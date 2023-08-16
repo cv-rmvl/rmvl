@@ -1,0 +1,9 @@
+float MIN_LENGTH = 5.f       # 灯条最小长度
+float CLOSE_LENGTH = 15.f    # 近处灯条临界长度
+float MAX_RATIO = 18.f       # 灯条长宽最大比例
+float RATIO_THRESHOLD = 6.f  # 精确获取特征信息时，长宽比的阈值
+float MIN_FAR_RATIO = 1.5f   # 远处灯条长宽最小比例
+float MAX_FAR_RATIO = 6.f    # 远处灯条长宽最大比例
+float MAX_CLOSE_RATIO = 14.f # 近处灯条长宽最大比例
+float MIN_AREA_RATIO = 0.5f  # 轮廓和外接矩形面积的比值
+float MAX_ANGLE = 25.f       # 与竖直方向的最大角度

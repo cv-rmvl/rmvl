@@ -1,0 +1,4 @@
+Vec3d RGB_MEANS = {0.485, 0.456, 0.406} # 归一化后的 RGB 颜色均值，顺序为 (R, G, B)
+Vec3d RGB_STDS = {0.229, 0.224, 0.225}  # 归一化后的 RGB 颜色标准差，顺序为 (R, G, B)
+double MONO_MEANS = 0.449               # 归一化后的 单通道颜色均值
+double MONO_STDS = 0.226                # 归一化后的 单通道颜色标准差

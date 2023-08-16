@@ -1,0 +1,30 @@
+#!/bin/bash
+
+export SANITIZE_COMMON_OPTIONS=malloc_context_size=10:verbosity=1:print_stacktrace=1
+                              # 缩短错误报告,显示的内存创建释放调用栈层数=10:报告详细程度=1
+
+# Address Sanitize 内存分析
+## 功能控制
+export ASAN_OPTIONS=${SANITIZE_COMMON_OPTIONS}:halt_on_error=1:detect_leaks=1:detect_invalid_pointer_pairs=2:check_initialization_order=true
+                                              # 错误后继续运行:内存泄漏检测(执行文件):检查指针操作:捕获初始化顺序问题
+
+## 输出控制
+# export ASAN_OPTIONS=${ASAN_OPTIONS}:log_path=./asan.log::'stack_trace_format="[frame=%n, function=%f, location=%S]"'
+export ASAN_OPTIONS=${ASAN_OPTIONS}::'stack_trace_format="[frame=%n, function=%f, location=%S]"'
+                                    # 输出格式
+# log_path=/home/hyj/asan/.asan.log
+# print_stats=true # 打印统计信息
+
+## 其他选项
+## strict_init_order # 如果为 true，则假设动态初始化程序永远不能从其他模块访问全局，即使后者已经初始化 严格检查初始化问题
+## detect_stack_use_after_return # 检查重新访问栈空间
+## debug # gdb 调试 ASAN https://github.com/google/sanitizers/wiki/AddressSanitizerAndDebugger : sanitizer\asan_interface.h
+
+# Leak Sanitize 内存泄漏
+export LSAN_OPTIONS=${SANITIZE_COMMON_OPTIONS}
+# use_unaligned=4; #4字节对齐 若压缩内存排布的结构体中存在指针 打开并设置此选项并设置自定义字节
+
+# Thread Sanitize 线程竞争等检测(忽略异常)
+export TSAN_OPTIONS=${SANITIZE_COMMON_OPTIONS}
+# Memory Sanitize - 操作未初始化内存
+export MSAN_OPTIONS=${SANITIZE_COMMON_OPTIONS}

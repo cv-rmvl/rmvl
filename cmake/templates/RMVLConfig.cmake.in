@@ -1,0 +1,66 @@
+# ===================================================================================
+#   RMVL CMake 配置文件
+#
+#               ** 此文件自动生成，请勿修改 **
+#
+#   外部项目使用说明:
+#       在你的 CMakeLists.txt 中，添加以下语句:
+#       
+#       find_package(RMVL REQUIRED)
+#       target_include_directories(MY_TARGET_NAME PUBLIC ${RMVL_INCLUDE_DIRS})
+#       target_link_libraries(MY_TARGET_NAME ${RMVL_LIBS})
+#
+#       此文件将定义以下变量:
+#         - RMVL_LIBS           : RMVL 模块的所有导入目标的列表
+#         - RMVL_INCLUDE_DIRS   : RMVL 包含目录
+#         - RMVL_FOUND          : RMVL 是否被寻找到的标志位
+#
+#       高级变量:
+#         - RMVL_INSTALL_PATH   : RMVL 被安装到的位置
+#         - RMVL_LIB_COMPONENTS : 给出的 RMVL 模块列表
+#
+# ===================================================================================
+
+include(FindPackageHandleStandardArgs)
+
+# 获取没有 ../.. 相对路径标记的绝对路径，消除隐式链接器警告
+get_filename_component(RMVL_CONFIG_PATH "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
+get_filename_component(RMVL_INSTALL_PATH "${RMVL_CONFIG_PATH}/@RMVL_INSTALL_PATH_RELATIVE_CONFIGCMAKE@" REALPATH)
+
+set(RMVL_LIB_COMPONENTS @RMVL_MODULES_CONFIGCMAKE@)
+set(__RMVL_INCLUDE_DIRS @RMVL_INCLUDE_DIRS_CONFIGCMAKE@)
+
+if(NOT OpenCV_FOUND)
+    find_package(OpenCV REQUIRED)
+endif(NOT OpenCV_FOUND)
+
+# 头文件安装配置
+set(RMVL_INCLUDE_DIRS "")
+foreach(d ${__RMVL_INCLUDE_DIRS})
+    get_filename_component(__d "${d}" REALPATH)
+    if(NOT EXISTS "${__d}")
+        message(WARNING "RMVL: Include directory doesn't exist: '${d}'. RMVL installation may be broken. Skip...")
+    else()
+        list(APPEND RMVL_INCLUDE_DIRS "${__d}")
+    endif()
+endforeach()
+unset(__d)
+
+if(NOT TARGET rmvl_feature)
+    include(${CMAKE_CURRENT_LIST_DIR}/RMVLModules.cmake)
+endif()
+
+# 库文件安装配置
+foreach(__rmvlcomponent ${RMVL_LIB_COMPONENTS})
+    if(NOT __rmvlcomponent MATCHES "^rmvl_")
+        set(__rmvlcomponent rmvl_${__rmvlcomponent})
+    endif()
+    set(RMVL_LIBS ${RMVL_LIBS} "${__rmvlcomponent}")
+endforeach()
+
+# We do not actually need REQUIRED_VARS to be checked for. Just use the
+# installation directory for the status.
+find_package_handle_standard_args(
+    RMVL
+    REQUIRED_VARS RMVL_INSTALL_PATH
+)

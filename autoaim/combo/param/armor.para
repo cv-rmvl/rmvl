@@ -1,0 +1,29 @@
+float MAX_CORNER_ANGLE = 25.f        # 装甲板最大错位角
+float MAX_DELTA_ANGLE = 8.f          # 左右灯条最大角度误差
+float MAX_LENGTH_RATIO = 1.5f        # 左右灯条长度最大比例
+float MAX_WIDTH_RATIO = 5.f          # 左右灯条宽度最大比例
+float MAX_COMBO_RATIO = 6.f          # 拟合成装甲板时，最大的长宽比
+float MIN_COMBO_RATIO = 1.5f         # 拟合成装甲板时，最小的长宽比
+float MAX_SMALL_COMBO_RATIO = 1.7f   # 匹配成小装甲板的最大长宽比例
+float MIN_BIG_COMBO_RATIO = 3.1f     # 匹配成大装甲板的最小长宽比例
+float MAX_SMALL_CORNER_ANGLE = 2.f   # 匹配成小装甲板的最大错位角
+float MIN_BIG_CORNER_ANGLE = 8.5f    # 匹配成大装甲板的最小错位角
+float BIG_SMALL_WIDTH_RATIO = 2.6f   # 区分大小装甲板的左右灯条宽度比例阈值
+float ERROR_LENGTH_SCALE_RATIO = 2.f # 装甲板左右灯条长度匹配误差系数
+float ERROR_WIDTH_SCALE_RATIO = 1.f  # 装甲板左右灯条宽度匹配误差系数
+float ERROR_ANGLE_SCALE_RATIO = 5.f  # 装甲板左右灯条夹角匹配误差系数
+float ERROR_TILT_ANGLE_RATIO = 2.f   # 装甲板左右灯条倾角匹配误差系数
+
+float ROI_WIDTH_RATIO = 0.5 # ROI 截取图像宽度比例（以装甲板宽度为 1）
+float ROI_HEIGHT_RATIO = 2  # ROI 截取图像高度比例（以装甲板高度为 1）
+float ROI_SIZE = 40         # 正方形 ROI 边长尺寸
+
+vector<Point3f> SMALL_ARMOR = {Point3f(-67, 28, 0), \
+                               Point3f(-67, -28, 0), \
+                               Point3f(67, -28, 0), \
+                               Point3f(67, 28, 0)} # 小装甲板世界坐标
+
+vector<Point3f> BIG_ARMOR = {Point3f(-115, 28, 0), \
+                             Point3f(-115, -28, 0), \
+                             Point3f(115, -28, 0), \
+                             Point3f(115, 28, 0)} # 大装甲板世界坐标

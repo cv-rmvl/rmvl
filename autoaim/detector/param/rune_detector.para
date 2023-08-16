@@ -1,0 +1,6 @@
+int GRAY_THRESHOLD_RED = 80       # 二值化 R-B 阈值
+int GRAY_THRESHOLD_BLUE = 80      # 二值化 B-R 阈值
+double MIN_CONTOUR_AREA = 10      # 能够参与神符特征匹配的最小面积
+double MAX_CONTOUR_AREA = 3500    # 能够参与神符特征匹配的最大面积
+double BIG_TARGET_AREA = 1000     # 判断为靶心的面积阈值
+double CONCENTRICITY_RATIO = 0.08 # 父子轮廓同心度与最大轮廓的比值

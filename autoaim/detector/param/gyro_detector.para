@@ -1,0 +1,14 @@
+int GRAY_THRESHOLD_RED = 80      # 二值化 R-B 阈值
+int GRAY_THRESHOLD_BLUE = 80     # 二值化 B-R 阈值
+double MIN_CONTOUR_AREA = 25     # 最小轮廓面积
+float MAX_GROUP_DELTA_DIS = 2000 # 识别为相同装甲板序列组时，车组中轴线在两帧之间允许的最大欧式距离
+
+float MIN_MULTIPLE_ANGLE = -500 # 两个装甲板允许合并至一个集合时，角度相乘的最小值
+float MAX_MULTIPLE_ANGLE = -50  # 两个装甲板允许合并至一个集合时，角度相乘的最大值
+float MAX_HEIGHT_RATIO = 1.6    # 两个装甲板允许合并至一个集合时，最大高度比值
+float MAX_WIDTH_RATIO = 1.8     # 两个装甲板允许合并至一个集合时，最大宽度比值
+float MAX_X_DISTANCE_RATIO = 9  # 两个装甲板允许合并至一个集合时，中心点的水平距离 dx 与装甲板高度的最大比值
+float MIN_X_DISTANCE_RATIO = 2  # 两个装甲板允许合并至一个集合时，中心点的水平距离 dx 与装甲板高度的最小比值
+float MAX_Y_DISTANCE_RATIO = 3  # 两个装甲板允许合并至一个集合时，中心点的垂直距离 dy 与装甲板高度的最大比值
+
+float MIN_CENTER_DIS = 30 # 序列组之间的最小间距，小于该值则需要弃用其中一个 group

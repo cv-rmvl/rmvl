@@ -1,0 +1,7 @@
+float B = 0.f               # 静态预测量系数
+double INTERVAL_ANGLE = 72  # 神符扇叶间隔角度
+double KP = 200             # 协方差矩阵系数
+double SAMPLE_INTERVAL = 10 # 采样间隔（单位 ms）
+double FIXED_ANGLE = 15     # 当模型阶数不够时，固定的角度预测增量（不区分正负）
+size_t DIFF_ORDER = 60      # 模型差分阶数
+size_t MAX_NF = 35          # 子弹飞行时间最大帧数

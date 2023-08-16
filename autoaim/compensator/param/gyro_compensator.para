@@ -1,0 +1,3 @@
+float YAW_COMPENSATE = 0.f   # yaw 静态补偿 (相机比测速模块高出的角度)
+float PITCH_COMPENSATE = 0.f # pitch 静态补偿 (相机比测速模块高出的角度)
+float MINIMUM_COM = 0.5f     # 手动补偿最小步进

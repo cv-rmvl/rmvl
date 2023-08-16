@@ -1,0 +1,2 @@
+double INTERVAL_ANGLE = 72  # 神符扇叶间隔角度
+size_t RAW_DATAS_SIZE = 500 # 神符角度原始数据队列上限（尽量设置大些，为神符预测参数辨识预留足够样本）

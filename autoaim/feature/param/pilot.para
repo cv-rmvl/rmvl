@@ -1,0 +1,4 @@
+float MIN_AREA = 10.f # 最小面积
+float MAX_RATIO = 4.f # 最大比率
+float MIN_RATIO = 1.f # 最小比率
+float VERTEX_K = 6.f  # 左右角点限制系数

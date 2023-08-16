@@ -1,0 +1,5 @@
+float INIT_FREQUENCY = 0.17f # 初始击打间隔
+float MISS_FREQUENCY = 0.65f # 击打不成功最大间隔
+
+float DISTURB_RADIUS_RATIO = 4.f # 干扰模式时射击半径比值（以神符旋转中心为基准）
+float NORMAL_RADIUS_RATIO = 1.5f # 普通模式时射击半径比值（以神符旋转中心为基准）

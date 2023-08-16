@@ -1,0 +1,4 @@
+double YAW_B = 0.f   # yaw 方向静态预测量（时间量）
+double PITCH_B = 0.f # pitch 方向静态预测量（时间量）
+double YAW_K = 1.f   # yaw 方向动态预测量
+double PITCH_K = 1.f # pitch 方向动态预测量

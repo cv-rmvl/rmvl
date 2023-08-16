@@ -1,0 +1,40 @@
+# 配置文件
+.vscode
+.idea
+
+# 编译文件
+*build
+devel
+*.o
+*.so
+*.a
+
+# 媒体文件
+*.mp4
+*.avi
+*.flv
+*.csv
+
+# 图像文件
+*.png
+*.jpg
+*.jpeg
+!rmvl-logo*
+
+# 模型文件
+*.onnx
+*.pth
+*.xml
+
+# 日志数据类文件
+log
+Camera
+
+# 自动生成的参数文件
+*para/
+!modules/para
+!modules/para/include/rmvlpara
+!include/rmvlpara
+
+# 其他文件
+*.zip

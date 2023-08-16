@@ -1,0 +1,4 @@
+int GRAY_THRESHOLD_RED = 80       # 二值化 R-B 阈值
+int GRAY_THRESHOLD_BLUE = 80      # 二值化 B-R 阈值
+double MIN_CONTOUR_AREA = 25      # 最小轮廓面积
+float MAX_TRACKER_DELTA_DIS = 255 # 识别为相同装甲板序列时，装甲板中心在两帧之间允许的最大距离

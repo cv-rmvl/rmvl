@@ -1,0 +1,10 @@
+float VELOCITY_THRESHOLD_MAX = 13.f # 速度大阈值
+float VELOCITY_THRESHOLD_MIN = 8.f  # 速度小阈值
+float VELOCITY_CHANGE = 1.f         # 速度改变阈值
+float TIMES_1 = 1.f                 # 击打时间1档  0.83
+float TIMES_2 = 1.7f                # 击打时间2档 1.66
+float TIMES_CHANGE = 50.f           # 击打时间2档 1.66
+float WIDTH_RATIO = 50.f
+float OUTPOST_DISTANCE = 400.f      # 装甲距离水平灯条最小距离
+uint8_t MAX_SEND_TIME = 5           # 发送射击信号最大次数
+float LOST_TIME = 2.f               # 丢失最大时间

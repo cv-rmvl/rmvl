@@ -1,0 +1,9 @@
+uint32_t TRACK_FRAMES = 50 # 序列组丢失最大帧数（追踪帧数）
+float INIT_RADIUS = 260    # 序列组默认初始分散度
+float ROTSPEED_SIZE = 50   # 旋转速度队列长度
+
+float MIN_HIGH_ROT_SPEED = 4.5 # 判定为高速状态的最低转速
+float MAX_LOW_ROT_SPEED = 1.5  # 判定为低速状态的最高转速
+
+Matx66f CENTER3D_Q = Matx66f::diag({1, 1, 1, 0.1, 0.1, 0.1}) # 旋转中心位置滤波器过程噪声协方差矩阵
+Matx66f CENTER3D_R = Matx66f::diag({20, 20, 20, 50, 50, 50}) # 旋转中心位置滤波器测量噪声协方差矩阵

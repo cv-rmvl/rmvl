@@ -1,0 +1,2 @@
+float PREDICT_K = 1.f # 动态预测量系数
+float PREDICT_B = 0.f # 静态预测量偏置

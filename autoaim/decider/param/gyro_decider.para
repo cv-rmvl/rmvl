@@ -1,0 +1,5 @@
+float NORMAL_RADIUS_RATIO = 0.8f   # 普通模式时射击半径比值
+string TYPE_PRIORITY = "111111111" # 数字决策优先级（从左到右的均满足 RobotType 中每个枚举类型的顺序）
+float PITCH_RESPONSE_DELAY = 1.f   # 高速状态下pitch轴的响应延迟系数
+float PITCH_RESPONSE_AMP = 1.f     # 高速状态下pitch轴的响应振幅系数
+float PRE_AIM_ANGLE = 0.f          # 提前瞄准角度（弧度制/帧）

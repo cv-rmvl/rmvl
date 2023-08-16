@@ -1,0 +1,3 @@
+double K = 1.f       # 动态响应预测量系数
+double B = 0.f       # 静态响应预测量系数
+double SHOOT_B = 0.f # 射击延迟预测量偏置
