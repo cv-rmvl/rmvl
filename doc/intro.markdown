@@ -14,7 +14,7 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 - @ref camera (**camera**) —— 目前包含基于 MindVision 迈德威视工业相机、HikRobot 海康机器人工业相机两种相机厂商 SDK 的二次开发工具库，点击[此处](@ref tutorial_build)可以安装以上两种相机的 SDK。
 
-- @ref filter (**filter**)，@ref rmath (**rmath**)
+- @ref ml (**ml**)，@ref rmath (**rmath**)
 
 - ... 以及其他包含在 `modules` 文件夹中的模块。
 
