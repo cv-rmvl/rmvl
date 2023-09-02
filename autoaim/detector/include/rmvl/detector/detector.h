@@ -30,10 +30,11 @@ namespace rm
  */
 struct DetectInfo
 {
-    cv::Mat src;         //!< 原图
-    cv::Mat gray;        //!< 灰度图
-    cv::Mat bin;         //!< 二值图
-    cv::Mat rendergraph; //!< 渲染图
+    cv::Mat src;               //!< 原图
+    cv::Mat gray;              //!< 灰度图列表
+    cv::Mat bin;               //!< 二值图列表
+    std::vector<cv::Mat> rois; //!< ROI 列表
+    cv::Mat rendergraphs;      //!< 渲染图列表
 
     std::vector<combo_ptr> combos;     //!< 当前帧所有组合体
     std::vector<feature_ptr> features; //!< 当前帧所有特征

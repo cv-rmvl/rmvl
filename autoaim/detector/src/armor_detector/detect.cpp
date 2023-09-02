@@ -34,7 +34,7 @@ DetectInfo ArmorDetector::detect(vector<group_ptr> &groups, Mat &src, PixChannel
     info.bin = rm::binary(src, color, ch_minus, thesh);
 
     // 找到所有的灯条和装甲板
-    find(info.bin, info.features, info.combos);
+    find(info.bin, info.features, info.combos, info.rois);
     // 将目标匹配进序列组
     match(groups, info.combos);
     return info;

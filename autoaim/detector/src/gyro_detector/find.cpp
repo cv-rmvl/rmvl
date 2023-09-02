@@ -23,7 +23,7 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-void GyroDetector::find(Mat &src, vector<feature_ptr> &features, vector<combo_ptr> &combos)
+void GyroDetector::find(Mat &src, vector<feature_ptr> &features, vector<combo_ptr> &combos, vector<Mat> &rois)
 {
     // ----------------------- light_blob -----------------------
     // 找到所有灯条
@@ -38,18 +38,14 @@ void GyroDetector::find(Mat &src, vector<feature_ptr> &features, vector<combo_pt
 #ifdef HAVE_RMVL_ORT
         if (_ort)
         {
-            // 对装甲板从中间向两边排序
-            sort(armors.begin(), armors.end(),
-                 [&](const armor_ptr &lhs, const armor_ptr &rhs) -> bool
-                 {
-                     return abs(lhs->getCenter().x - src.cols / 2.f) <
-                            abs(rhs->getCenter().x - src.cols / 2.f);
-                 });
-            for (auto armor : armors)
+            rois.clear();
+            rois.reserve(armors.size());
+            for (const auto &armor : armors)
             {
                 Mat roi = Armor::getNumberROI(src, armor);
                 auto type = _ort->inference({roi})[0];
                 armor->setType(_robot_t[type]);
+                rois.emplace_back(roi);
             }
             // eraseFakeArmors(armors);
         }

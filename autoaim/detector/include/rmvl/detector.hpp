@@ -16,7 +16,6 @@
  * @{
  *     @defgroup armor_detector 装甲板识别模块
  *     @defgroup gyro_detector 整车状态识别模块
- *     @defgroup top_armor_detector 顶部装甲识别模块
  *     @defgroup rune_detector 激活、未激活神符识别模块
  * @}
  */
@@ -32,10 +31,6 @@
 #ifdef HAVE_RMVL_GYRO_DETECTOR
 #include "detector/gyro_detector.h"
 #endif // HAVE_RMVL_GYRO_DETECTOR
-
-#ifdef HAVE_RMVL_TOP_ARMOR_DETECTOR
-#include "detector/top_armor_detector.h"
-#endif // HAVE_RMVL_TOP_ARMOR_DETECTOR
 
 #ifdef HAVE_RMVL_RUNE_DETECTOR
 #include "detector/rune_detector.h"

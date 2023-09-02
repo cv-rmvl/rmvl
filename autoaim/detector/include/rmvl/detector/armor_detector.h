@@ -69,7 +69,7 @@ public:
      * @return 识别信息结构体
      */
     DetectInfo detect(std::vector<group_ptr> &groups, cv::Mat &src, PixChannel color,
-                const GyroData &gyro_data, int64 record_time) override;
+                      const GyroData &gyro_data, int64 record_time) override;
 
     //! 构建 ArmorDetector
     static inline std::unique_ptr<ArmorDetector> make_detector() { return std::make_unique<ArmorDetector>(); }
@@ -88,10 +88,11 @@ private:
      * @brief 找出所有目标
      *
      * @param[in] src 预处理之后的图像
-     * @param[out] features 找到的所有特征
-     * @param[out] combos 存储所有找到的组合体的向量
+     * @param[out] features 找到的特征列表
+     * @param[out] combos 找到的组合体列表
+     * @param[out] rois 找到的组合体对应的 ROI 列表
      */
-    void find(cv::Mat &src, std::vector<feature_ptr> &features, std::vector<combo_ptr> &combos);
+    void find(cv::Mat &src, std::vector<feature_ptr> &features, std::vector<combo_ptr> &combos, std::vector<cv::Mat> &rois);
 
     /**
      * @brief 匹配、更新时间序列
