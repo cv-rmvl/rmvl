@@ -33,12 +33,29 @@ using namespace cv;
  */
 inline bool isHierarchyInactive(const vector<Vec4i> &hierarchy, size_t idx)
 {
-    return hierarchy[idx][0] == -1 && hierarchy[idx][1] == -1 && // h[idx] 无并列轮廓
-           hierarchy[idx][2] != -1 &&                            // h[idx] 有子轮廓，记为 hs[idx]
-           hierarchy[idx][3] != -1 &&                            // h[idx] 有父轮廓，记为 hf[idx]
-           hierarchy[hierarchy[idx][2]][2] == -1 &&              // hs[idx] 无子轮廓
-           hierarchy[hierarchy[idx][3]][3] != -1 &&              // hf[idx] 有父轮廓，记作 hff[idx]
-           hierarchy[hierarchy[hierarchy[idx][3]][3]][3] == -1;  // hff[idx] 无父轮廓
+    bool is_inactive = 0;
+    vector<int> bro_hierarchy;
+    int index = idx;
+    while (hierarchy[index][0] != -1)
+    {
+        bro_hierarchy.push_back(hierarchy[index][0]);
+        index = hierarchy[index][0];
+    }
+    while (hierarchy[index][1] != -1)
+    {
+        bro_hierarchy.push_back(hierarchy[index][1]);
+        index = hierarchy[index][1];
+    }
+    if (bro_hierarchy.size() > 2)
+        is_inactive = 1;
+
+    return is_inactive &&                                            // h[idx] 有大于两个并列轮廓
+           hierarchy[idx][2] != -1 &&                                // h[idx] 有子轮廓，记为 hs[idx]
+           ((hierarchy[hierarchy[idx][2]][2] != -1 &&                // hs[idx] 有子轮廓，记为 hss[idx]
+             hierarchy[hierarchy[hierarchy[idx][2]][2]][2] == -1) || // hss[idx] 无子轮廓
+            hierarchy[hierarchy[idx][2]][2] == -1) &&                // hs[idx] 无子轮廓
+           hierarchy[idx][3] != -1 &&                                // h[idx] 有父轮廓，记为 hf[idx]
+           hierarchy[hierarchy[idx][3]][3] == -1;                    // hf[idx] 无父轮廓
 }
 
 /**
@@ -102,6 +119,7 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
         {
             inner_center += (Point2f)contour_point;
         }
+        int contours_num = contours[hierarchy[idx][2]].size();
         inner_center /= (float)contours[hierarchy[idx][2]].size();
         auto dis = getDistance(inner_center, outer_center);
         auto size = (outer.size.width + outer.size.height) / 2.;
@@ -113,6 +131,8 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
             return true;
         }
         DEBUG_RUNE_WARNING_("center 0.ratio : fail");
+        if (contours_num < 10)
+            return true;
         return false;
     }
     return false;
@@ -186,7 +206,10 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
     if (rune_targets.empty() || rune_centers.empty())
         return;
     // 最优神符中心点
-    rune_center_ptr best_center = getBestCenter(rune_targets, rune_centers);
+    rune_center_ptr best_center = nullptr;
+    best_center = getBestCenter(rune_targets, rune_centers);
+    if (best_center == nullptr && rune_centers.size() == 1)
+        best_center = rune_centers.front();
     // 判空
     if (best_center == nullptr)
         return;
