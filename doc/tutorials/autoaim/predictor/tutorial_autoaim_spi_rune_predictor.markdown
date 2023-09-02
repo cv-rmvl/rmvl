@@ -1,4 +1,4 @@
-系统参数辨识神符预测 {#tutorial_autoaim_spi_rune_predictor}
+k 步前向预估神符预测 {#tutorial_autoaim_spi_rune_predictor}
 ============
 
 @author 黄昊睿
@@ -33,11 +33,13 @@
 
 **k 步前向预估**
 
-公式如下（略去证明步骤）
+由 @ref premise_2 可以得到如下公式
 
 \f[
 x(k)=c_0+\sum_{i=n_f}^{n+n_f-1}c_ix(k-i)\quad n_f\in{N^*}\tag{1-1}
 \f]
+
+不难发现，其公式与自回归模型 (AR) 一致，因此，以下公式推导则间接证明了在神符预测中 AR 模型的正确性。
 
 \f$n_f\f$可以为任意大小的正整数值，上述公式表明\f$x(k)\f$的结果可以通过计算\f$x(k-n_f-n+1)\f$，\f$x(k-n_f-n+2)\f$，\f$\dots\f$，\f$x(k-n_f)\f$共\f$n\f$个数的线性组合来得到，换句话说，可以根据前\f$n\f$帧的采样结果计算出\f$n_f\f$帧之后的结果。
 
