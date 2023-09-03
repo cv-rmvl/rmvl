@@ -1,11 +1,11 @@
 /**
  * @file rmvlpara.hpp
- * @author zhaoxi
+ * @author RoboMaster Vision Community
  * @brief 
  * @version 1.0
  * @date 2022-12-05
  * 
- * @copyright Copyright 2023 (c), zhaoxi
+ * @copyright Copyright 2023 (c), RoboMaster Vision Community
  * 
  */
 
