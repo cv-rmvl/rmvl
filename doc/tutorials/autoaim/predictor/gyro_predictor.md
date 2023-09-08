@@ -1,8 +1,12 @@
 在整车状态估计中涉及到的预测量 {#tutorial_autoaim_gyro_predictor}
 ============
 
-@author RoboMaster Vision Community
+@author 赵曦
 @date 2023/07/23
+
+@prev_tutorial{tutorial_autoaim_how_to_use_predictor}
+
+@next_tutorial{tutorial_autoaim_spi_rune_predictor}
 
 @tableofcontents
 

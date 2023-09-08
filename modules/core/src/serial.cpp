@@ -28,7 +28,7 @@ void rm::SerialPort::open()
     {
         if (_device.empty())
         {
-            struct dirent *dire = nullptr;
+            dirent *dire = nullptr;
             while ((dire = readdir(dir)) != nullptr)
             {
                 if ((strstr(dire->d_name, "ttyUSB") != nullptr) ||

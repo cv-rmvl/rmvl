@@ -58,7 +58,7 @@ rmvl_generate_module_para(feature)
 if(BUILD_TESTS)
     rmvl_add_test(
         feature Unit
-        DEPENDS  light_blob h_light_blob pilot rune_center rune_target
+        DEPENDS light_blob pilot rune_center rune_target
         DEPEND_TESTS GTest::gtest_main
     )
 endif(BUILD_TESTS)

@@ -19,6 +19,17 @@ using namespace rm;
 using namespace std;
 using namespace cv;
 
+#include <gtest/gtest.h>
+
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+
+#include "rmvl/detector/rune_detector.h"
+
+using namespace std;
+using namespace cv;
+using namespace rm;
+
 namespace rm_test
 {
 
@@ -27,11 +38,11 @@ class RuneDetectorTest : public testing::Test
 public:
     Mat src;
     vector<group_ptr> groups;
-    rm::detect_ptr detector;
+    detect_ptr detector;
 
     void SetUp() override
     {
-        detector = rm::RuneDetector::make_detector();
+        detector = RuneDetector::make_detector();
         src = Mat::zeros(Size(1278, 1024), CV_8UC3);
     }
     void TearDown() override {}
@@ -59,20 +70,20 @@ public:
             // 神符靶心
             circle(src, Point(target_x, target_y), 8, Scalar(0, 0, 255), 2);
             // 神符辅助瞄准特征
-            circle(src, Point(target_x, target_y), 32, Scalar(0, 0, 255), 2);
+            circle(src, Point(target_x, target_y), 24, Scalar(0, 0, 255), 2);
             circle(src, Point(target_x, target_y), 44, Scalar(0, 0, 255), 2);
             // 远（上）
-            line(src, Point(target_x + 24 * cosf(theta), target_y - 24 * sinf(theta)),
-                 Point(target_x + 52 * cosf(theta), target_y - 52 * sinf(theta)), Scalar(0, 0, 255), 4);
+            line(src, Point(target_x + 20 * cos(theta), target_y - 20 * sin(theta)),
+                 Point(target_x + 52 * cos(theta), target_y - 52 * sin(theta)), Scalar(0, 0, 255), 4);
             // 近（下）
-            line(src, Point(target_x - 24 * cosf(theta), target_y + 24 * sinf(theta)),
-                 Point(target_x - 52 * cosf(theta), target_y + 52 * sinf(theta)), Scalar(0, 0, 255), 4);
+            line(src, Point(target_x - 20 * cos(theta), target_y + 20 * sin(theta)),
+                 Point(target_x - 52 * cos(theta), target_y + 52 * sin(theta)), Scalar(0, 0, 255), 4);
             // 左
-            line(src, Point(target_x + 24 * cosf(theta + deg2rad(90.f)), target_y - 24 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x + 52 * cosf(theta + deg2rad(90.f)), target_y - 52 * sinf(theta + deg2rad(90.f))), Scalar(0, 0, 255), 4);
+            line(src, Point(target_x + 20 * cos(theta + 90_to_rad), target_y - 20 * sin(theta + 90_to_rad)),
+                 Point(target_x + 52 * cos(theta + 90_to_rad), target_y - 52 * sin(theta + 90_to_rad)), Scalar(0, 0, 255), 4);
             // 右
-            line(src, Point(target_x - 24 * cosf(theta + deg2rad(90.f)), target_y + 24 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x - 52 * cosf(theta + deg2rad(90.f)), target_y + 52 * sinf(theta + deg2rad(90.f))), Scalar(0, 0, 255), 4);
+            line(src, Point(target_x - 20 * cos(theta + 90_to_rad), target_y + 20 * sin(theta + 90_to_rad)),
+                 Point(target_x - 52 * cos(theta + 90_to_rad), target_y + 52 * sin(theta + 90_to_rad)), Scalar(0, 0, 255), 4);
         }
         // 已激活神符
         else
@@ -83,45 +94,45 @@ public:
         // 神符支架
         // 外支架
         // 横
-        line(src, Point(target_x + 70 * cosf(theta) + 60 * cosf(theta + deg2rad(90.f)), target_y - 70 * sinf(theta) - 60 * sinf(theta + deg2rad(90.f))),
-             Point(target_x + 70 * cosf(theta) - 60 * cosf(theta + deg2rad(90.f)), target_y - 70 * sinf(theta) + 60 * sinf(theta + deg2rad(90.f))),
+        line(src, Point(target_x + 70 * cos(theta) + 60 * cos(theta + 90_to_rad), target_y - 70 * sin(theta) - 60 * sin(theta + 90_to_rad)),
+             Point(target_x + 70 * cos(theta) - 60 * cos(theta + 90_to_rad), target_y - 70 * sin(theta) + 60 * sin(theta + 90_to_rad)),
              Scalar(0, 0, 255), 8);
         // 竖
         // 左
-        line(src, Point(target_x + 70 * cosf(theta) + 60 * cosf(theta + deg2rad(90.f)), target_y - 70 * sinf(theta) - 60 * sinf(theta + deg2rad(90.f))),
-             Point(target_x + 25 * cosf(theta) + 60 * cosf(theta + deg2rad(90.f)), target_y - 25 * sinf(theta) - 60 * sinf(theta + deg2rad(90.f))),
+        line(src, Point(target_x + 70 * cos(theta) + 60 * cos(theta + 90_to_rad), target_y - 70 * sin(theta) - 60 * sin(theta + 90_to_rad)),
+             Point(target_x + 25 * cos(theta) + 60 * cos(theta + 90_to_rad), target_y - 25 * sin(theta) - 60 * sin(theta + 90_to_rad)),
              Scalar(0, 0, 255), 8);
         // 右
-        line(src, Point(target_x + 70 * cosf(theta) - 60 * cosf(theta + deg2rad(90.f)), target_y - 70 * sinf(theta) + 60 * sinf(theta + deg2rad(90.f))),
-             Point(target_x + 25 * cosf(theta) - 60 * cosf(theta + deg2rad(90.f)), target_y - 25 * sinf(theta) + 60 * sinf(theta + deg2rad(90.f))),
+        line(src, Point(target_x + 70 * cos(theta) - 60 * cos(theta + 90_to_rad), target_y - 70 * sin(theta) + 60 * sin(theta + 90_to_rad)),
+             Point(target_x + 25 * cos(theta) - 60 * cos(theta + 90_to_rad), target_y - 25 * sin(theta) + 60 * sin(theta + 90_to_rad)),
              Scalar(0, 0, 255), 8);
 
         // 内支架
         // 横
-        line(src, Point(target_x - 70 * cosf(theta) + 60 * cosf(theta + deg2rad(90.f)), target_y + 70 * sinf(theta) - 60 * sinf(theta + deg2rad(90.f))),
-             Point(target_x - 70 * cosf(theta) - 60 * cosf(theta + deg2rad(90.f)), target_y + 70 * sinf(theta) + 60 * sinf(theta + deg2rad(90.f))),
+        line(src, Point(target_x - 70 * cos(theta) + 60 * cos(theta + 90_to_rad), target_y + 70 * sin(theta) - 60 * sin(theta + 90_to_rad)),
+             Point(target_x - 70 * cos(theta) - 60 * cos(theta + 90_to_rad), target_y + 70 * sin(theta) + 60 * sin(theta + 90_to_rad)),
              Scalar(0, 0, 255), 8);
         // 竖
         // 左
-        line(src, Point(target_x - 70 * cosf(theta) + 60 * cosf(theta + deg2rad(90.f)), target_y + 70 * sinf(theta) - 60 * sinf(theta + deg2rad(90.f))),
-             Point(target_x - 25 * cosf(theta) + 60 * cosf(theta + deg2rad(90.f)), target_y + 25 * sinf(theta) - 60 * sinf(theta + deg2rad(90.f))),
+        line(src, Point(target_x - 70 * cos(theta) + 60 * cos(theta + 90_to_rad), target_y + 70 * sin(theta) - 60 * sin(theta + 90_to_rad)),
+             Point(target_x - 25 * cos(theta) + 60 * cos(theta + 90_to_rad), target_y + 25 * sin(theta) - 60 * sin(theta + 90_to_rad)),
              Scalar(0, 0, 255), 8);
         // 右
-        line(src, Point(target_x - 70 * cosf(theta) - 60 * cosf(theta + deg2rad(90.f)), target_y + 70 * sinf(theta) + 60 * sinf(theta + deg2rad(90.f))),
-             Point(target_x - 25 * cosf(theta) - 60 * cosf(theta + deg2rad(90.f)), target_y + 25 * sinf(theta) + 60 * sinf(theta + deg2rad(90.f))),
+        line(src, Point(target_x - 70 * cos(theta) - 60 * cos(theta + 90_to_rad), target_y + 70 * sin(theta) + 60 * sin(theta + 90_to_rad)),
+             Point(target_x - 25 * cos(theta) - 60 * cos(theta + 90_to_rad), target_y + 25 * sin(theta) + 60 * sin(theta + 90_to_rad)),
              Scalar(0, 0, 255), 8);
 
         // 内支架连接
         // 中心
-        line(src, Point(target_x - 78 * cosf(theta), target_y + 78 * sinf(theta)),
-             Point(target_x - 162 * cosf(theta), target_y + 162 * sinf(theta)), Scalar(0, 0, 255), 16);
+        line(src, Point(target_x - 78 * cos(theta), target_y + 78 * sin(theta)),
+             Point(target_x - 162 * cos(theta), target_y + 162 * sin(theta)), Scalar(0, 0, 255), 16);
         // 未激活神符
         if (!active)
         {
             // 间断
             for (int i = 80; i < 190; i += 10)
-                line(src, Point(target_x - i * cosf(theta) + 25 * cosf(theta + deg2rad(90.f)), target_y + i * sinf(theta) - 25 * sinf(theta + deg2rad(90.f))),
-                     Point(target_x - i * cosf(theta) - 25 * cosf(theta + deg2rad(90.f)), target_y + i * sinf(theta) + 25 * sinf(theta + deg2rad(90.f))),
+                line(src, Point(target_x - i * cos(theta) + 25 * cos(theta + 90_to_rad), target_y + i * sin(theta) - 25 * sin(theta + 90_to_rad)),
+                     Point(target_x - i * cos(theta) - 25 * cos(theta + 90_to_rad), target_y + i * sin(theta) + 25 * sin(theta + 90_to_rad)),
                      Scalar(0, 0, 0), 4);
         }
 
@@ -129,22 +140,22 @@ public:
         else
         {
             // 左
-            line(src, Point(target_x - 70 * cosf(theta) + 62 * cosf(theta + deg2rad(90.f)), target_y + 70 * sinf(theta) - 62 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x - 120 * cosf(theta) + 62 * cosf(theta + deg2rad(90.f)), target_y + 120 * sinf(theta) - 62 * sinf(theta + deg2rad(90.f))),
+            line(src, Point(target_x - 70 * cos(theta) + 62 * cos(theta + 90_to_rad), target_y + 70 * sin(theta) - 62 * sin(theta + 90_to_rad)),
+                 Point(target_x - 120 * cos(theta) + 62 * cos(theta + 90_to_rad), target_y + 120 * sin(theta) - 62 * sin(theta + 90_to_rad)),
                  Scalar(0, 0, 255), 4);
-            line(src, Point(target_x - 120 * cosf(theta) + 62 * cosf(theta + deg2rad(90.f)), target_y + 120 * sinf(theta) - 62 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x - 172 * cosf(theta) + 25 * cosf(theta + deg2rad(90.f)), target_y + 172 * sinf(theta) - 25 * sinf(theta + deg2rad(90.f))),
+            line(src, Point(target_x - 120 * cos(theta) + 62 * cos(theta + 90_to_rad), target_y + 120 * sin(theta) - 62 * sin(theta + 90_to_rad)),
+                 Point(target_x - 172 * cos(theta) + 25 * cos(theta + 90_to_rad), target_y + 172 * sin(theta) - 25 * sin(theta + 90_to_rad)),
                  Scalar(0, 0, 255), 4);
             // 右
-            line(src, Point(target_x - 70 * cosf(theta) - 62 * cosf(theta + deg2rad(90.f)), target_y + 70 * sinf(theta) + 62 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x - 120 * cosf(theta) - 62 * cosf(theta + deg2rad(90.f)), target_y + 120 * sinf(theta) + 62 * sinf(theta + deg2rad(90.f))),
+            line(src, Point(target_x - 70 * cos(theta) - 62 * cos(theta + 90_to_rad), target_y + 70 * sin(theta) + 62 * sin(theta + 90_to_rad)),
+                 Point(target_x - 120 * cos(theta) - 62 * cos(theta + 90_to_rad), target_y + 120 * sin(theta) + 62 * sin(theta + 90_to_rad)),
                  Scalar(0, 0, 255), 4);
-            line(src, Point(target_x - 120 * cosf(theta) - 62 * cosf(theta + deg2rad(90.f)), target_y + 120 * sinf(theta) + 62 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x - 172 * cosf(theta) - 25 * cosf(theta + deg2rad(90.f)), target_y + 172 * sinf(theta) + 25 * sinf(theta + deg2rad(90.f))),
+            line(src, Point(target_x - 120 * cos(theta) - 62 * cos(theta + 90_to_rad), target_y + 120 * sin(theta) + 62 * sin(theta + 90_to_rad)),
+                 Point(target_x - 172 * cos(theta) - 25 * cos(theta + 90_to_rad), target_y + 172 * sin(theta) + 25 * sin(theta + 90_to_rad)),
                  Scalar(0, 0, 255), 4);
             // 内横
-            line(src, Point(target_x - 172 * cosf(theta) + 25 * cosf(theta + deg2rad(90.f)), target_y + 172 * sinf(theta) - 25 * sinf(theta + deg2rad(90.f))),
-                 Point(target_x - 172 * cosf(theta) - 25 * cosf(theta + deg2rad(90.f)), target_y + 172 * sinf(theta) + 25 * sinf(theta + deg2rad(90.f))),
+            line(src, Point(target_x - 172 * cos(theta) + 25 * cos(theta + 90_to_rad), target_y + 172 * sin(theta) - 25 * sin(theta + 90_to_rad)),
+                 Point(target_x - 172 * cos(theta) - 25 * cos(theta + 90_to_rad), target_y + 172 * sin(theta) + 25 * sin(theta + 90_to_rad)),
                  Scalar(0, 0, 255), 4);
         }
     }
@@ -156,18 +167,18 @@ public:
     }
 };
 
-TEST_F(RuneDetectorTest, armor1_center0)
+TEST_F(RuneDetectorTest, target1_center0)
 {
     SetUp();
-    createRuneTarget(600, 370, deg2rad(90.f), false);
+    createRuneTarget(600, 370, 90_to_rad, false);
     auto combos = detect();
     EXPECT_TRUE(combos.empty());
 }
 
-TEST_F(RuneDetectorTest, armor1_center1)
+TEST_F(RuneDetectorTest, target1_center1)
 {
     SetUp();
-    createRuneTarget(600, 370, deg2rad(90.f), false);
+    createRuneTarget(600, 370, 90_to_rad, false);
     createRuneCenter(590, 610);
     // imshow("test", src);
     // waitKey(0);
@@ -178,10 +189,10 @@ TEST_F(RuneDetectorTest, armor1_center1)
     EXPECT_FALSE(p_rune->isActive());
 }
 
-TEST_F(RuneDetectorTest, armor1_centerTilt)
+TEST_F(RuneDetectorTest, target1_centerTilt)
 {
     SetUp();
-    createRuneTarget(800, 200, deg2rad(90.f), false);
+    createRuneTarget(800, 200, 90_to_rad, false);
     createRuneCenter(590, 610);
     // imshow("test", src);
     // waitKey(0);
@@ -190,10 +201,10 @@ TEST_F(RuneDetectorTest, armor1_centerTilt)
     EXPECT_EQ(combos.size(), 0);
 }
 
-TEST_F(RuneDetectorTest, armor1_center2)
+TEST_F(RuneDetectorTest, target1_center2)
 {
     SetUp();
-    createRuneTarget(600, 370, deg2rad(90.f), false);
+    createRuneTarget(600, 370, 90_to_rad, false);
     createRuneCenter(590, 610);
     createRuneCenter(978, 520);
     // imshow("test", src);
@@ -206,7 +217,7 @@ TEST_F(RuneDetectorTest, armor1_center2)
 TEST_F(RuneDetectorTest, 1_active_rune)
 {
     SetUp();
-    createRuneTarget(600, 370, deg2rad(90.f), true);
+    createRuneTarget(600, 370, 90_to_rad, true);
     createRuneCenter(590, 610);
     // imshow("test", src);
     // waitKey(0);
@@ -220,8 +231,8 @@ TEST_F(RuneDetectorTest, 1_active_rune)
 TEST_F(RuneDetectorTest, 1_inactive_1_active)
 {
     SetUp();
-    createRuneTarget(600, 370, deg2rad(90.f), false);
-    createRuneTarget(600 + 230 * cosf(deg2rad(18.f)), 600 - 230 * sinf(deg2rad(18.f)), deg2rad(18.f), true);
+    createRuneTarget(600, 370, 90_to_rad, false);
+    createRuneTarget(600 + 230 * cos(deg2rad(18.f)), 600 - 230 * sin(deg2rad(18.f)), deg2rad(18.f), true);
     createRuneCenter(590, 610);
     // imshow("test", src);
     // waitKey(0);

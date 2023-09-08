@@ -1,12 +1,12 @@
-线程与线程池管理 {#tutorial_common_thread_pool}
+线程与线程池管理 {#tutorial_modules_thread_pool}
 ============
 
 @author RoboMaster Vision Community
 @date 2022/02/09
 
-@prev_tutorial{tutorial_common_singleton}
+@prev_tutorial{tutorial_modules_singleton}
 
-@next_tutorial{tutorial_common_camera}
+@next_tutorial{tutorial_modules_serial}
 
 @tableofcontents
 

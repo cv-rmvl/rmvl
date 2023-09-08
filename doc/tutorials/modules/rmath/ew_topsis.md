@@ -1,12 +1,12 @@
-基于 TOPSIS 模型的熵权法 {#tutorial_common_ew_topsis}
+基于 TOPSIS 模型的熵权法 {#tutorial_modules_ew_topsis}
 ============
 
 @author RoboMaster Vision Community
 @date 2023/01/11
 
-@prev_tutorial{tutorial_common_ra_heap}
+@prev_tutorial{tutorial_modules_ra_heap}
 
-@next_tutorial{tutorial_common_fitsine}
+@next_tutorial{tutorial_modules_ort}
 
 @tableofcontents
 

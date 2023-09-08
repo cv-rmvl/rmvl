@@ -1,12 +1,10 @@
-相机设备 {#tutorial_common_camera}
+相机设备 {#tutorial_modules_camera}
 ============
 
-@author RoboMaster Vision Community
+@author 赵曦
 @date 2023/03/15
 
-@prev_tutorial{tutorial_common_thread_pool}
-
-@next_tutorial{tutorial_common_serial}
+@prev_tutorial{tutorial_modules_ort}
 
 @tableofcontents
 

@@ -1,12 +1,12 @@
-卡尔曼滤波模块 {#tutorial_common_kalman}
+卡尔曼滤波模块 {#tutorial_modules_kalman}
 ============
 
 @author 张华铨
 @date 2022/10/11
 
-@prev_tutorial{tutorial_common_fitsine}
+@prev_tutorial{tutorial_modules_serial}
 
-@next_tutorial{tutorial_common_ort}
+@next_tutorial{tutorial_modules_union_find}
 
 @tableofcontents
 

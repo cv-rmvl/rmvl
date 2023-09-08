@@ -24,11 +24,6 @@ foreach(m ${RMVL_INCLUDE_DIRS})
     )
 endforeach(m ${RMVL_INCLUDE_DIRS})
 
-export(
-    TARGETS ${RMVL_MODULES_BUILD}
-    FILE ${CMAKE_BINARY_DIR}/RMVLModules.cmake
-)
-
 # --------------------------------------------------------------------------------------------
 #  Part 2/2: Make install
 # --------------------------------------------------------------------------------------------

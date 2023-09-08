@@ -1,12 +1,12 @@
-ONNX-Runtime 分类网络部署库 {#tutorial_common_ort}
+ONNX-Runtime 分类网络部署库 {#tutorial_modules_ort}
 ============
 
 @author 
 @date 
 
-@prev_tutorial{tutorial_common_kalman}
+@prev_tutorial{tutorial_modules_ew_topsis}
 
-@next_tutorial{tutorial_common_singleton}
+@next_tutorial{tutorial_modules_camera}
 
 @tableofcontents
 
