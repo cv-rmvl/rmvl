@@ -36,6 +36,7 @@ inline bool isHierarchyInactive(const vector<Vec4i> &hierarchy, size_t idx)
     bool is_inactive = 0;
     vector<int> bro_hierarchy;
     int index = idx;
+    // 记录并列轮廓数量
     while (hierarchy[index][0] != -1)
     {
         bro_hierarchy.push_back(hierarchy[index][0]);

@@ -1,10 +1,12 @@
-并查集 {#tutorial_common_union_find}
+并查集 {#tutorial_modules_union_find}
 ============
 
 @author RoboMaster Vision Community
 @date 2023/01/11
 
-@next_tutorial{tutorial_common_ra_heap}
+@prev_tutorial{tutorial_modules_kalman}
+
+@next_tutorial{tutorial_modules_ra_heap}
 
 @tableofcontents
 

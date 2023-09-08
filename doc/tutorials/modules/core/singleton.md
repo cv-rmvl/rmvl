@@ -1,12 +1,10 @@
-单例模板 {#tutorial_common_singleton}
+单例模板 {#tutorial_modules_singleton}
 ============
 
-@author RoboMaster Vision Community
+@author 赵曦
 @date 2022/02/09
 
-@prev_tutorial{tutorial_common_ort}
-
-@next_tutorial{tutorial_common_thread_pool}
+@next_tutorial{tutorial_modules_thread_pool}
 
 @tableofcontents
 

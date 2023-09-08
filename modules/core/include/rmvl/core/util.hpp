@@ -233,4 +233,140 @@ const std::string &getBuildInformation();
 #define RMVL_DbgAssert(expr) RMVL_Assert(expr)
 #endif
 
+namespace reflect
+{
+
+//! Constructor helper
+struct init
+{
+    template <typename Tp>
+    operator Tp(); // No need to define
+};
+
+template <std::size_t N>
+struct size_tag : size_tag<N - 1>
+{
+};
+template <>
+struct size_tag<0>
+{
+};
+
+#if __cplusplus < 202002L
+
+template <typename Tp>
+constexpr auto size(size_tag<10>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 10u; }
+template <typename Tp>
+constexpr auto size(size_tag<9>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 9u; }
+template <typename Tp>
+constexpr auto size(size_tag<8>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 9u; }
+template <typename Tp>
+constexpr auto size(size_tag<7>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 7u; }
+template <typename Tp>
+constexpr auto size(size_tag<6>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 6u; }
+template <typename Tp>
+constexpr auto size(size_tag<5>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}}, 0u) { return 5u; }
+template <typename Tp>
+constexpr auto size(size_tag<4>) -> decltype(Tp{init{}, init{}, init{}, init{}}, 0u) { return 4u; }
+template <typename Tp>
+constexpr auto size(size_tag<3>) -> decltype(Tp{init{}, init{}, init{}}, 0u) { return 3u; }
+template <typename Tp>
+constexpr auto size(size_tag<2>) -> decltype(Tp{init{}, init{}}, 0u) { return 2; }
+template <typename Tp>
+constexpr auto size(size_tag<1>) -> decltype(Tp{init{}}, 0u) { return 1u; }
+template <typename Tp>
+constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
+
+#endif
+
+} // namespace reflect
+
+/**
+ * @brief 获取指定类型的成员个数
+ *
+ * @tparam Tp 聚合类类型
+ * @return 成员个数
+ */
+template <typename Tp>
+#if __cplusplus < 202002L
+constexpr std::size_t size()
+{
+    static_assert(std::is_aggregate_v<Tp>);
+    return reflect::size<Tp>(reflect::size_tag<10>{});
+}
+#else
+consteval std::size_t size(auto &&...args)
+{
+    static_assert(std::is_aggregate_v<Tp>);
+    if constexpr (!requires { Tp{args...}; })
+        return sizeof...(args) - 1;
+    else
+        return size<Tp>(args..., reflect::init{});
+}
+#endif
+
+/**
+ * @brief 遍历聚合类的每一个数据成员
+ *
+ * @tparam Tp 聚合类类型
+ * @tparam Callable 可调用对象类型
+ * @param[in] val 聚合类对象
+ * @param[in] f 可调用对象
+ */
+template <typename Tp, typename Callable>
+void for_each(const Tp &val, Callable &&f)
+{
+    static_assert(std::is_aggregate_v<Tp>);
+    if constexpr (size<Tp>() == 10u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9);
+    }
+    else if constexpr (size<Tp>() == 9u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8);
+    }
+    else if constexpr (size<Tp>() == 8u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5, m6, m7] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7);
+    }
+    else if constexpr (size<Tp>() == 7u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5, m6] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6);
+    }
+    else if constexpr (size<Tp>() == 6u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5);
+    }
+    else if constexpr (size<Tp>() == 5u)
+    {
+        const auto &[m0, m1, m2, m3, m4] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4);
+    }
+    else if constexpr (size<Tp>() == 4u)
+    {
+        const auto &[m0, m1, m2, m3] = val;
+        f(m0), f(m1), f(m2), f(m3);
+    }
+    else if constexpr (size<Tp>() == 3u)
+    {
+        const auto &[m0, m1, m2] = val;
+        f(m0), f(m1), f(m2);
+    }
+    else if constexpr (size<Tp>() == 2u)
+    {
+        const auto &[m0, m1] = val;
+        f(m0), f(m1);
+    }
+    else if constexpr (size<Tp>() == 1u)
+    {
+        const auto &[m0] = val;
+        f(m0);
+    }
+}
+
 //! @} core

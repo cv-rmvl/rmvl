@@ -1,7 +1,7 @@
 float COEFF_K = 1.f            # 距离线性拟合 K
-float MIN_AREA_RATIO = 0.04f   # 最小面积比值
-float MAX_AREA_RATIO = 1.f     # 最大面积比值
-float MIN_RADIUS_RATIO = 7.f   # 特征间距与神符中心高度的最小比值
+float MIN_AREA_RATIO = 0.4f    # 最小面积比值
+float MAX_AREA_RATIO = 4.f     # 最大面积比值
+float MIN_RADIUS_RATIO = 1.f   # 特征间距与神符中心高度的最小比值
 float MAX_RADIUS_RATIO = 15.f  # 特征间距与神符中心高度的最大比值
 float BEST_RADIUS_RATIO = 11.f # 特征间距与神符中心高度的最优比值
 float MAX_MID_LINE_RATIO = 2.f # 神符中心离扇叶间中垂线距离与神符中心高度的最大比值

@@ -34,9 +34,9 @@ protected:
 public:
     virtual ~feature() = 0;
     //! 获取特征面积
-    inline virtual float getArea() { return _height * _width; }
+    inline float getArea() const { return _height * _width; }
     //! 获取特征中心点
-    inline virtual cv::Point2f getCenter() { return _center; }
+    inline const cv::Point2f &getCenter() const { return _center; }
     //! 获取特征宽度
     inline float getWidth() const { return _width; }
     //! 获取特征高度

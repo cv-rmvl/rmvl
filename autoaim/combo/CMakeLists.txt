@@ -20,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
     rune
-    DEPENDS combo rune_outer rune_bracket rune_center rune_target camera
+    DEPENDS combo rune_center rune_target camera
 )
 
 rmvl_generate_module_para(combo)
@@ -29,7 +29,7 @@ rmvl_generate_module_para(combo)
 if(BUILD_TESTS)
     rmvl_add_test(
         combo Unit
-        DEPENDS armor rune top_armor
+        DEPENDS armor rune
         DEPEND_TESTS GTest::gtest_main
     )
 endif(BUILD_TESTS)

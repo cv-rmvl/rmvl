@@ -83,7 +83,7 @@ void LightBlob::calcAccurateInfo(float lw_ratio, const vector<Point> &contour)
                  _bottom + Point2f(half_w * cos_angle, half_w * sin_angle)};
 }
 
-shared_ptr<LightBlob> LightBlob::make_feature(vector<Point> &contour)
+shared_ptr<LightBlob> LightBlob::make_feature(const vector<Point> &contour)
 {
     // init
     if (contour.size() < 6)
@@ -121,7 +121,7 @@ shared_ptr<LightBlob> LightBlob::make_feature(vector<Point> &contour)
     return make_shared<LightBlob>(contour, rotated_rect, lw_ratio, angle);
 }
 
-LightBlob::LightBlob(vector<Point> &contour, RotatedRect &rotated_rect, float lw_ratio, float angle)
+LightBlob::LightBlob(const vector<Point> &contour, RotatedRect &rotated_rect, float lw_ratio, float angle)
     : _rotated_rect(rotated_rect)
 {
     _angle = angle;

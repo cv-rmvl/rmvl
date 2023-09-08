@@ -5,9 +5,15 @@ k 步前向预估神符预测 {#tutorial_autoaim_spi_rune_predictor}
 @author 赵曦
 @date 2023/07/16
 
+@prev_tutorial{tutorial_autoaim_gyro_predictor}
+
+@next_tutorial{tutorial_autoaim_how_to_use_decider}
+
 @tableofcontents
 
 ------
+
+相关类 rm::SpiRunePredictor
 
 ### 使用此方法的前提
 
@@ -87,7 +93,7 @@ a_{m1}x_1+a_{m2}x_2+\dots+a_{mn}x_n&=&b_m\\
 A\pmb{x}=\pmb{b}\tag{2-2}
 \f]
 
-其中，\f$A\f$为方程组的系数矩阵，\f$\vec x\f$为待辨识的未知向量，\f$\vec b\f$为系数向量，一般情况下，\f$A\f$、\f$\vec b\f$的系数均可以通过给定或测量系统的输入或输出值来得到。为使得误差平方和最小，即
+其中，\f$A\f$为方程组的系数矩阵，\f$\pmb{x}\f$为待辨识的未知向量，\f$\pmb{b}\f$为系数向量，一般情况下，\f$A\f$、\f$\pmb{b}\f$的系数均可以通过给定或测量系统的输入或输出值来得到。为使得误差平方和最小，即
 
 \f[
 \sqrt{\sum_{i=1}^n\left(\pmb{a_i}\hat{x}-b_i\right)^2}=\parallel A\hat{x}-\pmb{b}\parallel_2=

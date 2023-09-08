@@ -4,4 +4,4 @@ float MAX_AREA_RATIO = 0.85f       # 最大面积比率
 float MIN_AREA_RATIO = 0.60f       # 最小面积比率
 float MAX_AREA_PERI_RATIO = 0.11f  # 最大面积周长比率
 float MIN_AREA_PERI_RATIO = 0.045f # 最小面积周长比率
-float MIN_AREA = 10.f              # 最小面积
+float MIN_AREA = 60.f              # 最小面积

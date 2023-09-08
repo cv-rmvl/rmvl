@@ -35,7 +35,7 @@ public:
     LightBlob(LightBlob &&) = delete;
     LightBlob(const LightBlob &) = delete;
     LightBlob(const cv::Point2f &, const cv::Point2f &, float);
-    LightBlob(std::vector<cv::Point> &, cv::RotatedRect &, float, float);
+    LightBlob(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
 
     //! 设置匹配信息
     inline void setMatchMessage(bool match) { _is_matched = match; }
@@ -52,7 +52,7 @@ public:
      * @param[in] contour 特征轮廓
      * @return 若构造成功则返回 LightBlob 的共享指针，否则返回 nullptr
      */
-    static std::shared_ptr<LightBlob> make_feature(std::vector<cv::Point> &contour);
+    static std::shared_ptr<LightBlob> make_feature(const std::vector<cv::Point> &contour);
 
     /**
      * @brief LightBlob 构造接口，使用若干参数
