@@ -25,39 +25,39 @@
 //! @addtogroup core
 //! @{
 
-#define HIGHLIGHT_(msg...)                   \
-    do                                       \
-    {                                        \
-        printf("\033[35m[   INFO   ] " msg); \
-        printf("\033[0m\n");                 \
+#define HIGHLIGHT_(msg...)                    \
+    do                                        \
+    {                                         \
+        printf("\033[35minfo - \033[0m" msg); \
+        printf("\n");                         \
     } while (false)
 
-#define WARNING_(msg...)                     \
-    do                                       \
-    {                                        \
-        printf("\033[33m[   WARN   ] " msg); \
-        printf("\033[0m\n");                 \
+#define WARNING_(msg...)                      \
+    do                                        \
+    {                                         \
+        printf("\033[33mwarn - \033[0m" msg); \
+        printf("\n");                         \
     } while (false)
 
-#define PASS_(msg...)                        \
-    do                                       \
-    {                                        \
-        printf("\033[32m[   PASS   ] " msg); \
-        printf("\033[0m\n");                 \
+#define PASS_(msg...)                         \
+    do                                        \
+    {                                         \
+        printf("\033[32minfo - \033[0m" msg); \
+        printf("\n");                         \
     } while (false)
 
 #define ERROR_(msg...)                       \
     do                                       \
     {                                        \
-        printf("\033[31m[   ERR    ] " msg); \
-        printf("\033[0m\n");                 \
+        printf("\033[31m err - \033[0m" msg); \
+        printf("\n");                        \
     } while (false)
 
-#define INFO_(msg...)                \
-    do                               \
-    {                                \
-        printf("[   INFO   ] " msg); \
-        printf("\n");                \
+#define INFO_(msg...)          \
+    do                         \
+    {                          \
+        printf("info - " msg); \
+        printf("\n");          \
     } while (false)
 
 #ifdef NDEBUG
