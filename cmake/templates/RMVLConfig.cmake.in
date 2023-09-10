@@ -1,25 +1,40 @@
 # ===================================================================================
-#   RMVL CMake 配置文件
+#  RMVL CMake 配置文件
 #
 #               ** 此文件自动生成，请勿修改 **
 #
-#   外部项目使用说明:
-#       在你的 CMakeLists.txt 中，添加以下语句:
-#       
-#       find_package(RMVL REQUIRED)
-#       target_include_directories(MY_TARGET_NAME PUBLIC ${RMVL_INCLUDE_DIRS})
-#       target_link_libraries(MY_TARGET_NAME ${RMVL_LIBS})
+#  外部项目使用说明:
+#    在你的 CMakeLists.txt 中，添加以下语句:
 #
-#       此文件将定义以下变量:
-#         - RMVL_LIBS           : RMVL 模块的所有导入目标的列表
-#         - RMVL_INCLUDE_DIRS   : RMVL 包含目录
-#         - RMVL_FOUND          : RMVL 是否被寻找到的标志位
+#    find_package(RMVL REQUIRED)
+#    target_include_directories(MY_TARGET_NAME PUBLIC ${RMVL_INCLUDE_DIRS})
+#    target_link_libraries(MY_TARGET_NAME ${RMVL_LIBS})
 #
-#       高级变量:
-#         - RMVL_INSTALL_PATH   : RMVL 被安装到的位置
-#         - RMVL_LIB_COMPONENTS : 给出的 RMVL 模块列表
+#    此文件将定义以下变量:
+#      - RMVL_LIBS           : RMVL 模块的所有导入目标的列表
+#      - RMVL_INCLUDE_DIRS   : RMVL 包含目录
+#      - RMVL_FOUND          : RMVL 是否被寻找到的标志位
+#      - RMVL_VERSION        : 当前 RMVL 版本: "@RMVL_VERSION_PLAIN@"
+#      - RMVL_VERSION_MAJOR  : RMVL_VERSION 的主要版本
+#      - RMVL_VERSION_MINOR  : RMVL_VERSION 的次要版本
+#      - RMVL_VERSION_PATCH  : RMVL_VERSION 的修订版本
+#      - RMVL_VERSION_STATUS : 当前构建的开发状态
+#
+#    高级变量:
+#      - RMVL_INSTALL_PATH   : RMVL 被安装到的位置
+#      - RMVL_LIB_COMPONENTS : 给出的 RMVL 模块列表
 #
 # ===================================================================================
+
+# ======================================================
+#  版本相关变量
+# ======================================================
+set(RMVL_VERSION @RMVL_VERSION_PLAIN@)
+set(RMVL_VERSION_MAJOR @RMVL_VERSION_MAJOR@)
+set(RMVL_VERSION_MINOR @RMVL_VERSION_MINOR@)
+set(RMVL_VERSION_PATCH @RMVL_VERSION_PATCH@)
+set(RMVL_VERSION_TWEAK 0)
+set(RMVL_VERSION_STATUS "@RMVL_VERSION_STATUS@")
 
 include(FindPackageHandleStandardArgs)
 
@@ -33,6 +48,10 @@ set(__RMVL_INCLUDE_DIRS @RMVL_INCLUDE_DIRS_CONFIGCMAKE@)
 if(NOT OpenCV_FOUND)
     find_package(OpenCV REQUIRED)
 endif(NOT OpenCV_FOUND)
+
+# ======================================================
+#  安装配置
+# ======================================================
 
 # 头文件安装配置
 set(RMVL_INCLUDE_DIRS "")

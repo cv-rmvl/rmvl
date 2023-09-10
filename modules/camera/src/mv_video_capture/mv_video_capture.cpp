@@ -1,8 +1,6 @@
 /**
  * @file mv_video_capture.cpp
  * @author RoboMaster Vision Community
- *         zhaoxi
- *         黄裕炯 (961352855@qq.com)
  * @brief 工业相机驱动
  * @version 1.0
  * @date 2018-12-08

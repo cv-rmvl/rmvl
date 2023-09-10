@@ -13,7 +13,7 @@
 #include <string>
 
 #define RMVL_VERSION_MAJOR 1
-#define RMVL_VERSION_MINOR 0
+#define RMVL_VERSION_MINOR 1
 #define RMVL_VERSION_PATCH 0
 #define RMVL_VERSION_STATUS "-dev"
 

@@ -1,7 +1,6 @@
 /**
  * @file types.hpp
  * @author RoboMaster Vision Community
- * @author 黄裕炯 (dglz.hyj@qq.com)
  * @brief 常用状态类型定义
  * @version 2.0
  * @date 2023-05-27
