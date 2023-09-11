@@ -1,6 +1,9 @@
 name: CMake in Linux
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
