@@ -1,7 +1,6 @@
 name: Documentation - 文档
 description: |
   报告与文档相关的问题
-
   Report an issue related to the document
 labels: ["documentation"]
 
@@ -9,9 +8,9 @@ body:
 - type: markdown
   attributes:
     value: |
-      #### Thank you for contributing! Before submitting a doc issue, please make sure it has no duplicate by searching through [the existing and past issues](https://github.com/opencv/opencv/issues?page=1&q=is%3Aissue+sort%3Acreated-desc)
-
       #### 感谢您的贡献！在提交文档工单之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/RoboMaster-Vision/RMVL/issues?q=is%3Aopen)都没有解决。
+
+      #### Thank you for contributing! Before submitting a doc issue, please make sure it has no duplicate by searching through [the existing and past issues](https://github.com/opencv/opencv/issues?page=1&q=is%3Aissue+sort%3Acreated-desc)
 
 - type: textarea
   attributes:

@@ -1,7 +1,6 @@
 name: Feature request - 功能要求
 description: |
-  提交一个新的 RMVL 特性的请求 
-
+  提交一个新的 RMVL 特性的请求
   Submit a request for a new RMVL feature
 labels: ["feature"]
 
