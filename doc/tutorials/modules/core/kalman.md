@@ -12,7 +12,7 @@
 
 ------
 
-相关类 rm::KalmanFilterX
+相关类 rm::KalmanFilter
 
 ## 1. 卡尔曼滤波理论
 
@@ -215,12 +215,12 @@ z_1,\ z_2,\ z_3\ \dots\ z_n
 
 ### 2.1 如何配置
 
-在 CMakeLists.txt 中链接库
+首先必须要寻找 RMVL 包，即 `find_package(RMVL [OPTIONS])`，之后可直接在中使用在 CMakeLists.txt 中链接库
 
 ```cmake
 target_link_libraries(
     xxx
-    rmvl_kalman
+    rmvl_core
 )
 ```
 
@@ -229,16 +229,16 @@ target_link_libraries(
 #### 2.2.1 包含头文件
 
 ```cpp
-#include <rmvl/filter/kalman.hpp>
+#include <rmvl/core/kalman.hpp>
 ```
 
 #### 2.2.2 创建并初始化卡尔曼滤波器对象
 
 ```cpp
-KalmanFilterX<n, n> filter;
+KalmanFilter<state, meature, control> filter;
 filter.setR(/* ... */);
 filter.setQ(/* ... */);
-cv::Vec<float, n> init_vec = {/* ... */};
+cv::Vec<float, state> init_vec = {/* ... */};
 filter.init(init_vec, pred_err);
 ```
 

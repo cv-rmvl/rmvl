@@ -29,44 +29,42 @@ touch main.cpp CMakeLists.txt
 ##### 2.1 编写 main.cpp
 
 将以下内容写至 `main.cpp` 中
+
 ```cpp
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
 #include <rmvl/detector.hpp>
 
-using namespace std;
-using namespace cv;
-
 int main(int argc, char *argv[])
 {
-    Mat src = Mat::zeros(Size(1280, 1024), CV_8UC3);
+    cv::Mat src = cv::Mat::zeros(cv::Size(1280, 1024), CV_8UC3);
 
-    line(src, Point(450, 380), Point(440, 470), Scalar(0, 0, 255), 18);
-    line(src, Point(650, 400), Point(640, 490), Scalar(0, 0, 255), 18);
-    line(src, Point(850, 370), Point(870, 460), Scalar(0, 0, 255), 18);
+    cv::line(src, cv::Point(450, 380), cv::Point(440, 470), cv::Scalar(0, 0, 255), 18);
+    cv::line(src, cv::Point(650, 400), cv::Point(640, 490), cv::Scalar(0, 0, 255), 18);
+    cv::line(src, cv::Point(850, 370), cv::Point(870, 460), cv::Scalar(0, 0, 255), 18);
 
-    detect_ptr detector = ArmorDetector::make_detector();
-    vector<group_ptr> groups;
+    rm::detect_ptr detector = rm::ArmorDetector::make_detector();
+    std::vector<rm::group_ptr> groups;
 
-    detector->detect(groups, src, RED, GyroData(), getTickCount());
+    detector->detect(groups, src, rm::RED, rm::GyroData{}, cv::getTickCount());
     auto p_combos = detector.combos;
 
     INFO_("size of armors = %ld", p_combos.size());
     for (auto &p_combo : p_combos)
     {
         auto corners = p_combo->getCorners();
-        line(src, corners[0], corners[2], Scalar(0, 255, 0), 2);
-        line(src, corners[1], corners[3], Scalar(0, 255, 0), 2);
+        cv::line(src, corners[0], corners[2], cv::Scalar(0, 255, 0), 2);
+        cv::line(src, corners[1], corners[3], cv::Scalar(0, 255, 0), 2);
     }
 
-    namedWindow("rmvl_deploy_test: src", WINDOW_NORMAL);
-    resizeWindow("rmvl_deploy_test: src", Size(640, 512));
-    imshow("rmvl_deploy_test: src", src);
+    cv::namedWindow("rmvl_deploy_test: src", cv::WINDOW_NORMAL);
+    cv::resizeWindow("rmvl_deploy_test: src", cv::Size(640, 512));
+    cv::imshow("rmvl_deploy_test: src", src);
 
     HIGHLIGHT_("RMVL build Successfully!\n\n\t\t-------- "
                "press any key to exit this program. --------\n");
-    waitKey(0);
+    cv::waitKey(0);
 
     return 0;
 }
@@ -76,17 +74,17 @@ int main(int argc, char *argv[])
 
 将以下内容写至 `CMakeLists.txt` 中
 ```cmake
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.16)
+
 project(rmvl_deploy)
+
 find_package(RMVL REQUIRED)
+
 add_executable(demo main.cpp)
-target_include_directories(
-    demo
-    PUBLIC ${RMVL_INCLUDE_DIRS}
-)
+
 target_link_libraries(
     demo
-    ${RMVL_LIBS}
+    PRIVATE ${RMVL_LIBS}
 )
 ```
 

@@ -20,4 +20,4 @@
 
 #### 杂项
 
-- @subpage tutorial_document - 本教程描述了一些新颖的文档过程，以及介绍了实用的 Doxygen 特性
+- @subpage tutorial_document - 本教程描述了文档的生成过程，并且介绍了实用的 Doxygen 特性

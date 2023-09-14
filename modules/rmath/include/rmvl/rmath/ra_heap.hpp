@@ -32,7 +32,7 @@ template <typename Tp, typename Sequence = std::vector<Tp>, typename Compare = s
 class RaHeap
 {
 #if __cplusplus >= 201703L
-    static_assert(std::is_same<Tp, typename Sequence::value_type>::value,
+    static_assert(std::is_same_v<Tp, typename Sequence::value_type>,
                   "value_type must be the same as the underlying container");
 #endif // C++17
 
