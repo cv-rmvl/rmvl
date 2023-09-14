@@ -1,0 +1,69 @@
+name: Bug Report - 报告错误
+description: |
+  Create a report to help us reproduce and fix the bug.
+  创建一个报告来帮助我们重现并修复 Bug
+labels: ["Bug"]
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      #### Thank you for contributing! Before reporting a bug, please make sure the issue has no duplicate and hasn't been already addressed by searching through [the existing and past issues](https://github.com/RoboMaster-Vision/RMVL/issues?q=is%3Aopen).
+      #### 感谢您的贡献！在汇报 Bug 之前，请查看有无对应的 issue 已被打开，确保问题没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/RoboMaster-Vision/RMVL/issues?q=is%3Aopen)都没有解决。
+
+- type: textarea
+  attributes:
+    label: System Information - 系统配置信息
+    description: |
+      Please provide the following system information to help us diagnose the bug. For example:
+      请提供以下系统信息来帮助我们诊断 Bug，例如
+
+      // For example
+      RMVL version: 1.0.0
+      OpenCV version: 4.8.0
+      OS / Platform: Ubuntu 20.04
+      Compiler version: GCC 9.3.0
+
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Detailed description - 问题的详细描述
+    description: |
+      Please provide a clear and concise description of what the bug is and paste the error log below. It helps improving readability if the error log is wrapped in ```` ```triple quotes blocks``` ````.
+      请提供一个清晰和简洁的描述是什么错误，并粘贴错误日志下面。如果将错误日志包装在```` ```三引号块``` ````中，将有助于提高可读性。
+    placeholder: |
+      A clear and concise description of what the bug is.
+      关于 Bug 的清晰而简洁的描述。
+
+      ```
+      # error log - 错误日志
+      ```
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Steps to reproduce - 复现步骤
+    description: |
+      Please provide a minimal example to help us reproduce the bug. Code should be wrapped with ```` ```triple quotes blocks``` ```` to improve readability. If the code is too long, please attach as a file or create and link a public gist: https://gist.github.com.
+      请提供一个最小的例子，以帮助我们重现错误。代码应该用```` ```三引号块``` ````包装，以提高可读性。如果代码太长，请作为文件附加或创建并链接公共要点: https://gist.github.com。
+
+      Related data files (images, video, etc) should be attached below as well. If the data files are too big, feel free to upload them to a online drive, share them and put the link below.
+      相关数据文件（图像，视频等）也应附在下面，如果数据文件太大，请将它们上传到互联网上，并将链接分享在下面。
+    placeholder: |
+      ```cpp
+      # sample code to reproduce the bug - 复现 Bug 的示例代码
+      ```
+
+      Data files: [image](https://link/to/the/image), [video](htts://link/to/the/onnx/model)
+  validations:
+    required: true
+- type: checkboxes
+  attributes:
+    label: Issue submission checklist - 工单提交清单
+    options:
+      - label: I report the issue, it's not a question - 我报告了这个 Bug，但这不是个人疑问
+        required: true
+      - label: I checked the problem with documentation, open issues, etc and have not found any solution - 我用文档、未解决的问题等检查了问题，但没有找到任何解决方案
+      - label: I updated to the latest RMVL version and the issue is still there - 我更新到最新的 RMVL 版本，问题仍然存在
+      - label: There is reproducer code and related data files (videos, images, etc) - 我提供了相关代码和数据文件（视频，图像等）
