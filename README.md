@@ -2,9 +2,10 @@
 
 **RoboMaster 视觉库**
 
-|      构建配置       |                             状态                             |
-| :-----------------: | :----------------------------------------------------------: |
-| Ubuntu 20.04 x86_64 | [![CMake in Linux](https://github.com/RoboMaster-Vision/RMVL/actions/workflows/build-by-cmake.yml/badge.svg)](https://github.com/RoboMaster-Vision/RMVL/actions/workflows/build-by-cmake.yml) |
+|   构建配置   | 系统架构 |   编译器   |                             状态                             |
+| :----------: | :------: | :--------: | :----------------------------------------------------------: |
+| Ubuntu 20.04 |  x86_64  | GCC 9.4.0  | [![CMake in Linux](https://github.com/RoboMaster-Vision/RMVL/actions/workflows/build-by-cmake.yml/badge.svg)](https://github.com/RoboMaster-Vision/RMVL/actions/workflows/build-by-cmake.yml) |
+| Ubuntu 22.04 |  x86_64  | GCC 12.3.0 | [![CMake in Linux](https://github.com/RoboMaster-Vision/RMVL/actions/workflows/build-by-cmake.yml/badge.svg)](https://github.com/RoboMaster-Vision/RMVL/actions/workflows/build-by-cmake.yml) |
 
 RMVL 是面向 RoboMaster 赛事的视觉库，旨在打造适用范围最广、使用最简洁、架构最统一、功能最强大的视觉库，并且以此建立和谐的纯技术向的 RoboMaster 视觉开源社区。
 

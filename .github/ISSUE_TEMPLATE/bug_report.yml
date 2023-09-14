@@ -1,14 +1,16 @@
 name: Bug Report - 报告错误
 description: |
+  创建一个报告来帮助我们重现并修复错误
+  
   Create a report to help us reproduce and fix the bug.
-  创建一个报告来帮助我们重现并修复 Bug
-labels: ["Bug"]
+labels: ["bug"]
 
 body:
 - type: markdown
   attributes:
-    value: >
+    value: |
       #### Thank you for contributing! Before reporting a bug, please make sure the issue has no duplicate and hasn't been already addressed by searching through [the existing and past issues](https://github.com/RoboMaster-Vision/RMVL/issues?q=is%3Aopen).
+
       #### 感谢您的贡献！在汇报 Bug 之前，请查看有无对应的 issue 已被打开，确保问题没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/RoboMaster-Vision/RMVL/issues?q=is%3Aopen)都没有解决。
 
 - type: textarea

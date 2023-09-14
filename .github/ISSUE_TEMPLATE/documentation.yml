@@ -1,25 +1,27 @@
 name: Documentation - 文档
 description: |
-  Report an issue related to the [document](https://vision.scutbot.cn/RMVL)
-  报告与[文档](https://vision.scutbot.cn/RMVL)相关的问题
-labels: ["Doc"]
+  报告与文档相关的问题
+
+  Report an issue related to the document
+labels: ["documentation"]
 
 body:
 - type: markdown
   attributes:
-    value: >
+    value: |
       #### Thank you for contributing! Before submitting a doc issue, please make sure it has no duplicate by searching through [the existing and past issues](https://github.com/opencv/opencv/issues?page=1&q=is%3Aissue+sort%3Acreated-desc)
+
       #### 感谢您的贡献！在提交文档工单之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/RoboMaster-Vision/RMVL/issues?q=is%3Aopen)都没有解决。
 
 - type: textarea
   attributes:
     label: Describe the doc issue - 描述文档的问题
-    description: >
-      Please provide a clear and concise description of what content in [document](https://vision.scutbot.cn/RMVL) is an issue. Note that there are multiple active branches, such as master, so please specify the branch with the problem.
+    description: |
       请清晰、简明地说明[文档](https://vision.scutbot.cn/RMVL)中的哪些内容存在问题。请注意会有多个分支，如 master，因此请指明出现问题的分支。
+      Please provide a clear and concise description of what content in [document](https://vision.scutbot.cn/RMVL) is an issue. Note that there are multiple active branches, such as master, so please specify the branch with the problem.
     placeholder: |
-      A clear and concise description of what content in [document](https://vision.scutbot.cn/RMVL) is an issue.
       对[文档](https://vision.scutbot.cn/RMVL)中的内容进行清晰而简洁的描述。
+      A clear and concise description of what content in [document](https://vision.scutbot.cn/RMVL) is an issue.
 
       Link to the doc: https://vision.scutbot.cn/RMVL/master/df/d41/classrm_1_1Armor.html
   validations:
@@ -27,6 +29,6 @@ body:
 - type: textarea
   attributes:
     label: Fix suggestion - 解决建议
-    description: >
-      Tell us how we could improve the documentation in this regard.
+    description: |
       请告诉我们如何改进这方面的文档。
+      Tell us how we could improve the documentation in this regard.
