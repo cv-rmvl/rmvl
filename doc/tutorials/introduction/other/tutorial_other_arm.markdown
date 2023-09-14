@@ -12,7 +12,7 @@
 
 * Linux 主机
 
-* ![img](https://img.shields.io/badge/CMake-3.19+-green)
+* ![img](https://img.shields.io/badge/CMake-3.16+-green)
 
 * ![img](https://img.shields.io/badge/OpenCV_for_ARM-4.2.0+-red) [点击此处下载最新发行版](https://github.com/opencv/opencv/releases/latest)
 
