@@ -1,5 +1,5 @@
 /**
- * @file camera_define.h
+ * @file definitions.h
  * @author RoboMaster Vision Community
  * @brief
  * @version 1.0

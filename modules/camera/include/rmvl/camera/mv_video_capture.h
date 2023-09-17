@@ -15,7 +15,7 @@
 
 #include <CameraApi.h>
 
-#include "camera_define.h"
+#include "definitions.h"
 
 namespace rm
 {

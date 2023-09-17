@@ -109,7 +109,7 @@ private:
  *   - `[2]`: 靶心环最远离神符中心的点
  *   - `[3]`: 靶心环与角点[0][2]的中垂线的交点（顺时针）
  *   - `[4]`: 神符中心点
- * - `getPnP` 数据仅直线距离 `distance` 有效
+ * - `getExtrinsics` 数据仅直线距离 `distance` 有效
  * - `getCenter` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征 `at(1)`
  */
 using rune_ptr = std::shared_ptr<Rune>;

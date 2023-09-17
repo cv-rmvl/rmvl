@@ -1,7 +1,7 @@
 /**
- * @file result_pnp.hpp
+ * @file parameters.hpp
  * @author RoboMaster Vision Community
- * @brief PnP数据
+ * @brief 相机内外参数定义
  * @version 0.1
  * @date 2023-01-12
  *
@@ -16,8 +16,9 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core/eigen.hpp>
 
-#include "rmvlpara/rmath.hpp"
-#include "uty_math.hpp"
+#include "rmvl/rmath/uty_math.hpp"
+
+#include "rmvlpara/camera.hpp"
 
 namespace rm
 {
@@ -25,11 +26,9 @@ namespace rm
 //! @addtogroup rmath
 //! @{
 
-/**
- * @brief pnp 姿态解算
- */
+//! 相机外参
 template <typename Tp = float>
-class ResultPnP
+class CameraExtrinsics
 {
     Tp _yaw = 0;
     Tp _pitch = 0;
@@ -104,9 +103,9 @@ private:
         // 类型转换
         cv2eigen(_r, rotated_matrix);
         // 获取欧拉角
-        Eigen::Matrix<Tp, 3, 1> euler_angles = rotated_matrix.eulerAngles(para::rmath_param.EULER_0,
-                                                                          para::rmath_param.EULER_1,
-                                                                          para::rmath_param.EULER_2);
+        Eigen::Matrix<Tp, 3, 1> euler_angles = rotated_matrix.eulerAngles(para::camera_param.EULER_0,
+                                                                          para::camera_param.EULER_1,
+                                                                          para::camera_param.EULER_2);
         _roll = rad2deg(euler_angles[2]);
         _pitch = rad2deg(euler_angles[1]);
         _yaw = rad2deg(euler_angles[0]);

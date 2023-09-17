@@ -1,5 +1,5 @@
 /**
- * @file camera_logging.h
+ * @file logging.h
  * @author RoboMaster Vision Community
  * @brief
  * @version 1.0

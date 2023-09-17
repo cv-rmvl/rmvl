@@ -24,7 +24,6 @@
 #ifdef HAVE_RMVL_RMATH
 #include "rmath/uty_math.hpp"
 
-#include "rmath/result_pnp.hpp"
 #include "rmath/transform.h"
 #include "rmath/ew_topsis.hpp"
 

@@ -1,6 +1,6 @@
 rmvl_add_module(
     combo INTERFACE
-    DEPENDS feature types rmath
+    DEPENDS feature types camera
 )
 
 # armor
@@ -10,7 +10,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
     armor
-    DEPENDS combo light_blob camera
+    DEPENDS combo light_blob 
 )
 
 # rune
@@ -20,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
     rune
-    DEPENDS combo rune_center rune_target camera
+    DEPENDS combo rune_center rune_target
 )
 
 rmvl_generate_module_para(combo)

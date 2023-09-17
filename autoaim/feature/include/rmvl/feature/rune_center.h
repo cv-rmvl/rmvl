@@ -25,7 +25,7 @@ class RuneCenter : public feature
 private:
     std::vector<cv::Point> _contour; //!< 轮廓点集
     cv::RotatedRect _rotated_rect;   //!< 旋转矩形
-    float _ratio = 0.f;              //!< 长宽比
+    float _ratio{};                  //!< 长宽比
 
 public:
     RuneCenter(const RuneCenter &) = delete;

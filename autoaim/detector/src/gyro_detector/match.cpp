@@ -129,7 +129,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
             for (size_t i = 0; i < combo_size; i++)
             {
                 combo_ptr p_combo = combo_vec[i];
-                combos_t[i] = p_combo->getPNP().tvec();
+                combos_t[i] = p_combo->getExtrinsics().tvec();
                 combos_P[i] = Armor::cast(p_combo)->getPose();
                 combos_r[i] = gyro_group_param.INIT_RADIUS;
             }
@@ -282,7 +282,7 @@ void GyroDetector::matchOneGroup(group_ptr group, const std::vector<combo_ptr> &
     sort(trackers.begin(), trackers.end(),
          [](const tracker_ptr &lhs, const tracker_ptr &rhs)
          {
-             return lhs->getPNP().distance() < rhs->getPNP().distance();
+             return lhs->getExtrinsics().distance() < rhs->getExtrinsics().distance();
          });
     // 待匹配参考 tracker 的大小
     size_t ref_size = trackers.size();

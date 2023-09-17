@@ -33,7 +33,7 @@ void GyroTracker::initFilter()
     // 初始化位置滤波器
     _center3d_filter.setR(gyro_tracker_param.POSITION_R);
     _center3d_filter.setQ(gyro_tracker_param.POSITION_Q);
-    const auto &tvec = first_combo->getPNP().tvec();
+    const auto &tvec = first_combo->getExtrinsics().tvec();
     Matx61f init_position_vec = {tvec(0), tvec(1), tvec(2), 0, 0, 0};
     _center3d_filter.init(init_position_vec, 1e-2);
     // 初始化姿态滤波器
@@ -102,20 +102,20 @@ void GyroTracker::updatePositionFilter()
     // 距离变化速度
     Vec3f delta_tvec = 0.f;
     if (_combo_deque.size() >= 4)
-        delta_tvec = (at(0)->getPNP().tvec() + at(1)->getPNP().tvec() -
-                      at(2)->getPNP().tvec() - at(3)->getPNP().tvec()) /
+        delta_tvec = (at(0)->getExtrinsics().tvec() + at(1)->getExtrinsics().tvec() -
+                      at(2)->getExtrinsics().tvec() - at(3)->getExtrinsics().tvec()) /
                      (4.f * t);
     else if (_combo_deque.size() > 1 && _combo_deque.size() < 4)
-        delta_tvec = (front()->getPNP().tvec() - back()->getPNP().tvec()) /
+        delta_tvec = (front()->getExtrinsics().tvec() - back()->getExtrinsics().tvec()) /
                      (static_cast<float>(_combo_deque.size() - 1) * t);
     // 预测
     _center3d_filter.predict();
     // 更新
-    Vec3f tvec = at(0)->getPNP().tvec();
+    Vec3f tvec = at(0)->getExtrinsics().tvec();
     Matx61f correct_position = _center3d_filter.correct({tvec[0], tvec[1], tvec[2],
                                                          delta_tvec[0], delta_tvec[1], delta_tvec[2]});
     Vec3f correct_tvec = {correct_position(0), correct_position(1), correct_position(2)};
-    _pnp_data.tvec(correct_tvec);
+    _extrinsic.tvec(correct_tvec);
 }
 
 void GyroTracker::updatePoseFilter()
