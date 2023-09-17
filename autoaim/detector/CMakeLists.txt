@@ -33,6 +33,13 @@ rmvl_add_module(
     DEPENDS detector rune_group
 )
 
+# tag_detector
+rmvl_add_module(
+    tag_detector
+    DEPENDS detector
+    EXTERNAL_SOURCE common
+)
+
 rmvl_generate_module_para(detector)
 
 # build the test program
