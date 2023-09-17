@@ -29,7 +29,7 @@ private:
     cv::RotatedRect _rotated_rect; //!< 旋转矩形
     cv::Point2f _left;             //!< 左顶点
     cv::Point2f _right;            //!< 右顶点
-    bool _is_matched = false;      //!< 是否匹配标志位
+    bool _is_matched{};            //!< 是否匹配标志位
 
 public:
     Pilot(const Pilot &) = delete;

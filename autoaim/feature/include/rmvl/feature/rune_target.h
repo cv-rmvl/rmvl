@@ -25,9 +25,9 @@ class RuneTarget : public feature
 private:
     std::vector<cv::Point> _contour; //!< 轮廓点集
     cv::RotatedRect _rotated_rect;   //!< 旋转矩形
-    float _ratio = 0.f;              //!< 长宽比
-    bool _is_active = false;         //!< 是否处于激活状态
-    float _radius = 0.f;             //!< 半径
+    float _ratio{};                  //!< 长宽比
+    bool _is_active{};               //!< 是否处于激活状态
+    float _radius{};                 //!< 半径
 
     struct ContourPoint
     {

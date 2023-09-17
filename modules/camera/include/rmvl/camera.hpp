@@ -25,7 +25,9 @@
 #include <rmvl/rmvl_modules.hpp>
 
 #ifdef HAVE_RMVL_CAMERA
-#include "camera/camera_define.h"
+#include "camera/definitions.h"
+#include "camera/logging.h"
+#include "camera/parameters.hpp"
 
 #ifdef HAVE_RMVL_MV_VIDEO_CAPTURE
 #include "camera/mv_video_capture.h"

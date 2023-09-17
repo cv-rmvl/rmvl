@@ -9,7 +9,7 @@
  *
  */
 
-#include "rmvl/camera/camera_logging.h"
+#include "rmvl/camera/logging.h"
 #include "rmvl/camera/hik_video_capture.h"
 
 using namespace rm;

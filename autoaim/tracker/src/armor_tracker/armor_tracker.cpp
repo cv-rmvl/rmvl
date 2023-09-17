@@ -25,7 +25,7 @@ void ArmorTracker::updateData(const combo_ptr &p_combo)
     _angle = p_combo->getHeight();
     _corners = p_combo->getCorners();
     _center = p_combo->getCenter();
-    _pnp_data = p_combo->getPNP();
+    _extrinsic = p_combo->getExtrinsics();
 }
 
 ArmorTracker::ArmorTracker(const combo_ptr &p_armor)

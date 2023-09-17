@@ -25,9 +25,9 @@ class group
 protected:
     std::vector<tracker_ptr> _trackers; //!< 同组追踪器
     cv::Point2f _center;                //!< 序列组中心
-    bool _is_tracked = false;           //!< 是否为目标序列组
-    uint32_t _vanish_num = 0;           //!< 丢帧数量
-    RMStatus _type;                     //!< 序列组各状态
+    bool _is_tracked{};                 //!< 是否为目标序列组
+    uint32_t _vanish_num{};             //!< 丢帧数量
+    RMStatus _type{};                   //!< 序列组各状态
 
 public:
     group() = default;

@@ -15,13 +15,12 @@
 
 #include "rmvlpara/camera.hpp"
 #include "rmvlpara/combo/armor.h"
-#include "rmvlpara/rmath.hpp"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
 using namespace cv;
+using namespace rm;
 using namespace std;
 using namespace para;
-using namespace rm;
 
 int GyroGroup::calcArmorNum(const vector<combo_ptr> &ref_combos)
 {
@@ -112,9 +111,9 @@ void GyroGroup::getGroupInfo(const vector<combo_ptr> &visible_combos, vector<Tra
          });
     for (size_t i = 0; i < visible_num; ++i)
     {
-        Rs[i] = operate_combos[i]->getPNP().R();
+        Rs[i] = operate_combos[i]->getExtrinsics().R();
         Ps[i] = Armor::cast(operate_combos[i])->getPose();
-        ts[i] = operate_combos[i]->getPNP().tvec();
+        ts[i] = operate_combos[i]->getExtrinsics().tvec();
         rs[i] = gyro_group_param.INIT_RADIUS;
     }
 

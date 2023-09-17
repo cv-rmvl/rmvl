@@ -49,11 +49,11 @@ ArmorSizeType Armor::matchArmorType()
         return ArmorSizeType::BIG;
 }
 
-ResultPnP<float> Armor::calculatePnPData(const Matx33f &cameraMatrix, const Matx51f &distcoeff, const GyroData &gyro_data)
+CameraExtrinsics<float> Armor::calculateExtrinsic(const Matx33f &cameraMatrix, const Matx51f &distcoeff, const GyroData &gyro_data)
 {
-    Vec3f rvec;                   // 旋转向量
-    Vec3f tvec;                   // 平移向量
-    ResultPnP<float> pnp_message; // 存储 PNP 信息
+    Vec3f rvec;                        // 旋转向量
+    Vec3f tvec;                        // 平移向量
+    CameraExtrinsics<float> extrinsic; // 存储相机外参
     // DEBUG_INFO_("Armor: %s, armor_type: %s", _func_, _type.ArmorSizeTypeID == ArmorSizeType::SMALL ? "SMALL" : "BIG");
     _type.ArmorSizeTypeID == ArmorSizeType::SMALL
         ? solvePnP(armor_param.SMALL_ARMOR, _corners, cameraMatrix, distcoeff, rvec, tvec, false, SOLVEPNP_IPPE)
@@ -64,10 +64,10 @@ ResultPnP<float> Armor::calculatePnPData(const Matx33f &cameraMatrix, const Matx
     Matx33f gyro_rmat;
     Vec3f gyro_tvec;
     Armor::cameraConvertToGyro(rmat, tvec, gyro_data, gyro_rmat, gyro_tvec);
-    pnp_message.R(gyro_rmat);
-    pnp_message.tvec(gyro_tvec);
+    extrinsic.R(gyro_rmat);
+    extrinsic.tvec(gyro_tvec);
 
-    return pnp_message;
+    return extrinsic;
 }
 
 void Armor::gyroConvertToCamera(const Matx33f &gyro_rmat, const Vec3f &gyro_tvec,

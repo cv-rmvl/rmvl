@@ -57,7 +57,7 @@ static void calcPrediction(const group_ptr &p_group, const tracker_ptr &p_tracke
         RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"gyro_group_ptr\"");
     // 旋转预测增量的分量计算
     float c = cos(rotangle), s = sin(rotangle);
-    const auto &tvec = p_tracker->getPNP().tvec();
+    const auto &tvec = p_tracker->getExtrinsics().tvec();
     Vec3f center2combo_pose = tvec - p_gyro_group->getCenter3D(); // 旋转中心到 combo 的向量
     Matx33f rot = {c, 0, s,
                    0, 1, 0,
@@ -96,7 +96,7 @@ static Point2f calculateHighSpeedBasicResponse(const group_ptr &target_group, co
     Point3f min_pitch3d;
     min_pitch3d.x = GyroGroup::cast(target_group)->getCenter3D()(0);
     for (const auto &p_target : target_group->data())
-        min_pitch3d.y += p_target->getPNP().tvec()(1);
+        min_pitch3d.y += p_target->getExtrinsics().tvec()(1);
     min_pitch3d.y /= static_cast<float>(target_group->data().size());
     min_pitch3d.z = predict_center3d.z;
     auto min_pitch_target2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeff, min_pitch3d);

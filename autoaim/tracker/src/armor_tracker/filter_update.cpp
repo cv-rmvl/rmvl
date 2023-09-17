@@ -24,7 +24,7 @@ void ArmorTracker::initFilter()
     // 初始化距离滤波器
     _distance_filter.setR(Matx22f::diag({0.01, 0.02})); // 距离为两帧差，误差为两倍
     _distance_filter.setQ(Matx22f::diag({0.01, 0.01})); // 距离的过程噪声随意调整
-    Matx21f init_dis_vec = {first_combo->getPNP().distance(), 0};
+    Matx21f init_dis_vec = {first_combo->getExtrinsics().distance(), 0};
     _distance_filter.init(init_dis_vec, 1e-2);
     // 初始化运动滤波器，相对角度和角速度
     _motion_filter.setR(armor_tracker_param.R); // 距离为两帧差，误差为两倍
@@ -41,14 +41,14 @@ void ArmorTracker::updateDistanceFilter()
     _distance_filter.setA(Matx22f{1, 1,
                                   0, 1});
     // 距离变化速度 / 差分
-    float current_distance = _combo_deque.front()->getPNP().distance();
+    float current_distance = _combo_deque.front()->getExtrinsics().distance();
     float delta_distance = current_distance - _last_distance;
     // 预测
     _distance_filter.predict();
     // 更新
     Matx21f correct_vec = _distance_filter.correct({current_distance,
                                                     delta_distance});
-    _pnp_data.distance(correct_vec(0));
+    _extrinsic.distance(correct_vec(0));
     _last_distance = correct_vec(0);
 }
 

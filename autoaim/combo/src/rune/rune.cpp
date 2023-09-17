@@ -72,7 +72,7 @@ Rune::Rune(const rune_target_ptr &p_target, const rune_center_ptr &p_center, con
     // 计算 pitch 的绝对目标转角
     double absolute_angle = _relative_angle.y + _gyro_data.rotation.pitch;
     // 计算距离
-    _pnp_data.distance(rune_param.RUNE_DISTANCE * sec(deg2rad(absolute_angle)));
+    _extrinsic.distance(rune_param.RUNE_DISTANCE * sec(deg2rad(absolute_angle)));
     // ------------- 更新神符角度 -------------
     auto angle_vec = Rune::cameraConvertToVertical(p_target->getCenter() - p_center->getCenter(),
                                                    gyro_data.rotation.pitch);

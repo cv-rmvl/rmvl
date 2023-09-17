@@ -15,8 +15,8 @@
 
 #include <MvCameraControl.h>
 
-#include "camera_define.h"
-#include "camera_logging.h"
+#include "definitions.h"
+#include "logging.h"
 
 namespace rm
 {

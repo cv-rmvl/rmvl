@@ -78,7 +78,7 @@ public:
     static inline void loadSVM(const std::string &path) { _svm = cv::ml::SVM::load(path); }
 
     /**
-     * @brief 装甲板 PNP 信息从陀螺仪坐标系转化为相机坐标系
+     * @brief 装甲板相机外参从陀螺仪坐标系转化为相机坐标系
      *
      * @param[in] gyro_rmat 陀螺仪坐标系下的装甲板旋转矩阵
      * @param[in] gyro_tvec 陀螺仪坐标系下的装甲板平移向量
@@ -90,7 +90,7 @@ public:
                                     const GyroData &gyro_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec);
 
     /**
-     * @brief 装甲板 PNP 信息从相机坐标系转化为陀螺仪坐标系
+     * @brief 装甲板相机外参从相机坐标系转化为陀螺仪坐标系
      *
      * @param[in] cam_rmat 相机坐标系下的装甲板旋转矩阵
      * @param[in] cam_tvec 相机坐标系下的装甲板平移向量
@@ -133,8 +133,8 @@ public:
     inline ArmorSizeType getArmorType() { return _type.ArmorSizeTypeID; }
     //! 设置机器人类型 RobotType
     inline void setType(RobotType stat) { _type.RobotTypeID = stat; }
-    //! 设置 PnP 信息
-    inline void setPNP(const ResultPnP<float> &pnp) { _pnp_data = pnp; }
+    //! 设置相机外参
+    inline void setExtrinsic(const CameraExtrinsics<float> &extrinsic) { _extrinsic = extrinsic; }
     //! 获取装甲板姿态法向量
     inline const cv::Vec2f &getPose() const { return _pose; }
 
@@ -142,12 +142,12 @@ private:
     /**
      * @brief 获取装甲板的位姿
      *
-     * @param[in] cam_matrix 相机内参，用于解算pnp
-     * @param[in] distcoeff 相机畸变参数，用于解算pnp
+     * @param[in] cam_matrix 相机内参，用于解算相机外参
+     * @param[in] distcoeff 相机畸变参数，用于解算相机外参
      * @param[in] gyro_data 陀螺仪数据
-     * @return ResultPnP - PnP 姿态解算信息
+     * @return CameraExtrinsics - 相机外参
      */
-    ResultPnP<float> calculatePnPData(const cv::Matx33f &cam_matrix, const cv::Matx51f &distcoeff, const GyroData &gyro_data);
+    CameraExtrinsics<float> calculateExtrinsic(const cv::Matx33f &cam_matrix, const cv::Matx51f &distcoeff, const GyroData &gyro_data);
 
     /**
      * @brief 用来确定装甲板的种类 (大装甲或者小装甲)

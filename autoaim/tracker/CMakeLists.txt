@@ -1,5 +1,5 @@
 rmvl_add_module(
-    tracker INTERFACE
+    tracker
     DEPENDS combo
 )
 

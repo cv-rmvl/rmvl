@@ -1,8 +1,5 @@
 find_package(Eigen3 REQUIRED)
 
-rmvl_generate_para(
-    rmath
-)
 rmvl_add_module(
     rmath
     DEPENDS para core

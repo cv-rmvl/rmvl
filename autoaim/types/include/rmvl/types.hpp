@@ -80,12 +80,12 @@ enum class CompensateType : uint8_t
 //! 状态类型
 struct RMStatus
 {
-    RuneType RuneTypeID = RuneType::UNKNOWN;                         //!< 能量机关激活类型
-    MoveType MoveTypeID = MoveType::UNKNOWN;                         //!< 运动类型
-    ArmorSizeType ArmorSizeTypeID = ArmorSizeType::UNKNOWN;          //!< 装甲板大小类型
-    TargetChangeType TargetChangeTypeID = TargetChangeType::UNKNOWN; //!< 目标切换类型
-    CompensateType CompensateTypeID = CompensateType::UNKNOWN;       //!< 强制补偿类型
-    RobotType RobotTypeID = RobotType::UNKNOWN;                      //!< 机器人类型
+    RuneType RuneTypeID{};                 //!< 能量机关激活类型
+    MoveType MoveTypeID{};                 //!< 运动类型
+    ArmorSizeType ArmorSizeTypeID{};       //!< 装甲板大小类型
+    TargetChangeType TargetChangeTypeID{}; //!< 目标切换类型
+    CompensateType CompensateTypeID{};     //!< 强制补偿类型
+    RobotType RobotTypeID{};               //!< 机器人类型
 
     RMStatus() = default;
 
@@ -104,7 +104,16 @@ struct RMStatus
      * @return 字符串类型
      */
     template <typename Tp>
-    static inline std::string to_string(Tp type) { return std::to_string(static_cast<uint8_t>(type)); }
+    static std::string to_string(Tp type) { return std::to_string(static_cast<uint8_t>(type)); }
+
+    /**
+     * @brief 将机器人类型转化为 `std::string` 类型
+     *
+     * @tparam Tp 数据类型
+     * @param[in] type RobotType 类型
+     * @return 字符串类型
+     */
+    static std::string to_string(RobotType type);
 };
 
 //! @} types

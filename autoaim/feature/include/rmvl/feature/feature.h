@@ -25,9 +25,9 @@ namespace rm
 class feature
 {
 protected:
-    float _width = 0.f;                //!< 特征宽度
-    float _height = 0.f;               //!< 特征高度
-    float _angle = 0.f;                //!< 特征角度
+    float _width{};                    //!< 特征宽度
+    float _height{};                   //!< 特征高度
+    float _angle{};                    //!< 特征角度
     cv::Point2f _center;               //!< 特征中心点
     std::vector<cv::Point2f> _corners; //!< 特征角点
 
@@ -51,6 +51,21 @@ inline feature::~feature() = default;
 
 //! 特征共享指针
 using feature_ptr = std::shared_ptr<feature>;
+
+//! 默认图像特征，仅表示一个孤立的点 `cv::Point2f`
+class DefaultFeature final : public feature
+{
+public:
+    DefaultFeature(const cv::Point2f &p) : feature() { _center = p, _corners = {p}; }
+
+    /**
+     * @brief DefaultFeature 构造接口
+     *
+     * @param[in] p 孤立的二维点
+     * @return DefaultFeature 共享指针
+     */
+    inline static std::shared_ptr<DefaultFeature> make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
+};
 
 //! @} feature
 

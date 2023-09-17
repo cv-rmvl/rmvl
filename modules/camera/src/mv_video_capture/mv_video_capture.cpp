@@ -14,7 +14,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/mv_video_capture.h"
-#include "rmvl/camera/camera_logging.h"
+#include "rmvl/camera/logging.h"
 
 using namespace rm;
 using namespace std;
