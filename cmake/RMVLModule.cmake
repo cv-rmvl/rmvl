@@ -89,7 +89,7 @@ endfunction(rmvl_install_directories)
 # ----------------------------------------------------------------------------
 macro(rmvl_add_module _name)
     # Add module options
-    set(multi_args DEPENDS EXTRA_HEADER EXTERNAL)
+    set(multi_args DEPENDS EXTRA_HEADER EXTRA_SOURCE EXTERNAL)
     cmake_parse_arguments(MD "INTERFACE" "" "${multi_args}" ${ARGN})
 
     # Module information
@@ -127,18 +127,24 @@ macro(rmvl_add_module _name)
             else()
                 set(para_dir ${CMAKE_CURRENT_LIST_DIR}/src/para)
             endif()
-
             set(para_src "")
             if(IS_DIRECTORY ${para_dir})
                 if(para_dir)
                     aux_source_directory(${para_dir} para_src)
                 endif()
+
+            # Bind extra source files
+            set(extra_src "")
+            if(MD_EXTRA_SOURCE)
+                aux_source_directory(${module_dir}/${MD_EXTRA_SOURCE} extra_src)
+            endif()
+
             endif(IS_DIRECTORY ${para_dir})
             # Build to *.so / *.a
             if(BUILD_SHARED_LIBS)
-                add_library(${the_module} SHARED ${target_src} ${para_src})
+                add_library(${the_module} SHARED ${target_src} ${para_src} ${extra_src})
             else()
-                add_library(${the_module} STATIC ${target_src} ${para_src})
+                add_library(${the_module} STATIC ${target_src} ${para_src} ${extra_src})
             endif()
         endif(MD_INTERFACE)
 
