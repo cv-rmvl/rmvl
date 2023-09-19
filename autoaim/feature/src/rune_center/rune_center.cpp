@@ -12,7 +12,6 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/feature/rune_center.h"
-#include "rmvl/feature/rune/rune_logging.h"
 
 #include "rmvlpara/feature/rune_center.h"
 
@@ -62,25 +61,25 @@ shared_ptr<RuneCenter> RuneCenter::make_feature(vector<Point> &contour)
     RotatedRect rotated_rect = fitEllipse(contour);
 
     // 1.绝对面积判断
-    DEBUG_RUNE_INFO_("center 1.rotated_rect_area : %f", rotated_rect.size.area());
+    DEBUG_INFO_("center 1.rotated_rect_area : %f", rotated_rect.size.area());
     if (rotated_rect.size.area() < rune_center_param.MIN_AREA || rotated_rect.size.area() > rune_center_param.MAX_AREA)
     {
-        DEBUG_RUNE_WARNING_("center 1.rotated_rect_area : fail");
+        DEBUG_WARNING_("center 1.rotated_rect_area : fail");
         return nullptr;
     }
-    DEBUG_RUNE_PASS_("center 1.rotated_rect_area : pass");
+    DEBUG_PASS_("center 1.rotated_rect_area : pass");
 
     // 2.比例判断
     float width = max(rotated_rect.size.width, rotated_rect.size.height);
     float height = min(rotated_rect.size.width, rotated_rect.size.height);
     float ratio = width / height;
-    DEBUG_RUNE_INFO_("center 2.center_ratio : %f", ratio);
+    DEBUG_INFO_("center 2.center_ratio : %f", ratio);
     if (ratio > rune_center_param.MAX_RATIO || ratio < rune_center_param.MIN_RATIO)
     {
-        DEBUG_RUNE_WARNING_("center 2.center_ratio : fail");
+        DEBUG_WARNING_("center 2.center_ratio : fail");
         return nullptr;
     }
-    DEBUG_RUNE_PASS_("center 2.center_ratio : pass");
+    DEBUG_PASS_("center 2.center_ratio : pass");
 
     return make_shared<RuneCenter>(contour, rotated_rect);
 }

@@ -14,7 +14,6 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/detector/rune_detector.h"
-#include "rmvl/feature/rune/rune_logging.h"
 
 #include "rmvlpara/combo/rune.h"
 #include "rmvlpara/detector/rune_detector.h"
@@ -84,13 +83,13 @@ inline bool isHierarchyActive(const vector<vector<Point>> &contours, const vecto
         auto dis = getDistance(inner_center, outer_center);
         auto size = (outer.size.width + outer.size.height) / 2.;
         // 偏移与最大直径的比值
-        DEBUG_RUNE_INFO_("target 0.ratio : %f", dis / size);
+        DEBUG_INFO_("target 0.ratio : %f", dis / size);
         if (dis / size < rune_detector_param.CONCENTRICITY_RATIO)
         {
-            DEBUG_RUNE_PASS_("target 0.ratio : pass");
+            DEBUG_PASS_("target 0.ratio : pass");
             return true;
         }
-        DEBUG_RUNE_WARNING_("target 0.ratio : fail");
+        DEBUG_WARNING_("target 0.ratio : fail");
     }
     return false;
 }
@@ -125,13 +124,13 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
         auto dis = getDistance(inner_center, outer_center);
         auto size = (outer.size.width + outer.size.height) / 2.;
         // 偏移与最大直径的比值
-        DEBUG_RUNE_INFO_("center 0.ratio : %f", dis / size);
+        DEBUG_INFO_("center 0.ratio : %f", dis / size);
         if (dis / size > rune_detector_param.CONCENTRICITY_RATIO)
         {
-            DEBUG_RUNE_PASS_("center 0.ratio : pass");
+            DEBUG_PASS_("center 0.ratio : pass");
             return true;
         }
-        DEBUG_RUNE_WARNING_("center 0.ratio : fail");
+        DEBUG_WARNING_("center 0.ratio : fail");
         if (contours_num < 10)
             return true;
         return false;
@@ -157,18 +156,18 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         if (rune_area < rune_detector_param.MIN_CONTOUR_AREA ||
             rune_area > rune_detector_param.MAX_CONTOUR_AREA)
             continue;
-        DEBUG_RUNE_INFO_("--------------------------------------");
-        DEBUG_RUNE_INFO_("rune_feature_area %ld : %f", i, rune_area);
+        DEBUG_INFO_("--------------------------------------");
+        DEBUG_INFO_("rune_feature_area %ld : %f", i, rune_area);
         // ========================== 轮廓筛选 ==========================
         // 未激活神符靶心
         if (isHierarchyInactive(hierarchy, i))
         {
-            DEBUG_RUNE_INFO_("--------------------------------------");
-            DEBUG_RUNE_INFO_("target unactive");
+            DEBUG_INFO_("--------------------------------------");
+            DEBUG_INFO_("target unactive");
             rune_target_ptr p_target = RuneTarget::make_feature(contours[i], false);
             if (p_target != nullptr)
             {
-                DEBUG_RUNE_PASS_("target pass");
+                DEBUG_PASS_("target pass");
                 rune_targets.push_back(p_target);
                 continue;
             }
@@ -176,12 +175,12 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         // 已激活神符靶心
         if (isHierarchyActive(contours, hierarchy, i))
         {
-            DEBUG_RUNE_INFO_("--------------------------------------");
-            DEBUG_RUNE_INFO_("target active");
+            DEBUG_INFO_("--------------------------------------");
+            DEBUG_INFO_("target active");
             rune_target_ptr p_target = RuneTarget::make_feature(contours[i], true);
             if (p_target != nullptr)
             {
-                DEBUG_RUNE_PASS_("target pass");
+                DEBUG_PASS_("target pass");
                 rune_targets.push_back(p_target);
                 continue;
             }
@@ -189,20 +188,20 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         // 神符中心
         if (isHierarchyCenter(contours, hierarchy, i))
         {
-            DEBUG_RUNE_INFO_("--------------------------------------");
-            DEBUG_RUNE_INFO_("center");
+            DEBUG_INFO_("--------------------------------------");
+            DEBUG_INFO_("center");
             rune_center_ptr p_center = RuneCenter::make_feature(contours[i]);
             if (p_center != nullptr)
             {
-                DEBUG_RUNE_PASS_("center pass");
+                DEBUG_PASS_("center pass");
                 rune_centers.push_back(p_center);
                 continue;
             }
         }
     }
-    DEBUG_RUNE_INFO_("--------------------------------------");
-    DEBUG_RUNE_INFO_("rune rune_targets_size : %ld", rune_targets.size());
-    DEBUG_RUNE_INFO_("rune rune_centers_size : %ld", rune_centers.size());
+    DEBUG_INFO_("--------------------------------------");
+    DEBUG_INFO_("rune rune_targets_size : %ld", rune_targets.size());
+    DEBUG_INFO_("rune rune_centers_size : %ld", rune_centers.size());
     // 判空
     if (rune_targets.empty() || rune_centers.empty())
         return;
@@ -301,11 +300,11 @@ vector<rune_ptr> RuneDetector::getRune(const vector<rune_target_ptr> &rune_targe
     // 神符外侧、神符支架两两匹配
     for (const auto &p_target : rune_targets)
     {
-        DEBUG_RUNE_INFO_("--------------------------------------");
+        DEBUG_INFO_("--------------------------------------");
         rune_ptr rune = Rune::make_combo(p_target, p_center, _gyro_data, _tick);
         if (rune != nullptr)
         {
-            DEBUG_RUNE_PASS_("rune pass");
+            DEBUG_PASS_("rune pass");
             retval.push_back(rune);
         }
     }
