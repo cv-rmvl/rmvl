@@ -1,6 +1,6 @@
 rmvl_add_module(
-    combo INTERFACE
-    DEPENDS feature types camera
+    combo
+    DEPENDS feature camera
 )
 
 # armor

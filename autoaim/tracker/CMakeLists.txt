@@ -3,17 +3,17 @@ rmvl_add_module(
     DEPENDS combo
 )
 
-# ArmorTracker
+# planar_tracker
 rmvl_generate_para(
-    armor_tracker
+    planar_tracker
     MODULE tracker
 )
 rmvl_add_module(
-    armor_tracker
+    planar_tracker
     DEPENDS tracker armor 
 )
 
-# GyroTracker
+# gyro_tracker
 rmvl_generate_para(
     gyro_tracker
     MODULE tracker
@@ -23,7 +23,7 @@ rmvl_add_module(
     DEPENDS tracker armor 
 )
 
-# RuneTracker
+# rune_tracker
 rmvl_generate_para(
     rune_tracker
     MODULE tracker
@@ -39,7 +39,7 @@ rmvl_generate_module_para(tracker)
 if(BUILD_TESTS)
     rmvl_add_test(
         tracker Unit
-        DEPENDS armor_tracker rune_tracker gyro_tracker
+        DEPENDS planar_tracker rune_tracker gyro_tracker
         DEPEND_TESTS GTest::gtest_main
     )
 endif(BUILD_TESTS)

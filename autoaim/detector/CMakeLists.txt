@@ -10,7 +10,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
     armor_detector
-    DEPENDS detector ort armor_tracker
+    DEPENDS detector ort planar_tracker
 )
 
 # gyro_detector
@@ -34,6 +34,10 @@ rmvl_add_module(
 )
 
 # tag_detector
+rmvl_generate_para(
+    tag_detector
+    MODULE detector
+)
 rmvl_add_module(
     tag_detector
     DEPENDS detector

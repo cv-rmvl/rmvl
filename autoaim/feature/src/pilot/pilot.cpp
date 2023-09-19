@@ -14,7 +14,6 @@
 #include "rmvl/rmath.hpp"
 #include "rmvl/feature/pilot.h"
 
-#include "rmvlpara/camera.hpp"
 #include "rmvlpara/feature/pilot.h"
 
 using namespace cv;

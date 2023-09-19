@@ -110,9 +110,6 @@ Armor::Armor(light_blob_ptr &p_left, light_blob_ptr &p_right, const GyroData &gy
     _extrinsic = calculateExtrinsic(camera_param.cameraMatrix, camera_param.distCoeff, gyro_data);
     const auto &rmat = _extrinsic.R();
     _pose = normalize(Vec2f(rmat(0, 2), rmat(2, 2)));
-    // 更新灯条匹配标志位
-    p_left->setMatchMessage(true);
-    p_right->setMatchMessage(true);
     // 设置组合体的特征容器
     _features = {p_left, p_right};
     _tick = tick;

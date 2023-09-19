@@ -1,7 +1,7 @@
 /**
- * @file armor_tracker.h
+ * @file planar_tracker.h
  * @author RoboMaster Vision Community
- * @brief 装甲板追踪器头文件
+ * @brief 平面目标追踪器头文件
  * @version 1.0
  * @date 2021-08-21
  *
@@ -11,55 +11,55 @@
 
 #pragma once
 
-#include "rmvl/core/kalman.hpp"
 #include "rmvl/combo/armor.h"
+#include "rmvl/core/kalman.hpp"
 #include "tracker.h"
 
 namespace rm
 {
 
-//! @addtogroup armor_tracker
+//! @addtogroup planar_tracker
 //! @{
 
-//! 装甲模块追踪器
-class ArmorTracker final : public tracker
+//! 平面目标追踪器
+class PlanarTracker final : public tracker
 {
 private:
     KF22f _distance_filter;             //!< 距离滤波器
     KF44f _motion_filter;               //!< 运动滤波器
     float _last_distance = 0;           //!< 目标上一帧的距离
     std::deque<float> _relative_speeds; //!< 图像速度的容器
-    std::deque<RobotType> _type_deque;  //!< 装甲板状态队列（数字）
+    std::deque<RMStatus> _type_deque;   //!< 状态队列
 
 public:
     /**
      * @brief 构造，并初始化追踪器
      *
-     * @param[in] p_armor 第一帧组合体
+     * @param[in] p_combo 第一帧组合体
      */
-    explicit ArmorTracker(const combo_ptr &p_armor);
+    explicit PlanarTracker(const combo_ptr &p_combo);
 
     /**
-     * @brief 构建 ArmorTracker
+     * @brief 构建 PlanarTracker
      *
-     * @param[in] p_armor 第一帧装甲模块组合特征（不允许为空）
+     * @param[in] p_combo 第一帧平面目标组合特征（不允许为空）
      */
-    static inline std::shared_ptr<ArmorTracker> make_tracker(const combo_ptr &p_armor) { return std::make_shared<ArmorTracker>(p_armor); }
+    static inline std::shared_ptr<PlanarTracker> make_tracker(const combo_ptr &p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
 
     /**
      * @brief 更新时间序列
      *
-     * @param[in] p_armor 传入tracker的装甲
+     * @param[in] p_combo 传入 tracker 的平面目标
      * @param[in] time 时间戳
      * @param[in] gyro_data 云台数据
      */
-    void update(combo_ptr p_armor, int64 time, const GyroData &gyro_data) override;
+    void update(combo_ptr p_combo, int64 time, const GyroData &gyro_data) override;
 
 private:
     /**
      * @brief 将 combo 中的数据更新至 tracker
      *
-     * @param p_combo armor_ptr 指针
+     * @param p_combo combo_ptr 指针
      */
     void updateData(const combo_ptr &p_combo);
 
@@ -67,7 +67,7 @@ private:
     void initFilter();
 
     /**
-     * @brief 更新装甲板类型
+     * @brief 更新状态类型
      *
      * @param[in] stat 类型
      */
@@ -95,9 +95,9 @@ private:
     void vanishProcess(int64_t tick, const GyroData &gyro);
 };
 
-//! 装甲模块追踪器共享指针
-using armor_tracker_ptr = std::shared_ptr<ArmorTracker>;
+//! 平面目标追踪器共享指针
+using planar_tracker_ptr = std::shared_ptr<PlanarTracker>;
 
-//! @} armor_tracker
+//! @} planar_tracker
 
 } // namespace rm

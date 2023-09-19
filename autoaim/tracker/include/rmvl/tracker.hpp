@@ -12,7 +12,7 @@
 /**
  * @defgroup tracker 追踪器/特征组合时间序列（数据组件）
  * @{
- *     @defgroup armor_tracker 装甲板时间序列
+ *     @defgroup planar_tracker 平面目标时间序列
  *     @defgroup gyro_tracker 旋转装甲时间序列
  *     @defgroup rune_tracker 神符时间序列
  * @}
@@ -24,9 +24,9 @@
 
 #include "tracker/tracker.h"
 
-#ifdef HAVE_RMVL_ARMOR_TRACKER
-#include "tracker/armor_tracker.h"
-#endif //! HAVE_RMVL_ARMOR_TRACKER
+#ifdef HAVE_RMVL_PLANAR_TRACKER
+#include "tracker/planar_tracker.h"
+#endif //! HAVE_RMVL_PLANAR_TRACKER
 
 #ifdef HAVE_RMVL_GYRO_TRACKER
 #include "tracker/gyro_tracker.h"

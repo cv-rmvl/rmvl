@@ -122,6 +122,9 @@ public:
     void sync(const GyroData &, int64_t) override {}
 };
 
+//! 序列组共享指针
+using default_group_ptr = std::shared_ptr<DefaultGroup>;
+
 //! @} group
 
 } // namespace rm

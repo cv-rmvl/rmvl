@@ -15,6 +15,8 @@
 
 #include <opencv2/core/types.hpp>
 
+#include "rmvl/types.hpp"
+
 namespace rm
 {
 
@@ -31,6 +33,8 @@ protected:
     cv::Point2f _center;               //!< 特征中心点
     std::vector<cv::Point2f> _corners; //!< 特征角点
 
+    rm::RMStatus _type; //!< 状态类型信息
+
 public:
     virtual ~feature() = 0;
     //! 获取特征面积
@@ -44,7 +48,9 @@ public:
     //! 获取特征角度
     inline float getAngle() const { return _angle; }
     //! 获取特征角点
-    inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
+    inline const auto &getCorners() const { return _corners; }
+    //! 获取状态信息
+    inline const RMStatus &getType() { return _type; }
 };
 
 inline feature::~feature() = default;
@@ -66,6 +72,9 @@ public:
      */
     inline static std::shared_ptr<DefaultFeature> make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
 };
+
+//! 默认特征共享指针
+using default_feature_ptr = std::shared_ptr<DefaultFeature>;
 
 //! @} feature
 

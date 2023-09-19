@@ -1,6 +1,6 @@
 rmvl_add_module(
     feature INTERFACE
-    DEPENDS para core
+    DEPENDS para types core
 )
 
 # light_blob
@@ -20,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
     pilot
-    DEPENDS feature rmath camera
+    DEPENDS feature rmath
 )
 
 # rune_center

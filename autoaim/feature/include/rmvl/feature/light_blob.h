@@ -28,7 +28,6 @@ class LightBlob : public feature
     cv::RotatedRect _rotated_rect; //!< 旋转矩形
     cv::Point2f _top;              //!< 上顶点
     cv::Point2f _bottom;           //!< 下顶点
-    bool _is_matched = false;      //!< 是否匹配标志位
 
 public:
     LightBlob() = default;
@@ -37,10 +36,6 @@ public:
     LightBlob(const cv::Point2f &, const cv::Point2f &, float);
     LightBlob(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
 
-    //! 设置匹配信息
-    inline void setMatchMessage(bool match) { _is_matched = match; }
-    //! 获取匹配信息
-    inline bool getMatchMessage() { return _is_matched; }
     //! 获取灯条顶端点
     inline cv::Point2f getTopPoint() { return _top; }
     //! 获取灯条底端点
