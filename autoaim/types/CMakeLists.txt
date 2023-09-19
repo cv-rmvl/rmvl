@@ -1,5 +1,6 @@
 rmvl_add_module(
     types
+    DEPENDS core
 )
 
 # build the test program

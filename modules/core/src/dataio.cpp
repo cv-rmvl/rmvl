@@ -9,7 +9,7 @@
  *
  */
 
-#include <opencv2/core.hpp>
+#include <opencv2/core/persistence.hpp>
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/core/dataio.hpp"

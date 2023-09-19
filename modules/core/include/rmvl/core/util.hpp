@@ -46,11 +46,11 @@
         printf("\n");                         \
     } while (false)
 
-#define ERROR_(msg...)                       \
-    do                                       \
-    {                                        \
+#define ERROR_(msg...)                        \
+    do                                        \
+    {                                         \
         printf("\033[31m err - \033[0m" msg); \
-        printf("\n");                        \
+        printf("\n");                         \
     } while (false)
 
 #define INFO_(msg...)          \
@@ -233,7 +233,13 @@ const std::string &getBuildInformation();
 #define RMVL_DbgAssert(expr) RMVL_Assert(expr)
 #endif
 
+namespace rm
+{
+
 namespace reflect
+{
+
+namespace helper
 {
 
 //! Constructor helper
@@ -245,15 +251,16 @@ struct init
 
 template <std::size_t N>
 struct size_tag : size_tag<N - 1>
-{
-};
+{};
 template <>
 struct size_tag<0>
-{
-};
+{};
 
 #if __cplusplus < 202002L
-
+template <typename Tp>
+constexpr auto size(size_tag<12>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 12u; }
+template <typename Tp>
+constexpr auto size(size_tag<11>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 11u; }
 template <typename Tp>
 constexpr auto size(size_tag<10>) -> decltype(Tp{init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}, init{}}, 0u) { return 10u; }
 template <typename Tp>
@@ -279,10 +286,11 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 
 #endif
 
-} // namespace reflect
+} // namespace helper
 
 /**
  * @brief 获取指定类型的成员个数
+ * @note 成员个数不要超过 `12`
  *
  * @tparam Tp 聚合类类型
  * @return 成员个数
@@ -292,7 +300,7 @@ template <typename Tp>
 constexpr std::size_t size()
 {
     static_assert(std::is_aggregate_v<Tp>);
-    return reflect::size<Tp>(reflect::size_tag<10>{});
+    return helper::size<Tp>(helper::size_tag<10>{});
 }
 #else
 consteval std::size_t size(auto &&...args)
@@ -301,12 +309,13 @@ consteval std::size_t size(auto &&...args)
     if constexpr (!requires { Tp{args...}; })
         return sizeof...(args) - 1;
     else
-        return size<Tp>(args..., reflect::init{});
+        return size<Tp>(args..., helper::init{});
 }
 #endif
 
 /**
  * @brief 遍历聚合类的每一个数据成员
+ * @note 成员个数不要超过 `12`
  *
  * @tparam Tp 聚合类类型
  * @tparam Callable 可调用对象类型
@@ -317,7 +326,17 @@ template <typename Tp, typename Callable>
 void for_each(const Tp &val, Callable &&f)
 {
     static_assert(std::is_aggregate_v<Tp>);
-    if constexpr (size<Tp>() == 10u)
+    if constexpr (size<Tp>() == 12u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10), f(11);
+    }
+    else if constexpr (size<Tp>() == 11u)
+    {
+        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = val;
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10);
+    }
+    else if constexpr (size<Tp>() == 10u)
     {
         const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9);
@@ -368,5 +387,144 @@ void for_each(const Tp &val, Callable &&f)
         f(m0);
     }
 }
+
+/**
+ * @brief 判断两个聚合类数据是否相同
+ * @note 成员个数不要超过 `12`
+ *
+ * @tparam Tp 聚合类类型
+ * @param[in] lhs 左操作数
+ * @param[in] rhs 右操作数
+ */
+template <typename Tp>
+bool equal(const Tp &lhs, const Tp &rhs)
+{
+    static_assert(std::is_aggregate_v<Tp>);
+    if constexpr (size<Tp>() == 12u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9 && l10 == r10 && l11 == r11;
+    }
+    else if constexpr (size<Tp>() == 11u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9 && l10 == r10;
+    }
+    else if constexpr (size<Tp>() == 10u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9;
+    }
+    else if constexpr (size<Tp>() == 9u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8;
+    }
+    else if constexpr (size<Tp>() == 8u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5, l6, l7] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5, r6, r7] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7;
+    }
+    else if constexpr (size<Tp>() == 7u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5, l6] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5, r6] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6;
+    }
+    else if constexpr (size<Tp>() == 6u)
+    {
+        const auto &[l0, l1, l2, l3, l4, l5] = lhs;
+        const auto &[r0, r1, r2, r3, r4, r5] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5;
+    }
+    else if constexpr (size<Tp>() == 5u)
+    {
+        const auto &[l0, l1, l2, l3, l4] = lhs;
+        const auto &[r0, r1, r2, r3, r4] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4;
+    }
+    else if constexpr (size<Tp>() == 4u)
+    {
+        const auto &[l0, l1, l2, l3] = lhs;
+        const auto &[r0, r1, r2, r3] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3;
+    }
+    else if constexpr (size<Tp>() == 3u)
+    {
+        const auto &[l0, l1, l2] = lhs;
+        const auto &[r0, r1, r2] = rhs;
+        return l0 == r0 && l1 == r1 && l2 == r2;
+    }
+    else if constexpr (size<Tp>() == 2u)
+    {
+        const auto &[l0, l1] = lhs;
+        const auto &[r0, r1] = rhs;
+        return l0 == r0 && l1 == r1;
+    }
+    else if constexpr (size<Tp>() == 1u)
+    {
+        const auto &[l0] = lhs;
+        const auto &[r0] = rhs;
+        return l0 == r0;
+    }
+}
+
+} // namespace reflect
+
+/**
+ * @brief 专为聚合类添加的 hash 生成可调用对象
+ *
+ * @tparam Tp 聚合体类型
+ */
+template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
+struct hash_aggregate
+{
+    std::size_t operator()(const Tp &r) const
+    {
+        std::size_t retval{};
+        reflect::for_each(r, [&retval](const auto &val) {
+            // boost::hash_combine
+            retval = retval ^ (std::hash<std::remove_reference_t<decltype(val)>>{}(val) << 1);
+        });
+        return retval;
+    }
+};
+
+/**
+ * @brief 哈希生成函数类型 traits
+ * @note 类型别名 `hash_func`
+ * @tparam Tp 数据类型
+ */
+template <typename Tp, typename Enable = void>
+struct hash_traits;
+
+/**
+ * @brief 非聚合类哈希生成函数类型 traits
+ *
+ * @tparam Tp 数据类型
+ */
+template <typename Tp>
+struct hash_traits<Tp, std::enable_if_t<!std::is_aggregate_v<Tp>>>
+{
+    using hash_func = std::hash<Tp>;
+};
+
+/**
+ * @brief 聚合类哈希生成函数类型 traits
+ *
+ * @tparam Tp 数据类型
+ */
+template <typename Tp>
+struct hash_traits<Tp, std::enable_if_t<std::is_aggregate_v<Tp>>>
+{
+    using hash_func = hash_aggregate<Tp>;
+};
+
+} // namespace rm
 
 //! @} core
