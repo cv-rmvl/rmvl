@@ -18,7 +18,9 @@
 #include <numbers>
 #endif
 
-#include <opencv2/core.hpp>
+#include <opencv2/core/matx.hpp>
+
+#include "rmvl/core/util.hpp"
 
 namespace rm
 {
@@ -403,12 +405,11 @@ typename ForwardIterator::value_type calculateModeNum(ForwardIterator first, For
 {
     assert(first != last);
     using value_type = typename ForwardIterator::value_type;
-    std::unordered_map<value_type, std::size_t> hash_map;
+    std::unordered_map<value_type, std::size_t, typename hash_traits<value_type>::hash_func> hash_map;
     for (ForwardIterator _it = first; _it != last; ++_it)
         ++hash_map[*_it];
     return std::max_element(hash_map.begin(), hash_map.end(),
-                            [&](const auto &lhs, const auto &rhs)
-                            {
+                            [&](const auto &lhs, const auto &rhs) {
                                 return lhs.second < rhs.second;
                             })
         ->first;

@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <opencv2/core/types.hpp>
+
 #include "rmvl/core/util.hpp"
 #include "uty_math.hpp"
 

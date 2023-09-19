@@ -63,9 +63,9 @@ inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
 
 在使用上也和正常的函数完全一致。
 
-#### 1.2.2 特有属性
+#### 1.2.2 派生类属性
 
-对于一些具体的特征特有的属性，比如装甲板灯条 rm::LightBlob 的上顶点，使用上需要额外注意类型转换的内容。一般我们在一些功能模块中，例如 @ref detector 中直接操纵的都是抽象类的共享指针 `rm::feature_ptr`，如果需要转换成派生类对象，可利用共享指针 `std::shared_ptr` 中对于动态类型转换的函数：`std::dynamic_pointer_cast`，比如想得到 rm::LightBlob 的共享指针，可以使用以下命令。
+对于一些派生的特征特有的属性，比如装甲板灯条 rm::LightBlob 的上顶点，使用上需要额外注意类型转换的内容。一般我们在一些功能模块中，例如 @ref detector 中直接操纵的都是抽象类的共享指针 `rm::feature_ptr`，如果需要转换成派生类对象，可利用共享指针 `std::shared_ptr` 中对于动态类型转换的函数：`std::dynamic_pointer_cast`，比如想得到 rm::LightBlob 的共享指针，可以使用以下命令。
 
 ```cpp
 auto p_light_blob = std::dynamic_pointer_cast<rm::LightBlob>(p_feature);
@@ -77,7 +77,7 @@ auto p_light_blob = std::dynamic_pointer_cast<rm::LightBlob>(p_feature);
 auto p_light_blob = rm::LightBlob::cast(p_feature);
 ```
 
-有了动态类型转换的接口就可以继续获取特有属性，下面的代码展示了如何获取装甲板灯条的上顶点。
+有了动态类型转换的接口就可以继续获取派生类属性，下面的代码展示了如何获取装甲板灯条的上顶点。
 
 ```cpp
 auto p_light_blob = rm::LightBlob::cast(p_feature);
