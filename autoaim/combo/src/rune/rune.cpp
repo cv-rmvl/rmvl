@@ -9,9 +9,9 @@
  *
  */
 
-#include "rmvl/combo/rune.h"
-#include "rmvl/feature/rune/rune_logging.h"
 #include "rmvl/rmath/transform.h"
+
+#include "rmvl/combo/rune.h"
 
 #include "rmvlpara/camera.hpp"
 #include "rmvlpara/combo/rune.h"
@@ -31,27 +31,27 @@ rune_ptr Rune::make_combo(const rune_target_ptr &p_target, const rune_center_ptr
     {
         // ----------------------【特征面积之比是否合适】----------------------
         float rune_area_ratio = p_target->getArea() / p_center->getArea();
-        DEBUG_RUNE_INFO_("rune 1.rune_area_ratio : %f", rune_area_ratio);
-        DEBUG_RUNE_INFO_("rune 1.rune_active : %d", p_target->isActive());
+        DEBUG_INFO_("rune 1.rune_area_ratio : %f", rune_area_ratio);
+        DEBUG_INFO_("rune 1.rune_active : %d", p_target->isActive());
         if (rune_area_ratio < rune_param.MIN_AREA_RATIO ||
             (!p_target->isActive() && rune_area_ratio > rune_param.MAX_AREA_RATIO))
         {
-            DEBUG_RUNE_WARNING_("rune 1.rune_area_ratio : fail");
+            DEBUG_WARNING_("rune 1.rune_area_ratio : fail");
             return nullptr;
         }
-        DEBUG_RUNE_PASS_("rune 1.rune_area_ratio : pass");
+        DEBUG_PASS_("rune 1.rune_area_ratio : pass");
         // ------------------------【特征间距是否合适】------------------------
         // 使用神符装甲板的长宽信息代表组合体的长宽信息
         float rune_radius = getDistance(p_target->getCenter(), p_center->getCenter());
         float radius_ratio = rune_radius / p_center->getHeight();
-        DEBUG_RUNE_INFO_("rune 2.radius_ratio : %f", radius_ratio);
+        DEBUG_INFO_("rune 2.radius_ratio : %f", radius_ratio);
         if (radius_ratio < rune_param.MIN_RADIUS_RATIO ||
             radius_ratio > rune_param.MAX_RADIUS_RATIO)
         {
-            DEBUG_RUNE_WARNING_("rune 2.rune_radius_ratio : fail");
+            DEBUG_WARNING_("rune 2.rune_radius_ratio : fail");
             return nullptr;
         }
-        DEBUG_RUNE_PASS_("rune 2.rune_radius_ratio : pass");
+        DEBUG_PASS_("rune 2.rune_radius_ratio : pass");
     }
 
     return make_shared<Rune>(p_target, p_center, gyro_data, tick);

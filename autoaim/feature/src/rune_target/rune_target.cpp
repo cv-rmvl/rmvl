@@ -12,7 +12,6 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/feature/rune_target.h"
-#include "rmvl/feature/rune/rune_logging.h"
 
 #include "rmvlpara/feature/rune_target.h"
 
@@ -31,46 +30,46 @@ shared_ptr<RuneTarget> RuneTarget::make_feature(vector<Point> &contour, bool is_
     float width = max(rotated_rect.size.width, rotated_rect.size.height);
     float height = min(rotated_rect.size.width, rotated_rect.size.height);
     float ratio = width / height;
-    DEBUG_RUNE_INFO_("target 1.ratio : %f", ratio);
+    DEBUG_INFO_("target 1.ratio : %f", ratio);
     if (ratio > rune_target_param.MAX_RATIO || ratio < rune_target_param.MIN_RATIO)
     {
-        DEBUG_RUNE_WARNING_("target 1.ratio : fail");
+        DEBUG_WARNING_("target 1.ratio : fail");
         return nullptr;
     }
-    DEBUG_RUNE_PASS_("target 1.ratio : pass");
+    DEBUG_PASS_("target 1.ratio : pass");
 
     // ---------------------- 面积比例判断 ----------------------
     float contour_area = contourArea(contour);  // 轮廓面积
     float rect_area = rotated_rect.size.area(); // 矩形面积
     float area_ratio = contour_area / rect_area;
-    DEBUG_RUNE_INFO_("target 2.area_ratio : %f", area_ratio);
+    DEBUG_INFO_("target 2.area_ratio : %f", area_ratio);
     if (area_ratio > rune_target_param.MAX_AREA_RATIO || area_ratio < rune_target_param.MIN_AREA_RATIO)
     {
-        DEBUG_RUNE_WARNING_("target 2.area_ratio : fail");
+        DEBUG_WARNING_("target 2.area_ratio : fail");
         return nullptr;
     }
-    DEBUG_RUNE_PASS_("target 2.area_ratio : pass");
+    DEBUG_PASS_("target 2.area_ratio : pass");
 
     // -------------------- 面积周长比例判断 --------------------
     float perimeter = arcLength(contour, true);
     float area_peri_ratio = contour_area / (perimeter * perimeter);
-    DEBUG_RUNE_INFO_("target 3.area_peri_ratio : %f", area_peri_ratio);
+    DEBUG_INFO_("target 3.area_peri_ratio : %f", area_peri_ratio);
     if (area_peri_ratio > rune_target_param.MAX_AREA_PERI_RATIO ||
         area_peri_ratio < rune_target_param.MIN_AREA_PERI_RATIO)
     {
-        DEBUG_RUNE_WARNING_("target 3.area_peri_ratio : fail");
+        DEBUG_WARNING_("target 3.area_peri_ratio : fail");
         return nullptr;
     }
-    DEBUG_RUNE_PASS_("target 3.area_peri_ratio : pass");
+    DEBUG_PASS_("target 3.area_peri_ratio : pass");
 
     // ---------------------- 绝对面积判断 ----------------------
-    DEBUG_RUNE_INFO_("target 4.contour_area : %f", contour_area);
+    DEBUG_INFO_("target 4.contour_area : %f", contour_area);
     if (contour_area < rune_target_param.MIN_AREA)
     {
-        DEBUG_RUNE_WARNING_("target 4.contour_area : fail");
+        DEBUG_WARNING_("target 4.contour_area : fail");
         return nullptr;
     }
-    DEBUG_RUNE_PASS_("target 4.contour_area : pass");
+    DEBUG_PASS_("target 4.contour_area : pass");
 
     return make_shared<RuneTarget>(contour, rotated_rect, is_active);
 }
