@@ -38,10 +38,8 @@ namespace rm
  */
 class TagDetector final : public detector
 {
-    apriltag_family_t *__tf;
-    apriltag_detector_t *__td;
-
-    std::unordered_map<int, std::string> __type_map;
+    apriltag_family_t *_tf;
+    apriltag_detector_t *_td;
 
 public:
     TagDetector();
@@ -57,12 +55,14 @@ public:
      * @brief 识别接口
      * @note 提取出所有角点以及对应的类型，通过 getTypes 和 getCorners 方法可以获取
      *
-     * @param[in out] trackers 追踪器列表
+     * @param[in out] groups 所有序列组
      * @param[in] src 原图像
+     * @param[in] color 待处理颜色
+     * @param[in] gyro_data 当前陀螺仪数据
      * @param[in] tick 时间戳
      */
     DetectInfo detect(std::vector<group_ptr> &groups, cv::Mat &src, PixChannel color,
-                      const GyroData &gyro_data, int64 record_time) override;
+                      const GyroData &gyro_data, int64 tick) override;
 
 private:
     /**
