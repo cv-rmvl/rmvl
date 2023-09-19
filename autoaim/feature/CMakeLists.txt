@@ -43,14 +43,11 @@ rmvl_add_module(
     DEPENDS feature rmath
 )
 
-option(RUNE_DEBUG "printf rune debug information" OFF)
-
-if(RUNE_DEBUG)
-    rmvl_compile_definitions(
-        feature 
-        INTERFACE rune_debug
-    )
-endif()
+# tag
+rmvl_add_module(
+    tag
+    DEPENDS feature rmath
+)
 
 rmvl_generate_module_para(feature)
 
