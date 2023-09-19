@@ -36,7 +36,7 @@ protected:
     GyroData _gyro_data;                //!< 当前陀螺仪数据
     std::vector<cv::Point2f> _corners;  //!< 角点
     CameraExtrinsics<float> _extrinsic; //!< 相机外参
-    int64 _tick;                        //!< 捕获该组合体时的时间戳
+    int64 _tick{};                      //!< 捕获该组合体时的时间戳
 
 public:
     virtual ~combo() = 0;
@@ -79,7 +79,8 @@ public:
 
 inline combo::~combo() = default;
 
-using combo_ptr = std::shared_ptr<combo>; //!< 组合体共享指针
+//! 组合体共享指针
+using combo_ptr = std::shared_ptr<combo>;
 
 //! 默认组合体，包含一个固定的特征，退化为 `feature` 使用
 class DefaultCombo final : public combo
@@ -88,24 +89,24 @@ public:
     DefaultCombo(const DefaultCombo &) = delete;
     DefaultCombo(DefaultCombo &&) = delete;
 
-    DefaultCombo(const feature_ptr &p_feature) : combo()
-    {
-        _features = {p_feature};
-        _height = p_feature->getHeight();
-        _width = p_feature->getWidth();
-        _center = p_feature->getCenter();
-        _angle = p_feature->getAngle();
-        _corners = p_feature->getCorners();
-    }
+    //! @warning 构造函数不直接使用
+    DefaultCombo(const feature_ptr &, int64_t);
 
     /**
      * @brief 构造 DefaultCombo
      *
      * @param[in] p_feature 特征 `feature` 共享指针
+     * @param[in] tick 时间戳
      * @return DefaultCombo 共享指针
      */
-    static inline std::shared_ptr<DefaultCombo> make_combo(const feature_ptr &p_feature) { return std::make_shared<DefaultCombo>(p_feature); }
+    static inline std::shared_ptr<DefaultCombo> make_combo(const feature_ptr &p_feature, int64_t tick)
+    {
+        return std::make_shared<DefaultCombo>(p_feature, tick);
+    }
 };
+
+//! 默认组合体共享指针
+using default_combo_ptr = std::shared_ptr<DefaultCombo>;
 
 //! @} combo
 

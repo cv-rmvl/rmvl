@@ -87,6 +87,7 @@ public:
     inline const cv::Point2f &getSpeed() { return _speed; }
 };
 
+//! 追踪器共享指针
 using tracker_ptr = std::shared_ptr<tracker>;
 
 //! 默认追踪器，时间序列仅用于存储组合体，可退化为 `combos` 使用
@@ -123,6 +124,9 @@ private:
      */
     void updateData(const combo_ptr &p_combo);
 };
+
+//! 默认追踪器共享指针
+using default_tracker_ptr = std::shared_ptr<DefaultTracker>;
 
 //! @} tracker
 

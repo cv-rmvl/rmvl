@@ -17,7 +17,7 @@
 #include "rmvl/ml/ort.h"
 #endif
 
-#include "rmvl/tracker/armor_tracker.h"
+#include "rmvl/tracker/planar_tracker.h"
 
 namespace rm
 {

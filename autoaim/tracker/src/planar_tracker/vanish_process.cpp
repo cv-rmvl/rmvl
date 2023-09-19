@@ -1,0 +1,46 @@
+/**
+ * @file filter_update.cpp
+ * @author RoboMaster Vision Community
+ * @brief 平面目标追踪器 - 掉帧处理
+ * @version 1.0
+ * @date 2022-08-24
+ *
+ * @copyright Copyright 2021 (c), RoboMaster Vision Community
+ *
+ */
+
+#include "rmvl/tracker/planar_tracker.h"
+
+#include "rmvlpara/camera.hpp"
+#include "rmvlpara/tracker/planar_tracker.h"
+
+using namespace rm;
+using namespace para;
+using namespace std;
+using namespace cv;
+
+void PlanarTracker::vanishProcess([[maybe_unused]] int64_t tick, [[maybe_unused]] const GyroData &gyro_data)
+{
+    if (_combo_deque.empty() || _vanish_num == 0)
+        return;
+    //! @note 后续完成 #10 后再进行完善
+    combo_ptr combo = _combo_deque.front();
+
+    // //////////////////////// 构造新对象 ////////////////////////
+    // // 补帧 combo 中心点
+    // // Point2f vanish_center = calculateRelativeCenter(camera_param.cameraMatrix, _relative_angle);
+    // // Point2f delta = vanish_center - last_combo->getCenter();
+    // vector<Point2f> last_corners = last_combo->getCorners();
+
+    // // Force to build 'LightBlob' object
+    // light_blob_ptr p_left = LightBlob::make_feature(last_corners[1],
+    //                                                 last_corners[0],
+    //                                                 last_combo->at(0)->getWidth());
+    // light_blob_ptr p_right = LightBlob::make_feature(last_corners[2],
+    //                                                  last_corners[3],
+    //                                                  last_combo->at(1)->getWidth());
+    // combo_ptr combo = Armor::make_combo(p_left, p_right, gyro_data, tick, last_combo->getType().ArmorSizeTypeID);
+    // // Correct
+    // // _motion_filter.correct(result);
+    _combo_deque.emplace_back(combo);
+}

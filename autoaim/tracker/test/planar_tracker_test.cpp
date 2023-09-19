@@ -1,7 +1,7 @@
 /**
- * @file armor_tracker_test.cpp
+ * @file planar_tracker_test.cpp
  * @author RoboMaster Vision Community
- * @brief 装甲板追踪器单元测试
+ * @brief 使用装甲板完成平面目标追踪器的单元测试
  * @version 1.0
  * @date 2022-08-28
  *
@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/tracker/armor_tracker.h"
+#include "rmvl/tracker/planar_tracker.h"
 
 #include "rmvlpara/camera.hpp"
 
@@ -24,7 +24,7 @@ using namespace cv;
 namespace rm_test
 {
 
-class ArmorTrackerTest : public testing::Test
+class PlanarTrackerTest : public testing::Test
 {
     Mat src;
 
@@ -80,21 +80,21 @@ public:
 };
 
 // 初始化构建功能验证
-TEST_F(ArmorTrackerTest, initial_build_function_test)
+TEST_F(PlanarTrackerTest, initial_build_function_test)
 {
     // 传入真实装甲板
     armor_ptr armor = buildArmor(Point(500, 300), 8);
-    tracker_ptr p_tracker = ArmorTracker::make_tracker(armor);
+    tracker_ptr p_tracker = PlanarTracker::make_tracker(armor);
     EXPECT_EQ(p_tracker->size(), 1);
     EXPECT_EQ(p_tracker->at(0), armor);
 }
 
 // 追踪器传入装甲板更新功能验证
-TEST_F(ArmorTrackerTest, tracker_update_with_1_armor)
+TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
 {
     // 连续传入 2 个装甲板
     armor_ptr armor = buildArmor(Point(500, 300), 8);
-    tracker_ptr p_tracker = ArmorTracker::make_tracker(armor);
+    tracker_ptr p_tracker = PlanarTracker::make_tracker(armor);
     armor_ptr armor2 = buildArmor(Point(505, 300), 8);
     p_tracker->update(armor2, tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);
@@ -102,11 +102,11 @@ TEST_F(ArmorTrackerTest, tracker_update_with_1_armor)
 }
 
 // 追踪器传入空掉帧处理功能验证
-TEST_F(ArmorTrackerTest, tracker_update_with_none)
+TEST_F(PlanarTrackerTest, tracker_update_with_none)
 {
     // 传入装甲板后传入空
     armor_ptr armor = buildArmor(Point(500, 300), 8);
-    tracker_ptr p_tracker = ArmorTracker::make_tracker(armor);
+    tracker_ptr p_tracker = PlanarTracker::make_tracker(armor);
     armor_ptr armor2 = nullptr;
     p_tracker->update(armor2, tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);

@@ -14,7 +14,7 @@
 #include "rmvl/detector/armor_detector.h"
 
 #include "rmvlpara/detector/armor_detector.h"
-#include "rmvlpara/tracker/armor_tracker.h"
+#include "rmvlpara/tracker/planar_tracker.h"
 
 using namespace rm;
 using namespace para;
@@ -52,7 +52,7 @@ void ArmorDetector::matchArmors(vector<tracker_ptr> &trackers, vector<combo_ptr>
     if (trackers.empty())
     {
         for (const auto &p_combo : combos)
-            trackers.emplace_back(ArmorTracker::make_tracker(p_combo));
+            trackers.emplace_back(PlanarTracker::make_tracker(p_combo));
         return;
     }
 
@@ -76,7 +76,7 @@ void ArmorDetector::matchArmors(vector<tracker_ptr> &trackers, vector<combo_ptr>
         }
         // 没有匹配到的装甲板作为新的序列
         for (const auto &p_combo : armor_set)
-            trackers.emplace_back(ArmorTracker::make_tracker(p_combo));
+            trackers.emplace_back(PlanarTracker::make_tracker(p_combo));
     }
     // 如果当前帧识别到的装甲板数量 < 序列数量
     else if (combos.size() < trackers.size())
@@ -124,7 +124,7 @@ void ArmorDetector::matchArmors(vector<tracker_ptr> &trackers, vector<combo_ptr>
             {
                 // 创建新序列，原来的序列打入 nullptr
                 trackers[i]->update(nullptr, _tick, _gyro_data);
-                trackers.emplace_back(ArmorTracker::make_tracker(*min_it));
+                trackers.emplace_back(PlanarTracker::make_tracker(*min_it));
             }
             else
                 trackers[i]->update(*min_it, _tick, _gyro_data);
@@ -139,7 +139,7 @@ void ArmorDetector::eraseNullTracker(vector<tracker_ptr> &trackers)
     trackers.erase(remove_if(trackers.begin(), trackers.end(),
                              [&](tracker_ptr &p_tracker)
                              {
-                                 return p_tracker->getVanishNumber() >= armor_tracker_param.TRACK_FRAMES;
+                                 return p_tracker->getVanishNumber() >= planar_tracker_param.TRACK_FRAMES;
                              }),
                    trackers.end());
 }

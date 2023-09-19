@@ -1,7 +1,7 @@
 /**
  * @file filter_update.cpp
  * @author RoboMaster Vision Community
- * @brief 装甲板追踪器-滤波更新
+ * @brief 平面目标追踪器 - 滤波更新
  * @version 1.0
  * @date 2022-08-24
  *
@@ -9,16 +9,16 @@
  *
  */
 
-#include "rmvl/tracker/armor_tracker.h"
+#include "rmvl/tracker/planar_tracker.h"
 
-#include "rmvlpara/tracker/armor_tracker.h"
+#include "rmvlpara/tracker/planar_tracker.h"
 
 using namespace rm;
 using namespace para;
 using namespace std;
 using namespace cv;
 
-void ArmorTracker::initFilter()
+void PlanarTracker::initFilter()
 {
     combo_ptr first_combo = _combo_deque.front();
     // 初始化距离滤波器
@@ -27,15 +27,15 @@ void ArmorTracker::initFilter()
     Matx21f init_dis_vec = {first_combo->getExtrinsics().distance(), 0};
     _distance_filter.init(init_dis_vec, 1e-2);
     // 初始化运动滤波器，相对角度和角速度
-    _motion_filter.setR(armor_tracker_param.R); // 距离为两帧差，误差为两倍
-    _motion_filter.setQ(armor_tracker_param.Q); // 距离的过程噪声仔细调整
+    _motion_filter.setR(planar_tracker_param.R); // 距离为两帧差，误差为两倍
+    _motion_filter.setQ(planar_tracker_param.Q); // 距离的过程噪声仔细调整
     Matx41f init_move_vec = {first_combo->getRelativeAngle().x,
                              first_combo->getRelativeAngle().y,
                              0, 0};
     _motion_filter.init(init_move_vec, 1e-2);
 }
 
-void ArmorTracker::updateDistanceFilter()
+void PlanarTracker::updateDistanceFilter()
 {
     // 设置状态转移矩阵
     _distance_filter.setA(Matx22f{1, 1,
@@ -52,7 +52,7 @@ void ArmorTracker::updateDistanceFilter()
     _last_distance = correct_vec(0);
 }
 
-void ArmorTracker::updateMotionFilter()
+void PlanarTracker::updateMotionFilter()
 {
     // 帧差时间
     float t = 0.f;
@@ -60,7 +60,7 @@ void ArmorTracker::updateMotionFilter()
         t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) /
             static_cast<double>(_combo_deque.size() - 1) / getTickFrequency();
     else
-        t = armor_tracker_param.SAMPLE_INTERVAL / 1000.f;
+        t = planar_tracker_param.SAMPLE_INTERVAL / 1000.f;
     // Set the state transition matrix: A
     _motion_filter.setA(Matx44f{
         1, 0, t, 0,

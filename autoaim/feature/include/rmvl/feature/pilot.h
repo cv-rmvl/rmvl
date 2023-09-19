@@ -29,14 +29,15 @@ private:
     cv::RotatedRect _rotated_rect; //!< 旋转矩形
     cv::Point2f _left;             //!< 左顶点
     cv::Point2f _right;            //!< 右顶点
-    bool _is_matched{};            //!< 是否匹配标志位
 
 public:
     Pilot(const Pilot &) = delete;
     Pilot(Pilot &&) = delete;
 
-    Pilot(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float width, float height);
-    Pilot(const float &ref_width, const float &ref_height, const cv::Point2f &ref_center, const float &ref_angle, const std::vector<cv::Point2f> &ref_corners);
+    //! @warning 构造函数不直接使用
+    Pilot(std::vector<cv::Point> &, cv::RotatedRect &, float, float);
+    //! @warning 构造函数不直接使用
+    Pilot(const float &, const float &, const cv::Point2f &, const float &, const std::vector<cv::Point2f> &);
 
     /**
      * @brief 构造接口
@@ -73,10 +74,6 @@ public:
         return std::dynamic_pointer_cast<Pilot>(p_feature);
     }
 
-    //! 设置匹配信息
-    inline void setMatchMessage(bool match) { _is_matched = match; }
-    //! 获取匹配信息
-    inline bool getMatchMessage() { return _is_matched; }
     //! 获取灯条左端点
     inline cv::Point2f getLeftPoint() { return _left; }
     //! 获取灯条右端点
