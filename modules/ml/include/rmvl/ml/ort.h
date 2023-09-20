@@ -21,7 +21,7 @@ namespace rm
 //! @addtogroup ml_ort
 //! @{
 
-//! ONNX-Runtime (Ort) 部署库 \cite ORT
+//! ONNX-Runtime (Ort) 部署库 \cite onnx-rt
 class OnnxRT
 {
     using session_ptr = std::unique_ptr<Ort::Session>;

@@ -12,6 +12,7 @@
 #### 特征
 
 - @subpage tutorial_autoaim_how_to_use_feature
+- @subpage tutorial_autoaim_april_tag
 
 #### 组合体
 
