@@ -4,7 +4,7 @@
 @author 赵曦
 @date 2023/06/22
 
-@prev_tutorial{tutorial_modules_thread_pool}
+@prev_tutorial{tutorial_modules_aggregate_reflect}
 
 @next_tutorial{tutorial_modules_kalman}
 

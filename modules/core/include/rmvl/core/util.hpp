@@ -300,7 +300,7 @@ template <typename Tp>
 constexpr std::size_t size()
 {
     static_assert(std::is_aggregate_v<Tp>);
-    return helper::size<Tp>(helper::size_tag<10>{});
+    return helper::size<Tp>(helper::size_tag<12>{});
 }
 #else
 consteval std::size_t size(auto &&...args)
