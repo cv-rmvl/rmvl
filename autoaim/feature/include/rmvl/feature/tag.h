@@ -43,6 +43,6 @@ public:
 
 using tag_ptr = std::shared_ptr<Tag>;
 
-} // namespace rm
-
 //! @} tag
+
+} // namespace rm
