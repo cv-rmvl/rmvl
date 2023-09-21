@@ -1,10 +1,10 @@
-如何使用/开发 decider 模块 {#tutorial_autoaim_how_to_use_decider}
+如何使用/开发 decider 模块 {#tutorial_extra_how_to_use_decider}
 ============
 
 @author 赵曦
 @date 2023/07/07
 
-@prev_tutorial{tutorial_autoaim_how_to_use_predictor}
+@prev_tutorial{tutorial_extra_how_to_use_predictor}
 
 @tableofcontents
 

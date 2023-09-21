@@ -1,12 +1,12 @@
-AprilTag 视觉标签 {#tutorial_autoaim_april_tag}
+AprilTag 视觉标签 {#tutorial_extra_april_tag}
 ============
 
 @author 赵曦
 @date 2023/09/20
 
-@prev_tutorial{tutorial_autoaim_how_to_use_feature}
+@prev_tutorial{tutorial_extra_how_to_use_feature}
 
-@next_tutorial{tutorial_autoaim_how_to_use_combo}
+@next_tutorial{tutorial_extra_how_to_use_combo}
 
 @tableofcontents
 

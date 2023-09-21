@@ -1,12 +1,12 @@
-如何使用/开发 group 模块 {#tutorial_autoaim_how_to_use_group}
+如何使用/开发 group 模块 {#tutorial_extra_how_to_use_group}
 ============
 
 @author 赵曦
 @date 2023/07/07
 
-@prev_tutorial{tutorial_autoaim_how_to_use_tracker}
+@prev_tutorial{tutorial_extra_how_to_use_tracker}
 
-@next_tutorial{tutorial_autoaim_how_to_use_detector}
+@next_tutorial{tutorial_extra_how_to_use_detector}
 
 @tableofcontents
 

@@ -44,23 +44,23 @@ set(
 )
 
 # List all the modules
-set(refs_autoaim)
+set(refs_extra)
 set(refs_modules)
-foreach(m ${RMVL_AUTOAIM_MODULE} ${RMVL_MAIN_MODULE})
+foreach(m ${RMVL_EXTRA_MODULE} ${RMVL_MAIN_MODULE})
     # Reference entry
     if(NOT "${m}" STREQUAL "para")
         set(one_ref "\t- ${m}. @ref ${m}\n")
         list(FIND RMVL_MAIN_MODULE ${m} _pos)
         if(${_pos} EQUAL -1)
-            set(refs_autoaim "${refs_autoaim}${one_ref}")
+            set(refs_extra "${refs_extra}${one_ref}")
         else()
             set(refs_modules "${refs_modules}${one_ref}")
         endif()
     endif()
 endforeach()
 
-if(refs_autoaim)
-    set(refs_autoaim "- Autoaim modules. 自瞄模块\n${refs_autoaim}")
+if(refs_extra)
+    set(refs_extra "- Extra modules. 扩展模块\n${refs_extra}")
 endif()
 if(refs_modules)
     set(refs_modules "- Main modules. 主要模块\n${refs_modules}")
