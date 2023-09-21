@@ -1,13 +1,13 @@
-k 步前向预估神符预测 {#tutorial_autoaim_spi_rune_predictor}
+k 步前向预估神符预测 {#tutorial_extra_spi_rune_predictor}
 ============
 
 @author 黄昊睿
 @author 赵曦
 @date 2023/07/16
 
-@prev_tutorial{tutorial_autoaim_gyro_predictor}
+@prev_tutorial{tutorial_extra_gyro_predictor}
 
-@next_tutorial{tutorial_autoaim_how_to_use_decider}
+@next_tutorial{tutorial_extra_how_to_use_decider}
 
 @tableofcontents
 

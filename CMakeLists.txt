@@ -68,9 +68,9 @@ include_directories(${CMAKE_BINARY_DIR})
 add_subdirectory(include)
 # Main modules
 add_subdirectory(modules)
-# RMVL autoaim modules containing 4 data components and 4 function modules
-if(BUILD_AUTOAIM)
-    add_subdirectory(autoaim)
+# RMVL extra modules containing 4 data components and 4 function modules
+if(BUILD_EXTRA)
+    add_subdirectory(extra)
 endif()
 
 # ----------------------------------------------------------------------------

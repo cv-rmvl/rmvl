@@ -1,12 +1,12 @@
-如何使用/开发 predictor 模块 {#tutorial_autoaim_how_to_use_predictor}
+如何使用/开发 predictor 模块 {#tutorial_extra_how_to_use_predictor}
 ============
 
 @author 赵曦
 @date 2023/07/07
 
-@prev_tutorial{tutorial_autoaim_how_to_use_compensator}
+@prev_tutorial{tutorial_extra_how_to_use_compensator}
 
-@next_tutorial{tutorial_autoaim_gyro_predictor}
+@next_tutorial{tutorial_extra_gyro_predictor}
 
 @tableofcontents
 

@@ -192,7 +192,7 @@ endif()
 # ----------------------------------------------------------------------------
 #   Module options
 # ----------------------------------------------------------------------------
-option(BUILD_AUTOAIM "Build autoaim modules containing 4 data components and 4 function modules" ON)
+option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" ON)
 
 # ----------------------------------------------------------------------------
 #   Extra options

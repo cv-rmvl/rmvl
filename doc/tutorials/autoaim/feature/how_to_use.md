@@ -1,10 +1,10 @@
-如何使用/开发 feature 模块 {#tutorial_autoaim_how_to_use_feature}
+如何使用/开发 feature 模块 {#tutorial_extra_how_to_use_feature}
 ============
 
 @author 赵曦
 @date 2023/07/07
 
-@next_tutorial{tutorial_autoaim_how_to_use_combo}
+@next_tutorial{tutorial_extra_how_to_use_combo}
 
 @tableofcontents
 
@@ -44,7 +44,7 @@ LightBlob(const LightBlob &) = delete;
 
 #### 1.2.1 通用属性
 
-rm::feature 由于是自瞄模块中最底层的数据组件，因此不存在数据结构类型的信息，仅有包含特征对应属性的信息，这一类信息都采用 `getXXX` 的形式来获取。特征类中包含了众多属性，有高度、宽度、角度、中心点、角点列表、面积，均可用形如 `getXXX` 的方法进行获取，以下是 rm::feature 对于这些方法的定义。
+rm::feature 由于是扩展模块中最底层的数据组件，因此不存在数据结构类型的信息，仅有包含特征对应属性的信息，这一类信息都采用 `getXXX` 的形式来获取。特征类中包含了众多属性，有高度、宽度、角度、中心点、角点列表、面积，均可用形如 `getXXX` 的方法进行获取，以下是 rm::feature 对于这些方法的定义。
 
 ```cpp
 // 获取特征面积
