@@ -14,8 +14,6 @@
 
 相关类 rm::KalmanFilter
 
-参考文献 @cite kalman
-
 ## 1. 卡尔曼滤波理论
 
 ### 1.1 卡尔曼滤波器是做什么的？
@@ -236,8 +234,17 @@ target_link_libraries(
 
 #### 2.2.2 创建并初始化卡尔曼滤波器对象
 
+取
+- 数据类型 `Tp` = `double`
+- 状态量阶数 `StateDim` = `4`
+- 观测量阶数 `MeatureDim` = `4`
+- 控制量阶数 `ControlDim` = `1`
+
+可以得到以下代码
+
 ```cpp
-KalmanFilter<state, meature, control> filter;
+rm::KalmanFilter<double, 4, 4, 1> filter; // 简写可以写成 rm::KF44d filter
+
 filter.setR(/* ... */);
 filter.setQ(/* ... */);
 cv::Vec<float, state> init_vec = {/* ... */};
@@ -253,3 +260,9 @@ filter.predict();
 // Correction
 auto corr = filter.correct(/* ... */);
 ```
+
+---------
+
+### 参考文献 {#ref_paper}
+
+- 卡尔曼滤波 @cite kalman
