@@ -4,7 +4,7 @@
 @author 赵曦
 @date 2023/07/07
 
-@next_tutorial{tutorial_extra_how_to_use_combo}
+@next_tutorial{tutorial_extra_april_tag}
 
 @tableofcontents
 
@@ -44,7 +44,7 @@ LightBlob(const LightBlob &) = delete;
 
 #### 1.2.1 通用属性
 
-rm::feature 由于是扩展模块中最底层的数据组件，因此不存在数据结构类型的信息，仅有包含特征对应属性的信息，这一类信息都采用 `getXXX` 的形式来获取。特征类中包含了众多属性，有高度、宽度、角度、中心点、角点列表、面积，均可用形如 `getXXX` 的方法进行获取，以下是 rm::feature 对于这些方法的定义。
+rm::feature 由于是扩展模块中最底层的数据组件，因此不存在数据结构类型的信息，仅有包含特征对应属性的信息，这一类信息都采用 `getXXX` 的形式来获取。特征类中包含了众多属性，有高度、宽度、角度、中心点、角点列表、面积<span style="color: green">、状态类型、相机外参（1.1.0起）</span>，均可用形如 `getXXX` 的方法进行获取，以下是 rm::feature 对于这些方法的定义。
 
 ```cpp
 // 获取特征面积
@@ -92,6 +92,7 @@ auto top_point = p_light_blob->getTopPoint();
 
 1. 必须定义在 `namespace rm` 中，下文不再赘述；
 2. 必须 public 继承于 `rm::feature` 基类；
-3. 必须定义 `my_feature::ptr` 作为 `std::shared_ptr<MyFeature>` 的别名（注意是 **驼峰命名** 还是 **蛇形命名** ）；
-4. 必须实现以 `my_feature::ptr` 为返回值的 `MyFeature::make_feature` 静态工厂函数；
+3. 必须定义 `MyFeature::ptr` 作为 `std::shared_ptr<MyFeature>` 的别名；
+4. 必须实现以 `MyFeature::ptr` 为返回值的 `MyFeature::make_feature` 静态工厂函数；
 5. 不得定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；
+6. 需要定义好 `ptr`、`const_ptr` 智能指针类型别名，并分别实现 `cast` 转换函数
