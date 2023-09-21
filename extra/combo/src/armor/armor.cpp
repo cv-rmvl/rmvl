@@ -12,15 +12,15 @@
 #include "rmvl/combo/armor.h"
 #include "rmvl/rmath/transform.h"
 
-#include "rmvlpara/combo/armor.h"
 #include "rmvlpara/camera.hpp"
+#include "rmvlpara/combo/armor.h"
 
 using namespace rm;
 using namespace para;
 using namespace std;
 using namespace cv;
 
-shared_ptr<Armor> Armor::make_combo(light_blob_ptr &p_left, light_blob_ptr &p_right, const GyroData &gyro_data,
+shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
                                     int64 tick, ArmorSizeType armor_size_type)
 {
     // 判空
@@ -80,7 +80,7 @@ shared_ptr<Armor> Armor::make_combo(light_blob_ptr &p_left, light_blob_ptr &p_ri
     return ret;
 }
 
-Armor::Armor(light_blob_ptr &p_left, light_blob_ptr &p_right, const GyroData &gyro_data, int64 tick,
+Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data, int64 tick,
              float width_r, float length_r, float corner_angle, float match_error,
              float combo_h, float combo_w, float combo_r, ArmorSizeType armor_size_type)
     : _width_ratio(width_r), _length_ratio(length_r), _corner_angle(corner_angle), _match_error(match_error)
@@ -103,9 +103,9 @@ Armor::Armor(light_blob_ptr &p_left, light_blob_ptr &p_right, const GyroData &gy
         _type.ArmorSizeTypeID = armor_size_type;
     // 更新角点
     _corners = {p_left->getBottomPoint(),   // 左下
-                 p_left->getTopPoint(),      // 左上
-                 p_right->getTopPoint(),     // 右上
-                 p_right->getBottomPoint()}; // 右下
+                p_left->getTopPoint(),      // 左上
+                p_right->getTopPoint(),     // 右上
+                p_right->getBottomPoint()}; // 右下
     // 计算相机外参
     _extrinsic = calculateExtrinsic(camera_param.cameraMatrix, camera_param.distCoeff, gyro_data);
     const auto &rmat = _extrinsic.R();

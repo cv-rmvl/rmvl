@@ -97,7 +97,7 @@ TEST_F(ArmorDetectorTest, more_armor_independence)
     auto info = p_detector->detect(groups, src, RED, GyroData(), getTickCount());
     
     sort(info.combos.begin(), info.combos.end(),
-         [](const combo_ptr &lhs, const combo_ptr &rhs)
+         [](const combo::ptr &lhs, const combo::ptr &rhs)
          {
              return lhs->getCenter().x < rhs->getCenter().x;
          });

@@ -59,7 +59,7 @@ void SpiRunePredictor::identifier(const deque<double> &raw_datas)
     _xm = _xm + _Pm * amt * (bm - Mat(am * _xm).at<double>(0));
 }
 
-PredictInfo SpiRunePredictor::predict(const vector<group_ptr> &groups, const unordered_map<tracker_ptr, double> &tof)
+PredictInfo SpiRunePredictor::predict(const vector<group::ptr> &groups, const unordered_map<tracker::ptr, double> &tof)
 {
     PredictInfo info{};
     if (groups.empty() || groups.front()->data().empty())
@@ -89,7 +89,7 @@ PredictInfo SpiRunePredictor::predict(const vector<group_ptr> &groups, const uno
     return info;
 }
 
-float SpiRunePredictor::staticPredict(const tracker_ptr &p_tracker)
+float SpiRunePredictor::staticPredict(tracker::ptr p_tracker)
 {
     auto p_rune_tracker = RuneTracker::cast(p_tracker);
     if (p_rune_tracker == nullptr)

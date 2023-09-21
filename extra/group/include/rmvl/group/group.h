@@ -23,13 +23,17 @@ namespace rm
 class group
 {
 protected:
-    std::vector<tracker_ptr> _trackers; //!< 同组追踪器
-    cv::Point2f _center;                //!< 序列组中心
-    bool _is_tracked{};                 //!< 是否为目标序列组
-    uint32_t _vanish_num{};             //!< 丢帧数量
-    RMStatus _type{};                   //!< 序列组各状态
+    std::vector<tracker::ptr> _trackers; //!< 同组追踪器
+
+    cv::Point2f _center;    //!< 序列组中心
+    bool _is_tracked{};     //!< 是否为目标序列组
+    uint32_t _vanish_num{}; //!< 丢帧数量
+    RMStatus _type{};       //!< 序列组各状态
 
 public:
+    using ptr = std::shared_ptr<group>;
+    using const_ptr = std::shared_ptr<const group>;
+
     group() = default;
 
     virtual ~group() = default;
@@ -53,11 +57,11 @@ public:
      *
      * @param p_tracker 新的追踪器 `tracker`
      */
-    virtual void add(tracker_ptr p_tracker) { _trackers.emplace_back(p_tracker); }
+    virtual void add(tracker::ptr p_tracker) { _trackers.emplace_back(p_tracker); }
 
     /**
      * @brief 获取同组所有的追踪器数据
-     * @note 若仅需要对 `vector<tracker_ptr>` 做数据处理，使用此方法可直接实现 group 至 tracker 的退化
+     * @note 若仅需要对 `vector<tracker::ptr>` 做数据处理，使用此方法可直接实现 group 至 tracker 的退化
      *
      * @return 同组追踪器
      */
@@ -82,48 +86,45 @@ public:
      *
      * @param[in] idx 追踪器下标
      */
-    inline tracker_ptr at(size_t idx) { return _trackers.at(idx); }
+    inline tracker::ptr at(size_t idx) const { return _trackers.at(idx); }
 
     /**
      * @brief 获取序列组中心
      *
      * @return 序列组中心
      */
-    inline cv::Point2f getCenter() { return _center; }
+    inline const auto &getCenter() const { return _center; }
 
     /**
      * @brief 获取丢帧数量
      *
      * @return 丢帧数量
      */
-    inline uint32_t getVanishNumber() { return _vanish_num; }
+    inline uint32_t getVanishNumber() const { return _vanish_num; }
 
     /**
      * @brief 获取该组类型
      *
      * @return RMStatus 该组类型
      */
-    inline RMStatus getType() { return _type; }
+    inline RMStatus getType() const { return _type; }
 };
-
-//! 序列组共享指针
-using group_ptr = std::shared_ptr<group>;
 
 //! 默认序列组（一般退化为 `trackers` 使用）
 class DefaultGroup final : public group
 {
 public:
+    using ptr = std::shared_ptr<DefaultGroup>;
+    using const_ptr = std::shared_ptr<const DefaultGroup>;
+
     DefaultGroup() = default;
 
     //! 构建 DefaultGroup
-    static inline std::shared_ptr<DefaultGroup> make_group() { return std::make_shared<DefaultGroup>(); }
+    static inline DefaultGroup::ptr make_group() { return std::make_shared<DefaultGroup>(); }
 
     //! DefaultGroup 同步操作
     void sync(const GyroData &, int64_t) override {}
 };
-
-//! 序列组共享指针
-using default_group_ptr = std::shared_ptr<DefaultGroup>;
 
 //! @} group
 

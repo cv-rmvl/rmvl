@@ -39,11 +39,11 @@ TEST(Run_Accuracy, data_from_0_300)
     auto p_target = RuneTarget::make_feature(Point(600, 500), false);
     auto p_rune = Rune::make_combo(p_target, p_center, GyroData(), getTickCount(), true);
     auto p_tracker = RuneTracker::make_tracker(p_rune);
-    unordered_map<tracker_ptr, double> tof;
+    unordered_map<tracker::ptr, double> tof;
     tof.emplace(p_tracker, 0.02);
     auto p_group = RuneGroup::make_group();
     p_group->add(p_tracker);
-    vector<group_ptr> groups = {p_group};
+    vector<group::ptr> groups = {p_group};
 
     for (int i = 0; i < 300; ++i)
     {

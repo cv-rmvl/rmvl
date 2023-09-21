@@ -22,7 +22,7 @@ using namespace rm;
 
 void RuneTracker::initFilter(float init_angle, float init_speed)
 {
-    combo_ptr first_combo = _combo_deque.front();
+    auto first_combo = _combo_deque.front();
 
     // 初始化旋转滤波器
     _filter.setR(rune_tracker_param.ROTATE_R);

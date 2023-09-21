@@ -47,7 +47,7 @@ public:
 TEST_F(BuildRuneCenterTest, normal_contourSize)
 {
     // 轮廓点数为6
-    rune_center_ptr rc1 = RuneCenter::make_feature(contour_6);
+    RuneCenter::ptr rc1 = RuneCenter::make_feature(contour_6);
     EXPECT_TRUE(rc1);
 }
 
@@ -56,7 +56,7 @@ TEST_F(BuildRuneCenterTest, few_contourSize)
     // 非正常轮廓点数构建神符中心
     vector<Point> contour_5 = {Point(27.9, 7.5), Point(27.9, 22.5),
                                Point(15, 30), Point(2.1, 22.5), Point(2.1, 7.5)};
-    rune_center_ptr rc = RuneCenter::make_feature(contour_5);
+    RuneCenter::ptr rc = RuneCenter::make_feature(contour_5);
     EXPECT_FALSE(rc);
 }
 

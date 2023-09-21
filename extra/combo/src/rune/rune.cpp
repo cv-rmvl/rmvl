@@ -21,8 +21,8 @@ using namespace rm;
 using namespace std;
 using namespace para;
 
-rune_ptr Rune::make_combo(const rune_target_ptr &p_target, const rune_center_ptr &p_center,
-                          const GyroData &gyro_data, int64 tick, bool force)
+Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
+                           const GyroData &gyro_data, int64 tick, bool force)
 {
     // ------------------------------【判空】------------------------------
     if (p_target == nullptr || p_center == nullptr)
@@ -57,7 +57,7 @@ rune_ptr Rune::make_combo(const rune_target_ptr &p_target, const rune_center_ptr
     return make_shared<Rune>(p_target, p_center, gyro_data, tick);
 }
 
-Rune::Rune(const rune_target_ptr &p_target, const rune_center_ptr &p_center, const GyroData &gyro_data, int64 tick)
+Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, int64 tick)
 {
     _gyro_data = gyro_data;
     _width = p_target->getWidth() + p_center->getWidth() + getDistance(p_target->getCenter(), p_center->getCenter());

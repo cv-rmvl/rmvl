@@ -17,7 +17,7 @@ using namespace std;
 using namespace para;
 using namespace rm;
 
-void GyroTracker::updateFromCombo(combo_ptr p_combo)
+void GyroTracker::updateFromCombo(combo::ptr p_combo)
 {
     _height = p_combo->getHeight();
     _width = p_combo->getWidth();
@@ -29,7 +29,7 @@ void GyroTracker::updateFromCombo(combo_ptr p_combo)
     _pose = Armor::cast(p_combo)->getPose();
 }
 
-GyroTracker::GyroTracker(const combo_ptr &p_armor)
+GyroTracker::GyroTracker(combo::ptr p_armor)
 {
     if (p_armor == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");
@@ -43,7 +43,7 @@ GyroTracker::GyroTracker(const combo_ptr &p_armor)
     initFilter();
 }
 
-void GyroTracker::update(combo_ptr p_armor, int64, const GyroData &)
+void GyroTracker::update(combo::ptr p_armor, int64, const GyroData &)
 {
     if (p_armor == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");

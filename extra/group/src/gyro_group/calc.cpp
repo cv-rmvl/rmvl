@@ -9,8 +9,8 @@
  *
  */
 
-#include "rmvl/rmath/transform.h"
 #include "rmvl/group/gyro_group.h"
+#include "rmvl/rmath/transform.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera.hpp"
@@ -22,7 +22,7 @@ using namespace rm;
 using namespace std;
 using namespace para;
 
-int GyroGroup::calcArmorNum(const vector<combo_ptr> &ref_combos)
+int GyroGroup::calcArmorNum(const vector<combo::ptr> &ref_combos)
 {
     // 机器人类型集合
     unordered_set<RobotType> robot_set;
@@ -65,8 +65,8 @@ void GyroGroup::calcGroupFrom3DMessage(const vector<Vec2f> &gyro_poses, const ve
     }
 }
 
-combo_ptr GyroGroup::constructComboForced(combo_ptr p_combo, const GyroData &gyro_data,
-                                          const Matx33f &gyro_rmat, const Vec3f &gyro_tvec, int64_t tick)
+combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &gyro_data,
+                                           const Matx33f &gyro_rmat, const Vec3f &gyro_tvec, int64_t tick)
 {
     // 陀螺仪坐标系转化为相机坐标系
     Matx33f cam_rmat;
@@ -84,13 +84,13 @@ combo_ptr GyroGroup::constructComboForced(combo_ptr p_combo, const GyroData &gyr
     if (new_corners.size() != 4)
         RMVL_Error_(RMVL_StsBadSize, "Size of the \"new_corners\" are not equal to 4. (size = %zu)", new_corners.size());
     // 强制构造灯条与装甲板
-    light_blob_ptr left = LightBlob::make_feature(new_corners[1], new_corners[0], p_combo->at(0)->getWidth());
-    light_blob_ptr right = LightBlob::make_feature(new_corners[2], new_corners[3], p_combo->at(1)->getWidth());
+    auto left = LightBlob::make_feature(new_corners[1], new_corners[0], p_combo->at(0)->getWidth());
+    auto right = LightBlob::make_feature(new_corners[2], new_corners[3], p_combo->at(1)->getWidth());
     return Armor::make_combo(left, right, gyro_data, tick, p_combo->getType().ArmorSizeTypeID);
 }
 
-void GyroGroup::getGroupInfo(const vector<combo_ptr> &visible_combos, vector<TrackerState> &state_vec,
-                             vector<combo_ptr> &combo_vec, Vec3f &group_center3d, Point2f &group_center2d)
+void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<TrackerState> &state_vec,
+                             vector<combo::ptr> &combo_vec, Vec3f &group_center3d, Point2f &group_center2d)
 {
     size_t visible_num = visible_combos.size();
     if (visible_num != 1 && visible_num != 2)
@@ -103,10 +103,9 @@ void GyroGroup::getGroupInfo(const vector<combo_ptr> &visible_combos, vector<Tra
     vector<Vec3f> ts(visible_num);   // 平移向量
     vector<float> rs(visible_num);   // 旋转半径
     // 排序，从右到左
-    vector<combo_ptr> operate_combos = visible_combos;
+    auto operate_combos = visible_combos;
     sort(operate_combos.begin(), operate_combos.end(),
-         [](const combo_ptr &lhs, const combo_ptr &rhs)
-         {
+         [](const combo::ptr &lhs, const combo::ptr &rhs) {
              return lhs->getCenter().x > rhs->getCenter().x;
          });
     for (size_t i = 0; i < visible_num; ++i)
@@ -120,7 +119,7 @@ void GyroGroup::getGroupInfo(const vector<combo_ptr> &visible_combos, vector<Tra
     if (visible_num == 1)
     {
         // 唯一一个追踪器
-        combo_ptr p_combo = operate_combos.front();
+        auto p_combo = operate_combos.front();
         calcGroupFrom3DMessage(Ps, ts, rs, group_center3d);
         float r = rs.front();
         Vec3f center_tvec = group_center3d; // 车组旋转中心位置平移向量
@@ -142,7 +141,7 @@ void GyroGroup::getGroupInfo(const vector<combo_ptr> &visible_combos, vector<Tra
             // 陀螺仪坐标系下的新装甲板到旋转中心点的方向向量
             Vec3f new_pose = normalize(Vec3f(new_R(0, 2), 0, new_R(2, 2)));
             Vec3f new_gyro_tvec = center_tvec - new_pose * r; // 陀螺仪坐标系下的新装甲板相机坐标系平移向量
-            combo_ptr armor = constructComboForced(p_combo, _gyro_data, new_R, new_gyro_tvec, _tick);
+            combo::ptr armor = constructComboForced(p_combo, _gyro_data, new_R, new_gyro_tvec, _tick);
             // 追踪器信息
             combo_vec[i + 1] = armor;
             state_vec[i + 1] = TrackerState(i + 1, r, 0.f);
@@ -174,7 +173,7 @@ void GyroGroup::getGroupInfo(const vector<combo_ptr> &visible_combos, vector<Tra
             // 新装甲板到旋转中心点的方向向量
             Vec3f new_pose = normalize(Vec3f(new_R(0, 2), 0, new_R(2, 2)));
             Vec3f new_tvec = center_tvec - new_pose * rs[i]; // 新装甲板平移向量
-            combo_ptr armor = constructComboForced(operate_combos[i], _gyro_data, new_R, new_tvec, _tick);
+            combo::ptr armor = constructComboForced(operate_combos[i], _gyro_data, new_R, new_tvec, _tick);
             // 组合体信息
             combo_vec[i + 2] = armor;
             state_vec[i + 2] = TrackerState(i + 2, rs[i], state_vec[i].delta_y());

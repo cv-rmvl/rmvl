@@ -21,41 +21,40 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-GyroGroup::GyroGroup(const vector<combo_ptr> &first_combos, int armor_num)
+GyroGroup::GyroGroup(const vector<combo::ptr> &first_combos, int armor_num)
 {
     // 确定装甲板 armor_num 数目
     _armor_num = armor_num < 1 ? calcArmorNum(first_combos) : armor_num;
-    vector<TrackerState> state_vec; // 追踪器信息列表
-    vector<combo_ptr> combo_vec;    // 整车模型中的组合体列表
-    Vec3f group_center3d;           // 旋转中心点相机坐标
-    Point2f group_center2d;         // 旋转中心点像素坐标
+    vector<TrackerState> state_vec;     // 追踪器信息列表
+    vector<combo::ptr> combo_vec; // 整车模型中的组合体列表
+    Vec3f group_center3d;               // 旋转中心点相机坐标
+    Point2f group_center2d;             // 旋转中心点像素坐标
     _gyro_data = first_combos.front()->getGyroData();
     _tick = first_combos.front()->getTick();
     // 获取 RobotType
     vector<RobotType> robot_type_vec;
     for_each(first_combos.begin(), first_combos.end(),
-             [&robot_type_vec](combo_ptr val)
-             {
+             [&robot_type_vec](combo::ptr val) {
                  robot_type_vec.push_back(val->getType().RobotTypeID);
              });
     _type.RobotTypeID = calculateModeNum(robot_type_vec.begin(), robot_type_vec.end());
     // 获取序列组信息
     getGroupInfo(first_combos, state_vec, combo_vec, group_center3d, group_center2d);
     // 初始化序列组
-    unordered_set<combo_ptr> combo_set(first_combos.begin(), first_combos.end());
+    unordered_set<combo::ptr> combo_set(first_combos.begin(), first_combos.end());
     initGroup(combo_set, state_vec, combo_vec, group_center3d, group_center2d);
     // 初始化滤波器
     initFilter();
 }
 
-void GyroGroup::initGroup(const unordered_set<combo_ptr> &visible_combo_set, const vector<TrackerState> &state_vec,
-                          const vector<combo_ptr> &combo_vec, const Vec3f &group_center3d, const Point2f &group_center2d)
+void GyroGroup::initGroup(const unordered_set<combo::ptr> &visible_combo_set, const vector<TrackerState> &state_vec,
+                          const vector<combo::ptr> &combo_vec, const Vec3f &group_center3d, const Point2f &group_center2d)
 {
     if (static_cast<int>(state_vec.size()) != _armor_num || static_cast<int>(combo_vec.size()) != _armor_num)
         RMVL_Error_(RMVL_StsBadArg, "Bad size of the \"state_vec\" (size = %zu) or \"combo_vec\" (size = %zu)",
                     state_vec.size(), combo_vec.size());
     // 按组合体顺序初始化追踪器
-    vector<tracker_ptr> tracker_vec;
+    vector<tracker::ptr> tracker_vec;
     for (const auto &p_combo : combo_vec)
         tracker_vec.push_back(GyroTracker::make_tracker(p_combo));
     _trackers = tracker_vec;
@@ -69,9 +68,9 @@ void GyroGroup::initGroup(const unordered_set<combo_ptr> &visible_combo_set, con
     for (auto p_tracker : _trackers)
     {
         if (visible_combo_set.find(p_tracker->front()) == visible_combo_set.end())
-            GyroTracker::cast(p_tracker)->updateVanishState(GyroTracker::VANISH);
+            const_pointer_cast<GyroTracker>(GyroTracker::cast(p_tracker))->updateVanishState(GyroTracker::VANISH);
         else
-            GyroTracker::cast(p_tracker)->updateVanishState(GyroTracker::APPEAR);
+            const_pointer_cast<GyroTracker>(GyroTracker::cast(p_tracker))->updateVanishState(GyroTracker::APPEAR);
     }
 }
 

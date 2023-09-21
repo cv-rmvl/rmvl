@@ -27,7 +27,7 @@ GyroCompensator::GyroCompensator()
     _yaw_static_com = gyro_compensator_param.YAW_COMPENSATE;
 }
 
-CompensateInfo GyroCompensator::compensate(const vector<group_ptr> &groups,
+CompensateInfo GyroCompensator::compensate(const vector<group::ptr> &groups,
                                            uint8_t shoot_speed, CompensateType com_flag)
 {
     CompensateInfo info;
@@ -38,7 +38,7 @@ CompensateInfo GyroCompensator::compensate(const vector<group_ptr> &groups,
     {
         auto p_gyro_group = GyroGroup::cast(p_group);
         if (p_gyro_group == nullptr)
-            RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"gyro_group_ptr\"");
+            RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"GyroGroup::ptr\"");
         // 直线距离
         auto dis = getDistance(p_gyro_group->getCenter3D(), Vec3f{}) / 1000.;
         // 目标转角

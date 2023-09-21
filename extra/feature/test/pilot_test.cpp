@@ -23,7 +23,7 @@ namespace rm_test
 class BuildPilotTest : public testing::Test
 {
 public:
-    pilot_ptr pilot;
+    Pilot::ptr pilot;
     Mat src;
     vector<Point> d_contour;
 

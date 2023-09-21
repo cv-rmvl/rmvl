@@ -18,21 +18,21 @@ using namespace std;
 using namespace para;
 using namespace rm;
 
-tracker_ptr OutpostDecider::getClosestTracker(const vector<tracker_ptr> &trackers)
+tracker::ptr OutpostDecider::getClosestTracker(const vector<tracker::ptr> &trackers)
 {
     if (trackers.empty())
         return nullptr;
     return *min_element(trackers.begin(), trackers.end(),
-                        [&](const tracker_ptr &lhs, const tracker_ptr &rhs)
+                        [&](tracker::ptr lhs, tracker::ptr rhs)
                         {
                             return pow(lhs->front()->getRelativeAngle().x, 2) + pow(lhs->front()->getRelativeAngle().y, 2) <
                                    pow(rhs->front()->getRelativeAngle().x, 2) + pow(rhs->front()->getRelativeAngle().y, 2);
                         });
 }
 
-tuple<combo_ptr, float> OutpostDecider::getAimPoint(const vector<combo_ptr> &combos)
+tuple<combo::ptr, float> OutpostDecider::getAimPoint(const vector<combo::ptr> &combos)
 {
-    unordered_map<combo_ptr, float> best_shoot_point; // 最佳射击点
+    unordered_map<combo::ptr, float> best_shoot_point; // 最佳射击点
     for (const auto &p_combo : combos)
     {
         // 找最小灯条宽度差->两灯条正对相机时宽度差最小
@@ -53,17 +53,17 @@ tuple<combo_ptr, float> OutpostDecider::getAimPoint(const vector<combo_ptr> &com
     return {armor, width_bias};
 }
 
-Point2f OutpostDecider::calculateData(tracker_ptr target_tracker, const CompensateInfo &compensate_info)
+Point2f OutpostDecider::calculateData(tracker::ptr target_tracker, const CompensateInfo &compensate_info)
 {
     const auto &comp = compensate_info.compensation.at(target_tracker);
     // 加入预测、补偿
     return target_tracker->getRelativeAngle() + comp;
 }
 
-void OutpostDecider::calculateInfo(tracker_ptr target_tracker, const CompensateInfo &compensate_info,
+void OutpostDecider::calculateInfo(tracker::ptr target_tracker, const CompensateInfo &compensate_info,
                                    const Point2f &horizon_center, bool is_next)
 {
-    vector<combo_ptr> current_combos;
+    vector<combo::ptr> current_combos;
     for (size_t i = 0; i < target_tracker->size(); i++)
     {
         current_combos.emplace_back(target_tracker->at(i));

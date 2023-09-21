@@ -33,7 +33,7 @@ class GyroGroup final : public group
     bool _is_tracked = false; //!< 是否为目标序列组
 
     //! 追踪器状态哈希表 [追踪器 : 追踪器状态]
-    std::unordered_map<tracker_ptr, TrackerState> _tracker_state;
+    std::unordered_map<tracker::ptr, TrackerState> _tracker_state;
 
     KF66f _center3d_filter; //!< 旋转中心点位置滤波器
 
@@ -49,10 +49,13 @@ class GyroGroup final : public group
     int _armor_num = 4; //!< 装甲板数量
 
 public:
+    using ptr = std::shared_ptr<GyroGroup>;
+    using const_ptr = std::shared_ptr<const GyroGroup>;
+
     GyroGroup() = delete;
     GyroGroup(const GyroGroup &) = delete;
     GyroGroup(GyroGroup &&) = delete;
-    GyroGroup(const std::vector<combo_ptr> &combos, int armor_num);
+    GyroGroup(const std::vector<combo::ptr> &combos, int armor_num);
 
     /**
      * @brief 根据第一帧识别到的组合体构建 GyroGroup
@@ -61,7 +64,7 @@ public:
      * @param[in] first_combos 组合体列表
      * @param[in] armor_num 强制指定装甲板个数（小于 1 表示自动判断）
      */
-    static inline std::shared_ptr<GyroGroup> make_group(const std::vector<combo_ptr> &first_combos, int armor_num)
+    static inline std::shared_ptr<GyroGroup> make_group(const std::vector<combo::ptr> &first_combos, int armor_num)
     {
         if (first_combos.size() != 1 && first_combos.size() != 2)
             return nullptr;
@@ -71,13 +74,18 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_group group_ptr 抽象指针
+     * @param[in] p_group group::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<GyroGroup> cast(group_ptr p_group)
-    {
-        return std::dynamic_pointer_cast<GyroGroup>(p_group);
-    }
+    static inline GyroGroup::ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<GyroGroup>(p_group); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_group group::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline GyroGroup::const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const GyroGroup>(p_group); }
 
     /**
      * @brief 根据陀螺仪坐标系下装甲板外参信息和默认初始半径集合，得到修正的半径集合、序列组中心坐标、装甲板法向量集合
@@ -98,10 +106,10 @@ public:
      * @param[in] gyro_rmat 陀螺仪坐标系下装甲板的旋转矩阵
      * @param[in] gyro_tvec 陀螺仪坐标系下装甲板的平移向量
      * @param[in] tick 时间戳数据
-     * @return combo_ptr
+     * @return 强制构建的 combo
      */
-    static combo_ptr constructComboForced(combo_ptr p_combo, const GyroData &gyro_data,
-                                          const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, int64_t tick);
+    static combo::ptr constructComboForced(combo::ptr p_combo, const GyroData &gyro_data,
+                                           const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, int64_t tick);
 
     /**
      * @brief 计算装甲板数目
@@ -109,7 +117,7 @@ public:
      * @param[in] ref_combos 指定参与计算的装甲板
      * @return 装甲板数目
      */
-    static int calcArmorNum(const std::vector<combo_ptr> &ref_combos);
+    static int calcArmorNum(const std::vector<combo::ptr> &ref_combos);
 
     /**
      * @brief GyroGroup 同步操作
@@ -125,7 +133,7 @@ public:
      * @param[in] p_tracker 追踪器指针
      * @return 追踪器信状态
      */
-    inline TrackerState getTrackerState(tracker_ptr p_tracker)
+    inline TrackerState getTrackerState(tracker::ptr p_tracker)
     {
         if (_tracker_state.find(p_tracker) == _tracker_state.end())
             RMVL_Error(RMVL_StsBadArg, "p_tracker in \"_tracker_state\" is not exist.");
@@ -153,8 +161,8 @@ private:
      * @param[out] group_center3d 旋转中心点相机坐标
      * @param[out] group_center2d 旋转中心点像素坐标
      */
-    void getGroupInfo(const std::vector<combo_ptr> &visible_combos, std::vector<TrackerState> &state_vec,
-                      std::vector<combo_ptr> &combo_vec, cv::Vec3f &group_center3d,
+    void getGroupInfo(const std::vector<combo::ptr> &visible_combos, std::vector<TrackerState> &state_vec,
+                      std::vector<combo::ptr> &combo_vec, cv::Vec3f &group_center3d,
                       cv::Point2f &group_center2d);
 
     /**
@@ -166,8 +174,8 @@ private:
      * @param[in] group_center3d 旋转中心点相机坐标
      * @param[in] group_center2d 旋转中心点像素坐标
      */
-    void initGroup(const std::unordered_set<combo_ptr> &visible_combo_set, const std::vector<TrackerState> &state_vec,
-                   const std::vector<combo_ptr> &combo_vec, const cv::Vec3f &group_center3d,
+    void initGroup(const std::unordered_set<combo::ptr> &visible_combo_set, const std::vector<TrackerState> &state_vec,
+                   const std::vector<combo::ptr> &combo_vec, const cv::Vec3f &group_center3d,
                    const cv::Point2f &group_center2d);
 
     /**
@@ -194,9 +202,6 @@ private:
     //! 更新group的旋转状态
     void updateRotStatus();
 };
-
-//! 序列组共享指针
-using gyro_group_ptr = std::shared_ptr<GyroGroup>;
 
 //! @} gyro_group
 

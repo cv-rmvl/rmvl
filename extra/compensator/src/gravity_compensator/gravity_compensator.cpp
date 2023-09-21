@@ -24,7 +24,7 @@ GravityCompensator::GravityCompensator()
     _yaw_static_com = gravity_compensator_param.YAW_COMPENSATE;
 }
 
-CompensateInfo GravityCompensator::compensate(const vector<group_ptr> &groups, uint8_t shoot_speed,
+CompensateInfo GravityCompensator::compensate(const vector<group::ptr> &groups, uint8_t shoot_speed,
                                               CompensateType com_flag)
 {
     CompensateInfo info{};

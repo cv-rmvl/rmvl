@@ -39,8 +39,8 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    DecideInfo decide(const std::vector<group_ptr> &groups, RMStatus flag,
-                      const tracker_ptr &last_target, const DetectInfo &detect_info,
+    DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+                      tracker::ptr last_target, const DetectInfo &detect_info,
                       const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
 
 private:
@@ -51,7 +51,7 @@ private:
      * @param[in] trackers 所有的装甲板时间序列追踪器
      * @return 离图像中心最近的目标序列
      */
-    tracker_ptr getClosestTracker(cv::Mat img, const std::vector<tracker_ptr> &trackers);
+    tracker::ptr getClosestTracker(cv::Mat img, const std::vector<tracker::ptr> &trackers);
 };
 
 //! @} translation_decider

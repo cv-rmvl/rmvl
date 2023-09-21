@@ -138,15 +138,15 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
     return false;
 }
 
-void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr> &combos)
+void RuneDetector::find(Mat src, vector<feature::ptr> &features, vector<combo::ptr> &combos)
 {
     vector<vector<Point>> contours; // 轮廓二维向量
     vector<Vec4i> hierarchy;        // 轮廓等级向量
     // 神符轮廓识别
     findContours(src, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
     // 神符旋转中心向量
-    vector<rune_center_ptr> rune_centers;
-    vector<rune_target_ptr> rune_targets;
+    vector<RuneCenter::ptr> rune_centers;
+    vector<RuneTarget::ptr> rune_targets;
     // 遍历轮廓构建特征
     for (size_t i = 0; i < contours.size(); i++)
     {
@@ -164,7 +164,7 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         {
             DEBUG_INFO_("--------------------------------------");
             DEBUG_INFO_("target unactive");
-            rune_target_ptr p_target = RuneTarget::make_feature(contours[i], false);
+            RuneTarget::ptr p_target = RuneTarget::make_feature(contours[i], false);
             if (p_target != nullptr)
             {
                 DEBUG_PASS_("target pass");
@@ -177,7 +177,7 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         {
             DEBUG_INFO_("--------------------------------------");
             DEBUG_INFO_("target active");
-            rune_target_ptr p_target = RuneTarget::make_feature(contours[i], true);
+            RuneTarget::ptr p_target = RuneTarget::make_feature(contours[i], true);
             if (p_target != nullptr)
             {
                 DEBUG_PASS_("target pass");
@@ -190,7 +190,7 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         {
             DEBUG_INFO_("--------------------------------------");
             DEBUG_INFO_("center");
-            rune_center_ptr p_center = RuneCenter::make_feature(contours[i]);
+            RuneCenter::ptr p_center = RuneCenter::make_feature(contours[i]);
             if (p_center != nullptr)
             {
                 DEBUG_PASS_("center pass");
@@ -206,7 +206,7 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
     if (rune_targets.empty() || rune_centers.empty())
         return;
     // 最优神符中心点
-    rune_center_ptr best_center = nullptr;
+    RuneCenter::ptr best_center = nullptr;
     best_center = getBestCenter(rune_targets, rune_centers);
     if (best_center == nullptr && rune_centers.size() == 1)
         best_center = rune_centers.front();
@@ -214,7 +214,7 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
     if (best_center == nullptr)
         return;
     // 获取尚未激活的神符
-    vector<rune_ptr> runes = getRune(rune_targets, best_center);
+    vector<Rune::ptr> runes = getRune(rune_targets, best_center);
     // 更新特征、组合体集合
     for (const auto &p_rune_target : rune_targets)
         features.emplace_back(p_rune_target);
@@ -223,10 +223,10 @@ void RuneDetector::find(Mat src, vector<feature_ptr> &features, vector<combo_ptr
         combos.emplace_back(p_combo);
 }
 
-rune_center_ptr RuneDetector::getBestCenter(const vector<rune_target_ptr> &rune_targets, const vector<rune_center_ptr> &rune_centers)
+RuneCenter::ptr RuneDetector::getBestCenter(const vector<RuneTarget::ptr> &rune_targets, const vector<RuneCenter::ptr> &rune_centers)
 {
     // 神符中心集合
-    unordered_set<rune_center_ptr> center_set(rune_centers.begin(), rune_centers.end());
+    unordered_set<RuneCenter::ptr> center_set(rune_centers.begin(), rune_centers.end());
     // 筛除离神符连线中垂线过远的中心
     if (rune_targets.size() > 1)
     {
@@ -258,7 +258,7 @@ rune_center_ptr RuneDetector::getBestCenter(const vector<rune_target_ptr> &rune_
     if (center_set.empty())
         return nullptr;
     // [神符中心 : 距离比值差]
-    unordered_map<rune_center_ptr, float> center_ratio_differences;
+    unordered_map<RuneCenter::ptr, float> center_ratio_differences;
     center_ratio_differences.reserve(center_set.size());
     for (auto &p_center : center_set)
     {
@@ -289,19 +289,19 @@ rune_center_ptr RuneDetector::getBestCenter(const vector<rune_target_ptr> &rune_
         ->first;
 }
 
-vector<rune_ptr> RuneDetector::getRune(const vector<rune_target_ptr> &rune_targets, const rune_center_ptr &p_center)
+vector<Rune::ptr> RuneDetector::getRune(const vector<RuneTarget::ptr> &rune_targets, RuneCenter::ptr p_center)
 {
     if (rune_targets.empty())
         return {};
     if (!p_center)
         return {};
 
-    vector<rune_ptr> retval;
+    vector<Rune::ptr> retval;
     // 神符外侧、神符支架两两匹配
     for (const auto &p_target : rune_targets)
     {
         DEBUG_INFO_("--------------------------------------");
-        rune_ptr rune = Rune::make_combo(p_target, p_center, _gyro_data, _tick);
+        Rune::ptr  rune = Rune::make_combo(p_target, p_center, _gyro_data, _tick);
         if (rune != nullptr)
         {
             DEBUG_PASS_("rune pass");

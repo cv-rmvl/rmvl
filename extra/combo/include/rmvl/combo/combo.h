@@ -26,7 +26,8 @@ namespace rm
 class combo
 {
 protected:
-    std::vector<feature_ptr> _features; //!< 特征列表
+    std::vector<feature::ptr> _features; //!< 特征列表
+
     float _height{};                    //!< 高度
     float _width{};                     //!< 宽度
     float _angle{};                     //!< 角度
@@ -39,6 +40,9 @@ protected:
     int64 _tick{};                      //!< 捕获该组合体时的时间戳
 
 public:
+    using ptr = std::shared_ptr<combo>;
+    using const_ptr = std::shared_ptr<const combo>;
+
     virtual ~combo() = 0;
 
     //! 获取组合体高度
@@ -50,7 +54,7 @@ public:
     //! 获取组合体中心点
     inline cv::Point2f getCenter() const { return _center; }
     //! 获取组合体角点
-    inline const std::vector<cv::Point2f> &getCorners() { return _corners; }
+    inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
     //! 获取组合体相机外参
     inline const CameraExtrinsics<float> &getExtrinsics() const { return _extrinsic; }
     //! 获取组合体类型
@@ -68,9 +72,9 @@ public:
      * @param[in] idx 下标
      * @return 指定特征
      */
-    inline feature_ptr at(size_t idx) const { return _features.at(idx); }
+    inline feature::ptr at(size_t idx) const { return _features.at(idx); }
     //! 获取特征列表数据
-    inline auto &data() { return _features; }
+    inline const auto &data() const { return _features; }
     //! 获取特征列表大小
     inline size_t size() const { return _features.size(); }
     //! 判断特征列表是否为空
@@ -79,18 +83,18 @@ public:
 
 inline combo::~combo() = default;
 
-//! 组合体共享指针
-using combo_ptr = std::shared_ptr<combo>;
-
 //! 默认组合体，包含一个固定的特征，退化为 `feature` 使用
 class DefaultCombo final : public combo
 {
 public:
+    using ptr = std::shared_ptr<DefaultCombo>;
+    using const_ptr = std::shared_ptr<const DefaultCombo>;
+
     DefaultCombo(const DefaultCombo &) = delete;
     DefaultCombo(DefaultCombo &&) = delete;
 
     //! @warning 构造函数不直接使用
-    DefaultCombo(const feature_ptr &, int64_t);
+    DefaultCombo(feature::ptr, int64_t);
 
     /**
      * @brief 构造 DefaultCombo
@@ -99,14 +103,24 @@ public:
      * @param[in] tick 时间戳
      * @return DefaultCombo 共享指针
      */
-    static inline std::shared_ptr<DefaultCombo> make_combo(const feature_ptr &p_feature, int64_t tick)
-    {
-        return std::make_shared<DefaultCombo>(p_feature, tick);
-    }
-};
+    static inline DefaultCombo::ptr make_combo(feature::ptr p_feature, int64_t tick) { return std::make_shared<DefaultCombo>(p_feature, tick); }
 
-//! 默认组合体共享指针
-using default_combo_ptr = std::shared_ptr<DefaultCombo>;
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_combo combo::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline DefaultCombo::ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<DefaultCombo>(p_combo); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_combo combo::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline DefaultCombo::const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const DefaultCombo>(p_combo); }
+};
 
 //! @} combo
 

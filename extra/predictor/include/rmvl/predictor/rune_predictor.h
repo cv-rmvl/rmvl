@@ -38,8 +38,8 @@ public:
      * @param[in] tof 每个追踪器对应的子弹飞行时间
      * @return 预测模块信息
      */
-    PredictInfo predict(const std::vector<group_ptr> &groups,
-                        const std::unordered_map<tracker_ptr, double> &tof) override;
+    PredictInfo predict(const std::vector<group::ptr> &groups,
+                        const std::unordered_map<tracker::ptr, double> &tof) override;
 
     //! 构建 RunePredictor
     static inline std::unique_ptr<RunePredictor> make_predictor() { return std::make_unique<RunePredictor>(); }

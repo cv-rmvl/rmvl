@@ -42,7 +42,7 @@ public:
 TEST_F(BuildRuneTargetTest, normal_contourSize)
 {
     // 一般个数轮廓点数，正常圆
-    rune_target_ptr rt1 = RuneTarget::make_feature(contour, 0);
+    RuneTarget::ptr rt1 = RuneTarget::make_feature(contour, 0);
     EXPECT_TRUE(rt1);
 }
 
@@ -54,7 +54,7 @@ TEST_F(BuildRuneTargetTest, contourShape)
     vector<vector<Point>> contours;
     findContours(img, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     vector<Point> contour_ = contours.front();
-    rune_target_ptr rt3 = RuneTarget::make_feature(contour_, 0);
+    RuneTarget::ptr rt3 = RuneTarget::make_feature(contour_, 0);
     EXPECT_FALSE(rt3);
 
     // 过高轮廓
@@ -62,7 +62,7 @@ TEST_F(BuildRuneTargetTest, contourShape)
     rectangle(img, Point(400, 400), Point(500, 600), Scalar(255, 255, 255), -1);
     findContours(img, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     contour_ = contours.front();
-    rune_target_ptr rt4 = RuneTarget::make_feature(contour_, 0);
+    RuneTarget::ptr rt4 = RuneTarget::make_feature(contour_, 0);
     EXPECT_FALSE(rt4);
 }
 
@@ -70,7 +70,7 @@ TEST_F(BuildRuneTargetTest, few_contourSize)
 {
     // 非正常轮廓点数构建神符靶心
     vector<Point> contour_4 = {Point(500, 455), Point(455, 500), Point(500, 545), Point(545, 500)};
-    rune_target_ptr rt = RuneTarget::make_feature(contour_4, 0);
+    RuneTarget::ptr rt = RuneTarget::make_feature(contour_4, 0);
     EXPECT_FALSE(rt);
 }
 

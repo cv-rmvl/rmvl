@@ -20,13 +20,13 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-DecideInfo TranslationDecider::decide(const vector<group_ptr> &groups, RMStatus, const tracker_ptr &last_target,
+DecideInfo TranslationDecider::decide(const vector<group::ptr> &groups, RMStatus, tracker::ptr last_target,
                                       const DetectInfo &detect_info, const CompensateInfo &compensate_info,
                                       const PredictInfo &predict_info)
 {
     // 决策信息
     DecideInfo info{};
-    vector<tracker_ptr> trackers;
+    vector<tracker::ptr> trackers;
     for (auto &p_group : groups)
     {
         const auto &p_trackers = p_group->data();
@@ -72,11 +72,11 @@ DecideInfo TranslationDecider::decide(const vector<group_ptr> &groups, RMStatus,
     return info;
 }
 
-tracker_ptr TranslationDecider::getClosestTracker(Mat img, const vector<tracker_ptr> &trackers)
+tracker::ptr TranslationDecider::getClosestTracker(Mat img, const vector<tracker::ptr> &trackers)
 {
     auto center = Point2f(img.size() / 2);
     return *min_element(trackers.begin(), trackers.end(),
-                        [&](const tracker_ptr &lhs, const tracker_ptr &rhs)
+                        [&](tracker::ptr lhs, tracker::ptr rhs)
                         {
                             Point2f t1_delta_point = lhs->front()->getCenter() - center;
                             Point2f t2_delta_point = rhs->front()->getCenter() - center;

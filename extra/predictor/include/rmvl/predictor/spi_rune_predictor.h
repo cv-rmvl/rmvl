@@ -44,8 +44,8 @@ public:
      * @param[in] tof 每个追踪器对应的子弹飞行时间
      * @return 预测模块信息
      */
-    PredictInfo predict(const std::vector<group_ptr> &groups,
-                        const std::unordered_map<tracker_ptr, double> &tof) override;
+    PredictInfo predict(const std::vector<group::ptr> &groups,
+                        const std::unordered_map<tracker::ptr, double> &tof) override;
 
     //! 构建 SpiRunePredictor
     static inline std::unique_ptr<SpiRunePredictor> make_predictor() { return std::make_unique<SpiRunePredictor>(); }
@@ -57,7 +57,7 @@ private:
      * @param[in] p_tracker 单个追踪器
      * @return 静态预测增量
      */
-    float staticPredict(const tracker_ptr &p_tracker);
+    float staticPredict(tracker::ptr p_tracker);
 
     /**
      * @brief 角度预测，获取增量

@@ -32,19 +32,22 @@ private:
     std::deque<RMStatus> _type_deque;   //!< 状态队列
 
 public:
+    using ptr = std::shared_ptr<PlanarTracker>;
+    using const_ptr = std::shared_ptr<const PlanarTracker>;
+
     /**
      * @brief 构造，并初始化追踪器
      *
      * @param[in] p_combo 第一帧组合体
      */
-    explicit PlanarTracker(const combo_ptr &p_combo);
+    explicit PlanarTracker(combo::ptr p_combo);
 
     /**
      * @brief 构建 PlanarTracker
      *
      * @param[in] p_combo 第一帧平面目标组合特征（不允许为空）
      */
-    static inline std::shared_ptr<PlanarTracker> make_tracker(const combo_ptr &p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
+    static inline PlanarTracker::ptr make_tracker(combo::ptr p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
 
     /**
      * @brief 更新时间序列
@@ -53,15 +56,15 @@ public:
      * @param[in] time 时间戳
      * @param[in] gyro_data 云台数据
      */
-    void update(combo_ptr p_combo, int64 time, const GyroData &gyro_data) override;
+    void update(combo::ptr p_combo, int64 time, const GyroData &gyro_data) override;
 
 private:
     /**
      * @brief 将 combo 中的数据更新至 tracker
      *
-     * @param p_combo combo_ptr 指针
+     * @param[in] p_combo combo::ptr 指针
      */
-    void updateData(const combo_ptr &p_combo);
+    void updateData(combo::ptr p_combo);
 
     //! 初始化 tracker 的距离和运动滤波器
     void initFilter();
@@ -94,9 +97,6 @@ private:
      */
     void vanishProcess(int64_t tick, const GyroData &gyro);
 };
-
-//! 平面目标追踪器共享指针
-using planar_tracker_ptr = std::shared_ptr<PlanarTracker>;
 
 //! @} planar_tracker
 

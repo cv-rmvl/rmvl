@@ -33,13 +33,13 @@ struct CompensateInfo
      * @note 记载每一个追踪器对应的补偿值，`x` 表示水平方向补偿增量，`y`
      *       表示垂直方向补偿增量
      */
-    std::unordered_map<tracker_ptr, cv::Point2f> compensation;
+    std::unordered_map<tracker::ptr, cv::Point2f> compensation;
 
     /**
      * @brief 飞行时间 (Time of Flying)
      * @note 记载每一个追踪器对应的飞行时间，表示弹丸击中目标所需要的子弹飞行时间
      */
-    std::unordered_map<tracker_ptr, double> tof;
+    std::unordered_map<tracker::ptr, double> tof;
 };
 
 //! 弹道下坠补偿模块
@@ -50,6 +50,8 @@ protected:
     float _pitch_static_com; //!< pitch 轴静态补偿，方向与 pitch 一致
 
 public:
+    using ptr = std::unique_ptr<compensator>;
+
     compensator() = default;
     virtual ~compensator() = default;
 
@@ -61,7 +63,7 @@ public:
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    virtual CompensateInfo compensate(const std::vector<group_ptr> &groups, uint8_t shoot_speed,
+    virtual CompensateInfo compensate(const std::vector<group::ptr> &groups, uint8_t shoot_speed,
                                       CompensateType com_flag) = 0;
 
     /**
@@ -90,9 +92,6 @@ private:
      */
     static double bulletModel(double distance, double velocity, double angle);
 };
-
-//! 补偿类非共享指针
-using compensate_ptr = std::unique_ptr<compensator>;
 
 //! @} compensator
 

@@ -53,10 +53,10 @@ public:
      * @param angle 装甲板倾角
      * @return
      */
-    armor_ptr buildArmor(Point center, float angle)
+    Armor::ptr buildArmor(Point center, float angle)
     {
-        light_blob_ptr left_blob = buildBlob(angle, center - Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
-        light_blob_ptr right_blob = buildBlob(angle, center + Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
+        LightBlob::ptr left_blob = buildBlob(angle, center - Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
+        LightBlob::ptr right_blob = buildBlob(angle, center + Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
         return Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
     }
 
@@ -67,7 +67,7 @@ public:
      * @param center 中心点
      * @return
      */
-    light_blob_ptr buildBlob(float angle, Point center)
+    LightBlob::ptr buildBlob(float angle, Point center)
     {
         src = Mat::zeros(Size(1280, 1024), CV_8UC1);
         Point base_bias(static_cast<int>(-110 * sin(deg2rad(angle))),
@@ -83,8 +83,8 @@ public:
 TEST_F(GyroTrackerTest, initial_build_function_test)
 {
     // 传入真实装甲板
-    armor_ptr armor = buildArmor(Point(500, 300), 8);
-    tracker_ptr p_tracker = GyroTracker::make_tracker(armor);
+    Armor::ptr armor = buildArmor(Point(500, 300), 8);
+    tracker::ptr p_tracker = GyroTracker::make_tracker(armor);
     EXPECT_EQ(p_tracker->size(), 1);
     EXPECT_EQ(p_tracker->at(0), armor);
 }
@@ -93,9 +93,9 @@ TEST_F(GyroTrackerTest, initial_build_function_test)
 TEST_F(GyroTrackerTest, tracker_update_with_1_armor)
 {
     // 连续传入 2 个装甲板
-    armor_ptr armor = buildArmor(Point(500, 300), 8);
-    tracker_ptr p_tracker = GyroTracker::make_tracker(armor);
-    armor_ptr armor2 = buildArmor(Point(505, 300), 8);
+    Armor::ptr armor = buildArmor(Point(500, 300), 8);
+    tracker::ptr p_tracker = GyroTracker::make_tracker(armor);
+    Armor::ptr armor2 = buildArmor(Point(505, 300), 8);
     p_tracker->update(armor2, tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_NE(p_tracker->getRelativeAngle(), armor2->getRelativeAngle());

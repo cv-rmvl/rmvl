@@ -89,7 +89,7 @@ void Armor::cameraConvertToGyro(const Matx33f &cam_rmat, const Vec3f &cam_tvec,
     gyro_tvec = rot * cam_tvec;
 }
 
-bool Armor::isContainBlob(light_blob_ptr blob, std::shared_ptr<Armor> armor)
+bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
 {
     // Get the four corner points of the area where the armor is located: (a, b, c, d)
     const auto &points = armor->getCorners();
@@ -121,7 +121,7 @@ bool Armor::isContainBlob(light_blob_ptr blob, std::shared_ptr<Armor> armor)
         return false;
 }
 
-Mat Armor::getNumberROI(Mat src, combo_ptr p_combo)
+Mat Armor::getNumberROI(Mat src, combo::ptr p_combo)
 {
     // 计算装甲板之间距离,该距离为获得的roi的边长
     double h_dis = p_combo->getHeight() * armor_param.ROI_HEIGHT_RATIO;

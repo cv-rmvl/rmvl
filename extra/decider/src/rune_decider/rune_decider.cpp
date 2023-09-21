@@ -30,7 +30,7 @@ using namespace cv;
  * @param[out] d_angle 实际目标转角增量信息
  * @param[out] d_center 实际图像中的位置信息
  */
-static void getPredictMsgFromAngleZ(float d_predict, tracker_ptr ref_tracker, Point2f &d_angle, Point2f &d_center)
+static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, Point2f &d_angle, Point2f &d_center)
 {
     auto p_rune = Rune::cast(ref_tracker->front());
     // 特征距离
@@ -48,8 +48,8 @@ static void getPredictMsgFromAngleZ(float d_predict, tracker_ptr ref_tracker, Po
               ref_tracker->getRelativeAngle();
 }
 
-DecideInfo RuneDecider::decide(const std::vector<group_ptr> &groups, RMStatus flag,
-                               const tracker_ptr &last_target, const DetectInfo &,
+DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus flag,
+                               tracker::ptr last_target, const DetectInfo &,
                                const CompensateInfo &compensate_info, const PredictInfo &predict_info)
 {
     // 决策信息
@@ -57,7 +57,7 @@ DecideInfo RuneDecider::decide(const std::vector<group_ptr> &groups, RMStatus fl
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
     // 需要被考虑的真实追踪器
-    vector<tracker_ptr> true_trackers;
+    vector<tracker::ptr> true_trackers;
     true_trackers.reserve(5);
 
     for (auto &p_tracker : groups.front()->data())
@@ -171,7 +171,7 @@ DecideInfo RuneDecider::decide(const std::vector<group_ptr> &groups, RMStatus fl
     return info;
 }
 
-bool RuneDecider::judgeShoot(tracker_ptr target_tracker, RuneType rune_mode,
+bool RuneDecider::judgeShoot(tracker::ptr target_tracker, RuneType rune_mode,
                              const Point2f &comp, const Point2f &center2d, Point2f &shoot_center)
 {
     if (!target_tracker)

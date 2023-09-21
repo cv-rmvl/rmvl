@@ -41,7 +41,7 @@ TagDetector::~TagDetector()
     tag25h9_destroy(_tf);
 }
 
-DetectInfo TagDetector::detect(vector<group_ptr> &groups, Mat &src, PixChannel,
+DetectInfo TagDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel,
                                const GyroData &gyro_data, int64 tick)
 {
     DetectInfo info;
@@ -89,17 +89,17 @@ DetectInfo TagDetector::detect(vector<group_ptr> &groups, Mat &src, PixChannel,
     info.combos.reserve(feature_size);
     for (size_t i = 0; i < feature_size; ++i)
     {
-        tag_ptr tag = Tag::make_feature(corners[i], types[i]);
+        auto tag = Tag::make_feature(corners[i], types[i]);
         if (tag == nullptr)
             continue;
         info.features.push_back(tag);
-        default_combo_ptr p_combo = DefaultCombo::make_combo(tag, _tick);
+        auto p_combo = DefaultCombo::make_combo(tag, _tick);
         if (p_combo == nullptr)
             continue;
         info.combos.push_back(p_combo);
     }
 
-    group_ptr p_group = groups.front();
+    group::ptr p_group = groups.front();
     auto &trackers = p_group->data();
     // combo 匹配 tracker
     match(trackers, info.combos);
@@ -117,7 +117,7 @@ DetectInfo TagDetector::detect(vector<group_ptr> &groups, Mat &src, PixChannel,
  */
 inline bool isChange(float dis) { return dis > tag_detector_param.MAX_TRACKER_DELTA_DIS; }
 
-void TagDetector::match(vector<tracker_ptr> &trackers, const vector<combo_ptr> &combos)
+void TagDetector::match(vector<tracker::ptr> &trackers, const vector<combo::ptr> &combos)
 {
     // 如果 trackers 为空先为每个识别到的 combo 开辟序列
     if (trackers.empty())
@@ -131,13 +131,13 @@ void TagDetector::match(vector<tracker_ptr> &trackers, const vector<combo_ptr> &
     if (combos.size() > trackers.size())
     {
         // 初始化装甲板集合
-        unordered_set<combo_ptr> tag_set(combos.begin(), combos.end());
+        unordered_set<combo::ptr> tag_set(combos.begin(), combos.end());
         // 距离最近的装甲板匹配到相应的序列中, 并 update
         for (auto p_tracker : trackers)
         {
             // 离 p_tracker 最近的 combo 及其距离
             auto min_it = min_element(combos.begin(), combos.end(),
-                                      [&p_tracker](combo_ptr lhs, combo_ptr rhs) {
+                                      [&p_tracker](combo::ptr lhs, combo::ptr rhs) {
                                           return getDistance(lhs->getCenter(), p_tracker->front()->getCenter()) <
                                                  getDistance(rhs->getCenter(), p_tracker->front()->getCenter());
                                       });
@@ -152,13 +152,13 @@ void TagDetector::match(vector<tracker_ptr> &trackers, const vector<combo_ptr> &
     else if (combos.size() < trackers.size())
     {
         // 初始化追踪器集合
-        unordered_set<tracker_ptr> tracker_set(trackers.begin(), trackers.end());
+        unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
         for (const auto &p_combo : combos)
         {
             // 离 tag 最近的 tracker 及其距离
             auto min_dis_tracker =
                 min_element(trackers.begin(), trackers.end(),
-                            [&p_combo](tracker_ptr lhs, tracker_ptr rhs) {
+                            [&p_combo](tracker::ptr lhs, tracker::ptr rhs) {
                                 return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
                                        getDistance(p_combo->getCenter(), rhs->front()->getCenter());
                             });
@@ -173,7 +173,7 @@ void TagDetector::match(vector<tracker_ptr> &trackers, const vector<combo_ptr> &
     else
     {
         // 初始化装甲板集合
-        unordered_set<combo_ptr> tag_set(combos.begin(), combos.end());
+        unordered_set<combo::ptr> tag_set(combos.begin(), combos.end());
         // 防止出现迭代器非法化的情况，此处使用下标访问
         size_t before_size = trackers.size(); // 存储原始 trackers 大小
         for (size_t i = 0; i < before_size; i++)
@@ -181,7 +181,7 @@ void TagDetector::match(vector<tracker_ptr> &trackers, const vector<combo_ptr> &
             // 离 tracker 最近的 combo
             auto min_it =
                 min_element(tag_set.begin(), tag_set.end(),
-                            [&trackers, &i](const combo_ptr &combo_1, const combo_ptr &combo_2) -> bool {
+                            [&trackers, &i](const combo::ptr &combo_1, const combo::ptr &combo_2) -> bool {
                                 return getDistance(combo_1->getCenter(), trackers[i]->front()->getCenter()) <
                                        getDistance(combo_2->getCenter(), trackers[i]->front()->getCenter());
                             });
@@ -202,11 +202,11 @@ void TagDetector::match(vector<tracker_ptr> &trackers, const vector<combo_ptr> &
     }
 }
 
-void TagDetector::eraseNullTracker(vector<tracker_ptr> &trackers)
+void TagDetector::eraseNullTracker(vector<tracker::ptr> &trackers)
 {
     // 删除
     trackers.erase(remove_if(trackers.begin(), trackers.end(),
-                             [&](tracker_ptr &p_tracker) {
+                             [&](tracker::ptr &p_tracker) {
                                  return p_tracker->getVanishNumber() >= planar_tracker_param.TRACK_FRAMES;
                              }),
                    trackers.end());

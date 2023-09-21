@@ -28,7 +28,7 @@ using namespace cv;
  * @param[in] rhs 右装甲板
  * @return 能否合并
  */
-static inline bool canBeUnion(const combo_ptr &lhs, const combo_ptr &rhs)
+static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
 {
     // 宽度比值
     float width_ratio = (lhs->getWidth() > rhs->getWidth()) ? lhs->getWidth() / rhs->getWidth()
@@ -78,19 +78,19 @@ static inline bool canBeUnion(const combo_ptr &lhs, const combo_ptr &rhs)
     return true;
 }
 
-void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
+void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
 {
-    unordered_map<combo_ptr, vector<combo_ptr>> combo_maps; // [代表元素:同组装甲板的列表]
+    unordered_map<combo::ptr, vector<combo::ptr>> combo_maps; // [代表元素:同组装甲板的列表]
     // 用并查集进行同组装甲板合并
     if (!combos.empty())
     {
         // 从左到右排序得到有序的装甲板序列
         sort(combos.begin(), combos.end(),
-             [](const combo_ptr &lhs, const combo_ptr &rhs)
+             [](const combo::ptr &lhs, const combo::ptr &rhs)
              {
                  return lhs->getCenter().x < rhs->getCenter().x;
              });
-        UnionFind<combo_ptr> uf(combos.begin(), combos.end());
+        UnionFind<combo::ptr> uf(combos.begin(), combos.end());
         for (size_t i = 0; i + 1 < combos.size(); ++i)
             for (size_t j = i + 1; j < combos.size(); ++j)
                 if (canBeUnion(combos[i], combos[j]))
@@ -114,11 +114,11 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
     else
     {
         // 装甲板集合代表元素对应的序列组中轴线坐标 [代表元素:旋转中心点]
-        unordered_map<combo_ptr, Point3f> groups_center;
+        unordered_map<combo::ptr, Point3f> groups_center;
         // 遍历装甲板组，构建 groups_center
         for (const auto &map_pair : combo_maps)
         {
-            combo_ptr represent = map_pair.first;
+            combo::ptr represent = map_pair.first;
             const auto &combo_vec = map_pair.second;
             // 设置装甲板的中心、姿态、半径集合
             size_t combo_size = combo_vec.size();
@@ -128,7 +128,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
             // 为 combo_vec 的每一个装甲板设置 t, R, r 三个数据量
             for (size_t i = 0; i < combo_size; i++)
             {
-                combo_ptr p_combo = combo_vec[i];
+                combo::ptr p_combo = combo_vec[i];
                 combos_t[i] = p_combo->getExtrinsics().tvec();
                 combos_P[i] = Armor::cast(p_combo)->getPose();
                 combos_r[i] = gyro_group_param.INIT_RADIUS;
@@ -143,7 +143,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
         if (combo_maps.size() > groups.size())
         {
             // 初始化代表装甲板集合
-            unordered_set<combo_ptr> represent_set;
+            unordered_set<combo::ptr> represent_set;
             for (const auto &[represent, combo_set] : combo_maps)
                 represent_set.insert(represent);
             // 距离最近的装甲板组匹配到相应的序列组中
@@ -168,7 +168,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
         else if (combo_maps.size() < groups.size())
         {
             // 初始化序列组集合
-            unordered_set<gyro_group_ptr> group_set(groups.size());
+            unordered_set<GyroGroup::ptr> group_set(groups.size());
             for (const auto &p_group : groups)
             {
                 auto p_gyro_group = GyroGroup::cast(p_group);
@@ -195,7 +195,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
         else
         {
             // 初始化代表装甲板集合
-            unordered_set<combo_ptr> represent_set;
+            unordered_set<combo::ptr> represent_set;
             for (const auto &[represent, combo_set] : combo_maps)
                 represent_set.insert(represent);
             size_t before_size = groups.size();
@@ -227,7 +227,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
             }
         }
         // 为所有序列组进行同步，并记录出现异常的 group
-        unordered_set<group_ptr> remove_set;
+        unordered_set<group::ptr> remove_set;
         for (const auto &p_group : groups)
         {
             try
@@ -242,7 +242,7 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
         }
         // 删除异常 group
         groups.erase(remove_if(groups.begin(), groups.end(),
-                               [&remove_set](const group_ptr &val)
+                               [&remove_set](group::ptr val)
                                {
                                    return remove_set.find(val) != remove_set.end();
                                }),
@@ -250,37 +250,37 @@ void GyroDetector::match(vector<group_ptr> &groups, vector<combo_ptr> &combos)
     }
     // 删除四个 tracker 同时消失数量过多的 group
     groups.erase(remove_if(groups.begin(), groups.end(),
-                           [](group_ptr &p_group)
+                           [](group::ptr &p_group)
                            {
                                return p_group->getVanishNumber() > gyro_group_param.TRACK_FRAMES;
                            }),
                  groups.end());
     // 删除 2D 中心点相距过近的 group
     sort(groups.begin(), groups.end(),
-         [](const group_ptr &lhs, const group_ptr &rhs)
+         [](group::ptr lhs, group::ptr rhs)
          {
              return lhs->getCenter().x < rhs->getCenter().x;
          });
-    unordered_set<group_ptr> erase_group_set;
+    unordered_set<group::ptr> erase_group_set;
     for (size_t i = 1; i < groups.size(); ++i)
         if (getDistance(groups[i]->getCenter(), groups[i - 1]->getCenter()) < gyro_detector_param.MIN_CENTER_DIS)
             erase_group_set.insert(groups[i]);
     groups.erase(remove_if(groups.begin(), groups.end(),
-                           [&erase_group_set](group_ptr &p_group)
+                           [&erase_group_set](group::ptr &p_group)
                            {
                                return erase_group_set.find(p_group) != erase_group_set.end();
                            }),
                  groups.end());
 }
 
-void GyroDetector::matchOneGroup(group_ptr group, const std::vector<combo_ptr> &combos)
+void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr> &combos)
 {
     // 在所有追踪器
-    vector<tracker_ptr> trackers = group->data();
-    unordered_set<tracker_ptr> tracker_set(trackers.begin(), trackers.end());
+    vector<tracker::ptr> trackers = group->data();
+    unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
     // 根据距离 distance 排序，选出待匹配的 trackers
     sort(trackers.begin(), trackers.end(),
-         [](const tracker_ptr &lhs, const tracker_ptr &rhs)
+         [](tracker::ptr lhs, tracker::ptr rhs)
          {
              return lhs->getExtrinsics().distance() < rhs->getExtrinsics().distance();
          });
@@ -299,7 +299,7 @@ void GyroDetector::matchOneGroup(group_ptr group, const std::vector<combo_ptr> &
         // 当前捕获到的新装甲板角点
         const auto &cur_p = p_combo->getCorners();
         auto min_tracker = *min_element(trackers.begin(), trackers.end(),
-                                        [&cur_p](const tracker_ptr &lhs, const tracker_ptr &rhs)
+                                        [&cur_p](tracker::ptr lhs, tracker::ptr rhs)
                                         {
                                             const auto &lhs_p = lhs->front()->getCorners();
                                             const auto &rhs_p = rhs->front()->getCorners();
@@ -318,11 +318,11 @@ void GyroDetector::matchOneGroup(group_ptr group, const std::vector<combo_ptr> &
         GyroTracker::cast(p_tracker)->updateVanishState(GyroTracker::VANISH);
 }
 
-void GyroDetector::eraseFakeTracker(vector<tracker_ptr> &trackers)
+void GyroDetector::eraseFakeTracker(vector<tracker::ptr> &trackers)
 {
     // 删除
     trackers.erase(remove_if(trackers.begin(), trackers.end(),
-                             [](tracker_ptr &p_tracker)
+                             [](tracker::ptr &p_tracker)
                              {
                                  return p_tracker->getType().RobotTypeID == RobotType::UNKNOWN;
                              }),

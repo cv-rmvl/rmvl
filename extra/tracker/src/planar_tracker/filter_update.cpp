@@ -20,7 +20,7 @@ using namespace cv;
 
 void PlanarTracker::initFilter()
 {
-    combo_ptr first_combo = _combo_deque.front();
+    combo::ptr first_combo = _combo_deque.front();
     // 初始化距离滤波器
     _distance_filter.setR(Matx22f::diag({0.01, 0.02})); // 距离为两帧差，误差为两倍
     _distance_filter.setQ(Matx22f::diag({0.01, 0.01})); // 距离的过程噪声随意调整

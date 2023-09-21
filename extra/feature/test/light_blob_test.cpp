@@ -30,7 +30,7 @@ TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
     // 轮廓点数为 6，小倾角
     contour = {Point(100, 100), Point(105, 105), Point(95, 105),
                Point(100, 200), Point(105, 195), Point(95, 195)};
-    light_blob_ptr blob1 = LightBlob::make_feature(contour);
+    LightBlob::ptr blob1 = LightBlob::make_feature(contour);
     EXPECT_TRUE(blob1 != nullptr);
 
     // 一般个数轮廓点数，小倾角
@@ -40,14 +40,14 @@ TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
     vector<vector<Point>> contours;
     findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     contour = contours.front();
-    light_blob_ptr blob2 = LightBlob::make_feature(contour);
+    LightBlob::ptr blob2 = LightBlob::make_feature(contour);
     EXPECT_TRUE(blob2 != nullptr);
 
     // 轮廓点数为 6，大倾角
     contour.clear();
     contour = {Point(100, 100), Point(105, 100), Point(100, 105),
                Point(170, 170), Point(165, 170), Point(170, 165)};
-    light_blob_ptr blob3 = LightBlob::make_feature(contour);
+    LightBlob::ptr blob3 = LightBlob::make_feature(contour);
     EXPECT_FALSE(blob3 != nullptr);
 
     // 一般个数轮廓点数，大倾角
@@ -57,7 +57,7 @@ TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
     contours.clear();
     findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     contour = contours.front();
-    light_blob_ptr blob4 = LightBlob::make_feature(contour);
+    LightBlob::ptr blob4 = LightBlob::make_feature(contour);
     EXPECT_FALSE(blob4 != nullptr);
 }
 
@@ -66,7 +66,7 @@ TEST(BuildLightBlobTest, fitEllipse_few_contourSize)
     // 轮廓点数为 5
     vector<Point> contour = {Point(100, 100), Point(105, 105), Point(95, 105),
                              Point(100, 200), Point(105, 195)};
-    light_blob_ptr blob = LightBlob::make_feature(contour);
+    LightBlob::ptr blob = LightBlob::make_feature(contour);
     EXPECT_FALSE(blob != nullptr);
 }
 
@@ -82,7 +82,7 @@ TEST(BuildLightBlobTest, fitEllipse_width_contourSize_judgeTable)
     vector<vector<Point>> contours;
     findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     contour = contours.front();
-    light_blob_ptr blob1 = LightBlob::make_feature(contour);
+    LightBlob::ptr blob1 = LightBlob::make_feature(contour);
     EXPECT_FALSE(blob1 != nullptr);
 
     // 一般个数轮廓点数，过细灯条，大倾角
@@ -92,7 +92,7 @@ TEST(BuildLightBlobTest, fitEllipse_width_contourSize_judgeTable)
     contours.clear();
     findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     contour = contours.front();
-    light_blob_ptr blob2 = LightBlob::make_feature(contour);
+    LightBlob::ptr blob2 = LightBlob::make_feature(contour);
     EXPECT_FALSE(blob2 != nullptr);
 }
 

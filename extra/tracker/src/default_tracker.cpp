@@ -11,7 +11,7 @@
 
 #include "rmvl/tracker/tracker.h"
 
-void rm::DefaultTracker::updateData(const rm::combo_ptr &p_combo)
+void rm::DefaultTracker::updateData(rm::combo::ptr p_combo)
 {
     _height = p_combo->getHeight();
     _width = p_combo->getHeight();
@@ -21,15 +21,15 @@ void rm::DefaultTracker::updateData(const rm::combo_ptr &p_combo)
     _extrinsic = p_combo->getExtrinsics();
 }
 
-rm::DefaultTracker::DefaultTracker(const rm::combo_ptr &p_combo) : rm::tracker()
+rm::DefaultTracker::DefaultTracker(rm::combo::ptr p_combo) : rm::tracker()
 {
     if (p_combo == nullptr)
-        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo_ptr is null pointer");
+        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument \"combo::ptr\" is null pointer");
     _combo_deque = {p_combo};
     updateData(p_combo);
 }
 
-void rm::DefaultTracker::update(rm::combo_ptr p_combo, int64, const rm::GyroData &)
+void rm::DefaultTracker::update(rm::combo::ptr p_combo, int64, const rm::GyroData &)
 {
     updateData(p_combo);
     _combo_deque.push_front(p_combo);

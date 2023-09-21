@@ -46,17 +46,19 @@ enum : std::size_t
 struct PredictInfo
 {
     //! 静态响应预测增量 B
-    std::unordered_map<tracker_ptr, cv::Vec<double, 9>> static_prediction;
+    std::unordered_map<tracker::ptr, cv::Vec<double, 9>> static_prediction;
     //! 动态响应预测增量 Kt
-    std::unordered_map<tracker_ptr, cv::Vec<double, 9>> dynamic_prediction;
+    std::unordered_map<tracker::ptr, cv::Vec<double, 9>> dynamic_prediction;
     //! 射击延迟预测增量 Bs
-    std::unordered_map<tracker_ptr, cv::Vec<double, 9>> shoot_delay_prediction;
+    std::unordered_map<tracker::ptr, cv::Vec<double, 9>> shoot_delay_prediction;
 };
 
 //! 目标预测模块
 class predictor
 {
 public:
+    using ptr = std::unique_ptr<predictor>;
+
     predictor() = default;
 
     virtual ~predictor() = default;
@@ -68,12 +70,9 @@ public:
      * @param[in] tof 每个追踪器对应的子弹飞行时间
      * @return 预测模块信息
      */
-    virtual PredictInfo predict(const std::vector<group_ptr> &groups,
-                                const std::unordered_map<tracker_ptr, double> &tof) = 0;
+    virtual PredictInfo predict(const std::vector<group::ptr> &groups,
+                                const std::unordered_map<tracker::ptr, double> &tof) = 0;
 };
-
-//! 抽象预测类非共享指针
-using predict_ptr = std::unique_ptr<predictor>;
 
 //! @} predictor
 

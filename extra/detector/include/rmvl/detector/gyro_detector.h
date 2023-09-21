@@ -69,7 +69,7 @@ public:
      * @param[in] record_time 时间戳
      * @return 识别信息结构体
      */
-    DetectInfo detect(std::vector<group_ptr> &groups, cv::Mat &src, rm::PixChannel color,
+    DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, rm::PixChannel color,
                       const GyroData &gyro_data, int64 record_time) override;
 
     //! 构建 GyroDetector
@@ -99,7 +99,7 @@ private:
      * @param[out] combos 找到的组合体列表
      * @param[out] rois 找到的组合体对应的 ROI 列表
      */
-    void find(cv::Mat &src, std::vector<feature_ptr> &features, std::vector<combo_ptr> &combos, std::vector<cv::Mat> &rois);
+    void find(cv::Mat &src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos, std::vector<cv::Mat> &rois);
 
     /**
      * @brief 匹配、更新时间序列
@@ -107,7 +107,7 @@ private:
      * @param[in] groups 所有序列组
      * @param[in] combos 每一帧的所有目标
      */
-    void match(std::vector<group_ptr> &groups, std::vector<combo_ptr> &combos);
+    void match(std::vector<group::ptr> &groups, std::vector<combo::ptr> &combos);
 
     /**
      * @brief 寻找灯条
@@ -115,7 +115,7 @@ private:
      * @param[in] bin 二值图
      * @return 找到的灯条
      */
-    std::vector<light_blob_ptr> findLightBlobs(cv::Mat &bin);
+    std::vector<LightBlob::ptr> findLightBlobs(cv::Mat &bin);
 
     /**
      * @brief 匹配装甲板
@@ -123,14 +123,14 @@ private:
      * @param[in out] light_blobs 灯条列表，内部进行从左到右排序
      * @return 当前帧找到的所有装甲板
      */
-    std::vector<armor_ptr> findArmors(std::vector<light_blob_ptr> &light_blobs);
+    std::vector<Armor::ptr> findArmors(std::vector<LightBlob::ptr> &light_blobs);
 
     /**
      * @brief 在多个装甲板共享同一个灯条时，根据匹配误差移除装甲板
      *
      * @param[in out] armors 待筛选的所有装甲板
      */
-    void eraseErrorArmors(std::vector<armor_ptr> &armors);
+    void eraseErrorArmors(std::vector<Armor::ptr> &armors);
 
     /**
      * @brief 删除强光误识别的灯条
@@ -138,14 +138,14 @@ private:
      * @param[in] src 原图像
      * @param[in out] blobs 所有灯条
      */
-    void eraseBrightBlobs(cv::Mat src, std::vector<light_blob_ptr> &blobs);
+    void eraseBrightBlobs(cv::Mat src, std::vector<LightBlob::ptr> &blobs);
 
     /**
      * @brief 删除假装甲板
      *
      * @param[in out] armors 所有装甲板
      */
-    void eraseFakeArmors(std::vector<armor_ptr> &armors);
+    void eraseFakeArmors(std::vector<Armor::ptr> &armors);
 
     /**
      * @brief 将指定装甲板匹配至单一 GyroGroup 的 tracker 中
@@ -155,14 +155,14 @@ private:
      * @param[in] group 单一 GyroGroup 序列组
      * @param[in] combos 单一序列组所对应的装甲板
      */
-    void matchOneGroup(group_ptr group, const std::vector<combo_ptr> &combos);
+    void matchOneGroup(group::ptr group, const std::vector<combo::ptr> &combos);
 
     /**
      * @brief 删除因数字识别判断出的伪装甲板序列
      *
      * @param[in] trackers 所有追踪器序列
      */
-    void eraseFakeTracker(std::vector<tracker_ptr> &trackers);
+    void eraseFakeTracker(std::vector<tracker::ptr> &trackers);
 
     /**
      * @brief 通过熵权法推理装甲板的匹配对象
@@ -171,7 +171,7 @@ private:
      * @param[in] combos 匹配到序列组中的装甲板
      * @return 推理得到的数据指标
      */
-    std::unordered_map<size_t, size_t> ewTopsisInference(const group_ptr &group, const std::vector<combo_ptr> &combos);
+    std::unordered_map<size_t, size_t> ewTopsisInference(group::ptr group, const std::vector<combo::ptr> &combos);
 };
 
 //! @} gyro_detector
