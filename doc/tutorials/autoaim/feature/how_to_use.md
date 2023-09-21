@@ -22,7 +22,7 @@
 
 ```cpp
 // 入参是用 std::vector<cv::Point> 所表示的轮廓
-rm::feature_ptr p_light_blob = rm::LightBlob::make_feature(contour);
+rm::feature::ptr p_light_blob = rm::LightBlob::make_feature(contour);
 ```
 
 所有特征类 rm::feature 的派生对象都 **显式弃置** 了复制构造函数以及移动构造函数，这说明
@@ -65,7 +65,7 @@ inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
 
 #### 1.2.2 派生类属性
 
-对于一些派生的特征特有的属性，比如装甲板灯条 rm::LightBlob 的上顶点，使用上需要额外注意类型转换的内容。一般我们在一些功能模块中，例如 @ref detector 中直接操纵的都是抽象类的共享指针 `rm::feature_ptr`，如果需要转换成派生类对象，可利用共享指针 `std::shared_ptr` 中对于动态类型转换的函数：`std::dynamic_pointer_cast`，比如想得到 rm::LightBlob 的共享指针，可以使用以下命令。
+对于一些派生的特征特有的属性，比如装甲板灯条 rm::LightBlob 的上顶点，使用上需要额外注意类型转换的内容。一般我们在一些功能模块中，例如 @ref detector 中直接操纵的都是抽象类的共享指针 `rm::feature::ptr`，如果需要转换成派生类对象，可利用共享指针 `std::shared_ptr` 中对于动态类型转换的函数：`std::dynamic_pointer_cast`，比如想得到 rm::LightBlob 的共享指针，可以使用以下命令。
 
 ```cpp
 auto p_light_blob = std::dynamic_pointer_cast<rm::LightBlob>(p_feature);
@@ -92,6 +92,6 @@ auto top_point = p_light_blob->getTopPoint();
 
 1. 必须定义在 `namespace rm` 中，下文不再赘述；
 2. 必须 public 继承于 `rm::feature` 基类；
-3. 必须定义 `my_feature_ptr` 作为 `std::shared_ptr<MyFeature>` 的别名（注意是 **驼峰命名** 还是 **蛇形命名** ）；
-4. 必须实现以 `my_feature_ptr` 为返回值的 `MyFeature::make_feature` 静态工厂函数；
+3. 必须定义 `my_feature::ptr` 作为 `std::shared_ptr<MyFeature>` 的别名（注意是 **驼峰命名** 还是 **蛇形命名** ）；
+4. 必须实现以 `my_feature::ptr` 为返回值的 `MyFeature::make_feature` 静态工厂函数；
 5. 不得定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；

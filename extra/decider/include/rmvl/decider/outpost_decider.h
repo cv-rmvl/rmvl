@@ -26,7 +26,7 @@ private:
     //! 目标装甲板信息 @todo 给类或结构体在声明处写上初始化数值
     struct TargetArmor
     {
-        combo_ptr aim_armor;
+        combo::ptr aim_armor;
         cv::Point2f predict_point;
         cv::Point2f angle; //!< `x` 为 total_yaw, `y` 为 total_pitch
         double fly_time;
@@ -68,8 +68,8 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    virtual DecideInfo decide(const std::vector<group_ptr> &groups, RMStatus flag,
-                              const tracker_ptr &last_target, const DetectInfo &detect_info,
+    virtual DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+                              tracker::ptr last_target, const DetectInfo &detect_info,
                               const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
 
     //! 构造 OutpostDecider
@@ -87,15 +87,15 @@ private:
      * @brief 选择静止的目标序列
      *
      * @param trackers 当前所有追踪器
-     * @return tracker_ptr
+     * @return tracker::ptr
      */
-    tracker_ptr getClosestTracker(const std::vector<tracker_ptr> &trackers);
+    tracker::ptr getClosestTracker(const std::vector<tracker::ptr> &trackers);
 
-    std::tuple<combo_ptr, float> getAimPoint(const std::vector<combo_ptr> &combos);
+    std::tuple<combo::ptr, float> getAimPoint(const std::vector<combo::ptr> &combos);
 
-    cv::Point2f calculateData(tracker_ptr target_tracker, const CompensateInfo &compensate_info);
+    cv::Point2f calculateData(tracker::ptr target_tracker, const CompensateInfo &compensate_info);
 
-    void calculateInfo(tracker_ptr target_tracker, const CompensateInfo &compensate_info,
+    void calculateInfo(tracker::ptr target_tracker, const CompensateInfo &compensate_info,
                        const cv::Point2f &horizon_center, bool is_next);
 };
 

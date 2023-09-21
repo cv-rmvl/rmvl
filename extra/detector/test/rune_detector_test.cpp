@@ -37,12 +37,12 @@ class RuneDetectorTest : public testing::Test
 {
 public:
     Mat src;
-    vector<group_ptr> groups;
-    detect_ptr detector;
+    vector<group::ptr> groups;
+    detector::ptr p_detector;
 
     void SetUp() override
     {
-        detector = RuneDetector::make_detector();
+        p_detector = RuneDetector::make_detector();
         src = Mat::zeros(Size(1278, 1024), CV_8UC3);
     }
     void TearDown() override {}
@@ -160,9 +160,9 @@ public:
         }
     }
 
-    vector<combo_ptr> detect()
+    vector<combo::ptr> detect()
     {
-        auto info = detector->detect(groups, src, RED, GyroData(), getTickCount());
+        auto info = p_detector->detect(groups, src, RED, GyroData(), getTickCount());
         return info.combos;
     }
 };
@@ -185,7 +185,7 @@ TEST_F(RuneDetectorTest, target1_center1)
     auto combos = detect();
     EXPECT_EQ(combos.size(), 1);
 
-    rune_ptr p_rune = Rune::cast(combos.front());
+    Rune::ptr p_rune = Rune::cast(combos.front());
     EXPECT_FALSE(p_rune->isActive());
 }
 
@@ -224,7 +224,7 @@ TEST_F(RuneDetectorTest, 1_active_rune)
     auto combos = detect();
     EXPECT_EQ(combos.size(), 1);
 
-    rune_ptr rune = Rune::cast(combos.front());
+    Rune::ptr rune = Rune::cast(combos.front());
     EXPECT_TRUE(rune->isActive());
 }
 
@@ -241,13 +241,12 @@ TEST_F(RuneDetectorTest, 1_inactive_1_active)
     EXPECT_EQ(combos.size(), 2);
 
     sort(combos.begin(), combos.end(),
-         [](const combo_ptr &lhs, const combo_ptr &rhs)
-         {
+         [](const combo::ptr &lhs, const combo::ptr &rhs) {
              return lhs->getCenter().x < rhs->getCenter().x;
          });
 
-    rune_ptr rune1 = Rune::cast(combos[0]);
-    rune_ptr rune2 = Rune::cast(combos[1]);
+    Rune::ptr rune1 = Rune::cast(combos[0]);
+    Rune::ptr rune2 = Rune::cast(combos[1]);
     EXPECT_FALSE(rune1->isActive());
     EXPECT_TRUE(rune2->isActive());
 }

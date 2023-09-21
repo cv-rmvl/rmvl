@@ -21,14 +21,30 @@ namespace rm
 //! @addtogroup combo_rune
 //! @{
 
-//! 能量机关神符
+/**
+ * @brief 神符（能量机关）
+ * @note
+ * - `at(0)`: 神符靶心，`at(1)`: 神符旋转中心（R 标）
+ * - `getAngle()` 获取的角度范围是 `[-180,180)`
+ * - `getCorners()`
+ *   - `[0]`: 靶心环最靠近神符中心的点
+ *   - `[1]`: 靶心环与角点[0][2]的中垂线的交点（顺时针）
+ *   - `[2]`: 靶心环最远离神符中心的点
+ *   - `[3]`: 靶心环与角点[0][2]的中垂线的交点（顺时针）
+ *   - `[4]`: 神符中心点
+ * - `getExtrinsics` 数据仅直线距离 `distance` 有效
+ * - `getCenter` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征 `at(1)`
+ */
 class Rune final : public combo
 {
     float _feature_dis = 0.f; //!< 特征间距
     bool _is_active = false;  //!< 是否激活
 
 public:
-    Rune(const rune_target_ptr &p_target, const rune_center_ptr &p_center, const GyroData &gyro_data, int64 tick);
+    using ptr = std::shared_ptr<Rune>;
+    using const_ptr = std::shared_ptr<const Rune>;
+
+    Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, int64 tick);
     Rune(const Rune &) = delete;
     Rune(Rune &&) = delete;
 
@@ -42,19 +58,24 @@ public:
      * @param[in] force 是否为强制构造
      * @return std::shared_ptr<Rune>
      */
-    static std::shared_ptr<Rune> make_combo(const rune_target_ptr &p_target, const rune_center_ptr &p_center,
+    static std::shared_ptr<Rune> make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
                                             const GyroData &gyro_data, int64 tick, bool force = false);
 
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_combo combo_ptr 抽象指针
+     * @param[in] p_combo combo::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<Rune> cast(combo_ptr p_combo)
-    {
-        return std::dynamic_pointer_cast<Rune>(p_combo);
-    }
+    static inline Rune::ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Rune>(p_combo); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_combo combo::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline Rune::const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Rune>(p_combo); }
 
     /**
      * @brief 相机平面中将角度值映射至垂直平面
@@ -95,24 +116,8 @@ private:
      * @param[in] p_center 神符中心
      * @return 按照左下，左上，右上，右下的顺序排列的角点向量
      */
-    static std::vector<cv::Point2f> calculatePoints(rune_target_ptr p_target, rune_center_ptr p_center);
+    static std::vector<cv::Point2f> calculatePoints(RuneTarget::ptr p_target, RuneCenter::ptr p_center);
 };
-
-/**
- * @brief 神符组合特征共享指针
- * @note
- * - `at(0)`: 神符靶心，`at(1)`: 神符旋转中心（R 标）
- * - `getAngle()` 获取的角度范围是 `[-180,180)`
- * - `getCorners()`
- *   - `[0]`: 靶心环最靠近神符中心的点
- *   - `[1]`: 靶心环与角点[0][2]的中垂线的交点（顺时针）
- *   - `[2]`: 靶心环最远离神符中心的点
- *   - `[3]`: 靶心环与角点[0][2]的中垂线的交点（顺时针）
- *   - `[4]`: 神符中心点
- * - `getExtrinsics` 数据仅直线距离 `distance` 有效
- * - `getCenter` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征 `at(1)`
- */
-using rune_ptr = std::shared_ptr<Rune>;
 
 //! @} combo_rune
 

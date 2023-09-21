@@ -19,8 +19,8 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-PredictInfo ArmorPredictor::predict(const vector<group_ptr> &groups,
-                                    const unordered_map<tracker_ptr, double> &tof)
+PredictInfo ArmorPredictor::predict(const vector<group::ptr> &groups,
+                                    const unordered_map<tracker::ptr, double> &tof)
 {
     // 预测信息
     PredictInfo info{};

@@ -49,12 +49,12 @@ GyroDecider::GyroDecider()
  * @param[out] point_p3d 目标预测点 (3D)
  * @param[out] point_dp 目标转角预测增量
  */
-static void calcPrediction(const group_ptr &p_group, const tracker_ptr &p_tracker,
-                           Vec3f translation_dp, float rotangle, Point2f &point_p2d, Point3f &point_p3d, Point2f &point_dp)
+static void calcPrediction(group::ptr p_group, tracker::ptr p_tracker, Vec3f translation_dp, float rotangle,
+                           Point2f &point_p2d, Point3f &point_p3d, Point2f &point_dp)
 {
-    gyro_group_ptr p_gyro_group = GyroGroup::cast(p_group);
+    GyroGroup::ptr p_gyro_group = GyroGroup::cast(p_group);
     if (p_gyro_group == nullptr)
-        RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"gyro_group_ptr\"");
+        RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"GyroGroup::ptr\"");
     // 旋转预测增量的分量计算
     float c = cos(rotangle), s = sin(rotangle);
     const auto &tvec = p_tracker->getExtrinsics().tvec();
@@ -87,7 +87,7 @@ static void calcPrediction(const group_ptr &p_group, const tracker_ptr &p_tracke
  * @param[in] predict_center3d 目标序列组的 3D 预测点
  * @return 高速状态下的基础响应
  */
-static Point2f calculateHighSpeedBasicResponse(const group_ptr &target_group, const tracker_ptr &target_tracker,
+static Point2f calculateHighSpeedBasicResponse(group::ptr target_group, tracker::ptr target_tracker,
                                                const Point3f &predict_center3d)
 {
     // pitch 最大振幅角度
@@ -107,8 +107,8 @@ static Point2f calculateHighSpeedBasicResponse(const group_ptr &target_group, co
                                                                     pitch_min * (1 - gyro_decider_param.PITCH_RESPONSE_AMP))};
 }
 
-DecideInfo GyroDecider::decide(const std::vector<group_ptr> &groups, RMStatus,
-                               const tracker_ptr &last_target, const DetectInfo &,
+DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, RMStatus,
+                               tracker::ptr last_target, const DetectInfo &,
                                const CompensateInfo &compensate_info, const PredictInfo &predict_info)
 {
     // 决策信息
@@ -118,7 +118,7 @@ DecideInfo GyroDecider::decide(const std::vector<group_ptr> &groups, RMStatus,
         return info;
     // -------------------------【选择目标序列组】-------------------------
     // 初始化目标序列组
-    group_ptr target_group = nullptr;
+    group::ptr target_group = nullptr;
     // 若上一帧有目标序列组，将上一帧目标序列组作为目标
     if (last_target != nullptr)
         for (const auto &p_group : groups)
@@ -136,7 +136,7 @@ DecideInfo GyroDecider::decide(const std::vector<group_ptr> &groups, RMStatus,
     {
         // -------------------------【决策数据解算】-------------------------
         RotStatus rot_status = GyroGroup::cast(target_group)->getRotStatus();
-        gyro_tracker_ptr p_gyro_tracker = GyroTracker::cast(info.target);
+        auto p_gyro_tracker = GyroTracker::cast(info.target);
 
         const auto &pKt = predict_info.dynamic_prediction.at(info.target);
         const auto &pB = predict_info.static_prediction.at(info.target);
@@ -208,7 +208,7 @@ DecideInfo GyroDecider::decide(const std::vector<group_ptr> &groups, RMStatus,
     return info;
 }
 
-tracker_ptr GyroDecider::getClosestTracker(const group_ptr &p_group, const PredictInfo &info)
+tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInfo &info)
 {
     if (p_group == nullptr)
         return nullptr;
@@ -220,8 +220,7 @@ tracker_ptr GyroDecider::getClosestTracker(const group_ptr &p_group, const Predi
     Point2f unused_pa, unused_pb;
 
     return *min_element(trackers.begin(), trackers.end(),
-                        [&](const tracker_ptr &lhs, const tracker_ptr &rhs)
-                        {
+                        [&](tracker::ptr lhs, tracker::ptr rhs) {
                             Point3f lhs_preaim_p3d; // 左操作数预测值 (3D)
                             float lhs_preaim_angle = info.dynamic_prediction.at(lhs)(ANG_Y) +
                                                      info.shoot_delay_prediction.at(lhs)(ANG_Y) +
@@ -239,16 +238,15 @@ tracker_ptr GyroDecider::getClosestTracker(const group_ptr &p_group, const Predi
                         });
 }
 
-group_ptr GyroDecider::getHighestPriorityGroup(const std::vector<group_ptr> &groups)
+group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &groups)
 {
     if (groups.empty())
         return nullptr;
     // 获取最优 group
     auto max_group = *max_element(groups.begin(), groups.end(),
-                                  [&](const group_ptr &g1, const group_ptr &g2)
-                                  {
-                                      gyro_group_ptr lhs = GyroGroup::cast(g1);
-                                      gyro_group_ptr rhs = GyroGroup::cast(g2);
+                                  [&](group::ptr g1, group::ptr g2) {
+                                      GyroGroup::ptr lhs = GyroGroup::cast(g1);
+                                      GyroGroup::ptr rhs = GyroGroup::cast(g2);
                                       auto type_lhs = g1->getType().RobotTypeID;
                                       auto type_rhs = g1->getType().RobotTypeID;
                                       // 需要满足: 优先级 rhs > lhs

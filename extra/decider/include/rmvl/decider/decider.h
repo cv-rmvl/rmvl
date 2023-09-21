@@ -28,7 +28,7 @@ namespace rm
  */
 struct DecideInfo
 {
-    tracker_ptr target;       //!< 目标追踪器
+    tracker::ptr target;       //!< 目标追踪器
     cv::Point2f shoot_center; //!< 目标追踪器对应距离下的实时射击中心
     cv::Point2f exp_angle;    //!< 云台响应的期望角度偏移量
     cv::Point2f exp_center2d; //!< 像素坐标系下的期望目标点
@@ -40,6 +40,8 @@ struct DecideInfo
 class decider
 {
 public:
+    using ptr = std::unique_ptr<decider>;
+
     decider() = default;
 
     virtual ~decider() = default;
@@ -55,13 +57,10 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    virtual DecideInfo decide(const std::vector<group_ptr> &groups, RMStatus flag,
-                              const tracker_ptr &last_target, const DetectInfo &detect_info,
+    virtual DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+                              tracker::ptr last_target, const DetectInfo &detect_info,
                               const CompensateInfo &compensate_info, const PredictInfo &predict_info) = 0;
 };
-
-//! 决策模块智能指针
-using decide_ptr = std::unique_ptr<decider>;
 
 //! @} decider
 

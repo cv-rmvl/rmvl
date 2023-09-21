@@ -31,14 +31,13 @@ void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
             return;
     // ------------ 更新消失帧数，取序列消失帧数最少者 ------------
     _vanish_num = min_element(_trackers.begin(), _trackers.end(),
-                              [](const auto &lhs, const auto &rhs)
-                              {
+                              [](const auto &lhs, const auto &rhs) {
                                   return lhs->getVanishNumber() < rhs->getVanishNumber();
                               })
                       ->get()
                       ->getVanishNumber();
     // ---------------------【提取可见的追踪器】---------------------
-    vector<tracker_ptr> visible_trackers; // 可见追踪器
+    vector<tracker::ptr> visible_trackers; // 可见追踪器
     for (auto &p_tracker : _trackers)
         if (p_tracker->getVanishNumber() == 0)
             visible_trackers.push_back(p_tracker);
@@ -107,16 +106,16 @@ void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
             // 旋转中心到组合体的线段向量
             Vec2f tmp = -p_gyro_tracker->getPose() * current_state.radius();
             Vec3f center2combo(tmp(0), 0, tmp(1));
-            Matx33f new_rmat = rot * p_tracker->getExtrinsics().R();                                       // 新的旋转矩阵
+            Matx33f new_rmat = rot * p_tracker->getExtrinsics().R();                                // 新的旋转矩阵
             Vec3f new_tvec = _center3d + rot * center2combo + Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(p_tracker->front(), _gyro_data, new_rmat, new_tvec, _tick);
-            p_tracker->update(p_armor, _tick, _gyro_data);
+            const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
         }
     }
     // 利用可见追踪器信息，完成强制构造与不可见追踪器的更新
     else if (visible_num == 1)
     {
-        tracker_ptr visible_tracker = visible_trackers.front();
+        tracker::ptr visible_tracker = visible_trackers.front();
         auto &visible_state = _tracker_state[visible_tracker];
         Vec2f tmp = -GyroTracker::cast(visible_tracker)->getPose() * _tracker_state[visible_tracker].radius();
         Vec3f center2combo(tmp(0), 0, tmp(1));
@@ -129,10 +128,10 @@ void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
             auto &current_state = _tracker_state[p_tracker];
             // 绕 y 轴旋转
             auto rot = euler2Mat(static_cast<float>(2_PI / _armor_num * static_cast<double>((i + 1))), Y);
-            Matx33f new_rmat = rot * visible_tracker->getExtrinsics().R();                                 // 新的旋转矩阵
+            Matx33f new_rmat = rot * visible_tracker->getExtrinsics().R();                          // 新的旋转矩阵
             Vec3f new_tvec = _center3d + rot * center2combo + Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(visible_tracker->front(), _gyro_data, new_rmat, new_tvec, _tick);
-            p_tracker->update(p_armor, _tick, _gyro_data);
+            const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
         }
     }
     else // visible_num == 2
@@ -161,12 +160,12 @@ void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
             // 绕 y 轴旋转
             auto rot = euler2Mat(static_cast<float>(PI), Y);
             // 平移向量的旋转增量
-            Matx33f new_rmat = rot * visible_trackers[i]->getExtrinsics().R();                                // 新旋转矩阵
+            Matx33f new_rmat = rot * visible_trackers[i]->getExtrinsics().R();                         // 新旋转矩阵
             Vec3f new_tvec = _center3d + rot * center2combo[i] + Vec3f(0, current_state.delta_y(), 0); // 新平移向量
             auto p_armor = constructComboForced(visible_trackers[i]->front(), _gyro_data, new_rmat, new_tvec, _tick);
             // 同步高度差
             current_state.delta_y(_tracker_state[visible_trackers[i]].delta_y());
-            p_tracker->update(p_armor, _tick, _gyro_data);
+            const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
         }
     }
     // ----------------------【更新 RobotType】----------------------

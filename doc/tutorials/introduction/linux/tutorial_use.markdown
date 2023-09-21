@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
     cv::line(src, cv::Point(650, 400), cv::Point(640, 490), cv::Scalar(0, 0, 255), 18);
     cv::line(src, cv::Point(850, 370), cv::Point(870, 460), cv::Scalar(0, 0, 255), 18);
 
-    rm::detect_ptr detector = rm::ArmorDetector::make_detector();
-    std::vector<rm::group_ptr> groups;
+    rm::detector::ptr detector = rm::ArmorDetector::make_detector();
+    std::vector<rm::group::ptr> groups;
 
     detector->detect(groups, src, rm::RED, rm::GyroData{}, cv::getTickCount());
     auto p_combos = detector.combos;

@@ -25,6 +25,9 @@ class RuneGroup final : public group
     std::deque<double> _datas; //!< 原始角度数据
 
 public:
+    using ptr = std::shared_ptr<RuneGroup>;
+    using const_ptr = std::shared_ptr<const RuneGroup>;
+
     RuneGroup() = default;
 
     //! 构建 RuneGroup
@@ -33,13 +36,18 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_group group_ptr 抽象指针
+     * @param[in] p_group group::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<RuneGroup> cast(group_ptr p_group)
-    {
-        return std::dynamic_pointer_cast<RuneGroup>(p_group);
-    }
+    static inline RuneGroup::ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<RuneGroup>(p_group); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_group group::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline RuneGroup::const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const RuneGroup>(p_group); }
 
     /**
      * @brief 神符序列组同步操作
@@ -58,8 +66,6 @@ public:
      */
     inline const auto &getRawDatas() const { return _datas; }
 };
-
-using RuneGroup_ptr = std::shared_ptr<RuneGroup>;
 
 //! @} rune_group
 

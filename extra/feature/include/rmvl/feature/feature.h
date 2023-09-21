@@ -36,6 +36,9 @@ protected:
     rm::RMStatus _type; //!< 状态类型信息
 
 public:
+    using ptr = std::shared_ptr<feature>;
+    using const_ptr = std::shared_ptr<const feature>;
+
     virtual ~feature() = 0;
     //! 获取特征面积
     inline float getArea() const { return _height * _width; }
@@ -50,18 +53,18 @@ public:
     //! 获取特征角点
     inline const auto &getCorners() const { return _corners; }
     //! 获取状态信息
-    inline const RMStatus &getType() { return _type; }
+    inline const RMStatus &getType() const { return _type; }
 };
 
 inline feature::~feature() = default;
-
-//! 特征共享指针
-using feature_ptr = std::shared_ptr<feature>;
 
 //! 默认图像特征，仅表示一个孤立的点 `cv::Point2f`
 class DefaultFeature final : public feature
 {
 public:
+    using ptr = std::shared_ptr<DefaultFeature>;
+    using const_ptr = std::shared_ptr<const DefaultFeature>;
+
     DefaultFeature(const cv::Point2f &p) : feature() { _center = p, _corners = {p}; }
 
     /**
@@ -71,10 +74,23 @@ public:
      * @return DefaultFeature 共享指针
      */
     inline static std::shared_ptr<DefaultFeature> make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
-};
 
-//! 默认特征共享指针
-using default_feature_ptr = std::shared_ptr<DefaultFeature>;
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_feature feature::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline DefaultFeature::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<DefaultFeature>(p_feature); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_feature feature::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline DefaultFeature::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const DefaultFeature>(p_feature); }
+};
 
 //! @} feature
 

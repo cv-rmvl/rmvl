@@ -25,11 +25,11 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 - @ref feature (**feature**) —— RMVL 最基本的数据组件，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 `feature` 有用的信息（一般是通过 `feature` 的构造函数完成）。
 
-- @ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature_ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息作为 `combo` 的构造函数。
+- @ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature::ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息作为 `combo` 的构造函数。
 
-- @ref tracker (**tracker**) —— `tracker` 是在时间上包含了许多相同物理特性的 `combo`，从而形成一个 `combo` 的时间序列，在 RMVL 中，则通过使用 `std::deque<combo_ptr>` 来表示这个时间序列。在功能上，`tracker` 不仅表示了不同时间下相同的 `combo` 的相关信息，还能处理在某个时间点上获取到不正确的 `combo` 的异常情况。
+- @ref tracker (**tracker**) —— `tracker` 是在时间上包含了许多相同物理特性的 `combo`，从而形成一个 `combo` 的时间序列，在 RMVL 中，则通过使用 `std::deque<combo::ptr>` 来表示这个时间序列。在功能上，`tracker` 不仅表示了不同时间下相同的 `combo` 的相关信息，还能处理在某个时间点上获取到不正确的 `combo` 的异常情况。
 
-- @ref group (**group**) —— 如果多个追踪器在物理空间上具有一定的相关性，比如共享轴旋转、刚性连接等属性，它们可以一起形成一个序列组 `group`，从而能够表示更加高级的物理信息。序列组使用 `std::vector<tracker_ptr>` 来存储这些追踪器。
+- @ref group (**group**) —— 如果多个追踪器在物理空间上具有一定的相关性，比如共享轴旋转、刚性连接等属性，它们可以一起形成一个序列组 `group`，从而能够表示更加高级的物理信息。序列组使用 `std::vector<tracker::ptr>` 来存储这些追踪器。
 
 ### 功能模块 {#function_modules}
 
@@ -59,12 +59,12 @@ RMVL中的每个功能模块都设计有一个抽象类和一系列派生类，�
 ```cpp
 #include <rmvl/detector.hpp>
 /* ... */
-std::vector<detect_ptr> detectors;
+std::vector<detector::ptr> detectors;
 detectors.emplace_back(ArmorDetector::make_detector());
 detectors.emplace_back(TopArmorDetector::make_detector());
 detectors.emplace_back(RuneDetector::make_detector());
 
-std::vector<group_ptr> groups;
+std::vector<group::ptr> groups;
 /* ... */
 for (auto &p_detector : detectors)
 {
@@ -84,11 +84,11 @@ RMVL 扩展模块中的各个功能模块之间的耦合度非常低，它们不
 #include <rmvl/predictor.hpp>
 #include <rmvl/decider.hpp>
 /* ... */
-detect_ptr p_detector = ArmorDetector::make_detector();
-compensate_ptr p_compensator = GravityCompensator::make_compensator();
-predict_ptr p_predictor = ArmorPredictor::make_predictor();
-decide_ptr p_decider = ArmorDecider::make_decider();
-vector<group_ptr> groups;
+detector::ptr p_detector = ArmorDetector::make_detector();
+compensator::ptr p_compensator = GravityCompensator::make_compensator();
+predictor::ptr p_predictor = ArmorPredictor::make_predictor();
+decider::ptr p_decider = ArmorDecider::make_decider();
+vector<group::ptr> groups;
 /* ... */
 auto detect_info = p_detector->detect(groups, src, BLUE, GyroData(), getTickCount());
 auto compensate_info = p_compensator->compensate(groups, {gyro_data.yaw, gyro_data.pitch}, shoot_speed);

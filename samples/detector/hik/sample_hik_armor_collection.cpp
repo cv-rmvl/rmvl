@@ -22,7 +22,7 @@ namespace fs = std::filesystem;
  * @param[in] src 原图像
  * @param[in] p_combo 指定装甲板
  */
-void draw(Mat src, combo_ptr p_combo)
+void draw(Mat src, combo::ptr p_combo)
 {
     // 角点
     const auto &corners = p_combo->getCorners();
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     capture.set(CAP_PROP_RM_WB_BGAIN, b_gain);
 
     auto p_detector = ArmorDetector::make_detector();
-    vector<group_ptr> groups;
+    vector<group::ptr> groups;
 
     namedWindow("装甲板收集", WINDOW_NORMAL);
     resizeWindow("装甲板收集", Size(1000, 800));

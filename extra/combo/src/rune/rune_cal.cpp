@@ -20,7 +20,7 @@ using namespace std;
 using namespace para;
 using namespace rm;
 
-vector<Point2f> Rune::calculatePoints(rune_target_ptr p_target, rune_center_ptr p_center)
+vector<Point2f> Rune::calculatePoints(RuneTarget::ptr p_target, RuneCenter::ptr p_center)
 {
     // -------------------------------【获取神符五个角点】-------------------------------
     // 中心点

@@ -13,8 +13,8 @@
 
 #include <deque>
 
-#include "rmvl/core/kalman.hpp"
 #include "rmvl/combo/rune.h"
+#include "rmvl/core/kalman.hpp"
 #include "tracker.h"
 
 namespace rm
@@ -23,15 +23,23 @@ namespace rm
 //! @addtogroup rune_tracker
 //! @{
 
-//! 神符时间序列
+/**
+ * @brief 神符时间序列
+ * @note
+ * - `getCenter()` 获取神符组合体修正的中心点，要获取神符旋转中心请访问对应特征
+ * - `getAngle()` 考虑圈数的角度，即角度被映射至 \f$(-\infty,+\infty)\f$ 的范围，且不经过滤波
+ */
 class RuneTracker final : public tracker
 {
-    int _round = 0;            //!< 圈数
+    int _round{};              //!< 圈数
     float _rotated_speed;      //!< 神符旋转角速度
     std::deque<float> _angles; //!< 角度容器
     KF22f _filter;             //!< 神符的角度滤波器
 
 public:
+    using ptr = std::shared_ptr<RuneTracker>;
+    using const_ptr = std::shared_ptr<const RuneTracker>;
+
     RuneTracker() = delete;
 
     /**
@@ -39,25 +47,30 @@ public:
      *
      * @param[in] p_rune 第一帧神符
      */
-    explicit RuneTracker(const combo_ptr &p_rune);
+    explicit RuneTracker(combo::ptr p_rune);
 
     /**
      * @brief 构建 RuneTracker
      *
      * @param[in] p_rune 第一帧神符模块组合特征（不允许为空）
      */
-    static inline std::shared_ptr<RuneTracker> make_tracker(const combo_ptr &p_rune) { return std::make_shared<RuneTracker>(p_rune); }
+    static inline RuneTracker::ptr make_tracker(combo::ptr p_rune) { return std::make_shared<RuneTracker>(p_rune); }
 
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_tracker tracker_ptr 抽象指针
+     * @param[in] p_tracker tracker::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<RuneTracker> cast(tracker_ptr p_tracker)
-    {
-        return std::dynamic_pointer_cast<RuneTracker>(p_tracker);
-    }
+    static inline RuneTracker::ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<RuneTracker>(p_tracker); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_tracker tracker::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline RuneTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const RuneTracker>(p_tracker); }
 
     /**
      * @brief 更新时间序列
@@ -66,7 +79,7 @@ public:
      * @param[in] tick 时间戳
      * @param[in] gyro_data 云台数据
      */
-    void update(combo_ptr p_rune, int64 tick, const GyroData &gyro_data) override;
+    void update(combo::ptr p_rune, int64 tick, const GyroData &gyro_data) override;
 
     /**
      * @brief 滤波器初始化
@@ -85,7 +98,7 @@ private:
      *
      * @param[in] p_combo 神符组合体
      */
-    void updateFromRune(combo_ptr p_combo);
+    void updateFromRune(combo::ptr p_combo);
 
     /**
      * @brief 更新神符转动的圈数，并计算在考虑圈数时的完全值
@@ -109,14 +122,6 @@ private:
      */
     void vanishProcess(int64 tick, const GyroData &gyro_data);
 };
-
-/**
- * @brief 神符追踪器共享指针
- * @note
- * - `getCenter()` 获取神符组合体修正的中心点，要获取神符旋转中心请访问对应特征
- * - `getAngle()` 考虑圈数的角度，即角度被映射至 \f$(-\infty,+\infty)\f$ 的范围，且不经过滤波
- */
-using rune_tracker_ptr = std::shared_ptr<RuneTracker>;
 
 //! @} rune_tracker
 

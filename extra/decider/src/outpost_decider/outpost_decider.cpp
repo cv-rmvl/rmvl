@@ -51,15 +51,15 @@ void OutpostDecider::init(ClearMode mode)
     }
 }
 
-DecideInfo OutpostDecider::decide(const std::vector<group_ptr> &groups, RMStatus,
-                                  const tracker_ptr &last_target, const DetectInfo &detect_info,
+DecideInfo OutpostDecider::decide(const std::vector<group::ptr> &groups, RMStatus,
+                                  tracker::ptr last_target, const DetectInfo &detect_info,
                                   const CompensateInfo &compensate_info, const PredictInfo &)
 {
     // 决策信息
     DecideInfo info{};
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups must equal to \'1\'.");
-    const vector<tracker_ptr> &trackers = groups.front()->data();
+    const vector<tracker::ptr> &trackers = groups.front()->data();
     // 获取、更新目标追踪器
     for (auto p_tracker : trackers)
         if (last_target == p_tracker && (p_tracker->getType().RobotTypeID == RobotType::OUTPOST ||

@@ -36,8 +36,8 @@ struct DetectInfo
     std::vector<cv::Mat> rois; //!< ROI 列表
     cv::Mat rendergraphs;      //!< 渲染图列表
 
-    std::vector<combo_ptr> combos;     //!< 当前帧所有组合体
-    std::vector<feature_ptr> features; //!< 当前帧所有特征
+    std::vector<combo::ptr> combos;     //!< 当前帧所有组合体
+    std::vector<feature::ptr> features; //!< 当前帧所有特征
 };
 
 //! 识别检测模块
@@ -48,6 +48,8 @@ protected:
     GyroData _gyro_data; //!< 每一帧对应的陀螺仪数据
 
 public:
+    using ptr = std::unique_ptr<detector>;
+
     detector() = default;
 
     virtual ~detector() = default;
@@ -62,12 +64,9 @@ public:
      * @param[in] record_time 时间戳
      * @return 识别信息结构体
      */
-    virtual DetectInfo detect(std::vector<group_ptr> &groups, cv::Mat &src, PixChannel color,
+    virtual DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
                               const GyroData &gyro_data, int64 record_time) = 0;
 };
-
-// 抽象识别类智能指针
-using detect_ptr = std::unique_ptr<detector>;
 
 //! @} detector
 

@@ -30,6 +30,9 @@ class LightBlob : public feature
     cv::Point2f _bottom;           //!< 下顶点
 
 public:
+    using ptr = std::shared_ptr<LightBlob>;
+    using const_ptr = std::shared_ptr<const LightBlob>;
+
     LightBlob() = default;
     LightBlob(LightBlob &&) = delete;
     LightBlob(const LightBlob &) = delete;
@@ -37,9 +40,9 @@ public:
     LightBlob(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
 
     //! 获取灯条顶端点
-    inline cv::Point2f getTopPoint() { return _top; }
+    inline const cv::Point2f &getTopPoint() const { return _top; }
     //! 获取灯条底端点
-    inline cv::Point2f getBottomPoint() { return _bottom; }
+    inline const cv::Point2f &getBottomPoint() const { return _bottom; }
 
     /**
      * @brief LightBlob 构造接口
@@ -57,7 +60,7 @@ public:
      * @param[in] width 灯条宽度
      * @return 若构造成功则返回 LightBlob 的共享指针，否则返回 nullptr
      */
-    static inline std::shared_ptr<LightBlob> make_feature(const cv::Point2f &top, const cv::Point2f &bottom, float width)
+    static inline LightBlob::ptr make_feature(const cv::Point2f &top, const cv::Point2f &bottom, float width)
     {
         return std::make_shared<LightBlob>(top, bottom, width);
     }
@@ -65,13 +68,18 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_feature feature_ptr 抽象指针
+     * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<LightBlob> cast(feature_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<LightBlob>(p_feature);
-    }
+    static inline LightBlob::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<LightBlob>(p_feature); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_feature feature::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline LightBlob::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const LightBlob>(p_feature); }
 
 private:
     /**
@@ -82,8 +90,6 @@ private:
      */
     void calcAccurateInfo(float lw_ratio, const std::vector<cv::Point> &contour);
 };
-
-using light_blob_ptr = std::shared_ptr<LightBlob>;
 
 //! @} light_blob
 

@@ -17,7 +17,7 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-void RuneTracker::updateFromRune(combo_ptr p_combo)
+void RuneTracker::updateFromRune(combo::ptr p_combo)
 {
     _width = p_combo->getWidth();
     _height = p_combo->getHeight();
@@ -28,10 +28,10 @@ void RuneTracker::updateFromRune(combo_ptr p_combo)
     _relative_angle = p_combo->getRelativeAngle();
 }
 
-RuneTracker::RuneTracker(const combo_ptr &p_rune)
+RuneTracker::RuneTracker(combo::ptr p_rune)
 {
     if (p_rune == nullptr)
-        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo_ptr is null pointer");
+        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is null pointer");
     _combo_deque.emplace_front(p_rune);
     initFilter(p_rune->getAngle(), 0.f);
     _angle = p_rune->getAngle();
@@ -39,7 +39,7 @@ RuneTracker::RuneTracker(const combo_ptr &p_rune)
     updateFromRune(p_rune);
 }
 
-void RuneTracker::update(combo_ptr p_rune, int64 tick, const GyroData &gyro_data)
+void RuneTracker::update(combo::ptr p_rune, int64 tick, const GyroData &gyro_data)
 {
     if (p_rune == nullptr)
     {
@@ -88,8 +88,8 @@ float RuneTracker::calculateTotalAngle()
     while (fabs(current_angle) > 180.f)
         current_angle += (current_angle > 0.f) ? -360.f : 360.f;
     // 更新角度
-    rune_ptr p_rune = Rune::cast(_combo_deque.front());
+    auto p_rune = Rune::cast(_combo_deque.front());
     if (p_rune == nullptr)
-        RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the combo_ptr is not equal to rune_ptr");
+        RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the combo::ptr is not equal to Rune::ptr ");
     return current_angle + 360.f * _round;
 }

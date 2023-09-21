@@ -18,7 +18,7 @@ using namespace std;
 using namespace cv;
 using namespace rm;
 
-void PlanarTracker::updateData(const combo_ptr &p_combo)
+void PlanarTracker::updateData(combo::ptr p_combo)
 {
     _height = p_combo->getHeight();
     _width = p_combo->getHeight();
@@ -28,10 +28,10 @@ void PlanarTracker::updateData(const combo_ptr &p_combo)
     _extrinsic = p_combo->getExtrinsics();
 }
 
-PlanarTracker::PlanarTracker(const combo_ptr &p_combo)
+PlanarTracker::PlanarTracker(combo::ptr p_combo)
 {
     if (p_combo == nullptr)
-        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo_ptr is null pointer");
+        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is null pointer");
     _combo_deque.emplace_front(p_combo);
     _type = p_combo->getType(); // tracker 状态初始化
     _type_deque.emplace_front(_type);
@@ -40,7 +40,7 @@ PlanarTracker::PlanarTracker(const combo_ptr &p_combo)
     updateData(p_combo);
 }
 
-void PlanarTracker::update(combo_ptr p_combo, int64 tick, const GyroData &gyro_data)
+void PlanarTracker::update(combo::ptr p_combo, int64 tick, const GyroData &gyro_data)
 {
     if (p_combo == nullptr)
     {

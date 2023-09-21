@@ -19,7 +19,7 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-DetectInfo RuneDetector::detect(vector<group_ptr> &groups, Mat &src, PixChannel color,
+DetectInfo RuneDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
                                 const GyroData &gyro_data, int64 record_time)
 {
     if (groups.size() > 1)

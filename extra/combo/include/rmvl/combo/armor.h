@@ -25,7 +25,11 @@ namespace rm
 //! @example samples/detector/mv/sample_mv_armor_size_classify.cpp 大小装甲板分类例程
 //! @example samples/detector/hik/sample_hik_armor_size_classify.cpp 大小装甲板分类例程
 
-//! 装甲模块组合特征
+/**
+ * @brief 装甲模块组合特征
+ * @note 特征包括 [0]: 左灯条，[1]: 右灯条
+ * @note 角点为 [0]: 左灯条下顶点，[1]: 左灯条上顶点，[2]: 右灯条上顶点，[3]: 右灯条下顶点
+ */
 class Armor : public combo
 {
     float _combo_ratio = 0.f;  //!< 组合特征宽高比
@@ -39,11 +43,14 @@ class Armor : public combo
     static cv::Ptr<cv::ml::SVM> _svm; //!< 大小装甲板二分类 SVM
 
 public:
+    using ptr = std::shared_ptr<Armor>;
+    using const_ptr = std::shared_ptr<const Armor>;
+
     Armor() = delete;
     Armor(const Armor &) = delete;
     Armor(Armor &&) = delete;
 
-    Armor(light_blob_ptr &, light_blob_ptr &, const GyroData &, int64, float, float, float, float, float, float, float, ArmorSizeType);
+    Armor(LightBlob::ptr, LightBlob::ptr, const GyroData &, int64, float, float, float, float, float, float, float, ArmorSizeType);
 
     /**
      * @brief Armor 构造接口
@@ -56,19 +63,24 @@ public:
      * @param[in] armor_size_type 需要指定的大小装甲板类型，默认为 `ArmorSizeType::UNKNOWN`
      * @return 若成功，返回 Armor 的共享指针，否则返回空
      */
-    static std::shared_ptr<Armor> make_combo(light_blob_ptr &p_left, light_blob_ptr &p_right, const GyroData &gyro_data,
-                                             int64 tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
+    static Armor::ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
+                                 int64 tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
 
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_combo combo_ptr 抽象指针
+     * @param[in] p_combo combo::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<Armor> cast(combo_ptr p_combo)
-    {
-        return std::dynamic_pointer_cast<Armor>(p_combo);
-    }
+    static inline Armor::ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Armor>(p_combo); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_combo combo::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline Armor::const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Armor>(p_combo); }
 
     /**
      * @brief 加载 SVM 装甲板大小分类的 *.xml 文件
@@ -108,7 +120,7 @@ public:
      * @param[in] armor 单一装甲板
      * @return 是否包含灯条中心
      */
-    static bool isContainBlob(light_blob_ptr blob, std::shared_ptr<Armor> armor);
+    static bool isContainBlob(LightBlob::ptr blob, Armor::ptr armor);
 
     /**
      * @brief 根据图像中指定装甲板的信息，截取仅包含数字的 ROI
@@ -117,7 +129,7 @@ public:
      * @param[in] p_combo 指定的参考装甲板
      * @return ROI
      */
-    static cv::Mat getNumberROI(cv::Mat src, combo_ptr p_combo);
+    static cv::Mat getNumberROI(cv::Mat src, combo::ptr p_combo);
 
     //! 获取组合特征宽高比
     inline float getComboRatio() { return _combo_ratio; }
@@ -158,13 +170,6 @@ private:
 };
 
 inline cv::Ptr<cv::ml::SVM> Armor::_svm = nullptr;
-
-/**
- * @brief 装甲模块组合特征共享指针
- * @note 特征包括 [0]: 左灯条，[1]: 右灯条
- * @note 角点为 [0]: 左灯条下顶点，[1]: 左灯条上顶点，[2]: 右灯条上顶点，[3]: 右灯条下顶点
- */
-using armor_ptr = std::shared_ptr<Armor>;
 
 //! @} combo_armor
 

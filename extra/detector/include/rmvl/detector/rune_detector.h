@@ -36,7 +36,7 @@ public:
      * @param[in] record_time 时间戳
      * @return 识别信息结构体
      */
-    DetectInfo detect(std::vector<group_ptr> &groups, cv::Mat &src, PixChannel color,
+    DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
                       const GyroData &gyro_data, int64 record_time) override;
 
     //! 构建 RuneDetector
@@ -50,7 +50,7 @@ private:
      * @param[out] features 找到的所有特征
      * @param[out] combos 找到的所有神符组合体
      */
-    void find(cv::Mat src, std::vector<feature_ptr> &features, std::vector<combo_ptr> &combos);
+    void find(cv::Mat src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos);
 
     /**
      * @brief 匹配、更新时间序列
@@ -58,7 +58,7 @@ private:
      * @param[in] rune_trackers 神符追踪器
      * @param[in] combos 每一帧的所有目标
      */
-    void match(std::vector<tracker_ptr> &rune_trackers, const std::vector<combo_ptr> &combos);
+    void match(std::vector<tracker::ptr> &rune_trackers, const std::vector<combo::ptr> &combos);
 
     /**
      * @brief 获取最佳的神符中心点
@@ -66,9 +66,9 @@ private:
      *
      * @param[in] p_targets 所有神符靶心
      * @param[in] p_centers 所有神符中心点
-     * @return rune_center_ptr
+     * @return RuneCenter::ptr
      */
-    rune_center_ptr getBestCenter(const std::vector<rune_target_ptr> &p_targets, const std::vector<rune_center_ptr> &p_centers);
+    RuneCenter::ptr getBestCenter(const std::vector<RuneTarget::ptr> &p_targets, const std::vector<RuneCenter::ptr> &p_centers);
 
     /**
      * @brief 获取未激活的神符
@@ -77,7 +77,7 @@ private:
      * @param[in] p_center 最佳神符中心点
      * @return 未激活的神符
      */
-    std::vector<rune_ptr> getRune(const std::vector<rune_target_ptr> &p_targets, const rune_center_ptr &p_center);
+    std::vector<Rune::ptr> getRune(const std::vector<RuneTarget::ptr> &p_targets, RuneCenter::ptr p_center);
 
     /**
      * @brief 神符匹配至时间序列
@@ -85,7 +85,7 @@ private:
      * @param[in out] trackers 神符追踪器列表
      * @param[in] combos 每一帧的所有目标
      */
-    void matchRunes(std::vector<tracker_ptr> &trackers, const std::vector<combo_ptr> &combos);
+    void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos);
 };
 
 //! @} rune_detector

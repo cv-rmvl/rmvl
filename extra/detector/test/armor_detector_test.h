@@ -25,8 +25,8 @@ class ArmorDetectorTest : public testing::Test
 {
 public:
     cv::Mat src;
-    rm::detect_ptr p_detector;
-    std::vector<rm::group_ptr> groups;
+    rm::detector::ptr p_detector;
+    std::vector<rm::group::ptr> groups;
 
     void SetUp() override
     {

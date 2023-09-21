@@ -31,13 +31,13 @@ namespace rm_test
 TEST(BuildRuneTest, incorrect_rune_feature)
 {
     // 均为空
-    rune_ptr rune1 = Rune::make_combo(nullptr, nullptr, GyroData(), getTickCount());
+    Rune::ptr  rune1 = Rune::make_combo(nullptr, nullptr, GyroData(), getTickCount());
     EXPECT_FALSE(rune1);
     // 均为假
     vector<Point> none_vec;
-    rune_target_ptr rune_target = RuneTarget::make_feature(none_vec, false);
-    rune_center_ptr rune_center = RuneCenter::make_feature(none_vec);
-    combo_ptr combo_2 = Rune::make_combo(rune_target, rune_center, GyroData(), getTickCount());
+    RuneTarget::ptr rune_target = RuneTarget::make_feature(none_vec, false);
+    RuneCenter::ptr rune_center = RuneCenter::make_feature(none_vec);
+    combo::ptr combo_2 = Rune::make_combo(rune_target, rune_center, GyroData(), getTickCount());
     EXPECT_FALSE(combo_2);
 }
 

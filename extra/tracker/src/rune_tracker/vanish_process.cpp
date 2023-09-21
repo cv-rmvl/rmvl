@@ -29,7 +29,7 @@ using namespace cv;
  * @param[in] gyro_data 最新陀螺仪数据
  * @return 构造出的神符
  */
-rune_ptr runeConstructForced(rune_ptr ref_rune, float delta_angle, int64_t tick, const GyroData &gyro_data)
+Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, int64_t tick, const GyroData &gyro_data)
 {
     auto p_rune_target = RuneTarget::cast(ref_rune->at(0));
     auto p_rune_center = RuneCenter::cast(ref_rune->at(1));
@@ -75,8 +75,8 @@ void RuneTracker::vanishProcess(int64 tick, const GyroData &gyro_data)
     // 旋转状态先验估计
     auto rotate_pre = _filter.predict();
 
-    rune_ptr p_rune = runeConstructForced(Rune::cast(_combo_deque.front()),
-                                          rotate_pre(0) - _angle, tick, gyro_data);
+    auto p_rune = runeConstructForced(Rune::cast(_combo_deque.front()),
+                                      rotate_pre(0) - _angle, tick, gyro_data);
     _angle = p_rune->getAngle();
 
     float rad_angle = deg2rad(p_rune->getAngle());

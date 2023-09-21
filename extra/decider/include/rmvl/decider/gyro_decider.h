@@ -44,8 +44,8 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    DecideInfo decide(const std::vector<group_ptr> &groups, RMStatus flag,
-                      const tracker_ptr &last_target, const DetectInfo &detect_info,
+    DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+                      tracker::ptr last_target, const DetectInfo &detect_info,
                       const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
 
     //! 构造 GyroDecider
@@ -60,7 +60,7 @@ private:
      * @param[in] info 预测信息
      * @return 最近的目标追踪器
      */
-    tracker_ptr getClosestTracker(const group_ptr &p_group, const PredictInfo &info);
+    tracker::ptr getClosestTracker(group::ptr p_group, const PredictInfo &info);
 
     /**
      * @brief 获取优先级最高的目标序列组
@@ -68,7 +68,7 @@ private:
      * @param[in] groups 所有的装甲板序列组
      * @return 优先级最高的目标序列组
      */
-    group_ptr getHighestPriorityGroup(const std::vector<group_ptr> &groups);
+    group::ptr getHighestPriorityGroup(const std::vector<group::ptr> &groups);
 };
 
 //! @} gyro_decider

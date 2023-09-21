@@ -19,7 +19,7 @@ using namespace rm;
 using namespace std;
 using namespace cv;
 
-unordered_map<size_t, size_t> GyroDetector::ewTopsisInference(const group_ptr &group, const vector<combo_ptr> &combos)
+unordered_map<size_t, size_t> GyroDetector::ewTopsisInference(group::ptr group, const vector<combo::ptr> &combos)
 {
     auto trackers = group->data();
     auto pGyroGroup = GyroGroup::cast(group);

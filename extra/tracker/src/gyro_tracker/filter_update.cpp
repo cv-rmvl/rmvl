@@ -23,7 +23,7 @@ using namespace cv;
 
 void GyroTracker::initFilter()
 {
-    combo_ptr first_combo = _combo_deque.front();
+    auto first_combo = _combo_deque.front();
     // 初始化运动滤波器 相对角度和角速度
     _motion_filter.setR(gyro_tracker_param.MOTION_R); // 距离为两帧差，误差为两倍
     _motion_filter.setQ(gyro_tracker_param.MOTION_Q); // 距离的过程噪声仔细调整

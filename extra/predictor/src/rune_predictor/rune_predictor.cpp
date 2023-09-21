@@ -22,13 +22,13 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-PredictInfo RunePredictor::predict(const vector<group_ptr> &groups, const unordered_map<tracker_ptr, double> &tof)
+PredictInfo RunePredictor::predict(const vector<group::ptr> &groups, const unordered_map<tracker::ptr, double> &tof)
 {
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
     auto rune_group = RuneGroup::cast(groups.front()); // 转换为神符 group 子类
     if (rune_group == nullptr)
-        RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the group_ptr is not equal to RuneGroup_ptr");
+        RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the group::ptr is not equal to Runegroup::ptr");
     // 预测信息
     PredictInfo info{};
     for (auto p_tracker : rune_group->data())

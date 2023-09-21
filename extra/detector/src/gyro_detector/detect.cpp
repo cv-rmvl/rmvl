@@ -19,7 +19,7 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-DetectInfo GyroDetector::detect(vector<group_ptr> &groups, Mat &src, PixChannel color,
+DetectInfo GyroDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
                                 const GyroData &gyro_data, int64 record_time)
 {
     // 识别信息

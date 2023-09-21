@@ -61,7 +61,7 @@ public:
      * @param[in] gyro_data 当前陀螺仪数据
      * @param[in] tick 时间戳
      */
-    DetectInfo detect(std::vector<group_ptr> &groups, cv::Mat &src, PixChannel color,
+    DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
                       const GyroData &gyro_data, int64 tick) override;
 
 private:
@@ -71,14 +71,14 @@ private:
      * @param[in out] trackers 所有追踪器序列
      * @param[in] combos 每一帧的所有目标
      */
-    void match(std::vector<tracker_ptr> &trackers, const std::vector<combo_ptr> &combos);
+    void match(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos);
 
     /**
      * @brief 及时删除多帧为空的序列
      *
      * @param[in out] trackers 所有追踪器序列
      */
-    void eraseNullTracker(std::vector<tracker_ptr> &trackers);
+    void eraseNullTracker(std::vector<tracker::ptr> &trackers);
 };
 
 //! @} tag_detector

@@ -31,6 +31,9 @@ private:
     cv::Point2f _right;            //!< 右顶点
 
 public:
+    using ptr = std::shared_ptr<Pilot>;
+    using const_ptr = std::shared_ptr<const Pilot>;
+
     Pilot(const Pilot &) = delete;
     Pilot(Pilot &&) = delete;
 
@@ -66,13 +69,18 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_feature feature_ptr 抽象指针
+     * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<Pilot> cast(feature_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<Pilot>(p_feature);
-    }
+    static inline Pilot::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<Pilot>(p_feature); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_feature feature::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline Pilot::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const Pilot>(p_feature); }
 
     //! 获取灯条左端点
     inline cv::Point2f getLeftPoint() { return _left; }
@@ -87,8 +95,6 @@ private:
      */
     void getTruePoint(std::vector<cv::Point> &);
 };
-
-using pilot_ptr = std::shared_ptr<Pilot>;
 
 //! @} pilot
 

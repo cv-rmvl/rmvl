@@ -37,6 +37,9 @@ private:
     };
 
 public:
+    using ptr = std::shared_ptr<RuneTarget>;
+    using const_ptr = std::shared_ptr<const RuneTarget>;
+
     RuneTarget() = default;
     RuneTarget(const RuneTarget &) = delete;
     RuneTarget(RuneTarget &&) = delete;
@@ -64,28 +67,30 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_feature feature_ptr 抽象指针
+     * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<RuneTarget> cast(feature_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<RuneTarget>(p_feature);
-    }
+    static inline RuneTarget::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<RuneTarget>(p_feature); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_feature feature::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline RuneTarget::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const RuneTarget>(p_feature); }
 
     //! 获取长宽比
-    inline float getRatio() { return _ratio; }
+    inline float getRatio() const { return _ratio; }
     //! 是否激活标志位
-    inline bool isActive() { return _is_active; }
+    inline bool isActive() const { return _is_active; }
     //! 获取半径
-    inline float getRadius() { return _radius; }
+    inline float getRadius() const { return _radius; }
     //! 获取轮廓
     inline const std::vector<cv::Point> &getContours() { return _contour; }
 
 private:
 };
-
-//! 神符靶心特征共享指针
-using rune_target_ptr = std::shared_ptr<RuneTarget>;
 
 //! @} rune_target
 

@@ -11,8 +11,8 @@
 
 #pragma once
 
-#include "rmvl/core/kalman.hpp"
 #include "rmvl/combo/armor.h"
+#include "rmvl/core/kalman.hpp"
 
 #include "tracker.h"
 
@@ -45,28 +45,36 @@ private:
     std::deque<RobotType> _type_deque; //!< 装甲板状态队列（数字）
 
 public:
+    using ptr = std::shared_ptr<GyroTracker>;
+    using const_ptr = std::shared_ptr<const GyroTracker>;
+
     GyroTracker() = delete;
 
     //! 初始化追踪器
-    explicit GyroTracker(const combo_ptr &p_armor);
+    explicit GyroTracker(combo::ptr p_armor);
 
     /**
      * @brief 构建 GyroTracker
      *
      * @param[in] p_armor 第一帧装甲（不允许为空）
      */
-    static inline std::shared_ptr<GyroTracker> make_tracker(const combo_ptr &p_armor) { return std::make_shared<GyroTracker>(p_armor); }
+    static inline GyroTracker::ptr make_tracker(combo::ptr p_armor) { return std::make_shared<GyroTracker>(p_armor); }
 
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_tracker tracker_ptr 抽象指针
+     * @param[in] p_tracker tracker::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<GyroTracker> cast(tracker_ptr p_tracker)
-    {
-        return std::dynamic_pointer_cast<GyroTracker>(p_tracker);
-    }
+    static inline GyroTracker::ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<GyroTracker>(p_tracker); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_tracker tracker::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline GyroTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const GyroTracker>(p_tracker); }
 
     /**
      * @brief 更新时间序列
@@ -75,7 +83,7 @@ public:
      * @param[in] time 时间戳
      * @param[in] gyro_data 云台数据
      */
-    void update(combo_ptr p_armor, int64 time, const GyroData &gyro_data) override;
+    void update(combo::ptr p_armor, int64 time, const GyroData &gyro_data) override;
 
     /**
      * @brief 更新消失状态
@@ -95,9 +103,9 @@ private:
     /**
      * @brief 从 combo 中更新数据
      *
-     * @param[in] p_combo armor_ptr 共享指针
+     * @param[in] p_combo Armor::ptr 共享指针
      */
-    void updateFromCombo(combo_ptr p_combo);
+    void updateFromCombo(combo::ptr p_combo);
 
     //! 初始化 tracker 的距离和运动滤波器
     void initFilter();
@@ -129,9 +137,6 @@ private:
      */
     float calcRotationSpeed();
 };
-
-//! 包含旋转的装甲板追踪器共享指针
-using gyro_tracker_ptr = std::shared_ptr<GyroTracker>;
 
 //! @} gyro_tracker
 

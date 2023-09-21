@@ -47,9 +47,9 @@ public:
      *
      * @param[in] tvec 平移向量
      * @param[in] angle 绕 Y 轴旋转的角度
-     * @return combo_ptr
+     * @return combo::ptr
      */
-    rm::combo_ptr createArmor(cv::Vec3f tvec, float angle)
+    rm::combo::ptr createArmor(cv::Vec3f tvec, float angle)
     {
         auto rmat = rm::euler2Mat(angle, rm::Y);
         cv::Vec3f rvec;

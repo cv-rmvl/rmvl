@@ -37,7 +37,7 @@ public:
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    CompensateInfo compensate(const std::vector<group_ptr> &groups,
+    CompensateInfo compensate(const std::vector<group::ptr> &groups,
                               uint8_t shoot_speed, CompensateType com_flag) override;
 
 private:

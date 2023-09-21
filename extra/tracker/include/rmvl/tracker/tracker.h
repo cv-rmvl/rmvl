@@ -25,8 +25,8 @@ namespace rm
 class tracker
 {
 protected:
-    std::deque<combo_ptr> _combo_deque; //!< 组合体时间队列
-    uint32_t _vanish_num{};             //!< 消失帧数
+    std::deque<combo::ptr> _combo_deque; //!< 组合体时间队列
+    uint32_t _vanish_num{};              //!< 消失帧数
 
     RMStatus _type{};                   //!< 追踪器类型
     float _height{};                    //!< 追踪器高度（可表示修正后）
@@ -39,6 +39,9 @@ protected:
     cv::Point2f _speed;                 //!< 相对目标转角速度
 
 public:
+    using ptr = std::shared_ptr<tracker>;
+    using const_ptr = std::shared_ptr<const tracker>;
+
     tracker() = default;
 
     virtual ~tracker() = default;
@@ -50,51 +53,51 @@ public:
      * @param[in] current_tick 当前时间戳
      * @param[in] gyro_data 当前陀螺仪信息
      */
-    virtual void update(combo_ptr p_combo, int64 current_tick, const GyroData &gyro_data) = 0;
+    virtual void update(combo::ptr p_combo, int64 current_tick, const GyroData &gyro_data) = 0;
 
     //! 获取时间队列中最新的组合体
-    inline combo_ptr front() { return _combo_deque.front(); }
+    inline combo::ptr front() const { return _combo_deque.front(); }
     //! 获取时间队列中最后的组合体
-    inline combo_ptr back() { return _combo_deque.back(); }
+    inline combo::ptr back() const { return _combo_deque.back(); }
     //! 获取掉帧数
-    inline uint32_t getVanishNumber() { return _vanish_num; }
+    inline uint32_t getVanishNumber() const { return _vanish_num; }
     //! 获取序列数量信息
-    inline size_t size() { return _combo_deque.size(); }
+    inline size_t size() const { return _combo_deque.size(); }
     //! 获取时间序列原始数据
-    inline auto &data() { return _combo_deque; }
+    inline const auto &data() const { return _combo_deque; }
     //! 序列是否为空
-    inline bool empty() { return _combo_deque.empty(); }
+    inline bool empty() const { return _combo_deque.empty(); }
     //! 索引 - 容器仅能通过内部 at 实现访问保证下标安全
-    inline combo_ptr at(size_t _n) const { return _combo_deque.at(_n); }
+    inline combo::ptr at(size_t _n) const { return _combo_deque.at(_n); }
 
     //! 追踪器类型
-    inline RMStatus getType() { return _type; }
+    inline RMStatus getType() const { return _type; }
     //! 追踪器修正后的高度
-    inline float getHeight() { return _height; }
+    inline float getHeight() const { return _height; }
     //! 追踪器修正后的宽度
-    inline float getWidth() { return _width; }
+    inline float getWidth() const { return _width; }
     //! 追踪器修正后的角度
-    inline float getAngle() { return _angle; }
+    inline float getAngle() const { return _angle; }
     //! 追踪器修正后的中心点
-    inline const cv::Point2f &getCenter() { return _center; }
+    inline const cv::Point2f &getCenter() const { return _center; }
     //! 追踪器修正后的角点
-    inline const std::vector<cv::Point2f> &getCorners() { return _corners; }
+    inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
     //! 修正后的相对角度（角度制）
-    inline const cv::Point2f &getRelativeAngle() { return _relative_angle; }
+    inline const cv::Point2f &getRelativeAngle() const { return _relative_angle; }
     //! 修正后的相机外参
-    inline const CameraExtrinsics<float> &getExtrinsics() { return _extrinsic; }
+    inline const CameraExtrinsics<float> &getExtrinsics() const { return _extrinsic; }
     //! 获取追踪器修正后的目标转角速度（角度制）
-    inline const cv::Point2f &getSpeed() { return _speed; }
+    inline const cv::Point2f &getSpeed() const { return _speed; }
 };
-
-//! 追踪器共享指针
-using tracker_ptr = std::shared_ptr<tracker>;
 
 //! 默认追踪器，时间序列仅用于存储组合体，可退化为 `combos` 使用
 class DefaultTracker final : public tracker
 {
 public:
-    explicit DefaultTracker(const combo_ptr &);
+    using ptr = std::shared_ptr<DefaultTracker>;
+    using const_ptr = std::shared_ptr<const DefaultTracker>;
+
+    explicit DefaultTracker(combo::ptr);
 
     /**
      * @brief 构造 DefaultTracker
@@ -102,10 +105,7 @@ public:
      * @param[in] p_combo 第一帧组合体（不允许为空）
      * @return DefaultTracker 共享指针
      */
-    static inline std::shared_ptr<DefaultTracker> make_tracker(const combo_ptr &p_combo)
-    {
-        return std::make_shared<DefaultTracker>(p_combo);
-    }
+    static inline DefaultTracker::ptr make_tracker(combo::ptr p_combo) { return std::make_shared<DefaultTracker>(p_combo); }
 
     /**
      * @brief 更新追踪器
@@ -114,19 +114,16 @@ public:
      * @param[in] current_tick 当前时间戳
      * @param[in] gyro_data 当前陀螺仪信息
      */
-    void update(combo_ptr p_combo, int64 current_tick, const GyroData &gyro_data) override;
+    void update(combo::ptr p_combo, int64 current_tick, const GyroData &gyro_data) override;
 
 private:
     /**
      * @brief 将 combo 中的数据更新至 tracker
      *
-     * @param[in] p_combo armor_ptr 指针
+     * @param[in] p_combo Armor::ptr 指针
      */
-    void updateData(const combo_ptr &p_combo);
+    void updateData(combo::ptr p_combo);
 };
-
-//! 默认追踪器共享指针
-using default_tracker_ptr = std::shared_ptr<DefaultTracker>;
 
 //! @} tracker
 

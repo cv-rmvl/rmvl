@@ -28,6 +28,9 @@ private:
     float _ratio{};                  //!< 长宽比
 
 public:
+    using ptr = std::shared_ptr<RuneCenter>;
+    using const_ptr = std::shared_ptr<const RuneCenter>;
+
     RuneCenter(const RuneCenter &) = delete;
     RuneCenter(RuneCenter &&) = delete;
     RuneCenter(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect);
@@ -52,22 +55,24 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_feature feature_ptr 抽象指针
+     * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<RuneCenter> cast(feature_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<RuneCenter>(p_feature);
-    }
+    static inline RuneCenter::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<RuneCenter>(p_feature); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_feature feature::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline RuneCenter::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const RuneCenter>(p_feature); }
 
     //! 获取长宽比
     inline float getRatio() { return _ratio; }
     //! 获取轮廓点集
     inline const std::vector<cv::Point> &getContour() { return _contour; }
 };
-
-//! 神符中心特征共享指针
-using rune_center_ptr = std::shared_ptr<RuneCenter>;
 
 //! @} rune_center
 
