@@ -211,12 +211,171 @@ int main()
 
 ### 3. 其余聚合体反射工具
 
-@todo 
-- 此部分未实现
-- 有关遍历成员，比较大小的功能文档
+#### 3.1 成员遍历
+
+函数原型如下
+
+```cpp
+template <typename Tp, typename Callable>
+void for_each(const Tp &val, Callable &&f);
+```
+
+其中
+
+- `Tp` — 聚合类型（必须满足）
+- `Callable` — 可调用对象类型，可以是函数<span style="color: red">模板</span>，函数对象<span style="color: red">模板</span>，或者 lambda 表达式的简写模板（即 `auto &&` 类型）
+
+下面给出一个例子
+
+```cpp
+#include <rmvl/core/util.hpp>
+
+struct X
+{
+    int a{};
+    double bb{};
+    std::string str{};
+};
+
+int main()
+{
+    auto f = [](auto &&val) {
+        std::cout << "val = " << val << std::endl;
+    };
+
+    X x{1, 3.1, "abc"};
+    rm::for_each(x, f);
+};
+```
+
+编译后运行结果为
+
+```
+val = 1
+val = 3.1
+val = abc
+```
+
+实现方法简单粗暴，通过结构化绑定与编译期的 `constexpr-if` 语句，分别调用可调用对象 `f` 即可，例如，一个 `size = 3` 的聚合体，可以使用以下语句完成成员的遍历
+
+```cpp
+const auto &[m0, m1, m2] = val;
+f(m0), f(m1), f(m2);
+```
+
+#### 3.2 相等函数
+
+@note
+- 此操作主要用于 C++20 前，自定义类的自定义 hash 函数
+- C++20 起，可使用预置 `operator==` 函数来实现同样的功能，可参考[默认比较](https://zh.cppreference.com/w/cpp/language/default_comparisons)
+
+函数原型如下
+
+```cpp
+template <typename Tp>
+bool equal(const Tp &lhs, const Tp &rhs);
+```
+
+其中
+
+- `Tp` — 聚合类型（必须满足）
+
+下面给出一个例子
+
+```cpp
+#include <rmvl/core/util.hpp>
+
+struct X
+{
+    int a{};
+    double bb{};
+    std::string str{};
+};
+
+int main()
+{
+    X x1{1, 3.1, "abc"};
+    X x2{2, 4.1, "abc"};
+    X x3{1, 3.1, "abc"};
+    std::cout << "x1 = x2: " << std::boolalpha << rm::reflect::equal(x1, x2) << std::endl;
+    std::cout << "x1 = x3: " << std::boolalpha << rm::reflect::equal(x1, x3) << std::endl;
+};
+```
+
+编译后运行结果为
+
+```
+x1 = x2: false
+x1 = x3: true
+```
+
+实现方法同样简单粗暴，核心操作与 `for_each` 的几乎一致，代码如下
+
+```cpp
+const auto &[l0, l1, l2] = lhs;
+const auto &[r0, r1, r2] = rhs;
+return l0 == r0 && l1 == r1 && l2 == r2;
+```
 
 ### 4. 聚合类对象作为散列表的键 (Key)
 
-@todo
-- 此部分未实现
-- 为聚合类而定义的哈希生成函数对象 `hash_aggregate` 文档，及其 `traits` 技法文档
+cppreference 中给出了有关自定义散列函数的例子
+
+```cpp
+struct S
+{
+    std::string first_name;
+    std::string last_name;
+    bool operator==(const S&) const = default; // C++20 起
+};
+ 
+// C++20 前
+// bool operator==(const S& lhs, const S& rhs)
+// {
+//     return lhs.first_name == rhs.first_name && lhs.last_name == rhs.last_name;
+// }
+ 
+// 自定义散列函数可以是独立函数对象：
+struct MyHash
+{
+    std::size_t operator()(S const& s) const 
+    {
+        std::size_t h1 = std::hash<std::string>{}(s.first_name);
+        std::size_t h2 = std::hash<std::string>{}(s.last_name);
+        return h1 ^ (h2 << 1); // 或者使用 boost::hash_combine
+    }
+};
+```
+
+RMVL 提供了聚合类一般化的接口，即任意聚合类的自定义散列函数 `rm::hash_aggregate`，基本用法如下
+
+```cpp
+struct X
+{
+    int a{};
+    double bb{};
+    std::string str{};
+
+#if __cplusplus < 202002L
+    bool operator==(const X &s) const { return rm::reflect::equal(*this, s); }
+#else
+    bool operator==(const X &) const = default;
+#endif
+};
+
+void f()
+{
+    // 定义 Key = X，Val = int 的散列表
+    std::unordered_map<X, int, rm::hash_aggregate<X>> hashmap;
+}
+```
+
+此外，对于一般化的类型 `T`，如果要使用 `std::unordered_map`，可以使用 [类型特性 type traits](https://zh.cppreference.com/w/cpp/meta#.E7.B1.BB.E5.9E.8B.E7.89.B9.E6.80.A7) 相关功能，RMVL 提供了用于 hash 函数选择的类型特性: `rm::hash_traits`，类型名为 `hash_func`，下面给出一个简单的用法
+
+```cpp
+template <typename T>
+void f()
+{
+    std::unordered_map<T, int, rm::hash_traits<T>::hash_func> hashmap;
+}
+```

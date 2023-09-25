@@ -19,7 +19,7 @@ namespace rm
 //! @addtogroup group
 //! @{
 
-//! 相关追踪器的集合（序列组）
+//! 相关追踪器的空间集合（序列组）
 class group
 {
 protected:
