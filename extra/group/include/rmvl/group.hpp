@@ -12,7 +12,7 @@
 #pragma once
 
 /**
- * @defgroup group 相关的追踪器集合（数据组件）
+ * @defgroup group 序列组/相关追踪器的空间集合（数据组件）
  * @{
  *     @defgroup gyro_group 整车状态序列组
  *     @defgroup rune_group 神符序列组
