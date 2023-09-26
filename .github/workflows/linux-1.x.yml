@@ -10,6 +10,6 @@ on:
 
 jobs:
   ubuntu2004-x86_64:
-    uses: RoboMaster-Vision/ci-workflow/.github/workflows/rmvl-u20.yml@main
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u20.yml@main
   ubuntu2204-x86_64:
-    uses: RoboMaster-Vision/ci-workflow/.github/workflows/rmvl-u22.yml@main
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u22.yml@main

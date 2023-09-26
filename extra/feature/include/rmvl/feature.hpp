@@ -18,6 +18,7 @@
     @defgroup pilot 前哨、基地的引导灯
     @defgroup rune_center 神符旋转中心特征
     @defgroup rune_target 神符靶心特征
+    @defgroup tag AprilTag(Tag25h9) 视觉标签
 @}
  */
 
@@ -41,3 +42,6 @@
 #include "feature/rune_center.h"
 #endif //! HAVE_RMVL_RUNE_CENTER
 
+#ifdef HAVE_RMVL_TAG
+#include "feature/tag.h"
+#endif // HAVE_RMVL_TAG
