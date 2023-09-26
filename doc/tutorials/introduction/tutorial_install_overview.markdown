@@ -11,11 +11,11 @@
 
 - RMVL 唯一的一种安装方式：从源代码开始编译
 
-- 前往 https://github.com/RoboMaster-Vision/RMVL/releases 并下载 "Release" 存档
+- 前往 https://github.com/cv-rmvl/rmvl/releases 并下载 "Release" 存档
 
 - 也可直接 clone RMVL 的远程存储库，这样您就可以体验 RMVL 的最新功能（可能不稳定）。
   ```shell
-  git clone https://github.com/RoboMaster-Vision/RMVL.git
+  git clone https://github.com/cv-rmvl/rmvl.git
   ```
 
 #### CMake 架构

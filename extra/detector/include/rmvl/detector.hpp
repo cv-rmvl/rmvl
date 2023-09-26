@@ -14,9 +14,10 @@
 /**
  * @defgroup detector 检测与识别模块（功能模块）
  * @{
- *     @defgroup armor_detector 装甲板识别模块
- *     @defgroup gyro_detector 整车状态识别模块
- *     @defgroup rune_detector 激活、未激活神符识别模块
+ * @defgroup armor_detector 装甲板识别模块
+ * @defgroup gyro_detector 整车状态识别模块
+ * @defgroup rune_detector 激活、未激活神符识别模块
+ * @defgroup tag_detector AprilTag(Tag25h9) 识别模块
  * @}
  */
 
@@ -35,3 +36,7 @@
 #ifdef HAVE_RMVL_RUNE_DETECTOR
 #include "detector/rune_detector.h"
 #endif // HAVE_RMVL_RUNE_DETECTOR
+
+#ifdef HAVE_RMVL_TAG_DETECTOR
+#include "detector/tag_detector.h"
+#endif // HAVE_RMVL_TAG_DETECTOR
