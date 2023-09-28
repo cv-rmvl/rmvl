@@ -45,3 +45,13 @@
 #### 2.4 决策模块
 
 - @subpage tutorial_extra_how_to_use_decider
+
+### 3. 顶层模块
+
+@note 此部分由用户自行实现
+
+- @subpage tutorial_extra_upper_base
+- @subpage tutorial_extra_upper_init
+- @subpage tutorial_extra_upper_read_data
+- @subpage tutorial_extra_upper_process
+- @subpage tutorial_extra_upper_write_data
