@@ -6,6 +6,8 @@
 
 @prev_tutorial{tutorial_extra_how_to_use_predictor}
 
+@next_tutorial{tutorial_extra_upper_base}
+
 @tableofcontents
 
 ------
