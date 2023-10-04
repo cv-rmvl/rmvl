@@ -22,9 +22,7 @@
 
 如果有一辆车以恒定速度行驶，现在我得到两个数据：汽车的当前位置和汽车的当前距离传感器数据，根据匀速公式计算
 
-<a href="https://imgse.com/i/xNlnw6" target="_blank">
-  <img src="https://s1.ax1x.com/2022/10/11/xNlnw6.png" width=680 height=380 />
-</a>
+<img src="https://s1.ax1x.com/2022/10/11/xNlnw6.png" width=680 height=380 />
 
 由于自身的原因，它的位置不是由匀速运动公式得到的精确位置，它的距离传感器数据也不完全准确。两者都有一定的误差。那么我们现在如何估计汽车的实际位置呢？
 

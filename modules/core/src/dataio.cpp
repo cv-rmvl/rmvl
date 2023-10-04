@@ -17,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-inline void writeTR(FileStorage &fs, const rm::GyroData::Translation &t, const rm::GyroData::Rotation &r)
+static inline void writeTR(FileStorage &fs, const rm::GyroData::Translation &t, const rm::GyroData::Rotation &r)
 {
     fs << "translation"
        << "{"
@@ -31,7 +31,7 @@ inline void writeTR(FileStorage &fs, const rm::GyroData::Translation &t, const r
        << "}";
 }
 
-inline void readTR(FileNode &fn, rm::GyroData::Translation &t, rm::GyroData::Rotation &r)
+static inline void readTR(FileNode &fn, rm::GyroData::Translation &t, rm::GyroData::Rotation &r)
 {
     FileNode translation_data = fn["translation"];
     FileNode rotation_data = fn["rotation"];
@@ -76,7 +76,7 @@ bool rm::GyroData::read(const string &path, uint32_t idx, GyroData &data) noexce
     return true;
 }
 
-bool rm::writeCorners(const string &path, uint32_t idx, const vector<vector<Point2d>> &corners)
+bool rm::writeCorners(const string &path, uint32_t idx, const vector<vector<Point2f>> &corners)
 {
     FileStorage fs(path, FileStorage::APPEND);
     if (!fs.isOpened())
@@ -94,17 +94,20 @@ bool rm::writeCorners(const string &path, uint32_t idx, const vector<vector<Poin
     return true;
 }
 
-bool rm::readCorners(const string &path, uint32_t idx, vector<vector<Point2d>> &corners)
+bool rm::readCorners(const string &path, uint32_t idx, vector<vector<Point2f>> &corners)
 {
     FileStorage fs(path, FileStorage::READ);
     if (!fs.isOpened())
         return false;
     FileNode corners_node = fs["corners_" + to_string(idx)];
+    corners.clear();
+    corners.reserve(corners_node.size());
     for (auto each_node : corners_node)
     {
         if (each_node.type() != FileNode::SEQ)
             return false;
-        vector<Point2d> row;
+        vector<Point2f> row;
+        row.reserve(each_node.size());
         for (auto point_node : each_node)
         {
             double x, y;

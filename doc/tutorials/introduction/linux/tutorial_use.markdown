@@ -8,9 +8,9 @@
 
 ------
 
-@note 必须确保您已经成功安装了 RMVL
+**注意**
 
-如果你不熟悉 CMake，请移步到 CMake [教程](https://cmake.org/cmake/help/latest) 
+<span style="color: red">必须确保您已经成功安装了 RMVL</span>。如果你不熟悉 CMake，请移步到 CMake [教程](https://cmake.org/cmake/help/latest) 
 
 ### 详细步骤
 
@@ -26,7 +26,7 @@ touch main.cpp CMakeLists.txt
 
 #### 2. 编写测试文件
 
-##### 2.1 编写 main.cpp
+**编写 main.cpp**
 
 将以下内容写至 `main.cpp` 中
 
@@ -47,13 +47,12 @@ int main(int argc, char *argv[])
     rm::detector::ptr detector = rm::ArmorDetector::make_detector();
     std::vector<rm::group::ptr> groups;
 
-    detector->detect(groups, src, rm::RED, rm::GyroData{}, cv::getTickCount());
-    auto p_combos = detector.combos;
+    auto info = detector->detect(groups, src, rm::RED, rm::GyroData{}, cv::getTickCount());
 
-    INFO_("size of armors = %ld", p_combos.size());
-    for (auto &p_combo : p_combos)
+    INFO_("size of armors = %ld", info.combos.size());
+    for (auto p_combo : info.combos)
     {
-        auto corners = p_combo->getCorners();
+        const auto &corners = p_combo->getCorners();
         cv::line(src, corners[0], corners[2], cv::Scalar(0, 255, 0), 2);
         cv::line(src, corners[1], corners[3], cv::Scalar(0, 255, 0), 2);
     }
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-##### 2.2 编写 CMakeLists.txt
+**编写 CMakeLists.txt**
 
 将以下内容写至 `CMakeLists.txt` 中
 ```cmake

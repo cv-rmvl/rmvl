@@ -1,7 +1,7 @@
 视觉库使用教程 {#tutorials}
 ============
 
-- @subpage tutorial_table_of_content_introduction
+- @subpage tutorial_table_of_content_config
 
 ##### 主要模块
 

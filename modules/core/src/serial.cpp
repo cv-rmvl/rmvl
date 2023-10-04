@@ -1,11 +1,11 @@
 /**
  * @file serial.cpp
  * @author RoboMaster Vision Community
- * @brief Linux 串口类
+ * @brief Unix 串口类
  * @version 2.0
  * @date 2018-12-08
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2018 (c), RoboMaster Vision Community
  *
  */
 
@@ -26,6 +26,7 @@ void rm::SerialPort::open()
     const char *dir_path = "/dev/";
     if ((dir = opendir(dir_path)) != nullptr)
     {
+        // 未指定设备名则搜寻 ttyUSB 或 ttyACM
         if (_device.empty())
         {
             dirent *dire = nullptr;
@@ -92,12 +93,13 @@ void rm::SerialPort::close()
     _is_open = false;
 }
 
-ssize_t rm::SerialPort::write(void *data, size_t length)
+ssize_t rm::SerialPort::fdwrite(void *data, size_t length)
 {
     ssize_t len_result = -1;
     if (_is_open)
     {
-        tcflush(_fd, TCOFLUSH); // 清空，防止数据累积在缓存区
+        // 清空，防止数据累积在缓存区
+        tcflush(_fd, TCOFLUSH);
         len_result = ::write(_fd, data, length);
     }
 
@@ -119,7 +121,7 @@ ssize_t rm::SerialPort::write(void *data, size_t length)
  * @param len The length of the data to be read
  * @return Length
  */
-ssize_t rm::SerialPort::read(void *data, size_t len)
+ssize_t rm::SerialPort::fdread(void *data, size_t len)
 {
     ssize_t len_result = -1;
 

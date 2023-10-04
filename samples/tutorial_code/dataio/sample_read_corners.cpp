@@ -9,7 +9,7 @@ int main()
 {
     for (uint32_t n = 0; n < 5; ++n)
     {
-        vector<vector<Point2d>> corners;
+        vector<vector<Point2f>> corners;
         // read data
         if (!readCorners("ts.yml", n, corners))
             continue;

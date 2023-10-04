@@ -10,6 +10,7 @@
  */
 
 #include <cstdarg>
+#include <cstring>
 
 #include "rmvl/core/util.hpp"
 

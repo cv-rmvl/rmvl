@@ -48,6 +48,9 @@ class HikVideoCapture final : public cv::VideoCapture
     using VideoCapture::open;
 
 public:
+    using ptr = std::unique_ptr<HikVideoCapture>;
+    using const_ptr = std::unique_ptr<const HikVideoCapture>;
+
     /**
      * @brief 构造函数 Constructor
      *

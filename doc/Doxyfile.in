@@ -36,6 +36,9 @@ ALIASES                += add_toggle{1}="@htmlonly[block] <div class='newInnerHT
 ALIASES                += add_toggle_cpp="@htmlonly[block] <div class='newInnerHTML' title='cpp' style='display: none;'>C++</div><div class='toggleable_div label_cpp' style='display: none;'>@endhtmlonly"
 ALIASES                += add_toggle_python="@htmlonly[block] <div class='newInnerHTML' title='python' style='display: none;'>Python</div><div class='toggleable_div label_python' style='display: none;'>@endhtmlonly"
 ALIASES                += end_toggle="@htmlonly[block] </div> @endhtmlonly"
+ALIASES                += add_checkbox_y="@htmlonly[block] <input type='checkbox' checked='checked' disabled>"
+ALIASES                += add_checkbox_n="@htmlonly[block] <input type='checkbox' disabled>"
+ALIASES                += end_checkbox=" </br> @endhtmlonly"
 ALIASES                += prev_tutorial{1}="**上一篇教程：**\ref \1 ↑\n"
 ALIASES                += next_tutorial{1}="**下一篇教程：**\ref \1 ↓\n"
 OPTIMIZE_OUTPUT_FOR_C  = NO
@@ -131,7 +134,7 @@ EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           = @CMAKE_DOXYGEN_EXAMPLE_PATH@
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = YES
-IMAGE_PATH             =
+IMAGE_PATH             = @CMAKE_CURRENT_SOURCE_DIR@/img
 INPUT_FILTER           =
 FILTER_PATTERNS        =
 FILTER_SOURCE_FILES    = NO

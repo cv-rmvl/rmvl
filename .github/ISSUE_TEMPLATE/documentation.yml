@@ -16,13 +16,13 @@ body:
   attributes:
     label: Describe the doc issue - 描述文档的问题
     description: |
-      请清晰、简明地说明[文档](https://vision.scutbot.cn/RMVL)中的哪些内容存在问题。请注意会有多个分支，如 master，因此请指明出现问题的分支。
-      Please provide a clear and concise description of what content in [document](https://vision.scutbot.cn/RMVL) is an issue. Note that there are multiple active branches, such as master, so please specify the branch with the problem.
+      请清晰、简明地说明[文档](https://vision.scutbot.cn/rmvl)中的哪些内容存在问题。请注意会有多个分支，如 master，因此请指明出现问题的分支。
+      Please provide a clear and concise description of what content in [document](https://vision.scutbot.cn/rmvl) is an issue. Note that there are multiple active branches, such as master, so please specify the branch with the problem.
     placeholder: |
-      对[文档](https://vision.scutbot.cn/RMVL)中的内容进行清晰而简洁的描述。
-      A clear and concise description of what content in [document](https://vision.scutbot.cn/RMVL) is an issue.
+      对[文档](https://vision.scutbot.cn/rmvl)中的内容进行清晰而简洁的描述。
+      A clear and concise description of what content in [document](https://vision.scutbot.cn/rmvl) is an issue.
 
-      Link to the doc: https://vision.scutbot.cn/RMVL/master/df/d41/classrm_1_1Armor.html
+      Link to the doc: https://vision.scutbot.cn/rmvl/master/df/d41/classrm_1_1Armor.html
   validations:
     required: true
 - type: textarea
