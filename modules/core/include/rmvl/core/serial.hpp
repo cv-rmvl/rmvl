@@ -1,20 +1,19 @@
 /**
  * @file serial.hpp
  * @author RoboMaster Vision Community
- * @brief
- * @version 1.0
- * @date 2022-11-22
+ * @brief Unix 串口类
+ * @version 2.0
+ * @date 2018-12-08
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2018 (c), RoboMaster Vision Community
  *
  */
 
 #pragma once
 
-#include <memory>
 #include <string>
+#include <string.h>
 #include <termios.h>
-#include <vector>
 
 namespace rm
 {
@@ -76,9 +75,7 @@ namespace rm
         printf("\n");                \
     } while (false)
 
-/**
- * @brief Serial communication library
- */
+//! 串行接口通信库
 class SerialPort
 {
     int _fd;               //!< 文件描述符
@@ -89,94 +86,88 @@ class SerialPort
 
 public:
     /**
-     * @brief Construct a new SerialPort object
+     * @brief 构造新 SerialPort 对象，并自动打开
      *
-     * @param[in] device Device name, default is empty
-     * @param[in] baud_rate Baud rate, default B115200
+     * @param[in] device 设备名，默认为空
+     * @param[in] baud_rate 波特率，默认为 `B115200`
      */
     explicit SerialPort(const std::string &device = {}, int baud_rate = B115200)
         : _device(device), _baud_rate(baud_rate) { open(); }
 
-    /**
-     * @brief Destroy the SerialPort object
-     */
+    //! 析构串口对象
     ~SerialPort() { close(); }
 
-    /**
-     * @brief Open the serial port, search all available devices automatically and try to open the first
-     */
+    //! 打开指定串口，或自动搜索所有可用的设备，并尝试打开第一个
     void open();
 
-    /**
-     * @brief Close the serial port
-     */
+    //! 关闭串口
     void close();
 
     /**
-     * @brief 从串口读取结构体
+     * @brief 从串口读取数据到结构体
+     * @note 每次读取后会清空缓冲区
      *
-     * @tparam T 读取到结构体的类型
-     * @param[in] head 头帧
-     * @param[in] tail 尾帧
-     * @return std::vector<T> 读到的所有结构体
+     * @tparam Tp 读取到结构体的类型
+     * @param[in] head_flag 头帧
+     * @param[in] tail_flag 尾帧
+     * @param[out] data 读取的结构体数据
+     * @return 是否读取成功
      */
-    template <typename T>
-    std::vector<T> readStruct(unsigned char head, unsigned char tail)
+    template <typename Tp>
+    inline bool read(unsigned char head_flag, unsigned char tail_flag, Tp &data)
     {
-        std::vector<T> vec_t;
+        bool retval{false};
         constexpr int LENGTH = 512;
-        constexpr int SIZE = sizeof(T);
-        unsigned char read_buffer[LENGTH] = {0};
-        ssize_t len_result = read(read_buffer, LENGTH);
+        constexpr int SIZE = sizeof(SerialPort);
+        unsigned char buffer[LENGTH] = {0};
+        ssize_t len_result = fdread(buffer, LENGTH);
         for (ssize_t i = 0; (i + SIZE + 1) < len_result; i++)
-            if (read_buffer[i] == head && read_buffer[i + SIZE + 1] == tail)
-                vec_t.push_back(*(reinterpret_cast<T *>(&read_buffer[i + 1])));
-        return vec_t;
+            if (buffer[i] == head_flag && buffer[i + SIZE + 1] == tail_flag)
+            {
+                auto p = memcpy(&data, &buffer[i + 1], SIZE);
+                if (p == &data)
+                    retval = true;
+            }
+        return retval;
     }
 
     /**
-     * @brief Struct data write to serial port
+     * @brief 结构体数据写入串口
+     * @note 每次写入前会清空缓冲区
      *
      * @tparam Tp 写入结构体的类型
-     * @param[in] data_struct 要写入的结构体
+     * @param[in] data 要写入的结构体
      * @return 是否写入成功
      */
     template <typename Tp>
-    bool writeStruct(Tp &data_struct)
+    inline bool write(const Tp &data)
     {
-        ssize_t len_result = write(&data_struct, sizeof(data_struct));
-        return (sizeof(data_struct) == len_result);
+        ssize_t len_result = fdwrite(&data, sizeof(data));
+        return (sizeof(data) == len_result);
     }
 
-    /**
-     * @brief The serial is opened?
-     *
-     * @return true
-     * @return false
-     */
+    //! 串口是否打开
     inline bool isOpened() const { return _is_open; };
 
 private:
     /**
-     * @brief Write data
+     * @brief 写入数据（基于文件描述符）
      *
-     * @param[in] data Start position of the data
-     * @param[in] length The length of the data to be written
-     * @return Whether to write in full
+     * @param[in] data 数据头指针（首地址）
+     * @param[in] len 待写入字长
+     * @return 是否完整写入
      */
-    ssize_t write(void *data, size_t len);
+    ssize_t fdwrite(void *data, size_t len);
 
     /**
-     * @brief Read data
+     * @brief 读取数据（基于文件描述符）
      *
-     * @param[in] data Start position of the data
-     * @param[in] len The length of the data to be read
-     * @return Length
+     * @param[in] data 数据头指针（首地址）
+     * @param[in] len 待读入字长
+     * @return 读取的数据长度
      */
-    ssize_t read(void *data, size_t len);
+    ssize_t fdread(void *data, size_t len);
 };
-
-using serial_port_ptr = std::unique_ptr<SerialPort>;
 
 //! @} serial
 

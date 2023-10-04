@@ -172,7 +172,7 @@ inline void throwError(const Exception &exc) { throw exc; }
 
 /**
  * @brief 发出错误信号并引发异常
- * @note 该函数将错误信息打印到stderr
+ * @note 该函数将错误信息打印到 stderr
  *
  * @param[in] _code 错误码
  * @param[in] _err 错误描述
@@ -184,9 +184,10 @@ inline void throwError(const Exception &exc) { throw exc; }
 void error(int _code, const std::string &_err, const char *_func, const char *_file, int _line);
 
 /**
- * @brief 返回完整的配置输出，返回值是原始的 CMake 输出，包括版本控制系统修订，编译器版本，编译器标志，启用的模块和第三方库等。
+ * @brief 返回完整的配置输出
  *
- * @return const&
+ * @return 原始的 CMake 输出，包括版本控制系统修订，编译器版本，编译器标志，启用的模块和第三方库等。
+ * @retval 配置、构建信息字符串
  */
 const std::string &getBuildInformation();
 

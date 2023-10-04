@@ -1,5 +1,5 @@
-#include <thread>
 #include <iostream>
+#include <thread>
 
 #include "rmvl/camera/mv_video_capture.h"
 #include "rmvl/detector/armor_detector.h"
@@ -15,10 +15,10 @@ using namespace cv;
 int wait_time = 1;
 int collect_num = 2000;
 
-capture_ptr capture;                              // 相机
+MvVideoCapture::ptr capture;                      // 相机
 auto p_detector = ArmorDetector::make_detector(); // 识别模块
 Mat frame;                                        // 帧图像
-vector<group::ptr> groups;                         // 序列组列表
+vector<group::ptr> groups;                        // 序列组列表
 Mat armor_samples;                                // 装甲板信息样本
 Mat armor_responses;                              // 装甲板响应/标签
 

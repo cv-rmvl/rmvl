@@ -1,4 +1,4 @@
-视觉库的配置与构建 {#tutorial_build}
+构建视觉库 {#tutorial_build}
 ============
 
 @prev_tutorial{tutorial_configuration_options}

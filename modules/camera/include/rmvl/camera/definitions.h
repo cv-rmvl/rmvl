@@ -21,8 +21,6 @@ namespace rm
 //! @addtogroup camera
 //! @{
 
-using capture_ptr = std::unique_ptr<cv::VideoCapture>;
-
 //! 采集模式 Camera grab mode
 enum GrabMode : int
 {

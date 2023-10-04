@@ -66,6 +66,9 @@ class MvVideoCapture final : public cv::VideoCapture
     using VideoCapture::open;
 
 public:
+    using ptr = std::unique_ptr<MvVideoCapture>;
+    using const_ptr = std::unique_ptr<const MvVideoCapture>;
+
     /**
      * @brief 构造函数 Constructor
      *

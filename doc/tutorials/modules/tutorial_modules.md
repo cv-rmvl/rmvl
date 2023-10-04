@@ -1,7 +1,7 @@
 主要模块使用教程 {#tutorial_table_of_content_modules}
 ============
 
-@prev_tutorial{tutorial_table_of_content_introduction}
+@prev_tutorial{tutorial_table_of_content_config}
 
 @next_tutorial{tutorial_table_of_content_extra}
 

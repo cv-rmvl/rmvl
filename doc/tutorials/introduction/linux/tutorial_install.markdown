@@ -1,4 +1,4 @@
-视觉库的打包与安装 {#tutorial_install}
+安装视觉库 {#tutorial_install}
 ============
 
 @prev_tutorial{tutorial_build}
@@ -8,7 +8,7 @@
 
 ------
 
-### 1. 安装
+#### 安装
 
 在构建完成之后，可以通过 `make install` 来安装 RMVL 的头文件、库文件、和 CMake 配置文件
 
@@ -22,7 +22,7 @@ sudo make install
 sudo make install -j4
 ```
 
-### 2. 测试
+#### 测试
 
 在任意一个地方打开终端，输入
 
@@ -35,3 +35,7 @@ rmvl_version
 ```shell
 rmvl_version -v
 ```
+
+#### 注意
+
+若想为 RMVL 编写测试 demo，请参考 @ref tutorial_use 。

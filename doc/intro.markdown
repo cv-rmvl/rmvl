@@ -3,8 +3,6 @@
 
 @tableofcontents
 
-------
-
 ### 写在前面
 
 #### 前世今生{#YAT}
@@ -12,7 +10,7 @@
 RMVL 起源于 SRVL（SCUT Robotlab Vision Library——华南理工大学机器人实验室视觉库），由华南理工大学华南虎战队视觉组成员共同研发，于实验室团队内部自建的 Gitea 服务进行代码托管和功能维护，主要用于参加 [RoboMaster 系列赛事](https://www.robomaster.com)。该项目在 RM2021 赛季内部技术交流活动后，即 2021 年 8 月正式启动，总共经过 3 届队员传承、更迭，依次开发了 1.x ~ 4.x 共 4 个系列的版本。
 
 - **1.x** —— *2021.10* 发布<span style="color: green">（未开源）</span>，主要解决了 2021 赛季步兵、英雄代码混乱的情况，初步尝试了使用抽象工厂设计模式进行代码架构的设计，届时，SRVL 开发者和使用者的不同需求需要在 SRVL 编译过程中修改编译选项。
-- **2.x** —— *2022.01* 发布<span style="color: green">（未开源）</span>，在上一版设计模式使用后出现了维护困难的情况（多个 @ref function_modules 共同组合，导致产生非常多的派生工厂）后，移除了原先所有的设计模式，各功能模块仅单独存在，不再另外设置组合或其他强依赖关系。此外，**2.x** 相较于 **1.x** 添加了全新的内容： @ref group 。
+- **2.x** —— *2022.01* 发布<span style="color: green">（未开源）</span>，在上一版设计模式使用后出现了维护困难的情况（多个 @ref function_modules 共同组合，导致产生非常多的派生工厂）后，移除了原先所有的设计模式，各功能模块仅单独存在，不再另外设置组合或其他强依赖关系。此外， **2.x** 相较于 **1.x** 添加了全新的内容： @ref group 。
 - **3.x** —— *2022.08* 发布<span style="color: green">（未开源）</span>，架构功能大变更。在开发上，添加了自动化构建测试工具，添加了一系列单元测试；在功能上，移除了原先所有的 `group` 组件，重定义并完善 `group` 组件，在此系列代码基础上，后续完成了 **RM2023 版整车状态估计** ；在使用上，顶层模块与视觉库完全分离，由用户自行实现，进一步降低了依赖关系，此外还加入了更加规范且方便的编译安装方式。
 - **4.x** —— 未发布，但于 2023 年登陆 [Github](https://github.com) 平台<span style="color: green">（已开源）</span>，更名为 RMVL，并发布 RMVL **1.x** 系列版本，该系列彻底形成了面向对象迭代器设计模式与责任链设计模式相互结合的代码架构。该版本旨在简化数据组件的开发，移除了不属于 @ref data_components 管理的，但在 @ref function_modules 中被设置的信息。此外还为各个 @ref function_modules 加入了 `XxxInfo` 的信息类。该版本首次加入命名空间 `rm`，并且极大程度简化并统一了参数模块的定义方式。
 
@@ -56,9 +54,7 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 - @ref detector (**detector**) —— 识别、检测器是功能模块中最重要的部分，也是视觉图像处理的第一步。它负责对输入图像进行识别并加以处理，提取出目标轮廓、特征点等信息，并结合已知的部分数据组件，按顺序依次构建各种新的数据组件。
   <center>
-    <a href="https://imgse.com/i/xOgdat" target="_blank">
-      <img src="https://s1.ax1x.com/2022/11/05/xOgdat.md.png" alt="xOgdat.png" border="0" />
-    </a>
+    <img src="https://s1.ax1x.com/2022/11/05/xOgdat.md.png" alt="xOgdat.png" border="0" />
   </center>
   识别得到的各种图像以及提取到的特征和组合体均保存至识别模块信息 `rm::DetectInfo` 中。
 

@@ -77,26 +77,27 @@ struct GyroData
 
 /**
  * @brief 将角点数据写入 YAML 文件中
+ * @details
+ * 默认以 `APPEND` 模式进行写入到结构体 `corners_<?>` 中，`<?>` 表示写入的标号，即参数 `idx`
  * @note
- * - 默认以 `APPEND` 模式进行写入到结构体 `corners_<?>` 中，`<?>` 表示写入的标号，即参数 `idx`
- * - YAML 文件参见 @ref readCorners
+ * YAML 文件参见 @ref readCorners
  *
  * @param[in] path 写入的文件路径
  * @param[in] idx 写入的标号
  * @param[in] corners 待写入的角点数据
  * @return 是否写入成功
  */
-bool writeCorners(const std::string &path, uint32_t idx, const std::vector<std::vector<cv::Point2d>> &corners);
+bool writeCorners(const std::string &path, uint32_t idx, const std::vector<std::vector<cv::Point2f>> &corners);
 
 /**
  * @brief 从指定 YAML 文件中读取角点数据
- * @note
+ * @details
  * - 访问指定下标的数据结构体 `corners_<?>`，`<?>` 表示对应的标号，即参数 `idx`
  * - YAML 文件形如以下内容
  * @code {.yml}
  * %YAML:1.0
  * ---
- * frame_1:
+ * corners_1:
  *    -
  *       -
  *          x: 1.9
@@ -110,7 +111,7 @@ bool writeCorners(const std::string &path, uint32_t idx, const std::vector<std::
  *          y: 6.15
  * ...
  * ---
- * frame_2:
+ * corners_2:
  *    -
  *       -
  *          x: 7.16
@@ -122,7 +123,7 @@ bool writeCorners(const std::string &path, uint32_t idx, const std::vector<std::
  * @param[out] corners 读取出的角点数据，读取失败则不对 `data` 做任何操作
  * @return 是否写入成功
  */
-bool readCorners(const std::string &path, uint32_t idx, std::vector<std::vector<cv::Point2d>> &corners);
+bool readCorners(const std::string &path, uint32_t idx, std::vector<std::vector<cv::Point2f>> &corners);
 
 //! @} core_dataio
 
