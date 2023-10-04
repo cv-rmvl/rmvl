@@ -12,7 +12,7 @@
 
 ### 1. 显示图像、打印调试信息
 
-视觉程序日常调试必不可少的就是显示图像，例如 OpenCV 中提供了 `cv::imshow` 函数来显示图像。在执行完程序处理的全部流程后，可以对当前帧捕获到或计算出的信息进行观察，rm::DetectInfo ， rm::CompensateInfo ， rm::PredictInfo ， rm::DecideInfo 包含了各自模块得到的全部信息。例如 rm::DetectInfo 中提供了原图、二值图、所有 ROI、渲染图等图像信息，可以使用 `cv::imshow()` 显示到屏幕； rm::CompensateInfo 中提供了补偿的角度偏移信息，可以使用 `printf` 或 `std::cout` 输出到终端。
+视觉程序日常调试必不可少的就是显示图像，例如 OpenCV 中提供了 `cv::imshow` 函数来显示图像。在执行完程序处理的全部流程后，可以对当前帧捕获到或计算出的信息进行观察， rm::DetectInfo ， rm::CompensateInfo ， rm::PredictInfo ， rm::DecideInfo 包含了各自模块得到的全部信息。例如 rm::DetectInfo 中提供了原图、二值图、所有 ROI、渲染图等图像信息，可以使用 `cv::imshow()` 显示到屏幕； rm::CompensateInfo 中提供了补偿的角度偏移信息，可以使用 `printf` 或 `std::cout` 输出到终端。
 
 ### 2. 角点写入文件
 

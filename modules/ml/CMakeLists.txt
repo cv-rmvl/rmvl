@@ -8,24 +8,19 @@ rmvl_add_module(
 
 # add module: ort
 find_package(Ort)
+set(BUILD_rmvl_ort_INIT ${Ort_FOUND})
+
 rmvl_generate_para(
     ort
     MODULE ml
 )
 
-if(Ort_FOUND)
-    rmvl_add_module(
-        ort
-        DEPENDS ml
-        EXTRA_HEADER ${Ort_INCLUDE_DIRS}
-        EXTERNAL ${Ort_LIBS}
-    )
-else()
-    rmvl_add_module(
-        ort INTERFACE
-        DEPENDS ml
-    )
-endif()
+rmvl_add_module(
+    ort
+    DEPENDS ml
+    EXTRA_HEADER ${Ort_INCLUDE_DIRS}
+    EXTERNAL ${Ort_LIBS}
+)
 
 rmvl_generate_module_para(ml)
 

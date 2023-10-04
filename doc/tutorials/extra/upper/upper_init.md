@@ -21,7 +21,7 @@
 @add_checkbox_y
 相机设备
 @end_checkbox
-@add_checkbox_n
+@add_checkbox_y
 光源控制器
 @end_checkbox
 @add_checkbox_n
