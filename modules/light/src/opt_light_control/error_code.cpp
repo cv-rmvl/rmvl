@@ -19,7 +19,7 @@
 using namespace std;
 using namespace rm;
 
-void LightController::initErrorCode()
+void OPTLightController::initErrorCode()
 {
     _error_code[OPT_SUCCEED] = "operation succeed";
     _error_code[OPT_ERR_INVALIDHANDLE] = "invalid handle";

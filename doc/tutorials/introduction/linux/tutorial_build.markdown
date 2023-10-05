@@ -62,14 +62,16 @@ make -j8 && sudo make install
 sudo apt install libeigen3-dev
 ```
 
-#### 1.3 相机 SDK（可选）
+#### 1.3 硬件设备开发 SDK（可选）
 
-| 相机厂商 | 编译选项 | CMake 包 `find_package(..)` | SDK 下载地址（点击即可下载） |
-| :-----: | :----: | :-----------: | :--------: |
-| MindVision | `BUILD_rmvl_mv_video_capture` | MvSDK | [RMVL_mv](https://www.mindvision.com.cn/uploadfiles/SDK/linuxSDK_V2.1.0.37.tar.gz) |
-| HikVision | `BUILD_rmvl_hik_video_capture` | HikSDK | [RMVL_hik](https://www.hikrobotics.com/cn2/source/support/software/MVS_STD_GML_V2.1.2_221208.zip) |
+|    设备    |    品牌    | CMake 包 `find_package(..)` |                 SDK 下载地址（点击即可下载）                 |
+| :--------: | :--------: | :-------------------------: | :----------------------------------------------------------: |
+|    相机    | MindVision |            MvSDK            | [rmvl_mv](https://www.mindvision.com.cn/uploadfiles/SDK/linuxSDK_V2.1.0.37.tar.gz) |
+|    相机    | HikVision  |           HikSDK            | [rmvl_hik](https://www.hikrobotics.com/cn2/source/support/software/MVS_STD_GML_V2.1.2_221208.zip) |
+|    相机    |    OPT     |        OPTCameraSDK         | [rmvl_opt_cam](https://vision.scutbot.cn/files/opt_camera_sdk.tar.xz) |
+| 光源控制器 |    OPT     |        OPTLightCtrl         | [rmvl_opt_lc](https://vision.scutbot.cn/files/opt_lc_sdk.tar.xz) |
 
-以上 SDK 在进行二次封装得到的相机库都需要链接到 OpenCV。
+@note 以上与相机相关的 SDK 在进行二次封装得到的库都需要链接到 OpenCV。
 
 #### 1.4 onnxruntime
 
