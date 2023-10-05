@@ -35,7 +35,7 @@ struct IPConfig
 using OPTController_StatusCode = long;
 
 //! OPT 奥普特光源控制器
-class LightController
+class OPTLightController
 {
     bool _init = false;                                      //!< 初始化标志位
     OPTController_Handle _handle;                            //!< 光源控制器句柄
@@ -43,11 +43,11 @@ class LightController
     static std::unordered_map<int, std::string> _error_code; //!< 错误码哈希表
 
 public:
-    //! 构造新 LightController 对象
-    LightController() { initErrorCode(); }
+    //! 构造新 OPTLightController 对象
+    OPTLightController() { initErrorCode(); }
 
-    //! 析构 LightController 对象
-    ~LightController() { disconnect(); }
+    //! 析构 OPTLightController 对象
+    ~OPTLightController() { disconnect(); }
 
     /**
      * @brief 使用 IP 地址创建 EtherNet 以太网连接

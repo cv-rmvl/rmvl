@@ -34,3 +34,4 @@
 ### 4. 硬件设备支持库
 
 - @subpage tutorial_modules_camera
+- @subpage tutorial_modules_light

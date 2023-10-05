@@ -16,7 +16,7 @@
 using namespace std;
 using namespace rm;
 
-bool LightController::connect(const IPConfig &ip_config)
+bool OPTLightController::connect(const IPConfig &ip_config)
 {
     if (_init)
         disconnect();
@@ -30,7 +30,7 @@ bool LightController::connect(const IPConfig &ip_config)
         return false;
 }
 
-bool LightController::connect(const char *SN)
+bool OPTLightController::connect(const char *SN)
 {
     if (_init)
         disconnect();
@@ -45,7 +45,7 @@ bool LightController::connect(const char *SN)
         return false;
 }
 
-bool LightController::disconnect()
+bool OPTLightController::disconnect()
 {
     if (_init)
     {
@@ -57,20 +57,20 @@ bool LightController::disconnect()
     return false;
 }
 
-bool LightController::openChannels(const std::vector<int> &channels)
+bool OPTLightController::openChannels(const std::vector<int> &channels)
 {
     _status_code = OPTController_TurnOnMultiChannel(_handle, const_cast<int *>(channels.data()),
                                                      static_cast<int>(channels.size()));
     return _status_code == OPT_SUCCEED;
 }
 
-bool LightController::openAllChannels()
+bool OPTLightController::openAllChannels()
 {
     _status_code = OPTController_TurnOnChannel(_handle, 0);
     return _status_code == OPT_SUCCEED;
 }
 
-bool LightController::closeChannels(const std::vector<int> &channels)
+bool OPTLightController::closeChannels(const std::vector<int> &channels)
 {
     vector<IntensityItem> intensities(channels.size());
     for (size_t i = 0; i < channels.size(); ++i)
@@ -81,21 +81,21 @@ bool LightController::closeChannels(const std::vector<int> &channels)
     return _status_code == OPT_SUCCEED;
 }
 
-bool LightController::closeAllChannels()
+bool OPTLightController::closeAllChannels()
 {
     OPTController_SetIntensity(_handle, 0, 0);
     _status_code = OPTController_TurnOffChannel(_handle, 0);
     return _status_code == OPT_SUCCEED;
 }
 
-int LightController::getIntensity(int channel)
+int OPTLightController::getIntensity(int channel)
 {
     int intensity;
     _status_code = OPTController_ReadIntensity(_handle, channel, &intensity);
     return _status_code == OPT_SUCCEED ? intensity : -1;
 }
 
-bool LightController::setIntensity(int channel, int intensity)
+bool OPTLightController::setIntensity(int channel, int intensity)
 {
     _status_code = OPTController_SetIntensity(_handle, channel, intensity);
     return _status_code == OPT_SUCCEED;
