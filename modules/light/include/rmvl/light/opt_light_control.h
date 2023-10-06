@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -27,16 +27,16 @@ namespace rm
 //! IP 配置聚合类
 struct IPConfig
 {
-    const char *ip;              //!< IP 地址
-    const char *subnet_mask;     //!< 子网掩码
-    const char *default_gateway; //!< 默认网管
+    std::string ip;              //!< IP 地址
+    std::string subnet_mask;     //!< 子网掩码
+    std::string default_gateway; //!< 默认网管
 };
-
-using OPTController_StatusCode = long;
 
 //! OPT 奥普特光源控制器
 class OPTLightController
 {
+    using OPTController_StatusCode = long;
+
     bool _init = false;                                      //!< 初始化标志位
     OPTController_Handle _handle;                            //!< 光源控制器句柄
     OPTController_StatusCode _status_code;                   //!< 运行时状态码

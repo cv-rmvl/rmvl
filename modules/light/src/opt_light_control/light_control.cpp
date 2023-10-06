@@ -21,13 +21,8 @@ bool OPTLightController::connect(const IPConfig &ip_config)
     if (_init)
         disconnect();
     _init = true;
-    _status_code = OPTController_CreateEtheConnectionByIP(const_cast<char *>(ip_config.ip), &_handle);
-    if (_status_code == OPT_SUCCEED)
-    {
-        return true;
-    }
-    else
-        return false;
+    _status_code = OPTController_CreateEtheConnectionByIP(const_cast<char *>(ip_config.ip.c_str()), &_handle);
+    return _status_code == OPT_SUCCEED;
 }
 
 bool OPTLightController::connect(const char *SN)
@@ -60,7 +55,7 @@ bool OPTLightController::disconnect()
 bool OPTLightController::openChannels(const std::vector<int> &channels)
 {
     _status_code = OPTController_TurnOnMultiChannel(_handle, const_cast<int *>(channels.data()),
-                                                     static_cast<int>(channels.size()));
+                                                    static_cast<int>(channels.size()));
     return _status_code == OPT_SUCCEED;
 }
 
@@ -77,7 +72,7 @@ bool OPTLightController::closeChannels(const std::vector<int> &channels)
         intensities[i] = {channels[i], 0};
     OPTController_SetMultiIntensity(_handle, intensities.data(), static_cast<int>(intensities.size()));
     _status_code = OPTController_TurnOffMultiChannel(_handle, const_cast<int *>(channels.data()),
-                                                      static_cast<int>(channels.size()));
+                                                     static_cast<int>(channels.size()));
     return _status_code == OPT_SUCCEED;
 }
 
