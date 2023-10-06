@@ -19,7 +19,7 @@ endif()
 #  Configure CMake policies
 # ----------------------------------------------------------------------------
 if(POLICY CMP0135)
-  cmake_policy(SET CMP0135 NEW) # CMake 3.24: URL download, extract file and timestamp
+    cmake_policy(SET CMP0135 NEW) # CMake 3.24: URL download, extract file and timestamp
 endif()
 
 cmake_minimum_required(VERSION 3.16)
@@ -32,6 +32,9 @@ project(
 # CMake module named xxx.cmake PATH
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+# ----------------------------------------------------------------------------
+#  RMVL utilities macro and function
+# ----------------------------------------------------------------------------
 include(RMVLUtils)
 
 # Build Type
@@ -48,6 +51,11 @@ include(RMVLCompilerOptions)
 #  Get actual RMVL version number from sources
 # ----------------------------------------------------------------------------
 include(RMVLVersion)
+
+# ----------------------------------------------------------------------------
+#  RMVL parameters and miscellaneous generation
+# ----------------------------------------------------------------------------
+include(RMVLGenPara)
 
 # ----------------------------------------------------------------------------
 #  Build & install
