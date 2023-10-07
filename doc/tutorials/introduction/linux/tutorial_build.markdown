@@ -10,9 +10,9 @@
 
 ### 1. 安装依赖
 
-@note 带有 `*` 的表示必须安装
+@note 带有 `(*)` 的表示必须安装
 
-#### 1.1 OpenCV*
+#### 1.1 OpenCV (*)
 
 OpenCV 是 RMVL 必需的依赖库，如果没有找到 OpenCV 库，RMVL 将无法构建，下面介绍 OpenCV 的安装方法。
 
@@ -55,14 +55,14 @@ make -j8 && sudo make install
 @see
 - [OpenCV documents](https://docs.opencv.org/4.x/)
 
-#### 1.2 Eigen3*
+#### 1.2 Eigen3 (*)
 
 ```shell
 # use apt to obtain Eigen3
 sudo apt install libeigen3-dev
 ```
 
-#### 1.3 硬件设备开发 SDK（可选）
+#### 1.3 硬件设备 SDK
 
 |    设备    |    品牌    | CMake 包 `find_package(..)` |                 SDK 下载地址（点击即可下载）                 |
 | :--------: | :--------: | :-------------------------: | :----------------------------------------------------------: |
