@@ -42,11 +42,13 @@ rmvl_generate_para(
     tag_detector
     MODULE detector
 )
-rmvl_add_module(
-    tag_detector
-    DEPENDS detector
-    EXTRA_SOURCE common
-)
+if(WITH_APRILTAG)
+    rmvl_add_module(
+        tag_detector
+        DEPENDS detector
+        EXTERNAL apriltag 
+    )
+endif()
 
 rmvl_generate_module_para(detector)
 

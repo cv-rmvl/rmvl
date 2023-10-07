@@ -77,20 +77,23 @@ endfunction(rmvl_install_directories)
 # ----------------------------------------------------------------------------
 #   在当前目录中添加新的 RMVL 模块
 #   用法:
-#       rmvl_add_module(<name> [INTERFACE] [EXTRA_HEADER] <list of 3rd party include directories>]
-#           [DEPENDS <list of rmvl dependencies>] [EXTERNAL <list of 3rd party dependencies>])
+#       rmvl_add_module(<name> [INTERFACE] [EXTRA_HEADER <list of other include directories>]
+#           [EXTRA_SOURCE <list of other source directories>] [DEPENDS <list of rmvl dependencies>]
+#           [EXTERNAL <list of 3rd party dependencies>])
 #   示例:
 #       rmvl_add_module(
-#           armor_detector                      # 需要生成的模块 (文件夹名)
-#           EXTRA_HEADER ${OpenCV_INCLUDE_DIRS} # 依赖的第三方头文件目录
-#           DEPENDS armor                       # 依赖的 RMVL 模块 (文件夹名)
-#           EXTERNAL ${OpenCV_LIBS}             # 依赖的第三方目标库
+#           my_module               # 需要生成的模块 (文件夹名)
+#           EXTRA_HEADER xxx_h      # 参与构建的其余头文件目录
+#           EXTRA_SOURCE xxx_src    # 参与构建的其余头文件目录
+#           DEPENDS core            # 依赖的 RMVL 模块 (文件夹名)
+#           EXTERNAL ${OpenCV_LIBS} # 依赖的第三方目标库
 #       )
 # ----------------------------------------------------------------------------
 macro(rmvl_add_module _name)
-    # Add module options
+    # Configure arguments parser
+    set(options INTERFACE)
     set(multi_args DEPENDS EXTRA_HEADER EXTRA_SOURCE EXTERNAL)
-    cmake_parse_arguments(MD "INTERFACE" "" "${multi_args}" ${ARGN})
+    cmake_parse_arguments(MD "${options}" "" "${multi_args}" ${ARGN})
 
     # Module information
     unset(the_module)
@@ -132,14 +135,12 @@ macro(rmvl_add_module _name)
                 if(para_dir)
                     aux_source_directory(${para_dir} para_src)
                 endif()
-
+            endif(IS_DIRECTORY ${para_dir})
             # Bind extra source files
             set(extra_src "")
             if(MD_EXTRA_SOURCE)
                 aux_source_directory(${module_dir}/${MD_EXTRA_SOURCE} extra_src)
             endif()
-
-            endif(IS_DIRECTORY ${para_dir})
             # Build to *.so / *.a
             if(BUILD_SHARED_LIBS)
                 add_library(${the_module} SHARED ${target_src} ${para_src} ${extra_src})

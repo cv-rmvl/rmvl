@@ -43,6 +43,16 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # ----------------------------------------------------------------------------
+#  Build
+# ----------------------------------------------------------------------------
+# RMVL Install layout 
+include(RMVLInstall)
+include(RMVLModule)
+include(RMVLExtraTarget)
+
+include_directories(${CMAKE_BINARY_DIR})
+
+# ----------------------------------------------------------------------------
 #  RMVL compile configure and options
 # ----------------------------------------------------------------------------
 include(RMVLCompilerOptions)
@@ -56,18 +66,6 @@ include(RMVLVersion)
 #  RMVL parameters and miscellaneous generation
 # ----------------------------------------------------------------------------
 include(RMVLGenPara)
-
-# ----------------------------------------------------------------------------
-#  Build & install
-# ----------------------------------------------------------------------------
-# RMVL Install layout 
-include(RMVLInstall)
-
-include(RMVLModule)
-
-include(RMVLExtraTarget)
-
-include_directories(${CMAKE_BINARY_DIR})
 
 # ----------------------------------------------------------------------------
 #  Process subdirectories
@@ -161,24 +159,30 @@ endif()
 status("     ccache:"              ENABLE_CCACHE AND CCACHE_FOUND THEN YES ELSE NO)
 
 # =================== Other third-party libraries ===================
-find_package(OpenCV)
-find_package(Eigen3)
+find_package(OpenCV QUIET)
+find_package(Eigen3 QUIET)
+find_package(Ort QUIET)
 status("")
 status("  Other third-party libraries:")
-status("     OpenCV: (*)")
-status("        Version:"              ${OpenCV_VERSION})
-status("        Location:"             ${OpenCV_INSTALL_PATH})
-status("     Eigen library: (*)")
-status("        Version:"              ${EIGEN3_VERSION_STRING})
-status("        CMake dir:"            ${Eigen3_DIR})
-status("        include:"              ${EIGEN3_INCLUDE_DIR})
-status("     Camera devices SDK:")
-status("        MindVision camera:"    BUILD_rmvl_mv_video_capture THEN YES ELSE NO)
-status("        HikRobot camera:"      BUILD_rmvl_hik_video_capture THEN YES ELSE NO)
-status("     Light controller SDK:")
-status("        OPT Light controller:" BUILD_rmvl_opt_light_control THEN YES ELSE NO)
-status("     Inference engine:")
-status("        ONNX Runtime:"         BUILD_rmvl_ort THEN YES ELSE NO)
+status("     OpenCV: (*)"           OpenCV_FOUND THEN "YES (version: ${OpenCV_VERSION})" ELSE NO)
+status("     Eigen library: (*)"    Eigen3_FOUND THEN "YES (version: ${EIGEN3_VERSION_STRING})" ELSE NO)
+status("     onnxruntime:"          Ort_FOUND THEN YES ELSE NO)
+status("     apriltag:"             RMVL_3rd_apriltag_FOUND THEN YES ELSE NO)
+
+# =============================== SDK ===============================
+status("")
+status("  Hardware SDK:")
+status("     Camera:")
+status("        MindVision:"        BUILD_rmvl_mv_video_capture THEN YES ELSE NO)
+status("        HikRobot:"          BUILD_rmvl_hik_video_capture THEN YES ELSE NO)
+status("        OPT:"               BUILD_rmvl_opt_video_capture THEN YES ELSE NO)
+status("     Light controller:")
+status("        OPT:"               BUILD_rmvl_opt_light_control THEN YES ELSE NO)
+
+# ========================= Inference engine ========================
+status("")
+status("  Inference engine in RMVL:")
+status("     Ort:"                  BUILD_rmvl_ort THEN YES ELSE NO)
 
 # ========================== RMVL modules ===========================
 string(REGEX REPLACE "rmvl_" " " modules_public_dir ${RMVL_MODULES_PUBLIC})
