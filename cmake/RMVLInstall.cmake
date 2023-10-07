@@ -19,11 +19,13 @@ endif()
 # --------------------------------------------------------------------------------------------
 #  Initial install layout
 # --------------------------------------------------------------------------------------------
+# Unix
 include(GNUInstallDirs)
-set(RMVL_BIN_INSTALL_PATH "bin")
-set(RMVL_TEST_INSTALL_PATH "${RMVL_BIN_INSTALL_PATH}")
-set(RMVL_LIB_INSTALL_PATH "${CMAKE_INSTALL_LIBDIR}")
-set(RMVL_CONFIG_INSTALL_PATH "${RMVL_LIB_INSTALL_PATH}/cmake/${PROJECT_NAME}")
-set(RMVL_INCLUDE_INSTALL_PATH "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
+set(RMVL_BIN_INSTALL_PATH       "bin")
+set(RMVL_TEST_INSTALL_PATH      "${RMVL_BIN_INSTALL_PATH}")
+set(RMVL_LIB_INSTALL_PATH       "${CMAKE_INSTALL_LIBDIR}")
+set(RMVL_3P_LIB_INSTALL_PATH    "${RMVL_LIB_INSTALL_PATH}/${PROJECT_NAME}/3rdparty")
+set(RMVL_CONFIG_INSTALL_PATH    "${RMVL_LIB_INSTALL_PATH}/cmake/${PROJECT_NAME}")
+set(RMVL_INCLUDE_INSTALL_PATH   "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${RMVL_LIB_INSTALL_PATH}")

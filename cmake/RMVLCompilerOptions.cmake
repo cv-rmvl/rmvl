@@ -76,10 +76,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # Here is the compile-generate-path for Linux and MacOS
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+    set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/3rdparty/lib)
 else()
     # Here is the compile-generate-path for Windows
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}\\bin)
     set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}\\lib)
+    set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}\\3rdparty\\lib)
 endif()
 
 # ----------------------------------------------------------------------------
@@ -190,15 +192,21 @@ if(NOT MSVC)
 endif()
 
 # ----------------------------------------------------------------------------
-#   Module options
+#   Module and other options
 # ----------------------------------------------------------------------------
 option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" ON)
-
-# ----------------------------------------------------------------------------
-#   Extra options
-# ----------------------------------------------------------------------------
 option(BUILD_EXAMPLES "Build RMVL all examples" ON)
 option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
+
+# ----------------------------------------------------------------------------
+#   3rdparty options
+# ----------------------------------------------------------------------------
+option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
+
+option(WITH_APRILTAG "Enable apriltag support" ON)
+if(WITH_APRILTAG)
+    include(RMVLFindAprilTag)
+endif()
 
 # ----------------------------------------------------------------------------
 #   Build performance and unit tests
