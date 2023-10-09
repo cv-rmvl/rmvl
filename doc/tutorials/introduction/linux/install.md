@@ -36,6 +36,6 @@ rmvl_version
 rmvl_version -v
 ```
 
-#### 注意
+------
 
 若想为 RMVL 编写测试 demo，请参考 @ref tutorial_use 。

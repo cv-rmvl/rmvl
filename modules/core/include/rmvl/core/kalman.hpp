@@ -15,7 +15,6 @@
 #pragma once
 
 #include <opencv2/core/matx.hpp>
-#include <type_traits>
 
 //! @addtogroup core
 //! @{

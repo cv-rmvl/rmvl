@@ -8,11 +8,11 @@
 
 ------
 
-### 1. 安装依赖
+### 安装依赖
 
 @note 带有 `(*)` 的表示必须安装
 
-#### 1.1 OpenCV (*)
+#### OpenCV (*)
 
 OpenCV 是 RMVL 必需的依赖库，如果没有找到 OpenCV 库，RMVL 将无法构建，下面介绍 OpenCV 的安装方法。
 
@@ -55,14 +55,14 @@ make -j8 && sudo make install
 @see
 - [OpenCV documents](https://docs.opencv.org/4.x/)
 
-#### 1.2 Eigen3 (*)
+#### Eigen3 (*)
 
 ```shell
 # use apt to obtain Eigen3
 sudo apt install libeigen3-dev
 ```
 
-#### 1.3 硬件设备 SDK
+#### 硬件设备 SDK
 
 |    设备    |    品牌    | CMake 包 `find_package(..)` |                 SDK 下载地址（点击即可下载）                 |
 | :--------: | :--------: | :-------------------------: | :----------------------------------------------------------: |
@@ -73,7 +73,7 @@ sudo apt install libeigen3-dev
 
 @note 以上与相机相关的 SDK 在进行二次封装得到的库都需要链接到 OpenCV。
 
-#### 1.4 onnxruntime
+#### onnxruntime
 
 onnxruntime 库是目前数字识别所依赖的第三方库，如果有需要开启此功能，则需要执行以下命令。
 
@@ -90,15 +90,15 @@ sudo cp -r onnxruntime-linux-x64-1.12.0/lib /usr/local
 rm -r onnxruntime-linux-x64-1.12.0 && rm onnxruntime-linux-x64-1.12.0.tgz
 ```
 
-### 2. 配置 RMVL 项目
+### 配置 RMVL 项目
 
-#### 2.1 进入编译空间
+#### 进入编译空间
 
 ```shell
 cd build
 ```
 
-#### 2.2 请继续在终端中输入以下内容
+#### 请继续在终端中输入以下内容
 
 ```shell
 # Open the tests
@@ -111,14 +111,14 @@ cmake -D BUILD_TESTS=ON ..
 cmake-gui ..
 ```
 
-### 3. 构建 RMVL
+### 构建 RMVL 并进行单元测试
 
 ```shell
 make -j8
-```
-
-### 4. 运行 RMVL 的测试用例
-
-```shell
+# 运行 RMVL 单元测试的测试用例
 ctest
 ```
+
+------
+
+如要完成安装过程，请继续阅读 @ref tutorial_install 。

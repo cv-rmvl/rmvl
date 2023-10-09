@@ -3,14 +3,12 @@
  * @author RoboMaster Vision Community
  * @brief RMVL 版本控制
  * @version 1.0
- * 
+ *
  * @copyright Copyright 2023 (c), RoboMaster Vision Community
- * 
+ *
  */
 
 #pragma once
-
-#include <string>
 
 #define RMVL_VERSION_MAJOR 1
 #define RMVL_VERSION_MINOR 1
@@ -30,7 +28,7 @@ namespace rm
  * @note "For example: 3.6.0-dev"
  * @see getVersionMajor, getVersionMinor, getVersionPatch
  */
-inline std::string getVersionString() { return RMVL_VERSION; }
+inline const char *getVersionString() { return RMVL_VERSION; }
 
 //! 返回主要库版本
 inline int getVersionMajor() { return RMVL_VERSION_MAJOR; }
