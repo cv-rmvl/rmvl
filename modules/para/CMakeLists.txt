@@ -1,4 +1,4 @@
 rmvl_add_module(
-    para INTERFACE
-    DEPENDS core
+  para INTERFACE
+  DEPENDS core
 )

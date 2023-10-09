@@ -1,11 +1,10 @@
 # build lists of modules to be documented
+set(cur_path "${CMAKE_CURRENT_SOURCE_DIR}")
+file(GLOB module_extra_st RELATIVE "${cur_path}" "${cur_path}/*")
+
 set(RMVL_EXTRA_MODULE "")
-
-execute_process(COMMAND ls ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE module_extra_st)
-string(REPLACE "\n" ";" module_extra_st "${module_extra_st}")
-
 foreach(m ${module_extra_st})
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${m} AND (NOT (${m} STREQUAL include)))
+    if(IS_DIRECTORY ${cur_path}/${m} AND (NOT (${m} STREQUAL include)))
         list(APPEND RMVL_EXTRA_MODULE "${m}")
     endif()
 endforeach()

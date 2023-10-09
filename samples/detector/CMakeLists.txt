@@ -1,8 +1,9 @@
-execute_process(COMMAND ls ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE sample_tmp)
-string(REPLACE "\n" ";" sample_tmp "${sample_tmp}")
+if(camera_tmp)
+  unset(camera_tmp)
+endif()
 
-foreach(_sub ${sample_tmp})
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_sub})
-        add_subdirectory(${_sub})
-    endif()
+set(camera_tmp hik mv)
+
+foreach(_sub ${camera_tmp})
+  add_subdirectory(${_sub})
 endforeach()

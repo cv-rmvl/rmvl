@@ -63,17 +63,17 @@ std::string rm::format(const char *fmt, ...)
 }
 
 rm::Exception::Exception(RMVLErrorCode _code, const std::string &_err, const std::string &_func,
-                           const std::string &_file, int _line)
+                         const std::string &_file, int _line)
     : code(_code), err(_err), func(_func), file(_file), line(_line)
 {
     if (!func.empty())
         msg = rm::format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
-                           ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                           file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
+                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                         file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
     else
         msg = rm::format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
-                           ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                           file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
+                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                         file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
 }
 
 void rm::error(int _code, const std::string &_err, const char *_func, const char *_file, int _line)
@@ -91,9 +91,9 @@ void rm::error(int _code, const std::string &_err, const char *_func, const char
 #endif //! _GNUC_
 }
 
-const std::string &rm::getBuildInformation()
+const char *rm::getBuildInformation()
 {
-    static std::string build_info =
+    static const char *build_info =
 #include "version_string.inc"
         ;
     return build_info;

@@ -1,12 +1,12 @@
 find_package(OpenCV REQUIRED)
 
 rmvl_generate_para(
-    camera
+  camera
 )
 rmvl_add_module(
-    camera
-    DEPENDS rmath para
-    EXTERNAL ${OpenCV_LIBS}
+  camera
+  DEPENDS rmath para
+  EXTERNAL ${OpenCV_LIBS}
 )
 
 # --------------------------------------------------------------------------
@@ -24,18 +24,18 @@ set(BUILD_rmvl_hik_video_capture_INIT ${HikSDK_FOUND})
 # --------------------------------------------------------------------------
 # mv
 rmvl_add_module(
-    mv_video_capture
-    DEPENDS camera
-    EXTRA_HEADER ${MvSDK_INCLUDE_DIRS}
-    EXTERNAL ${MvSDK_LIBS}
+  mv_video_capture
+  DEPENDS camera
+  EXTRA_HEADER ${MvSDK_INCLUDE_DIRS}
+  EXTERNAL ${MvSDK_LIBS}
 )
 
 # hik
 rmvl_add_module(
-    hik_video_capture
-    DEPENDS camera
-    EXTRA_HEADER ${HikSDK_INCLUDE_DIRS}
-    EXTERNAL ${HikSDK_LIBS}
+  hik_video_capture
+  DEPENDS camera
+  EXTRA_HEADER ${HikSDK_INCLUDE_DIRS}
+  EXTERNAL ${HikSDK_LIBS}
 )
 
 # --------------------------------------------------------------------------

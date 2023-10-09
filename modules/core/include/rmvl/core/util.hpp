@@ -157,11 +157,7 @@ public:
     int line;         //!< 源文件中发生错误的行号
 };
 
-/**
- * @brief
- *
- * @param exc
- */
+//! 抛出异常
 inline void throwError(const Exception &exc) { throw exc; }
 
 #ifdef NDEBUG
@@ -189,7 +185,7 @@ void error(int _code, const std::string &_err, const char *_func, const char *_f
  * @return 原始的 CMake 输出，包括版本控制系统修订，编译器版本，编译器标志，启用的模块和第三方库等。
  * @retval 配置、构建信息字符串
  */
-const std::string &getBuildInformation();
+const char *getBuildInformation();
 
 } // namespace rm
 

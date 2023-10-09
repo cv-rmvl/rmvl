@@ -1,46 +1,46 @@
 rmvl_add_module(
-    decider INTERFACE
-    DEPENDS detector compensator predictor
+  decider INTERFACE
+  DEPENDS detector compensator predictor
 )
 
 # GyroDecider
 rmvl_generate_para(
-    gyro_decider
-    MODULE decider
+  gyro_decider
+  MODULE decider
 )
 rmvl_add_module(
-    gyro_decider
-    DEPENDS decider camera 
+  gyro_decider
+  DEPENDS decider camera 
 )
 
 # TranslationDecider
 rmvl_generate_para(
-    translation_decider
-    MODULE decider
+  translation_decider
+  MODULE decider
 )
 rmvl_add_module(
-    translation_decider
-    DEPENDS decider camera
+  translation_decider
+  DEPENDS decider camera
 )
 
 # RuneDecider
 rmvl_generate_para(
-    rune_decider
-    MODULE decider
+  rune_decider
+  MODULE decider
 )
 rmvl_add_module(
-    rune_decider
-    DEPENDS decider camera
+  rune_decider
+  DEPENDS decider camera
 )
 
 # OutpostDecider
 rmvl_generate_para(
-    outpost_decider
-    MODULE decider
+  outpost_decider
+  MODULE decider
 )
 rmvl_add_module(
-    outpost_decider
-    DEPENDS decider camera
+  outpost_decider
+  DEPENDS decider camera
 )
 
 rmvl_generate_module_para(decider)
