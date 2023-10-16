@@ -122,7 +122,7 @@ endfunction()
 #   用法:
 #     rmvl_download(
 #       <dl_name> <dl_kind>
-#       SOURCE <...>
+#       <...>
 #     )
 #   示例 1:
 #     rmvl_download(

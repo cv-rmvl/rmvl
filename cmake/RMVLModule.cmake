@@ -290,13 +290,14 @@ endfunction(rmvl_add_test test_name test_kind)
 # ----------------------------------------------------------------------------
 #   此命令用于为指定模块添加新的 RMVL 可执行文件
 #   用法:
-#   rmvl_add_exe(<name> <file_name>
+#   rmvl_add_exe(<name> SOURCES <file_name>
 #     [DEPENDS <list of rmvl dependencies>]
 #     [EXTERNAL <list of 3rd party dependencies>]
 #   )
 #   示例:
 #   rmvl_add_exe(
-#     sample_armor_collection armor-collection.cpp
+#     sample_armor_collection
+#     SOURCES armor-collection.cpp
 #     DEPENDS mv_video_capture armor_detector
 #   )
 # ----------------------------------------------------------------------------

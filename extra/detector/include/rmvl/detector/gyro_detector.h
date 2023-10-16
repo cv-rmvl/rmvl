@@ -15,10 +15,7 @@
 
 #include "detector.h"
 
-#ifdef HAVE_RMVL_ORT
 #include "rmvl/ml/ort.h"
-#endif
-
 #include "rmvl/tracker/gyro_tracker.h"
 
 namespace rm
@@ -32,18 +29,13 @@ class GyroDetector final : public detector
 {
     int _armor_num; //!< 默认装甲板数目
 
-#ifdef HAVE_RMVL_ORT
     std::unique_ptr<OnnxRT> _ort;
     std::unordered_map<int, RobotType> _robot_t;
-#else
-    const int *_ort = nullptr;
-#endif // HAVE_RMVL_ORT
 
 public:
     GyroDetector(int armor_num) : _armor_num(armor_num) {}
     ~GyroDetector() = default;
 
-#ifdef HAVE_RMVL_ORT
     explicit GyroDetector(const std::string &model, int armor_num) : _armor_num(armor_num)
     {
         _ort = std::make_unique<OnnxRT>(model);
@@ -57,7 +49,6 @@ public:
         _robot_t[7] = RobotType::BASE;
         _robot_t[8] = RobotType::SENTRY;
     }
-#endif // HAVE_RMVL_ORT
 
     /**
      * @brief 装甲板识别核心函数
@@ -78,7 +69,6 @@ public:
         return std::make_unique<GyroDetector>(armor_num);
     }
 
-#ifdef HAVE_RMVL_ORT
     /**
      * @brief 构建 GyroDetector
      *
@@ -88,7 +78,6 @@ public:
     {
         return std::make_unique<GyroDetector>(model, armor_num);
     }
-#endif // HAVE_RMVL_ORT
 
 private:
     /**

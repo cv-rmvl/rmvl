@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "rmvl/core/util.hpp"
 
 //! @defgroup types 类型系统

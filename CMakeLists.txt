@@ -8,25 +8,25 @@
 
 # Disable in-source builds to prevent source tree corruption.
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-    message(
-        FATAL_ERROR 
-        "FATAL: In-source builds are not allowed.
-        You should create a separate directory for build files."
-    )
+  message(
+    FATAL_ERROR 
+    "FATAL: In-source builds are not allowed.
+    You should create a separate directory for build files."
+  )
 endif()
 
 # ----------------------------------------------------------------------------
 #  Configure CMake policies
 # ----------------------------------------------------------------------------
 if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW) # CMake 3.24: URL download, extract file and timestamp
+  cmake_policy(SET CMP0135 NEW) # CMake 3.24: URL download, extract file and timestamp
 endif()
 
 cmake_minimum_required(VERSION 3.16)
 
 project(
-    RMVL
-    LANGUAGES CXX C
+  RMVL
+  LANGUAGES CXX C
 )
 
 # CMake module named xxx.cmake PATH
@@ -39,7 +39,7 @@ include(RMVLUtils)
 
 # Build Type
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 # ----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ endif()
 #  RMVL Examples
 # ----------------------------------------------------------------------------
 if(BUILD_EXAMPLES)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/samples)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/samples)
 endif(BUILD_EXAMPLES)
 
 # ----------------------------------------------------------------------------
