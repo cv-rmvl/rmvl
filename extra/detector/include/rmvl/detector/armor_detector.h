@@ -13,10 +13,7 @@
 
 #include "detector.h"
 
-#ifdef HAVE_RMVL_ORT
 #include "rmvl/ml/ort.h"
-#endif
-
 #include "rmvl/tracker/planar_tracker.h"
 
 namespace rm
@@ -31,18 +28,13 @@ namespace rm
 //! 装甲板识别模块
 class ArmorDetector final : public detector
 {
-#ifdef HAVE_RMVL_ORT
     std::unique_ptr<OnnxRT> _ort;
     std::unordered_map<int, RobotType> _robot_t;
-#else
-    const int *_ort = nullptr;
-#endif // HAVE_RMVL_ORT
 
 public:
     ArmorDetector() = default;
     ~ArmorDetector() = default;
 
-#ifdef HAVE_RMVL_ORT
     explicit ArmorDetector(const std::string &model)
     {
         _ort = std::make_unique<OnnxRT>(model);
@@ -56,7 +48,6 @@ public:
         _robot_t[7] = RobotType::BASE;
         _robot_t[8] = RobotType::SENTRY;
     }
-#endif // HAVE_RMVL_ORT
 
     /**
      * @brief 装甲板识别核心函数
@@ -74,14 +65,12 @@ public:
     //! 构建 ArmorDetector
     static inline std::unique_ptr<ArmorDetector> make_detector() { return std::make_unique<ArmorDetector>(); }
 
-#ifdef HAVE_RMVL_ORT
     /**
      * @brief 构建 ArmorDetector
      *
      * @param[in] model ONNX_Runtime 数字识别模型
      */
     static inline std::unique_ptr<ArmorDetector> make_detector(const std::string &model) { return std::make_unique<ArmorDetector>(model); }
-#endif // HAVE_RMVL_ORT
 
 private:
     /**

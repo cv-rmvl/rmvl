@@ -31,7 +31,7 @@ string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_INPUT_LIST "${paths_include}; ${rootfil
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_INCLUDE_ROOTS "${paths_include}")
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_TEST_ROOTS "${paths_test}")
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_EXAMPLE_PATH "${example_path}")
-set(CMAKE_DOXYGEN_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
+set(CMAKE_DOXYGEN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 set(CMAKE_EXTRA_BIB_FILES "${bibfile}")
 
 list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/rmvl-logo-small.png")
@@ -69,3 +69,9 @@ endif()
 # writing file
 configure_file(${RMVL_DOXYFILE_IN} ${doxyfile} @ONLY)
 configure_file(root.markdown.in ${rootfile} @ONLY)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen/html
+  DESTINATION "${RMVL_DOC_INSTALL_PATH}"
+  OPTIONAL
+)

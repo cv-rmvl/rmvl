@@ -33,7 +33,6 @@ void ArmorDetector::find(Mat &src, vector<feature::ptr> &features, vector<combo:
     {
         // 找到所有装甲板
         vector<Armor::ptr> armors = findArmors(blobs);
-#ifdef HAVE_RMVL_ORT
         if (_ort)
         {
             rois.clear();
@@ -48,13 +47,8 @@ void ArmorDetector::find(Mat &src, vector<feature::ptr> &features, vector<combo:
             // eraseFakeArmors(armors);
         }
         else
-        {
-#endif // HAVE_RMVL_ORT
             for (const auto &armor : armors)
                 armor->setType(RobotType::UNKNOWN);
-#ifdef HAVE_RMVL_ORT
-        }
-#endif // HAVE_RMVL_ORT
 
         // 根据匹配误差筛选
         eraseErrorArmors(armors);
@@ -93,8 +87,7 @@ vector<Armor::ptr> ArmorDetector::findArmors(vector<LightBlob::ptr> &light_blobs
 {
     // 灯条从左到右排序
     sort(light_blobs.begin(), light_blobs.end(),
-         [&](LightBlob::ptr p_left, LightBlob::ptr p_right) -> bool
-         {
+         [&](LightBlob::ptr p_left, LightBlob::ptr p_right) -> bool {
              return p_left->getCenter().x < p_right->getCenter().x;
          });
     // 储存所有匹配到的装甲板
@@ -155,8 +148,7 @@ void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
     }
     // 删除
     armors.erase(remove_if(armors.begin(), armors.end(),
-                           [&armor_map](const Armor::ptr &val)
-                           {
+                           [&armor_map](const Armor::ptr &val) {
                                return armor_map[val];
                            }),
                  armors.end());
@@ -165,8 +157,7 @@ void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
 void ArmorDetector::eraseFakeArmors(vector<Armor::ptr> &armors)
 {
     armors.erase(remove_if(armors.begin(), armors.end(),
-                           [&](Armor::ptr &it)
-                           {
+                           [&](Armor::ptr &it) {
                                return it->getType().RobotTypeID == RobotType::UNKNOWN;
                            }),
                  armors.end());
@@ -175,8 +166,7 @@ void ArmorDetector::eraseFakeArmors(vector<Armor::ptr> &armors)
 void ArmorDetector::eraseBrightBlobs(Mat src, vector<LightBlob::ptr> &blobs)
 {
     blobs.erase(remove_if(blobs.begin(), blobs.end(),
-                          [&](LightBlob::ptr blob) -> bool
-                          {
+                          [&](LightBlob::ptr blob) -> bool {
                               int total_brightness = 0;
                               for (int i = -5; i <= 5; i++)
                               {

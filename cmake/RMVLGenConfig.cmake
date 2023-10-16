@@ -47,6 +47,8 @@ install(
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )
 install(
-  FILES "${config_dir}/RMVLConfig.cmake" "${config_dir}/RMVLConfig-version.cmake"
+  FILES "${config_dir}/RMVLConfig.cmake"
+        "${config_dir}/RMVLConfig-version.cmake"
+        "${CMAKE_SOURCE_DIR}/cmake/RMVLModule.cmake"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )

@@ -12,11 +12,7 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
 #include <vector>
-
-#include <OPTController.h>
-#include <OPTErrorCode.h>
 
 namespace rm
 {
@@ -37,15 +33,10 @@ class OPTLightController
 {
     using OPTController_StatusCode = long;
 
-    bool _init = false;                                      //!< 初始化标志位
-    OPTController_Handle _handle;                            //!< 光源控制器句柄
-    OPTController_StatusCode _status_code;                   //!< 运行时状态码
-    static std::unordered_map<int, std::string> _error_code; //!< 错误码哈希表
+    bool _init = false; //!< 初始化标志位
+    long long _handle;  //!< 光源控制器句柄
 
 public:
-    //! 构造新 OPTLightController 对象
-    OPTLightController() { initErrorCode(); }
-
     //! 析构 OPTLightController 对象
     ~OPTLightController() { disconnect(); }
 
@@ -124,23 +115,7 @@ public:
      * @param[in] time 触发时间，单位: 10ms
      * @return 是否成功触发？
      */
-    inline bool trigger(int channel, int time)
-    {
-        _status_code = OPTController_SoftwareTrigger(_handle, channel, time);
-        return _status_code == OPT_SUCCEED;
-    }
-
-private:
-    //! 初始化 'error code' 散列表
-    void initErrorCode();
-
-    /**
-     * @brief 获取错误信息
-     *
-     * @param[in] flag 状态码
-     * @return 错误信息
-     */
-    inline std::string getErrorString(int flag) { return _error_code[flag]; }
+    bool trigger(int channel, int time);
 };
 
 //! @} opt_light_control

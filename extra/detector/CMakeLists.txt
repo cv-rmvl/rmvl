@@ -3,10 +3,8 @@ rmvl_add_module(
   DEPENDS imgproc group
 )
 
-find_package(Ort)
-
 # armor_detector
-set(BUILD_rmvl_armor_detector_INIT ${Ort_FOUND})
+set(BUILD_rmvl_armor_detector_INIT ${BUILD_rmvl_ort})
 rmvl_generate_para(
   armor_detector
   MODULE detector
@@ -17,7 +15,7 @@ rmvl_add_module(
 )
 
 # gyro_detector
-set(BUILD_rmvl_gyro_detector_INIT ${Ort_FOUND})
+set(BUILD_rmvl_gyro_detector_INIT ${BUILD_rmvl_ort})
 rmvl_generate_para(
   gyro_detector
   MODULE detector
