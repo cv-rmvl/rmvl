@@ -1,5 +1,5 @@
-uint32_t TRACK_FRAMES = 4    # 追踪帧数
-float SAMPLE_INTERVAL = 15.f # 采样时间
+uint32_t TRACK_FRAMES = 4   # 追踪帧数
+double SAMPLE_INTERVAL = 15 # 采样时间
 
 Matx44f Q = {0.01, 0, 0, 0, \
              0, 0.01, 0, 0, \

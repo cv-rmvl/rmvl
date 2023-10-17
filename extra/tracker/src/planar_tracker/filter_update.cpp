@@ -59,7 +59,7 @@ void PlanarTracker::updateMotionFilter()
     if (_combo_deque.size() >= 2)
         t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
     else
-        t = planar_tracker_param.SAMPLE_INTERVAL / 1000.f;
+        t = planar_tracker_param.SAMPLE_INTERVAL / 1000.;
     // Set the state transition matrix: A
     _motion_filter.setA(Matx44f{
         1, 0, t, 0,

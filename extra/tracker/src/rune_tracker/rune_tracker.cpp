@@ -59,7 +59,7 @@ void RuneTracker::update(combo::ptr p_rune, double tick, const GyroData &gyro_da
         if (_combo_deque.size() >= 2)
             t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
         else
-            t = rune_tracker_param.SAMPLE_INTERVAL / 1000.f;
+            t = rune_tracker_param.SAMPLE_INTERVAL / 1000.;
         updateRotateFilter(t);
         // 重置消失帧数
         _vanish_num = 0;

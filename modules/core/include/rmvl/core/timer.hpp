@@ -38,8 +38,8 @@ public:
 
     //! 重置定时器
     static inline void reset() { _tick = steady_clock::now(); }
-    //! 返回从构造初期到现在经过的时间（单位：ms）
-    static inline double now() { return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(steady_clock::now() - _tick).count(); }
+    //! 返回从构造初期到现在经过的时间（单位：s）
+    static inline double now() { return std::chrono::duration_cast<std::chrono::duration<double>>(steady_clock::now() - _tick).count(); }
 };
 
 inline std::chrono::steady_clock::time_point Timer::_tick = {};
