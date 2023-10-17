@@ -21,7 +21,7 @@ using namespace std;
 using namespace cv;
 
 shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
-                                    int64 tick, ArmorSizeType armor_size_type)
+                                    double tick, ArmorSizeType armor_size_type)
 {
     // 判空
     if (p_left == nullptr || p_right == nullptr)
@@ -80,7 +80,7 @@ shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_righ
     return ret;
 }
 
-Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data, int64 tick,
+Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data, double tick,
              float width_r, float length_r, float corner_angle, float match_error,
              float combo_h, float combo_w, float combo_r, ArmorSizeType armor_size_type)
     : _width_ratio(width_r), _length_ratio(length_r), _corner_angle(corner_angle), _match_error(match_error)

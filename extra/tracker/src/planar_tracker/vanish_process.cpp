@@ -19,7 +19,7 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-void PlanarTracker::vanishProcess([[maybe_unused]] int64_t tick, [[maybe_unused]] const GyroData &gyro_data)
+void PlanarTracker::vanishProcess([[maybe_unused]] double tick, [[maybe_unused]] const GyroData &gyro_data)
 {
     if (_combo_deque.empty() || _vanish_num == 0)
         return;

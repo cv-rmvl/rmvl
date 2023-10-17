@@ -44,7 +44,7 @@ struct DetectInfo
 class detector
 {
 protected:
-    std::int64_t _tick;  //!< 每一帧对应的时间戳
+    double _tick;        //!< 每一帧对应的时间点
     GyroData _gyro_data; //!< 每一帧对应的陀螺仪数据
 
 public:
@@ -61,11 +61,11 @@ public:
      * @param[in] src 原图像
      * @param[in] color 待处理的颜色通道
      * @param[in] gyro_data 陀螺仪数据
-     * @param[in] record_time 时间戳
+     * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
     virtual DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                              const GyroData &gyro_data, int64 record_time) = 0;
+                              const GyroData &gyro_data, double tick) = 0;
 };
 
 //! @} detector

@@ -13,7 +13,7 @@
 
 using namespace rm;
 
-DefaultCombo::DefaultCombo(feature::ptr p_feature, int64_t tick) : combo()
+DefaultCombo::DefaultCombo(feature::ptr p_feature, double tick) : combo()
 {
     _features = {p_feature};
     _height = p_feature->getHeight();

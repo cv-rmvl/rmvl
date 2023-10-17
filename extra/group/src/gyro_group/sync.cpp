@@ -21,7 +21,7 @@ using namespace std;
 using namespace para;
 using namespace rm;
 
-void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
+void GyroGroup::sync(const GyroData &gyro_data, double tick)
 {
     // -----------------【前置错误与边界条件判断】-----------------
     if (static_cast<int>(_trackers.size()) != _armor_num)
@@ -41,7 +41,7 @@ void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
     for (auto &p_tracker : _trackers)
         if (p_tracker->getVanishNumber() == 0)
             visible_trackers.push_back(p_tracker);
-    // --------------【更新序列组的时间戳、陀螺仪数据】--------------
+    // --------------【更新序列组的时间点、陀螺仪数据】--------------
     _tick = tick;
     _gyro_data = gyro_data;
     // ----【计算出待更新至序列组整体状态的必要信息，并完成同步】----
@@ -77,7 +77,7 @@ void GyroGroup::sync(const GyroData &gyro_data, int64_t tick)
     {
         auto p_gyro_tracker = GyroTracker::cast(p_tracker);
         rotation_speed += p_gyro_tracker->getRotatedSpeed();
-        sample_time += p_gyro_tracker->getSampleTime();
+        sample_time += p_gyro_tracker->getDuration();
     }
     if (isnan(rotation_speed))
         RMVL_Error(RMVL_StsNotaNumber, "\"rotation_speed\" is not a number");

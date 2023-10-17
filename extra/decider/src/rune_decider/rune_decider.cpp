@@ -9,10 +9,11 @@
  *
  */
 
-#include "rmvl/decider/rune_decider.h"
+#include "rmvl/core/timer.hpp"
 #include "rmvl/combo/rune.h"
 #include "rmvl/rmath/transform.h"
 #include "rmvl/rmath/uty_math.hpp"
+#include "rmvl/decider/rune_decider.h"
 
 #include "rmvlpara/camera.hpp"
 #include "rmvlpara/decider/rune_decider.h"
@@ -110,9 +111,6 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
                 triggerInit();
                 info.target = true_trackers.back();
             }
-            // delta = getTickCount();
-            // _delta_times = static_cast<double>((delta - _start_times) / getTickFrequency());
-            // cout << _delta_times << endl;
         }
     }
 
@@ -131,11 +129,10 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
         info.exp_angle += comp;    // 加上补偿
         info.exp_center2d = center;
 
-        int64 delta = getTickCount();
-        _delta_times = static_cast<double>(delta - _start_times) / getTickFrequency();
+        _delta_time = Timer::now() - _start_tick;
         // 判断能否射击
         if (judgeShoot(info.target, flag.RuneTypeID, comp, info.exp_center2d, info.shoot_center) &&
-            _delta_times > _miss_frequency && !_is_changed)
+            _delta_time > _miss_frequency && !_is_changed)
         {
             if (_send_times < 5)
             {
@@ -149,7 +146,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
             }
         }
         else if (judgeShoot(info.target, flag.RuneTypeID, comp, info.exp_center2d, info.shoot_center) &&
-                 _delta_times > _initial_frequency && _is_changed)
+                 _delta_time > _initial_frequency && _is_changed)
         {
             // 继续追踪 5 帧，作为靠近目标后的保险措施
             if (_send_times < 5)
@@ -193,7 +190,7 @@ bool RuneDecider::judgeShoot(tracker::ptr target_tracker, RuneType rune_mode,
 void RuneDecider::triggerInit()
 {
     _is_changed = true;
-    _start_times = getTickCount();
+    _start_tick = Timer::now();
     _initial_frequency = rune_decider_param.INIT_FREQUENCY;
     _miss_frequency = rune_decider_param.MISS_FREQUENCY;
     _send_times = 0;

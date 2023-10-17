@@ -25,11 +25,11 @@ using namespace cv;
  *
  * @param[in] ref_rune 参考神符组合体
  * @param[in] delta_angle 基于参考神符的角度增量（角度制）
- * @param[in] tick 最新时间戳
+ * @param[in] tick 最新时间点
  * @param[in] gyro_data 最新陀螺仪数据
  * @return 构造出的神符
  */
-Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, int64_t tick, const GyroData &gyro_data)
+Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const GyroData &gyro_data)
 {
     auto p_rune_target = RuneTarget::cast(ref_rune->at(0));
     auto p_rune_center = RuneCenter::cast(ref_rune->at(1));
@@ -58,7 +58,7 @@ Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, int64_t tic
     return Rune::make_combo(p_new_rune_target, p_new_rune_center, gyro_data, tick, true);
 }
 
-void RuneTracker::vanishProcess(int64 tick, const GyroData &gyro_data)
+void RuneTracker::vanishProcess(double tick, const GyroData &gyro_data)
 {
     // 判空
     if (_combo_deque.empty() || _vanish_num == 0)
@@ -66,8 +66,7 @@ void RuneTracker::vanishProcess(int64 tick, const GyroData &gyro_data)
     // 获取帧差时间
     float t = 0.f;
     if (_combo_deque.size() >= 2)
-        t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) /
-            static_cast<double>(_combo_deque.size() - 1) / getTickFrequency();
+        t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
     else
         t = rune_tracker_param.SAMPLE_INTERVAL / 1000.f;
     _filter.setA(Matx22f{1, t,

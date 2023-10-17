@@ -37,7 +37,7 @@ protected:
     GyroData _gyro_data;                //!< 当前陀螺仪数据
     std::vector<cv::Point2f> _corners;  //!< 角点
     CameraExtrinsics<float> _extrinsic; //!< 相机外参
-    int64 _tick{};                      //!< 捕获该组合体时的时间戳
+    double _tick{};                     //!< 捕获该组合体时的时间点
 
 public:
     using ptr = std::shared_ptr<combo>;
@@ -59,8 +59,8 @@ public:
     inline const CameraExtrinsics<float> &getExtrinsics() const { return _extrinsic; }
     //! 获取组合体类型
     inline RMStatus getType() const { return _type; }
-    //! 获取捕获该组合体时的时间戳
-    inline int64 getTick() const { return _tick; }
+    //! 获取捕获该组合体的时间点
+    inline double getTick() const { return _tick; }
     //! 获取组合体的相对目标转角
     inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
     //! 获取组合体当前的陀螺仪数据
@@ -94,16 +94,16 @@ public:
     DefaultCombo(DefaultCombo &&) = delete;
 
     //! @warning 构造函数不直接使用
-    DefaultCombo(feature::ptr, int64_t);
+    DefaultCombo(feature::ptr, double);
 
     /**
      * @brief 构造 DefaultCombo
      *
      * @param[in] p_feature 特征 `feature` 共享指针
-     * @param[in] tick 时间戳
+     * @param[in] tick 当前时间点
      * @return DefaultCombo 共享指针
      */
-    static inline DefaultCombo::ptr make_combo(feature::ptr p_feature, int64_t tick) { return std::make_shared<DefaultCombo>(p_feature, tick); }
+    static inline DefaultCombo::ptr make_combo(feature::ptr p_feature, double tick) { return std::make_shared<DefaultCombo>(p_feature, tick); }
 
     /**
      * @brief 动态类型转换

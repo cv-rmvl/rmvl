@@ -33,16 +33,6 @@ rmvl_add_module(
   DEPENDS decider camera
 )
 
-# OutpostDecider
-rmvl_generate_para(
-  outpost_decider
-  MODULE decider
-)
-rmvl_add_module(
-  outpost_decider
-  DEPENDS decider camera
-)
-
 rmvl_generate_module_para(decider)
 
 # build the test program

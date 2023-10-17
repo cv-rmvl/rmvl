@@ -33,10 +33,17 @@ class OPTLightController
 {
     using OPTController_StatusCode = long;
 
-    bool _init = false; //!< 初始化标志位
-    long long _handle;  //!< 光源控制器句柄
+    bool _init = false;  //!< 初始化标志位
+    long long _handle{}; //!< 光源控制器句柄
 
 public:
+    //! 构造新 OPTLightController 对象
+    OPTLightController() = default;
+    //! 禁止从 OPTLightController 对象复制构造
+    OPTLightController(const OPTLightController &) = delete;
+    //! 移动 OPTLightController 对象
+    OPTLightController(OPTLightController &&obj);
+
     //! 析构 OPTLightController 对象
     ~OPTLightController() { disconnect(); }
 

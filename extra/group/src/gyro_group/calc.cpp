@@ -66,7 +66,7 @@ void GyroGroup::calcGroupFrom3DMessage(const vector<Vec2f> &gyro_poses, const ve
 }
 
 combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &gyro_data,
-                                           const Matx33f &gyro_rmat, const Vec3f &gyro_tvec, int64_t tick)
+                                           const Matx33f &gyro_rmat, const Vec3f &gyro_tvec, double tick)
 {
     // 陀螺仪坐标系转化为相机坐标系
     Matx33f cam_rmat;

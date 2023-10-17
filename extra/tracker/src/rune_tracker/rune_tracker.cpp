@@ -39,7 +39,7 @@ RuneTracker::RuneTracker(combo::ptr p_rune)
     updateFromRune(p_rune);
 }
 
-void RuneTracker::update(combo::ptr p_rune, int64 tick, const GyroData &gyro_data)
+void RuneTracker::update(combo::ptr p_rune, double tick, const GyroData &gyro_data)
 {
     if (p_rune == nullptr)
     {
@@ -57,8 +57,7 @@ void RuneTracker::update(combo::ptr p_rune, int64 tick, const GyroData &gyro_dat
         // 更新滤波器
         float t = 0.f;
         if (_combo_deque.size() >= 2)
-            t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) /
-                static_cast<double>(_combo_deque.size() - 1) / getTickFrequency();
+            t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
         else
             t = rune_tracker_param.SAMPLE_INTERVAL / 1000.f;
         updateRotateFilter(t);

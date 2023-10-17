@@ -17,7 +17,6 @@
  *     @defgroup gyro_decider 整车状态决策模块
  *     @defgroup translation_decider 平移目标决策模块
  *     @defgroup rune_decider 激活、未激活神符决策模块
- *     @defgroup outpost_decider 前哨装甲决策模块
  * @}
  */
 
@@ -36,7 +35,3 @@
 #ifdef HAVE_RMVL_RUNE_DECIDER
 #include "decider/rune_decider.h"
 #endif // HAVE_RMVL_RUNE_DECIDER
-
-#ifdef HAVE_RMVL_OUTPOST_DECIDER
-#include "decider/outpost_decider.h"
-#endif // HAVE_RMVL_OUTPOST_DECIDER

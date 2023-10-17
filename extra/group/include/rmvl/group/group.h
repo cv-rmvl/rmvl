@@ -44,9 +44,9 @@ public:
      *       的内部数据，例如序列组中心，自主构造新的 `tracker` 等
      *
      * @param[in] gyro_data 最新陀螺仪数据
-     * @param[in] tick 最新时间戳
+     * @param[in] tick 最新时间点
      */
-    virtual void sync(const GyroData &gyro_data, int64_t tick) = 0;
+    virtual void sync(const GyroData &gyro_data, double tick) = 0;
 
     /**
      * @brief 添加追踪器至序列组
@@ -123,7 +123,7 @@ public:
     static inline DefaultGroup::ptr make_group() { return std::make_shared<DefaultGroup>(); }
 
     //! DefaultGroup 同步操作
-    void sync(const GyroData &, int64_t) override {}
+    void sync(const GyroData &, double) override {}
 };
 
 //! @} group

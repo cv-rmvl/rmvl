@@ -15,6 +15,7 @@
 
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/core/timer.hpp"
 #include "rmvl/detector/armor_detector.h"
 
 namespace rm_test

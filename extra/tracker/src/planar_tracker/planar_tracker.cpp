@@ -40,7 +40,7 @@ PlanarTracker::PlanarTracker(combo::ptr p_combo)
     updateData(p_combo);
 }
 
-void PlanarTracker::update(combo::ptr p_combo, int64 tick, const GyroData &gyro_data)
+void PlanarTracker::update(combo::ptr p_combo, double tick, const GyroData &gyro_data)
 {
     if (p_combo == nullptr)
     {

@@ -20,12 +20,12 @@ using namespace std;
 using namespace cv;
 
 DetectInfo GyroDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
-                                const GyroData &gyro_data, int64 record_time)
+                                const GyroData &gyro_data, double tick)
 {
     // 识别信息
     DetectInfo info{};
     info.src = src;
-    _tick = record_time;
+    _tick = tick;
     _gyro_data = gyro_data;
 
     // 二值化处理图像

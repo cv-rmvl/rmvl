@@ -44,7 +44,8 @@ public:
     using ptr = std::shared_ptr<Rune>;
     using const_ptr = std::shared_ptr<const Rune>;
 
-    Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, int64 tick);
+    //! @warning 禁止直接使用构造函数
+    Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, double tick);
     Rune(const Rune &) = delete;
     Rune(Rune &&) = delete;
 
@@ -54,12 +55,12 @@ public:
      * @param[in] p_target 神符靶心
      * @param[in] p_center 神符中心
      * @param[in] gyro_data 陀螺仪数据
-     * @param[in] tick 捕获特征的时间戳
+     * @param[in] tick 捕获特征的时间点
      * @param[in] force 是否为强制构造
      * @return std::shared_ptr<Rune>
      */
     static std::shared_ptr<Rune> make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
-                                            const GyroData &gyro_data, int64 tick, bool force = false);
+                                            const GyroData &gyro_data, double tick, bool force = false);
 
     /**
      * @brief 动态类型转换
