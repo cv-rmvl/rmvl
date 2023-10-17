@@ -29,7 +29,7 @@ rm::DefaultTracker::DefaultTracker(rm::combo::ptr p_combo) : rm::tracker()
     updateData(p_combo);
 }
 
-void rm::DefaultTracker::update(rm::combo::ptr p_combo, int64, const rm::GyroData &)
+void rm::DefaultTracker::update(rm::combo::ptr p_combo, double, const rm::GyroData &)
 {
     updateData(p_combo);
     _combo_deque.push_front(p_combo);

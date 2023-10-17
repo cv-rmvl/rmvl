@@ -13,8 +13,9 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/group/gyro_group.h"
+#include "rmvl/core/timer.hpp"
 #include "rmvl/rmath/transform.h"
+#include "rmvl/group/gyro_group.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/combo/armor.h"
@@ -58,7 +59,7 @@ public:
         cv::projectPoints(world_points, rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
         auto p_left = rm::LightBlob::make_feature(imagePoints[1], imagePoints[0], 10);
         auto p_right = rm::LightBlob::make_feature(imagePoints[2], imagePoints[3], 10);
-        return rm::Armor::make_combo(p_left, p_right, rm::GyroData(), cv::getTickCount(), rm::ArmorSizeType::SMALL);
+        return rm::Armor::make_combo(p_left, p_right, rm::GyroData(), rm::timer.now(), rm::ArmorSizeType::SMALL);
     }
 };
 

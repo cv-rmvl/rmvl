@@ -19,11 +19,11 @@ using namespace std;
 using namespace cv;
 
 DetectInfo ArmorDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
-                                 const GyroData &gyro_data, int64 record_time)
+                                 const GyroData &gyro_data, double tick)
 {
     DetectInfo info{};
     info.src = src;
-    _tick = record_time;
+    _tick = tick;
     _gyro_data = gyro_data;
     // 初始化存储信息
     if (groups.empty())

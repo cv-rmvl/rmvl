@@ -28,7 +28,7 @@ namespace rm
 //! 整车状态序列组
 class GyroGroup final : public group
 {
-    int64_t _tick;            //!< 时间戳
+    double _tick;            //!< 时间点
     GyroData _gyro_data;      //!< 当前陀螺仪数据
     bool _is_tracked = false; //!< 是否为目标序列组
 
@@ -105,11 +105,11 @@ public:
      * @param[in] gyro_data 最新陀螺仪数据
      * @param[in] gyro_rmat 陀螺仪坐标系下装甲板的旋转矩阵
      * @param[in] gyro_tvec 陀螺仪坐标系下装甲板的平移向量
-     * @param[in] tick 时间戳数据
+     * @param[in] tick 当前时间点数据
      * @return 强制构建的 combo
      */
     static combo::ptr constructComboForced(combo::ptr p_combo, const GyroData &gyro_data,
-                                           const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, int64_t tick);
+                                           const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick);
 
     /**
      * @brief 计算装甲板数目
@@ -123,9 +123,9 @@ public:
      * @brief GyroGroup 同步操作
      *
      * @param[in] gyro_data 最新陀螺仪数据
-     * @param[in] tick 最新时间戳
+     * @param[in] tick 最新时间点
      */
-    void sync(const GyroData &gyro_data, int64_t tick);
+    void sync(const GyroData &gyro_data, double tick);
 
     /**
      * @brief 获取追踪器状态

@@ -46,7 +46,7 @@ void GyroTracker::initFilter()
 
 void GyroTracker::updateMotionFilter()
 {
-    float t = _sample_time;
+    float t = _duration;
     // Set the state transition matrix: A
     _motion_filter.setA(Matx44f{
         1, 0, t, 0,
@@ -91,7 +91,7 @@ void GyroTracker::updateMotionFilter()
 
 void GyroTracker::updatePositionFilter()
 {
-    float t = _sample_time;
+    float t = _duration;
     // 设置状态转移矩阵
     _center3d_filter.setA(Matx66f{1, 0, 0, t, 0, 0,
                                   0, 1, 0, 0, t, 0,
@@ -120,7 +120,7 @@ void GyroTracker::updatePositionFilter()
 
 void GyroTracker::updatePoseFilter()
 {
-    float t = _sample_time;
+    float t = _duration;
     // 设置状态转移矩阵
     _pose_filter.setA(Matx44f{1, 0, t, 0,
                               0, 1, 0, t,

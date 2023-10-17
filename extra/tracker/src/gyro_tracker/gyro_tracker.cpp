@@ -39,11 +39,11 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     _type = p_armor->getType();
     _combo_deque.emplace_front(p_armor);
     _type_deque.emplace_front(_type.RobotTypeID);
-    _sample_time = gyro_tracker_param.SAMPLE_INTERVAL / 1000.f;
+    _duration = gyro_tracker_param.SAMPLE_INTERVAL / 1000.f;
     initFilter();
 }
 
-void GyroTracker::update(combo::ptr p_armor, int64, const GyroData &)
+void GyroTracker::update(combo::ptr p_armor, double, const GyroData &)
 {
     if (p_armor == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");
@@ -55,13 +55,12 @@ void GyroTracker::update(combo::ptr p_armor, int64, const GyroData &)
     // 帧差时间计算
     if (_combo_deque.empty())
         RMVL_Error(RMVL_StsBadSize, "\"_combo_deque\" is empty");
-    _sample_time = 0.f;
+    _duration = 0.f;
     if (_combo_deque.size() >= 2)
-        _sample_time = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) /
-                        static_cast<double>(_combo_deque.size() - 1) / getTickFrequency();
+        _duration = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
     else
-        _sample_time = gyro_tracker_param.SAMPLE_INTERVAL / 1000.f;
-    if (isnan(_sample_time))
+        _duration = gyro_tracker_param.SAMPLE_INTERVAL / 1000.f;
+    if (isnan(_duration))
         RMVL_Error(RMVL_StsDivByZero, "\"t\" is nan");
     // 更新滤波器
     updateMotionFilter();
@@ -110,7 +109,7 @@ float GyroTracker::calcRotationSpeed()
     // 逐差计算速度，pose 为 combo 指向 center，现需要取反
     float rotspeed = calcAngleFrom2Vec(-Armor::cast(at(pose_num - 1))->getPose(),
                                        -Armor::cast(at(0))->getPose()) /
-                     (static_cast<float>(pose_num - 1) * _sample_time);
+                     (static_cast<float>(pose_num - 1) * _duration);
     // 速度限幅
     float abs_rotspeed = abs(rotspeed);
     if (abs_rotspeed > gyro_tracker_param.MAX_ROTSPEED)

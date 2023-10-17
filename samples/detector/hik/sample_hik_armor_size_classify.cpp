@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 
+#include "rmvl/core/timer.hpp"
 #include "rmvl/camera/hik_video_capture.h"
 #include "rmvl/detector/armor_detector.h"
 
@@ -29,7 +30,7 @@ void collect(PixChannel color, ArmorSizeType type, int begin_idx)
         capture->read(frame);
         if (frame.empty())
             RMVL_Error(RMVL_StsBadSize, "frame is empty, something wrong with the camera.");
-        auto info = p_detector->detect(groups, frame, color, GyroData(), getTickCount());
+        auto info = p_detector->detect(groups, frame, color, GyroData(), Timer::now());
         const auto &combos = info.combos;
         if (combos.size() != 1)
         {
@@ -175,7 +176,7 @@ int main(int argc, const char *argv[])
     cout << "在键盘上按下一次 \033[33mEsc\033[0m 来暂停，按下两次 \033[33mEsc\033[0m 来退出测试" << endl;
     while (capture->read(frame))
     {
-        auto info = p_detector->detect(groups, frame, color, GyroData(), getTickCount());
+        auto info = p_detector->detect(groups, frame, color, GyroData(), Timer::now());
         const auto &combos = info.combos;
         if (!combos.empty())
         {

@@ -42,7 +42,7 @@ TagDetector::~TagDetector()
 }
 
 DetectInfo TagDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel,
-                               const GyroData &gyro_data, int64 tick)
+                               const GyroData &gyro_data, double tick)
 {
     DetectInfo info;
     info.src = src;

@@ -50,7 +50,8 @@ public:
     Armor(const Armor &) = delete;
     Armor(Armor &&) = delete;
 
-    Armor(LightBlob::ptr, LightBlob::ptr, const GyroData &, int64, float, float, float, float, float, float, float, ArmorSizeType);
+    //! @warning 禁止直接使用构造函数
+    Armor(LightBlob::ptr, LightBlob::ptr, const GyroData &, double, float, float, float, float, float, float, float, ArmorSizeType);
 
     /**
      * @brief Armor 构造接口
@@ -59,12 +60,12 @@ public:
      * @param[in] p_left 左灯条共享指针
      * @param[in] p_right 右灯条共享指针
      * @param[in] gyro_data 当前时刻组合特征对应的陀螺仪数据
-     * @param[in] tick 捕获组合特征时的时间戳，目前采用 `cv::getTickCount`
+     * @param[in] tick 捕获组合特征的时间点
      * @param[in] armor_size_type 需要指定的大小装甲板类型，默认为 `ArmorSizeType::UNKNOWN`
      * @return 若成功，返回 Armor 的共享指针，否则返回空
      */
     static Armor::ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
-                                 int64 tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
+                                 double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
 
     /**
      * @brief 动态类型转换

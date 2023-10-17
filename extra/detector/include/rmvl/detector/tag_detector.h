@@ -60,10 +60,10 @@ public:
      * @param[in] src 原图像
      * @param[in] color 待处理颜色
      * @param[in] gyro_data 当前陀螺仪数据
-     * @param[in] tick 时间戳
+     * @param[in] tick 当前时间点
      */
     DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                      const GyroData &gyro_data, int64 tick) override;
+                      const GyroData &gyro_data, double tick) override;
 
 private:
     /**

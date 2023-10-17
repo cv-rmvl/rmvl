@@ -24,6 +24,7 @@ using namespace cv;
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/core/timer.hpp"
 #include "rmvl/detector/rune_detector.h"
 
 using namespace std;
@@ -162,7 +163,7 @@ public:
 
     vector<combo::ptr> detect()
     {
-        auto info = p_detector->detect(groups, src, RED, GyroData(), getTickCount());
+        auto info = p_detector->detect(groups, src, RED, GyroData(), Timer::now());
         return info.combos;
     }
 };

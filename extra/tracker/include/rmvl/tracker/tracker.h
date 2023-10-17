@@ -50,10 +50,10 @@ public:
      * @brief 更新追踪器
      *
      * @param[in] p_combo 更新的组合体
-     * @param[in] current_tick 当前时间戳
+     * @param[in] tick 当前时间点
      * @param[in] gyro_data 当前陀螺仪信息
      */
-    virtual void update(combo::ptr p_combo, int64 current_tick, const GyroData &gyro_data) = 0;
+    virtual void update(combo::ptr p_combo, double tick, const GyroData &gyro_data) = 0;
 
     //! 获取时间队列中最新的组合体
     inline combo::ptr front() const { return _combo_deque.front(); }
@@ -111,10 +111,10 @@ public:
      * @brief 更新追踪器
      *
      * @param[in] p_combo 更新的组合体
-     * @param[in] current_tick 当前时间戳
+     * @param[in] tick 当前时间点
      * @param[in] gyro_data 当前陀螺仪信息
      */
-    void update(combo::ptr p_combo, int64 current_tick, const GyroData &gyro_data) override;
+    void update(combo::ptr p_combo, double tick, const GyroData &gyro_data) override;
 
 private:
     /**

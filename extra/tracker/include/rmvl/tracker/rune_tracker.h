@@ -76,10 +76,10 @@ public:
      * @brief 更新时间序列
      *
      * @param[in] p_rune 神符共享指针
-     * @param[in] tick 时间戳
+     * @param[in] tick 当前时间点
      * @param[in] gyro_data 云台数据
      */
-    void update(combo::ptr p_rune, int64 tick, const GyroData &gyro_data) override;
+    void update(combo::ptr p_rune, double tick, const GyroData &gyro_data) override;
 
     /**
      * @brief 滤波器初始化
@@ -117,10 +117,10 @@ private:
     /**
      * @brief 掉帧处理，更新滤波、估计后的考虑圈数的角度以及神符特征
      *
-     * @param[in] tick 最新时间戳
+     * @param[in] tick 最新时间点
      * @param[in] gyro 最新陀螺仪数据
      */
-    void vanishProcess(int64 tick, const GyroData &gyro_data);
+    void vanishProcess(double tick, const GyroData &gyro_data);
 };
 
 //! @} rune_tracker

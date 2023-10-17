@@ -4,6 +4,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+#include "rmvl/core/timer.hpp"
 #include "rmvl/camera/mv_video_capture.h"
 #include "rmvl/detector/armor_detector.h"
 
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
         if (!capture.read(src))
             RMVL_Error(RMVL_StsError, "Fail to read the image.");
         // 识别
-        auto info = p_detector->detect(groups, src, color, GyroData(), getTickCount());
+        auto info = p_detector->detect(groups, src, color, GyroData(), Timer::now());
         const auto &combos = info.combos;
         if (combos.size() > 1)
             WARNING_("当前识别到多于 1 个装甲板：识别到 %zu 个", combos.size());

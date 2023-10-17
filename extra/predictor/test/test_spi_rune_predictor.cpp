@@ -19,6 +19,7 @@
 #undef private
 #undef protected
 
+#include "rmvl/core/timer.hpp"
 #include "rmvl/group/rune_group.h"
 #include "rmvl/tracker/rune_tracker.h"
 
@@ -37,7 +38,7 @@ TEST(Run_Accuracy, data_from_0_300)
     auto p_predictor = SpiRunePredictor::make_predictor();
     auto p_center = RuneCenter::make_feature(Point(500, 500));
     auto p_target = RuneTarget::make_feature(Point(600, 500), false);
-    auto p_rune = Rune::make_combo(p_target, p_center, GyroData(), getTickCount(), true);
+    auto p_rune = Rune::make_combo(p_target, p_center, GyroData(), Timer::now(), true);
     auto p_tracker = RuneTracker::make_tracker(p_rune);
     unordered_map<tracker::ptr, double> tof;
     tof.emplace(p_tracker, 0.02);
@@ -51,7 +52,7 @@ TEST(Run_Accuracy, data_from_0_300)
                            500 - 100 * sin(deg2rad(i)));
         auto new_target = RuneTarget::make_feature(Point(600, 500), false);
         auto gyro_data = GyroData{};
-        int64_t tick = getTickCount();
+        double tick = Timer::now();
 
         auto new_rune = Rune::make_combo(new_target, p_center, gyro_data, tick, true);
         p_tracker->update(new_rune, tick, gyro_data);

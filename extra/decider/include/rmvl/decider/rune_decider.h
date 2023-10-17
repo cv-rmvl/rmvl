@@ -22,12 +22,12 @@ namespace rm
 //! 神符决策模块
 class RuneDecider final : public decider
 {
-    bool _is_changed = true;          //!< 神符改变标志位
-    int64 _start_times = 0;           //!< 起始时间
-    double _delta_times = 0.;         //!< 累积时间
-    int _send_times = 0;              //!< 发送次数
-    float _miss_frequency = 0.65f;    //!< 击打不成功最大间隔
-    float _initial_frequency = 0.17f; //!< 初始击打间隔
+    bool _is_changed = true;         //!< 神符改变标志位
+    double _start_tick{};            //!< 起始时间
+    double _delta_time{};            //!< 累积时间
+    int _send_times{};               //!< 发送次数
+    float _miss_frequency{0.65f};    //!< 击打不成功最大间隔
+    float _initial_frequency{0.17f}; //!< 初始击打间隔
 
 public:
     RuneDecider() = default;

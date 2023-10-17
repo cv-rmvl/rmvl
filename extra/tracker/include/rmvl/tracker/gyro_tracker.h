@@ -34,9 +34,9 @@ public:
     };
 
 private:
-    float _sample_time = 0.f; //!< 采样帧差时间
-    cv::Vec2f _pose;          //!< 修正后的装甲板姿态法向量
-    float _rotspeed = 0.f;    //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
+    double _duration{}; //!< 采样帧差时间
+    cv::Vec2f _pose;    //!< 修正后的装甲板姿态法向量
+    float _rotspeed{};  //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
 
     KF44f _motion_filter;   //!< 目标转角滤波器
     KF66f _center3d_filter; //!< 位置滤波器
@@ -80,10 +80,10 @@ public:
      * @brief 更新时间序列
      *
      * @param[in] p_armor 传入 tracker 的组合体
-     * @param[in] time 时间戳
+     * @param[in] tick 时间点
      * @param[in] gyro_data 云台数据
      */
-    void update(combo::ptr p_armor, int64 time, const GyroData &gyro_data) override;
+    void update(combo::ptr p_armor, double tick, const GyroData &gyro_data) override;
 
     /**
      * @brief 更新消失状态
@@ -93,7 +93,7 @@ public:
     inline void updateVanishState(VanishState state) { state == VANISH ? _vanish_num++ : _vanish_num = 0; }
 
     //! 获取帧差时间
-    inline float getSampleTime() const { return _sample_time; }
+    inline double getDuration() const { return _duration; }
     //! 获取修正后的装甲板姿态法向量
     inline const cv::Vec2f &getPose() const { return _pose; }
     //! 获取绕 y 轴的自转角速度（俯视顺时针为正，滤波数据，弧度）

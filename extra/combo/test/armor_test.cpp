@@ -13,6 +13,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/combo/armor.h"
+#include "rmvl/core/timer.hpp"
 
 using namespace rm;
 using namespace std;
@@ -54,13 +55,13 @@ TEST_F(BuildArmorTest, incorrect_blob)
 {
     LightBlob::ptr right_blob = nullptr;
     // 一个灯条为空
-    Armor::ptr armor = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_FALSE(armor != nullptr);
     // 一个灯条为假
     vector<Point> null_contour;
     right_blob = LightBlob::make_feature(null_contour);
     armor.reset();
-    armor = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    armor = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_FALSE(armor != nullptr);
 }
 
@@ -69,15 +70,15 @@ TEST_F(BuildArmorTest, different_blob_distance)
     LightBlob::ptr right_blob;
     // 小间距
     right_blob = buildBlob(0, Point2f(30, 0));
-    Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor1, nullptr);
     // 正常间距
     right_blob = buildBlob(0, Point2f(200, 0));
-    Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_NE(armor2, nullptr);
     // 大间距
     right_blob = buildBlob(0, Point2f(1000, 0));
-    Armor::ptr armor3 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor3 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor3, nullptr);
 }
 
@@ -88,12 +89,12 @@ TEST_F(BuildArmorTest, different_blob_tiltAngle)
     // 小倾角
     left_blob = buildBlob(5);
     right_blob = buildBlob(5, Point(200, 10));
-    Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_NE(armor1, nullptr);
     // 大倾角
     left_blob = buildBlob(45);
     right_blob = buildBlob(45, Point(180, 180));
-    Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor2, nullptr);
 }
 
@@ -102,11 +103,11 @@ TEST_F(BuildArmorTest, different_blob_angle)
     LightBlob::ptr right_blob;
     // 小夹角
     right_blob = buildBlob(5, Point(200, 0));
-    Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_NE(armor1, nullptr);
     // 大夹角
     right_blob = buildBlob(15, Point(200, 0));
-    Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+    Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor2, nullptr);
 }
 

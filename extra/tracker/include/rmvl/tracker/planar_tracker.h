@@ -53,10 +53,10 @@ public:
      * @brief 更新时间序列
      *
      * @param[in] p_combo 传入 tracker 的平面目标
-     * @param[in] time 时间戳
+     * @param[in] tick 时间点
      * @param[in] gyro_data 云台数据
      */
-    void update(combo::ptr p_combo, int64 time, const GyroData &gyro_data) override;
+    void update(combo::ptr p_combo, double tick, const GyroData &gyro_data) override;
 
 private:
     /**
@@ -92,10 +92,10 @@ private:
     /**
      * @brief 掉帧处理（使用滤波器的预测数值补帧）同时更新整个 tracker 提供给外部的接口信息
      *
-     * @param[in] tick 最新时间戳
+     * @param[in] tick 最新时间点
      * @param[in] gyro 最新陀螺仪数据
      */
-    void vanishProcess(int64_t tick, const GyroData &gyro);
+    void vanishProcess(double tick, const GyroData &gyro);
 };
 
 //! @} planar_tracker

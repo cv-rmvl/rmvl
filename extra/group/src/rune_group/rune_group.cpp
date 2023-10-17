@@ -19,7 +19,7 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-void RuneGroup::sync(const GyroData &, int64_t)
+void RuneGroup::sync(const GyroData &, double)
 {
     if (_trackers.empty())
         RMVL_Error(RMVL_StsBadSize, "trackers of the \"rune_group\" is empty!");

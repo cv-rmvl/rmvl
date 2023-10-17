@@ -12,6 +12,7 @@
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/core/timer.hpp"
 #include "rmvl/tracker/planar_tracker.h"
 
 #include "rmvlpara/camera.hpp"
@@ -29,8 +30,8 @@ class PlanarTrackerTest : public testing::Test
     Mat src;
 
 public:
-    int64 tick = getTickCount();
-    GyroData gyro_data = GyroData();
+    double tick{Timer::now()};
+    GyroData gyro_data{};
 
     void SetUp() override
     {
@@ -57,7 +58,7 @@ public:
     {
         LightBlob::ptr left_blob = buildBlob(angle, center - Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
         LightBlob::ptr right_blob = buildBlob(angle, center + Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
-        return Armor::make_combo(left_blob, right_blob, GyroData(), getTickCount());
+        return Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     }
 
     /**
