@@ -305,20 +305,19 @@ macro(rmvl_add_exe exe_name)
   # Add module options
   set(multi_args SOURCES DEPENDS EXTERNAL)
   cmake_parse_arguments(EXE "" "" "${multi_args}" ${ARGN})
-  set(the_target rmvl_${exe_name})
 
   # Add executable
-  add_executable(${the_target} ${EXE_SOURCES})
+  add_executable(${exe_name} ${EXE_SOURCES})
 
   # Add dependence
   foreach(_dep ${EXE_DEPENDS})
-    target_link_libraries(${the_target} rmvl_${_dep})
+    target_link_libraries(${exe_name} rmvl_${_dep})
   endforeach(_dep ${EXE_DEPENDS})
-  target_link_libraries(${the_target} ${EXE_EXTERNAL})
+  target_link_libraries(${exe_name} ${EXE_EXTERNAL})
 
   # Install
   install(
-    TARGETS ${the_target}
+    TARGETS ${exe_name}
     RUNTIME DESTINATION ${RMVL_BIN_INSTALL_PATH}
   )
 endmacro(rmvl_add_exe exe_name)

@@ -35,8 +35,9 @@ else()
   set(RMVL_INCLUDE_DIRS_CONFIGCMAKE "\"\${RMVL_INSTALL_PATH}/${RMVL_INCLUDE_INSTALL_PATH}\"")
 endif()
 
+set(cmake_dir "${CMAKE_SOURCE_DIR}/cmake")
 set(config_dir "${CMAKE_BINARY_DIR}/config-install")
-set(template_dir "${CMAKE_SOURCE_DIR}/cmake/templates")
+set(template_dir "${cmake_dir}/templates")
 
 configure_file("${template_dir}/RMVLConfig.cmake.in" "${config_dir}/RMVLConfig.cmake" @ONLY)
 configure_file("${template_dir}/RMVLConfig-version.cmake.in" "${config_dir}/RMVLConfig-version.cmake" @ONLY)
@@ -46,9 +47,11 @@ install(
   FILE RMVLModules.cmake
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )
+
 install(
   FILES "${config_dir}/RMVLConfig.cmake"
         "${config_dir}/RMVLConfig-version.cmake"
-        "${CMAKE_SOURCE_DIR}/cmake/RMVLModule.cmake"
+        "${cmake_dir}/RMVLModule.cmake"
+        "${cmake_dir}/RMVLUtils.cmake"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )
