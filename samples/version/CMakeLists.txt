@@ -1,5 +1,5 @@
 rmvl_add_exe(
-  version
+  rmvl_version
   SOURCES sample_version.cpp
   DEPENDS core
 )
