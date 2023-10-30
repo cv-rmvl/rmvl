@@ -7,13 +7,16 @@ rmvl_add_module(
 )
 
 # add module: ort
-find_package(Ort)
-set(BUILD_rmvl_ort_INIT ${Ort_FOUND})
+if(WITH_ONNXRUNTIME)
+  find_package(Ort)
+endif()
 
 rmvl_generate_para(
   ort
   MODULE ml
 )
+  
+set(BUILD_rmvl_ort_INIT ${WITH_ONNXRUNTIME})
 
 rmvl_add_module(
   ort
