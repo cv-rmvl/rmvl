@@ -201,10 +201,22 @@ option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
 #   3rdparty options
 # ----------------------------------------------------------------------------
 option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
+option(BUILD_OPEN62541 "Build the 3rd party: open62541" OFF)
 
 option(WITH_APRILTAG "Enable apriltag support" ON)
 if(WITH_APRILTAG)
   include(RMVLFindAprilTag)
+endif()
+option(WITH_OPEN62541 "Enable open62541 support" ON)
+if(WITH_OPEN62541)
+  include(RMVLFindOpen62541)
+endif()
+option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
+if(WITH_ONNXRUNTIME)
+  find_package(Ort QUIET)
+  if(NOT Ort_FOUND)
+    option(WITH_ONNXRUNTIME "Enable onnxruntime support" OFF)
+  endif()
 endif()
 
 # ----------------------------------------------------------------------------

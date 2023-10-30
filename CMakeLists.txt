@@ -18,6 +18,9 @@ endif()
 # ----------------------------------------------------------------------------
 #  Configure CMake policies
 # ----------------------------------------------------------------------------
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW) # option() honors normal variables.
+endif()
 if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW) # CMake 3.24: URL download, extract file and timestamp
 endif()
@@ -161,13 +164,13 @@ status("     ccache:"              ENABLE_CCACHE AND CCACHE_FOUND THEN YES ELSE 
 # =================== Other third-party libraries ===================
 find_package(OpenCV QUIET)
 find_package(Eigen3 QUIET)
-find_package(Ort QUIET)
 status("")
 status("  Other third-party libraries:")
 status("     OpenCV: (*)"           OpenCV_FOUND THEN "YES (ver ${OpenCV_VERSION})" ELSE NO)
 status("     Eigen library: (*)"    Eigen3_FOUND THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
-status("     onnxruntime:"          Ort_FOUND THEN YES ELSE NO)
-status("     apriltag:"             RMVL_3rd_apriltag_FOUND THEN YES ELSE NO)
+status("     onnxruntime:"          WITH_ONNXRUNTIME THEN YES ELSE NO)
+status("     apriltag:"             WITH_APRILTAG THEN YES ELSE NO)
+status("     open62541:"            WITH_OPEN62541 THEN YES ELSE NO)
 
 # =============================== SDK ===============================
 status("")

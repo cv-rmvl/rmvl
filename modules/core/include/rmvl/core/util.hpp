@@ -17,6 +17,7 @@
 
 #include <rmvl/rmvl_modules.hpp>
 
+#include <cstdint>
 #include <cstdio>
 #include <string>
 

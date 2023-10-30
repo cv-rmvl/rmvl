@@ -1,0 +1,135 @@
+/**
+ * @file method.hpp
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 方法节点
+ * @version 1.0
+ * @date 2023-10-23
+ *
+ * @copyright Copyright 2023 (c), zhaoxi
+ *
+ */
+
+#pragma once
+
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "utilities.hpp"
+
+namespace rm
+{
+
+//! @addtogroup opcua
+//! @{
+
+//! OPC UA 方法参数
+struct Argument final
+{
+    std::string name;        //!< 方法名
+    UA_TypeFlag data_type{}; //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
+    uint32_t dims{};         //!< 参数维数 @warning 不能为 `0`
+
+    Argument() = default;
+
+    /**
+     * @brief 构造 `rm::Argument` 方法参数
+     * 
+     * @param[in] n 方法名
+     * @param[in] dt 参数数据类型
+     * @param[in] dm 参数维数（默认为 `1`）
+     */
+    Argument(std::string_view n, UA_TypeFlag dt, uint32_t dm = 1) : name(n), data_type(dt), dims(dm) {}
+
+    Argument(const Argument &val) : name(val.name), data_type(val.data_type), dims(val.dims) {}
+    Argument(Argument &&val) : name(std::move(val.name)), data_type(std::exchange(val.data_type, 0)), dims(std::exchange(val.dims, 0)) {}
+
+    Argument &operator=(const Argument &val);
+    Argument &operator=(Argument &&val);
+};
+
+//! OPC UA 方法
+struct Method final
+{
+    /**
+     * @brief 浏览名称 BrowseName
+     * @brief
+     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称不能重复
+     */
+    std::string browse_name;
+
+    /**
+     * @brief 展示名称 DisplayName
+     * @brief
+     * - 在服务器上对外展示的名字 - `en-US`
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称可以相同
+     */
+    std::string display_name;
+
+    //! 方法的描述
+    std::string description;
+
+    //! 传入参数列表
+    std::vector<Argument> iargs;
+
+    //! 传出参数列表
+    std::vector<Argument> oargs;
+
+    /**
+     * @brief 方法回调函数
+     * @brief 函数原型为
+     * @code {.cpp}
+     * UA_StatusCode foo(
+     *     UA_Server *server, const UA_NodeId *sessionId, void *sessionContext, const UA_NodeId *methodId,
+     *     void *methodContext, const UA_NodeId *objectId, void *objectContext, size_t inputSize, const UA_Variant *input,
+     *     size_t outputSize, UA_Variant *output);
+     * @endcode
+     *
+     */
+    UA_MethodCallback func;
+
+    Method() = default;
+
+    /**
+     * @brief 使用方法回调函数构造 Method
+     *
+     * @note 由于可发生隐式转换，因此可传入函数、函数指针以及无捕获列表的 `lambda` 表达式
+     * @param f 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
+     */
+    Method(UA_MethodCallback f) : func(f) {}
+
+    Method(const Method &val) : browse_name(val.browse_name), display_name(val.display_name),
+                                description(val.description), func(val.func), iargs(val.iargs), oargs(val.oargs) {}
+
+    Method(Method &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
+                           func(std::exchange(val.func, nullptr)), iargs(std::move(val.iargs)), oargs(std::move(val.oargs)) {}
+
+    Method &operator=(const Method &val);
+    Method &operator=(Method &&val);
+};
+
+//! @} opcua
+
+namespace helper
+{
+
+//! @addtogroup opcua
+//! @{
+
+/**
+ * @brief `rm::Argument` 转化为 `UA_Argument`
+ *
+ * @warning 此方法一般不直接使用
+ * @param[in] val `rm::Argument` 表示的方法
+ * @return `UA_Argument` 的堆空间指针
+ */
+UA_Argument *cvtArgument(const Argument &arg);
+
+//! @} opcua
+
+} // namespace helper
+
+} // namespace rm

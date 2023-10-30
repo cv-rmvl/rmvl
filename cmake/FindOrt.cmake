@@ -1,4 +1,6 @@
-set(ort_root_path "/usr/local")
+if(NOT ort_root_path)
+  set(ort_root_path "/usr/local")
+endif()
 
 # add the include directories path
 set(Ort_INCLUDE_DIR "${ort_root_path}/include/onnxruntime")
