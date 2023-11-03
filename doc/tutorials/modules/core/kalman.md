@@ -6,7 +6,7 @@
 
 @prev_tutorial{tutorial_modules_serial}
 
-@next_tutorial{tutorial_modules_union_find}
+@next_tutorial{tutorial_modules_least_square}
 
 @tableofcontents
 

@@ -57,30 +57,6 @@ explicit SerialPort(const std::string &device = {}, int baud_rate = B115200);
 
 rm::SerialPort 提供了极其方便的串口读取、写入的接口。
 
-@note 此部分在 RMVL 不同版本之间略有差异
-
-@add_toggle{1.1.0前}
-
-| 功能 |     函数      |                             功能                             |
-| :--: | :-----------: | :----------------------------------------------------------: |
-| 读取 | `readStruct`  | 指定头尾帧，读取缓冲区中所有能够组成结构体的数据，最新的数据被置于末尾 |
-| 写入 | `writeStruct` |               传入待写入的结构体完成数据的写入               |
-
-- 读取函数原型
-  ```cpp
-  template <typename Tp>
-  inline std::vector<Tp> readStruct(unsigned char head_flag, unsigned char tail_flag);
-  ```
-- 写入函数原型
-  ```cpp
-  template <typename Tp>
-  inline bool writeStruct(Tp &data_struct);
-  ```
-
-@end_toggle
-
-@add_toggle{1.1.0起}
-
 | 功能 |  函数   |                        功能                        |
 | :--: | :-----: | :------------------------------------------------: |
 | 读取 | `read`  | 指定头尾帧，读取缓冲区中最新的能够组成结构体的数据 |
@@ -96,8 +72,6 @@ rm::SerialPort 提供了极其方便的串口读取、写入的接口。
   template <typename Tp>
   inline bool write(Tp &data_struct);
   ```
-
-@end_toggle
 
 #### 链路层协议 {#serialport_protocol}
 

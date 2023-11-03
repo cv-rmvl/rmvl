@@ -11,7 +11,7 @@ unset(open62541_FOUND)
 if(NOT BUILD_OPEN62541)
   find_package(open62541 QUIET)
   if(NOT open62541_FOUND)
-    message(WARNING "Invalid open62541 support, please enable BUILD_OPEN62541")
+    message(STATUS "Invalid open62541 support, please enable \"BUILD_OPEN62541\"")
     option(WITH_OPEN62541 "Enable open62541 support" OFF)
   endif()
 # has 'BUILD'

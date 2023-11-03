@@ -214,9 +214,7 @@ endif()
 option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
 if(WITH_ONNXRUNTIME)
   find_package(Ort QUIET)
-  if(NOT Ort_FOUND)
-    option(WITH_ONNXRUNTIME "Enable onnxruntime support" OFF)
-  endif()
+  option(WITH_ONNXRUNTIME "Enable onnxruntime support" ${Ort_FOUND})
 endif()
 
 # ----------------------------------------------------------------------------

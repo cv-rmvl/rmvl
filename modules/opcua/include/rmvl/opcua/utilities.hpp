@@ -11,10 +11,14 @@
 
 #pragma once
 
+#include <string>
 #include <typeindex>
 #include <unordered_map>
 
-#include <open62541.h>
+#include <open62541/types_generated.h>
+
+struct UA_Server;
+struct UA_Client;
 
 namespace rm
 {
@@ -40,9 +44,9 @@ using UA_TypeFlag = size_t;
 
 //! 获取形如 `UA_TYPES_<xxx>` 的类型标志位
 inline std::unordered_map<std::type_index, UA_TypeFlag> typeflag =
-    {{std::type_index(typeid(UA_Boolean)), UA_TYPES_BOOLEAN},
-     {std::type_index(typeid(UA_SByte)), UA_TYPES_SBYTE},
-     {std::type_index(typeid(UA_Byte)), UA_TYPES_BYTE},
+    {{std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
+     {std::type_index(typeid(int8_t)), UA_TYPES_SBYTE},
+     {std::type_index(typeid(uint8_t)), UA_TYPES_BYTE},
      {std::type_index(typeid(UA_Int16)), UA_TYPES_INT16},
      {std::type_index(typeid(UA_UInt16)), UA_TYPES_UINT16},
      {std::type_index(typeid(UA_Int32)), UA_TYPES_INT32},

@@ -23,7 +23,6 @@ target_compile_options(${APRILTAG_PKG} PRIVATE -w)
 target_include_directories(
   ${APRILTAG_PKG} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
 set_target_properties(
