@@ -192,10 +192,10 @@ public:
     explicit Variable(VariableType &vtype) : _type(&vtype), _value(vtype.getValue()), _data_type(vtype.getDataType()),
                                              _dims(vtype.getArrayDimensions()), _access_level(3U) {}
 
-    Variable(const Variable &val) : browse_name(val.browse_name), _type(val._type), display_name(val.display_name), description(val.description),
+    Variable(const Variable &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description), _type(val._type),
                                     _value(val._value), _data_type(val._data_type), _dims(val._dims), _access_level(val._access_level) {}
 
-    Variable(Variable &&val) : browse_name(std::move(val.browse_name)), _type(std::exchange(val._type, nullptr)), display_name(std::move(val.display_name)), description(std::move(val.description)),
+    Variable(Variable &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)), _type(std::exchange(val._type, nullptr)),
                                _value(std::move(val._value)), _data_type(std::exchange(val._data_type, 0)), _dims(std::exchange(val._dims, 0)), _access_level(std::exchange(val._access_level, 0)) {}
 
     Variable &operator=(const Variable &val);
@@ -259,7 +259,7 @@ UA_Variant *cvtVariable(const Variable &val);
  * @brief `rm::VariableType` 转化为无类型的 `UA_Variant`
  *
  * @warning 此方法一般不直接使用
- * @param[in] val `rm::VariableType` 表示的变量类型
+ * @param[in] vtype `rm::VariableType` 表示的变量类型
  * @return 用 `UA_Variant` 表示变量类型节点内置数据的堆空间指针
  */
 UA_Variant *cvtVariable(const VariableType &vtype);

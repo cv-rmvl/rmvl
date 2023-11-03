@@ -11,15 +11,10 @@
 
 #include <stack>
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
-#include <open62541.h>
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+#include <open62541/plugin/accesscontrol_default.h>
+#include <open62541/plugin/log_stdout.h>
+#include <open62541/server.h>
+#include <open62541/server_config_default.h>
 
 #include "rmvl/opcua/server.hpp"
 
@@ -156,13 +151,74 @@ UA_NodeId rm::Server::addVariableNodeEx(const rm::Variable &val, UA_NodeId paren
     return retval;
 }
 
-void rm::Server::writeVariable(UA_NodeId node, const rm::Variable &val)
+bool rm::Server::writeVariable(UA_NodeId node, const rm::Variable &val)
 {
     auto variant = helper::cvtVariable(val);
     _variant_gc.insert(variant);
     auto status = UA_Server_writeValue(_server, node, *variant);
     if (status != UA_STATUSCODE_GOOD)
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to write variable, error code: %s", UA_StatusCode_name(status));
+    return status == UA_STATUSCODE_GOOD;
+}
+
+bool rm::Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
+{
+    UA_ValueCallback callback;
+    callback.onRead = before_read;
+    callback.onWrite = after_write;
+    auto status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
+    if (status != UA_STATUSCODE_GOOD)
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+                     "Function addVariableNodeValueCallBack: %s", UA_StatusCode_name(status));
+    return status == UA_STATUSCODE_GOOD;
+}
+
+UA_NodeId rm::Server::addDataSourceVariableNodeEx(const rm::Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id)
+{
+    // 变量节点属性 `UA_VariableAttributes`
+    UA_VariableAttributes attr = UA_VariableAttributes_default;
+    UA_Variant *variant = helper::cvtVariable(val);
+    // 添加至 GC
+    _variant_gc.insert(variant);
+    // 设置属性
+    attr.value = *variant;
+    attr.dataType = variant->type->typeId;
+    attr.accessLevel = val.getAccessLevel();
+    attr.valueRank = val.getValueRank();
+    if (attr.valueRank != UA_VALUERANK_SCALAR)
+    {
+        attr.arrayDimensionsSize = variant->arrayDimensionsSize;
+        attr.arrayDimensions = variant->arrayDimensions;
+    }
+    attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
+    attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
+    // 获取变量节点的变量类型节点
+    UA_NodeId type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
+    const auto *p_type = val.getType();
+    if (p_type != nullptr)
+    {
+        type_id = type_id | find(p_type->browse_name);
+        if (UA_NodeId_equal(&type_id, &UA_NODEID_NULL))
+        {
+            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
+            type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
+        }
+    }
+    UA_NodeId retval{UA_NODEID_NULL};
+    // 获取数据源重定向信息
+    UA_DataSource data_source;
+    data_source.read = on_read;
+    data_source.write = on_write;
+    // 添加节点至服务器
+    auto status = UA_Server_addDataSourceVariableNode(
+        _server, UA_NODEID_NULL, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+        UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)), type_id, attr, data_source, nullptr, &retval);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data source variable node: %s", UA_StatusCode_name(status));
+        return UA_NODEID_NULL;
+    }
+    return retval;
 }
 
 UA_NodeId rm::Server::addMethodNodeEx(const rm::Method &method, UA_NodeId parent_id)

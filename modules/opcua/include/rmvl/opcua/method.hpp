@@ -17,6 +17,10 @@
 
 #include "utilities.hpp"
 
+using UA_MethodCallback = UA_StatusCode (*)(
+    UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
+    const UA_NodeId *, void *, size_t, const UA_Variant *, size_t, UA_Variant *);
+
 namespace rm
 {
 
@@ -34,7 +38,7 @@ struct Argument final
 
     /**
      * @brief 构造 `rm::Argument` 方法参数
-     * 
+     *
      * @param[in] n 方法名
      * @param[in] dt 参数数据类型
      * @param[in] dm 参数维数（默认为 `1`）
@@ -97,15 +101,15 @@ struct Method final
      * @brief 使用方法回调函数构造 Method
      *
      * @note 由于可发生隐式转换，因此可传入函数、函数指针以及无捕获列表的 `lambda` 表达式
-     * @param f 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
+     * @param[in] f 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
      */
     Method(UA_MethodCallback f) : func(f) {}
 
     Method(const Method &val) : browse_name(val.browse_name), display_name(val.display_name),
-                                description(val.description), func(val.func), iargs(val.iargs), oargs(val.oargs) {}
+                                description(val.description), iargs(val.iargs), oargs(val.oargs), func(val.func) {}
 
     Method(Method &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
-                           func(std::exchange(val.func, nullptr)), iargs(std::move(val.iargs)), oargs(std::move(val.oargs)) {}
+                           iargs(std::move(val.iargs)), oargs(std::move(val.oargs)), func(std::exchange(val.func, nullptr)) {}
 
     Method &operator=(const Method &val);
     Method &operator=(Method &&val);
@@ -123,7 +127,7 @@ namespace helper
  * @brief `rm::Argument` 转化为 `UA_Argument`
  *
  * @warning 此方法一般不直接使用
- * @param[in] val `rm::Argument` 表示的方法
+ * @param[in] arg `rm::Argument` 表示的方法
  * @return `UA_Argument` 的堆空间指针
  */
 UA_Argument *cvtArgument(const Argument &arg);

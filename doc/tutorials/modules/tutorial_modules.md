@@ -9,7 +9,7 @@
 
 ------
 
-### 1. 核心模块
+### 1. 核心模块、教程
 
 #### 1.1 工具类
 
@@ -20,6 +20,7 @@
 #### 1.2 算法类
 
 - @subpage tutorial_modules_kalman
+- @subpage tutorial_modules_least_square
 
 ### 2. 数据结构与算法
 

@@ -9,6 +9,10 @@
  *
  */
 
+#include <open62541/server.h>
+#include <open62541/client.h>
+#include <open62541/plugin/log_stdout.h>
+
 #include "rmvl/opcua/method.hpp"
 #include "rmvl/opcua/variable.hpp"
 

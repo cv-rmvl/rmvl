@@ -9,6 +9,10 @@
  *
  */
 
+#include <open62541/client.h>
+#include <open62541/client_config_default.h>
+#include <open62541/plugin/log_stdout.h>
+
 #include "rmvl/opcua/client.hpp"
 
 rm::Client::Client(std::string_view address, rm::UserConfig usr)
