@@ -9,12 +9,13 @@ unset(apriltag_FOUND)
 
 # no 'BUILD'
 if(NOT BUILD_APRILTAG)
+  message(STATUS "Looking for apriltag")
   find_package(apriltag QUIET)
   if(apriltag_FOUND)
-    message(WARNING "Enable apriltag support but disable to build the 3rdparty/apritag, please check the data of \"tag25h9.c\"")
+    message(STATUS "Looking for apriltag - found (please check the data of \"tag25h9.c\")")
   else()
-    message(WARNING "Invalid apriltag support, please enable BUILD_APRILTAG")
-    option(WITH_APRILTAG "Enable open62541 support" OFF)
+    message(STATUS "Looking for apriltag - not found")
+    rmvl_option(WITH_APRILTAG "Enable open62541 support" OFF)
   endif()
 # has 'BUILD'
 else()

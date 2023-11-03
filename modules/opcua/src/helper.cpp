@@ -9,9 +9,9 @@
  *
  */
 
-#include <open62541/server.h>
 #include <open62541/client.h>
 #include <open62541/plugin/log_stdout.h>
+#include <open62541/server.h>
 
 #include "rmvl/opcua/method.hpp"
 #include "rmvl/opcua/variable.hpp"
@@ -197,6 +197,74 @@ UA_Variant *rm::helper::cvtVariable(const rm::Variable &val)
         p_val->arrayDimensions = &const_cast<UA_UInt32 &>(val.getArrayDimensions());
     }
     return p_val;
+}
+
+rm::Variable rm::helper::cvtVariable(const UA_Variant *p_val)
+{
+    UA_UInt32 dims = p_val->arrayLength;
+    UA_TypeFlag type_flag = p_val->type->typeKind;
+    void *data = p_val->data;
+    if (dims == 1)
+    {
+        switch (type_flag)
+        {
+        case UA_TYPES_STRING:
+            return reinterpret_cast<const char *>(data);
+        case UA_TYPES_BOOLEAN:
+            return *reinterpret_cast<UA_Boolean *>(data);
+        case UA_TYPES_SBYTE:
+            return *reinterpret_cast<UA_SByte *>(data);
+        case UA_TYPES_BYTE:
+            return *reinterpret_cast<UA_Byte *>(data);
+        case UA_TYPES_INT16:
+            return *reinterpret_cast<UA_Int16 *>(data);
+        case UA_TYPES_UINT16:
+            return *reinterpret_cast<UA_UInt16 *>(data);
+        case UA_TYPES_INT32:
+            return *reinterpret_cast<UA_Int32 *>(data);
+        case UA_TYPES_UINT32:
+            return *reinterpret_cast<UA_UInt32 *>(data);
+        case UA_TYPES_INT64:
+            return *reinterpret_cast<UA_Int64 *>(data);
+        case UA_TYPES_UINT64:
+            return *reinterpret_cast<UA_UInt64 *>(data);
+        case UA_TYPES_FLOAT:
+            return *reinterpret_cast<UA_Float *>(data);
+        case UA_TYPES_DOUBLE:
+            return *reinterpret_cast<UA_Double *>(data);
+        default:
+            RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", type_flag);
+        }
+    }
+    else
+    {
+        switch (type_flag)
+        {
+        case UA_TYPES_SBYTE:
+            return std::vector(reinterpret_cast<UA_SByte *>(data), reinterpret_cast<UA_SByte *>(data) + dims);
+        case UA_TYPES_BYTE:
+            return std::vector(reinterpret_cast<UA_Byte *>(data), reinterpret_cast<UA_Byte *>(data) + dims);
+        case UA_TYPES_INT16:
+            return std::vector(reinterpret_cast<UA_Int16 *>(data), reinterpret_cast<UA_Int16 *>(data) + dims);
+        case UA_TYPES_UINT16:
+            return std::vector(reinterpret_cast<UA_UInt16 *>(data), reinterpret_cast<UA_UInt16 *>(data) + dims);
+        case UA_TYPES_INT32:
+            return std::vector(reinterpret_cast<UA_Int32 *>(data), reinterpret_cast<UA_Int32 *>(data) + dims);
+        case UA_TYPES_UINT32:
+            return std::vector(reinterpret_cast<UA_UInt32 *>(data), reinterpret_cast<UA_UInt32 *>(data) + dims);
+        case UA_TYPES_INT64:
+            return std::vector(reinterpret_cast<UA_Int64 *>(data), reinterpret_cast<UA_Int64 *>(data) + dims);
+        case UA_TYPES_UINT64:
+            return std::vector(reinterpret_cast<UA_UInt64 *>(data), reinterpret_cast<UA_UInt64 *>(data) + dims);
+        case UA_TYPES_FLOAT:
+            return std::vector(reinterpret_cast<UA_Float *>(data), reinterpret_cast<UA_Float *>(data) + dims);
+        case UA_TYPES_DOUBLE:
+            return std::vector(reinterpret_cast<UA_Double *>(data), reinterpret_cast<UA_Double *>(data) + dims);
+        default:
+            RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", type_flag);
+        }
+    }
+    return {};
 }
 
 UA_Variant *rm::helper::cvtVariable(const rm::VariableType &vtype)

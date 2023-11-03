@@ -40,7 +40,7 @@ struct UserConfig final
 };
 
 //! 类型标志位，可通过 `typeflag[xxx]` 进行获取
-using UA_TypeFlag = size_t;
+using UA_TypeFlag = UA_UInt32;
 
 //! 获取形如 `UA_TYPES_<xxx>` 的类型标志位
 inline std::unordered_map<std::type_index, UA_TypeFlag> typeflag =

@@ -169,11 +169,11 @@ public:
     /**
      * @brief 单值构造
      *
-     * @tparam Tp 变量的存储数据类型，必须是基础类型或者 `const char *` 表示的字符串类型
+     * @tparam Tp 变量的存储数据类型，必须是基础类型、`const char *` 或 `const char (&)[N]` 表示的字符串类型
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    Variable(Tp &&val) : _value(val), _data_type(typeflag[typeid(Tp)]), _dims(1), _access_level(3U) {}
+    Variable(const Tp &val) : _value(val), _data_type(typeflag[typeid(Tp)]), _dims(1), _access_level(3U) {}
 
     /**
      * @brief 列表构造
@@ -247,7 +247,7 @@ namespace helper
 //! @{
 
 /**
- * @brief `rm::Variable` 转化为无类型的 `UA_Variant`
+ * @brief `rm::Variable` 转化为 `UA_Variant`
  *
  * @warning 此方法一般不直接使用
  * @param[in] val `rm::Variable` 表示的变量
@@ -256,7 +256,16 @@ namespace helper
 UA_Variant *cvtVariable(const Variable &val);
 
 /**
- * @brief `rm::VariableType` 转化为无类型的 `UA_Variant`
+ * @brief `UA_Variant` 转化为 `rm::Variable`
+ *
+ * @warning 此方法一般不直接使用
+ * @param[in] p_val `UA_Variant` 表示的变量指针
+ * @return 用 `rm::Variable` 表示的变量节点
+ */
+Variable cvtVariable(const UA_Variant *p_val);
+
+/**
+ * @brief `rm::VariableType` 转化为 `UA_Variant`
  *
  * @warning 此方法一般不直接使用
  * @param[in] vtype `rm::VariableType` 表示的变量类型

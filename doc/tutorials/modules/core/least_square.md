@@ -33,23 +33,23 @@
 - \f$(\pmb\alpha+\pmb\beta,\pmb\gamma)=(\pmb\alpha+\pmb\gamma,\pmb\beta+\pmb\gamma)\f$
 - \f$(\pmb\alpha,\pmb\alpha)\geq0，当且仅当\pmb\alpha=\pmb0，等号成立\f$
 
-在初等几何中，点到直线（或平面）上所有点的距离以垂线最短。同样的，对于一个 **欧式空间** \f$V=\mathbb{R}^n\f$，一个指定向量 \f$\pmb\beta\in V\f$ 和子空间 \f$W\subseteq V\f$ 的各个向量距离也以 **垂线** 最短。换句话说，该向量 \f$\pmb\beta\f$ 与子空间 \f$W\f$ 正交。其中子空间可以表示成
+在初等几何中，点到直线（或平面）上所有点的距离以垂线最短。同样的，对于一个 **欧式空间** \f$V=\mathbb{R}^n\f$，一个指定向量 \f$\pmb\beta\in V\f$ 和子空间 \f$W\subseteq V\f$ 的各个向量距离也以 **垂线** 最短。换句话说，该向量 \f$\pmb\beta\f$ 与子空间 \f$W\f$ 正交，记作 \f$\pmb\beta\perp W\f$。其中子空间可以表示成
 
 \f[W=L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)\tag{1-1}\f]
 
-其中 \f$\pmb\alpha_1,\ \pmb\alpha_2,\ \cdots,\ \pmb\alpha_s\f$ 是一 \f$W\f$ 的一组基。从上式可以推导出，对于任意的向量 \f$\pmb\alpha_i\inW\f$ 。若满足向量 \f$\pmb\beta\f$ 与子空间正交，说明 \f$\pmb\beta\f$ 与所有的 \f$\pmb\alpha_i\f$ 也正交，因此可以写为
+其中 \f$\pmb\alpha_1,\ \pmb\alpha_2,\ \cdots,\ \pmb\alpha_s\f$ 是一 \f$W\f$ 的一组基。从上式可以推导出，若 \f$\exists\pmb\beta\in V\f$，使得 \f$\pmb\beta\perp W\f$，则对于 \f$\forall\pmb\alpha\in W\f$，均有 \f$\pmb\beta\perp\pmb\alpha\f$。因此可以写为
 
 \f[\begin{matrix}
 (\pmb\alpha_1,\pmb\beta)&=&\pmb\alpha_1^T\pmb\beta&=&0\\
 (\pmb\alpha_2,\pmb\beta)&=&\pmb\alpha_2^T\pmb\beta&=&0\\
 \vdots&=&\vdots&=&\vdots\\
-(\pmb\alpha_i,\pmb\beta)&=&\pmb\alpha_i^T\pmb\beta&=&0
+(\pmb\alpha_n,\pmb\beta)&=&\pmb\alpha_n^T\pmb\beta&=&0
 \end{matrix}\tag{1-2a}\f]
 
 观察中间一列 \f$\pmb\alpha_i^T\pmb\beta\f$，可以写成
 
 \f[
-(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_i)^T\pmb\beta=0\tag{1-2b}
+(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_i)^T\pmb\beta=\pmb 0\tag{1-2b}
 \f]
 
 我们先用一个最简单的例子。
@@ -86,7 +86,7 @@
 \f[\left\{\begin{align}2x_1+x_2&=1\\x_1-x_2&=0\\x_1+x_2&=2\end{align}\right.\qquad\Leftrightarrow\qquad
 \begin{bmatrix}2&1\\1&-1\\1&1\end{bmatrix}\begin{bmatrix}x_1\\x_2\end{bmatrix}=\begin{bmatrix}1\\0\\2\end{bmatrix}\tag{2-1}\f]
 
-普遍来看，这里 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$ 在图 1-3 中可以表示成
+这里 \f$A=\begin{bmatrix}2&1\\1&-1\\1&1\end{bmatrix}\f$，\f$\pmb b=(1,0,2)^T\f$，在图 1-3 中表示如下。
 
 <center>
 ![ls-equations](ls-equations.png)
@@ -94,7 +94,7 @@
 图 1-3
 </center>
 
-这一类方程组没有数值解，但我们设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出平方误差的表达式，后续再进一步说明
+一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出平方误差的表达式。
 
 \f[
 \delta^2=\sum_{i=1}^s(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}
@@ -134,7 +134,9 @@ A^TA\hat{\pmb x}&=A^T\pmb b
 
 经过化简我们最终可以得到
 
-\f[\hat{\pmb x}=\left(A^TA\right)^{-1}A^T\pmb b\tag{2-6}\f]
+\f[
+\boxed{\hat{\pmb x}=\left(A^TA\right)^{-1}A^T\pmb b}\tag{2-6}
+\f]
 
 这就是最小二乘解所满足的代数方程。
 
@@ -182,7 +184,7 @@ y&=x_1
 
 题目：求公式 \f$\text{(2-1)}\f$ 的最小二乘解
 
-系数矩阵：\f$A=\begin{bmatrix}2&1\\1&-1\\1&1\end{bmatrix}\f$，其生成的列空间为图 2-2 中<span style="color: orange">橙色的平面</span>，并对 \f$A\f$ 作列分块得到 \f$A=(\pmb\alpha_1,\pmb\alpha_2)\f$
+系数矩阵：\f$A=\begin{bmatrix}2&1\\1&-1\\1&1\end{bmatrix}\f$，其生成的列空间为图 2-2 中<span style="color: orange">橙色的平面</span>，记作平面 \f$\alpha\f$，并对 \f$A\f$ 作列分块得到 \f$A=(\pmb\alpha_1,\pmb\alpha_2)\f$
 
 列空间外向量（右端项）：\f$\pmb b=(1,0,2)^T\f$
 
@@ -192,7 +194,41 @@ y&=x_1
 图 2-2
 </center>
 
-需要满足 \f$\pmb y-\pmb b\f$ 与 \f$L(\pmb\alpha_1,\pmb\alpha_2)\f$ 垂直，即 \f$\pmb y-\pmb b\f$ 分别与 \f$\pmb\alpha_1\f$ 和 \f$\pmb\alpha_2\f$ 垂直。使用公式 \f$\text{(1-2b)}\f$ 能够推导出公式 \f$\text{(2-5)}\f$，这里不多赘述，留给读者自行计算验证。
+需要满足 \f$(\pmb y-\pmb b)\perp\alpha\f$，则需要分别满足 \f$(\pmb y-\pmb b)\perp\alpha_1\f$ 和 \f$(\pmb y-\pmb b)\perp\alpha_2\f$，下面使用几何法对最小二乘法的原理进行验证。
+
+① 求平面 \f$\alpha\f$ 的法向量 \f$\pmb n\f$
+
+\f[
+\pmb n=\left|\begin{matrix}\pmb i&\pmb j&\pmb k\\1&-1&1\\2&1&1\end{matrix}\right|
+=-2\pmb i+\pmb j+3\pmb k=\begin{bmatrix}-2\\1\\3\end{bmatrix}\tag{3-4}
+\f]
+
+② 根据约束条件列方程
+
+满足 2 个 <span style="color: red">**约束条件**</span> ，即
+
+- \f$\pmb y-\pmb b=k\pmb n\f$，表示 \f$\pmb y-\pmb b\f$ 是平面 \f$\alpha\f$ 的一个法向量
+- \f$\pmb y=x_1\pmb\alpha_1+x_2\pmb\alpha_2\f$，表示 \f$\pmb y\in L(\pmb\alpha_1,\pmb\alpha_2)\f$，即 \f$\pmb y\f$ 是列空间中的一个向量
+
+联立得到
+
+\f[k\pmb n+\pmb b=x_1\pmb\alpha_1+x_2\pmb\alpha_2\tag{3-5a}\f]
+
+即
+
+\f[\left\{\begin{align}
+-2k+1&=2x_1+x_2\\k&=x_1-x_2\\3k+2&=x_1+x_2
+\end{align}\right.\tag{3-5b}\f]
+
+③ 求解 \f$\hat{\pmb x}\f$
+
+这是一个关于 \f$k,x_1,x_2\f$ 的线性方程组，解得
+
+\f[X=(-\frac27,\frac37,\frac57)^T\tag{3-6}\f]
+
+因此我们得到了满足以上 <span style="color: red">**约束条件**</span> 的解
+
+\f[\hat{\pmb x}=\left(\frac37,\frac57\right)^T\tag{3-7}\f]
 
 ### 4. 部署使用
 
@@ -204,7 +240,7 @@ bool cv::solve(
     InputArray src2,
     OutputArray dst,
     int flags = DECOMP_LU 
-)
+);
 ```
 
 有关递推最小二乘法的介绍可参考 @ref tutorial_extra_spi_rune_predictor 。

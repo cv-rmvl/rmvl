@@ -151,7 +151,19 @@ UA_NodeId rm::Server::addVariableNodeEx(const rm::Variable &val, UA_NodeId paren
     return retval;
 }
 
-bool rm::Server::writeVariable(UA_NodeId node, const rm::Variable &val)
+rm::Variable rm::Server::read(UA_NodeId node)
+{
+    UA_Variant p_val;
+    auto status = UA_Server_readValue(_server, node, &p_val);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to read variable: %s", UA_StatusCode_name(status));
+        return {};
+    }
+    return helper::cvtVariable(&p_val);
+}
+
+bool rm::Server::write(UA_NodeId node, const rm::Variable &val)
 {
     auto variant = helper::cvtVariable(val);
     _variant_gc.insert(variant);
@@ -211,8 +223,10 @@ UA_NodeId rm::Server::addDataSourceVariableNodeEx(const rm::Variable &val, DataS
     data_source.write = on_write;
     // 添加节点至服务器
     auto status = UA_Server_addDataSourceVariableNode(
-        _server, UA_NODEID_NULL, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-        UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)), type_id, attr, data_source, nullptr, &retval);
+        _server, UA_NODEID_NULL, parent_id,
+        UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+        UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
+        type_id, attr, data_source, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data source variable node: %s", UA_StatusCode_name(status));
@@ -371,7 +385,7 @@ UA_NodeId rm::Server::addObjectNodeEx(const rm::Object &obj, UA_NodeId parent_id
     {
         auto sub_node_id = retval | find(browse_name);
         if (UA_NodeId_equal(&sub_node_id, &UA_NODEID_NULL))
-            writeVariable(sub_node_id, variable);
+            write(sub_node_id, variable);
         else
             addVariableNodeEx(variable, retval);
     }
