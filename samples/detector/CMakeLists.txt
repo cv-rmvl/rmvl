@@ -1,3 +1,6 @@
+if(NOT BUILD_EXTRA)
+  return()
+endif()
 if(camera_tmp)
   unset(camera_tmp)
 endif()

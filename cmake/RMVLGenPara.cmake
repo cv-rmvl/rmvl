@@ -209,14 +209,13 @@ function(rmvl_generate_para target_name)
   endif()  
   # parser
   para_parser(${file_name} para_header_details para_source_details)
-  set(template_path "${CMAKE_SOURCE_DIR}/cmake/templates")
   set(para_include_path)
   # has module
   if(PARA_MODULE)
     set(para_include_path "rmvlpara/${module_name}/${target_name}.h")
     set(header_ext "h")
     configure_file(
-      ${template_path}/para_generator_source.in
+      ${para_template_path}/para_generator_source.in
       ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/para/param.cpp
       @ONLY
     )
@@ -225,7 +224,7 @@ function(rmvl_generate_para target_name)
     set(header_ext hpp)
     set(para_include_path "rmvlpara/${module_name}.hpp")
     configure_file(
-      ${template_path}/para_generator_source.in
+      ${para_template_path}/para_generator_source.in
       ${CMAKE_CURRENT_LIST_DIR}/src/para/param.cpp
       @ONLY
     )
@@ -235,7 +234,7 @@ function(rmvl_generate_para target_name)
     set(def_new_group "${def_new_group}//! @} para\n")
   endif()
   configure_file(
-    ${template_path}/para_generator_header.in
+    ${para_template_path}/para_generator_header.in
     ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path}
     @ONLY
   )
@@ -261,9 +260,8 @@ function(rmvl_generate_module_para module_name)
     set(para_module_header_details "${para_module_header_details}#endif //! HAVE_RMVL_${upper}\n")
   endforeach()
   # generate C++ file
-  set(template_path "${CMAKE_SOURCE_DIR}/cmake/templates")
   configure_file(
-    ${template_path}/para_generator_module.in
+    ${para_template_path}/para_generator_module.in
     ${CMAKE_CURRENT_LIST_DIR}/include/rmvlpara/${module_name}.hpp
     @ONLY
   )

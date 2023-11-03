@@ -43,14 +43,14 @@ endfunction()
 macro(rmvl_finalize_status)
   set(RMVL_BUILD_INFO_FILE "${CMAKE_BINARY_DIR}/version_string.tmp")
   if(EXISTS "${RMVL_BUILD_INFO_FILE}")
-    file(READ "${RMVL_BUILD_INFO_FILE}" __content)
+    file(READ "${RMVL_BUILD_INFO_FILE}" _content)
   else()
-    set(__content "")
+    set(_content "")
   endif()
-  if(NOT "${__content}" STREQUAL "${RMVL_BUILD_INFO_STR}")
+  if(NOT "${_content}" STREQUAL "${RMVL_BUILD_INFO_STR}")
     file(WRITE "${RMVL_BUILD_INFO_FILE}" "${RMVL_BUILD_INFO_STR}")
   endif()
-  unset(__content)
+  unset(_content)
   unset(RMVL_BUILD_INFO_STR CACHE)
 
   if(DEFINED RMVL_MODULE_rmvl_core_BINARY_DIR)
@@ -116,18 +116,6 @@ function(status text)
     rmvl_output_status("${text}")
   endif()
 endfunction()
-
-# ----------------------------------------------------------------------------
-#   重新设定编译选项
-#   示例:
-#     rmvl_option(xx "this is test" ON)
-# ----------------------------------------------------------------------------
-macro(rmvl_option _name _description _val)
-  if(DEFINED ${_name})
-    unset(${_name})
-  endif()
-  option(${_name} "${_description}" ${_val})
-endmacro()
 
 # ----------------------------------------------------------------------------
 #   下载并参与 RMVL 的构建

@@ -97,7 +97,7 @@ endif()
 #   Develop options
 # ----------------------------------------------------------------------------
 # Cache compilation acceleration
-rmvl_option(ENABLE_CCACHE "Use ccache to faster compile when develop" ON)
+option(ENABLE_CCACHE "Use ccache to faster compile when develop" ON)
 if(ENABLE_CCACHE)
   message(STATUS "Looking for ccache")
   find_program(CCACHE_FOUND ccache)
@@ -114,7 +114,7 @@ if(ENABLE_CCACHE)
 endif()
 
 # Code warning
-rmvl_option(ENABLE_WARNING "Enable warning for all project " ON)
+option(ENABLE_WARNING "Enable warning for all project " ON)
 if(ENABLE_WARNING)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     list(APPEND MSVC_OPTIONS "/W3")
@@ -135,7 +135,7 @@ if(ENABLE_WARNING)
 endif()
 
 # Coverage test
-rmvl_option(ENABLE_COVERAGE "Build with unit test coverage" OFF)
+option(ENABLE_COVERAGE "Build with unit test coverage" OFF)
 if(ENABLE_COVERAGE)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options("-fprofile-arcs -ftest-coverage --coverage")
@@ -145,10 +145,10 @@ if(ENABLE_COVERAGE)
 endif()
 
 # Code analysis: Address / Undefined / Memory / Thread
-rmvl_option(ENABLE_ADDRESS_SANITIZER "Build with Address Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
-rmvl_option(ENABLE_UNDEFINED_SANITIZER "Build Undefined Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
-rmvl_option(ENABLE_MEMORY_SANITIZER "Build Memory Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
-rmvl_option(ENABLE_THREAD_SANITIZER "Build Thread Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
+option(ENABLE_ADDRESS_SANITIZER "Build with Address Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
+option(ENABLE_UNDEFINED_SANITIZER "Build Undefined Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
+option(ENABLE_MEMORY_SANITIZER "Build Memory Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
+option(ENABLE_THREAD_SANITIZER "Build Thread Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
 if(NOT MSVC)
   if(ENABLE_ADDRESS_SANITIZER)
     include(${CMAKE_MODULE_PATH}/check/check_asan.cmake)
@@ -193,35 +193,35 @@ endif()
 # ----------------------------------------------------------------------------
 #   Module and other options
 # ----------------------------------------------------------------------------
-rmvl_option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" ON)
-rmvl_option(BUILD_EXAMPLES "Build RMVL all examples" ON)
-rmvl_option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
+option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" ON)
+option(BUILD_EXAMPLES "Build RMVL all examples" ON)
+option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
 
 # ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
-rmvl_option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
-rmvl_option(BUILD_OPEN62541 "Build the 3rd party: open62541" OFF)
+option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
+option(BUILD_OPEN62541 "Build the 3rd party: open62541" OFF)
 
-rmvl_option(WITH_APRILTAG "Enable apriltag support" ON)
+option(WITH_APRILTAG "Enable apriltag support" ON)
 if(WITH_APRILTAG)
   include(RMVLFindAprilTag)
 endif()
-rmvl_option(WITH_OPEN62541 "Enable open62541 support" ON)
+option(WITH_OPEN62541 "Enable open62541 support" ON)
 if(WITH_OPEN62541)
   include(RMVLFindOpen62541)
 endif()
-rmvl_option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
+option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
 if(WITH_ONNXRUNTIME)
   find_package(Ort QUIET)
-  rmvl_option(WITH_ONNXRUNTIME "Enable onnxruntime support" ${Ort_FOUND})
+  option(WITH_ONNXRUNTIME "Enable onnxruntime support" ${Ort_FOUND})
 endif()
 
 # ----------------------------------------------------------------------------
 #   Build performance and unit tests
 # ----------------------------------------------------------------------------
 # Unit tests
-rmvl_option(BUILD_TESTS "Build accuracy & regression tests" OFF)
+option(BUILD_TESTS "Build accuracy & regression tests" OFF)
 if(BUILD_TESTS)
   enable_testing()
   # Using gtests command
@@ -237,7 +237,7 @@ if(BUILD_TESTS)
 endif()
 
 # Performance tests
-rmvl_option(BUILD_PERF_TESTS "Build performance tests" OFF)
+option(BUILD_PERF_TESTS "Build performance tests" OFF)
 if(BUILD_PERF_TESTS)
   enable_testing()
   set(BENCHMARK_ENABLE_TESTING OFF)
