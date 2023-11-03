@@ -53,5 +53,14 @@ install(
         "${config_dir}/RMVLConfig-version.cmake"
         "${cmake_dir}/RMVLModule.cmake"
         "${cmake_dir}/RMVLUtils.cmake"
+        "${cmake_dir}/RMVLGenPara.cmake"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
+)
+
+# genpara
+install(
+  FILES "${cmake_dir}/templates/para_generator_header.in"
+        "${cmake_dir}/templates/para_generator_module.in"
+        "${cmake_dir}/templates/para_generator_source.in"
+  DESTINATION "${RMVL_CONFIG_INSTALL_PATH}/templates"
 )
