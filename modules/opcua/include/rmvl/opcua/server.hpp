@@ -162,13 +162,21 @@ public:
     }
 
     /**
+     * @brief 从指定的变量节点读数据
+     * 
+     * @param[in] node 既存的变量节点的 `UA_NodeId`
+     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     */
+    Variable read(UA_NodeId node);
+
+    /**
      * @brief 给指定的变量节点写数据
      *
-     * @param[in] node 既存的变量节点的 `NodeId`
+     * @param[in] node 既存的变量节点的 `UA_NodeId`
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    bool writeVariable(UA_NodeId node, const Variable &val);
+    bool write(UA_NodeId node, const Variable &val);
 
     /**
      * @brief 添加方法节点 MethodNode 至指定父节点中

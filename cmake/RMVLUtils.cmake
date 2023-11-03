@@ -118,6 +118,18 @@ function(status text)
 endfunction()
 
 # ----------------------------------------------------------------------------
+#   重新设定编译选项
+#   示例:
+#     rmvl_option(xx "this is test" ON)
+# ----------------------------------------------------------------------------
+macro(rmvl_option _name _description _val)
+  if(DEFINED ${_name})
+    unset(${_name})
+  endif()
+  option(${_name} "${_description}" ${_val})
+endmacro()
+
+# ----------------------------------------------------------------------------
 #   下载并参与 RMVL 的构建
 #   用法:
 #     rmvl_download(

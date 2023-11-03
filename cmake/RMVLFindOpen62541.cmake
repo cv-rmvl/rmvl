@@ -9,10 +9,13 @@ unset(open62541_FOUND)
 
 # no 'BUILD'
 if(NOT BUILD_OPEN62541)
+  message(STATUS "Looking for open62541")
   find_package(open62541 QUIET)
   if(NOT open62541_FOUND)
-    message(STATUS "Invalid open62541 support, please enable \"BUILD_OPEN62541\"")
-    option(WITH_OPEN62541 "Enable open62541 support" OFF)
+    message(STATUS "Looking for open62541 - not found")
+    rmvl_option(WITH_OPEN62541 "Enable open62541 support" OFF)
+  else()
+    message(STATUS "Looking for open62541 - found")
   endif()
 # has 'BUILD'
 else()

@@ -140,10 +140,10 @@ P_m=P_{m-1}-P_{m-1}\pmb{a_m}^T\left(I+\pmb{a_m}P_{m-1}\pmb{a_m}^T\right)^{-1}\pm
 汇总以上结果，最后可以得到
 
 \f[
-\left\{\begin{align}
+\boxed{\left\{\begin{align}
 P_m&=P_{m-1}-\frac{P_{m-1}\pmb{a_m}^T\pmb{a_m}P_{m-1}}{1-\pmb{a_m}P_{m-1}\pmb{a_m}^T}\\
 \hat{x}_m&=\hat{x}_{m-1}+P_m\pmb{a_m}^T\left(b_m-\pmb{a_m}\hat{x}_{m-1}\right)
-\end{align}\right.\tag{2-8}
+\end{align}\right.}\tag{2-8}
 \f]
 
 ### 预测
@@ -157,11 +157,11 @@ c_0+\theta(k-n_f)c_{n_f}+\theta(k-n_f-1)c_{n_f+1}+\dots+\theta(k-n_f-n+1)c_{n_f+
 结合公式\f$\text{(2-8)}\f$，得到
 
 \f[
-\left\{\begin{align}
+\boxed{\left\{\begin{align}
 \pmb{a_m}&=\left[1\quad \theta(k-n_f)\quad \theta(k-n_f-1)\quad \dots\quad \theta(k-n_f-n+1)\right]\\
 b_m&=\theta(k)\\
 \hat{x}_m&=\left[c_0\quad c_{n_f}\quad c_{n_f+1}\quad \dots\quad c_{n_f+n-1}\right]^T
-\end{align}\right.\tag{3-2}
+\end{align}\right.}\tag{3-2}
 \f]
 
 \f$\theta(k)\f$表示当前帧采样得到的神符数据数据，\f$\theta(k-n_f)\f$表示\f$n_f\f$个采样周期（帧）之前采集到的神符角度信息，\f$\theta(k-n_f-n+1)\f$表示从\f$n_f\f$个采样周期之前再往前\f$n\f$个周期的神符角度信息。若要预测当前帧后\f$n_f\f$个采样周期的神符角度，运用公式\f$\text{(1-1)}\f$，使用使用前\f$n\f$帧到当前帧的\f$\theta\f$角度，代入迭代公式，即可计算出\f$n_f\f$个采样周期后的角度值。最后使用\f$\text{(1-3)}\f$和\f$\text{(1-4)}\f$即可得到最终的预测结果\f$y_p\f$。
