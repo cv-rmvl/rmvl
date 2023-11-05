@@ -11,7 +11,10 @@
 
 #include "rmvl/opcua/object.hpp"
 
-rm::VariableType &rm::VariableType::operator=(const rm::VariableType &val)
+namespace rm
+{
+
+VariableType &VariableType::operator=(const VariableType &val)
 {
     browse_name = val.browse_name;
     display_name = val.display_name;
@@ -22,7 +25,7 @@ rm::VariableType &rm::VariableType::operator=(const rm::VariableType &val)
     return *this;
 }
 
-rm::VariableType &rm::VariableType::operator=(rm::VariableType &&val)
+VariableType &VariableType::operator=(VariableType &&val)
 {
     browse_name = std::move(val.browse_name);
     display_name = std::move(val.display_name);
@@ -33,7 +36,7 @@ rm::VariableType &rm::VariableType::operator=(rm::VariableType &&val)
     return *this;
 }
 
-rm::Variable &rm::Variable::operator=(const rm::Variable &val)
+Variable &Variable::operator=(const Variable &val)
 {
     browse_name = val.browse_name;
     display_name = val.display_name;
@@ -46,7 +49,7 @@ rm::Variable &rm::Variable::operator=(const rm::Variable &val)
     return *this;
 }
 
-rm::Variable &rm::Variable::operator=(rm::Variable &&val)
+Variable &Variable::operator=(Variable &&val)
 {
     browse_name = std::move(val.browse_name);
     display_name = std::move(val.display_name);
@@ -59,7 +62,7 @@ rm::Variable &rm::Variable::operator=(rm::Variable &&val)
     return *this;
 }
 
-rm::Argument &rm::Argument::operator=(const rm::Argument &val)
+Argument &Argument::operator=(const Argument &val)
 {
     name = val.name;
     data_type = val.data_type;
@@ -67,7 +70,7 @@ rm::Argument &rm::Argument::operator=(const rm::Argument &val)
     return *this;
 }
 
-rm::Argument &rm::Argument::operator=(rm::Argument &&val)
+Argument &Argument::operator=(Argument &&val)
 {
     name = std::move(val.name);
     data_type = std::exchange(val.data_type, 0);
@@ -75,7 +78,7 @@ rm::Argument &rm::Argument::operator=(rm::Argument &&val)
     return *this;
 }
 
-rm::Method &rm::Method::operator=(const rm::Method &val)
+Method &Method::operator=(const Method &val)
 {
     browse_name = val.browse_name;
     display_name = val.display_name;
@@ -86,7 +89,7 @@ rm::Method &rm::Method::operator=(const rm::Method &val)
     return *this;
 }
 
-rm::Method &rm::Method::operator=(rm::Method &&val)
+Method &Method::operator=(Method &&val)
 {
     browse_name = std::move(val.browse_name);
     display_name = std::move(val.display_name);
@@ -97,7 +100,7 @@ rm::Method &rm::Method::operator=(rm::Method &&val)
     return *this;
 }
 
-rm::ObjectType &rm::ObjectType::operator=(const rm::ObjectType &val)
+ObjectType &ObjectType::operator=(const ObjectType &val)
 {
     browse_name = val.browse_name;
     display_name = val.display_name;
@@ -108,7 +111,7 @@ rm::ObjectType &rm::ObjectType::operator=(const rm::ObjectType &val)
     return *this;
 }
 
-rm::ObjectType &rm::ObjectType::operator=(rm::ObjectType &&val)
+ObjectType &ObjectType::operator=(ObjectType &&val)
 {
     browse_name = std::move(val.browse_name);
     display_name = std::move(val.display_name);
@@ -118,3 +121,5 @@ rm::ObjectType &rm::ObjectType::operator=(rm::ObjectType &&val)
     _methods = std::move(val._methods);
     return *this;
 }
+
+} // namespace rm

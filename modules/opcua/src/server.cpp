@@ -18,9 +18,12 @@
 
 #include "rmvl/opcua/server.hpp"
 
+namespace rm
+{
+
 // ============================= 基本配置 =============================
 
-rm::Server::Server(uint16_t port, const std::vector<rm::UserConfig> &users)
+Server::Server(uint16_t port, const std::vector<UserConfig> &users)
 {
     _server = UA_Server_new();
 
@@ -46,7 +49,7 @@ rm::Server::Server(uint16_t port, const std::vector<rm::UserConfig> &users)
     }
 }
 
-void rm::Server::run()
+void Server::run()
 {
     _running = true;
     _run = std::thread([this]() {
@@ -56,7 +59,7 @@ void rm::Server::run()
     });
 }
 
-rm::Server::~Server()
+Server::~Server()
 {
     for (auto &val : _variant_gc)
         UA_Variant_delete(val);
@@ -67,7 +70,7 @@ rm::Server::~Server()
 
 // ============================= 节点配置 =============================
 
-UA_NodeId rm::Server::addVariableTypeNode(const rm::VariableType &vtype)
+UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
 {
     UA_VariableTypeAttributes attr = UA_VariableTypeAttributes_default;
     UA_Variant *variant = helper::cvtVariable(vtype);
@@ -99,7 +102,7 @@ UA_NodeId rm::Server::addVariableTypeNode(const rm::VariableType &vtype)
     return retval;
 }
 
-UA_NodeId rm::Server::addVariableNodeEx(const rm::Variable &val, UA_NodeId parent_id)
+UA_NodeId Server::addVariableNodeEx(const Variable &val, UA_NodeId parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
@@ -151,19 +154,20 @@ UA_NodeId rm::Server::addVariableNodeEx(const rm::Variable &val, UA_NodeId paren
     return retval;
 }
 
-rm::Variable rm::Server::read(UA_NodeId node)
+bool Server::read(UA_NodeId node, Variable &val)
 {
     UA_Variant p_val;
     auto status = UA_Server_readValue(_server, node, &p_val);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to read variable: %s", UA_StatusCode_name(status));
-        return {};
+        return false;
     }
-    return helper::cvtVariable(&p_val);
+    val = helper::cvtVariable(&p_val);
+    return true;
 }
 
-bool rm::Server::write(UA_NodeId node, const rm::Variable &val)
+bool Server::write(UA_NodeId node, const Variable &val)
 {
     auto variant = helper::cvtVariable(val);
     _variant_gc.insert(variant);
@@ -173,7 +177,7 @@ bool rm::Server::write(UA_NodeId node, const rm::Variable &val)
     return status == UA_STATUSCODE_GOOD;
 }
 
-bool rm::Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
+bool Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
 {
     UA_ValueCallback callback;
     callback.onRead = before_read;
@@ -185,7 +189,7 @@ bool rm::Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeR
     return status == UA_STATUSCODE_GOOD;
 }
 
-UA_NodeId rm::Server::addDataSourceVariableNodeEx(const rm::Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id)
+UA_NodeId Server::addDataSourceVariableNodeEx(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
@@ -235,7 +239,7 @@ UA_NodeId rm::Server::addDataSourceVariableNodeEx(const rm::Variable &val, DataS
     return retval;
 }
 
-UA_NodeId rm::Server::addMethodNodeEx(const rm::Method &method, UA_NodeId parent_id)
+UA_NodeId Server::addMethodNodeEx(const Method &method, UA_NodeId parent_id)
 {
     UA_MethodAttributes attr = UA_MethodAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(method.display_name));
@@ -285,7 +289,7 @@ UA_NodeId rm::Server::addMethodNodeEx(const rm::Method &method, UA_NodeId parent
     return retval;
 }
 
-UA_NodeId rm::Server::addObjectTypeNode(const rm::ObjectType &otype)
+UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
 {
     // 定义对象类型节点
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
@@ -294,7 +298,7 @@ UA_NodeId rm::Server::addObjectTypeNode(const rm::ObjectType &otype)
     UA_NodeId retval{UA_NODEID_NULL};
     // 获取父节点的 NodeID
     UA_NodeId parent_id{UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE)};
-    const rm::ObjectType *current = otype.getBase();
+    const ObjectType *current = otype.getBase();
     std::stack<std::string> base_stack;
     while (current != nullptr)
     {
@@ -344,13 +348,13 @@ UA_NodeId rm::Server::addObjectTypeNode(const rm::ObjectType &otype)
     return retval;
 }
 
-UA_NodeId rm::Server::addObjectNodeEx(const rm::Object &obj, UA_NodeId parent_id)
+UA_NodeId Server::addObjectNodeEx(const Object &obj, UA_NodeId parent_id)
 {
     UA_ObjectAttributes attr{UA_ObjectAttributes_default};
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(obj.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
     // 获取对象类型节点
-    const rm::ObjectType *current = obj.getType();
+    const ObjectType *current = obj.getType();
     UA_NodeId type_id{UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE)};
     std::stack<std::string> base_stack;
     while (current != nullptr)
@@ -391,3 +395,5 @@ UA_NodeId rm::Server::addObjectNodeEx(const rm::Object &obj, UA_NodeId parent_id
     }
     return retval;
 }
+
+} // namespace rm

@@ -14,6 +14,7 @@
 #include <opencv2/core/types.hpp>
 
 #include "rmvlpara/loader.hpp"
+
 @def_new_group@
 namespace rm::para
 {

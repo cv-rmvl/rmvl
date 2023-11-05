@@ -1,0 +1,1 @@
+uint32_t SPIN_TIMEOUT = 500 # 服务器超时响应的时间，单位 (ms)
