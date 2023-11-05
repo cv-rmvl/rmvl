@@ -58,7 +58,10 @@ UA_NodeId operator|(UA_NodeId origin, rm::findNodeInClient &&fnic)
     return UA_NODEID_NULL;
 }
 
-UA_Variant *rm::helper::cvtVariable(const rm::Variable &val)
+namespace rm::helper
+{
+
+UA_Variant *cvtVariable(const Variable &val)
 {
     const std::any &data = val.getValue();
 
@@ -199,7 +202,7 @@ UA_Variant *rm::helper::cvtVariable(const rm::Variable &val)
     return p_val;
 }
 
-rm::Variable rm::helper::cvtVariable(const UA_Variant *p_val)
+Variable cvtVariable(const UA_Variant *p_val)
 {
     UA_UInt32 dims = p_val->arrayLength;
     UA_TypeFlag type_flag = p_val->type->typeKind;
@@ -267,7 +270,7 @@ rm::Variable rm::helper::cvtVariable(const UA_Variant *p_val)
     return {};
 }
 
-UA_Variant *rm::helper::cvtVariable(const rm::VariableType &vtype)
+UA_Variant *cvtVariable(const VariableType &vtype)
 {
     const std::any &data = vtype.getValue();
 
@@ -408,11 +411,11 @@ UA_Variant *rm::helper::cvtVariable(const rm::VariableType &vtype)
     return p_val;
 }
 
-UA_Argument *rm::helper::cvtArgument(const rm::Argument &arg)
+UA_Argument *cvtArgument(const Argument &arg)
 {
     UA_Argument *argument = UA_Argument_new();
     argument->name = UA_STRING_ALLOC(arg.name.c_str());
-    argument->description = UA_LOCALIZEDTEXT_ALLOC(helper::zh_CN(), arg.name.c_str());
+    argument->description = UA_LOCALIZEDTEXT_ALLOC(zh_CN(), arg.name.c_str());
     argument->dataType = UA_TYPES[arg.data_type].typeId;
     RMVL_Assert(arg.dims);
     if (arg.dims == 1)
@@ -429,3 +432,5 @@ UA_Argument *rm::helper::cvtArgument(const rm::Argument &arg)
     }
     return argument;
 }
+
+} // namespace rm::helper

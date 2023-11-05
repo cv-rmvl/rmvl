@@ -14,8 +14,12 @@
 #include <open62541/plugin/log_stdout.h>
 
 #include "rmvl/opcua/client.hpp"
+#include "rmvlpara/opcua.hpp"
 
-rm::Client::Client(std::string_view address, rm::UserConfig usr)
+namespace rm
+{
+
+Client::Client(std::string_view address, UserConfig usr)
 {
     _client = UA_Client_new();
     UA_ClientConfig *config = UA_Client_getConfig(_client);
@@ -35,7 +39,7 @@ rm::Client::Client(std::string_view address, rm::UserConfig usr)
     }
 }
 
-rm::Client::~Client()
+Client::~Client()
 {
     auto status = UA_Client_disconnect(_client);
     if (status != UA_STATUSCODE_GOOD)
@@ -43,3 +47,23 @@ rm::Client::~Client()
     UA_Client_delete(_client);
     _client = nullptr;
 }
+
+void Client::spin()
+{
+    bool warning{};
+    while (true)
+    {
+        auto status = UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT);
+        if (!warning && status != UA_STATUSCODE_GOOD)
+        {
+            UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT,
+                           "No events and message received, spinning indefinitely, error status: %s", UA_StatusCode_name(status));
+            warning = true;
+        }
+        warning = (status == UA_STATUSCODE_GOOD) ? false : warning;
+    }
+}
+
+void Client::spinOnce() { UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT); }
+
+} // namespace rm

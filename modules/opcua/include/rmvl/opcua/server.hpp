@@ -81,7 +81,7 @@ public:
      *
      * @note 需要配合管道运算符 `|` 完成路径搜索
      * @code {.cpp}
-     * auto dst_mode = src_node | svr.find(1, "person") | svr.find(1, "name");
+     * auto dst_mode = src_node | svr.find("person") | svr.find("name");
      * @endcode
      *
      * @param[in] browse_name 浏览名
@@ -165,9 +165,10 @@ public:
      * @brief 从指定的变量节点读数据
      * 
      * @param[in] node 既存的变量节点的 `UA_NodeId`
-     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     * @param[out] val 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     * @return 是否读取成功
      */
-    Variable read(UA_NodeId node);
+    bool read(UA_NodeId node, Variable &val);
 
     /**
      * @brief 给指定的变量节点写数据

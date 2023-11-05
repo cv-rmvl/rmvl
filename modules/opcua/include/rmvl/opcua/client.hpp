@@ -47,7 +47,7 @@ public:
      *
      * @note 需要配合管道运算符 `|` 完成路径搜索
      * @code {.cpp}
-     * auto dst_mode = src_node | clt.find(1, "person") | clt.find(1, "name");
+     * auto dst_mode = src_node | clt.find("person") | clt.find("name");
      * @endcode
      *
      * @param[in] browse_name 浏览名
@@ -57,6 +57,36 @@ public:
     inline findNodeInClient find(const std::string &browse_name) { return {_client, browse_name}; }
 
     /****************************** 功能配置 ******************************/
+
+    /**
+     * @brief 在网络上监听并处理到达的异步响应。同时进行内部维护、安全通道的更新和订阅管理。
+     * @note 执行事件循环，等效于 ROS/ROS2 工具包中的 `ros::spin()` 以及 `rclcpp::spin()`
+     */
+    void spin();
+
+    /**
+     * @brief 在网络上监听并处理到达的异步响应。同时进行内部维护、安全通道的更新和订阅管理。
+     * @note 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
+     */
+    void spinOnce();
+
+    /**
+     * @brief 从指定的变量节点读数据
+     * 
+     * @param[in] node 既存的变量节点的 `UA_NodeId`
+     * @param[out] val 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     * @return 是否读取成功
+     */
+    bool read(UA_NodeId node, Variable &val);
+
+    /**
+     * @brief 给指定的变量节点写数据
+     *
+     * @param[in] node 既存的变量节点的 `UA_NodeId`
+     * @param[in] val 待写入的数据
+     * @return 是否写入成功
+     */
+    bool write(UA_NodeId node, const Variable &val);
 };
 
 //! @} opcua
