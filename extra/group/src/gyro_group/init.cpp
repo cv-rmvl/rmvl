@@ -13,7 +13,7 @@
 #include "rmvl/rmath/transform.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
 
 using namespace rm;

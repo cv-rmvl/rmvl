@@ -3,7 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/hik_video_capture.h"
+#include "rmvl/camera/hik_camera.h"
 #include "rmvlpara/loader.hpp"
 
 using namespace rm;
@@ -17,10 +17,10 @@ int main()
     MV_CC_DEVICE_INFO_LIST camera_list;
     ret = MV_CC_EnumDevices(MV_USB_DEVICE, &camera_list);
     if (ret != MV_OK)
-        CAM_INFO("failed to enum camera devices");
+        INFO_("cam - failed to enum camera devices");
     unsigned int nums = camera_list.nDeviceNum;
     auto info = camera_list.pDeviceInfo;
-    CAM_INFO("camera quantity: %u", nums);
+    INFO_("cam - camera quantity: %u", nums);
 
     printf("┌──────┬──────────────┬────────────────┬─────────────────────┬────────────────┐\n");
     printf("│ 索引 │  相机序列号  │    型号名字    │     设备版本号      │    通信协议    │\n");
@@ -45,7 +45,7 @@ int main()
     if (sn == "q")
         return 0;
 
-    HikVideoCapture capture(GRAB_CONTINUOUS, RETRIEVE_CV, sn.c_str());
+    HikCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV, sn.c_str());
 
     int exposure = 1000;
     int gain = 0;
@@ -64,13 +64,13 @@ int main()
         readExcludeNone(fs["b_gain"], b_gain);
     }
 
-    capture.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    capture.set(CAP_PROP_RM_EXPOSURE, exposure);
-    capture.set(CAP_PROP_RM_GAIN, gain);
-    capture.set(CAP_PROP_RM_MANUAL_WB);
-    capture.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    capture.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    capture.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    capture.set(CAMERA_MANUAL_EXPOSURE);
+    capture.set(CAMERA_EXPOSURE, exposure);
+    capture.set(CAMERA_GAIN, gain);
+    capture.set(CAMERA_MANUAL_WB);
+    capture.set(CAMERA_WB_RGAIN, r_gain);
+    capture.set(CAMERA_WB_GGAIN, g_gain);
+    capture.set(CAMERA_WB_BGAIN, b_gain);
 
     namedWindow("图像画面", WINDOW_NORMAL);
     resizeWindow("图像画面", Size(640, 480));

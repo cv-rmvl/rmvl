@@ -13,7 +13,7 @@
 #include "rmvl/rmath/transform.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
@@ -80,7 +80,7 @@ combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &g
     Rodrigues(cam_rmat, cam_rvec);
     vector<Point2f> new_corners;
     projectPoints(p_combo->getType().ArmorSizeTypeID == ArmorSizeType::SMALL ? armor_param.SMALL_ARMOR : armor_param.BIG_ARMOR,
-                  cam_rvec, cam_tvec, camera_param.cameraMatrix, camera_param.distCoeff, new_corners);
+                  cam_rvec, cam_tvec, camera_param.cameraMatrix, camera_param.distCoeffs, new_corners);
     if (new_corners.size() != 4)
         RMVL_Error_(RMVL_StsBadSize, "Size of the \"new_corners\" are not equal to 4. (size = %zu)", new_corners.size());
     // 强制构造灯条与装甲板
@@ -130,7 +130,7 @@ void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<Tr
         auto I = Matx33f::eye();
         Vec3f cam_tvec;
         Armor::gyroConvertToCamera(I, center_tvec, _gyro_data, I, cam_tvec);
-        group_center2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeff, cam_tvec);
+        group_center2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeffs, cam_tvec);
 
         // 2、3、4 号追踪器
         for (int i = 0; i < _armor_num - 1; i++)
@@ -163,7 +163,7 @@ void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<Tr
         auto I = Matx33f::eye();
         Vec3f cam_tvec;
         Armor::gyroConvertToCamera(I, center_tvec, _gyro_data, I, cam_tvec);
-        group_center2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeff, center_tvec);
+        group_center2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeffs, center_tvec);
         // 第三、四块装甲板
         for (int i = 0; i < _armor_num - 2; i++)
         {

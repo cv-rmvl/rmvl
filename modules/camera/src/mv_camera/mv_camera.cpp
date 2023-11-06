@@ -1,5 +1,5 @@
 /**
- * @file mv_video_capture.cpp
+ * @file mv_camera.cpp
  * @author RoboMaster Vision Community
  * @brief 工业相机驱动
  * @version 1.0
@@ -13,14 +13,13 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/mv_video_capture.h"
-#include "rmvl/camera/logging.h"
+#include "rmvl/camera/mv_camera.h"
 
 using namespace rm;
 using namespace std;
 using namespace cv;
 
-MvVideoCapture::MvVideoCapture(GrabMode grab_mode, RetrieveMode retrieve_mode,
+MvCamera::MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode,
                                const string &serial, const vector<int> &decode_param)
     : _camera_list(new tSdkCameraDevInfo[_camera_counts]),
       _grab_mode(grab_mode), _retrieve_mode(retrieve_mode)
@@ -30,13 +29,13 @@ MvVideoCapture::MvVideoCapture(GrabMode grab_mode, RetrieveMode retrieve_mode,
     if (retrieve_mode & RETRIEVE_LUT)
         init_param_status = decode_param.empty() ? false : initLUT(decode_param);
     if (!init_param_status)
-        CAM_WARNING("camera decode param is empty!");
+        WARNING_("cam - camera decode param is empty!");
     if (!serial.empty())
         _camera_id = serial;
     open();
 }
 
-MvVideoCapture::~MvVideoCapture()
+MvCamera::~MvCamera()
 {
     delete[] _camera_list;
     _camera_list = nullptr;
@@ -45,20 +44,20 @@ MvVideoCapture::~MvVideoCapture()
     release();
 }
 
-bool MvVideoCapture::open()
+bool MvCamera::open()
 {
     CameraSdkInit(1);
     // 枚举设备，并建立设备列表
     _status = CameraEnumerateDevice(_camera_list, &_camera_counts);
     if (_status == CAMERA_STATUS_SUCCESS)
-        CAM_PASS("camera enum status: %s", CameraGetErrorString(_status));
+        PASS_("cam - camera enum status: %s", CameraGetErrorString(_status));
     else
-        CAM_INFO("camera enum status: %s", CameraGetErrorString(_status));
-    CAM_INFO("camera quantity: %d", _camera_counts);
+        INFO_("cam - camera enum status: %s", CameraGetErrorString(_status));
+    INFO_("cam - camera quantity: %d", _camera_counts);
     // 无设备连接
     if (_camera_counts == 0)
     {
-        CAM_ERROR("could not find the camera devise.");
+        ERROR_("cam - could not find the camera devise.");
         return false;
     }
     // 哈希匹配 序列号-相机设备信息哈希表
@@ -73,15 +72,15 @@ bool MvVideoCapture::open()
         _status = CameraInit(id_info[_camera_id], -1, -1, &_hCamera);
     else 
     {
-        CAM_ERROR("could not find the camera according to the specific S/N");
+        ERROR_("cam - could not find the camera according to the specific S/N");
         return false;
     }
     // 初始化失败
     if (_status == CAMERA_STATUS_SUCCESS)
-        CAM_PASS("camera initial status: %s", CameraGetErrorString(_status));
+        PASS_("cam - camera initial status: %s", CameraGetErrorString(_status));
     else
     {
-        CAM_ERROR("failed to initial the camera device: %s", CameraGetErrorString(_status));
+        ERROR_("cam - failed to initial the camera device: %s", CameraGetErrorString(_status));
         return false;
     }
 
@@ -126,11 +125,11 @@ inline ColorConversionCodes mediaType2CVType(UINT media_type)
     return convertion[media_type];
 }
 
-bool MvVideoCapture::retrieve(OutputArray image, RetrieveMode flag)
+bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
 {
     if (_channel != 1 && _channel != 3)
     {
-        CAM_ERROR("camera image _channel: %d.", _channel);
+        ERROR_("cam - camera image _channel: %d.", _channel);
         image.assign(Mat());
         CameraReleaseImageBuffer(_hCamera, _pbyBuffer);
         return false;
@@ -152,7 +151,7 @@ bool MvVideoCapture::retrieve(OutputArray image, RetrieveMode flag)
         else
         {
             image.assign(Mat());
-            CAM_ERROR("failed to retrieve, retrieve mode: %d.", _retrieve_mode);
+            ERROR_("cam - failed to retrieve, retrieve mode: %d.", _retrieve_mode);
             retflag = false;
         }
         return retflag;
@@ -181,16 +180,16 @@ bool MvVideoCapture::retrieve(OutputArray image, RetrieveMode flag)
         return true;
     }
 
-    CAM_ERROR("failed to retrieve, retrieve mode: %d.", _retrieve_mode);
+    ERROR_("cam - failed to retrieve, retrieve mode: %d.", _retrieve_mode);
     image.assign(Mat());
     return false;
 }
 
-bool MvVideoCapture::initLUT(const vector<int> &lut)
+bool MvCamera::initLUT(const vector<int> &lut)
 {
     if (lut.size() != 256)
     {
-        CAM_ERROR("parameters in Look-Up Table");
+        ERROR_("cam - parameters in Look-Up Table");
         return false;
     }
     uchar table1[256];
@@ -200,9 +199,9 @@ bool MvVideoCapture::initLUT(const vector<int> &lut)
     return true;
 }
 
-bool MvVideoCapture::reconnect()
+bool MvCamera::reconnect()
 {
-    CAM_INFO("camera device reconnect");
+    INFO_("cam - camera device reconnect");
     release();
     sleep(1);
     // 重置相机数量
@@ -210,13 +209,13 @@ bool MvVideoCapture::reconnect()
     open();
     // 还原参数设置
     if (_auto_exposure)
-        set(CAP_PROP_RM_AUTO_EXPOSURE);
+        set(CAMERA_AUTO_EXPOSURE);
     else
-        set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    set(CAP_PROP_RM_EXPOSURE, _exposure);
-    set(CAP_PROP_RM_GAIN, _gain);
-    set(CAP_PROP_RM_WB_RGAIN, _r_gain);
-    set(CAP_PROP_RM_WB_GGAIN, _g_gain);
-    set(CAP_PROP_RM_WB_BGAIN, _b_gain);
+        set(CAMERA_MANUAL_EXPOSURE);
+    set(CAMERA_EXPOSURE, _exposure);
+    set(CAMERA_GAIN, _gain);
+    set(CAMERA_WB_RGAIN, _r_gain);
+    set(CAMERA_WB_GGAIN, _g_gain);
+    set(CAMERA_WB_BGAIN, _b_gain);
     return true;
 }

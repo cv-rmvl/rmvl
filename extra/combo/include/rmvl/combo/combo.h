@@ -10,7 +10,7 @@
  */
 #pragma once
 
-#include "rmvl/camera/parameters.hpp"
+#include "rmvl/camera/camutils.hpp"
 #include "rmvl/types.hpp"
 
 #include "rmvl/core/dataio.hpp"

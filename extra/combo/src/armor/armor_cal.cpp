@@ -49,15 +49,15 @@ ArmorSizeType Armor::matchArmorType()
         return ArmorSizeType::BIG;
 }
 
-CameraExtrinsics<float> Armor::calculateExtrinsic(const Matx33f &cameraMatrix, const Matx51f &distcoeff, const GyroData &gyro_data)
+CameraExtrinsics<float> Armor::calculateExtrinsic(const Matx33f &cameraMatrix, const Matx51f &distCoeffs, const GyroData &gyro_data)
 {
     Vec3f rvec;                        // 旋转向量
     Vec3f tvec;                        // 平移向量
     CameraExtrinsics<float> extrinsic; // 存储相机外参
     // DEBUG_INFO_("Armor: %s, armor_type: %s", _func_, _type.ArmorSizeTypeID == ArmorSizeType::SMALL ? "SMALL" : "BIG");
     _type.ArmorSizeTypeID == ArmorSizeType::SMALL
-        ? solvePnP(armor_param.SMALL_ARMOR, _corners, cameraMatrix, distcoeff, rvec, tvec, false, SOLVEPNP_IPPE)
-        : solvePnP(armor_param.BIG_ARMOR, _corners, cameraMatrix, distcoeff, rvec, tvec, false, SOLVEPNP_IPPE);
+        ? solvePnP(armor_param.SMALL_ARMOR, _corners, cameraMatrix, distCoeffs, rvec, tvec, false, SOLVEPNP_IPPE)
+        : solvePnP(armor_param.BIG_ARMOR, _corners, cameraMatrix, distCoeffs, rvec, tvec, false, SOLVEPNP_IPPE);
     // 变换为陀螺仪坐标系下
     Matx33f rmat;
     Rodrigues(rvec, rmat);

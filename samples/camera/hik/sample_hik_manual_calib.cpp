@@ -5,7 +5,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/hik_video_capture.h"
+#include "rmvl/camera/hik_camera.h"
 #include "rmvlpara/loader.hpp"
 
 using namespace rm;
@@ -18,9 +18,9 @@ Matx<double, 3, 3> cameraMatrix = {1250, 0, 640,
                                    0, 1250, 512,
                                    0, 0, 1};
 // 畸变系数
-Matx<double, 5, 1> distCoeff = {0, 0, 0, 0, 0};
+Matx<double, 5, 1> distCoeffs = {0, 0, 0, 0, 0};
 
-HikVideoCapture capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+HikCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
 
 void cameraMatrixCallBack(int pos, void *mat_pos_)
 {
@@ -34,9 +34,9 @@ void distCoeffCallBack(int pos, void *mat_pos_)
     Point *mat_pos = static_cast<Point *>(mat_pos_);
     // 畸变系数
     if (mat_pos->x == 0 || mat_pos->x == 1)
-        distCoeff(mat_pos->x, mat_pos->y) = static_cast<double>(-5000. + pos) / 5000.;
+        distCoeffs(mat_pos->x, mat_pos->y) = static_cast<double>(-5000. + pos) / 5000.;
     if (mat_pos->x == 2 || mat_pos->x == 3 || mat_pos->x == 4)
-        distCoeff(mat_pos->x, mat_pos->y) = static_cast<double>(-500. + pos) / 5000.;
+        distCoeffs(mat_pos->x, mat_pos->y) = static_cast<double>(-500. + pos) / 5000.;
 }
 
 int main()
@@ -45,7 +45,7 @@ int main()
     const char *file_name = "out_calibration.yml";
     FileStorage fs_mv_in(file_name, FileStorage::READ);
     readExcludeNone(fs_mv_in["cameraMatrix"], cameraMatrix);
-    readExcludeNone(fs_mv_in["distCoeff"], distCoeff);
+    readExcludeNone(fs_mv_in["distCoeffs"], distCoeffs);
 
     int exposure = 1000;
     int gain = 0;
@@ -64,13 +64,13 @@ int main()
         readExcludeNone(fs_hik_set["b_gain"], b_gain);
     }
 
-    capture.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    capture.set(CAP_PROP_RM_EXPOSURE, exposure);
-    capture.set(CAP_PROP_RM_GAIN, gain);
-    capture.set(CAP_PROP_RM_MANUAL_WB);
-    capture.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    capture.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    capture.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    capture.set(CAMERA_MANUAL_EXPOSURE);
+    capture.set(CAMERA_EXPOSURE, exposure);
+    capture.set(CAMERA_GAIN, gain);
+    capture.set(CAMERA_MANUAL_WB);
+    capture.set(CAMERA_WB_RGAIN, r_gain);
+    capture.set(CAMERA_WB_GGAIN, g_gain);
+    capture.set(CAMERA_WB_BGAIN, b_gain);
 
     namedWindow("图像画面", WINDOW_NORMAL);
     namedWindow("控制面板", WINDOW_AUTOSIZE);
@@ -94,15 +94,15 @@ int main()
     createTrackbar("内参 (1, 2)", "控制面板", nullptr, 3000, cameraMatrixCallBack, &(matrix_pose.at(5)));
     setTrackbarPos("内参 (1, 2)", "控制面板", cameraMatrix(1, 2));
     createTrackbar("畸变 0", "控制面板", nullptr, 10000, distCoeffCallBack, &(dist_pose.at(0)));
-    setTrackbarPos("畸变 0", "控制面板", distCoeff(0, 0) * 5000 + 5000);
+    setTrackbarPos("畸变 0", "控制面板", distCoeffs(0, 0) * 5000 + 5000);
     createTrackbar("畸变 1", "控制面板", nullptr, 10000, distCoeffCallBack, &(dist_pose.at(1)));
-    setTrackbarPos("畸变 1", "控制面板", distCoeff(1, 0) * 5000 + 5000);
+    setTrackbarPos("畸变 1", "控制面板", distCoeffs(1, 0) * 5000 + 5000);
     createTrackbar("畸变 2", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(2)));
-    setTrackbarPos("畸变 2", "控制面板", distCoeff(2, 0) * 5000 + 500);
+    setTrackbarPos("畸变 2", "控制面板", distCoeffs(2, 0) * 5000 + 500);
     createTrackbar("畸变 3", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(3)));
-    setTrackbarPos("畸变 3", "控制面板", distCoeff(3, 0) * 5000 + 500);
+    setTrackbarPos("畸变 3", "控制面板", distCoeffs(3, 0) * 5000 + 500);
     createTrackbar("畸变 4", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(4)));
-    setTrackbarPos("畸变 4", "控制面板", distCoeff(4, 0) * 5000 + 500);
+    setTrackbarPos("畸变 4", "控制面板", distCoeffs(4, 0) * 5000 + 500);
 
     sleep(1);
 
@@ -120,7 +120,7 @@ int main()
 
         // 图像矫正
         Mat map1, map2;
-        initUndistortRectifyMap(cameraMatrix, distCoeff, Mat(), cameraMatrix, frame.size(), CV_32FC1, map1, map2);
+        initUndistortRectifyMap(cameraMatrix, distCoeffs, Mat(), cameraMatrix, frame.size(), CV_32FC1, map1, map2);
         remap(frame, frame, map1, map2, INTER_NEAREST);
 
         // 绘制参照线
@@ -144,7 +144,7 @@ int main()
         {
             FileStorage fs_mv_out(file_name, FileStorage::WRITE);
             fs_mv_out << "cameraMatrix" << cameraMatrix;
-            fs_mv_out << "distCoeff" << distCoeff;
+            fs_mv_out << "distCoeffs" << distCoeffs;
 
             printf("\033[32mSuccess to write the parameters into \"%s\"\033[0m\n", file_name);
             printf("                  ┌ %-5.4g, %-5.4g, %-5.4g ┐\n"
@@ -155,10 +155,10 @@ int main()
                    cameraMatrix(2, 0), cameraMatrix(2, 1), cameraMatrix(2, 2));
             printf("               ┌ %-8.5g ┐\n"
                    "               │ %-8.5g │\n"
-                   " -- distCoeff: │ %-8.5g │\n"
+                   " -- distCoeffs: │ %-8.5g │\n"
                    "               │ %-8.5g │\n"
                    "               └ %-8.5g ┘\n",
-                   distCoeff(0), distCoeff(1), distCoeff(2), distCoeff(3), distCoeff(4));
+                   distCoeffs(0), distCoeffs(1), distCoeffs(2), distCoeffs(3), distCoeffs(4));
         }
     }
 

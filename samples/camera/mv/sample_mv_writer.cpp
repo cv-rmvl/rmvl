@@ -1,7 +1,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio.hpp>
 
-#include "rmvl/camera/mv_video_capture.h"
+#include "rmvl/camera/mv_camera.h"
 #include "rmvlpara/loader.hpp"
 
 using namespace rm;
@@ -11,7 +11,7 @@ using namespace cv;
 
 int main()
 {
-    MvVideoCapture capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
 
     Mat tmp;
     while (!capture.read(tmp))
@@ -35,13 +35,13 @@ int main()
         readExcludeNone(fs["b_gain"], b_gain);
     }
 
-    capture.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    capture.set(CAP_PROP_RM_EXPOSURE, exposure);
-    capture.set(CAP_PROP_RM_GAIN, gain);
-    capture.set(CAP_PROP_RM_MANUAL_WB);
-    capture.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    capture.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    capture.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    capture.set(CAMERA_MANUAL_EXPOSURE);
+    capture.set(CAMERA_EXPOSURE, exposure);
+    capture.set(CAMERA_GAIN, gain);
+    capture.set(CAMERA_MANUAL_WB);
+    capture.set(CAMERA_WB_RGAIN, r_gain);
+    capture.set(CAMERA_WB_GGAIN, g_gain);
+    capture.set(CAMERA_WB_BGAIN, b_gain);
 
     Mat frame;
     while (capture.read(frame))

@@ -13,7 +13,7 @@
 #include "rmvl/rmath/transform.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
 using namespace cv;
@@ -88,7 +88,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
     auto I = Matx33f::eye();
     Vec3f cam_tvec;
     Armor::gyroConvertToCamera(I, _center3d, _gyro_data, I, cam_tvec);
-    _center = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeff, cam_tvec);
+    _center = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeffs, cam_tvec);
     // 旋转角速度滤波
     updateRotationFilter(_rotspeed, _rotspeed);
     // 更新旋转状态

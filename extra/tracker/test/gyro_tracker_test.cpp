@@ -15,7 +15,7 @@
 #include "rmvl/core/timer.hpp"
 #include "rmvl/tracker/gyro_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 
 using namespace rm;
 using namespace para;
@@ -38,7 +38,7 @@ public:
         camera_param.cameraMatrix = {1500, 0, 640,
                                      0, 1500, 512,
                                      0, 0, 1};
-        camera_param.distCoeff = {-5.4755376911541398e-01,
+        camera_param.distCoeffs = {-5.4755376911541398e-01,
                                   3.4944810516243208e-01,
                                   -5.7851122028406655e-03,
                                   2.1845982977120020e-03,

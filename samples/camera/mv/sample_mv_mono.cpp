@@ -3,7 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/mv_video_capture.h"
+#include "rmvl/camera/mv_camera.h"
 #include "rmvlpara/loader.hpp"
 
 using namespace rm;
@@ -17,36 +17,36 @@ int r_gain = 100;
 int g_gain = 100;
 int b_gain = 100;
 
-MvVideoCapture cap(GRAB_CONTINUOUS, RETRIEVE_CV);
+MvCamera cap(GRAB_CONTINUOUS, RETRIEVE_CV);
 
 void exposureCallBack(int pos, void *)
 {
     exposure = pos;
-    cap.set(CAP_PROP_RM_EXPOSURE, exposure);
+    cap.set(CAMERA_EXPOSURE, exposure);
 }
 
 void gainCallBack(int pos, void *)
 {
     gain = pos;
-    cap.set(CAP_PROP_RM_GAIN, gain);
+    cap.set(CAMERA_GAIN, gain);
 }
 
 void rGainCallBack(int pos, void *)
 {
     r_gain = pos;
-    cap.set(CAP_PROP_RM_WB_RGAIN, r_gain);
+    cap.set(CAMERA_WB_RGAIN, r_gain);
 }
 
 void gGainCallBack(int pos, void *)
 {
     g_gain = pos;
-    cap.set(CAP_PROP_RM_WB_GGAIN, g_gain);
+    cap.set(CAMERA_WB_GGAIN, g_gain);
 }
 
 void bGainCallBack(int pos, void *)
 {
     b_gain = pos;
-    cap.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    cap.set(CAMERA_WB_BGAIN, b_gain);
 }
 
 int main()
@@ -61,13 +61,13 @@ int main()
         readExcludeNone(fs["g_gain"], g_gain);
         readExcludeNone(fs["b_gain"], b_gain);
     }
-    cap.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    cap.set(CAP_PROP_RM_EXPOSURE, exposure);
-    cap.set(CAP_PROP_RM_GAIN, gain);
-    cap.set(CAP_PROP_RM_MANUAL_WB);
-    cap.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    cap.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    cap.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    cap.set(CAMERA_MANUAL_EXPOSURE);
+    cap.set(CAMERA_EXPOSURE, exposure);
+    cap.set(CAMERA_GAIN, gain);
+    cap.set(CAMERA_MANUAL_WB);
+    cap.set(CAMERA_WB_RGAIN, r_gain);
+    cap.set(CAMERA_WB_GGAIN, g_gain);
+    cap.set(CAMERA_WB_BGAIN, b_gain);
 
     namedWindow("图像画面", WINDOW_NORMAL);
     namedWindow("控制面板", WINDOW_AUTOSIZE);

@@ -3,7 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/hik_video_capture.h"
+#include "rmvl/camera/hik_camera.h"
 #include "rmvlpara/loader.hpp"
 
 using namespace rm;
@@ -17,13 +17,13 @@ int r_gain = 1200;
 int g_gain = 1200;
 int b_gain = 1200;
 
-HikVideoCapture cap(GRAB_CONTINUOUS, RETRIEVE_CV);
+HikCamera cap(GRAB_CONTINUOUS, RETRIEVE_CV);
 
-inline void exposureCallBack(int pos, void *) { exposure = pos, cap.set(CAP_PROP_RM_EXPOSURE, exposure); }
-inline void gainCallBack(int pos, void *) { gain = pos, cap.set(CAP_PROP_RM_GAIN, gain); }
-inline void rGainCallBack(int pos, void *) { r_gain = pos, cap.set(CAP_PROP_RM_WB_RGAIN, r_gain); }
-inline void gGainCallBack(int pos, void *) { g_gain = pos, cap.set(CAP_PROP_RM_WB_GGAIN, g_gain); }
-inline void bGainCallBack(int pos, void *) { b_gain = pos, cap.set(CAP_PROP_RM_WB_BGAIN, b_gain); }
+inline void exposureCallBack(int pos, void *) { exposure = pos, cap.set(CAMERA_EXPOSURE, exposure); }
+inline void gainCallBack(int pos, void *) { gain = pos, cap.set(CAMERA_GAIN, gain); }
+inline void rGainCallBack(int pos, void *) { r_gain = pos, cap.set(CAMERA_WB_RGAIN, r_gain); }
+inline void gGainCallBack(int pos, void *) { g_gain = pos, cap.set(CAMERA_WB_GGAIN, g_gain); }
+inline void bGainCallBack(int pos, void *) { b_gain = pos, cap.set(CAMERA_WB_BGAIN, b_gain); }
 
 int main()
 {
@@ -38,13 +38,13 @@ int main()
         readExcludeNone(fs["b_gain"], b_gain);
     }
 
-    cap.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    cap.set(CAP_PROP_RM_EXPOSURE, exposure);
-    cap.set(CAP_PROP_RM_GAIN, gain);
-    cap.set(CAP_PROP_RM_MANUAL_WB);
-    cap.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    cap.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    cap.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    cap.set(CAMERA_MANUAL_EXPOSURE);
+    cap.set(CAMERA_EXPOSURE, exposure);
+    cap.set(CAMERA_GAIN, gain);
+    cap.set(CAMERA_MANUAL_WB);
+    cap.set(CAMERA_WB_RGAIN, r_gain);
+    cap.set(CAMERA_WB_GGAIN, g_gain);
+    cap.set(CAMERA_WB_BGAIN, b_gain);
 
     namedWindow("图像画面", WINDOW_NORMAL);
     resizeWindow("图像画面", Size(1000, 750));

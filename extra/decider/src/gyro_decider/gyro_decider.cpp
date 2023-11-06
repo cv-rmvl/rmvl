@@ -14,7 +14,7 @@
 #include "rmvl/rmath/transform.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/gyro_decider.h"
 
 using namespace rm;
@@ -73,7 +73,7 @@ static void calcPrediction(group::ptr p_group, tracker::ptr p_tracker, Vec3f tra
     point_p3d = motion_p;
     // 解算 2D 预测值
     point_p2d = cameraConvertToPixel(camera_param.cameraMatrix,
-                                     camera_param.distCoeff, point_p3d);
+                                     camera_param.distCoeffs, point_p3d);
     // 解算预测角度增量
     point_dp = calculateRelativeAngle(camera_param.cameraMatrix, point_p2d) -
                p_tracker->getRelativeAngle();
@@ -99,7 +99,7 @@ static Point2f calculateHighSpeedBasicResponse(group::ptr target_group, tracker:
         min_pitch3d.y += p_target->getExtrinsics().tvec()(1);
     min_pitch3d.y /= static_cast<float>(target_group->data().size());
     min_pitch3d.z = predict_center3d.z;
-    auto min_pitch_target2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeff, min_pitch3d);
+    auto min_pitch_target2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeffs, min_pitch3d);
     auto angle_tmp = calculateRelativeAngle(camera_param.cameraMatrix, min_pitch_target2d);
     float pitch_min = angle_tmp.y;
     // pitch 目标角度

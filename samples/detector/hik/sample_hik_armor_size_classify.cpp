@@ -2,7 +2,7 @@
 #include <thread>
 
 #include "rmvl/core/timer.hpp"
-#include "rmvl/camera/hik_video_capture.h"
+#include "rmvl/camera/hik_camera.h"
 #include "rmvl/detector/armor_detector.h"
 
 #include <opencv2/highgui.hpp>
@@ -16,7 +16,7 @@ using namespace cv;
 int wait_time = 1;
 int collect_num = 2000;
 
-HikVideoCapture::ptr capture;                     // 相机
+HikCamera::ptr capture;                     // 相机
 auto p_detector = ArmorDetector::make_detector(); // 识别模块
 Mat frame;                                        // 帧图像
 vector<group::ptr> groups;                        // 序列组列表
@@ -97,7 +97,7 @@ int main(int argc, const char *argv[])
     armor_responses = Mat::zeros(collect_num * 2, 1, CV_32SC1);
 
     // 设置相机参数
-    capture = HikVideoCapture::make_capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    capture = HikCamera::make_capture(GRAB_CONTINUOUS, RETRIEVE_CV);
     if (!capture->isOpened())
     {
         printf("相机打开失败\n");
@@ -119,13 +119,13 @@ int main(int argc, const char *argv[])
         readExcludeNone(fs_mv_set["b_gain"], b_gain);
     }
 
-    capture->set(CAP_PROP_RM_MANUAL_EXPOSURE, 0);
-    capture->set(CAP_PROP_RM_EXPOSURE, exposure);
-    capture->set(CAP_PROP_RM_GAIN, gain);
-    capture->set(CAP_PROP_RM_MANUAL_WB, 0);
-    capture->set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    capture->set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    capture->set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    capture->set(CAMERA_MANUAL_EXPOSURE, 0);
+    capture->set(CAMERA_EXPOSURE, exposure);
+    capture->set(CAMERA_GAIN, gain);
+    capture->set(CAMERA_MANUAL_WB, 0);
+    capture->set(CAMERA_WB_RGAIN, r_gain);
+    capture->set(CAMERA_WB_GGAIN, g_gain);
+    capture->set(CAMERA_WB_BGAIN, b_gain);
 
     cv::Ptr<cv::ml::SVM> p_svm = nullptr;
 

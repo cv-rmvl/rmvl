@@ -16,7 +16,7 @@
 #include <rmvl/rmvl_modules.hpp>
 
 #ifdef HAVE_RMVL_CAMERA
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #endif //! HAVE_RMVL_CAMERA
 
 #ifdef HAVE_RMVL_ML

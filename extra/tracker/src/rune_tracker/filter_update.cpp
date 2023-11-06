@@ -12,7 +12,7 @@
 
 #include "rmvl/tracker/rune_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/tracker/rune_tracker.h"
 
 using namespace cv;

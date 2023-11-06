@@ -15,7 +15,7 @@
 
 #include "rmvl/detector/gyro_detector.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/gyro_detector.h"
 
 using namespace rm;

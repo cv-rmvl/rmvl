@@ -13,7 +13,7 @@
 #include "rmvl/group/gyro_group.h"
 #include "rmvl/rmath/transform.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/compensator/gyro_compensator.h"
 
 using namespace cv;

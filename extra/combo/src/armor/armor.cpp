@@ -12,7 +12,7 @@
 #include "rmvl/combo/armor.h"
 #include "rmvl/rmath/transform.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
 
 using namespace rm;
@@ -107,7 +107,7 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
                 p_right->getTopPoint(),     // 右上
                 p_right->getBottomPoint()}; // 右下
     // 计算相机外参
-    _extrinsic = calculateExtrinsic(camera_param.cameraMatrix, camera_param.distCoeff, gyro_data);
+    _extrinsic = calculateExtrinsic(camera_param.cameraMatrix, camera_param.distCoeffs, gyro_data);
     const auto &rmat = _extrinsic.R();
     _pose = normalize(Vec2f(rmat(0, 2), rmat(2, 2)));
     // 设置组合体的特征容器

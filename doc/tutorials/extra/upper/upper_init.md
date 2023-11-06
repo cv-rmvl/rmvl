@@ -62,11 +62,11 @@ std::vector<rm::group::ptr> groups;
 
 @add_toggle{相机设备}
 
-相机模块可参考手册 @ref tutorial_modules_camera ，此处不多赘述，以 rm::HikVideoCapture 为例，直接使用
+相机模块可参考手册 @ref tutorial_modules_camera ，此处不多赘述，以 rm::HikCamera 为例，直接使用
 
 ```cpp
 // 创建并初始化相机
-auto p_capture = rm::HikVideoCapture::make_capture(rm::GRAB_CONTINUOUS, rm::RETRIEVE_CV);
+auto p_capture = rm::HikCamera::make_capture(rm::GRAB_CONTINUOUS, rm::RETRIEVE_CV);
 ```
 
 即可完成相机的初始化。

@@ -12,7 +12,7 @@
 #include "rmvl/decider/translation_decider.h"
 #include "rmvl/rmath.hpp"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/translation_decider.h"
 
 using namespace rm;
