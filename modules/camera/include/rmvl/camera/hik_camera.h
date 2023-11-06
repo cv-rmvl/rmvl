@@ -76,8 +76,7 @@ public:
      * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      */
-    static inline std::unique_ptr<HikCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode,
-                                                                std::string_view serial = "")
+    static inline std::unique_ptr<HikCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "")
     {
         return std::make_unique<HikCamera>(grab_mode, retrieve_mode, serial);
     }
