@@ -154,7 +154,7 @@ UA_NodeId Server::addVariableNodeEx(const Variable &val, UA_NodeId parent_id)
     return retval;
 }
 
-bool Server::read(UA_NodeId node, Variable &val)
+bool Server::read(const UA_NodeId &node, Variable &val)
 {
     UA_Variant p_val;
     auto status = UA_Server_readValue(_server, node, &p_val);
@@ -167,7 +167,7 @@ bool Server::read(UA_NodeId node, Variable &val)
     return true;
 }
 
-bool Server::write(UA_NodeId node, const Variable &val)
+bool Server::write(const UA_NodeId &node, const Variable &val)
 {
     auto variant = helper::cvtVariable(val);
     _variant_gc.insert(variant);

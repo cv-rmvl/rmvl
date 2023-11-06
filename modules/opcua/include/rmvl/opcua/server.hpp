@@ -168,7 +168,7 @@ public:
      * @param[out] val 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      * @return 是否读取成功
      */
-    bool read(UA_NodeId node, Variable &val);
+    bool read(const UA_NodeId &node, Variable &val);
 
     /**
      * @brief 给指定的变量节点写数据
@@ -177,7 +177,7 @@ public:
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    bool write(UA_NodeId node, const Variable &val);
+    bool write(const UA_NodeId &node, const Variable &val);
 
     /**
      * @brief 添加方法节点 MethodNode 至指定父节点中
