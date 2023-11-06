@@ -206,7 +206,7 @@ y&=x_1
 图 2-2
 </center>
 
-需要满足 \f$(\pmb y-\pmb b)\perp\alpha\f$，则需要分别满足 \f$(\pmb y-\pmb b)\perp\alpha_1\f$ 和 \f$(\pmb y-\pmb b)\perp\alpha_2\f$，下面使用几何法对最小二乘法的原理进行验证。
+需要满足 \f$(\pmb y-\pmb b)\perp\alpha\f$，则需要分别满足 \f$(\pmb y-\pmb b)\perp\pmb\alpha_1\f$ 和 \f$(\pmb y-\pmb b)\perp\pmb\alpha_2\f$，下面使用几何法对最小二乘法的原理进行验证。
 
 ① 求平面 \f$\alpha\f$ 的法向量 \f$\pmb n\f$
 

@@ -78,9 +78,7 @@ public:
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      * @param[in] decode_param 解码/转码参数 Decoding parameters
      */
-    MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode,
-                   const std::string &serial = std::string(),
-                   const std::vector<int> &decode_param = std::vector<int>());
+    MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "", const std::vector<int> &decode_param = std::vector<int>());
 
     MvCamera(const MvCamera &) = delete;
     MvCamera(MvCamera &&) = delete;
@@ -93,9 +91,7 @@ public:
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      * @param[in] decode_param 解码/转码参数 Decoding parameters
      */
-    static inline std::unique_ptr<MvCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode,
-                                                               const std::string &serial = std::string(),
-                                                               const std::vector<int> &decode_param = std::vector<int>())
+    static inline std::unique_ptr<MvCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "", const std::vector<int> &decode_param = std::vector<int>())
     {
         return std::make_unique<MvCamera>(grab_mode, retrieve_mode, serial, decode_param);
     }

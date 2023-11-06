@@ -19,10 +19,8 @@ using namespace rm;
 using namespace std;
 using namespace cv;
 
-MvCamera::MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode,
-                               const string &serial, const vector<int> &decode_param)
-    : _camera_list(new tSdkCameraDevInfo[_camera_counts]),
-      _grab_mode(grab_mode), _retrieve_mode(retrieve_mode)
+MvCamera::MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, string_view serial, const vector<int> &decode_param)
+    : _camera_list(new tSdkCameraDevInfo[_camera_counts]), _grab_mode(grab_mode), _retrieve_mode(retrieve_mode)
 {
     // 需要解码参数的几种解码模式 Several decoding modes that require decoding parameters
     bool init_param_status = true;
@@ -60,7 +58,7 @@ bool MvCamera::open()
         ERROR_("cam - could not find the camera devise.");
         return false;
     }
-    // 哈希匹配 序列号-相机设备信息哈希表
+    // Key: 序列号, Val: 相机设备信息哈希表
     unordered_map<string, tSdkCameraDevInfo *> id_info;
     for (INT enum_idx = 0; enum_idx < _camera_counts; ++enum_idx)
         id_info[_camera_list[enum_idx].acSn] = &_camera_list[enum_idx];
@@ -70,7 +68,7 @@ bool MvCamera::open()
     // 根据序列号初始化相机
     else if (id_info.find(_camera_id) != id_info.end())
         _status = CameraInit(id_info[_camera_id], -1, -1, &_hCamera);
-    else 
+    else
     {
         ERROR_("cam - could not find the camera according to the specific S/N");
         return false;
@@ -115,7 +113,7 @@ bool MvCamera::open()
  * @param[in] media_type
  * @return ColorConversionCodes
  */
-inline ColorConversionCodes mediaType2CVType(UINT media_type)
+static inline ColorConversionCodes mediaType2CVType(UINT media_type)
 {
     static std::unordered_map<UINT, ColorConversionCodes> convertion =
         {{CAMERA_MEDIA_TYPE_BAYGR8, COLOR_BayerGR2RGB},
