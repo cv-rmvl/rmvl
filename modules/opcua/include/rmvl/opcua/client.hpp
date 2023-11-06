@@ -72,12 +72,12 @@ public:
 
     /**
      * @brief 从指定的变量节点读数据
-     * 
+     *
      * @param[in] node 既存的变量节点的 `UA_NodeId`
      * @param[out] val 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      * @return 是否读取成功
      */
-    bool read(UA_NodeId node, Variable &val);
+    bool read(const UA_NodeId &node, Variable &val);
 
     /**
      * @brief 给指定的变量节点写数据
@@ -86,7 +86,31 @@ public:
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    bool write(UA_NodeId node, const Variable &val);
+    bool write(const UA_NodeId &node, const Variable &val);
+
+    /**
+     * @brief 在客户端调用指定对象节点中的方法
+     *
+     * @param[in] obj_node 对象节点
+     * @param[in] name 方法名
+     * @param[in] inputs 输入参数列表
+     * @param[out] outputs 输出参数列表
+     * @return 是否成功完成当前操作的状态码
+     */
+    bool callEx(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
+
+    /**
+     * @brief 在客户端调用 ObjectsFolder 中的方法
+     *
+     * @param[in] name 方法名
+     * @param[in] inputs 输入参数列表
+     * @param[out] outputs 输出参数列表
+     * @return 是否成功完成当前操作的状态码
+     */
+    inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
+    {
+        return callEx(UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), name, inputs, outputs);
+    }
 };
 
 //! @} opcua
