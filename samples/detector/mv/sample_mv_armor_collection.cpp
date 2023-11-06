@@ -5,7 +5,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 #include "rmvl/core/timer.hpp"
-#include "rmvl/camera/mv_video_capture.h"
+#include "rmvl/camera/mv_camera.h"
 #include "rmvl/detector/armor_detector.h"
 
 #include "rmvlpara/loader.hpp"
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         printf("已发现 \033[33m\"%s\"\033[0m 文件夹\n", path.c_str());
 
     // 相机初始化
-    MvVideoCapture capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
     if (!capture.isOpened())
     {
         printf("相机打开失败\n");
@@ -103,13 +103,13 @@ int main(int argc, char *argv[])
         readExcludeNone(fs_mv_set["b_gain"], b_gain);
     }
 
-    capture.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    capture.set(CAP_PROP_RM_EXPOSURE, exposure);
-    capture.set(CAP_PROP_RM_GAIN, gain);
-    capture.set(CAP_PROP_RM_MANUAL_WB);
-    capture.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    capture.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    capture.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    capture.set(CAMERA_MANUAL_EXPOSURE);
+    capture.set(CAMERA_EXPOSURE, exposure);
+    capture.set(CAMERA_GAIN, gain);
+    capture.set(CAMERA_MANUAL_WB);
+    capture.set(CAMERA_WB_RGAIN, r_gain);
+    capture.set(CAMERA_WB_GGAIN, g_gain);
+    capture.set(CAMERA_WB_BGAIN, b_gain);
 
     auto p_detector = ArmorDetector::make_detector();
     vector<group::ptr> groups;

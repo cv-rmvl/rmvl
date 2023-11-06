@@ -13,7 +13,7 @@
 
 #include "rmvl/combo/rune.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/rune.h"
 
 using namespace cv;

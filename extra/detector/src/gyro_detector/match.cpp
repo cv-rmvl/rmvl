@@ -13,7 +13,7 @@
 #include "rmvl/group/gyro_group.h"
 #include "rmvl/rmath/union_find.hpp"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/gyro_detector.h"
 
 using namespace rm;

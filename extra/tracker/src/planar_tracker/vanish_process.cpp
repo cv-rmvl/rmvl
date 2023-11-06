@@ -11,7 +11,7 @@
 
 #include "rmvl/tracker/planar_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/tracker/planar_tracker.h"
 
 using namespace rm;

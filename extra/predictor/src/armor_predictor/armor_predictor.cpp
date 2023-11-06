@@ -11,7 +11,7 @@
 
 #include "rmvl/predictor/armor_predictor.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/predictor/armor_predictor.h"
 
 using namespace rm;

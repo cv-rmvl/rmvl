@@ -1,5 +1,5 @@
 /**
- * @file mv_video_capture.h
+ * @file mv_camera.h
  * @author RoboMaster Vision Community
  * @brief MindVision camera driver header file
  * @version 1.0
@@ -12,10 +12,11 @@
 #pragma once
 
 #include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
 
 #include <CameraApi.h>
 
-#include "definitions.h"
+#include "camutils.hpp"
 
 namespace rm
 {
@@ -30,7 +31,7 @@ namespace rm
 //! @example samples/camera/mv/sample_mv_writer.cpp 迈德威视相机录屏例程
 
 //! 迈德威视相机库 MindVision camera library
-class MvVideoCapture final : public cv::VideoCapture
+class MvCamera final : public cv::VideoCapture
 {
     // -------------------------- 相机信息 Device information -------------------------
     bool _is_opened = false;         //!< 相机是否打开 Whether the camera is opened
@@ -66,8 +67,8 @@ class MvVideoCapture final : public cv::VideoCapture
     using VideoCapture::open;
 
 public:
-    using ptr = std::unique_ptr<MvVideoCapture>;
-    using const_ptr = std::unique_ptr<const MvVideoCapture>;
+    using ptr = std::unique_ptr<MvCamera>;
+    using const_ptr = std::unique_ptr<const MvCamera>;
 
     /**
      * @brief 构造函数 Constructor
@@ -77,29 +78,29 @@ public:
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      * @param[in] decode_param 解码/转码参数 Decoding parameters
      */
-    MvVideoCapture(GrabMode grab_mode, RetrieveMode retrieve_mode,
+    MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode,
                    const std::string &serial = std::string(),
                    const std::vector<int> &decode_param = std::vector<int>());
 
-    MvVideoCapture(const MvVideoCapture &) = delete;
-    MvVideoCapture(MvVideoCapture &&) = delete;
+    MvCamera(const MvCamera &) = delete;
+    MvCamera(MvCamera &&) = delete;
 
     /**
-     * @brief 构建 MvVideoCapture 对象 Construct MvVideoCapture object
+     * @brief 构建 MvCamera 对象 Construct MvCamera object
      *
      * @param[in] grab_mode 相机采集模式 Camera grab mode
      * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      * @param[in] decode_param 解码/转码参数 Decoding parameters
      */
-    static inline std::unique_ptr<MvVideoCapture> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode,
+    static inline std::unique_ptr<MvCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode,
                                                                const std::string &serial = std::string(),
                                                                const std::vector<int> &decode_param = std::vector<int>())
     {
-        return std::make_unique<MvVideoCapture>(grab_mode, retrieve_mode, serial, decode_param);
+        return std::make_unique<MvCamera>(grab_mode, retrieve_mode, serial, decode_param);
     }
 
-    ~MvVideoCapture() override;
+    ~MvCamera() override;
 
     /**
      * @brief 设置相机参数/事件 Set the camera parameter or activity
@@ -168,7 +169,7 @@ public:
      *
      * @param image 待读入的图像 The image to read in
      */
-    virtual MvVideoCapture &operator>>(cv::Mat &image) override
+    virtual MvCamera &operator>>(cv::Mat &image) override
     {
         read(image);
         return *this;

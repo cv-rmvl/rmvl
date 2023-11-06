@@ -3,7 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/mv_video_capture.h"
+#include "rmvl/camera/mv_camera.h"
 #include "rmvlpara/loader.hpp"
 
 using namespace rm;
@@ -35,7 +35,7 @@ int main()
     cin >> sn;
     if (sn == "q")
         return 0;
-    MvVideoCapture capture(GRAB_CONTINUOUS, RETRIEVE_CV, sn.c_str());
+    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV, sn.c_str());
 
     int exposure = 1000;
     int gain = 64;
@@ -54,13 +54,13 @@ int main()
         readExcludeNone(fs["b_gain"], b_gain);
     }
 
-    capture.set(CAP_PROP_RM_MANUAL_EXPOSURE);
-    capture.set(CAP_PROP_RM_EXPOSURE, exposure);
-    capture.set(CAP_PROP_RM_GAIN, gain);
-    capture.set(CAP_PROP_RM_MANUAL_WB);
-    capture.set(CAP_PROP_RM_WB_RGAIN, r_gain);
-    capture.set(CAP_PROP_RM_WB_GGAIN, g_gain);
-    capture.set(CAP_PROP_RM_WB_BGAIN, b_gain);
+    capture.set(CAMERA_MANUAL_EXPOSURE);
+    capture.set(CAMERA_EXPOSURE, exposure);
+    capture.set(CAMERA_GAIN, gain);
+    capture.set(CAMERA_MANUAL_WB);
+    capture.set(CAMERA_WB_RGAIN, r_gain);
+    capture.set(CAMERA_WB_GGAIN, g_gain);
+    capture.set(CAMERA_WB_BGAIN, b_gain);
 
     namedWindow("frame", WINDOW_NORMAL);
 

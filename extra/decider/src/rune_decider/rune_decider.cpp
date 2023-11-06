@@ -15,7 +15,7 @@
 #include "rmvl/rmath/uty_math.hpp"
 #include "rmvl/decider/rune_decider.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/rune_decider.h"
 
 using namespace rm;

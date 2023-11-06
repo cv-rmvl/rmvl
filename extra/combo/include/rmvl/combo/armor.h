@@ -156,11 +156,11 @@ private:
      * @brief 获取装甲板的位姿
      *
      * @param[in] cam_matrix 相机内参，用于解算相机外参
-     * @param[in] distcoeff 相机畸变参数，用于解算相机外参
+     * @param[in] distCoeffs 相机畸变参数，用于解算相机外参
      * @param[in] gyro_data 陀螺仪数据
      * @return CameraExtrinsics - 相机外参
      */
-    CameraExtrinsics<float> calculateExtrinsic(const cv::Matx33f &cam_matrix, const cv::Matx51f &distcoeff, const GyroData &gyro_data);
+    CameraExtrinsics<float> calculateExtrinsic(const cv::Matx33f &cam_matrix, const cv::Matx51f &distCoeffs, const GyroData &gyro_data);
 
     /**
      * @brief 用来确定装甲板的种类 (大装甲或者小装甲)

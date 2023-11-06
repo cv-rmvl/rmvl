@@ -61,23 +61,23 @@ cv::Point2f calculateRelativeCenter(const cv::Matx33f &cameraMatrix, cv::Point2f
  * @brief 计算 3D 目标点在像素坐标系下的坐标
  *
  * @param[in] cameraMatrix 相机内参矩阵
- * @param[in] distCoeff 相机畸变参数
+ * @param[in] distCoeffs 相机畸变参数
  * @param[in] center3d 目标点在相机坐标系下的坐标
  * @return 目标点在像素坐标系下的坐标
  */
-cv::Vec2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeff, const cv::Vec3f &center3d);
+cv::Vec2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const cv::Vec3f &center3d);
 
 /**
  * @brief 计算 3D 目标点在像素坐标系下的坐标
  *
  * @param[in] cameraMatrix 相机内参矩阵
- * @param[in] distCoeff 相机畸变参数
+ * @param[in] distCoeffs 相机畸变参数
  * @param[in] center3d 目标点在相机坐标系下的坐标
  * @return 目标点在像素坐标系下的坐标
  */
-inline cv::Point2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeff, const cv::Point3f &center3d)
+inline cv::Point2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const cv::Point3f &center3d)
 {
-    return cameraConvertToPixel(cameraMatrix, distCoeff, cv::Vec3f(center3d));
+    return cameraConvertToPixel(cameraMatrix, distCoeffs, cv::Vec3f(center3d));
 }
 
 /**

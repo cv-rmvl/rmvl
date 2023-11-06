@@ -40,13 +40,13 @@ cv::Point2f rm::calculateRelativeCenter(const cv::Matx33f &cameraMatrix, cv::Poi
     return {result(0), result(1)};
 }
 
-cv::Vec2f rm::cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeff, const cv::Vec3f &center3d)
+cv::Vec2f rm::cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const cv::Vec3f &center3d)
 {
     std::vector<cv::Point3f> world_center3ds(1);
     cv::Vec3f center_tvec = center3d;
     cv::Vec3f center_rvec = {0, 0, 1}; // (1, 0, 0) 或 (0, 1, 0) 均可
     std::vector<cv::Point2f> center2ds;
-    cv::projectPoints(world_center3ds, center_rvec, center_tvec, cameraMatrix, distCoeff, center2ds);
+    cv::projectPoints(world_center3ds, center_rvec, center_tvec, cameraMatrix, distCoeffs, center2ds);
     return center2ds.front();
 }
 

@@ -1,5 +1,5 @@
 /**
- * @file hik_video_capture.h
+ * @file hik_camera.h
  * @author RoboMaster Vision Community
  * @brief Hik Robot 工业相机库
  * @version 1.0
@@ -12,11 +12,11 @@
 #pragma once
 
 #include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
 
 #include <MvCameraControl.h>
 
-#include "definitions.h"
-#include "logging.h"
+#include "camutils.hpp"
 
 namespace rm
 {
@@ -30,7 +30,7 @@ namespace rm
 //! @example samples/camera/hik/sample_hik_writer.cpp 海康机器人工业相机录屏例程
 
 //! 海康机器人相机库 HikRobot camera library
-class HikVideoCapture final : public cv::VideoCapture
+class HikCamera final : public cv::VideoCapture
 {
     // -------------------------- 相机信息 Device information -------------------------
     void *_handle;                   //!< 相机设备句柄 Handle of the camera device
@@ -48,8 +48,8 @@ class HikVideoCapture final : public cv::VideoCapture
     using VideoCapture::open;
 
 public:
-    using ptr = std::unique_ptr<HikVideoCapture>;
-    using const_ptr = std::unique_ptr<const HikVideoCapture>;
+    using ptr = std::unique_ptr<HikCamera>;
+    using const_ptr = std::unique_ptr<const HikCamera>;
 
     /**
      * @brief 构造函数 Constructor
@@ -58,16 +58,16 @@ public:
      * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      */
-    HikVideoCapture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "");
+    HikCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "");
 
-    HikVideoCapture(const HikVideoCapture &) = delete;
-    HikVideoCapture(HikVideoCapture &&) = delete;
+    HikCamera(const HikCamera &) = delete;
+    HikCamera(HikCamera &&) = delete;
 
     //! 析构函数 Destructor
-    ~HikVideoCapture() override;
+    ~HikCamera() override;
 
     /**
-     * @brief 构建 HikVideoCapture 对象 Construct HikVideoCapture object
+     * @brief 构建 HikCamera 对象 Construct HikCamera object
      * @note 此相机库仅支持 USB 相机设备，暂时对 GigE 网口相机不兼容
      * @note This camera library only supports USB camera devices and is temporarily not
      *       compatible with GigE netport cameras
@@ -76,10 +76,10 @@ public:
      * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      */
-    static inline std::unique_ptr<HikVideoCapture> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode,
+    static inline std::unique_ptr<HikCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode,
                                                                 std::string_view serial = "")
     {
-        return std::make_unique<HikVideoCapture>(grab_mode, retrieve_mode, serial);
+        return std::make_unique<HikCamera>(grab_mode, retrieve_mode, serial);
     }
 
     /**
@@ -131,7 +131,7 @@ public:
      *
      * @param image 待读入的图像 The image to read in
      */
-    virtual HikVideoCapture &operator>>(cv::Mat &image) override
+    virtual HikCamera &operator>>(cv::Mat &image) override
     {
         read(image);
         return *this;

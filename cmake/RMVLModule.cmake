@@ -298,7 +298,7 @@ endfunction(rmvl_add_test test_name test_kind)
 #   rmvl_add_exe(
 #     sample_armor_collection
 #     SOURCES armor-collection.cpp
-#     DEPENDS mv_video_capture armor_detector
+#     DEPENDS mv_camera armor_detector
 #   )
 # ----------------------------------------------------------------------------
 macro(rmvl_add_exe exe_name)

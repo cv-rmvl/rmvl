@@ -13,7 +13,7 @@
 #include "rmvl/predictor/spi_rune_predictor.h"
 #include "rmvl/tracker/rune_tracker.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/predictor/spi_rune_predictor.h"
 
 using namespace rm;

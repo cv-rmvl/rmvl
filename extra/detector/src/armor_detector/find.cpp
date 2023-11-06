@@ -13,7 +13,7 @@
 
 #include "rmvl/detector/armor_detector.h"
 
-#include "rmvlpara/camera.hpp"
+#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/armor_detector.h"
 
 using namespace rm;

@@ -25,17 +25,15 @@
 #include <rmvl/rmvl_modules.hpp>
 
 #ifdef HAVE_RMVL_CAMERA
-#include "camera/definitions.h"
-#include "camera/logging.h"
-#include "camera/parameters.hpp"
+#include "camera/camutils.hpp"
 
-#ifdef HAVE_RMVL_MV_VIDEO_CAPTURE
-#include "camera/mv_video_capture.h"
-#endif //! HAVE_RMVL_MV_VIDEO_CAPTURE
+#ifdef HAVE_RMVL_MV_CAMERA
+#include "camera/mv_camera.h"
+#endif //! HAVE_RMVL_MV_CAMERA
 
-#ifdef HAVE_RMVL_HIK_VIDEO_CAPTURE
-#include "camera/hik_video_capture.h"
-#endif //! HAVE_RMVL_HIK_VIDEO_CAPTURE
+#ifdef HAVE_RMVL_HIK_CAMERA
+#include "camera/hik_camera.h"
+#endif //! HAVE_RMVL_HIK_CAMERA
 
 #endif //! HAVE_RMVL_CAMERA
 

@@ -125,7 +125,7 @@ auto decide_info = p_decider->decide(groups);
 #include <rmvlpara/loader.hpp>
 
 #include <rmvlpara/combo/armor.h>
-#include <rmvlpara/camera.hpp>
+#include <rmvlpara/camera/camera.h>
 
 /* code */
 

@@ -9,12 +9,12 @@
  *
  */
 
-#include "rmvl/camera/hik_video_capture.h"
+#include "rmvl/camera/hik_camera.h"
 
 using namespace rm;
 using namespace std;
 
-const char *HikVideoCapture::errorCode2Str(unsigned int code)
+const char *HikCamera::errorCode2Str(unsigned int code)
 {
     switch (code)
     {
