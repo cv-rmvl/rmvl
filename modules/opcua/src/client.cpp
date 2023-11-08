@@ -100,77 +100,34 @@ bool Client::write(const UA_NodeId &node, const Variable &val)
     return true;
 }
 
-bool Client::callEx(const UA_NodeId &parent_id, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
+bool Client::callEx(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
 {
-    // 初始化输入输出参数: UA_Variant 的向量
+    // 初始化输入、输出参数
     std::vector<UA_Variant> input_variants;
     input_variants.reserve(inputs.size());
     for (const auto &input : inputs)
-        input_variants.push_back(helper::cvtVariable(input));
-
-    size_t output_size=1;
+        input_variants.emplace_back(helper::cvtVariable(input));
+    size_t output_size;
     UA_Variant *output_variants;
-    // 调用方法
-    auto node_id = parent_id | find(name);
-    if (UA_NodeId_isNull(&node_id))
-        return false;
-    auto status = UA_Client_call(_client, parent_id, node_id, input_variants.size(),
-                                 input_variants.data(), &output_size, &output_variants);
-    if (status != UA_STATUSCODE_GOOD)
+    // 获取方法节点
+    UA_NodeId method_node = obj_node | find(name);
+    if (UA_NodeId_isNull(&method_node))
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method, id: %d, error code: %s",
-                     node_id.identifier.numeric, UA_StatusCode_name(status));
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find the method node: %s", name.c_str());
         return false;
     }
-    // 处理输出变量
+    // 调用方法
+    UA_StatusCode retval = UA_Client_call(_client, obj_node, method_node, input_variants.size(),
+                                          input_variants.data(), &output_size, &output_variants);
+    if (retval != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method: %s \033[31m(ns=%u, s=%d)\033[0m",
+                     UA_StatusCode_name(retval), method_node.namespaceIndex, method_node.identifier.numeric);
+        return false;
+    }
     outputs.reserve(output_size);
     for (size_t i = 0; i < output_size; ++i)
-        outputs.push_back(helper::cvtVariable(output_variants[i]));
-    return true;
-}
-
-bool Client::createVariableMonitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change)
-{
-    // 创建订阅
-    UA_CreateSubscriptionResponse sub_resp;
-    auto status = createSubscription(sub_resp);
-    if (!status)
-        return false;
-    // 创建监视项请求
-    UA_MonitoredItemCreateRequest request = UA_MonitoredItemCreateRequest_default(node);
-    request.requestedParameters.samplingInterval = 100.0;
-    request.requestedParameters.discardOldest = true;
-    request.requestedParameters.queueSize = 10;
-    // 创建监视器
-    UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createDataChange(
-        _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request, &node, on_change, nullptr);
-    if (result.statusCode != UA_STATUSCODE_GOOD)
-    {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
-        return false;
-    }
-    return true;
-}
-
-////////////////////////// Private //////////////////////////
-
-bool Client::createSubscription(UA_CreateSubscriptionResponse &response)
-{
-    UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
-    request.requestedPublishingInterval = para::opcua_param.SUB_PUBLISHING_INTERVAL;
-    request.requestedLifetimeCount = para::opcua_param.SUB_LIFETIME_COUNT;
-    request.requestedMaxKeepAliveCount = para::opcua_param.SUB_MAX_KEEPALIVE_COUNT;
-    request.maxNotificationsPerPublish = para::opcua_param.SUB_MAX_NOTIFICATIONS;
-    request.publishingEnabled = true;
-    request.priority = para::opcua_param.SUB_PRIORITY;
-
-    response = UA_Client_Subscriptions_create(_client, request, nullptr, nullptr, nullptr);
-    if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
-    {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create subscription, error: %s",
-                     UA_StatusCode_name(response.responseHeader.serviceResult));
-        return false;
-    }
+        outputs.emplace_back(output_variants[i].data, output_variants[i].type, output_variants[i].arrayLength);
     return true;
 }
 
