@@ -31,6 +31,8 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
 
 UA_NodeId operator|(UA_NodeId origin, rm::findNodeInClient &&fnic)
 {
+    if (UA_NodeId_isNull(&origin))
+        return origin;
     UA_BrowsePath browse_path;
     UA_BrowsePath_init(&browse_path);
     browse_path.startingNode = origin;

@@ -94,11 +94,21 @@
 图 1-3
 </center>
 
-一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出平方误差的表达式。
+一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出误差平方和的表达式。
 
 \f[
 \delta^2=\sum_{i=1}^s(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}
 \f]
+
+上式也可以写成
+
+\f[\delta^2=\sum_{i=1}^s\left[\left(\sum_{j=1}^na_{ij}x_j\right)-b_i\right]^2\tag{2-3a}\f]
+
+或
+
+\f[\delta^2=\left\|\left(\sum_{j=1}^na_{ij}x_j\right)-b_i\right\|_2^2\tag{2-3b}\f]
+
+@note 公式 \f$\text{(2-3b)}\f$ 中出现的形如 \f$\left\|A\right\|_2\f$ 的部分也叫做向量的2-范数。
 
 上式的基本想法是，将线性方程组的<span style="color: red">每一个方程</span>在带入 \f$\hat{\pmb x}\f$ 后与右端项 \f$b_i\f$ 作差，即可得到每一项的误差 \f$\delta_i\f$，我们令 \f$\pmb y=A\pmb x\f$，则 \f$\pmb y\f$ 当然是个 \f$s\f$ 维列向量，上述平方偏差 \f$\delta^2\f$ 也就是 \f$|\pmb y-\pmb b|^2\f$，而最小二乘法就是要找一组 \f$\hat{\pmb x}\f$ 使得 \f$|\pmb y-\pmb b|^2\f$ 最小，换句话说，就是要使 \f$\pmb y\f$ 与 \f$\pmb b\f$ 的距离最小。
 
@@ -106,7 +116,7 @@
 
 **基本概念介绍**
 
-1. 对于一般的线性方程组（方程数\f$\leq\f$未知数个数\f$n\f$），\f$A\pmb x=\pmb0\f$ 的解（也叫通解）生成的空间 \f$\pmb x\f$ 称为<span style="color: red">解空间</span>，其极大线性无关组被称为 **基础解系** ，即解空间的任意一个向量都可由基础解系所线性表出，即 \f$\pmb x=k_1\pmb\xi_1+k_2\pmb\xi_2+\cdots+k_t\pmb\xi_t\f$，其中满足 \f[\text{rank}(A)+t=n\tag{2-3}\f]
+1. 对于一般的线性方程组（方程数\f$\leq\f$未知数个数\f$n\f$），\f$A\pmb x=\pmb0\f$ 的解（也叫通解）生成的空间 \f$\pmb x\f$ 称为<span style="color: red">解空间</span>，其极大线性无关组被称为 **基础解系** ，即解空间的任意一个向量都可由基础解系所线性表出，即 \f$\pmb x=k_1\pmb\xi_1+k_2\pmb\xi_2+\cdots+k_t\pmb\xi_t\f$，其中满足 \f[\text{rank}(A)+t=n\tag{2-4}\f]
 2. 对于任意的线性方程组（可以是超定的）\f$A\f$ 是\f$s\times n\f$系数矩阵，\f$A\f$ 的列向量组合生成的空间，即 \f$x_1\pmb\alpha_1+x_2\pmb\alpha_2+\cdots+x_n\pmb\alpha_n\f$ 的空间，即代表 \f$A\pmb x\f$ 所生成的空间。同样的，可以写为 \f$L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)\f$，对于 \f$A\pmb x\f$ 生成的空间，后文简称为<span style="color: red">列空间</span>
 3. \f$\pmb b\f$ 是方程组右端项，表示列空间之外的一个向量，即在超定线性方程组中，\f$\pmb b\notin L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)\f$，因此才具备向量 \f$\pmb b\f$ 到 \f$A\pmb x\f$ 的距离的概念
 
@@ -117,11 +127,11 @@
 (\pmb\alpha_2,\pmb y-\pmb b)&=&\pmb\alpha_2^T(\pmb y-\pmb b)&=&0\\
 \vdots&=&\vdots&=&\vdots\\
 (\pmb\alpha_s,\pmb y-\pmb b)&=&\pmb\alpha_s^T(\pmb y-\pmb b)&=&0\\
-\end{matrix}\tag{2-4}\f]
+\end{matrix}\tag{2-5}\f]
 
 这表示当 \f$\pmb y-\pmb b\f$ 与列空间正交时，\f$\pmb y\f$ 与 \f$\pmb b\f$ 距离最短，与列空间正交就必须要与生成列空间的每一个向量即 \f$\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s\f$ 正交。整合后可以得到
 
-\f[(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)^T(\pmb y-\pmb b)=0\tag{2-5}\f]
+\f[(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)^T(\pmb y-\pmb b)=\pmb0\tag{2-6}\f]
 
 \f$\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s\f$ 刚好是系数矩阵按列分块的形式，又有 \f$\pmb y=A\hat{\pmb x}\f$ 我们可以得到如下公式。
 
@@ -135,14 +145,14 @@ A^TA\hat{\pmb x}&=A^T\pmb b
 经过化简我们最终可以得到
 
 \f[
-\boxed{\hat{\pmb x}=\left(A^TA\right)^{-1}A^T\pmb b}\tag{2-6}
+\boxed{\hat{\pmb x}=\left(A^TA\right)^{-1}A^T\pmb b}\tag{2-7}
 \f]
 
 这就是最小二乘解所满足的代数方程。
 
-### 3. 例子
+### 3. 示例
 
-下面给出两个例子，用图形的方式表示超定线性方程组的最小二乘解（此处不会当做计算题死板的套公式）
+下面给出 3 个示例，不直接使用公式 \f$\text{(2-7)}\f$，通过几何或者其他手段来表示最小二乘解。
 
 <span style="color: green">**示例 1**</span>
 
@@ -230,7 +240,121 @@ y&=x_1
 
 \f[\hat{\pmb x}=\left(\frac37,\frac57\right)^T\tag{3-7}\f]
 
-### 4. 部署使用
+<span style="color: green">**示例 3**</span>
+
+题目：使用形如 \f$f(t)=a_0+a_1t\f$ 的曲线在已知点集上完成拟合（线性拟合）
+
+<center>
+表 3-1 已知点集
+|  \f$t\f$   | \f$1\f$ | \f$2\f$ | \f$3\f$ | \f$4\f$ |
+| :--------: | :-----: | :-----: | :-----: | :-----: |
+| \f$f(t)\f$ | \f$0\f$ | \f$2\f$ | \f$1\f$ | \f$3\f$ |
+</center>
+
+上文研究的 **线性空间** 都是定义在数域 \f$\mathbb P^n\f$ 上的欧式空间，实际上，对于系数属于 \f$\mathbb P\f$，而未定元为 \f$t\f$ 的所有次数小于 \f$n\f$ 的多项式集合也构成一个 **线性空间** ，记作
+
+\f[\mathbb P{[t]}_n=a_0+a_1t+a_2t^2+\cdots+a_{n-1}t^{n-1}=\sum_{i=0}^{n-1}a_it^i\tag{3-8}\f]
+
+可以很容易的找到一组基
+
+\f[\left\{\begin{matrix}
+\phi_0(t)&=&1\\\phi_1(t)&=&t\\\phi_2(t)&=&t^2\\\vdots&=&\vdots\\\phi_{n-1}(t)&=&t^{n-1}\\
+\end{matrix}\right.\tag{3-9}\f]
+
+@note
+- 若不加说明，后文对 \f$\phi_i(t)\f$ 简记为 \f$\phi_i\f$
+- 要证明 \f$\phi_0,\phi_1,\cdots,\phi_{n-1}\f$ 是一组基，则要证明他们线性无关。
+- 此处的线性无关表示任意的 \f$\phi_i\f$ 都不能被其余所有 \f$\phi_j\f$ 所表示，其中 \f$i\neq j\f$。比如说 \f$t\f$ 不能被 \f$1\f$ 和 \f$t^2,\ t^3,\ \cdots\f$ 所表示。
+- 从定义上证明线性无关，需要证明 \f[a_0+a_1t+a_2t^2+\cdots+a_{n-1}t^{n-1}=\sum_{i=0}^{n-1}a_it^i=0\f] **只有零解** ，即 \f$a_0=a_1=a_2=\cdots=a_{n-1}=0\f$，这是显然的。
+- 没有定义内积运算，因此这组基 **没有正交的概念** 。
+
+<span style="color: blue">上面都是一些概念性的介绍，跟后文求解最小二乘解无关</span>。回到<span style="color: green">示例 3</span>的这一问题本身，我们可以根据表 3-1 的信息，得到
+
+\f[\left\{\begin{align}
+\phi_0(t_1)a_0+\phi_1(t_1)a_1&=f(t_1)\\
+\phi_0(t_2)a_0+\phi_1(t_2)a_1&=f(t_2)\\
+\phi_0(t_3)a_0+\phi_1(t_3)a_1&=f(t_3)\\
+\phi_0(t_4)a_0+\phi_1(t_4)a_1&=f(t_4)
+\end{align}\right.\tag{3-10a}\f]
+
+即
+
+\f[\left\{\begin{align}a_0+a_1&=0\\a_0+2a_1&=2\\a_0+3a_1&=1\\a_0+4a_1&=3\end{align}\right.\tag{3-10b}\f]
+
+这就转化为了一个超定线性方程组 \f$A\pmb a=\pmb f\f$，求解可直接使用公式 \f$\text{(2-7)}\f$，一般的，其系数矩阵可以表示为
+
+\f[A=\begin{bmatrix}
+\phi_0(t_1)&\phi_1(t_1)&\cdots&\phi_{n-1}(t_1)\\
+\phi_0(t_2)&\phi_1(t_2)&\cdots&\phi_{n-1}(t_2)\\
+\vdots&\vdots&&\vdots\\
+\phi_0(t_s)&\phi_1(t_s)&\cdots&\phi_{n-1}(t_s)
+\end{bmatrix}\qquad\pmb f=\begin{bmatrix}
+f(t_1)\\f(t_2)\\\vdots\\f(t_s)\end{bmatrix}\tag{3-11}\f]
+
+------
+
+后文将给出另外一种描述最小二乘法的做法，这种做法有别于上面构造向量与子空间垂直的方式，通过对误差平方和直接求其最小值来得到最小二乘解（两种方式结果均能推导出公式 \f$\text{(2-7)}\f$，但出发点不同）。此外，要介绍的这个解法也同样适用于整个线性空间（包括欧式空间、多项式空间等线性空间）。
+
+### 4. 法方程求解最小二乘法
+
+后文会以多项式空间为例，从 \f$\delta^2\f$ 的极值（最小值）入手，通过对该误差平方和求导数的方式获得该最优解，这也是数值分析教材中普遍采用的做法。在本小节后，会使用这一方法求解<span style="color: green">**示例 3**</span>的问题。
+
+回顾公式 \f$\text{(2-3b)}\f$：\f$\sum\limits_{j=1}^na_{ij}x_j\f$ 的部分，这是对应于欧式空间 \f$\mathbb R^n\f$ 的误差平方和的写法，这表示生成的位于<span style="color: red">列空间</span>中的向量在基下的第 \f$i\f$ 个分量（坐标）。对于多项式空间 \f$\mathbb R{[t]}_n\f$，这部分的写法为 \f$a_0+a_1t+\cdots+a_{n-1}t^{n-1}=\sum\limits_{j=0}^{n-1}a_jt^j\f$。那么对于包含 \f$s\f$ 个已知点的集合（每个点包含 \f$t_i\f$ 和 \f$f(t_i)\f$ 两部分），使用 \f$\mathbb R{[t]}_n\f$ 即 \f$\sum\limits_{j=0}^{n-1}a_jt^j=\sum\limits_{j=0}^{n-1}a_j\phi_j(t_i)\f$ 的多项式来拟合这些点集，其最小二乘解设为 \f$f^*(t)\f$，此时的误差平方和的最小值可以表示成
+
+\f[\delta_\min^2=\sum_{i=1}^s\left[f(t_i)-f^*(t_i)\right]^2=\min\sum_{i=1}^s\left[f(t_i)-\sum\limits_{j=0}^{n-1}a_j\phi_j(t_i)\right]^2\tag{4-1}\f]
+
+要求解 \f$a_0,a_1,\cdots,a_{n-1}\f$，这相当于求多元函数
+
+\f[F(a_0,a_1,\cdots,a_{n-1})=\sum_{i=1}^s\left[f(t_i)-\sum_{j=0}^{n-1}a_j\phi_j(t_i)\right]^2\tag{4-2}\f]
+
+的极小值点。按照求极值的必要条件，可以对上述多元函数求偏导，令其为 \f$0\f$ 有
+
+\f[\frac{\partial F}{\partial a_k}=2\sum_{i=1}^s\left[f(t_i)-\sum_{j=0}^{n-1}a_j\phi_j(t_i)\right][-\phi_k(t_i)]=0\qquad(k=0,1,\cdots,n-1),\f]
+
+整理为
+
+\f[\sum_{j=0}^{n-1}\left[\sum_{i=1}^s\phi_k(t_i)\phi_j(t_i)\right]a_j=\sum_{i=1}^s\phi_k(t_i)f(t_i)\qquad(k=0,1,\cdots,n-1)\tag{4-2}\f]
+
+不同的 2 个数字向量的内积定义为 \f$(\pmb\alpha,\pmb\beta)=\sum\limits_{i=1}^sa_ib_i\f$，同样的，多项式不同的 2 个分量（例如 \f$\phi_1(t)=t\f$ 和 \f$\phi_2(t)=t^2\f$ 就是不同的分量）之间的内积可以定义为 \f$(\phi_p(t),\phi_q(t))=\sum\limits_{i=1}^s\phi_p(t_i)\phi_q(t_i)\f$，简记为 \f$(\phi_p,\phi_q)\f$。则有
+
+\f[\left\{\begin{align}
+(\phi_k,\phi_j)&=\sum_{i=1}^s\phi_k(t_i)\phi_j(t_i)\\
+(\phi_k,f)&=\sum_{i=1}^s\phi_k(t_i)\phi_j(t_i)\equiv d_k\\
+\end{align}\right.\tag{4-3}\f]
+
+于是公式 \f$\text{(4-2)}\f$ 可以写成
+
+\f[\sum_{j=0}^{n-1}(\phi_k,\phi_j)=d_k\qquad(k=0,1,\cdots,n-1)\tag{4-4a}\f]
+
+或者展开写为
+
+\f[\left\{\begin{matrix}
+(\phi_0,\phi_0)a_0&+&(\phi_0,\phi_1)a_1&+&\cdots&+&(\phi_0,\phi_{n-1})a_{n-1}&=&d_0\\
+(\phi_1,\phi_0)a_0&+&(\phi_1,\phi_1)a_1&+&\cdots&+&(\phi_1,\phi_{n-1})a_{n-1}&=&d_1\\
+\vdots&&\vdots&&&&\vdots&=&\vdots\\
+(\phi_{n-1},\phi_0)a_0&+&(\phi_{n-1},\phi_1)a_1&+&\cdots&+&(\phi_{n-1},\phi_{n-1})a_{n-1}&=&d_{n-1}\\
+\end{matrix}\right.\tag{4-4b}\f]
+
+上式称为 \f$a_0,a_1,\cdots,a_{n-1}\f$ 的<span style="color: red">法方程（组）</span>，是 \f$n\f$ 阶线性方程组，其系数矩阵是
+
+\f[G=\begin{bmatrix}
+(\phi_0,\phi_0)&(\phi_0,\phi_1)&\cdots&(\phi_0,\phi_{n-1})\\
+(\phi_1,\phi_0)&(\phi_1,\phi_1)&\cdots&(\phi_1,\phi_{n-1})\\
+\vdots&\vdots&&\vdots\\
+(\phi_{n-1},\phi_0)&(\phi_{n-1},\phi_1)&\cdots&(\phi_{n-1},\phi_{n-1})\\
+\end{bmatrix}\tag{4-5}\f]
+
+容易验证，最终得到的系数矩阵 \f$G\f$ 与公式 \f$\text{(3-11)}\f$ 中 \f$A\f$ 矩阵的关系为 \f$G=A^TA\f$，并且右端项 \f$\pmb d=A^T\pmb f\f$，代入公式 \f$\text{(4-4)}\f$ 可以得到
+
+\f[A^TA\pmb a=A^T\pmb f\tag{4-6}\f]
+
+即
+
+\f[\boxed{\hat{\pmb a}=\left(A^TA\right)^{-1}A^T\pmb f}\tag{4-7}\f]
+
+这与公式 \f$\text{(2-7)}\f$ 完全一致。
+
+### 5. 部署使用
 
 OpenCV 中提供了最小二乘法求解的函数 `cv::solve()`，并设置有 2 个相关的成员函数，其函数原型如下。此外可参考 [cv::solve](https://docs.opencv.org/4.x/d2/de8/group__core__array.html#ga12b43690dbd31fed96f213eefead2373) 的 OpenCV 手册。
 
@@ -243,10 +367,12 @@ bool cv::solve(
 );
 ```
 
-有关递推最小二乘法的介绍可参考 @ref tutorial_extra_spi_rune_predictor 。
-
 ---
 
-### 参考书籍
+有关递推最小二乘法的介绍可参考 @ref tutorial_extra_spi_rune_predictor 。
 
-\cite tongji_linear_algebra \cite luo2013matrix
+#### 参考书籍
+
+\cite tongji_linear_algebra
+\cite luo2013matrix
+\cite numerical_analysis

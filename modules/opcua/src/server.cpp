@@ -366,10 +366,10 @@ UA_NodeId Server::addObjectNodeEx(const Object &obj, UA_NodeId parent_id)
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
         auto sub_node_id = retval | find(browse_name);
-        if (UA_NodeId_isNull(&sub_node_id))
-            addVariableNodeEx(variable, retval);
-        else
+        if (!UA_NodeId_isNull(&sub_node_id))
             write(sub_node_id, variable);
+        else
+            addVariableNodeEx(variable, retval);
     }
     return retval;
 }
