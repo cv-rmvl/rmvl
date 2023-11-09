@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <open62541/client_subscriptions.h>
+
 #include "object.hpp"
 
 namespace rm
@@ -95,7 +97,7 @@ public:
      * @param[in] name 方法名
      * @param[in] inputs 输入参数列表
      * @param[out] outputs 输出参数列表
-     * @return 是否成功完成当前操作的状态码
+     * @return 是否成功完成当前操作
      */
     bool callEx(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
 
@@ -105,12 +107,31 @@ public:
      * @param[in] name 方法名
      * @param[in] inputs 输入参数列表
      * @param[out] outputs 输出参数列表
-     * @return 是否成功完成当前操作的状态码
+     * @return 是否成功完成当前操作
      */
     inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
     {
         return callEx(UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), name, inputs, outputs);
     }
+
+    /**
+     * @brief 创建变量节点监视项
+     * @note 当所监测的服务器中的变量数据发生更改时，通知监视器，执行 data_change 回调函数
+     *
+     * @param[in] node 待监视节点的 `UA_NodeId`
+     * @param[in] on_change 数据变更回调函数
+     * @return 是否成功完成当前操作
+     */
+    bool createVariableMonitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change);
+
+private:
+    /**
+     * @brief 发起订阅请求，并返回订阅 ID
+     * 
+     * @param[out] response 订阅请求的响应
+     * @return 是否成功完成当前操作
+     */
+    bool createSubscription(UA_CreateSubscriptionResponse &responce);
 };
 
 //! @} opcua
