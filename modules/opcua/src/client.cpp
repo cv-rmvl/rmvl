@@ -20,6 +20,10 @@
 namespace rm
 {
 
+////////////////////////// Public //////////////////////////
+
+// ****************** 通用配置 ******************
+
 Client::Client(std::string_view address, UserConfig usr)
 {
     _client = UA_Client_new();
@@ -48,6 +52,8 @@ Client::~Client()
     UA_Client_delete(_client);
     _client = nullptr;
 }
+
+// ****************** 功能配置 ******************
 
 void Client::spin()
 {
@@ -88,6 +94,51 @@ bool Client::write(const UA_NodeId &node, const Variable &val)
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to write value to the specific node, error: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    return true;
+}
+
+bool Client::createVariableMonitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change)
+{
+    // 创建订阅
+    UA_CreateSubscriptionResponse sub_resp;
+    auto status = createSubscription(sub_resp);
+    if (!status)
+        return false;
+    // 创建监视项请求
+    UA_MonitoredItemCreateRequest request = UA_MonitoredItemCreateRequest_default(node);
+    request.requestedParameters.samplingInterval = 100.0;
+    request.requestedParameters.discardOldest = true;
+    request.requestedParameters.queueSize = 10;
+    // 创建监视器
+    UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createDataChange(
+        _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request, &node, on_change, nullptr);
+    if (result.statusCode != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
+        return false;
+    }
+    return true;
+}
+
+////////////////////////// Private //////////////////////////
+
+bool Client::createSubscription(UA_CreateSubscriptionResponse &response)
+{
+    UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
+    request.requestedPublishingInterval = para::opcua_param.SUB_PUBLISHING_INTERVAL;
+    request.requestedLifetimeCount = para::opcua_param.SUB_LIFETIME_COUNT;
+    request.requestedMaxKeepAliveCount = para::opcua_param.SUB_MAX_KEEPALIVE_COUNT;
+    request.maxNotificationsPerPublish = para::opcua_param.SUB_MAX_NOTIFICATIONS;
+    request.publishingEnabled = true;
+    request.priority = para::opcua_param.SUB_PRIORITY;
+
+    response = UA_Client_Subscriptions_create(_client, request, nullptr, nullptr, nullptr);
+    if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create subscription, error: %s",
+                     UA_StatusCode_name(response.responseHeader.serviceResult));
         return false;
     }
     return true;
