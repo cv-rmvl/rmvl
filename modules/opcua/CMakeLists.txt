@@ -10,4 +10,13 @@ if(WITH_OPEN62541)
     DEPENDS para
     EXTERNAL open62541
   )
+
+  # add test
+  if(BUILD_TESTS)
+    rmvl_add_test(
+      opcua Unit
+      DEPENDS opcua
+      DEPEND_TESTS GTest::gtest_main
+    )
+  endif()
 endif()

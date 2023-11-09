@@ -65,7 +65,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <size_t N>
-    VariableType(const char str[N]) : _value(str), _data_type(typeflag[typeid(const char *)]), _dims(1) {}
+    VariableType(const char (&str)[N]) : _value(str), _data_type(typeflag[typeid(const char *)]), _dims(1) {}
 
     /**
      * @brief 单值构造，设置默认值
@@ -213,7 +213,7 @@ public:
     //! 获取数据
     inline const auto &getValue() const { return _value; }
 
-    //! 获取数据类型
+    //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
     inline UA_TypeFlag getDataType() const { return _data_type; }
 
     //! 获取数组维度指针 @note 单独的数则返回 `1`，未初始化则返回 `0`
