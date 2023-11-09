@@ -14,6 +14,8 @@
 #include <thread>
 #include <unordered_set>
 
+#include <open62541/nodeids.h>
+
 #include "object.hpp"
 
 namespace rm
@@ -54,13 +56,13 @@ public:
      * @param[in] port OPC UA 服务器端口号，一般设置为 `4840U`
      * @param[in] users 用户列表 @see UserConfig
      */
-    Server(uint16_t port, const std::vector<UserConfig> &users = {});
+    explicit Server(uint16_t port, const std::vector<UserConfig> &users = {});
 
     Server(const Server &) = delete;
     Server(Server &&) = delete;
 
     //! 运行服务器
-    void run();
+    void start();
 
     //! 停止服务器
     inline void stop() { _running = false; }

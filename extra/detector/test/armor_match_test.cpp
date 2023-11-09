@@ -9,8 +9,6 @@
  *
  */
 
-#include <thread>
-
 #include "armor_detector_test.h"
 
 using namespace rm_test;

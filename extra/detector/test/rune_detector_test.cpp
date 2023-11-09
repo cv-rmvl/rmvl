@@ -13,17 +13,6 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/detector/rune_detector.h"
-
-using namespace rm;
-using namespace std;
-using namespace cv;
-
-#include <gtest/gtest.h>
-
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-
 #include "rmvl/core/timer.hpp"
 #include "rmvl/detector/rune_detector.h"
 

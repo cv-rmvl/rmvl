@@ -49,7 +49,7 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
     }
 }
 
-void Server::run()
+void Server::start()
 {
     _running = true;
     _run = std::thread([this]() {
