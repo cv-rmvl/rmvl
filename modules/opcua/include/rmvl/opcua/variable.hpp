@@ -95,6 +95,16 @@ public:
 
     VariableType &operator=(VariableType &&val);
 
+    /**
+     * @brief 将变量类型节点转化为指定类型的数据
+     * 
+     * @tparam Tp 变量类型的数据类型
+     * @param[in] val 变量类型节点
+     * @return Tp 该数据类型的数据
+     */
+    template <typename Tp>
+    static inline Tp cast(const rm::VariableType &val) { return std::any_cast<Tp>(val.getValue()); }
+
     //! 获取默认数据
     inline const auto &getValue() const { return _value; }
 
@@ -203,6 +213,16 @@ public:
     Variable &operator=(Variable &&val);
 
     /**
+     * @brief 将变量节点转化为指定类型的数据
+     * 
+     * @tparam Tp 变量的数据类型
+     * @param[in] val 变量节点
+     * @return Tp 该数据类型的数据
+     */
+    template <typename Tp>
+    static inline Tp cast(const rm::Variable &val) { return std::any_cast<Tp>(val.getValue()); }
+
+    /**
      * @brief 获取用 `rm::VariableType` 表示的变量类型
      *
      * @see _type
@@ -251,27 +271,27 @@ namespace helper
  *
  * @warning 此方法一般不直接使用
  * @param[in] val `rm::Variable` 表示的变量
- * @return 用 `UA_Variant` 表示变量节点内置数据的堆空间指针
+ * @return `UA_Variant` 表示变量节点的内置数据
  */
-UA_Variant *cvtVariable(const Variable &val);
+UA_Variant cvtVariable(const Variable &val);
 
 /**
  * @brief `UA_Variant` 转化为 `rm::Variable`
  *
  * @warning 此方法一般不直接使用
- * @param[in] p_val `UA_Variant` 表示的变量指针
+ * @param[in] p_val `UA_Variant` 表示的变量
  * @return 用 `rm::Variable` 表示的变量节点
  */
-Variable cvtVariable(const UA_Variant *p_val);
+Variable cvtVariable(const UA_Variant &p_val);
 
 /**
  * @brief `rm::VariableType` 转化为 `UA_Variant`
  *
  * @warning 此方法一般不直接使用
  * @param[in] vtype `rm::VariableType` 表示的变量类型
- * @return 用 `UA_Variant` 表示变量类型节点内置数据的堆空间指针
+ * @return 用 `UA_Variant` 表示的变量类型节点的内置数据
  */
-UA_Variant *cvtVariable(const VariableType &vtype);
+UA_Variant cvtVariable(const VariableType &vtype);
 
 //! @} opcua
 

@@ -177,13 +177,14 @@ public:
     //! 对象的描述 - `zh-CN`
     std::string description{};
 
+    Object() : _type(nullptr) {}
+
     /**
      * @brief 从对象类型构造新的对象节点
      *
      * @param[in] otype 既存的待作为对象节点类型信息的使用 `rm::ObjectType` 表示的变量类型
      */
-    Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()), browse_name(otype.browse_name),
-                                display_name(otype.display_name), description(otype.description) {}
+    Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()) {}
 
     Object(const Object &val) : _type(val._type), _variables(val._variables), browse_name(val.browse_name),
                                 display_name(val.display_name), description(val.description) {}
@@ -193,7 +194,7 @@ public:
 
     /**
      * @brief 设置对象类型 `rm::ObjectType`
-     * 
+     *
      * @param[in] otype 既存的用 `rm::ObjectType` 表示的对象类型
      */
     inline void setType(ObjectType &otype) { _type = &otype; }

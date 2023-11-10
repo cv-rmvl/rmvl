@@ -14,58 +14,65 @@
 #include "rmvl/opcua/client.hpp"
 #include "rmvl/opcua/server.hpp"
 
-// namespace rm_test
-// {
+namespace rm_test
+{
 
-// class OPC_UA_ClientTest : public testing::Test
-// {
-//     // 测试服务器对象
-//     rm::Server server = rm::Server(4840);
+void setSvr(rm::Server &svr)
+{
+    // 添加数组变量节点
+    rm::Variable variable = std::vector({1, 2, 3, 4, 5});
+    variable.browse_name = "array";
+    variable.description = "this is array";
+    variable.display_name = "数组";
+    svr.addVariableNode(variable);
+    // 添加加法方法节点
+    rm::Method method;
+    method.browse_name = "add";
+    method.description = "this is add method";
+    method.display_name = "加法";
+    method.iargs = {{"a", UA_TYPES_INT32}, {"b", UA_TYPES_INT32}};
+    method.oargs = {{"c", UA_TYPES_INT32}};
+    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
+                     void *, size_t, const UA_Variant *input, size_t, UA_Variant *output) -> UA_StatusCode {
+        int32_t a = *reinterpret_cast<int *>(input[0].data);
+        int32_t b = *reinterpret_cast<int *>(input[1].data);
+        int32_t c = a + b;
+        return UA_Variant_setScalarCopy(output, &c, &UA_TYPES[UA_TYPES_INT32]);
+    };
+    svr.addMethodNode(method);
+    // 添加对象节点，包含字符串变量和乘法方法
+    svr.start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+}
 
-// protected:
-//     void SetUp() override
-//     {
-//         // 添加数组变量节点
-//         rm::Variable variable = std::vector({1, 2, 3, 4, 5});
-//         variable.browse_name = "array";
-//         variable.description;
-//         // 添加加法方法节点
+TEST(OPC_UA_ClientTest, read_variable)
+{
+    rm::Server svr(5000);
+    setSvr(svr);
+    rm::Client client("opc.tcp://localhost:5000");
+    // 读取测试服务器上的变量值
+    rm::Variable variable;
+    auto id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("array");
+    EXPECT_TRUE(client.read(id, variable));
+    auto vec = rm::Variable::cast<std::vector<int>>(variable);
+    for (size_t i = 0; i < vec.size(); ++i)
+        EXPECT_EQ(vec[i], i + 1);
+    svr.stop();
+    svr.join();
+}
 
-//         // 添加对象节点，包含字符串变量和乘法方法
-//         server.start();
-//     }
+TEST(OPC_UA_ClientTest, call)
+{
+    rm::Server svr(5002);
+    setSvr(svr);
+    rm::Client client("opc.tcp://localhost:5002");
+    // 调用测试服务器上的方法
+    std::vector<rm::Variable> input = {1, 2};
+    std::vector<rm::Variable> output;
+    EXPECT_TRUE(client.call("add", input, output));
+    EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
+    svr.stop();
+    svr.join();
+}
 
-//     void TearDown() override
-//     {
-//         server.stop();
-//         server.join();
-//     }
-// };
-
-// TEST_F(OPC_UA_ClientTest, ReadVariable)
-// {
-//     // 读取测试服务器上的变量值
-//     int32_t value = 0;
-//     EXPECT_TRUE(client_.ReadVariable<int32_t>("ns=1;s=TestVariable", value));
-//     EXPECT_EQ(value, 42);
-// }
-
-// TEST_F(OPC_UA_ClientTest, WriteVariable)
-// {
-//     // 修改测试服务器上的变量值
-//     EXPECT_TRUE(client_.WriteVariable<int32_t>("ns=1;s=TestVariable", 100));
-//     // 验证变量值是否修改成功
-//     int32_t value = 0;
-//     EXPECT_TRUE(client_.ReadVariable<int32_t>("ns=1;s=TestVariable", value));
-//     EXPECT_EQ(value, 100);
-// }
-
-// TEST_F(OPC_UA_ClientTest, CallMethod)
-// {
-//     // 调用测试服务器上的方法
-//     int32_t result = 0;
-//     EXPECT_TRUE(client_.CallMethod<int32_t>("ns=1;s=TestMethod", 10, 20, result));
-//     EXPECT_EQ(result, 30);
-// }
-
-// } // namespace rm_test
+} // namespace rm_test

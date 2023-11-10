@@ -44,9 +44,6 @@ class Server final
     bool _running{};    //!< 服务器运行状态
     std::thread _run;   //!< 服务器运行线程
 
-    std::unordered_set<UA_Variant *> _variant_gc;   //!< UA_Variant 垃圾收集
-    std::unordered_set<UA_Argument *> _argument_gc; //!< UA_Argument 垃圾收集
-
 public:
     /****************************** 通用配置 ******************************/
 

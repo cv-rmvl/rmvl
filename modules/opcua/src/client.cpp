@@ -84,18 +84,48 @@ bool Client::read(const UA_NodeId &node, Variable &val)
         return false;
     }
     // 变量节点信息
-    val = helper::cvtVariable(&variant);
+    val = helper::cvtVariable(variant);
     return true;
 }
 
 bool Client::write(const UA_NodeId &node, const Variable &val)
 {
-    auto status = UA_Client_writeValueAttribute(_client, node, helper::cvtVariable(val));
+    UA_Variant new_variant = helper::cvtVariable(val);
+    auto status = UA_Client_writeValueAttribute(_client, node, &new_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to write value to the specific node, error: %s", UA_StatusCode_name(status));
         return false;
     }
+    return true;
+}
+
+bool Client::callEx(const UA_NodeId &parent_id, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
+{
+    // 初始化输入输出参数: UA_Variant 的向量
+    std::vector<UA_Variant> input_variants;
+    input_variants.reserve(inputs.size());
+    for (const auto &input : inputs)
+        input_variants.push_back(helper::cvtVariable(input));
+
+    size_t output_size=1;
+    UA_Variant *output_variants;
+    // 调用方法
+    auto node_id = parent_id | find(name);
+    if (UA_NodeId_isNull(&node_id))
+        return false;
+    auto status = UA_Client_call(_client, parent_id, node_id, input_variants.size(),
+                                 input_variants.data(), &output_size, &output_variants);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method, id: %d, error code: %s",
+                     node_id.identifier.numeric, UA_StatusCode_name(status));
+        return false;
+    }
+    // 处理输出变量
+    outputs.reserve(output_size);
+    for (size_t i = 0; i < output_size; ++i)
+        outputs.push_back(helper::cvtVariable(output_variants[i]));
     return true;
 }
 

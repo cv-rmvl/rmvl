@@ -128,9 +128,9 @@ namespace helper
  *
  * @warning 此方法一般不直接使用
  * @param[in] arg `rm::Argument` 表示的方法
- * @return `UA_Argument` 的堆空间指针
+ * @return `UA_Argument` 表示的方法
  */
-UA_Argument *cvtArgument(const Argument &arg);
+UA_Argument cvtArgument(const Argument &arg);
 
 //! @} opcua
 
