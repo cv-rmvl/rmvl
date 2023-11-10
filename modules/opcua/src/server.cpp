@@ -59,31 +59,22 @@ void Server::start()
     });
 }
 
-Server::~Server()
-{
-    for (auto &val : _variant_gc)
-        UA_Variant_delete(val);
-    for (auto &val : _argument_gc)
-        UA_Argument_delete(val);
-    UA_Server_delete(_server);
-}
+Server::~Server() { UA_Server_delete(_server); }
 
 // ============================= 节点配置 =============================
 
 UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
 {
     UA_VariableTypeAttributes attr = UA_VariableTypeAttributes_default;
-    UA_Variant *variant = helper::cvtVariable(vtype);
-    // 添加至 GC
-    _variant_gc.insert(variant);
+    UA_Variant variant = helper::cvtVariable(vtype);
     // 设置属性
-    attr.value = *variant;
-    attr.dataType = variant->type->typeId;
+    attr.value = variant;
+    attr.dataType = variant.type->typeId;
     attr.valueRank = vtype.getValueRank();
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
-        attr.arrayDimensionsSize = variant->arrayDimensionsSize;
-        attr.arrayDimensions = variant->arrayDimensions;
+        attr.arrayDimensionsSize = variant.arrayDimensionsSize;
+        attr.arrayDimensions = variant.arrayDimensions;
     }
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(vtype.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(vtype.display_name));
@@ -106,18 +97,16 @@ UA_NodeId Server::addVariableNodeEx(const Variable &val, UA_NodeId parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
-    UA_Variant *variant = helper::cvtVariable(val);
-    // 添加至 GC
-    _variant_gc.insert(variant);
+    UA_Variant variant = helper::cvtVariable(val);
     // 设置属性
-    attr.value = *variant;
-    attr.dataType = variant->type->typeId;
+    attr.value = variant;
+    attr.dataType = variant.type->typeId;
     attr.accessLevel = val.getAccessLevel();
     attr.valueRank = val.getValueRank();
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
-        attr.arrayDimensionsSize = variant->arrayDimensionsSize;
-        attr.arrayDimensions = variant->arrayDimensions;
+        attr.arrayDimensionsSize = variant.arrayDimensionsSize;
+        attr.arrayDimensions = variant.arrayDimensions;
     }
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
@@ -127,7 +116,7 @@ UA_NodeId Server::addVariableNodeEx(const Variable &val, UA_NodeId parent_id)
     if (p_type != nullptr)
     {
         type_id = type_id | find(p_type->browse_name);
-        if (UA_NodeId_equal(&type_id, &UA_NODEID_NULL))
+        if (UA_NodeId_isNull(&type_id))
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
             type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
@@ -163,15 +152,14 @@ bool Server::read(const UA_NodeId &node, Variable &val)
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to read variable: %s", UA_StatusCode_name(status));
         return false;
     }
-    val = helper::cvtVariable(&p_val);
+    val = helper::cvtVariable(p_val);
     return true;
 }
 
 bool Server::write(const UA_NodeId &node, const Variable &val)
 {
     auto variant = helper::cvtVariable(val);
-    _variant_gc.insert(variant);
-    auto status = UA_Server_writeValue(_server, node, *variant);
+    auto status = UA_Server_writeValue(_server, node, variant);
     if (status != UA_STATUSCODE_GOOD)
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to write variable, error code: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
@@ -193,18 +181,16 @@ UA_NodeId Server::addDataSourceVariableNodeEx(const Variable &val, DataSourceRea
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
-    UA_Variant *variant = helper::cvtVariable(val);
-    // 添加至 GC
-    _variant_gc.insert(variant);
+    UA_Variant variant = helper::cvtVariable(val);
     // 设置属性
-    attr.value = *variant;
-    attr.dataType = variant->type->typeId;
+    attr.value = variant;
+    attr.dataType = variant.type->typeId;
     attr.accessLevel = val.getAccessLevel();
     attr.valueRank = val.getValueRank();
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
-        attr.arrayDimensionsSize = variant->arrayDimensionsSize;
-        attr.arrayDimensions = variant->arrayDimensions;
+        attr.arrayDimensionsSize = variant.arrayDimensionsSize;
+        attr.arrayDimensions = variant.arrayDimensions;
     }
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
@@ -214,7 +200,7 @@ UA_NodeId Server::addDataSourceVariableNodeEx(const Variable &val, DataSourceRea
     if (p_type != nullptr)
     {
         type_id = type_id | find(p_type->browse_name);
-        if (UA_NodeId_equal(&type_id, &UA_NODEID_NULL))
+        if (UA_NodeId_isNull(&type_id))
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
             type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
@@ -250,19 +236,11 @@ UA_NodeId Server::addMethodNodeEx(const Method &method, UA_NodeId parent_id)
     std::vector<UA_Argument> inputs;
     inputs.reserve(method.iargs.size());
     for (auto &arg : method.iargs)
-    {
-        UA_Argument *ua_arg = helper::cvtArgument(arg);
-        _argument_gc.insert(ua_arg);
-        inputs.push_back(*ua_arg);
-    }
+        inputs.push_back(helper::cvtArgument(arg));
     std::vector<UA_Argument> outputs;
     outputs.reserve(method.oargs.size());
     for (auto &arg : method.oargs)
-    {
-        UA_Argument *ua_arg = helper::cvtArgument(arg);
-        _argument_gc.insert(ua_arg);
-        outputs.push_back(*ua_arg);
-    }
+        outputs.push_back(helper::cvtArgument(arg));
     // 添加节点
     UA_NodeId retval{UA_NODEID_NULL};
     auto status = UA_Server_addMethodNode(
@@ -310,7 +288,7 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
         parent_id = parent_id | find(base_stack.top());
         base_stack.pop();
     }
-    if (UA_NodeId_equal(&parent_id, &UA_NODEID_NULL))
+    if (UA_NodeId_isNull(&parent_id))
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the base object type ID during adding object type node");
         parent_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE);
@@ -367,7 +345,7 @@ UA_NodeId Server::addObjectNodeEx(const Object &obj, UA_NodeId parent_id)
         type_id = type_id | find(base_stack.top());
         base_stack.pop();
     }
-    if (UA_NodeId_equal(&type_id, &UA_NODEID_NULL))
+    if (UA_NodeId_isNull(&type_id))
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the object type of the object: \"%s\"", obj.browse_name.c_str());
         type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE);
@@ -388,10 +366,10 @@ UA_NodeId Server::addObjectNodeEx(const Object &obj, UA_NodeId parent_id)
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
         auto sub_node_id = retval | find(browse_name);
-        if (UA_NodeId_equal(&sub_node_id, &UA_NODEID_NULL))
-            write(sub_node_id, variable);
-        else
+        if (UA_NodeId_isNull(&sub_node_id))
             addVariableNodeEx(variable, retval);
+        else
+            write(sub_node_id, variable);
     }
     return retval;
 }

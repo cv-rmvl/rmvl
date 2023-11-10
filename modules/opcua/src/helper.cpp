@@ -18,15 +18,13 @@
 
 UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
 {
-    if (!UA_NodeId_equal(&origin, &UA_NODEID_NULL))
+    if (UA_NodeId_isNull(&origin))
         return origin;
     auto &&[p_server, browse_name] = fnis;
     auto qualified_name = UA_QUALIFIEDNAME(1, rm::helper::to_char(browse_name.c_str()));
     auto bpr = UA_Server_browseSimplifiedBrowsePath(p_server, origin, 1, &qualified_name);
     UA_NodeId retval = UA_NODEID_NULL;
-    if (bpr.statusCode != UA_STATUSCODE_GOOD || bpr.targetsSize < 1)
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find NodeId (name = %s): %s", browse_name.c_str(), UA_StatusCode_name(bpr.statusCode));
-    else
+    if (bpr.statusCode == UA_STATUSCODE_GOOD && bpr.targetsSize >= 1)
         UA_NodeId_copy(&bpr.targets[0].targetId.nodeId, &retval);
     return retval;
 }
@@ -53,7 +51,7 @@ UA_NodeId operator|(UA_NodeId origin, rm::findNodeInClient &&fnic)
         if (response.resultsSize == 1 && response.results[0].targetsSize == 1)
             return response.results[0].targets[0].targetId.nodeId;
 
-    UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find NodeId (name = %s): %s",
+    UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find node, name: %s, error code: %s",
                  browse_name.c_str(), UA_StatusCode_name(response.responseHeader.serviceResult));
     return UA_NODEID_NULL;
 }
@@ -61,81 +59,83 @@ UA_NodeId operator|(UA_NodeId origin, rm::findNodeInClient &&fnic)
 namespace rm::helper
 {
 
-UA_Variant *cvtVariable(const Variable &val)
+UA_Variant cvtVariable(const Variable &val)
 {
     const std::any &data = val.getValue();
 
-    UA_Variant *p_val = UA_Variant_new();
+    UA_Variant p_val;
+    UA_Variant_init(&p_val);
     if (val.getArrayDimensions() == 1)
     {
         switch (val.getDataType())
         {
         case UA_TYPES_STRING: {
             UA_String str = UA_STRING_ALLOC(std::any_cast<const char *>(data));
-            UA_Variant_setScalarCopy(p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
+            UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
         }
         break;
         case UA_TYPES_BOOLEAN: {
             auto rawval = std::any_cast<UA_Boolean>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_BOOLEAN]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BOOLEAN]);
         }
         break;
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<UA_SByte>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_SBYTE]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_SBYTE]);
         }
         break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<UA_Byte>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_BYTE]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BYTE]);
         }
         break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<UA_Int16>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_INT16]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT16]);
         }
         break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<UA_UInt16>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_UINT16]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT16]);
         }
         break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<UA_Int32>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_INT32]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT32]);
         }
         break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<UA_UInt32>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_UINT32]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT32]);
         }
         break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<UA_Int64>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_INT64]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT64]);
         }
         break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<UA_UInt64>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_UINT64]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT64]);
         }
         break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<UA_Float>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_FLOAT]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_FLOAT]);
         }
         break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<UA_Double>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_DOUBLE]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_DOUBLE]);
         }
         break;
         default:
             RMVL_Error(RMVL_StsBadArg, "Unknown UA_TypeFlag");
             break;
         }
-        p_val->arrayDimensionsSize = 0;
-        p_val->arrayDimensions = nullptr;
+        p_val.arrayLength = 0;
+        p_val.arrayDimensionsSize = 0;
+        p_val.arrayDimensions = nullptr;
     }
     else
     {
@@ -143,70 +143,70 @@ UA_Variant *cvtVariable(const Variable &val)
         {
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<std::vector<UA_SByte>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
         }
         break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<std::vector<UA_Byte>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_BYTE]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_BYTE]);
         }
         break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<std::vector<UA_Int16>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT16]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT16]);
         }
         break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<std::vector<UA_UInt16>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT16]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT16]);
         }
         break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<std::vector<UA_Int32>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT32]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT32]);
         }
         break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<std::vector<UA_UInt32>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT32]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT32]);
         }
         break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<std::vector<UA_Int64>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT64]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT64]);
         }
         break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<std::vector<UA_UInt64>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT64]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT64]);
         }
         break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<std::vector<UA_Float>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_FLOAT]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_FLOAT]);
         }
         break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<std::vector<UA_Double>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_DOUBLE]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_DOUBLE]);
         }
         break;
         default:
             RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", val.getDataType());
             break;
         }
-
-        p_val->arrayDimensionsSize = 1;
-        p_val->arrayDimensions = &const_cast<UA_UInt32 &>(val.getArrayDimensions());
+        p_val.arrayLength = val.getArrayDimensions();
+        p_val.arrayDimensionsSize = 1;
+        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(val.getArrayDimensions());
     }
     return p_val;
 }
 
-Variable cvtVariable(const UA_Variant *p_val)
+Variable cvtVariable(const UA_Variant &p_val)
 {
-    UA_UInt32 dims = p_val->arrayLength;
-    UA_TypeFlag type_flag = p_val->type->typeKind;
-    void *data = p_val->data;
+    UA_UInt32 dims = (p_val.arrayLength == 0 ? 1 : p_val.arrayLength);
+    UA_TypeFlag type_flag = p_val.type->typeKind;
+    void *data = p_val.data;
     if (dims == 1)
     {
         switch (type_flag)
@@ -270,81 +270,83 @@ Variable cvtVariable(const UA_Variant *p_val)
     return {};
 }
 
-UA_Variant *cvtVariable(const VariableType &vtype)
+UA_Variant cvtVariable(const VariableType &vtype)
 {
     const std::any &data = vtype.getValue();
 
-    UA_Variant *p_val = UA_Variant_new();
+    UA_Variant p_val;
+    UA_Variant_init(&p_val);
     if (vtype.getArrayDimensions() == 1)
     {
         switch (vtype.getDataType())
         {
         case UA_TYPES_STRING: {
             UA_String str = UA_STRING(to_char(std::any_cast<const char *>(data)));
-            UA_Variant_setScalarCopy(p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
+            UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
         }
         break;
         case UA_TYPES_BOOLEAN: {
             auto rawval = std::any_cast<UA_Boolean>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_BOOLEAN]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BOOLEAN]);
         }
         break;
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<UA_SByte>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_SBYTE]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_SBYTE]);
         }
         break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<UA_Byte>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_BYTE]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BYTE]);
         }
         break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<UA_Int16>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_INT16]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT16]);
         }
         break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<UA_UInt16>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_UINT16]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT16]);
         }
         break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<UA_Int32>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_INT32]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT32]);
         }
         break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<UA_UInt32>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_UINT32]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT32]);
         }
         break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<UA_Int64>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_INT64]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT64]);
         }
         break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<UA_UInt64>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_UINT64]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT64]);
         }
         break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<UA_Float>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_FLOAT]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_FLOAT]);
         }
         break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<UA_Double>(data);
-            UA_Variant_setScalarCopy(p_val, &rawval, &UA_TYPES[UA_TYPES_DOUBLE]);
+            UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_DOUBLE]);
         }
         break;
         default:
             RMVL_Error(RMVL_StsBadArg, "Unknown UA_TypeFlag");
             break;
         }
-        p_val->arrayDimensionsSize = 0;
-        p_val->arrayDimensions = nullptr;
+        p_val.arrayLength = 0;
+        p_val.arrayDimensionsSize = 0;
+        p_val.arrayDimensions = nullptr;
     }
     else
     {
@@ -352,83 +354,84 @@ UA_Variant *cvtVariable(const VariableType &vtype)
         {
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<std::vector<UA_SByte>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
         }
         break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<std::vector<UA_Byte>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_BYTE]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_BYTE]);
         }
         break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<std::vector<UA_Int16>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT16]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT16]);
         }
         break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<std::vector<UA_UInt16>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT16]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT16]);
         }
         break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<std::vector<UA_Int32>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT32]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT32]);
         }
         break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<std::vector<UA_UInt32>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT32]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT32]);
         }
         break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<std::vector<UA_Int64>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT64]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT64]);
         }
         break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<std::vector<UA_UInt64>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT64]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT64]);
         }
         break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<std::vector<UA_Float>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_FLOAT]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_FLOAT]);
         }
         break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<std::vector<UA_Double>>(data);
-            UA_Variant_setArrayCopy(p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_DOUBLE]);
+            UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_DOUBLE]);
         }
         break;
         default:
             RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", vtype.getDataType());
             break;
         }
-
-        p_val->arrayDimensionsSize = 1;
-        p_val->arrayDimensions = &const_cast<UA_UInt32 &>(vtype.getArrayDimensions());
+        p_val.arrayLength = vtype.getArrayDimensions();
+        p_val.arrayDimensionsSize = 1;
+        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(vtype.getArrayDimensions());
     }
     return p_val;
 }
 
-UA_Argument *cvtArgument(const Argument &arg)
+UA_Argument cvtArgument(const Argument &arg)
 {
-    UA_Argument *argument = UA_Argument_new();
-    argument->name = UA_STRING_ALLOC(arg.name.c_str());
-    argument->description = UA_LOCALIZEDTEXT_ALLOC(zh_CN(), arg.name.c_str());
-    argument->dataType = UA_TYPES[arg.data_type].typeId;
+    UA_Argument argument;
+    UA_Argument_init(&argument);
+    argument.name = UA_STRING_ALLOC(arg.name.c_str());
+    argument.description = UA_LOCALIZEDTEXT_ALLOC(zh_CN(), arg.name.c_str());
+    argument.dataType = UA_TYPES[arg.data_type].typeId;
     RMVL_Assert(arg.dims);
     if (arg.dims == 1)
     {
-        argument->valueRank = UA_VALUERANK_SCALAR;
-        argument->arrayDimensionsSize = 0;
-        argument->arrayDimensions = nullptr;
+        argument.valueRank = UA_VALUERANK_SCALAR;
+        argument.arrayDimensionsSize = 0;
+        argument.arrayDimensions = nullptr;
     }
     else
     {
-        argument->valueRank = 1;
-        argument->arrayDimensionsSize = 1;
-        argument->arrayDimensions = &const_cast<rm::Argument &>(arg).dims;
+        argument.valueRank = 1;
+        argument.arrayDimensionsSize = 1;
+        argument.arrayDimensions = &const_cast<rm::Argument &>(arg).dims;
     }
     return argument;
 }
