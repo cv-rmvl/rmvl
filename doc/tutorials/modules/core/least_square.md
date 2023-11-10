@@ -2,7 +2,9 @@
 ============
 
 @author 赵曦
-@date 2023/11/01
+@date 2023/11/10
+@version 1.0
+@brief 从 **向量到子空间距离** ，和 **构建法方程** 两种方式推导了最小二乘法的矩阵表示
 
 @prev_tutorial{tutorial_modules_kalman}
 
@@ -43,7 +45,7 @@
 (\pmb\alpha_1,\pmb\beta)&=&\pmb\alpha_1^T\pmb\beta&=&0\\
 (\pmb\alpha_2,\pmb\beta)&=&\pmb\alpha_2^T\pmb\beta&=&0\\
 \vdots&=&\vdots&=&\vdots\\
-(\pmb\alpha_n,\pmb\beta)&=&\pmb\alpha_n^T\pmb\beta&=&0
+(\pmb\alpha_s,\pmb\beta)&=&\pmb\alpha_s^T\pmb\beta&=&0
 \end{matrix}\tag{1-2a}\f]
 
 观察中间一列 \f$\pmb\alpha_i^T\pmb\beta\f$，可以写成
@@ -64,7 +66,7 @@
 
 \f[\left(OA,BP\right)=0\tag{1-3}\f]
 
-我们令\f$OA=\pmb a\f$，\f$OB=\pmb b\f$，待求向量\f$OP=\pmb y\f$，（\f$\pmb a, \pmb b, \pmb y\f$均为列向量）代入公式 \f$\text{(1-3)}\f$ 可以得到
+我们令\f$OA=\pmb a\f$，\f$OB=\pmb b\f$，待求向量\f$OP=\pmb y\f$，（\f$\pmb a, \pmb b, \pmb y\f$ 均为列向量）代入公式 \f$\text{(1-3)}\f$ 可以得到
 
 \f[(\pmb a,\ \pmb y-\pmb b)=0\tag{1-4}\f]
 
@@ -97,12 +99,12 @@
 一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出误差平方和的表达式。
 
 \f[
-\delta^2=\sum_{i=1}^s(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}
+\delta^2=\sum_{i=0}^{s-1}(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}
 \f]
 
 上式也可以写成
 
-\f[\delta^2=\sum_{i=1}^s\left[\left(\sum_{j=1}^na_{ij}x_j\right)-b_i\right]^2\tag{2-3a}\f]
+\f[\delta^2=\sum_{i=0}^{s-1}\left[\left(\sum_{j=1}^na_{ij}x_j\right)-b_i\right]^2\tag{2-3a}\f]
 
 或
 
@@ -246,9 +248,10 @@ y&=x_1
 
 <center>
 表 3-1 已知点集
-|  \f$t\f$   | \f$1\f$ | \f$2\f$ | \f$3\f$ | \f$4\f$ |
-| :--------: | :-----: | :-----: | :-----: | :-----: |
-| \f$f(t)\f$ | \f$0\f$ | \f$2\f$ | \f$1\f$ | \f$3\f$ |
+| 下标 \f$i\f$ |    0    |    1    |    2    |    3    |
+| :----------: | :-----: | :-----: | :-----: | :-----: |
+|  \f$t_i\f$   | \f$1\f$ | \f$2\f$ | \f$3\f$ | \f$4\f$ |
+| \f$f(t_i)\f$ | \f$0\f$ | \f$2\f$ | \f$1\f$ | \f$3\f$ |
 </center>
 
 上文研究的 **线性空间** 都是定义在数域 \f$\mathbb P^n\f$ 上的欧式空间，实际上，对于系数属于 \f$\mathbb P\f$，而未定元为 \f$t\f$ 的所有次数小于 \f$n\f$ 的多项式集合也构成一个 **线性空间** ，记作
@@ -271,10 +274,10 @@ y&=x_1
 <span style="color: blue">上面都是一些概念性的介绍，跟后文求解最小二乘解无关</span>。回到<span style="color: green">示例 3</span>的这一问题本身，我们可以根据表 3-1 的信息，得到
 
 \f[\left\{\begin{align}
+\phi_0(t_0)a_0+\phi_1(t_0)a_1&=f(t_0)\\
 \phi_0(t_1)a_0+\phi_1(t_1)a_1&=f(t_1)\\
 \phi_0(t_2)a_0+\phi_1(t_2)a_1&=f(t_2)\\
-\phi_0(t_3)a_0+\phi_1(t_3)a_1&=f(t_3)\\
-\phi_0(t_4)a_0+\phi_1(t_4)a_1&=f(t_4)
+\phi_0(t_3)a_0+\phi_1(t_3)a_1&=f(t_3)
 \end{align}\right.\tag{3-10a}\f]
 
 即
@@ -284,12 +287,12 @@ y&=x_1
 这就转化为了一个超定线性方程组 \f$A\pmb a=\pmb f\f$，求解可直接使用公式 \f$\text{(2-7)}\f$，一般的，其系数矩阵可以表示为
 
 \f[A=\begin{bmatrix}
+\phi_0(t_0)&\phi_1(t_0)&\cdots&\phi_{n-1}(t_0)\\
 \phi_0(t_1)&\phi_1(t_1)&\cdots&\phi_{n-1}(t_1)\\
-\phi_0(t_2)&\phi_1(t_2)&\cdots&\phi_{n-1}(t_2)\\
 \vdots&\vdots&&\vdots\\
-\phi_0(t_s)&\phi_1(t_s)&\cdots&\phi_{n-1}(t_s)
+\phi_0(t_{s-1})&\phi_1(t_{s-1})&\cdots&\phi_{n-1}(t_{s-1})
 \end{bmatrix}\qquad\pmb f=\begin{bmatrix}
-f(t_1)\\f(t_2)\\\vdots\\f(t_s)\end{bmatrix}\tag{3-11}\f]
+f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 
 ------
 
@@ -301,30 +304,30 @@ f(t_1)\\f(t_2)\\\vdots\\f(t_s)\end{bmatrix}\tag{3-11}\f]
 
 回顾公式 \f$\text{(2-3b)}\f$：\f$\sum\limits_{j=1}^na_{ij}x_j\f$ 的部分，这是对应于欧式空间 \f$\mathbb R^n\f$ 的误差平方和的写法，这表示生成的位于<span style="color: red">列空间</span>中的向量在基下的第 \f$i\f$ 个分量（坐标）。对于多项式空间 \f$\mathbb R{[t]}_n\f$，这部分的写法为 \f$a_0+a_1t+\cdots+a_{n-1}t^{n-1}=\sum\limits_{j=0}^{n-1}a_jt^j\f$。那么对于包含 \f$s\f$ 个已知点的集合（每个点包含 \f$t_i\f$ 和 \f$f(t_i)\f$ 两部分），使用 \f$\mathbb R{[t]}_n\f$ 即 \f$\sum\limits_{j=0}^{n-1}a_jt^j=\sum\limits_{j=0}^{n-1}a_j\phi_j(t_i)\f$ 的多项式来拟合这些点集，其最小二乘解设为 \f$f^*(t)\f$，此时的误差平方和的最小值可以表示成
 
-\f[\delta_\min^2=\sum_{i=1}^s\left[f(t_i)-f^*(t_i)\right]^2=\min\sum_{i=1}^s\left[f(t_i)-\sum\limits_{j=0}^{n-1}a_j\phi_j(t_i)\right]^2\tag{4-1}\f]
+\f[\delta_\min^2=\sum_{i=0}^{s-1}\left[f(t_i)-f^*(t_i)\right]^2=\min\sum_{i=0}^{s-1}\left[f(t_i)-\sum\limits_{j=0}^{n-1}a_j\phi_j(t_i)\right]^2\tag{4-1}\f]
 
 要求解 \f$a_0,a_1,\cdots,a_{n-1}\f$，这相当于求多元函数
 
-\f[F(a_0,a_1,\cdots,a_{n-1})=\sum_{i=1}^s\left[f(t_i)-\sum_{j=0}^{n-1}a_j\phi_j(t_i)\right]^2\tag{4-2}\f]
+\f[F(a_0,a_1,\cdots,a_{n-1})=\sum_{i=0}^{s-1}\left[f(t_i)-\sum_{j=0}^{n-1}a_j\phi_j(t_i)\right]^2\tag{4-2}\f]
 
 的极小值点。按照求极值的必要条件，可以对上述多元函数求偏导，令其为 \f$0\f$ 有
 
-\f[\frac{\partial F}{\partial a_k}=2\sum_{i=1}^s\left[f(t_i)-\sum_{j=0}^{n-1}a_j\phi_j(t_i)\right][-\phi_k(t_i)]=0\qquad(k=0,1,\cdots,n-1),\f]
+\f[\frac{\partial F}{\partial a_k}=2\sum_{i=0}^{s-1}\left[f(t_i)-\sum_{j=0}^{n-1}a_j\phi_j(t_i)\right][-\phi_k(t_i)]=0\qquad(k=0,1,\cdots,n-1),\f]
 
 整理为
 
-\f[\sum_{j=0}^{n-1}\left[\sum_{i=1}^s\phi_k(t_i)\phi_j(t_i)\right]a_j=\sum_{i=1}^s\phi_k(t_i)f(t_i)\qquad(k=0,1,\cdots,n-1)\tag{4-2}\f]
+\f[\sum_{j=0}^{n-1}\left[\sum_{i=0}^{s-1}\phi_k(t_i)\phi_j(t_i)\right]a_j=\sum_{i=0}^{s-1}\phi_k(t_i)f(t_i)\qquad(k=0,1,\cdots,n-1)\tag{4-3}\f]
 
-不同的 2 个数字向量的内积定义为 \f$(\pmb\alpha,\pmb\beta)=\sum\limits_{i=1}^sa_ib_i\f$，同样的，多项式不同的 2 个分量（例如 \f$\phi_1(t)=t\f$ 和 \f$\phi_2(t)=t^2\f$ 就是不同的分量）之间的内积可以定义为 \f$(\phi_p(t),\phi_q(t))=\sum\limits_{i=1}^s\phi_p(t_i)\phi_q(t_i)\f$，简记为 \f$(\phi_p,\phi_q)\f$。则有
+不同的 2 个数字向量的内积定义为 \f$(\pmb\alpha,\pmb\beta)=\sum\limits_{i=0}^sa_ib_i\f$，同样的，多项式不同的 2 个分量（例如 \f$\phi_1(t)=t\f$ 和 \f$\phi_2(t)=t^2\f$ 就是不同的分量）之间的内积可以定义为 \f$(\phi_p(t),\phi_q(t))=\sum\limits_{i=0}^{s-1}\phi_p(t_i)\phi_q(t_i)\f$，简记为 \f$(\phi_p,\phi_q)\f$。则有
 
 \f[\left\{\begin{align}
-(\phi_k,\phi_j)&=\sum_{i=1}^s\phi_k(t_i)\phi_j(t_i)\\
-(\phi_k,f)&=\sum_{i=1}^s\phi_k(t_i)\phi_j(t_i)\equiv d_k\\
-\end{align}\right.\tag{4-3}\f]
+(\phi_k,\phi_j)&=\sum_{i=0}^{s-1}\phi_k(t_i)\phi_j(t_i)\\
+(\phi_k,f)&=\sum_{i=0}^{s-1}\phi_k(t_i)f(t_i)\equiv d_k\\
+\end{align}\right.\tag{4-4}\f]
 
-于是公式 \f$\text{(4-2)}\f$ 可以写成
+于是公式 \f$\text{(4-3)}\f$ 可以写成
 
-\f[\sum_{j=0}^{n-1}(\phi_k,\phi_j)=d_k\qquad(k=0,1,\cdots,n-1)\tag{4-4a}\f]
+\f[\sum_{j=0}^{n-1}(\phi_k,\phi_j)=d_k\qquad(k=0,1,\cdots,n-1)\tag{4-5a}\f]
 
 或者展开写为
 
@@ -333,7 +336,7 @@ f(t_1)\\f(t_2)\\\vdots\\f(t_s)\end{bmatrix}\tag{3-11}\f]
 (\phi_1,\phi_0)a_0&+&(\phi_1,\phi_1)a_1&+&\cdots&+&(\phi_1,\phi_{n-1})a_{n-1}&=&d_1\\
 \vdots&&\vdots&&&&\vdots&=&\vdots\\
 (\phi_{n-1},\phi_0)a_0&+&(\phi_{n-1},\phi_1)a_1&+&\cdots&+&(\phi_{n-1},\phi_{n-1})a_{n-1}&=&d_{n-1}\\
-\end{matrix}\right.\tag{4-4b}\f]
+\end{matrix}\right.\tag{4-5b}\f]
 
 上式称为 \f$a_0,a_1,\cdots,a_{n-1}\f$ 的<span style="color: red">法方程（组）</span>，是 \f$n\f$ 阶线性方程组，其系数矩阵是
 
@@ -342,17 +345,70 @@ f(t_1)\\f(t_2)\\\vdots\\f(t_s)\end{bmatrix}\tag{3-11}\f]
 (\phi_1,\phi_0)&(\phi_1,\phi_1)&\cdots&(\phi_1,\phi_{n-1})\\
 \vdots&\vdots&&\vdots\\
 (\phi_{n-1},\phi_0)&(\phi_{n-1},\phi_1)&\cdots&(\phi_{n-1},\phi_{n-1})\\
-\end{bmatrix}\tag{4-5}\f]
+\end{bmatrix}\tag{4-6}\f]
 
-容易验证，最终得到的系数矩阵 \f$G\f$ 与公式 \f$\text{(3-11)}\f$ 中 \f$A\f$ 矩阵的关系为 \f$G=A^TA\f$，并且右端项 \f$\pmb d=A^T\pmb f\f$，代入公式 \f$\text{(4-4)}\f$ 可以得到
+对于 \f$(\phi_p,\phi_q)\f$，可以写成矩阵的表示方式，即
 
-\f[A^TA\pmb a=A^T\pmb f\tag{4-6}\f]
+\f[\begin{align}(\phi_p,\phi_q)&=\sum_{i=0}^{s-1}\phi_p(t_i)\phi_q(t_i)\\&=[\phi_p(t_0),\phi_p(t_1),\cdots,\phi_p(t_{s-1})]
+\begin{bmatrix}\phi_i(t_0)\\\phi_i(t_1)\\\vdots\\\phi_q(t_{s-1})\end{bmatrix}\end{align}\tag{4-7}\f]
+
+因此对法方程系数矩阵 \f$G\f$ 的第 \f$k\ (k=0,1,\cdots,n-1)\f$ 行，有
+
+\f[[(\phi_k,\phi_0),(\phi_k,\phi_1),\cdots,(\phi_k,\phi_{n-1})]=[\phi_k(t_0),\phi_k(t_1),\cdots,\phi_k(t_{s-1})]
+\begin{bmatrix}\phi_0(t_0)&\phi_1(t_0)&\cdots&\phi_{n-1}(t_0)\\\phi_0(t_1)&\phi_1(t_1)&\cdots&\phi_{n-1}(t_1)\\\vdots&\vdots
+&&\vdots\\\phi_0(t_{s-1})&\phi_1(t_{s-1})&\cdots&\phi_{n-1}(t_{s-1})\end{bmatrix}\tag{4-8}\f]
+
+将 \f$k=0,1,\cdots,n-1\f$ 的行向量拼起来，得到
+
+\f[\begin{align}G&=\begin{bmatrix}
+(\phi_0,\phi_0)&(\phi_0,\phi_1)&\cdots&(\phi_0,\phi_{n-1})\\
+(\phi_1,\phi_0)&(\phi_1,\phi_1)&\cdots&(\phi_1,\phi_{n-1})\\
+\vdots&\vdots&&\vdots\\
+(\phi_{n-1},\phi_0)&(\phi_{n-1},\phi_1)&\cdots&(\phi_{n-1},\phi_{n-1})\\
+\end{bmatrix}\\&=\begin{bmatrix}
+\phi_0(t_0)&\phi_0(t_1)&\cdots&\phi_0(t_{s-1})\\
+\phi_1(t_0)&\phi_1(t_1)&\cdots&\phi_1(t_{s-1})\\
+\vdots&\vdots&&\vdots\\
+\phi_{n-1}(t_0)&\phi_{n-1}(t_1)&\cdots&\phi_{n-1}(t_{s-1})\\
+\end{bmatrix}\begin{bmatrix}
+\phi_0(t_0)&\phi_1(t_0)&\cdots&\phi_{n-1}(t_0)\\
+\phi_0(t_1)&\phi_1(t_1)&\cdots&\phi_{n-1}(t_1)\\
+\vdots&\vdots&&\vdots\\
+\phi_0(t_{s-1})&\phi_1(t_{s-1})&\cdots&\phi_{n-1}(t_{s-1})
+\end{bmatrix}\end{align}\tag{4-9}\f]
+
+将公式 \f$\text{(3-11)}\f$ 中 \f$A\f$ 的矩阵表示方式代入 \f$\text{(4-9)}\f$ 可以得到 \f$G=A^TA\f$，并且右端项 \f$\pmb d=A^T\pmb f\f$，代入公式 \f$\text{(4-5)}\f$ 可以得到
+
+\f[A^TA\pmb a=A^T\pmb f\tag{4-10}\f]
 
 即
 
-\f[\boxed{\hat{\pmb a}=\left(A^TA\right)^{-1}A^T\pmb f}\tag{4-7}\f]
+\f[\boxed{\hat{\pmb a}=\left(A^TA\right)^{-1}A^T\pmb f}\tag{4-11}\f]
 
 这与公式 \f$\text{(2-7)}\f$ 完全一致。
+
+对于<span style="color: green">**示例 3**</span>，可以依次计算出
+
+\f[\begin{align}
+(\phi_0,\phi_0)&=\sum_{i=0}^3\phi_0(t_i)\phi_0(t_i)=\sum_{i=0}^31\times1=4\\
+(\phi_1,\phi_0)=(\phi_0,\phi_1)&=\sum_{i=0}^3\phi_0(t_i)\phi_1(t_i)=\sum_{i=0}^31\times t_i=1+2+3+4=10\\
+(\phi_1,\phi_1)&=\sum_{i=0}^3\phi_1(t_i)\phi_1(t_i)=\sum_{i=0}^3t_i\times t_i=1+4+9+16=30\\
+d_0=(\phi_0,f)&=\sum_{i=0}^3\phi_0(t_i)f(t_i)=\sum_{i=0}^31\times f(t_i)=0+2+1+3=6\\
+d_1=(\phi_1,f)&=\sum_{i=0}^3\phi_1(t_i)f(t_i)=\sum_{i=0}^3t_i\times f(t_i)=0+2\times2+3\times1+4\times3=19\\
+\end{align}\tag{4-12}\f]
+
+得到
+
+\f[\begin{bmatrix}4&10\\10&30\end{bmatrix}\hat{\pmb a}=
+\begin{bmatrix}6\\19\end{bmatrix}\tag{4-13}\f]
+
+解得：\f$\left\{\begin{align}a_0&=-0.5\\a_1&=0.8\end{align}\right.\f$，即拟合曲线为 \f$y=-0.5+0.8t\f$，使用数学绘图软件验证，结果正确。
+
+<center>
+![ls-eg3](ls-eg3.png)
+
+图 4-1
+</center>
 
 ### 5. 部署使用
 
