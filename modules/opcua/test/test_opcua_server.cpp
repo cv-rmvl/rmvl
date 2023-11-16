@@ -50,7 +50,7 @@ TEST(OPC_UA_Server, server_config_add_node)
 // 服务器添加方法节点
 TEST(OPC_UA_Server, server_config_call_method)
 {
-    rm::Server server(4840);
+    rm::Server server(4841);
     rm::Method method;
     method.browse_name = "test_method";
     method.description = "this is test method";
@@ -68,7 +68,7 @@ TEST(OPC_UA_Server, server_config_call_method)
 // 服务器节点服务端路径搜索
 TEST(OPC_UA_Server, server_config_find_node)
 {
-    rm::Server server(4840);
+    rm::Server server(4842);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -81,6 +81,49 @@ TEST(OPC_UA_Server, server_config_find_node)
     auto id = server.addObjectNode(object);
     auto target = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | server.find("test_object");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
+    server.start();
+    server.stop();
+    server.join();
+}
+
+// 添加自定义事件类型节点
+TEST(OPC_UA_Server, server_config_add_event_type_node)
+{
+    rm::Server server(4843);
+    rm::EventType event_type;
+    event_type.browse_name = "test_event_type";
+    event_type.description = "this is test event type";
+    event_type.display_name = "测试事件类型";
+    int val = 3;
+    event_type.add("test_val", val);
+    auto id = server.addEventTypeNode(event_type);
+    auto target = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE) | server.find("test_event_type");
+    EXPECT_TRUE(UA_NodeId_equal(&id, &target));
+    server.start();
+    server.stop();
+    server.join();
+}
+
+// 手动触发事件
+TEST(OPC_UA_Server, server_config_trigger_event)
+{
+    rm::Server server(4844);
+    // 添加事件类型
+    rm::EventType event_type;
+    event_type.browse_name = "test_event_type";
+    event_type.description = "this is test event type";
+    event_type.display_name = "测试事件类型";
+    int val = 3;
+    event_type.add("test_val", val);
+    server.addEventTypeNode(event_type);
+    // 创建事件
+    rm::Event event(event_type);
+    event.source_name = "test_event";
+    event.message = "this is test event";
+    event.severity = 1;
+    event["test_val1"] = 99;
+    // 触发事件
+    EXPECT_TRUE(server.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event));
     server.start();
     server.stop();
     server.join();

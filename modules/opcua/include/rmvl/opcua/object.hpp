@@ -29,27 +29,6 @@ namespace rm
  */
 class ObjectType final
 {
-    //! 继承的 `rm::ObjectType` 对象类型
-    ObjectType *_base;
-
-    /**
-     * @brief 变量节点
-     * @brief
-     * - `Key`: 浏览名 BrowseName
-     * @brief
-     * - `Value`: 用 `rm::Variable` 表示的变量
-     */
-    std::unordered_map<std::string, Variable> _variables;
-
-    /**
-     * @brief 方法节点
-     * @brief
-     * - `Key`: 浏览名 BrowseName
-     * @brief
-     * - `Value`: 用 `rm::Method` 表示的方法
-     */
-    std::unordered_map<std::string, Method> _methods;
-
 public:
     /**
      * @brief 浏览名称 BrowseName
@@ -73,15 +52,37 @@ public:
     //! 对象类型的描述 - `zh-CN`
     std::string description{};
 
+private:
+    //! 继承的 `rm::ObjectType` 对象类型
+    ObjectType *_base;
+
+    /**
+     * @brief 变量节点
+     * @brief
+     * - `Key`: 浏览名 BrowseName
+     * @brief
+     * - `Value`: 用 `rm::Variable` 表示的变量
+     */
+    std::unordered_map<std::string, Variable> _variables;
+
+    /**
+     * @brief 方法节点
+     * @brief
+     * - `Key`: 浏览名 BrowseName
+     * @brief
+     * - `Value`: 用 `rm::Method` 表示的方法
+     */
+    std::unordered_map<std::string, Method> _methods;
+
 public:
-    //! 构造 `rm::ObjectType` 对象类型 @note 其继承的 `rm::ObjectType` 为空
+    //! 构造 `rm::ObjectType` 对象类型
     ObjectType() = default;
 
-    ObjectType(const ObjectType &val) : _base(val._base), _variables(val._variables), _methods(val._methods),
-                                        browse_name(val.browse_name), display_name(val.display_name), description(val.description) {}
+    ObjectType(const ObjectType &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description),
+                                        _base(val._base), _variables(val._variables), _methods(val._methods) {}
 
-    ObjectType(ObjectType &&val) : _base(std::exchange(val._base, nullptr)), _variables(std::move(val._variables)), _methods(std::move(val._methods)),
-                                   browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)) {}
+    ObjectType(ObjectType &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
+                                   _base(std::exchange(val._base, nullptr)), _variables(std::move(val._variables)), _methods(std::move(val._methods)) {}
 
     ObjectType &operator=(const ObjectType &val);
     ObjectType &operator=(ObjectType &&val);

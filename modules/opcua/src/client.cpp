@@ -100,7 +100,7 @@ bool Client::write(const UA_NodeId &node, const Variable &val)
     return true;
 }
 
-bool Client::callEx(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
+bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
 {
     // 初始化输入、输出参数
     std::vector<UA_Variant> input_variants;
@@ -117,17 +117,114 @@ bool Client::callEx(const UA_NodeId &obj_node, const std::string &name, const st
         return false;
     }
     // 调用方法
-    UA_StatusCode retval = UA_Client_call(_client, obj_node, method_node, input_variants.size(),
+    UA_StatusCode status = UA_Client_call(_client, obj_node, method_node, input_variants.size(),
                                           input_variants.data(), &output_size, &output_variants);
-    if (retval != UA_STATUSCODE_GOOD)
+    if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method: %s \033[31m(ns=%u, s=%d)\033[0m",
-                     UA_StatusCode_name(retval), method_node.namespaceIndex, method_node.identifier.numeric);
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method, node id: %d, error code: %s",
+                     method_node.identifier.numeric, UA_StatusCode_name(status));
         return false;
     }
     outputs.reserve(output_size);
     for (size_t i = 0; i < output_size; ++i)
-        outputs.emplace_back(output_variants[i].data, output_variants[i].type, output_variants[i].arrayLength);
+        outputs.push_back(helper::cvtVariable(output_variants[i]));
+    return true;
+}
+
+bool Client::subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
+{
+    // 创建订阅
+    UA_CreateSubscriptionResponse resp;
+    auto status = createSubscription(resp);
+    if (!status)
+        return false;
+    // 创建监视项请求
+    UA_MonitoredItemCreateRequest request = UA_MonitoredItemCreateRequest_default(node);
+    request.requestedParameters.samplingInterval = para::opcua_param.SAMPLING_INTERVAL;
+    request.requestedParameters.discardOldest = true;
+    request.requestedParameters.queueSize = queue_size;
+    // 创建监视器
+    UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createDataChange(
+        _client, resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request, &node, on_change, nullptr);
+    if (result.statusCode != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
+        return false;
+    }
+    return true;
+}
+
+bool Client::subscribe(UA_NodeId node_id, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+{
+    // 创建订阅
+    UA_CreateSubscriptionResponse sub_resp;
+    if (!createSubscription(sub_resp))
+        return false;
+
+    UA_MonitoredItemCreateRequest request_item;
+    UA_MonitoredItemCreateRequest_init(&request_item);
+    request_item.itemToMonitor.nodeId = node_id;
+    request_item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
+    request_item.monitoringMode = UA_MONITORINGMODE_REPORTING;
+    // 准备 BrowseName 列表
+    std::vector<UA_QualifiedName> browse_names(names.size());
+    for (size_t i = 0; i < browse_names.size(); ++i)
+    {
+        uint16_t ns = (names[i] == "SourceName" || names[i] == "Message" || names[i] == "Severity") ? 0 : 1;
+        browse_names[i] = UA_QUALIFIEDNAME(ns, helper::to_char(names[i]));
+    }
+    // 准备 select_clauses 列表
+    std::vector<UA_SimpleAttributeOperand> select_clauses(browse_names.size());
+    for (size_t i = 0; i < browse_names.size(); ++i)
+    {
+        select_clauses[i].typeDefinitionId = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE);
+        select_clauses[i].attributeId = UA_ATTRIBUTEID_VALUE;
+        select_clauses[i].browsePathSize = 1;
+        select_clauses[i].browsePath = &browse_names[i];
+    }
+    // 创建事件过滤器
+    UA_EventFilter filter;
+    UA_EventFilter_init(&filter);
+    filter.selectClauses = select_clauses.data();
+    filter.selectClausesSize = select_clauses.size();
+    request_item.requestedParameters.filter.encoding = UA_EXTENSIONOBJECT_DECODED;
+    request_item.requestedParameters.filter.content.decoded.data = &filter;
+    request_item.requestedParameters.filter.content.decoded.type = &UA_TYPES[UA_TYPES_EVENTFILTER];
+    // 创建事件监视器
+    UA_UInt32 monitor_id{};
+    UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(
+        _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request_item, &monitor_id, on_event, nullptr);
+    if (result.statusCode != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create event monitor, error: %s", UA_StatusCode_name(result.statusCode));
+        return false;
+    }
+    else
+    {
+        UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Created event monitor, monitor id: %d", monitor_id);
+        return true;
+    }
+}
+
+////////////////////////// Private //////////////////////////
+
+bool Client::createSubscription(UA_CreateSubscriptionResponse &response)
+{
+    UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
+    request.requestedPublishingInterval = para::opcua_param.PUBLISHING_INTERVAL;
+    request.requestedLifetimeCount = para::opcua_param.LIFETIME_COUNT;
+    request.requestedMaxKeepAliveCount = para::opcua_param.MAX_KEEPALIVE_COUNT;
+    request.maxNotificationsPerPublish = para::opcua_param.MAX_NOTIFICATIONS;
+    request.publishingEnabled = true;
+    request.priority = para::opcua_param.PRIORITY;
+
+    response = UA_Client_Subscriptions_create(_client, request, nullptr, nullptr, nullptr);
+    if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create subscription, error: %s",
+                     UA_StatusCode_name(response.responseHeader.serviceResult));
+        return false;
+    }
     return true;
 }
 

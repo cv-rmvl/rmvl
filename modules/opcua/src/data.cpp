@@ -9,6 +9,7 @@
  *
  */
 
+#include "rmvl/opcua/event.hpp"
 #include "rmvl/opcua/object.hpp"
 
 namespace rm
@@ -119,6 +120,38 @@ ObjectType &ObjectType::operator=(ObjectType &&val)
     _base = std::exchange(val._base, nullptr);
     _variables = std::move(val._variables);
     _methods = std::move(val._methods);
+    return *this;
+}
+
+EventType &EventType::operator=(const EventType &val)
+{
+    browse_name = val.browse_name;
+    display_name = val.display_name;
+    description = val.description;
+    _properties = val._properties;
+    return *this;
+}
+
+EventType &EventType::operator=(EventType &&val)
+{
+    browse_name = std::move(val.browse_name);
+    display_name = std::move(val.display_name);
+    description = std::move(val.description);
+    _properties = std::move(val._properties);
+    return *this;
+}
+
+Event &Event::operator=(const Event &val)
+{
+    _type = val._type;
+    _properties = val._properties;
+    return *this;
+}
+
+Event &Event::operator=(Event &&val)
+{
+    _type = std::exchange(val._type, nullptr);
+    _properties = std::move(val._properties);
     return *this;
 }
 

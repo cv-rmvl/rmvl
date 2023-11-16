@@ -93,7 +93,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
     return retval;
 }
 
-UA_NodeId Server::addVariableNodeEx(const Variable &val, UA_NodeId parent_id)
+UA_NodeId Server::addVariableNode(const Variable &val, UA_NodeId parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
@@ -125,15 +125,8 @@ UA_NodeId Server::addVariableNodeEx(const Variable &val, UA_NodeId parent_id)
     UA_NodeId retval{UA_NODEID_NULL};
     // 添加节点至服务器
     auto status = UA_Server_addVariableNode(
-        // 预先定义的变量节点 NodeId
-        _server, UA_NODEID_NULL,
-        // 父节点（通过派生得到当前节点），这里是 ObjectsFolder
-        parent_id,
-        // 与父节点之间的引用类型，这里是 ORGANIZES
-        UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-        // 浏览名 BrowseName
+        _server, UA_NODEID_NULL, parent_id, UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
         UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
-        // 变量类型节点（通过实例化得到当前节点）
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -177,7 +170,7 @@ bool Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead 
     return status == UA_STATUSCODE_GOOD;
 }
 
-UA_NodeId Server::addDataSourceVariableNodeEx(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id)
+UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
@@ -225,7 +218,7 @@ UA_NodeId Server::addDataSourceVariableNodeEx(const Variable &val, DataSourceRea
     return retval;
 }
 
-UA_NodeId Server::addMethodNodeEx(const Method &method, UA_NodeId parent_id)
+UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id)
 {
     UA_MethodAttributes attr = UA_MethodAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(method.display_name));
@@ -307,7 +300,7 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
     for (const auto &[browse_name, val] : otype.getVariables())
     {
         // 添加至服务器
-        UA_NodeId sub_retval = addVariableNodeEx(val, retval);
+        UA_NodeId sub_retval = addVariableNode(val, retval);
         // 设置子变量节点为强制生成
         status = UA_Server_addReference(
             _server, sub_retval, UA_NODEID_NUMERIC(0, UA_NS0ID_HASMODELLINGRULE),
@@ -322,11 +315,11 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
     }
     // 添加方法节点作为对象类型节点的子节点
     for (const auto &val : otype.getMethods())
-        addMethodNodeEx(val.second, retval);
+        addMethodNode(val.second, retval);
     return retval;
 }
 
-UA_NodeId Server::addObjectNodeEx(const Object &obj, UA_NodeId parent_id)
+UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
 {
     UA_ObjectAttributes attr{UA_ObjectAttributes_default};
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(obj.display_name));
@@ -369,9 +362,103 @@ UA_NodeId Server::addObjectNodeEx(const Object &obj, UA_NodeId parent_id)
         if (!UA_NodeId_isNull(&sub_node_id))
             write(sub_node_id, variable);
         else
-            addVariableNodeEx(variable, retval);
+            addVariableNode(variable, retval);
     }
     return retval;
+}
+
+UA_NodeId Server::addEventTypeNode(const EventType &etype)
+{
+    UA_NodeId retval;
+    UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
+    attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(etype.display_name));
+    attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(etype.description));
+
+    auto status = UA_Server_addObjectTypeNode(
+        _server, UA_NODEID_NULL, UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE),
+        UA_NODEID_NUMERIC(0, UA_NS0ID_HASSUBTYPE),
+        UA_QUALIFIEDNAME(1, helper::to_char(etype.browse_name)),
+        attr, nullptr, &retval);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add event type: %s", UA_StatusCode_name(status));
+        return UA_NODEID_NULL;
+    }
+    // 添加自定义数据
+    for (const auto &[browse_name, val] : etype.getProperties())
+    {
+        UA_VariableAttributes val_attr = UA_VariableAttributes_default;
+        val_attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(browse_name));
+        val_attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
+        UA_Variant_setScalarCopy(&val_attr.value, &val, &UA_TYPES[UA_TYPES_INT32]);
+        UA_NodeId sub_id;
+        status = UA_Server_addVariableNode(
+            _server, UA_NODEID_NULL, retval, UA_NODEID_NUMERIC(0, UA_NS0ID_HASPROPERTY),
+            UA_QUALIFIEDNAME(1, helper::to_char(browse_name)), UA_NODEID_NUMERIC(0, UA_NS0ID_PROPERTYTYPE),
+            val_attr, nullptr, &sub_id);
+        if (status != UA_STATUSCODE_GOOD)
+        {
+            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+                         "Failed to add event type property: %s", UA_StatusCode_name(status));
+            return UA_NODEID_NULL;
+        }
+        // 设置子变量节点为强制生成
+        status = UA_Server_addReference(
+            _server, sub_id, UA_NODEID_NUMERIC(0, UA_NS0ID_HASMODELLINGRULE),
+            UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
+        if (status != UA_STATUSCODE_GOOD)
+        {
+            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+                         "Failed to add reference during adding event type node, browse name: %s, error code: %s",
+                         browse_name.c_str(), UA_StatusCode_name(status));
+            return UA_NODEID_NULL;
+        }
+    }
+    return retval;
+}
+
+bool Server::triggerEvent(const UA_NodeId &node_id, const Event &event)
+{
+    UA_NodeId type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE) | find(event.getType()->browse_name);
+    if (UA_NodeId_isNull(&type_id))
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the event type ID during triggering event");
+        return false;
+    }
+    // 创建事件
+    UA_NodeId event_id{UA_NODEID_NULL};
+    auto status = UA_Server_createEvent(_server, type_id, &event_id);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to create event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+
+    // 设置事件默认属性
+    UA_DateTime time = UA_DateTime_now();
+    UA_String source_name = UA_STRING(helper::to_char(event.source_name));
+    UA_LocalizedText evt_msg = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(event.message));
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Time")), &time, &UA_TYPES[UA_TYPES_DATETIME]);
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("SourceName")), &source_name, &UA_TYPES[UA_TYPES_STRING]);
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+    // 设置事件自定义属性
+    for (const auto &[browse_name, prop] : event.getProperties())
+    {
+        UA_NodeId sub_node_id = event_id | find(browse_name);
+        if (!UA_NodeId_isNull(&sub_node_id))
+            UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(1, helper::to_char(browse_name)),
+                                                 &prop, &UA_TYPES[UA_TYPES_INT32]);
+    }
+
+    // 触发事件
+    status = UA_Server_triggerEvent(_server, event_id, node_id, nullptr, true);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to trigger event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    return true;
 }
 
 } // namespace rm

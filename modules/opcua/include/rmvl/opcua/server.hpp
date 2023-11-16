@@ -16,6 +16,7 @@
 
 #include <open62541/nodeids.h>
 
+#include "event.hpp"
 #include "object.hpp"
 
 namespace rm
@@ -77,15 +78,14 @@ public:
 
     /**
      * @brief 获取路径搜索必要信息
-     *
-     * @note 需要配合管道运算符 `|` 完成路径搜索
+     * @brief 需要配合管道运算符 `|` 完成路径搜索
      * @code {.cpp}
      * auto dst_mode = src_node | svr.find("person") | svr.find("name");
      * @endcode
      *
      * @param[in] browse_name 浏览名
      * @return 目标节点信息
-     * @retval `[_server, browse_name]`
+     * @retval fnis `[_client, browse_name]` 元组
      */
     inline FindNodeInServer find(const std::string &browse_name) { return {_server, browse_name}; }
 
@@ -95,34 +95,25 @@ public:
      * @brief 添加变量类型节点 VariableTypeNode 至 `BaseDataVariableType` 中
      *
      * @param[in] vtype `rm::VariableType` 表示的变量
-     * @return 添加后服务器中对应的变量类型节点唯一标识 `UA_NodeId`
+     * @return 添加至服务器后，对应变量类型节点的唯一标识 `UA_NodeId`
      */
     UA_NodeId addVariableTypeNode(const VariableType &vtype);
 
     /**
-     * @brief 添加变量节点 VariableNode 至指定父节点中
+     * @brief 添加变量节点 VariableNode 至指定父节点中，并指定引用类型
      *
      * @param[in] val `rm::Variable` 表示的变量
-     * @param[in] parent_id 指定父节点的 `UA_NodeId`
-     * @return 添加后服务器中对应的变量节点唯一标识 `UA_NodeId`
+     * @param[in] parent_id 指定父节点的 `UA_NodeId`，默认为 `ObjectsFolder`
+     * @return 添加至服务器后，对应变量节点的唯一标识 `UA_NodeId`
      */
-    UA_NodeId addVariableNodeEx(const Variable &val, UA_NodeId parent_id);
-
-    /**
-     * @brief 添加变量节点 VariableNode 至 `ObjectsFolder` 中
-     *
-     * @tparam Tp 变量节点数据类型
-     * @param[in] val `rm::Variable` 表示的变量
-     * @return 添加后服务器中对应的变量节点唯一标识 `UA_NodeId`
-     */
-    inline UA_NodeId addVariableNode(const Variable &val) { return addVariableNodeEx(val, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER)); }
+    UA_NodeId addVariableNode(const Variable &val, UA_NodeId parent_id = UA_NODEID_NUMERIC(0, 85));
 
     /**
      * @brief 为既有的变量节点 VariableNode 添加值回调
+     * @brief 值回调表示在对 **服务器中的** 变量节点进行读写的时候，会在读之前执行 `beforeRead`，在写之后执行 `afterWrite`
      *
-     * @note 值回调表示在对 **服务器中的** 变量节点进行读写的时候，会在读之前执行 `beforeRead`，在写之后执行 `afterWrite`
-     * @param[in] id 既有的变量节点的 `UA_NodeId`
-     * - 因变量节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
+     * @param[in] id 既有的变量节点的 `UA_NodeId`，因变量节点可能位于任意一个父节点下，因此可以使用
+     * **路径搜索** 进行查找
      * @param[in] before_read 可隐式转换为 `ValueCallBackBeforeRead` 函数指针类型的可调用对象
      * @param[in] after_write 可隐式转换为 `ValueCallBackAfterWrite` 函数指针类型的可调用对象
      * @return 是否添加成功
@@ -131,38 +122,23 @@ public:
 
     /**
      * @brief 添加数据源变量节点 VariableNode 至指定父节点中
-     *
-     * @note
-     * 数据源变量节点不同于变量节点的值回调
-     * @note
+     * @brief 数据源变量节点不同于变量节点的值回调
+     * @brief
      * - 值回调是在现有变量节点之上添加读取 **前** 和写入 **后** 的回调函数，本质上仍然是从服务器中获取数据
-     * @note
+     * @brief
      * - 数据源变量节点会把每次 IO 都绑定到各自的回调函数中，即可以重定向到一个实际的物理过程中，从而跟服务器本身的数据读写脱离关系
-     * @param[in] val `rm::Variable` 表示的变量
-     * @param[in] on_read 重定向的读取回调函数
-     * @param[in] on_write 重定向的写入回调函数
-     * @param[in] parent_id 指定父节点的 `UA_NodeId`
-     * @return 添加后服务器中对应的数据源变量节点唯一标识 `UA_NodeId`
-     */
-    UA_NodeId addDataSourceVariableNodeEx(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id);
-
-    /**
-     * @brief 添加数据源变量节点 VariableNode 至 `ObjectsFolder` 中
      *
-     * @see addDataSourceVariableNodeEx
      * @param[in] val `rm::Variable` 表示的变量
      * @param[in] on_read 重定向的读取回调函数
      * @param[in] on_write 重定向的写入回调函数
-     * @return 添加后服务器中对应的数据源变量节点唯一标识 `UA_NodeId`
+     * @param[in] parent_id 指定父节点的 `UA_NodeId`，默认为 `ObjectsFolder`
+     * @return 添加至服务器后，对应数据源变量节点的唯一标识 `UA_NodeId`
      */
-    inline UA_NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write)
-    {
-        return addDataSourceVariableNodeEx(val, on_read, on_write, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER));
-    }
+    UA_NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id = UA_NODEID_NUMERIC(0, 85));
 
     /**
      * @brief 从指定的变量节点读数据
-     * 
+     *
      * @param[in] node 既存的变量节点的 `UA_NodeId`
      * @param[out] val 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      * @return 是否读取成功
@@ -182,24 +158,16 @@ public:
      * @brief 添加方法节点 MethodNode 至指定父节点中
      *
      * @param[in] method `rm::Method` 表示的方法
-     * @param[in] parent_id 指定父节点的 `UA_NodeId`
-     * @return 添加后服务器中对应的方法节点唯一标识 `UA_NodeId`
+     * @param[in] parent_id 指定父节点的 `UA_NodeId`，默认为 `ObjectsFolder`
+     * @return 添加至服务器后，对应方法节点的唯一标识 `UA_NodeId`
      */
-    UA_NodeId addMethodNodeEx(const Method &method, UA_NodeId parent_id);
-
-    /**
-     * @brief 添加方法节点 MethodNode 至 `ObjectsFolder` 中
-     *
-     * @param[in] method `rm::Method` 表示的方法
-     * @return 添加后服务器中对应的方法节点唯一标识 `UA_NodeId`
-     */
-    inline UA_NodeId addMethodNode(const Method &method) { return addMethodNodeEx(method, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER)); };
+    UA_NodeId addMethodNode(const Method &method, const UA_NodeId &parent_id = UA_NODEID_NUMERIC(0, 85));
 
     /**
      * @brief 添加对象类型节点 ObjectTypeNode 至 `BaseObjectType` 中
      *
      * @param[in] otype `rm::ObjectType` 表示的对象类型
-     * @return 添加后服务器中对应的对象类型节点唯一标识 `UA_NodeId`
+     * @return 添加至服务器后，对应对象类型节点的唯一标识 `UA_NodeId`
      */
     UA_NodeId addObjectTypeNode(const ObjectType &otype);
 
@@ -207,20 +175,28 @@ public:
      * @brief 添加对象节点 ObjectNode 至指定的父节点中
      *
      * @param[in] obj `rm::Object` 表示的对象
-     * @param[in] parent_id 指定的父节点 `UA_NodeId`
-     *
-     * @return 添加后服务器中对应的对象节点唯一标识 `UA_NodeId`
+     * @param[in] parent_id 指定的父节点 `UA_NodeId`，默认为 `ObjectsFolder`
+     * @return 添加至服务器后，对应对象节点的唯一标识 `UA_NodeId`
      */
-    UA_NodeId addObjectNodeEx(const Object &obj, UA_NodeId parent_id);
+    UA_NodeId addObjectNode(const Object &obj, UA_NodeId parent_id = UA_NODEID_NUMERIC(0, 85));
 
     /**
-     * @brief 添加对象节点 ObjectNode 至 `ObjectsFolder` 中
+     * @brief 添加事件类型至 `BaseEventType` 中
      *
-     * @param[in] obj `rm::Object` 表示的对象
-     *
-     * @return 添加后服务器中对应的对象节点唯一标识 `UA_NodeId`
+     * @param[in] etype `rm::EventType` 表示的事件类型
+     * @return 添加至服务器后，对应事件类型的唯一标识 `UA_NodeId`
      */
-    inline UA_NodeId addObjectNode(const Object &obj) { return addObjectNodeEx(obj, UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER)); }
+    UA_NodeId addEventTypeNode(const EventType &etype);
+
+    /**
+     * @brief 创建并触发事件
+     * 
+     * @param[in] node_id 触发事件的节点 `UA_NodeId`
+     * @param[in] event `rm::Event` 表示的事件
+     * @note `Server` 的 `node_id` 是 `UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER)`
+     * @return 是否创建并触发成功？
+     */
+    bool triggerEvent(const UA_NodeId &node_id, const Event &event);
 };
 
 //! @} opcua

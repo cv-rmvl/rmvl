@@ -14,11 +14,19 @@
 #include "rmvl/opcua/client.hpp"
 #include "rmvl/opcua/server.hpp"
 
+#include "rmvlpara/opcua.hpp"
+
 namespace rm_test
 {
 
 void setSvr(rm::Server &svr)
 {
+    // 添加单变量节点
+    rm::Variable single_value = 42;
+    single_value.browse_name = "single";
+    single_value.description = "this is single value";
+    single_value.display_name = "单值";
+    svr.addVariableNode(single_value);
     // 添加数组变量节点
     rm::Variable variable = std::vector({1, 2, 3, 4, 5});
     variable.browse_name = "array";
@@ -45,6 +53,7 @@ void setSvr(rm::Server &svr)
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 }
 
+// 路径搜索
 TEST(OPC_UA_ClientTest, read_variable)
 {
     rm::Server svr(5000);
@@ -61,6 +70,24 @@ TEST(OPC_UA_ClientTest, read_variable)
     svr.join();
 }
 
+// 变量读写
+TEST(OPC_UA_ClientTest, variable_IO)
+{
+    rm::Server svr(5001);
+    setSvr(svr);
+    rm::Client client("opc.tcp://localhost:5001");
+    // 读取测试服务器上的变量值
+    auto id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("single");
+    EXPECT_TRUE(client.write(id, 99));
+    rm::Variable variable;
+    EXPECT_TRUE(client.read(id, variable));
+    int single_value = rm::Variable::cast<int>(variable);
+    EXPECT_EQ(single_value, 99);
+    svr.stop();
+    svr.join();
+}
+
+// 方法调用
 TEST(OPC_UA_ClientTest, call)
 {
     rm::Server svr(5002);
@@ -71,6 +98,76 @@ TEST(OPC_UA_ClientTest, call)
     std::vector<rm::Variable> output;
     EXPECT_TRUE(client.call("add", input, output));
     EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
+    svr.stop();
+    svr.join();
+}
+
+std::string type_name{};
+int receive_data{};
+
+void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *value)
+{
+    type_name = value->value.type->typeName;
+    receive_data = *reinterpret_cast<int *>(value->value.data);
+}
+
+// 订阅
+TEST(OPC_UA_ClientTest, client_subscription)
+{
+    rm::Server svr(5003);
+    setSvr(svr);
+    rm::Client client("opc.tcp://localhost:5003");
+    // 订阅测试服务器上的变量
+    auto node_id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("single");
+    EXPECT_TRUE(client.subscribe(node_id, onChange, 5));
+    // 数据更新
+    client.write(node_id, 66);
+    client.spinOnce();
+    EXPECT_EQ(type_name, "Int32");
+    EXPECT_EQ(receive_data, 66);
+    svr.stop();
+    svr.join();
+}
+
+// 事件响应
+std::string source_name;
+int aaa{};
+void onEvent(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, size_t size, UA_Variant *event_fields)
+{
+    for (size_t i = 0; i < size; ++i)
+    {
+        if (UA_Variant_hasScalarType(&event_fields[i], &UA_TYPES[UA_TYPES_STRING]))
+        {
+            UA_String *tmp = reinterpret_cast<UA_String *>(event_fields[i].data);
+            source_name = reinterpret_cast<char *>(tmp->data);
+        }
+        else if (UA_Variant_hasScalarType(&event_fields[i], &UA_TYPES[UA_TYPES_INT32]))
+            aaa = *reinterpret_cast<UA_Int32 *>(event_fields[i].data);
+    }
+}
+
+TEST(OPC_UA_ClientTest, client_event)
+{
+    rm::Server svr(5004);
+    setSvr(svr);
+    rm::EventType etype;
+    etype.browse_name = "TestEventType";
+    etype.display_name = "测试事件类型";
+    etype.description = "测试事件类型";
+    etype.add("aaa", 3);
+    svr.addEventTypeNode(etype);
+    rm::Client client("opc.tcp://localhost:5004");
+    client.subscribe(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), {"SourceName", "aaa"}, onEvent);
+    // 触发事件
+    rm::Event event(etype);
+    event.source_name = "GtestServer";
+    event.message = "this is test event";
+    event["aaa"] = 66;
+    svr.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event);
+    client.spinOnce();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    EXPECT_EQ(source_name, "GtestServer");
+    EXPECT_EQ(aaa, 66);
     svr.stop();
     svr.join();
 }
