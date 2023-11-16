@@ -29,7 +29,7 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
     return retval;
 }
 
-UA_NodeId operator|(UA_NodeId origin, rm::findNodeInClient &&fnic)
+UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInClient &&fnic)
 {
     if (UA_NodeId_isNull(&origin))
         return origin;

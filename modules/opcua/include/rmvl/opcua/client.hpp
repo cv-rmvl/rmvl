@@ -46,29 +46,30 @@ public:
 
     /**
      * @brief 获取路径搜索必要信息
-     *
-     * @note 需要配合管道运算符 `|` 完成路径搜索
+     * @brief 需要配合管道运算符 `|` 完成路径搜索
      * @code {.cpp}
      * auto dst_mode = src_node | clt.find("person") | clt.find("name");
      * @endcode
      *
      * @param[in] browse_name 浏览名
      * @return 目标节点信息
-     * @retval `[_client, browse_name]`
+     * @retval fnic `[_client, browse_name]` 元组
      */
-    inline findNodeInClient find(const std::string &browse_name) { return {_client, browse_name}; }
+    inline FindNodeInClient find(const std::string &browse_name) { return {_client, browse_name}; }
 
     /****************************** 功能配置 ******************************/
 
     /**
-     * @brief 在网络上监听并处理到达的异步响应。同时进行内部维护、安全通道的更新和订阅管理。
-     * @note 执行事件循环，等效于 ROS/ROS2 工具包中的 `ros::spin()` 以及 `rclcpp::spin()`
+     * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
+     * @brief
+     * - 执行事件循环，等效于 ROS/ROS2 工具包中的 `ros::spin()` 以及 `rclcpp::spin()`
      */
     void spin();
 
     /**
-     * @brief 在网络上监听并处理到达的异步响应。同时进行内部维护、安全通道的更新和订阅管理。
-     * @note 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
+     * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
+     * @brief
+     * - 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
      */
     void spinOnce();
 
@@ -99,7 +100,7 @@ public:
      * @param[out] outputs 输出参数列表
      * @return 是否成功完成当前操作
      */
-    bool callEx(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
+    bool call(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
 
     /**
      * @brief 在客户端调用 ObjectsFolder 中的方法
@@ -111,23 +112,50 @@ public:
      */
     inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
     {
-        return callEx(UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), name, inputs, outputs);
+        return call(UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), name, inputs, outputs);
     }
 
     /**
-     * @brief 创建变量节点监视项
-     * @note 当所监测的服务器中的变量数据发生更改时，通知监视器，执行 data_change 回调函数
+     * @brief 创建变量节点监视项，以实现订阅节点的功能
+     * @brief
+     * - 服务器在设定的采样频率 `opcua_param.SAMPLING_INTERVAL`
+     *   下监视变量，若发生更改会尝试发出通知，通知的发送频率受到
+     *   `opcua_param.PUBLISHING_INTERVAL` 控制。当客户端收到通知时，执行
+     *   `on_change` 回调函数
+     * @brief
+     * - 类似于 ROS 中的订阅话题，这里是订阅变量节点
+     * @code {.cpp}
+     * // on_change 回调函数的用法示例，假设订阅的变量节点为 Int32 类型
+     * void on_change(UA_Client *client, UA_UInt32 sub_id, void *sub_context,
+     *                UA_UInt32 mon_id, void *mon_context, UA_DataValue *value)
+     * {
+     *     UA_Int32 current_value = *reinterpret_cast<UA_Int32 *>(value->value.data);
+     *     // 显示当前值
+     *     UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "current value: %d", current_value);
+     * }
+     * @endcode
      *
      * @param[in] node 待监视节点的 `UA_NodeId`
      * @param[in] on_change 数据变更回调函数
-     * @return 是否成功完成当前操作
+     * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知
+     * @return 是否成功订阅变量节点？
      */
-    bool createVariableMonitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change);
+    bool subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size);
+
+    /**
+     * @brief 创建事件监视项，以实现事件的订阅功能
+     * 
+     * @param[in] node_id 待监视节点的 `UA_NodeId`
+     * @param[in] names 关注的事件属性名列表 @see rm::Event::getProperties()
+     * @param[in] on_event 事件回调函数
+     * @return 是否成功订阅事件？
+     */
+    bool subscribe(UA_NodeId node_id, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
 
 private:
     /**
-     * @brief 发起订阅请求，并返回订阅 ID
-     * 
+     * @brief 发起订阅请求，并得到订阅 ID
+     *
      * @param[out] response 订阅请求的响应
      * @return 是否成功完成当前操作
      */

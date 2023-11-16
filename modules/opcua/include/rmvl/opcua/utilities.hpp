@@ -60,7 +60,7 @@ inline std::unordered_map<std::type_index, UA_TypeFlag> typeflag =
 //! 目标节点信息（服务端指针、浏览名）
 using FindNodeInServer = ::std::tuple<UA_Server *, ::std::string>;
 //! 目标节点信息（客户端指针、浏览名）
-using findNodeInClient = ::std::tuple<UA_Client *, ::std::string>;
+using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string>;
 
 //! @} opcua
 
@@ -70,9 +70,9 @@ namespace helper
 //! @addtogroup opcua
 //! @{
 
-//! zh-CN
+//! 获取编译期常量 `zh-CN`
 inline constexpr char *zh_CN() { return const_cast<char *>("zh-CN"); }
-//! en-US
+//! 获取编译期常量 `en-US`
 inline constexpr char *en_US() { return const_cast<char *>("en-US"); }
 //! `std::string` 转为 `char *`
 inline char *to_char(const std::string &str) { return const_cast<char *>(str.c_str()); }
@@ -101,6 +101,6 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis);
  * @param[in] fnic 目标节点信息（客户端指针、命名空间、浏览名）
  * @return 目标 NodeId
  */
-UA_NodeId operator|(UA_NodeId origin, rm::findNodeInClient &&fnic);
+UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInClient &&fnic);
 
 //! @} opcua
