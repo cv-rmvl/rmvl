@@ -10,7 +10,7 @@ RMVL 最初是面向 RoboMaster 赛事的视觉库，现已逐步加入与机器
 
 ### 项目资源
 
-* 说明文档: [点击此处](https://vision.scutbot.cn/rmvl)
+* 说明文档: <https://cv-rmvl.github.io>
 
 * 工单: <https://github.com/cv-rmvl/rmvl/issues>
 
