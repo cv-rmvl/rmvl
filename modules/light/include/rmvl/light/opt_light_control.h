@@ -50,7 +50,7 @@ public:
     /**
      * @brief 使用 IP 地址创建 EtherNet 以太网连接
      *
-     * @param ip_config IP 配置信息
+     * @param[in] ip_config IP 配置信息
      * @return 连接是否成功建立？
      */
     bool connect(const IPConfig &ip_config);
@@ -58,9 +58,10 @@ public:
     /**
      * @brief 使用设备序列号创建 EtherNet 以太网连接
      *
+     * @param[in] SN 设备序列号
      * @return 连接是否成功建立？
      */
-    bool connect(const char *SN);
+    bool connect(const std::string &SN);
 
     /**
      * @brief 断开已存在网口的连接
@@ -86,7 +87,7 @@ public:
     /**
      * @brief 关闭指定通道
      *
-     * @param[in] channels 要关闭的通道的索引组成的 `std::vector` ，范围:[1 ~ 32]（十进制格式）
+     * @param[in] channels 要关闭的通道的索引组成的 `std::vector` ，范围: [1 ~ 32]（十进制格式）
      * @return 指定通道是否关闭成功？
      */
     bool closeChannels(const std::vector<int> &channels);
