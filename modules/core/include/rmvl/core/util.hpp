@@ -205,8 +205,8 @@ const char *getBuildInformation();
  * @brief 调用错误处理程序
  * @note 该宏可用于动态构造错误消息，以包含一些动态信息，例如
  * @code
- *  // 请注意格式化文本消息周围的额外括号
- *  RMVL_Error_(StsOutOfRange, "the value at (%d, %d) = %g is out of range", badPt.x, badPt.y, badValue);
+ * // 请注意格式化文本消息周围的额外括号
+ * RMVL_Error_(StsOutOfRange, "the value at (%d, %d) = %g is out of range", badPt.x, badPt.y, badValue);
  * @endcode
  * @param[in] code 一种 RMVLErrorCode 错误码
  * @param[in] fmt 格式化字符串
