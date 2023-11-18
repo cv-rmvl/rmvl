@@ -20,4 +20,3 @@
 #include "core/dataio.hpp"
 #include "core/kalman.hpp"
 #include "core/serial.hpp"
-#include "core/singleton.hpp"

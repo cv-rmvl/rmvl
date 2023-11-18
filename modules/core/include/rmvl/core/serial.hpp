@@ -12,8 +12,10 @@
 #pragma once
 
 #include <string>
-#include <string.h>
+
+#ifdef __GNUC__
 #include <termios.h>
+#endif // __GNUC__
 
 namespace rm
 {
@@ -75,14 +77,16 @@ namespace rm
         printf("\n");                \
     } while (false)
 
+#ifdef __GNUC__
+
 //! 串行接口通信库
 class SerialPort
 {
-    int _fd;               //!< 文件描述符
-    termios _option;       //!< 终端控制
-    bool _is_open = false; //!< 串口打开标志位
-    std::string _device;   //!< 设备名
-    int _baud_rate;        //!< 波特率
+    int _fd{};           //!< 文件描述符
+    termios _option;     //!< 终端控制
+    bool _is_open{};     //!< 串口打开标志位
+    std::string _device; //!< 设备名
+    int _baud_rate;      //!< 波特率
 
 public:
     /**
@@ -168,6 +172,8 @@ private:
      */
     ssize_t fdread(void *data, size_t len);
 };
+
+#endif // __GNUC__
 
 //! @} serial
 

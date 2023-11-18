@@ -10,12 +10,16 @@
  */
 
 #include <cstring>
+
+#ifdef __GNUC__
 #include <dirent.h>
 #include <fcntl.h>
-#include <string>
 #include <unistd.h>
+#endif // __GNUC__
 
 #include "rmvl/core/serial.hpp"
+
+#ifdef __GNUC__
 
 void rm::SerialPort::open()
 {
@@ -142,3 +146,5 @@ ssize_t rm::SerialPort::fdread(void *data, size_t len)
         DEBUG_SER_PASS("Success to read the serial port.");
     return len_result;
 }
+
+#endif // __GNUC__

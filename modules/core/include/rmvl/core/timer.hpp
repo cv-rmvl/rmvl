@@ -24,7 +24,11 @@ namespace rm
 //! @addtogroup core_timer
 //! @{
 
-//! 定时器
+/**
+ * @brief 定时器
+ * @brief
+ * - 在程序开始时调用 `reset()` 函数，之后调用 `now()` 函数即可返回从构造初期到现在经过的时间
+ */
 class Timer
 {
     using steady_clock = std::chrono::steady_clock;
