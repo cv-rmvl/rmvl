@@ -41,7 +41,23 @@ TEST(OPC_UA_Server, server_config_add_node)
     variable.browse_name = "test_double";
     variable.description = "this is test double";
     variable.display_name = "测试双精度浮点数";
-    server.addVariableNode(variable);
+    auto node = server.addVariableNode(variable);
+    EXPECT_FALSE(UA_NodeId_isNull(&node));
+    server.start();
+    server.stop();
+    server.join();
+}
+
+// 服务器添加变量类型节点
+TEST(OPC_UA_Server, server_config_add_type_node)
+{
+    rm::Server server(4842);
+    rm::VariableType variable_type = "string_test";
+    variable_type.browse_name = "test_string";
+    variable_type.description = "this is test string";
+    variable_type.display_name = "测试字符串";
+    auto node = server.addVariableTypeNode(variable_type);
+    EXPECT_FALSE(UA_NodeId_isNull(&node));
     server.start();
     server.stop();
     server.join();
@@ -50,7 +66,7 @@ TEST(OPC_UA_Server, server_config_add_node)
 // 服务器添加方法节点
 TEST(OPC_UA_Server, server_config_call_method)
 {
-    rm::Server server(4841);
+    rm::Server server(4845);
     rm::Method method;
     method.browse_name = "test_method";
     method.description = "this is test method";
@@ -65,10 +81,75 @@ TEST(OPC_UA_Server, server_config_call_method)
     server.join();
 }
 
+// 服务器添加对象节点
+TEST(OPC_UA_Server, server_config_add_object_node)
+{
+    rm::Server server(4846);
+    rm::Object object;
+    object.browse_name = "test_object";
+    object.description = "this is test object";
+    object.display_name = "测试对象";
+    rm::Variable val1 = 3.14;
+    val1.browse_name = "test_val1";
+    val1.description = "this is test val1";
+    val1.display_name = "测试变量 1";
+    object.add(val1);
+    auto id = server.addObjectNode(object);
+    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    server.start();
+    server.stop();
+    server.join();
+}
+
+// 服务器添加对象类型节点
+TEST(OPC_UA_Server, server_config_add_object_type_node)
+{
+    rm::Server server(4847);
+    rm::ObjectType object_type;
+    object_type.browse_name = "test_object_type";
+    object_type.description = "this is test object type";
+    object_type.display_name = "测试对象类型";
+    rm::Variable val1 = 3.14;
+    val1.browse_name = "test_val1";
+    val1.description = "this is test val1";
+    val1.display_name = "测试变量 1";
+    object_type.add(val1);
+    auto id = server.addObjectTypeNode(object_type);
+    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    server.start();
+    server.stop();
+    server.join();
+}
+
+// 从对象类型节点派生对象节点，并添加到服务器
+TEST(OPC_UA_Server, create_object_by_object_type_and_add_to_server)
+{
+    rm::Server server(4848);
+    rm::ObjectType object_type;
+    object_type.browse_name = "test_object_type";
+    object_type.description = "this is test object type";
+    object_type.display_name = "测试对象类型";
+    rm::Variable val1 = 3.14;
+    val1.browse_name = "test_val1";
+    val1.description = "this is test val1";
+    val1.display_name = "测试变量 1";
+    object_type.add(val1);
+    server.addObjectTypeNode(object_type);
+    rm::Object object(object_type);
+    object.browse_name = "test_object";
+    object.description = "this is test object";
+    object.display_name = "测试对象";
+    auto id = server.addObjectNode(object);
+    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    server.start();
+    server.stop();
+    server.join();
+}
+
 // 服务器节点服务端路径搜索
 TEST(OPC_UA_Server, server_config_find_node)
 {
-    rm::Server server(4842);
+    rm::Server server(4850);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -89,7 +170,7 @@ TEST(OPC_UA_Server, server_config_find_node)
 // 添加自定义事件类型节点
 TEST(OPC_UA_Server, server_config_add_event_type_node)
 {
-    rm::Server server(4843);
+    rm::Server server(4855);
     rm::EventType event_type;
     event_type.browse_name = "test_event_type";
     event_type.description = "this is test event type";
@@ -107,7 +188,7 @@ TEST(OPC_UA_Server, server_config_add_event_type_node)
 // 手动触发事件
 TEST(OPC_UA_Server, server_config_trigger_event)
 {
-    rm::Server server(4844);
+    rm::Server server(4860);
     // 添加事件类型
     rm::EventType event_type;
     event_type.browse_name = "test_event_type";
