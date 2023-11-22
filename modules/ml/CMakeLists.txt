@@ -2,7 +2,7 @@ find_package(OpenCV REQUIRED)
 
 rmvl_add_module(
   ml INTERFACE
-  DEPENDS core para
+  DEPENDS core
   EXTERNAL ${OpenCV_LIBS}
 )
 

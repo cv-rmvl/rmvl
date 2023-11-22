@@ -1,6 +1,6 @@
 rmvl_add_module(
   feature INTERFACE
-  DEPENDS para types core
+  DEPENDS types
 )
 
 # light_blob

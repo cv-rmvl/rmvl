@@ -2,13 +2,12 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include "rmvl/core/timer.hpp"
 #include "rmvl/camera/mv_camera.h"
 #include "rmvl/detector/armor_detector.h"
 
-#include "rmvlpara/loader.hpp"
 
 using namespace cv;
 using namespace std;
@@ -96,11 +95,11 @@ int main(int argc, char *argv[])
     FileStorage fs_mv_set("out_para.yml", FileStorage::READ);
     if (fs_mv_set.isOpened())
     {
-        readExcludeNone(fs_mv_set["exposure"], exposure);
-        readExcludeNone(fs_mv_set["gain"], gain);
-        readExcludeNone(fs_mv_set["r_gain"], r_gain);
-        readExcludeNone(fs_mv_set["g_gain"], g_gain);
-        readExcludeNone(fs_mv_set["b_gain"], b_gain);
+        fs_mv_set["exposure"].isNone() ? void(0) : (fs_mv_set["exposure"] >> exposure);
+        fs_mv_set["gain"].isNone() ? void(0) : (fs_mv_set["gain"] >> gain);
+        fs_mv_set["r_gain"].isNone() ? void(0) : (fs_mv_set["r_gain"] >> r_gain);
+        fs_mv_set["g_gain"].isNone() ? void(0) : (fs_mv_set["g_gain"] >> g_gain);
+        fs_mv_set["b_gain"].isNone() ? void(0) : (fs_mv_set["b_gain"] >> b_gain);
     }
 
     capture.set(CAMERA_MANUAL_EXPOSURE);

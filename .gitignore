@@ -33,8 +33,6 @@ Camera
 
 # 自动生成的参数文件
 *para/
-!modules/para
-!modules/para/include/rmvlpara
 !include/rmvlpara
 
 # 其他文件
