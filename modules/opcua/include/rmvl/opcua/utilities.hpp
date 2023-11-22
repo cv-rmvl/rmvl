@@ -23,6 +23,10 @@ struct UA_Client;
 namespace rm
 {
 
+#define OPCUA_VERSION UA_OPEN62541_VER_MAJOR * 10000 +   \
+                          UA_OPEN62541_VER_MINOR * 100 + \
+                          UA_OPEN62541_VER_PATCH
+
 //! @addtogroup opcua
 //! @{
 
