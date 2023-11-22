@@ -11,9 +11,9 @@
 #pragma once
 
 #define RMVL_VERSION_MAJOR 1
-#define RMVL_VERSION_MINOR 1
+#define RMVL_VERSION_MINOR 2
 #define RMVL_VERSION_PATCH 0
-#define RMVL_VERSION_STATUS ""
+#define RMVL_VERSION_STATUS "-dev"
 
 #define RMVLAUX_STR_EXP(__A) #__A
 #define RMVLAUX_STR(__A) RMVLAUX_STR_EXP(__A)

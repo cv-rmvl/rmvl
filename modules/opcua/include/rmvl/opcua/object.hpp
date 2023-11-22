@@ -54,7 +54,7 @@ public:
 
 private:
     //! 继承的 `rm::ObjectType` 对象类型
-    ObjectType *_base;
+    ObjectType *_base{nullptr};
 
     /**
      * @brief 变量节点
