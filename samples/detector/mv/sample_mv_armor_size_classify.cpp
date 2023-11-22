@@ -1,11 +1,12 @@
 #include <iostream>
 #include <thread>
 
-#include "rmvl/core/timer.hpp"
 #include "rmvl/camera/mv_camera.h"
+#include "rmvl/core/timer.hpp"
 #include "rmvl/detector/armor_detector.h"
 
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/ml.hpp>
 
 using namespace rm;
@@ -13,15 +14,15 @@ using namespace para;
 using namespace std;
 using namespace cv;
 
-int wait_time = 1;
-int collect_num = 2000;
+static int wait_time = 1;
+static int collect_num = 2000;
 
-MvCamera::ptr capture;                      // 相机
-auto p_detector = ArmorDetector::make_detector(); // 识别模块
-Mat frame;                                        // 帧图像
-vector<group::ptr> groups;                        // 序列组列表
-Mat armor_samples;                                // 装甲板信息样本
-Mat armor_responses;                              // 装甲板响应/标签
+static MvCamera::ptr capture;                            // 相机
+static auto p_detector = ArmorDetector::make_detector(); // 识别模块
+static Mat frame;                                        // 帧图像
+static vector<group::ptr> groups;                        // 序列组列表
+static Mat armor_samples;                                // 装甲板信息样本
+static Mat armor_responses;                              // 装甲板响应/标签
 
 void collect(PixChannel color, ArmorSizeType type, int begin_idx)
 {
@@ -112,11 +113,11 @@ int main(int argc, const char *argv[])
     FileStorage fs_mv_set("out_para.yml", FileStorage::READ);
     if (fs_mv_set.isOpened())
     {
-        readExcludeNone(fs_mv_set["exposure"], exposure);
-        readExcludeNone(fs_mv_set["gain"], gain);
-        readExcludeNone(fs_mv_set["r_gain"], r_gain);
-        readExcludeNone(fs_mv_set["g_gain"], g_gain);
-        readExcludeNone(fs_mv_set["b_gain"], b_gain);
+        fs_mv_set["exposure"].isNone() ? void(0) : (fs_mv_set["exposure"] >> exposure);
+        fs_mv_set["gain"].isNone() ? void(0) : (fs_mv_set["gain"] >> gain);
+        fs_mv_set["r_gain"].isNone() ? void(0) : (fs_mv_set["r_gain"] >> r_gain);
+        fs_mv_set["g_gain"].isNone() ? void(0) : (fs_mv_set["g_gain"] >> g_gain);
+        fs_mv_set["b_gain"].isNone() ? void(0) : (fs_mv_set["b_gain"] >> b_gain);
     }
 
     capture->set(CAMERA_MANUAL_EXPOSURE, 0);

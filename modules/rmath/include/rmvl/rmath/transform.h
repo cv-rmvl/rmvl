@@ -81,21 +81,6 @@ inline cv::Point2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const c
 }
 
 /**
- * @brief 将投影角转换为欧拉角
- * @note 该欧拉角为 yaw-pitch-roll 顺序
- * @todo 陀螺仪角度为先 yaw 后 pitch 的欧拉角，当前发送的数据的pitch为投影角，与实际欧拉角存在误差;
- *       目前的效果是用下面的代码后，近距离 pitch 的误差会减小，但是远距离 pitch 的误差会增大，还需要再测;
- *       该函数应该在加补偿与陀螺仪角度之前调用;
- *       优化效果可能不会明显，所以测试优先级不高，有空再测;
- *       畸变也可能带来误差;
- *
- * @param[in] yaw yaw 投影角（角度制）
- * @param[in] pitch pitch 投影角（角度制）
- * @return 投影角对应的欧拉角 yaw 与 pitch（角度制）
- */
-cv::Point2f relativeAngle2EulerAngle(float yaw, float pitch);
-
-/**
  * @brief 欧拉角转换为旋转矩阵
  *
  * @tparam Tp 数据类型

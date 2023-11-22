@@ -9,12 +9,14 @@
  *
  */
 
-#include <unistd.h>
 #include <unordered_set>
+
+#include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/hik_camera.h"
 
-using namespace rm;
+namespace rm
+{
 
 //! MV_CC_PIXEL_CONVERT_PARAM 的初始化变量
 static MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init =
@@ -46,21 +48,21 @@ void HikCamera::release()
     auto ret = MV_CC_StopGrabbing(_handle);
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to stop grabbing (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to stop grabbing (error: \"%s\")", errorCode2Str(ret));
         return;
     }
     // 关闭设备
     ret = MV_CC_CloseDevice(_handle);
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to close device (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to close device (error: \"%s\")", errorCode2Str(ret));
         return;
     }
     // 销毁句柄
     ret = MV_CC_DestroyHandle(_handle);
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to destroy handle (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to destroy handle (error: \"%s\")", errorCode2Str(ret));
         return;
     }
 }
@@ -71,15 +73,15 @@ bool HikCamera::open()
     int ret = MV_OK;
     ret = MV_CC_EnumDevices(MV_USB_DEVICE, &_devices);
     if (ret == MV_OK)
-        PASS_("cam - camera enum status: %s", errorCode2Str(ret));
+        PASS_("camera enum status: %s", errorCode2Str(ret));
     else
-        INFO_("cam - camera enum status: %s", errorCode2Str(ret));
+        INFO_("camera enum status: %s", errorCode2Str(ret));
     unsigned int nums = _devices.nDeviceNum;
-    INFO_("cam - camera quantity: %u", nums);
+    INFO_("camera quantity: %u", nums);
     // 无设备连接
     if (nums == 0)
     {
-        ERROR_("cam - could not find the camera devise.");
+        ERROR_("could not find the camera devise.");
         return false;
     }
     // ------------------ 选择设备并创建句柄 ------------------
@@ -101,14 +103,14 @@ bool HikCamera::open()
         ret = MV_CC_CreateHandle(&_handle, device_info_arr[0]);
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to create handle (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to create handle (error: \"%s\")", errorCode2Str(ret));
         return false;
     }
     // ----------------------- 打开相机 -----------------------
     ret = MV_CC_OpenDevice(_handle);
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to open device (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to open device (error: \"%s\")", errorCode2Str(ret));
         return false;
     }
     // --------------------- 设置工作模式 ---------------------
@@ -118,14 +120,14 @@ bool HikCamera::open()
         ret = MV_CC_SetEnumValue(_handle, "TriggerMode", 1); // 触发模式
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to set trigger mode (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to set trigger mode (error: \"%s\")", errorCode2Str(ret));
         return false;
     }
     // 开始取流
     ret = MV_CC_StartGrabbing(_handle);
     if (ret != MV_OK)
     {
-        ERROR_("cam - failed to start grabbing (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to start grabbing (error: \"%s\")", errorCode2Str(ret));
         return false;
     }
     return true;
@@ -162,7 +164,7 @@ bool HikCamera::retrieve(cv::OutputArray image, RetrieveMode flag)
          PixelType_Gvsp_Mono14, PixelType_Gvsp_Mono16};
     if (pixel_type == PixelType_Gvsp_Undefined)
     {
-        ERROR_("cam - undefined pixel type");
+        ERROR_("undefined pixel type");
         image.assign(cv::Mat());
         return false;
     }
@@ -194,7 +196,7 @@ bool HikCamera::retrieve(cv::OutputArray image, RetrieveMode flag)
                                  channel == 1 ? CV_8UC1 : CV_8UC3, _p_dstbuf.data()));
             return true;
         }
-        ERROR_("cam - failed to convert the pixel type (error: \"%s\")", errorCode2Str(ret));
+        ERROR_("failed to convert the pixel type (error: \"%s\")", errorCode2Str(ret));
     }
     // cv::cvtColor
     else if (flag == RETRIEVE_CV)
@@ -212,7 +214,7 @@ bool HikCamera::retrieve(cv::OutputArray image, RetrieveMode flag)
     }
     // 无效参数
     else
-        ERROR_("cam - failed to retrieve, invalid retrieve mode: %d.", _retrieve_mode);
+        ERROR_("failed to retrieve, invalid retrieve mode: %d.", _retrieve_mode);
     // 处理失败默认操作
     image.assign(cv::Mat());
     return false;
@@ -226,7 +228,7 @@ bool HikCamera::read(cv::OutputArray image)
         retrieve(image, _retrieve_mode);
     else
     {
-        WARNING_("cam - No data in getting image buffer");
+        WARNING_("No data in getting image buffer");
         reconnect();
     }
     // 释放图像缓存
@@ -235,7 +237,7 @@ bool HikCamera::read(cv::OutputArray image)
         ret = MV_CC_FreeImageBuffer(_handle, &_p_out);
         if (ret != MV_OK)
         {
-            ERROR_("cam - failed to free image buffer (error: \"%s\")", errorCode2Str(ret));
+            ERROR_("failed to free image buffer (error: \"%s\")", errorCode2Str(ret));
             return false;
         }
     }
@@ -244,9 +246,11 @@ bool HikCamera::read(cv::OutputArray image)
 
 bool HikCamera::reconnect()
 {
-    INFO_("cam - camera device reconnect");
+    INFO_("camera device reconnect");
     release();
     sleep(1);
     open();
     return true;
 }
+
+} // namespace rm

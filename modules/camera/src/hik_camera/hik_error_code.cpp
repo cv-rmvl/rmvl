@@ -1,7 +1,7 @@
 /**
  * @file hik_error_code.cpp
  * @author RoboMaster Vision Community
- * @brief
+ * @brief HikRobot 工业相机库错误码
  * @version 1.0
  * @date 2023-06-15
  *

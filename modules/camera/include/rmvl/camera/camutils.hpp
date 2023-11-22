@@ -90,13 +90,13 @@ class CameraExtrinsics
 
 public:
     //! 获取平移向量
-    inline cv::Vec<Tp, 3> tvec() const { return _tvec; }
+    inline const cv::Vec<Tp, 3> &tvec() const { return _tvec; }
     //! 获取旋转向量
-    inline cv::Vec<Tp, 3> rvec() const { return _rvec; }
+    inline const cv::Vec<Tp, 3> &rvec() const { return _rvec; }
     //! 获取旋转矩阵
-    inline cv::Matx<Tp, 3, 3> R() const { return _r; }
+    inline const cv::Matx<Tp, 3, 3> &R() const { return _r; }
     //! 获取外参矩阵
-    inline cv::Matx<Tp, 4, 4> T() const { return _t; }
+    inline const cv::Matx<Tp, 4, 4> &T() const { return _t; }
     //! 获取yaw
     inline Tp yaw() const { return _yaw; }
     //! 获取pitch
