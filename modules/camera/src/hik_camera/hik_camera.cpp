@@ -9,6 +9,7 @@
  *
  */
 
+#include <unistd.h>
 #include <unordered_set>
 
 #include <opencv2/imgproc.hpp>

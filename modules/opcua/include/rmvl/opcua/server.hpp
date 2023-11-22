@@ -59,7 +59,7 @@ public:
     Server(const Server &) = delete;
     Server(Server &&) = delete;
 
-    //! 运行服务器
+    //! 运行服务器，调用方线程不阻塞
     void start();
 
     //! 停止服务器
