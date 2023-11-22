@@ -3,6 +3,7 @@
 
 @author 赵曦
 @date 2023/07/07
+@brief 包含 feature 模块的创建、信息获取以及开发时的注意事项
 
 @next_tutorial{tutorial_extra_april_tag}
 

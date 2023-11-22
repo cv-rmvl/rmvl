@@ -119,11 +119,15 @@ auto decide_info = p_decider->decide(groups);
 
 不同的机器人具有不同的属性，它们对功能需求、运动响应和通信延迟都有不同的影响。RMVL 为所有这些参数提供了默认值，以确保正确的运行。但在实际部署时，但这些参数通常不是最有效的、最正确的，因此像机器人这样的顶层项目需要手动加载这些参数以最大化性能。
 
-到目前为止，RMVL 的所有参数文件都是通过 **YAML** 文件读取和写入运行时加载的，参数规范文件本身由 `*.para` 文件所规定，包含了该参数的类型、标识符、默认值以及注释。这个文件在 CMake 运行期间会生成一系列对应的 `*.cpp` 和 `*.h (*.hpp)`，这个功能由一系列 **CMake** 语法定义，例如 `rmvl_generate_para`。RMVL 参数模块在命名空间 `para` 中提供了统一的参数加载接口 `load()`，并限制只能将参数传递给已实例化的 `xxxParam` 对象。请参考以下代码：
+**定义**
+
+参数规范文件本身由 `*.para` 文件所规定，包含了该参数的类型、标识符、默认值以及注释。这个文件在 CMake 运行期间会生成一系列对应的 `*.cpp` 和 `*.h (*.hpp)`，这个功能由一系列 **CMake** 语法定义，例如 `rmvl_generate_para`。
+
+**加载**
+
+RMVL 的所有参数文件都是通过 **YAML** 文件的读取和写入完成运行时的参数加载的，每个参数类中均提供了一致的接口 `load()` 用于从 YAML 文件中加载参数，可参考以下代码：
 
 ```cpp
-#include <rmvlpara/loader.hpp>
-
 #include <rmvlpara/combo/armor.h>
 #include <rmvlpara/camera/camera.h>
 
@@ -131,11 +135,13 @@ auto decide_info = p_decider->decide(groups);
 
 std::string prefix_str = "../etc/";
 
-para::load(para::armor_param, prefix_str + "armor_param.yml");
-para::load(para::camera_param, prefix_str + "camera_param.yml");
+if (!para::armor_param.load(prefix_str + "armor_param.yml"))
+    printf("Failed to load the param: \"armor_param\".");
+if (!para::camera_param.load(prefix_str + "camera_param.yml"))
+    printf("Failed to load the param: \"camera_param\".");
 ```
 
-这段代码中，`rmvlpara/loader.hpp` 头文件被包含，并使用`load()`函数来加载参数。以加载`armor_param`和`camera_param`为例，假设这些参数分别对应于装甲板和相机的参数。
+这段代码中，`armor` 和 `camera` 参数类的头文件被包含，并使用成员方法 `load()` 来加载参数。
 
 #### 异常处理
 
