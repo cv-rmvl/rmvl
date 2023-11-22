@@ -6,7 +6,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   camera
-  DEPENDS rmath para
+  DEPENDS rmath
   EXTERNAL ${OpenCV_LIBS}
 )
 

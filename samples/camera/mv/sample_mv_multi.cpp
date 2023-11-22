@@ -4,7 +4,6 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/mv_camera.h"
-#include "rmvlpara/loader.hpp"
 
 using namespace rm;
 using namespace para;
@@ -47,11 +46,11 @@ int main()
     FileStorage fs("out_para.yml", FileStorage::READ);
     if (fs.isOpened())
     {
-        readExcludeNone(fs["exposure"], exposure);
-        readExcludeNone(fs["gain"], gain);
-        readExcludeNone(fs["r_gain"], r_gain);
-        readExcludeNone(fs["g_gain"], g_gain);
-        readExcludeNone(fs["b_gain"], b_gain);
+        fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
+        fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
+        fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
+        fs["g_gain"].isNone() ? void(0) : (fs["g_gain"] >> g_gain);
+        fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
     capture.set(CAMERA_MANUAL_EXPOSURE);

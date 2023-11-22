@@ -6,7 +6,6 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/mv_camera.h"
-#include "rmvlpara/loader.hpp"
 
 using namespace rm;
 using namespace para;
@@ -14,13 +13,13 @@ using namespace std;
 using namespace cv;
 
 // 内参矩阵
-Matx<double, 3, 3> cameraMatrix = {1250, 0, 640,
-                                   0, 1250, 512,
-                                   0, 0, 1};
+static Matx<double, 3, 3> cameraMatrix = {1250, 0, 640,
+                                          0, 1250, 512,
+                                          0, 0, 1};
 // 畸变系数
-Matx<double, 5, 1> distCoeffs = {0, 0, 0, 0, 0};
+static Matx<double, 5, 1> distCoeffs = {0, 0, 0, 0, 0};
 
-MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+static MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
 
 void cameraMatrixCallBack(int pos, void *mat_pos_)
 {
@@ -44,8 +43,8 @@ int main()
     // 读取相机内参、畸变系数
     const char *file_name = "out_calibration.yml";
     FileStorage fs_mv_in(file_name, FileStorage::READ);
-    readExcludeNone(fs_mv_in["cameraMatrix"], cameraMatrix);
-    readExcludeNone(fs_mv_in["distCoeffs"], distCoeffs);
+    fs_mv_in["cameraMatrix"].isNone() ? void(0) : (fs_mv_in["cameraMatrix"] >> cameraMatrix);
+    fs_mv_in["distCoeffs"].isNone() ? void(0) : (fs_mv_in["distCoeffs"] >> distCoeffs);
 
     int exposure = 10000;
     int gain = 64;
@@ -57,11 +56,11 @@ int main()
     FileStorage fs_mv_set("out_para.yml", FileStorage::READ);
     if (fs_mv_set.isOpened())
     {
-        readExcludeNone(fs_mv_set["exposure"], exposure);
-        readExcludeNone(fs_mv_set["gain"], gain);
-        readExcludeNone(fs_mv_set["r_gain"], r_gain);
-        readExcludeNone(fs_mv_set["g_gain"], g_gain);
-        readExcludeNone(fs_mv_set["b_gain"], b_gain);
+        fs_mv_set["exposure"].isNone() ? void(0) : (fs_mv_set["exposure"] >> exposure);
+        fs_mv_set["gain"].isNone() ? void(0) : (fs_mv_set["gain"] >> gain);
+        fs_mv_set["r_gain"].isNone() ? void(0) : (fs_mv_set["r_gain"] >> r_gain);
+        fs_mv_set["g_gain"].isNone() ? void(0) : (fs_mv_set["g_gain"] >> g_gain);
+        fs_mv_set["b_gain"].isNone() ? void(0) : (fs_mv_set["b_gain"] >> b_gain);
     }
 
     capture.set(CAMERA_MANUAL_EXPOSURE);

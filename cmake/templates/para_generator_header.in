@@ -12,9 +12,6 @@
 #pragma once
 
 #include <opencv2/core/types.hpp>
-
-#include "rmvlpara/loader.hpp"
-
 @def_new_group@
 namespace rm::para
 {
@@ -23,19 +20,19 @@ namespace rm::para
 //! @{
 
 //! @class_name@ 参数模块
-class @class_name@
+struct @class_name@
 {
-    template <typename _Tp, typename Enable>
-    friend void load(_Tp &, const std::string &);
-
-public:
-    using paraId = void;
-
 @para_header_details@
     @class_name@() = default;
 
-private:
-    explicit @class_name@(const std::string &);
+    /**
+     * @brief 从指定 `YAML` 文件中加载 `@class_name@`
+     *
+     * @note `YAML` 文件的后缀允许是 `*.yml` 和 `*.yaml`
+     * @param[in] path 参数路径
+     * @return 是否加载成功
+     */
+    bool load(const std::string &path);
 };
 
 //! @class_name@ 参数模块
@@ -44,3 +41,5 @@ inline @class_name@ @target_name@_param;
 //! @} para_@module_name@
 
 } // namespace rm::para
+
+namespace para = rm::para;

@@ -7,7 +7,7 @@ if(WITH_OPEN62541)
   # configure library module
   rmvl_add_module(
     opcua
-    DEPENDS para
+    DEPENDS core
     EXTERNAL open62541
   )
 

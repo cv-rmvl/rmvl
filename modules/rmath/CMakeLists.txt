@@ -2,7 +2,7 @@ find_package(Eigen3 REQUIRED)
 
 rmvl_add_module(
   rmath
-  DEPENDS para core
+  DEPENDS core
   EXTRA_HEADER ${EIGEN3_INCLUDE_DIR}
   EXTERNAL
 )

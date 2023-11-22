@@ -13,10 +13,18 @@
 
 #include "@para_include_path@"
 
-rm::para::@class_name@::@class_name@(const std::string &path)
+namespace rm::para
+{
+
+bool @class_name@::load(const std::string &path)
 {
     cv::FileStorage fs(path, cv::FileStorage::READ);
-    RMVL_Assert(fs.isOpened());
+    if(!fs.isOpened())
+        return false;
+    cv::FileNode node;
 
 @para_source_details@
+    return true;
 }
+
+} // rm::para

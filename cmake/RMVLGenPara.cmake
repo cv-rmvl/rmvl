@@ -146,12 +146,13 @@ function(para_parser file_name header_details source_details)
       set(ret_header "${ret_header}    ${type_sym} ${id_sym} = ${default_sym};\n")
     endif()
     # get return value (source)
+    set(ret_source "${ret_source}    node = fs[\"${id_sym}\"];\n")
     if(type_sym MATCHES "uint" OR type_sym STREQUAL "size_t")
-      set(ret_source "${ret_source}    if (!fs[\"${id_sym}\"].isNone())\n    {\n")
-      set(ret_source "${ret_source}        int tmp_${id_sym} {};\n        fs[\"${id_sym}\"] >> tmp_${id_sym};\n")
+      set(ret_source "${ret_source}    if (!node.isNone())\n    {\n")
+      set(ret_source "${ret_source}        int tmp_${id_sym}{};\n        node >> tmp_${id_sym};\n")
       set(ret_source "${ret_source}        ${id_sym} = static_cast<${type_sym}>(tmp_${id_sym});\n    }\n")
     else()
-      set(ret_source "${ret_source}    para::readExcludeNone(fs[\"${id_sym}\"], ${id_sym});\n")
+      set(ret_source "${ret_source}    node.isNone() ? void(0) : (node >> ${id_sym});\n")
     endif()
   endforeach(substr ${out_val})
   set(${header_details} "${ret_header}" PARENT_SCOPE)
@@ -210,8 +211,8 @@ function(rmvl_generate_para target_name)
   set(para_include_path)
   # has module
   if(PARA_MODULE)
-    set(para_include_path "rmvlpara/${module_name}/${target_name}.h")
     set(header_ext "h")
+    set(para_include_path "rmvlpara/${module_name}/${target_name}.${header_ext}")
     configure_file(
       ${para_template_path}/para_generator_source.in
       ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/para/param.cpp
@@ -219,8 +220,8 @@ function(rmvl_generate_para target_name)
     )
   # dosen't have module
   else()
-    set(header_ext hpp)
-    set(para_include_path "rmvlpara/${module_name}.hpp")
+    set(header_ext "hpp")
+    set(para_include_path "rmvlpara/${module_name}.${header_ext}")
     configure_file(
       ${para_template_path}/para_generator_source.in
       ${CMAKE_CURRENT_LIST_DIR}/src/para/param.cpp
