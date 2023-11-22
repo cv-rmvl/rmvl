@@ -145,12 +145,12 @@ public:
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
      * 
-     * @param[in] node_id 待监视节点的 `UA_NodeId`
-     * @param[in] names 关注的事件属性名列表 @see rm::Event::getProperties()
+     * @param[in] node 待监视节点的 `UA_NodeId`
+     * @param[in] names 关注的事件属性名列表，参考 Event::getProperties()
      * @param[in] on_event 事件回调函数
      * @return 是否成功订阅事件？
      */
-    bool subscribe(UA_NodeId node_id, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
+    bool subscribe(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
 
 private:
     /**

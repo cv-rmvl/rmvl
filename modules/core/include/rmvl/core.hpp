@@ -12,6 +12,7 @@
 #pragma once
 
 //! @defgroup core 视觉库核心模块
+//! @defgroup para 参数模块
 
 #include "core/util.hpp"
 #include "core/version.hpp"

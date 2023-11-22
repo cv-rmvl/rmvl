@@ -49,14 +49,3 @@ cv::Vec2f rm::cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Ma
     cv::projectPoints(world_center3ds, center_rvec, center_tvec, cameraMatrix, distCoeffs, center2ds);
     return center2ds.front();
 }
-
-cv::Point2f rm::relativeAngle2EulerAngle(float yaw, float pitch)
-{
-    // 欧拉角
-    float euler_yaw = yaw;
-    float tan_yaw = tanf(deg2rad(euler_yaw));
-    float tan_pitch = tanf(deg2rad(pitch));
-    float tan_euler_pitch = tan_pitch / sqrt(pow(tan_yaw, 2) + pow(tan_pitch, 2) + 1);
-    float euler_pitch = rad2deg(atanf(tan_euler_pitch));
-    return cv::Point2f(euler_yaw, euler_pitch);
-}

@@ -72,7 +72,16 @@ public:
      * @param[in] idx 下标
      * @return 指定特征
      */
-    inline feature::ptr at(size_t idx) const { return _features.at(idx); }
+    inline feature::ptr at(size_t idx) { return _features.at(idx); }
+
+    /**
+     * @brief 获取指定特征
+     *
+     * @param[in] idx 下标
+     * @return 指定特征
+     */
+    inline const feature::const_ptr at(size_t idx) const { return _features.at(idx); }
+
     //! 获取特征列表数据
     inline const auto &data() const { return _features; }
     //! 获取特征列表大小

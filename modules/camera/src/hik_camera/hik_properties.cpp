@@ -54,7 +54,7 @@ bool HikCamera::set(int propId, double value)
     case CAMERA_SOFT_TRIGGER:
         return MV_CC_SetCommandValue(_handle, "TriggerSoftware") == MV_OK;
     default:
-        ERROR_("cam - Try to set undefined variable, id: %d.", propId);
+        ERROR_("Try to set undefined variable, id: %d.", propId);
         return false;
     }
 }
@@ -92,7 +92,7 @@ double HikCamera::get(int propId) const
     case CAMERA_SATURATION:
         return MV_CC_GetFloatValue(_handle, "Saturation", &f_value) == MV_OK ? static_cast<double>(f_value.fCurValue) : -1;
     default:
-        ERROR_("cam - Try to set undefined variable, id: %d.", propId);
+        ERROR_("Try to set undefined variable, id: %d.", propId);
         return false;
     }
 }

@@ -30,7 +30,7 @@ class OnnxRT
     Ort::SessionOptions _session_options;        //!< Session 配置
     Ort::MemoryInfo _memory_info;                //!< Tensor 内存分配信息
     Ort::AllocatorWithDefaultOptions _allocator; //!< 默认配置的内存分配器
-    session_ptr _pSession;
+    session_ptr _p_session;
 
     std::vector<std::vector<float>> _input_arrays; //!< 输入数组
     std::vector<const char *> _input_names;        //!< 输入名
@@ -86,7 +86,7 @@ private:
      * @param[in] output_tensors 网络输出的 Tensors
      * @return 具有最高可信度的 index 或值
      */
-    std::vector<size_t> postProcess(std::vector<Ort::Value> &output_tensors);
+    std::vector<size_t> postProcess(const std::vector<Ort::Value> &output_tensors);
 
     /**
      * @brief 推理并返回输出 Tensors
@@ -94,10 +94,10 @@ private:
      * @param[in] input_tensors 输入 Tensors
      * @return 输出 Tensors
      */
-    inline std::vector<Ort::Value> doInference(std::vector<Ort::Value> &input_tensors)
+    inline std::vector<Ort::Value> doInference(const std::vector<Ort::Value> &input_tensors)
     {
-        return _pSession->Run(Ort::RunOptions{nullptr}, _input_names.data(), input_tensors.data(),
-                              input_tensors.size(), _output_names.data(), _output_names.size());
+        return _p_session->Run(Ort::RunOptions{nullptr}, _input_names.data(), input_tensors.data(),
+                               input_tensors.size(), _output_names.data(), _output_names.size());
     }
 };
 

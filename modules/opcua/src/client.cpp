@@ -154,7 +154,7 @@ bool Client::subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback 
     return true;
 }
 
-bool Client::subscribe(UA_NodeId node_id, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+bool Client::subscribe(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
 {
     // 创建订阅
     UA_CreateSubscriptionResponse sub_resp;
@@ -163,7 +163,7 @@ bool Client::subscribe(UA_NodeId node_id, const std::vector<std::string> &names,
 
     UA_MonitoredItemCreateRequest request_item;
     UA_MonitoredItemCreateRequest_init(&request_item);
-    request_item.itemToMonitor.nodeId = node_id;
+    request_item.itemToMonitor.nodeId = node;
     request_item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
     request_item.monitoringMode = UA_MONITORINGMODE_REPORTING;
     // 准备 BrowseName 列表

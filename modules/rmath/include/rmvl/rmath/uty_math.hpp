@@ -30,24 +30,24 @@ namespace rm
 
 // --------------------【结构、类型、常量定义】--------------------
 #ifdef MAXFLOAT
-constexpr double FLOAT_MAX = static_cast<double>(MAXFLOAT);
+constexpr double FLOAT_MAX{MAXFLOAT};
 #elif defined HUGE
-constexpr double FLOAT_MAX = static_cast<double>(HUGE);
+constexpr double FLOAT_MAX{HUGE};
 #endif
 
 #if __cplusplus > 201703L
-constexpr double PI = std::numbers::pi;        //!< 圆周率: \f$\pi\f$
-constexpr double e = std::numbers::e;          //!< 自然对数底数: \f$e\f$
-constexpr double SQRT_2 = std::numbers::sqrt2; //!< 根号 2: \f$\sqrt2\f$
+constexpr double PI{std::numbers::pi};        //!< 圆周率: \f$\pi\f$
+constexpr double e{std::numbers::e};          //!< 自然对数底数: \f$e\f$
+constexpr double SQRT_2{std::numbers::sqrt2}; //!< 根号 2: \f$\sqrt2\f$
 #else
-constexpr double PI = 3.14159265358979323; //!< 圆周率: \f$\pi\f$
-constexpr double e = 2.7182818459045;      //!< 自然对数底数: \f$e\f$
-constexpr double SQRT_2 = 1.4142135623731; //!< 根号 2: \f$\sqrt2\f$
+constexpr double PI{3.14159265358979323}; //!< 圆周率: \f$\pi\f$
+constexpr double e{2.7182818459045};      //!< 自然对数底数: \f$e\f$
+constexpr double SQRT_2{1.4142135623731}; //!< 根号 2: \f$\sqrt2\f$
 #endif
 
-constexpr double PI_2 = PI / 2; //!< PI / 2: \f$\frac\pi2\f$
-constexpr double PI_4 = PI / 4; //!< PI / 4: \f$\frac\pi4\f$
-constexpr double g = 9.788;     //!< 重力加速度: \f$g\f$
+constexpr double PI_2{PI / 2.}; //!< PI / 2: \f$\frac\pi2\f$
+constexpr double PI_4{PI / 4.}; //!< PI / 4: \f$\frac\pi4\f$
+constexpr double g{9.788};      //!< 重力加速度: \f$g\f$
 
 constexpr double operator""_PI(long double num) { return num * PI; }
 constexpr double operator""_PI(long long unsigned num) { return num * PI; }
@@ -75,13 +75,13 @@ namespace rm
 {
 
 template <typename Tp>
-inline Tp operator+(Tp val, const cv::Matx<Tp, 1, 1> &mat) { return val + mat(0, 0); }
+constexpr Tp operator+(Tp val, const cv::Matx<Tp, 1, 1> &mat) { return val + mat(0, 0); }
 template <typename Tp>
-inline cv::Matx<Tp, 1, 1> operator+(const cv::Matx<Tp, 1, 1> &mat, Tp val) { return cv::Matx<Tp, 1, 1>(mat(0, 0) + val); }
+constexpr cv::Matx<Tp, 1, 1> operator+(const cv::Matx<Tp, 1, 1> &mat, Tp val) { return cv::Matx<Tp, 1, 1>(mat(0, 0) + val); }
 template <typename Tp>
-inline Tp operator-(Tp val, const cv::Matx<Tp, 1, 1> &mat) { return val - mat(0, 0); }
+constexpr Tp operator-(Tp val, const cv::Matx<Tp, 1, 1> &mat) { return val - mat(0, 0); }
 template <typename Tp>
-inline cv::Matx<Tp, 1, 1> operator-(const cv::Matx<Tp, 1, 1> &mat, Tp val) { return cv::Matx<Tp, 1, 1>(mat(0, 0) - val); }
+constexpr cv::Matx<Tp, 1, 1> operator-(const cv::Matx<Tp, 1, 1> &mat, Tp val) { return cv::Matx<Tp, 1, 1>(mat(0, 0) - val); }
 
 //! 角度制式
 enum AngleMode : bool
@@ -100,7 +100,7 @@ enum AngleMode : bool
  * @return 弧度
  */
 template <typename Tp>
-inline Tp deg2rad(Tp deg) { return deg * static_cast<Tp>(PI) / static_cast<Tp>(180); }
+constexpr Tp deg2rad(Tp deg) { return deg * static_cast<Tp>(PI) / static_cast<Tp>(180); }
 
 /**
  * @brief 弧度转换为角度
@@ -110,7 +110,7 @@ inline Tp deg2rad(Tp deg) { return deg * static_cast<Tp>(PI) / static_cast<Tp>(1
  * @return 角度
  */
 template <typename Tp>
-inline Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<Tp>(PI); }
+constexpr Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<Tp>(PI); }
 
 /**
  * @brief Point类型转换为Matx类型
@@ -120,7 +120,7 @@ inline Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<Tp>(
  * @return Matx类型变量
  */
 template <typename Tp>
-inline cv::Matx<Tp, 3, 1> point2matx(cv::Point3_<Tp> point) { return cv::Matx<Tp, 3, 1>(point.x, point.y, point.z); }
+constexpr cv::Matx<Tp, 3, 1> point2matx(cv::Point3_<Tp> point) { return cv::Matx<Tp, 3, 1>(point.x, point.y, point.z); }
 
 /**
  * @brief Matx类型转换为Point类型
@@ -130,7 +130,7 @@ inline cv::Matx<Tp, 3, 1> point2matx(cv::Point3_<Tp> point) { return cv::Matx<Tp
  * @return Point类型变量
  */
 template <typename Tp>
-inline cv::Point3_<Tp> matx2point(cv::Matx<Tp, 3, 1> matx) { return cv::Point3_<Tp>(matx(0), matx(1), matx(2)); }
+constexpr cv::Point3_<Tp> matx2point(cv::Matx<Tp, 3, 1> matx) { return cv::Point3_<Tp>(matx(0), matx(1), matx(2)); }
 
 /**
  * @brief Matx类型转换为Vec类型
@@ -140,7 +140,7 @@ inline cv::Point3_<Tp> matx2point(cv::Matx<Tp, 3, 1> matx) { return cv::Point3_<
  * @return Vec类型变量
  */
 template <typename Tp>
-inline cv::Vec<Tp, 3> matx2vec(cv::Matx<Tp, 3, 1> matx) { return cv::Vec<Tp, 3>(matx(0), matx(1), matx(2)); }
+constexpr cv::Vec<Tp, 3> matx2vec(cv::Matx<Tp, 3, 1> matx) { return cv::Vec<Tp, 3>(matx(0), matx(1), matx(2)); }
 
 // ------------------------【广义位移计算】------------------------
 
@@ -154,7 +154,7 @@ inline cv::Vec<Tp, 3> matx2vec(cv::Matx<Tp, 3, 1> matx) { return cv::Vec<Tp, 3>(
  * @return 平面欧式距离
  */
 template <typename Tp1, typename Tp2>
-inline auto getDistance(const cv::Point_<Tp1> &pt_1, const cv::Point_<Tp2> &pt_2)
+constexpr auto getDistance(const cv::Point_<Tp1> &pt_1, const cv::Point_<Tp2> &pt_2)
 {
     return std::sqrt(std::pow(pt_1.x - pt_2.x, 2) + std::pow(pt_1.y - pt_2.y, 2));
 }
@@ -169,7 +169,7 @@ inline auto getDistance(const cv::Point_<Tp1> &pt_1, const cv::Point_<Tp2> &pt_2
  * @return 平面欧式距离
  */
 template <typename Tp1, typename Tp2>
-inline auto getDistance(const cv::Vec<Tp1, 2> &vec_1, const cv::Vec<Tp2, 2> &vec_2)
+constexpr auto getDistance(const cv::Vec<Tp1, 2> &vec_1, const cv::Vec<Tp2, 2> &vec_2)
 {
     return std::sqrt(std::pow(vec_1(0) - vec_2(0), 2) + std::pow(vec_1(1) - vec_2(1), 2));
 }
@@ -194,7 +194,7 @@ enum class CalPlane : uint8_t
  * @return 空间欧式距离
  */
 template <typename Tp1, typename Tp2>
-inline auto getDistance(const cv::Point3_<Tp1> &pt_1, const cv::Point3_<Tp2> &pt_2, CalPlane calplane = CalPlane::xyz)
+constexpr auto getDistance(const cv::Point3_<Tp1> &pt_1, const cv::Point3_<Tp2> &pt_2, CalPlane calplane = CalPlane::xyz)
 {
     switch (calplane)
     {
@@ -220,7 +220,7 @@ inline auto getDistance(const cv::Point3_<Tp1> &pt_1, const cv::Point3_<Tp2> &pt
  * @return 空间欧式距离
  */
 template <typename Tp1, typename Tp2>
-inline auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &vec_2, CalPlane calplane = CalPlane::xyz)
+constexpr auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &vec_2, CalPlane calplane = CalPlane::xyz)
 {
     return getDistance(cv::Point3_<Tp1>(vec_1), cv::Point3_<Tp2>(vec_2), calplane);
 }
@@ -244,10 +244,9 @@ inline auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &vec
  * @return 平面欧式距离
  */
 template <typename Tp1, typename Tp2>
-inline auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, bool direc = true)
+constexpr auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, bool direc = true)
 {
-    auto retval = (line(1) * pt.x - line(0) * pt.y +
-                   line(0) * line(3) - line(1) * line(2)) /
+    auto retval = (line(1) * pt.x - line(0) * pt.y + line(0) * line(3) - line(1) * line(2)) /
                   std::sqrt(line(0) * line(0) + line(1) * line(1));
     return direc ? retval : std::abs(retval);
 }
@@ -264,7 +263,7 @@ inline auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, 
  * @return 返回角度
  */
 template <typename Tp1, typename Tp2>
-inline auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD)
+constexpr auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD)
 {
     auto rad = -std::atan2((end.y - start.y), (end.x - start.x));
     return mode ? rad : rad2deg(rad);
@@ -282,7 +281,7 @@ inline auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, 
  * @return 返回角度
  */
 template <typename Tp1, typename Tp2>
-inline auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD)
+constexpr auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD)
 {
     auto rad = std::atan2((end.x - start.x), (start.y - end.y));
     return mode ? rad : rad2deg(rad);
@@ -297,7 +296,7 @@ inline auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, 
  * @return 夹角，角度的范围是 (-180°, 180°]
  */
 template <typename Tp>
-Tp getDeltaAngle(Tp angle_1, Tp angle_2)
+constexpr Tp getDeltaAngle(Tp angle_1, Tp angle_2)
 {
     // 角度范围统一化
     while (std::abs(angle_1) > 180)
@@ -368,7 +367,7 @@ constexpr inline Tp sgn(Tp x) { return (x > 0) ? 1 : ((x < 0) ? -1 : 0); }
  * @return 函数值 \f$f_{sig}(x)\f$
  */
 template <typename Tp>
-inline Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + std::pow(static_cast<Tp>(e), -k * x + mu)); }
+constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + std::pow(static_cast<Tp>(e), -k * x + mu)); }
 
 /**
  * @brief 平面向量外积
@@ -379,7 +378,7 @@ inline Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + std::
  * @return 外积，若 retval = 0，则共线
  */
 template <typename Tp>
-inline Tp cross2D(const cv::Vec<Tp, 2> &a, const cv::Vec<Tp, 2> &b) { return a(0) * b(1) - a(1) * b(0); }
+constexpr Tp cross2D(const cv::Vec<Tp, 2> &a, const cv::Vec<Tp, 2> &b) { return a(0) * b(1) - a(1) * b(0); }
 
 /**
  * @brief 平面向量外积
@@ -390,7 +389,7 @@ inline Tp cross2D(const cv::Vec<Tp, 2> &a, const cv::Vec<Tp, 2> &b) { return a(0
  * @return 外积，若 retval = 0，则共线
  */
 template <typename Tp>
-inline Tp cross2D(const cv::Point_<Tp> &a, const cv::Point_<Tp> &b) { return a.x * b.y - a.y * b.x; }
+constexpr Tp cross2D(const cv::Point_<Tp> &a, const cv::Point_<Tp> &b) { return a.x * b.y - a.y * b.x; }
 
 /**
  * @brief 在指定范围内寻找众数，时间复杂度 O(N)
@@ -414,18 +413,6 @@ typename ForwardIterator::value_type calculateModeNum(ForwardIterator first, For
                             })
         ->first;
 }
-
-/**
- * @brief 三个数据寻找中位数
- *
- * @tparam Tp 数据类型
- * @param[in] a 数 a
- * @param[in] b 数 b
- * @param[in] c 数 c
- * @return 中位数
- */
-template <typename Tp>
-inline Tp getMid(Tp a, Tp b, Tp c) { return a + b + c - std::max(std::max(a, b), c) - std::min(std::min(a, b), c); }
 
 //! @} rmath
 
