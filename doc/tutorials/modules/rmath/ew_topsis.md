@@ -25,11 +25,10 @@
 首先计算标准化指标：\f$R\f$
 
 \f[
-R_{i,j}=\begin{cases}
-\frac{R_{i,j}'-\min\limits_iR_{i,j}'}{\max\limits_iR_{i,j}'-\min\limits_iR_{i,j}'}&j\text{为正指标} \\
-\frac{\max\limits_iR_{i,j}'-R_{i,j}'}{\max\limits_iR_{i,j}'-\min\limits_iR_{i,j}'}&j\text{为负指标}
-\end{cases}
-\tag{1}
+R_{i,j}=\left\{\begin{align}
+\frac{R_{i,j}'-\min\limits_iR_{i,j}'}{\max\limits_iR_{i,j}'-\min\limits_iR_{i,j}'}&\quad j\text{为正指标} \\
+\frac{\max\limits_iR_{i,j}'-R_{i,j}'}{\max\limits_iR_{i,j}'-\min\limits_iR_{i,j}'}&\quad j\text{为负指标}
+\end{align}\right.\tag{1}
 \f]
 
 计算样本值占指标的比重：\f$P\f$

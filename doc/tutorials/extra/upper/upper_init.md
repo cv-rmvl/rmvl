@@ -75,8 +75,7 @@ auto p_capture = rm::HikCamera::make_capture(rm::GRAB_CONTINUOUS, rm::RETRIEVE_C
 
 @add_toggle{光源控制器}
 
-@todo
-本小节暂无
+@ref tutorial_modules_light 一文中指引了有关 SDK 的安装，可参考其相关类完成开发工作。
 
 @end_toggle
 

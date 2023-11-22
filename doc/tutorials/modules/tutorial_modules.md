@@ -13,7 +13,6 @@
 
 #### 1.1 工具类
 
-- @subpage tutorial_modules_singleton
 - @subpage tutorial_modules_aggregate_reflect
 - @subpage tutorial_modules_serial
 

@@ -1,6 +1,8 @@
 安装视觉库 {#tutorial_install}
 ============
 
+@brief RMVL 的编译安装
+
 @prev_tutorial{tutorial_build}
 @next_tutorial{tutorial_use}
 
