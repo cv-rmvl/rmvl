@@ -22,18 +22,267 @@ OPC UA {#tutorial_modules_opcua}
 
 OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通信标准，以实现互操作性和集成性。它提供了一套标准的服务和功能，使不同类型的设备和系统能够相互通信和交换数据，其特点包括：
 
-1. 独立性和开放性：OPC UA 不依赖于特定的硬件、操作系统或网络协议，可以在不同的平台上运行，并与其他通信标准集成。
-2. 安全性：OPC UA 提供了强大的安全机制，包括身份验证、加密和访问控制，以确保数据和通信的机密性和完整性。
-3. 可扩展性：OPC UA 支持灵活的数据模型和信息建模，可以适应不同应用领域和需求的变化。
-4. 信息建模：OPC UA 使用统一的信息模型，将数据和功能以标准化的方式表示和描述，使不同系统之间的数据交换更加简化和一致。
-5. 可靠性：OPC UA 提供了可靠的通信机制，包括消息确认、重试和错误处理，以确保数据的可靠传输。
+|   特点   |                             介绍                             |
+| :------: | :----------------------------------------------------------: |
+|  兼容性  | OPC UA 不依赖于特定的硬件、操作系统或网络协议，可以在不同的平台上运行，并与其他通信标准集成 |
+|  安全性  | OPC UA 提供了强大的安全机制，包括身份验证、加密和访问控制，以确保数据和通信的机密性和完整性 |
+|  可扩展  | OPC UA 支持灵活的数据模型和信息建模，可以适应不同应用领域和需求的变化 |
+| 信息建模 | OPC UA 使用统一的信息模型，将数据和功能以标准化的方式表示和描述，使不同系统之间的数据交换更加简化和一致 |
+|  可靠性  | OPC UA 提供了可靠的通信机制，包括消息确认、重试和错误处理，以确保数据的可靠传输 |
 
 #### 1.2 地址空间
 
+<center>
+![opcua](opcua.svg)
 
+图 1-1 OPC UA 地址空间模型
+</center>
 
-### 2. 客户端/服务器 Cient/Server
+1. 对象类型节点 rm::ObjectType ：提供对象的定义，即对象的抽象，与类相当，且子类可以继承父类的特征，方便模型的扩充。该节点包括对象的各种数据类型，数据的语义，以及控制方式。OPC UA 命名空间 `0` 中规定了多个基础的对象类型节点。如使用最广的 BaseObjectType（在 RMVL 中表示为 `rm::nodeBaseObjectType`），所有对象类型节点都需要继承该节点再进行扩充。在对具体设备建模的过程中，应该将设备组成的各部分分解为不同的对象分别建模，再用引用节点将各部分按照实际设备中的关系相关联，从而得到完整设备的对象类型节点。
 
+2. 对象节点 rm::Object ：将对象类型实例化即可得到对象节点，该节点是设备在数字空间的映射。所有对设备数据的访问都能在该模型中访问到对应的数据节点。所有对 设备的控制都转换为方法节点的触发。设备产生的消息在节点对象中将触发对应的事件。
 
+3. 引用类型节点 **ReferenceType** ：引用类型描述了引用的语义，而引用用于定义引用两端的节点之间的关系。最常用的引用类型如 Organizes（在 RMVL 中表示为 `rm::nodeOrganizes`），表示节点之间的层级关系，如同文件夹与文件夹内的文件，数据层级复杂的设备，需要通过多种引用类型对设备信息节点之间的关系进行描述。
 
-### 3. 发布/订阅 Pub/Sub
+4. 数据类型节点 **DataType** ：数据类型节点描述了变量节点中变量的数据类型。在 OPC UA 信息模型在命名空间 `0` 中定义了多种内置的数据类型，包括整型、浮点型、 字符串等多个类型，能对变量的数据进行准确的描述。也可以自定义数据类型，比如描述二维坐标的 `2DPoint` 等类型，获得更符合数据本身的描述。@note 注意：此类节点并不能提供具体的数据构成，只是提供了数据类型的一个描述，因此 RMVL 中的 @ref opcua 不提供该功能。若计划提供数据的构成，比如包含的数据长度等信息，请使用变量类型节点 rm::VariableType 。
+
+5. 变量类型节点 rm::VariableType ：该节点提供了对变量节点的定义，是设备中各种数据的抽象。常用引用中的 HasTypeDefinition 引用节点连接数据类型节点，对数据类型进行描述（在 RMVL 中表示为 `rm::nodeHasTypeDefinition`）。用 HasProperty 引用节点对数据的语义进行描述（在 RMVL 中表示为 `rm::nodeHasProperty`）。也可以使用自定义的数据类型节点对变量的数据进行描述，具有灵活性。
+
+6. 变量节点 rm::Variable ：该节点是变量类型节点的实例，也是使用的最多的节点。客户端访问设备数据有以下 3 种方式。
+   |    访问方式    |                             介绍                             |                             备注                             |
+   | :------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+   |    直接读写    | 将设备多模态数据写入对应的变量节点，然后客户端读取对应节点内保存的数值 | 如果客户端要获取设备最新的值，需要一直手动去触发对设备数据源的读取请求 |
+   |     值回调     | 客户端发起 **IO** 请求后，服务器在 **读取前** 和 **写入后** 分别调用对应的回调函数 |     可以利用此功能在需要访问数据的时候才让服务器更新数据     |
+   | 数据源变量节点 | 客户端的读取请求直接重定向到设备的数据源中，即客户端直接从数据源获取数据，变量节点不存储数据 | 缩减了数据先写入变量节点再进行读取的过程，但多个客户端连接访问同一数据时会增大服务器与设备之间的传输负载 |
+
+7. 方法节点 rm::Method ：方法节点是对设备控制方法在数字模型中的映射。方法节点可以通过服务器或客户端进行调用，然后将会对设备的控制器发送指令，使得设备执行对应的操作。常见的方法节点有：触发视觉采集、电机反转、设备初始化等。
+
+8. 视图节点 **View** ：视图节点可将地址空间中感兴趣的节点提取出来，作为一个子集，视图节点作为该子集的入口，方便客户端浏览。
+
+### 2. 服务器/客户端
+
+基于服务器/客户端的方式是 OPC UA 最基本的一种通信方式，上文的地址空间在服务器/客户端通信的过程中完全展现出来。下面列举一些 opcua 模块中常用的服务器与客户端的成员方法。
+
+#### 2.1 初始化
+
+**服务器**
+
+```cpp
+// server.cpp
+#include <rmvl/opcua/server.hpp>
+
+int main()
+{
+    // 创建 OPC UA 服务器，端口为 4840
+    rm::Server svr(4840);
+    // 服务器运行
+    svr.start();
+
+    /* other code */
+
+    // 线程阻塞，直到调用了 svr.stop()，线程才会继续执行。
+    svr.join();
+}
+```
+
+**客户端**
+
+```cpp
+// client.cpp
+#include <rmvl/opcua/client>
+
+int main()
+{
+    // 创建 OPC UA 客户端，连接到 localhost:4840
+    rm::Client clt("opc.tcp://localhost:4840");
+
+    /* other code */
+}
+```
+
+#### 2.2 变量
+
+**服务器**
+
+```cpp
+// server.cpp
+#include <rmvl/opcua/server.hpp>
+
+int main()
+{
+    rm::Server svr(4840);
+    svr.start();
+
+    // 定义 double 型变量，如果要强制使用 3.14 定义 float 型变量，
+    // 可以使用 rm::Variable num = float(3.14);
+    rm::Variable num = 3.14;
+    // 浏览名 BrowseName
+    num.browse_name = "number";
+    // 显示名 DisplayName
+    num.display_name = "Number";
+    // 描述
+    num.description = "数字";
+    // 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
+    svr.addVariableNode(num);
+
+    svr.join();
+}
+```
+
+**客户端**
+
+```cpp
+// client.cpp
+#include <rmvl/opcua/client.hpp>
+
+int main()
+{
+    rm::Client clt("opc.tcp://localhost:4840");
+
+    // 寻找待读取的变量
+    auto node = rm::nodeObjectsFolder | clt.find("number");
+    // 存储读取的数据
+    rm::Variable target;
+    // 读取变量，返回值表示是否读取成功
+    if (!clt.read(node, target))
+    {
+        ERROR_("Failed to read the variable.");
+        return 0;
+    }
+    // 使用静态成员函数将 target 转化为目标格式，并打印
+    printf("%f\n", rm::Variable::cast<double>(target));
+}
+```
+
+#### 2.3 方法
+
+**服务器**
+
+```cpp
+// server.cpp
+#include <rmvl/opcua/server.hpp>
+
+int main()
+{
+    rm::Server svr(4840);
+    svr.start();
+
+    // 定义方法
+    rm::Method method;
+    method.browse_name = "add";
+    method.display_name = "Add";
+    method.description = "两数之和";
+    // 定义函数传入参数 iargs 的类型
+    method.iargs = {{"Number 1", UA_TYPES_INT32}, {"Number 2", UA_TYPES_INT32}};
+    // 定义函数返回值 oargs 的类型
+    method.oargs = {{"Sum", UA_TYPES_INT32}};
+
+    /*
+        1. 数据类型均使用在 open62541 中定义的 UA_TYPES_ 作为前缀的宏
+        2. {"Number 1", UA_TYPES_INT32} 的部分是 rm::Argument 的聚合类，表示方法的参数
+        3. 允许有多个返回值，即 oargs 的长度允许 > 1
+    */
+
+    // 方法的函数指针，无捕获列表的 lambda 表达式可发生向函数指针的隐式转换，因此可以使用 "=" 完成赋值
+    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
+                     void *, size_t, const UA_Variant *input, size_t, UA_Variant *output) -> UA_StatusCode {
+        int32_t num1 = *reinterpret_cast<int *>(input[0].data);
+        int32_t num2 = *reinterpret_cast<int *>(input[1].data);
+        int32_t retval = num1 + num2;
+        return UA_Variant_setScalarCopy(output, &retval, &UA_TYPES[UA_TYPES_INT32]);
+    };
+    // 方法节点添加至服务器
+    server.addMethodNode(method);
+
+    svr.join();
+}
+```
+
+**客户端**
+
+```cpp
+// client.cpp
+#include <rmvl/opcua/client.hpp>
+
+int main()
+{
+    rm::Client clt("opc.tcp://localhost:4840");
+
+    // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
+    std::vector<rm::Variable> input = {1, 2};
+    // 设置输出参数，用来存储结果
+    std::vector<rm::Variable> output;
+    // 调用方法，判断调用是否成功
+    if (!clt.call("add", input, output))
+    {
+        ERROR_("Failed to call the method");
+        return 0;
+    }
+    // 输出结果
+    printf("retval = %d\n", rm::Variable::cast<int>(output.front()));
+}
+```
+
+#### 2.4 对象
+
+**服务器**
+
+```cpp
+// server.cpp
+#include <rmvl/opcua/server.hpp>
+
+int main()
+{
+    rm::Server svr(4840);
+    svr.start();
+
+    /* other code */
+
+    svr.join();
+}
+```
+
+**客户端**
+
+```cpp
+// client.cpp
+#include <rmvl/opcua/client.hpp>
+
+int main()
+{
+    rm::Client clt("opc.tcp://localhost:4840");
+}
+```
+
+#### 2.5 监视
+
+**服务器**
+
+```cpp
+// server.cpp
+#include <rmvl/opcua/server.hpp>
+
+int main()
+{
+    rm::Server svr(4840);
+    svr.start();
+
+    /* other code */
+
+    svr.join();
+}
+```
+
+**客户端**
+
+```cpp
+// client.cpp
+#include <rmvl/opcua/client.hpp>
+
+int main()
+{
+    rm::Client clt("opc.tcp://localhost:4840");
+}
+```
+
+### 3. 发布/订阅

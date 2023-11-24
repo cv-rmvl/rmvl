@@ -112,7 +112,7 @@ public:
      */
     inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
     {
-        return call(UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER), name, inputs, outputs);
+        return call(rm::nodeObjectsFolder, name, inputs, outputs);
     }
 
     /**

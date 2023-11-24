@@ -30,5 +30,3 @@ body:
     label: 解决的大致思路
     description: |
       请提供一个大致的解决思路，以帮助我们理解您的想法。
-  validations:
-    required: true

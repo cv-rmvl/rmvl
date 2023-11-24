@@ -178,7 +178,7 @@ TEST(OPC_UA_Server, server_config_add_event_type_node)
     int val = 3;
     event_type.add("test_val", val);
     auto id = server.addEventTypeNode(event_type);
-    auto target = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE) | server.find("test_event_type");
+    auto target = nodeBaseEventType | server.find("test_event_type");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
     server.start();
     server.stop();

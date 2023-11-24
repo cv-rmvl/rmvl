@@ -85,9 +85,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(vtype.display_name));
     UA_NodeId retval{UA_NODEID_NULL};
     auto status = UA_Server_addVariableTypeNode(
-        _server, UA_NODEID_NULL,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE),
-        UA_NODEID_NUMERIC(0, UA_NS0ID_HASSUBTYPE),
+        _server, UA_NODEID_NULL, nodeBaseDataVariableType, nodeHasSubtype,
         UA_QUALIFIEDNAME(1, helper::to_char(vtype.browse_name)),
         UA_NODEID_NULL, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
@@ -98,7 +96,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
     return retval;
 }
 
-UA_NodeId Server::addVariableNode(const Variable &val, UA_NodeId parent_id)
+UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
@@ -116,7 +114,7 @@ UA_NodeId Server::addVariableNode(const Variable &val, UA_NodeId parent_id)
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     // 获取变量节点的变量类型节点
-    UA_NodeId type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
+    UA_NodeId type_id = nodeBaseDataVariableType;
     const auto *p_type = val.getType();
     if (p_type != nullptr)
     {
@@ -124,14 +122,15 @@ UA_NodeId Server::addVariableNode(const Variable &val, UA_NodeId parent_id)
         if (UA_NodeId_isNull(&type_id))
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
-            type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
+            type_id = nodeBaseDataVariableType;
         }
     }
     UA_NodeId retval{UA_NODEID_NULL};
     // 添加节点至服务器
+    UA_NodeId object_folder_id{nodeObjectsFolder};
+    UA_NodeId ref_id = UA_NodeId_equal(&parent_id, &object_folder_id) ? nodeOrganizes : nodeHasComponent;
     auto status = UA_Server_addVariableNode(
-        _server, UA_NODEID_NULL, parent_id, UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-        UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
+        _server, UA_NODEID_NULL, parent_id, ref_id, UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -193,7 +192,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     // 获取变量节点的变量类型节点
-    UA_NodeId type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
+    UA_NodeId type_id = nodeBaseDataVariableType;
     const auto *p_type = val.getType();
     if (p_type != nullptr)
     {
@@ -201,7 +200,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
         if (UA_NodeId_isNull(&type_id))
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
-            type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE);
+            type_id = nodeBaseDataVariableType;
         }
     }
     UA_NodeId retval{UA_NODEID_NULL};
@@ -212,7 +211,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     // 添加节点至服务器
     auto status = UA_Server_addDataSourceVariableNode(
         _server, UA_NODEID_NULL, parent_id,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+        nodeOrganizes,
         UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
         type_id, attr, data_source, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
@@ -243,7 +242,7 @@ UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id
     UA_NodeId retval{UA_NODEID_NULL};
     auto status = UA_Server_addMethodNode(
         _server, UA_NODEID_NULL, parent_id,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+        nodeHasComponent,
         UA_QUALIFIEDNAME(1, helper::to_char(method.browse_name.c_str())),
         attr, method.func, inputs.size(), inputs.data(),
         outputs.size(), outputs.data(), nullptr, &retval);
@@ -254,7 +253,7 @@ UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id
         return UA_NODEID_NULL;
     }
     // 添加 Mandatory 属性
-    status = UA_Server_addReference(_server, retval, UA_NODEID_NUMERIC(0, UA_NS0ID_HASMODELLINGRULE),
+    status = UA_Server_addReference(_server, retval, nodeHasModellingRule,
                                     UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -273,7 +272,7 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(otype.description));
     UA_NodeId retval{UA_NODEID_NULL};
     // 获取父节点的 NodeID
-    UA_NodeId parent_id{UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE)};
+    UA_NodeId parent_id{nodeBaseObjectType};
     const ObjectType *current = otype.getBase();
     std::stack<std::string> base_stack;
     while (current != nullptr)
@@ -289,11 +288,11 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
     if (UA_NodeId_isNull(&parent_id))
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the base object type ID during adding object type node");
-        parent_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE);
+        parent_id = nodeBaseObjectType;
     }
     auto status = UA_Server_addObjectTypeNode(
         _server, UA_NODEID_NULL, parent_id,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_HASSUBTYPE),
+        nodeHasSubtype,
         UA_QUALIFIEDNAME(1, helper::to_char(otype.browse_name)),
         attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
@@ -308,7 +307,7 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
         UA_NodeId sub_retval = addVariableNode(val, retval);
         // 设置子变量节点为强制生成
         status = UA_Server_addReference(
-            _server, sub_retval, UA_NODEID_NUMERIC(0, UA_NS0ID_HASMODELLINGRULE),
+            _server, sub_retval, nodeHasModellingRule,
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
         if (status != UA_STATUSCODE_GOOD)
         {
@@ -331,7 +330,7 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
     // 获取对象类型节点
     const ObjectType *current = obj.getType();
-    UA_NodeId type_id{UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE)};
+    UA_NodeId type_id{nodeBaseObjectType};
     std::stack<std::string> base_stack;
     while (current != nullptr)
     {
@@ -346,13 +345,13 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     if (UA_NodeId_isNull(&type_id))
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the object type of the object: \"%s\"", obj.browse_name.c_str());
-        type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE);
+        type_id = nodeBaseObjectType;
     }
     // 添加至服务器
     UA_NodeId retval = UA_NODEID_NULL;
     auto status = UA_Server_addObjectNode(
         _server, UA_NODEID_NULL, parent_id,
-        UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+        nodeOrganizes,
         UA_QUALIFIEDNAME(1, helper::to_char(obj.browse_name)),
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
@@ -380,8 +379,8 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(etype.description));
 
     auto status = UA_Server_addObjectTypeNode(
-        _server, UA_NODEID_NULL, UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE),
-        UA_NODEID_NUMERIC(0, UA_NS0ID_HASSUBTYPE),
+        _server, UA_NODEID_NULL, nodeBaseEventType,
+        nodeHasSubtype,
         UA_QUALIFIEDNAME(1, helper::to_char(etype.browse_name)),
         attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
@@ -398,8 +397,8 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
         UA_Variant_setScalarCopy(&val_attr.value, &val, &UA_TYPES[UA_TYPES_INT32]);
         UA_NodeId sub_id;
         status = UA_Server_addVariableNode(
-            _server, UA_NODEID_NULL, retval, UA_NODEID_NUMERIC(0, UA_NS0ID_HASPROPERTY),
-            UA_QUALIFIEDNAME(1, helper::to_char(browse_name)), UA_NODEID_NUMERIC(0, UA_NS0ID_PROPERTYTYPE),
+            _server, UA_NODEID_NULL, retval, nodeHasProperty,
+            UA_QUALIFIEDNAME(1, helper::to_char(browse_name)), nodePropertyType,
             val_attr, nullptr, &sub_id);
         if (status != UA_STATUSCODE_GOOD)
         {
@@ -409,7 +408,7 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
         }
         // 设置子变量节点为强制生成
         status = UA_Server_addReference(
-            _server, sub_id, UA_NODEID_NUMERIC(0, UA_NS0ID_HASMODELLINGRULE),
+            _server, sub_id, nodeHasModellingRule,
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
         if (status != UA_STATUSCODE_GOOD)
         {
@@ -424,7 +423,7 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
 
 bool Server::triggerEvent(const UA_NodeId &node_id, const Event &event)
 {
-    UA_NodeId type_id = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE) | find(event.getType()->browse_name);
+    UA_NodeId type_id = nodeBaseEventType | find(event.getType()->browse_name);
     if (UA_NodeId_isNull(&type_id))
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the event type ID during triggering event");
