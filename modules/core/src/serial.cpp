@@ -17,6 +17,7 @@
 #include <unistd.h>
 #endif // __GNUC__
 
+#include "rmvl/core/util.hpp"
 #include "rmvl/core/serial.hpp"
 
 #ifdef __GNUC__
@@ -48,24 +49,24 @@ void rm::SerialPort::open()
     }
     else
     {
-        SER_ERROR("Cannot find the directory: \"%s\"", dir_path);
+        ERROR_("Cannot find the directory: \"%s\"", dir_path);
         return;
     }
 
     if (file_name.empty())
     {
-        SER_ERROR("Cannot find the serial port.");
+        ERROR_("Cannot find the serial port.");
         return;
     }
     else
         file_name = dir_path + file_name;
 
-    SER_INFO("Opening the serial port: %s", file_name.c_str());
+    INFO_("Opening the serial port: %s", file_name.c_str());
     _fd = ::open(file_name.c_str(), O_RDWR | O_NOCTTY | O_NDELAY); // 非堵塞情况
 
     if (_fd == -1)
     {
-        SER_ERROR("Failed to open the serial port.");
+        ERROR_("Failed to open the serial port.");
         return;
     }
     tcgetattr(_fd, &_option);
@@ -109,11 +110,11 @@ ssize_t rm::SerialPort::fdwrite(void *data, size_t length)
 
     if (len_result != static_cast<ssize_t>(length))
     {
-        SER_WARNING("Unable to write to serial port, restart...");
+        WARNING_("Unable to write to serial port, restart...");
         open();
     }
     else
-        DEBUG_SER_INFO("Success to write the serial port.");
+        DEBUG_INFO_("Success to write the serial port.");
 
     return len_result;
 }
@@ -137,13 +138,13 @@ ssize_t rm::SerialPort::fdread(void *data, size_t len)
 
     if (len_result == -1)
     {
-        SER_WARNING("The serial port cannot be read, restart...");
+        WARNING_("The serial port cannot be read, restart...");
         open();
     }
     else if (len_result == 0)
-        DEBUG_SER_WARNING("Serial port read: null");
+        DEBUG_WARNING_("Serial port read: null");
     else
-        DEBUG_SER_PASS("Success to read the serial port.");
+        DEBUG_PASS_("Success to read the serial port.");
     return len_result;
 }
 

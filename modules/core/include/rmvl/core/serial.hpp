@@ -28,55 +28,6 @@ namespace rm
 //! @addtogroup serial
 //! @{
 
-#ifdef NDEBUG
-#define DEBUG_SER_WARNING(msg) ((void)0)
-#define DEBUG_SER_ERROR(msg) ((void)0)
-#define DEBUG_SER_HIGHLIGHT(msg) ((void)0)
-#define DEBUG_SER_INFO(msg) ((void)0)
-#define DEBUG_SER_PASS(msg) ((void)0)
-#else
-#define DEBUG_SER_WARNING(msg) SER_WARNING(msg)
-#define DEBUG_SER_ERROR(msg) SER_ERROR(msg)
-#define DEBUG_SER_HIGHLIGHT(msg) SER_HIGHLIGHT(msg)
-#define DEBUG_SER_INFO(msg) SER_INFO(msg)
-#define DEBUG_SER_PASS(msg) SER_PASS(msg)
-#endif
-
-#define SER_HIGHLIGHT(msg...)                \
-    do                                       \
-    {                                        \
-        printf("\033[35m[ SER-INFO ] " msg); \
-        printf("\033[0m\n");                 \
-    } while (false)
-
-#define SER_WARNING(msg...)                  \
-    do                                       \
-    {                                        \
-        printf("\033[33m[ SER-ERR  ] " msg); \
-        printf("\033[0m\n");                 \
-    } while (false)
-
-#define SER_PASS(msg...)                     \
-    do                                       \
-    {                                        \
-        printf("\033[32m[ SER-PASS ] " msg); \
-        printf("\033[0m\n");                 \
-    } while (false)
-
-#define SER_ERROR(msg...)                    \
-    do                                       \
-    {                                        \
-        printf("\033[31m[ SER-ERR  ] " msg); \
-        printf("\033[0m\n");                 \
-    } while (false)
-
-#define SER_INFO(msg...)             \
-    do                               \
-    {                                \
-        printf("[ SER-INFO ] " msg); \
-        printf("\n");                \
-    } while (false)
-
 #ifdef __GNUC__
 
 //! 串行接口通信库

@@ -71,16 +71,12 @@ using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string>;
 namespace helper
 {
 
-//! @addtogroup opcua
-//! @{
-
 //! 获取编译期常量 `zh-CN`
 inline constexpr char *zh_CN() { return const_cast<char *>("zh-CN"); }
 //! 获取编译期常量 `en-US`
 inline constexpr char *en_US() { return const_cast<char *>("en-US"); }
 //! `std::string` 转为 `char *`
 inline char *to_char(const std::string &str) { return const_cast<char *>(str.c_str()); }
-//! @}
 
 } // namespace helper
 

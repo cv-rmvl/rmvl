@@ -120,9 +120,6 @@ struct Method final
 namespace helper
 {
 
-//! @addtogroup opcua
-//! @{
-
 /**
  * @brief `rm::Argument` 转化为 `UA_Argument`
  *
@@ -131,8 +128,6 @@ namespace helper
  * @return `UA_Argument` 表示的方法
  */
 UA_Argument cvtArgument(const Argument &arg);
-
-//! @} opcua
 
 } // namespace helper
 

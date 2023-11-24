@@ -7,7 +7,7 @@
 @brief 从一维进行 **KalmanFilter** 理论的介绍和公式推导，并在高维度进行类比和推广
 @todo **2.0** 从状态空间方程的角度以及最优化控制的角度推导
 
-@prev_tutorial{tutorial_modules_serial}
+@prev_tutorial{tutorial_modules_opcua}
 
 @next_tutorial{tutorial_modules_least_square}
 
