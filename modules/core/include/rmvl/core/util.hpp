@@ -26,53 +26,53 @@
 //! @addtogroup core
 //! @{
 
-#define HIGHLIGHT_(msg...)                    \
-    do                                        \
-    {                                         \
-        printf("\033[35minfo - \033[0m" msg); \
-        printf("\n");                         \
+#define HIGHLIGHT_(...)                               \
+    do                                                \
+    {                                                 \
+        printf("\033[35minfo - \033[0m" __VA_ARGS__); \
+        printf("\n");                                 \
     } while (false)
 
-#define WARNING_(msg...)                      \
-    do                                        \
-    {                                         \
-        printf("\033[33mwarn - \033[0m" msg); \
-        printf("\n");                         \
+#define WARNING_(...)                                 \
+    do                                                \
+    {                                                 \
+        printf("\033[33mwarn - \033[0m" __VA_ARGS__); \
+        printf("\n");                                 \
     } while (false)
 
-#define PASS_(msg...)                         \
-    do                                        \
-    {                                         \
-        printf("\033[32minfo - \033[0m" msg); \
-        printf("\n");                         \
+#define PASS_(...)                                    \
+    do                                                \
+    {                                                 \
+        printf("\033[32minfo - \033[0m" __VA_ARGS__); \
+        printf("\n");                                 \
     } while (false)
 
-#define ERROR_(msg...)                        \
-    do                                        \
-    {                                         \
-        printf("\033[31m err - \033[0m" msg); \
-        printf("\n");                         \
+#define ERROR_(...)                                   \
+    do                                                \
+    {                                                 \
+        printf("\033[31m err - \033[0m" __VA_ARGS__); \
+        printf("\n");                                 \
     } while (false)
 
-#define INFO_(msg...)          \
-    do                         \
-    {                          \
-        printf("info - " msg); \
-        printf("\n");          \
+#define INFO_(...)                     \
+    do                                 \
+    {                                  \
+        printf("info - " __VA_ARGS__); \
+        printf("\n");                  \
     } while (false)
 
 #ifdef NDEBUG
-#define DEBUG_WARNING_(msg...) ((void)0)
-#define DEBUG_ERROR_(msg...) ((void)0)
-#define DEBUG_HIGHLIGHT_(msg...) ((void)0)
-#define DEBUG_INFO_(msg...) ((void)0)
-#define DEBUG_PASS_(msg...) ((void)0)
+#define DEBUG_WARNING_(...) ((void)0)
+#define DEBUG_ERROR_(...) ((void)0)
+#define DEBUG_HIGHLIGHT_(...) ((void)0)
+#define DEBUG_INFO_(...) ((void)0)
+#define DEBUG_PASS_(...) ((void)0)
 #else
-#define DEBUG_WARNING_(msg...) WARNING_(msg)
-#define DEBUG_ERROR_(msg...) ERROR_(msg)
-#define DEBUG_HIGHLIGHT_(msg...) HIGHLIGHT_(msg)
-#define DEBUG_INFO_(msg...) INFO_(msg)
-#define DEBUG_PASS_(msg...) PASS_(msg)
+#define DEBUG_WARNING_(...) WARNING_(__VA_ARGS__)
+#define DEBUG_ERROR_(...) ERROR_(__VA_ARGS__)
+#define DEBUG_HIGHLIGHT_(...) HIGHLIGHT_(__VA_ARGS__)
+#define DEBUG_INFO_(...) INFO_(__VA_ARGS__)
+#define DEBUG_PASS_(...) PASS_(__VA_ARGS__)
 #endif
 
 typedef int RMVLErrorCode; //!< 重定义 `int` 为 RMVLErrorCode
@@ -212,7 +212,7 @@ const char *getBuildInformation();
  * @param[in] fmt 格式化字符串
  * @param[in] args 括号中带有类似 printf 格式的错误信息
  */
-#define RMVL_Error_(code, fmt, args...) rm::error(code, rm::format(fmt, args), RMVL_Func, __FILE__, __LINE__)
+#define RMVL_Error_(code, fmt, ...) rm::error(code, rm::format(fmt, __VA_ARGS__), RMVL_Func, __FILE__, __LINE__)
 
 /**
  * @brief 在运行时检查条件，如果失败则抛出异常

@@ -24,6 +24,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD ${max_version})
 
+set(CMAKE_JOB_POOL_COMPILE "compile")
+set(CMAKE_JOB_POOL_LINK "link")
+
 # ----------------------------------------------------------------------------
 #   Detect target platform architecture
 # ----------------------------------------------------------------------------
@@ -126,8 +129,8 @@ if(ENABLE_WARNING)
     add_compile_options(
       -Wall
       -Wextra
+      -Wpedantic
       # -Wconversion
-      # -Wpedantic
       # -Werror
       # -Wfatal-errors
     )
@@ -214,6 +217,7 @@ endif()
 option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
 if(WITH_ONNXRUNTIME)
   find_package(Ort QUIET)
+  unset(WITH_ONNXRUNTIME CACHE)
   option(WITH_ONNXRUNTIME "Enable onnxruntime support" ${Ort_FOUND})
 endif()
 
