@@ -1,0 +1,34 @@
+name: Refactor or optimization - 重构或优化
+description: |
+  Suggest a code refactor or feature, performance optimization.
+labels: ["optimization"]
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      #### 感谢您的贡献！在提交重构或优化请求 issue 之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/cv-rmvl/rmvl/issues?q=is%3Aopen)都没有解决。
+
+- type: textarea
+  attributes:
+    label: 描待优化、重构的内容
+    description: |
+      描述现阶段代码存在的安全性、功能性上待优化，或者代码逻辑上、架构上待重构的内容
+    placeholder: |
+      对待重构的内容进行清晰而简洁的描述。
+
+      // For example
+      - xxx 模块的代码与其他模块的代码耦合度过高，需要重构
+      - xxx 模块的代码存在内存泄漏，需要优化，使用 GCC Sanitizer 分析的结果如下
+        ```
+        # Sanitizer 运行结果
+        ```
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: 解决的大致思路
+    description: |
+      请提供一个大致的解决思路，以帮助我们理解您的想法。
+  validations:
+    required: true

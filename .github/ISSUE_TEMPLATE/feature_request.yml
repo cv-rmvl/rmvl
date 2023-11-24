@@ -1,28 +1,23 @@
 name: Feature request - 功能要求
 description: |
-  提交一个新的 RMVL 特性的请求
-  Submit a request for a new RMVL feature
+  Submit a request for a new RMVL feature.
 labels: ["feature"]
 
 body:
 - type: markdown
   attributes:
     value: |
-      #### 感谢您的贡献！在提交新的功能请求之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/cv-rmvl/rmvl/issues?q=is%3Aopen)都没有解决。
-
-      #### Thank you for contributing! Before submitting a feature request, please make sure the issue has no duplicate and hasn't been already addressed by searching through [the existing and past issues](https://github.com/cv-rmvl/rmvl/issues?q=is%3Aopen).
+      #### 感谢您的贡献！在提交新的功能请求 issue 之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/cv-rmvl/rmvl/issues?q=is%3Aopen)都没有解决。
 
 - type: textarea
   attributes:
-    label: Describe the feature and motivation - 描述功能特点和出发点
+    label: 描述功能特点和出发点
     description: |
-      请提供一个清晰且简洁的建议性的功能图像并和简述你的出发点。
-      Please provide a clear and concise proposal of the feature and outline the motivation.
+      请提供一个清晰且简洁的功能描述，也可以提供一个图像辅助您的表述，并简述你提出该功能的出发点。
   validations:
     required: true
 - type: textarea
   attributes:
-    label: Additional context - 附加内容
+    label: 附加内容
     description: |
-      添加任何其他上下文，如伪代码、链接、图表、截图，以帮助 RoboMaster 视觉社区更好地理解功能请求。
-      Add any other context, such as pseudo code, links, diagram, screenshots, to help RoboMaster vision community better understand the feature request.
+      添加任何其他上下文，如伪代码、链接、图表、截图，以帮助开发者更好地理解功能请求。
