@@ -1,7 +1,6 @@
 blank_issues_enabled: true
 contact_links:
   - name: Questions? - 有疑问？
-    url: https://vision.scutbot.cn/rmvl
+    url: cv-rmvl.github.io
     about: |
-      有好好阅读文档中的内容吗？如果还是有问题，可以向任何一名开发者提出疑问哦！
-      Did you read the document well? If you still have questions, feel free to ask any of the developers!
+      有查阅文档中的内容吗？还是有问题，可以向任何一名开发者提出疑问，如果文档存在问题，可以发起对应的工单（Issue）

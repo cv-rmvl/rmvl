@@ -1,33 +1,28 @@
 name: Documentation - 文档
 description: |
-  报告与文档相关的问题
-  Report an issue related to the document
+  Report an issue related to the document.
 labels: ["documentation"]
 
 body:
 - type: markdown
   attributes:
     value: |
-      #### 感谢您的贡献！在提交文档工单之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/cv-rmvl/rmvl/issues?q=is%3Aopen)都没有解决。
-
-      #### Thank you for contributing! Before submitting a doc issue, please make sure it has no duplicate by searching through [the existing and past issues](https://github.com/opencv/opencv/issues?page=1&q=is%3Aissue+sort%3Acreated-desc)
+      #### 感谢您的贡献！在提交文档 issue 之前，请查看有无对应的 issue 已被打开，确保请求没有被重复提出，并且搜索过[现在和之前的问题](https://github.com/cv-rmvl/rmvl/issues?q=is%3Aopen)都没有解决。
 
 - type: textarea
   attributes:
-    label: Describe the doc issue - 描述文档的问题
+    label: 描述文档的问题
     description: |
-      请清晰、简明地说明[文档](https://vision.scutbot.cn/rmvl)中的哪些内容存在问题。请注意会有多个分支，如 master，因此请指明出现问题的分支。
-      Please provide a clear and concise description of what content in [document](https://vision.scutbot.cn/rmvl) is an issue. Note that there are multiple active branches, such as master, so please specify the branch with the problem.
+      请清晰、简明地说明[文档](cv-rmvl.github.io)中的哪些内容存在问题。请注意会有多个分支，如 master，因此请指明出现问题的分支。
     placeholder: |
-      对[文档](https://vision.scutbot.cn/rmvl)中的内容进行清晰而简洁的描述。
-      A clear and concise description of what content in [document](https://vision.scutbot.cn/rmvl) is an issue.
+      对文档中的内容进行清晰而简洁的描述。
 
-      Link to the doc: https://vision.scutbot.cn/rmvl/master/df/d41/classrm_1_1Armor.html
+      // For example
+      文档主页面 cv-rmvl.github.io/master 缺少有关 OPC UA 使用上的说明
   validations:
     required: true
 - type: textarea
   attributes:
-    label: Fix suggestion - 解决建议
+    label: 解决建议
     description: |
       请告诉我们如何改进这方面的文档。
-      Tell us how we could improve the documentation in this regard.
