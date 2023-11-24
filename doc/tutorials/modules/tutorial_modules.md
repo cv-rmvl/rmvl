@@ -15,6 +15,7 @@
 
 - @subpage tutorial_modules_aggregate_reflect
 - @subpage tutorial_modules_serial
+- @subpage tutorial_modules_opcua
 
 #### 1.2 算法类
 

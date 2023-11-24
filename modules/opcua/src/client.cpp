@@ -131,7 +131,7 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     return true;
 }
 
-bool Client::subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
+bool Client::monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
 {
     // 创建订阅
     UA_CreateSubscriptionResponse resp;
@@ -154,7 +154,7 @@ bool Client::subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback 
     return true;
 }
 
-bool Client::subscribe(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+bool Client::monitor(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
 {
     // 创建订阅
     UA_CreateSubscriptionResponse sub_resp;
