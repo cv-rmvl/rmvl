@@ -177,7 +177,7 @@ bool Client::monitor(UA_NodeId node, const std::vector<std::string> &names, UA_C
     std::vector<UA_SimpleAttributeOperand> select_clauses(browse_names.size());
     for (size_t i = 0; i < browse_names.size(); ++i)
     {
-        select_clauses[i].typeDefinitionId = UA_NODEID_NUMERIC(0, UA_NS0ID_BASEEVENTTYPE);
+        select_clauses[i].typeDefinitionId = nodeBaseEventType;
         select_clauses[i].attributeId = UA_ATTRIBUTEID_VALUE;
         select_clauses[i].browsePathSize = 1;
         select_clauses[i].browsePath = &browse_names[i];
