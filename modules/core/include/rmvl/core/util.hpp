@@ -210,7 +210,7 @@ const char *getBuildInformation();
  * @endcode
  * @param[in] code 一种 RMVLErrorCode 错误码
  * @param[in] fmt 格式化字符串
- * @param[in] args 括号中带有类似 printf 格式的错误信息
+ * @param[in] ... 括号中带有类似 printf 格式的错误信息
  */
 #define RMVL_Error_(code, fmt, ...) rm::error(code, rm::format(fmt, __VA_ARGS__), RMVL_Func, __FILE__, __LINE__)
 

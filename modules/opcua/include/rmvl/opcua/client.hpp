@@ -138,19 +138,47 @@ public:
      * @param[in] node 待监视节点的 `UA_NodeId`
      * @param[in] on_change 数据变更回调函数
      * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知
-     * @return 是否成功订阅变量节点？
+     * @return 变量节点监视创建成功？
      */
-    bool subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size);
+    bool monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size);
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
-     * 
+     *
      * @param[in] node 待监视节点的 `UA_NodeId`
      * @param[in] names 关注的事件属性名列表，参考 Event::getProperties()
      * @param[in] on_event 事件回调函数
-     * @return 是否成功订阅事件？
+     * @return 事件监视创建成功？
      */
-    bool subscribe(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
+    bool monitor(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
+
+    /**
+     * @brief 创建变量节点监视项，以实现订阅节点的功能
+     *
+     * @deprecated 函数名与 `Pub/Sub` 的功能容易混淆，请使用 `monitor()` 函数
+     * @param[in] node 待监视节点的 `UA_NodeId`
+     * @param[in] on_change 数据变更回调函数
+     * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知
+     * @return 变量节点监视创建成功？
+     */
+    inline bool subscribe(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
+    {
+        return monitor(node, on_change, queue_size);
+    }
+
+    /**
+     * @brief 创建事件监视项，以实现事件的订阅功能
+     *
+     * @deprecated 函数名与 `Pub/Sub` 的功能容易混淆，请使用 `monitor()` 函数
+     * @param[in] node 待监视节点的 `UA_NodeId`
+     * @param[in] names 关注的事件属性名列表，参考 Event::getProperties()
+     * @param[in] on_event 事件回调函数
+     * @return 事件监视创建成功？
+     */
+    inline bool subscribe(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+    {
+        return monitor(node, names, on_event);
+    }
 
 private:
     /**
