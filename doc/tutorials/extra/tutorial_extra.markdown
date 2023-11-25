@@ -48,7 +48,7 @@
 
 ### 3. 顶层模块
 
-@note 此部分由用户自行实现
+<span style="color: red">此部分由用户自行实现</span>
 
 - @subpage tutorial_extra_upper_base
 - @subpage tutorial_extra_upper_init

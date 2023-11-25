@@ -139,7 +139,7 @@ public:
     Exception() : code(RMVL_StsOk), line(0) {}
 
     /**
-     * @brief 完整的构造函数。通常不显式调用构造函数。而是使用宏 RMVL_Error()、RMVL_Error_()
+     * @brief 完整的构造函数。通常不显式调用构造函数。而是使用宏 RMVL_Error() 、 RMVL_Error_()
      *        和 RMVL_Assert()
      */
     Exception(int _code, const std::string &_err, const std::string &_func, const std::string &_file, int _line);
