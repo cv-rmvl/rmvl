@@ -1,4 +1,4 @@
-OPC UA {#tutorial_modules_opcua}
+工业自动化通信协议 OPC UA {#tutorial_modules_opcua}
 ============
 
 @author 赵曦
@@ -18,7 +18,7 @@ OPC UA {#tutorial_modules_opcua}
 
 #### 1.1 OPC UA 是什么
 
-[OPC UA](https://opcfoundation.org/about/opc-technologies/opc-ua/)（全称为开放式连接和集成架构统一架构，Open Platform Communications Unified Architecture）是一种用于工业自动化和物联网（IoT）应用的开放通信协议和架构。它提供了一种统一的框架，用于在不同设备和系统之间实现数据传输、通信和集成。
+[OPC UA](https://opcfoundation.org/about/opc-technologies/opc-ua/)（全称为开放式连接和集成架构统一架构，Open Platform Communications Unified Architecture）是一种用于工业和物联网（IoT）应用的开放通信协议和架构。它提供了一种统一的框架，用于在不同设备和系统之间实现数据传输、通信和集成。
 
 OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通信标准，以实现互操作性和集成性。它提供了一套标准的服务和功能，使不同类型的设备和系统能够相互通信和交换数据，其特点包括：
 
