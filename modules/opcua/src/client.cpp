@@ -73,7 +73,7 @@ void Client::spin()
 
 void Client::spinOnce() { UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT); }
 
-bool Client::read(const UA_NodeId &node, Variable &val)
+Variable Client::read(const UA_NodeId &node)
 {
     UA_Variant variant;
 
@@ -81,11 +81,10 @@ bool Client::read(const UA_NodeId &node, Variable &val)
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to read value from the specific node, error: %s", UA_StatusCode_name(status));
-        return false;
+        return {};
     }
     // 变量节点信息
-    val = helper::cvtVariable(variant);
-    return true;
+    return helper::cvtVariable(variant);
 }
 
 bool Client::write(const UA_NodeId &node, const Variable &val)

@@ -60,9 +60,9 @@ TEST(OPC_UA_ClientTest, read_variable)
     setSvr(svr);
     rm::Client client("opc.tcp://localhost:5000");
     // 读取测试服务器上的变量值
-    rm::Variable variable;
     auto id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("array");
-    EXPECT_TRUE(client.read(id, variable));
+    rm::Variable variable = client.read(id);
+    EXPECT_FALSE(variable.empty());
     auto vec = rm::Variable::cast<std::vector<int>>(variable);
     for (size_t i = 0; i < vec.size(); ++i)
         EXPECT_EQ(vec[i], i + 1);
@@ -79,8 +79,8 @@ TEST(OPC_UA_ClientTest, variable_IO)
     // 读取测试服务器上的变量值
     auto id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("single");
     EXPECT_TRUE(client.write(id, 99));
-    rm::Variable variable;
-    EXPECT_TRUE(client.read(id, variable));
+    rm::Variable variable = client.read(id);
+    EXPECT_FALSE(variable.empty());
     int single_value = rm::Variable::cast<int>(variable);
     EXPECT_EQ(single_value, 99);
     svr.stop();
@@ -118,8 +118,8 @@ TEST(OPC_UA_ClientTest, client_subscription)
     setSvr(svr);
     rm::Client client("opc.tcp://localhost:5003");
     // 订阅测试服务器上的变量
-    auto node_id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("single");
-    EXPECT_TRUE(client.subscribe(node_id, onChange, 5));
+    auto node_id = rm::nodeObjectsFolder | client.find("single");
+    EXPECT_TRUE(client.monitor(node_id, onChange, 5));
     // 数据更新
     client.write(node_id, 66);
     client.spinOnce();
@@ -157,13 +157,13 @@ TEST(OPC_UA_ClientTest, client_event)
     etype.add("aaa", 3);
     svr.addEventTypeNode(etype);
     rm::Client client("opc.tcp://localhost:5004");
-    client.subscribe(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), {"SourceName", "aaa"}, onEvent);
+    client.monitor(rm::nodeServer, {"SourceName", "aaa"}, onEvent);
     // 触发事件
     rm::Event event(etype);
     event.source_name = "GtestServer";
     event.message = "this is test event";
     event["aaa"] = 66;
-    svr.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event);
+    svr.triggerEvent(rm::nodeServer, event);
     client.spinOnce();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     EXPECT_EQ(source_name, "GtestServer");

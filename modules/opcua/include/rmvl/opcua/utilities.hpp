@@ -15,6 +15,7 @@
 #include <typeindex>
 #include <unordered_map>
 
+#include <open62541/nodeids.h>
 #include <open62541/types_generated.h>
 
 struct UA_Server;

@@ -67,7 +67,7 @@ UA_Variant cvtVariable(const Variable &val)
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
-    if (val.getArrayDimensions() == 1)
+    if (val.size() == 1)
     {
         switch (val.getDataType())
         {
@@ -197,9 +197,9 @@ UA_Variant cvtVariable(const Variable &val)
             RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", val.getDataType());
             break;
         }
-        p_val.arrayLength = val.getArrayDimensions();
+        p_val.arrayLength = val.size();
         p_val.arrayDimensionsSize = 1;
-        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(val.getArrayDimensions());
+        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(val.size());
     }
     return p_val;
 }
@@ -278,7 +278,7 @@ UA_Variant cvtVariable(const VariableType &vtype)
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
-    if (vtype.getArrayDimensions() == 1)
+    if (vtype.size() == 1)
     {
         switch (vtype.getDataType())
         {
@@ -408,9 +408,9 @@ UA_Variant cvtVariable(const VariableType &vtype)
             RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", vtype.getDataType());
             break;
         }
-        p_val.arrayLength = vtype.getArrayDimensions();
+        p_val.arrayLength = vtype.size();
         p_val.arrayDimensionsSize = 1;
-        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(vtype.getArrayDimensions());
+        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(vtype.size());
     }
     return p_val;
 }
