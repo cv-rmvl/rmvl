@@ -112,7 +112,7 @@ public:
     inline UA_TypeFlag getDataType() const { return _data_type; }
 
     //! 获取数组维度 @note 单独的数则返回 `1`，未初始化则返回 `0`
-    inline const UA_UInt32 &getArrayDimensions() const { return _dims; }
+    inline const UA_UInt32 &size() const { return _dims; }
 
     /**
      * @brief 获取默认数据的阶数、秩
@@ -174,7 +174,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <unsigned int N>
-    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag[typeid(const char *)]), _dims(1) {}
+    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag[typeid(const char *)]), _dims(1), _access_level(3U) {}
 
     /**
      * @brief 单值构造
@@ -200,7 +200,7 @@ public:
      * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
      */
     explicit Variable(VariableType &vtype) : _type(&vtype), _value(vtype.getValue()), _data_type(vtype.getDataType()),
-                                             _dims(vtype.getArrayDimensions()), _access_level(3U) {}
+                                             _dims(vtype.size()), _access_level(3U) {}
 
     Variable(const Variable &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description), _type(val._type),
                                     _value(val._value), _data_type(val._data_type), _dims(val._dims), _access_level(val._access_level) {}
@@ -211,6 +211,9 @@ public:
     Variable &operator=(const Variable &val);
 
     Variable &operator=(Variable &&val);
+
+    //! 判断变量节点是否为空
+    constexpr bool empty() const { return _dims == 0; }
 
     /**
      * @brief 将变量节点转化为指定类型的数据
@@ -237,7 +240,7 @@ public:
     inline UA_TypeFlag getDataType() const { return _data_type; }
 
     //! 获取数组维度指针 @note 单独的数则返回 `1`，未初始化则返回 `0`
-    inline const UA_UInt32 &getArrayDimensions() const { return _dims; }
+    inline const UA_UInt32 &size() const { return _dims; }
 
     /**
      * @brief 设置访问性

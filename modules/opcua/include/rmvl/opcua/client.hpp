@@ -77,10 +77,9 @@ public:
      * @brief 从指定的变量节点读数据
      *
      * @param[in] node 既存的变量节点的 `UA_NodeId`
-     * @param[out] val 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
-     * @return 是否读取成功
+     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      */
-    bool read(const UA_NodeId &node, Variable &val);
+    Variable read(const UA_NodeId &node);
 
     /**
      * @brief 给指定的变量节点写数据

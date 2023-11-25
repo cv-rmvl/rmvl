@@ -21,15 +21,15 @@ TEST(OPC_UA_Server, value_config)
 {
     // 变量类型节点、字符串
     rm::VariableType variable_type = "string_test";
-    EXPECT_EQ(variable_type.getArrayDimensions(), 1);
+    EXPECT_EQ(variable_type.size(), 1);
     EXPECT_EQ(variable_type.getDataType(), UA_TYPES_STRING);
     // 添加变量节点、双精度浮点数
     rm::Variable variable = 3.1415;
-    EXPECT_EQ(variable.getArrayDimensions(), 1);
+    EXPECT_EQ(variable.size(), 1);
     EXPECT_EQ(variable.getDataType(), UA_TYPES_DOUBLE);
     // 添加变量节点、数组
     rm::Variable variable_array = std::vector<int>{1, 2, 3};
-    EXPECT_EQ(variable_array.getArrayDimensions(), 3);
+    EXPECT_EQ(variable_array.size(), 3);
     EXPECT_EQ(variable_array.getDataType(), UA_TYPES_INT32);
 }
 
@@ -178,7 +178,7 @@ TEST(OPC_UA_Server, server_config_add_event_type_node)
     int val = 3;
     event_type.add("test_val", val);
     auto id = server.addEventTypeNode(event_type);
-    auto target = nodeBaseEventType | server.find("test_event_type");
+    auto target = rm::nodeBaseEventType | server.find("test_event_type");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
     server.start();
     server.stop();

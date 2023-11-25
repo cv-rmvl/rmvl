@@ -102,7 +102,7 @@ int main()
 
 #### 2.2 变量
 
-**服务器**
+在上文介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点。
 
 ```cpp
 // server.cpp
@@ -129,7 +129,7 @@ int main()
 }
 ```
 
-**客户端**
+然后在客户端中直接读取变量节点。
 
 ```cpp
 // client.cpp
@@ -139,12 +139,12 @@ int main()
 {
     rm::Client clt("opc.tcp://localhost:4840");
 
-    // 寻找待读取的变量
+    // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
     auto node = rm::nodeObjectsFolder | clt.find("number");
-    // 存储读取的数据
-    rm::Variable target;
-    // 读取变量，返回值表示是否读取成功
-    if (!clt.read(node, target))
+    // 读取变量
+    rm::Variable target = clt.read(node);
+    // 判断是否为空
+    if (target.empty())
     {
         ERROR_("Failed to read the variable.");
         return 0;
@@ -156,7 +156,7 @@ int main()
 
 #### 2.3 方法
 
-**服务器**
+在服务器中添加两数之和的方法节点，供客户端调用。
 
 ```cpp
 // server.cpp
@@ -198,7 +198,7 @@ int main()
 }
 ```
 
-**客户端**
+在客户端调用指定方法。
 
 ```cpp
 // client.cpp
@@ -225,7 +225,14 @@ int main()
 
 #### 2.4 对象
 
-**服务器**
+在服务器中添加对象节点：
+
+- A
+  - B1
+    - C1: `3.14`
+    - C2: `666`
+  - B2
+    - C3: `"xyz"`
 
 ```cpp
 // server.cpp
@@ -235,28 +242,65 @@ int main()
 {
     rm::Server svr(4840);
     svr.start();
-
-    /* other code */
+    // 准备对象节点数据 A
+    rm::Object a;
+    a.browse_name = a.description = a.display_name = "A";
+    // 添加对象节点 A 至服务器
+    auto node_a = svr.addObjectNode(a);
+    // 准备对象节点数据 B1
+    rm::Object b1;
+    b1.browse_name = b1.description = b1.display_name = "B1";
+    // 准备 B1 的变量节点 C1
+    rm::Variable c1 = 3.14;
+    c1.browse_name = c1.description = c1.display_name = "C1";
+    b1.add(c1);
+    // 准备 B1 的变量节点 C2
+    rm::Variable c2 = 666;
+    c2.browse_name = c2.description = c2.display_name = "C2";
+    b1.add(c2);
+    // 添加对象节点 B1 至服务器
+    svr.addObjectNode(b1, node_a);
+    // 准备对象节点数据 B2
+    rm::Object b2;
+    b2.browse_name = b2.description = b2.display_name = "B2";
+    // 准备 B2 的变量节点 C3
+    rm::Variable c3 = "xyz";
+    c3.browse_name = c3.description = c3.display_name = "C3";
+    b2.add(c3);
+    // 添加对象节点 B2 至服务器
+    svr.addObjectNode(b2, node_a);
 
     svr.join();
 }
 ```
 
-**客户端**
+在客户端寻找 `C2` 和 `C3` 并打印。
 
 ```cpp
 // client.cpp
+#include <iostream>
 #include <rmvl/opcua/client.hpp>
 
 int main()
 {
     rm::Client clt("opc.tcp://localhost:4840");
+
+    // 路径搜索寻找 C2
+    auto node_c2 = rm::nodeObjectsFolder | clt.find("A") | clt.find("B1") | clt.find("C2");
+    rm::Variable c2;
+    clt.read(node_c2, c2);
+    std::cout << rm::Variable::cast<int>(c2) << std::endl;
+    // 路径搜索寻找 C3
+    auto node_c3 = rm::nodeObjectsFolder | clt.find("A") | clt.find("B2") | clt.find("C3");
+    rm::Variable c3;
+    clt.read(node_c3, c3);
+    std::cout << rm::Variable::cast<const char *>(c3) << std::endl;
 }
 ```
 
 #### 2.5 监视
 
-**服务器**
+在服务器中添加待监视的变量节点
 
 ```cpp
 // server.cpp
@@ -267,22 +311,78 @@ int main()
     rm::Server svr(4840);
     svr.start();
 
-    /* other code */
+    // 定义 int 型变量
+    rm::Variable num = 100;
+    num.browse_name = "number";
+    num.display_name = "Number";
+    num.description = "数字";
+    // 添加到服务器的默认位置
+    svr.addVariableNode(num);
 
     svr.join();
 }
 ```
 
-**客户端**
+在客户端 1 中修改变量节点的数据
 
 ```cpp
-// client.cpp
+// client_1.cpp
 #include <rmvl/opcua/client.hpp>
 
 int main()
 {
     rm::Client clt("opc.tcp://localhost:4840");
+    auto node = rm::nodeObjectsFolder | clt.find("number");
+    for (int i = 0; i < 100; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        // 写入数据，i + 200 隐式构造成了 rm::Variable
+        bool success = clt.write(node, i + 200);
+        if (!success)
+            ERROR_("Failed to write data to the variable.");
+    }
+}
+```
+
+在客户端 2 中监视变量节点
+
+```cpp
+// client_2.cpp
+#include <rmvl/opcua/client.hpp>
+
+void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *value)
+{
+    int receive_data = *reinterpret_cast<int *>(value->value.data);
+    printf("Data (n=number) was changed to: %d\n", receive_data);
+}
+
+int main()
+{
+    rm::Client clt("opc.tcp://localhost:4840");
+    auto node = rm::nodeObjectsFolder | clt.find("number");
+    // 监视变量，这里的 onChange 同样可以写成无捕获列表的 lambda 表达式，因为存在隐式转换
+    client.monitor(node_id, onChange, 5);
+    // 线程阻塞
+    client.spin();
 }
 ```
 
 ### 3. 发布/订阅
+
+@todo 本小节暂无
+
+### 4. 参数加载
+
+@ref opcua 中提供了以下几个运行时可调节参数
+
+|    类型    |       参数名        | 默认值 |                             注释                             |
+| :--------: | :-----------------: | :----: | :----------------------------------------------------------: |
+| `uint32_t` |    SPIN_TIMEOUT     |  500   |               服务器超时响应的时间，单位 (ms)                |
+|  `double`  |  SAMPLING_INTERVAL  |   50   |             服务器监视变量的采样速度，单位 (ms)              |
+|  `double`  | PUBLISHING_INTERVAL |  100   | 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms) |
+| `uint32_t` |   LIFETIME_COUNT    |  100   | 在没有发布任何消息的情况下，订阅请求所期望的能够保持活动状态的最大发布周期数 |
+| `uint32_t` | MAX_KEEPALIVE_COUNT |   10   | 在没有任何通知的情况下，订阅请求所期望的服务器应该发送的最大 “保活” 消息数 |
+| `uint32_t` |  MAX_NOTIFICATIONS  |  100   | 服务器应该发送的期望的最大通知数（通知是服务器向客户端报告订阅的变化的方式） |
+| `uint8_t`  |      PRIORITY       |   0    |                       订阅请求的优先级                       |
+
+具体调节方式可参考引言中的 @ref intro_parameters_manager 部分。
