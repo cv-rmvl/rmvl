@@ -13,6 +13,8 @@
 
 #include "rmvl/opcua/server.hpp"
 
+#include "testnum.h"
+
 namespace rm_test
 {
 
@@ -206,6 +208,17 @@ TEST(OPC_UA_Server, server_config_trigger_event)
     // 触发事件
     EXPECT_TRUE(server.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event));
     server.start();
+    server.stop();
+    server.join();
+}
+
+// 从函数指针配置服务器
+TEST(OPC_UA_Server, server_config_function_ptr)
+{
+    rm::Server server(testnum, 4865);
+    server.start();
+    auto id = rm::nodeObjectsFolder | server.find("TestNumber");
+    EXPECT_FALSE(UA_NodeId_isNull(&id));
     server.stop();
     server.join();
 }

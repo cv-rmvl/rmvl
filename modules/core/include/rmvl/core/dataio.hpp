@@ -94,7 +94,7 @@ bool writeCorners(const std::string &path, uint32_t idx, const std::vector<std::
  * @details
  * - 访问指定下标的数据结构体 `corners_<?>`，`<?>` 表示对应的标号，即参数 `idx`
  * - YAML 文件形如以下内容
- * @code {.yml}
+ * @code{.yml}
  * %YAML:1.0
  * ---
  * corners_1:

@@ -42,7 +42,7 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 #### 数据组件 {#data_components}
 
-- @ref feature (**feature**) —— RMVL 最基本的数据组件，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 `feature` 有用的信息（一般是通过 `feature` 的构造函数完成）。
+- @ref feature (**feature**) —— RMVL 最基本的数据组件，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** @cite opencv 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 `feature` 有用的信息（一般是通过 `feature` 的构造函数完成）。
 
 - @ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature::ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息作为 `combo` 的构造函数。
 

@@ -11,6 +11,7 @@
 
 #include "rmvl/opcua/event.hpp"
 #include "rmvl/opcua/object.hpp"
+#include "rmvl/opcua/view.hpp"
 
 namespace rm
 {
@@ -152,6 +153,24 @@ Event &Event::operator=(Event &&val)
 {
     _type = std::exchange(val._type, nullptr);
     _properties = std::move(val._properties);
+    return *this;
+}
+
+View &View::operator=(const View &val)
+{
+    browse_name = val.browse_name;
+    display_name = val.display_name;
+    description = val.description;
+    _nodes = val._nodes;
+    return *this;
+}
+
+View &View::operator=(View &&val)
+{
+    browse_name = std::move(val.browse_name);
+    display_name = std::move(val.display_name);
+    description = std::move(val.description);
+    _nodes = std::move(val._nodes);
     return *this;
 }
 

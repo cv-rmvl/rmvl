@@ -185,7 +185,7 @@ public:
      *
      * @param[in] otype 既存的待作为对象节点类型信息的使用 `rm::ObjectType` 表示的变量类型
      */
-    Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()) {}
+    explicit Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()) {}
 
     Object(const Object &val) : _type(val._type), _variables(val._variables), browse_name(val.browse_name),
                                 display_name(val.display_name), description(val.description) {}
@@ -193,15 +193,8 @@ public:
     Object(Object &&val) : _type(std::exchange(val._type, nullptr)), _variables(std::move(val._variables)), browse_name(std::move(val.browse_name)),
                            display_name(std::move(val.display_name)), description(std::move(val.description)) {}
 
-    /**
-     * @brief 设置对象类型 `rm::ObjectType`
-     *
-     * @param[in] otype 既存的用 `rm::ObjectType` 表示的对象类型
-     */
-    inline void setType(ObjectType &otype) { _type = &otype; }
-
     //! 获取对象类型 `rm::ObjectType`
-    inline const ObjectType *getType() const { return _type; }
+    inline const ObjectType *type() const { return _type; }
 
     /**
      * @brief 添加变量节点至 `rm::Object` 对象中

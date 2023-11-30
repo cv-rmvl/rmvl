@@ -82,11 +82,11 @@ public:
 
     /**
      * @brief 获取 `int` 整型的非默认属性列表
-     * @see Event::getProperties()
+     * @see Event::data()
      *
      * @return 属性列表
      */
-    inline const auto &getProperties() const { return _properties; }
+    inline const auto &data() const { return _properties; }
 };
 
 //! OPC UA 事件
@@ -110,7 +110,7 @@ public:
      *
      * @param[in] etype 既存的待作为事件类型信息的使用 `rm::EventType` 表示的变量类型
      */
-    Event(EventType &etype) : _type(&etype), _properties(etype.getProperties()) {}
+    Event(EventType &etype) : _type(&etype), _properties(etype.data()) {}
 
     Event(const Event &val) : _type(val._type), _properties(val._properties) {}
     Event(Event &&val) : _type(std::exchange(val._type, nullptr)), _properties(std::move(val._properties)) {}
@@ -145,7 +145,7 @@ public:
      *
      * @return 非默认属性列表
      */
-    inline const auto &getProperties() const { return _properties; }
+    inline const auto &data() const { return _properties; }
 
     /**
      * @brief 设置事件类型
@@ -155,7 +155,7 @@ public:
     inline void setType(EventType &type) { _type = &type; }
 
     //! 获取事件类型
-    inline const EventType *getType() const { return _type; }
+    inline const EventType *type() const { return _type; }
 };
 
 //! @} opcua
