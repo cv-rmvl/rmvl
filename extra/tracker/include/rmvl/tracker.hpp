@@ -26,12 +26,12 @@
 
 #ifdef HAVE_RMVL_PLANAR_TRACKER
 #include "tracker/planar_tracker.h"
-#endif //! HAVE_RMVL_PLANAR_TRACKER
+#endif // HAVE_RMVL_PLANAR_TRACKER
 
 #ifdef HAVE_RMVL_GYRO_TRACKER
 #include "tracker/gyro_tracker.h"
-#endif //! HAVE_RMVL_GYRO_TRACKER
+#endif // HAVE_RMVL_GYRO_TRACKER
 
 #ifdef HAVE_RMVL_RUNE_TRACKER
 #include "tracker/rune_tracker.h"
-#endif //! HAVE_RMVL_RUNE_TRACKER
+#endif // HAVE_RMVL_RUNE_TRACKER

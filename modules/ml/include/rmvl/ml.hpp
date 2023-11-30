@@ -22,4 +22,4 @@
 
 #ifdef HAVE_RMVL_ORT
 #include "ml/ort.h"
-#endif //! HAVE_RMVL_ORT
+#endif // HAVE_RMVL_ORT

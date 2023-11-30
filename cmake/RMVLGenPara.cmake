@@ -227,10 +227,11 @@ function(rmvl_generate_para target_name)
       ${CMAKE_CURRENT_LIST_DIR}/src/para/param.cpp
       @ONLY
     )
-    set(def_new_group "${def_new_group}//! @addtogroup para\n")
-    set(def_new_group "${def_new_group}//! @{\n")
+    set(def_new_group "${def_new_group}//! @addtogroup para\n//! @{\n")
     set(def_new_group "${def_new_group}//! @defgroup para_${module_name} ${module_name} 的参数模块\n")
-    set(def_new_group "${def_new_group}//! @} para\n")
+    set(def_new_group "${def_new_group}//! @addtogroup para_${module_name}\n//! @{\n")
+    set(def_new_group "${def_new_group}//! @brief 与 @ref ${module_name} 相关的参数模块，包含...\n")
+    set(def_new_group "${def_new_group}//! @} para_${module_name}\n//! @} para\n")
   endif()
   configure_file(
     ${para_template_path}/para_generator_header.in
@@ -256,7 +257,7 @@ function(rmvl_generate_module_para module_name)
     string(TOUPPER "${_sub}" upper)
     set(para_module_header_details "${para_module_header_details}\n#ifdef HAVE_RMVL_${upper}\n")
     set(para_module_header_details "${para_module_header_details}#include \"${module_name}/${_sub}.h\"\n")
-    set(para_module_header_details "${para_module_header_details}#endif //! HAVE_RMVL_${upper}\n")
+    set(para_module_header_details "${para_module_header_details}#endif // HAVE_RMVL_${upper}\n")
   endforeach()
   # generate C++ file
   configure_file(

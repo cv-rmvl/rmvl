@@ -27,16 +27,16 @@
 
 #ifdef HAVE_RMVL_ARMOR_PREDICTOR
 #include "predictor/armor_predictor.h"
-#endif //! HAVE_RMVL_ARMOR_PREDICTOR
+#endif // HAVE_RMVL_ARMOR_PREDICTOR
 
 #ifdef HAVE_RMVL_GYRO_PREDICTOR
 #include "predictor/gyro_predictor.h"
-#endif //! HAVE_RMVL_GYRO_PREDICTOR
+#endif // HAVE_RMVL_GYRO_PREDICTOR
 
 #ifdef HAVE_RMVL_RUNE_PREDICTOR
 #include "predictor/rune_predictor.h"
-#endif //! HAVE_RMVL_RUNE_PREDICTOR
+#endif // HAVE_RMVL_RUNE_PREDICTOR
 
 #ifdef HAVE_RMVL_SPI_RUNE_PREDICTOR
 #include "predictor/spi_rune_predictor.h"
-#endif //! HAVE_RMVL_SPI_RUNE_PREDICTOR
+#endif // HAVE_RMVL_SPI_RUNE_PREDICTOR

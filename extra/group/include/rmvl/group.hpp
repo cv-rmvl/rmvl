@@ -25,8 +25,8 @@
 
 #ifdef HAVE_RMVL_GYRO_GROUP
 #include "group/gyro_group.h"
-#endif //! HAVE_RMVL_GYRO_GROUP
+#endif // HAVE_RMVL_GYRO_GROUP
 
 #ifdef HAVE_RMVL_RUNE_GROUP
 #include "group/rune_group.h"
-#endif //! HAVE_RMVL_RUNE_GROUP
+#endif // HAVE_RMVL_RUNE_GROUP

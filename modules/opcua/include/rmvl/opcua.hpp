@@ -4,9 +4,9 @@
  * @brief 基于 open62541 的 OPC UA 二次开发库汇总头文件
  * @version 1.0
  * @date 2023-10-22
- * 
+ *
  * @copyright Copyright 2023 (c), zhaoxi
- * 
+ *
  */
 
 #pragma once
@@ -22,5 +22,14 @@
  * @} opcua
  */
 
-#include "opcua/server.hpp"
+////////////////// Client/Server //////////////////
+
 #include "opcua/client.hpp"
+#include "opcua/server.hpp"
+
+///////////////////// Pub/Sub /////////////////////
+
+#ifdef UA_ENABLE_PUBSUB
+#include "opcua/publisher.hpp"
+#include "opcua/subscriber.hpp"
+#endif // UA_ENABLE_PUBSUB

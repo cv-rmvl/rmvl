@@ -88,7 +88,7 @@ void rm::error(int _code, const std::string &_err, const char *_func, const char
     _builtin_trap();
     // or use infinite loop: for (;;) {}
 #endif
-#endif //! _GNUC_
+#endif // _GNUC_
 }
 
 const char *rm::getBuildInformation()

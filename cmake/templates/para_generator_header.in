@@ -18,6 +18,12 @@ namespace rm::para
 
 //! @addtogroup para_@module_name@
 //! @{
+//! @details
+//! - 类名： @class_name@ ，对应的全局参数变量： `rm::para::@target_name@_param`
+//! @} para_@module_name@
+
+//! @addtogroup para_@module_name@
+//! @{
 
 //! @class_name@ 参数模块
 struct @class_name@

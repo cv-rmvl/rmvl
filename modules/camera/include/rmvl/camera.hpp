@@ -29,12 +29,12 @@
 
 #ifdef HAVE_RMVL_MV_CAMERA
 #include "camera/mv_camera.h"
-#endif //! HAVE_RMVL_MV_CAMERA
+#endif // HAVE_RMVL_MV_CAMERA
 
 #ifdef HAVE_RMVL_HIK_CAMERA
 #include "camera/hik_camera.h"
-#endif //! HAVE_RMVL_HIK_CAMERA
+#endif // HAVE_RMVL_HIK_CAMERA
 
-#endif //! HAVE_RMVL_CAMERA
+#endif // HAVE_RMVL_CAMERA
 
 //! @} camera

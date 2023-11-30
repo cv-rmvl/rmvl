@@ -16,4 +16,4 @@
 #ifdef HAVE_RMVL_IMGPROC
 #include "imgproc/pretreat.h"
 #include "imgproc/paint.hpp"
-#endif //! HAVE_RMVL_IMGPROC
+#endif // HAVE_RMVL_IMGPROC
