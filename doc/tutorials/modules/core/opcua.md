@@ -12,11 +12,13 @@
 
 @tableofcontents
 
+相关模块： @ref opcua
+
 ------
 
-### 1. 简介
+### 简介
 
-#### 1.1 OPC UA 是什么
+#### OPC UA 是什么
 
 [OPC UA](https://opcfoundation.org/about/opc-technologies/opc-ua/)（全称为开放式连接和集成架构统一架构，Open Platform Communications Unified Architecture）是一种用于工业和物联网（IoT）应用的开放通信协议和架构。它提供了一种统一的框架，用于在不同设备和系统之间实现数据传输、通信和集成。
 
@@ -30,7 +32,7 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 | 信息建模 | OPC UA 使用统一的信息模型，将数据和功能以标准化的方式表示和描述，使不同系统之间的数据交换更加简化和一致 |
 |  可靠性  | OPC UA 提供了可靠的通信机制，包括消息确认、重试和错误处理，以确保数据的可靠传输 |
 
-#### 1.2 地址空间
+#### 地址空间
 
 <center>
 ![opcua](opcua.svg)
@@ -59,11 +61,11 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 8. 视图节点 **View** ：视图节点可将地址空间中感兴趣的节点提取出来，作为一个子集，视图节点作为该子集的入口，方便客户端浏览。
 
-### 2. 服务器/客户端
+### 服务器/客户端 {#opcua_server_client}
 
 基于服务器/客户端的方式是 OPC UA 最基本的一种通信方式，上文的地址空间在服务器/客户端通信的过程中完全展现出来。下面列举一些 opcua 模块中常用的服务器与客户端的成员方法。
 
-#### 2.1 初始化
+#### 初始化
 
 **服务器**
 
@@ -100,7 +102,7 @@ int main()
 }
 ```
 
-#### 2.2 变量
+#### 变量
 
 在上文介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点。
 
@@ -154,7 +156,7 @@ int main()
 }
 ```
 
-#### 2.3 方法
+#### 方法
 
 在服务器中添加两数之和的方法节点，供客户端调用。
 
@@ -223,7 +225,7 @@ int main()
 }
 ```
 
-#### 2.4 对象
+#### 对象
 
 在服务器中添加对象节点：
 
@@ -298,7 +300,41 @@ int main()
 }
 ```
 
-#### 2.5 监视
+#### 视图
+
+在 `nodeObjectsFolder` 中先添加 `A/num1`、`num2` 2 个变量节点，并将 `num1` 和 `num2` 加入视图，下面的示例演示在 **服务器** 中创建并添加视图节点。若要在客户端中进行此操作，创建并添加视图节点的步骤基本一致，这里不做展示。需要注意的是，在客户端中创建并添加视图节点，需要提前在服务器中加入对应的（变量、方法、对象……）节点
+
+```cpp
+// server.cpp
+#include <rmvl/opcua/server.hpp>
+
+int main()
+{
+    rm::Server svr(4840);
+    svr.start();
+    // 准备对象节点数据 A
+    rm::Object a;
+    a.browse_name = a.description = a.display_name = "A";
+    // 这里使用宏来创建 num1
+    uaCreateVariable(num1, 1);
+    a.add(num1);
+    auto node_a = svr.addObjectNode(a);
+    auto node_num1 = node_a | svr.find("num1");
+    // 这里使用宏来创建 num2
+    uaCreateVariable(num2, 2);
+    auto node_num2 = svr.addVariableNode(num2);
+
+    // 创建视图
+    rm::View num_view;
+    // 添加节点至视图（这里使用的是变量节点的 UA_NodeId，实际上其他节点也是允许的）
+    num_view.add(node_num1, node_num2);
+    // 添加至服务器
+    svr.addViewNode(num_view);
+    svr.join();
+}
+```
+
+#### 监视
 
 在服务器中添加待监视的变量节点
 
@@ -367,11 +403,11 @@ int main()
 }
 ```
 
-### 3. 发布/订阅
+### 发布/订阅 {#opcua_pub_sub}
 
 @todo 本小节暂无
 
-### 4. 参数加载
+### 参数加载 {#opcua_parameters}
 
 @ref opcua 中提供了以下几个运行时可调节参数
 
@@ -386,3 +422,58 @@ int main()
 | `uint8_t`  |      PRIORITY       |   0    |                       订阅请求的优先级                       |
 
 具体调节方式可参考引言中的 @ref intro_parameters_manager 部分。
+
+### 从 XML 配置 OPC UA {#opcua_nodeset_compiler}
+
+#### 安装 UaModeler
+
+可使用 UaModeler 等软件进行可视化信息模型的建立，构建后可以导出为一个 `*.xml` 文件，首先先安装 UaModeler。
+
+**Windows EXE**
+
+- Windows 下可点击[此处](https://pan.baidu.com/s/1pK0gYf-yQjUoFQ-Ie7qB1w)安装官方版本的 UaModeler 软件。
+
+**Python**
+
+- 如果有 Python 环境，也可以使用开源的 UaModeler 库，功能与官方软件基本一致。使用之前需要安装 `pip3` Python 包管理工具，安装好包管理工具后，可使用以下命令行安装 UaModeler
+  ```bash
+  pip3 install opcua-modeler
+
+  # Linux 下可以执行以下命令行运行 UaModeler
+  opcua-modeler
+  ```
+
+具体安装细节可参考 [opcua-modeler on Github](https://github.com/FreeOpcUa/opcua-modeler) 的 README。
+
+#### 可视化配置 OPC UA 信息模型
+
+对于项目创建或导出等内容，此处不做过底盘介绍，可参考[此博客](https://wanghao1314.blog.csdn.net/article/details/104092781)了解上述内容。
+
+@note
+- 一般的，定义对象、变量、方法等内容均按照在代码中的顺序进行定义即可，但需要注意的是，添加了方法节点后，还需要在代码中设置该方法节点执行的回调函数，可参见 `rm::Server::setMethodNodeCallBack`。
+- `NamespaceArray` 的 `[1]` 的字符串需要更改为 `urn:open62541.server.application`
+
+#### 生成 \*.c/\*.h 文件
+
+@note 以下生成 C/C++ 文件的介绍来自 [open62541 nodeset-compiler](https://www.open62541.org/doc/master/nodeset_compiler.html#getting-started)。
+
+进入 `<path-to-open62541>/tools/nodeset_compiler` 文件夹，执行以下命令行
+
+```bash
+# 获取 Opc.Ua.NodeSet2.xml 文件
+wget https://files.opcfoundation.org/schemas/UA/1.05/Opc.Ua.NodeSet2.xml
+# 将刚刚生成的 XML 文件移动至当前文件夹中，并重命名为 xxx.xml
+mv <path-to-xml> ./xxx.xml
+# 执行 nodeset_compiler
+python3 ./nodeset_compiler.py \
+  --types-array=UA_TYPES \
+  --existing Opc.Ua.NodeSet2.xml \
+  --xml xxx.xml \
+  myNodeSet # myNodeSet 是要生成的文件名，包含 myNodeSet.h 和 myNodeSet.c，请自行设置
+```
+
+---
+
+### 引用
+
+@cite ua-modeler UaModeler · FreeOpcUa/opcua-modeler · Github

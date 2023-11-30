@@ -18,6 +18,7 @@
 
 #include "event.hpp"
 #include "object.hpp"
+#include "view.hpp"
 
 namespace rm
 {
@@ -37,6 +38,8 @@ using DataSourceRead = UA_StatusCode (*)(UA_Server *, const UA_NodeId *, void *,
 //! 数据源回调函数，Write 函数指针定义
 using DataSourceWrite = UA_StatusCode (*)(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
                                           const UA_NumericRange *, const UA_DataValue *);
+//! 服务器配置函数指针，由 `nodeset_compiler` 生成
+using ServerUserConfig = UA_StatusCode (*)(UA_Server *);
 
 //! OPC UA 服务器
 class Server final
@@ -56,6 +59,18 @@ public:
      */
     explicit Server(uint16_t port, const std::vector<UserConfig> &users = {});
 
+    /**
+     * @brief 从服务器配置函数指针创建 OPC UA 服务器
+     * @brief
+     * - 服务器配置函数指针需提供 `*.xml` 文件，并由 `nodeset_compiler` 生成
+     * - 关于 `*.xml` 文件的编写，参考 @ref opcua_nodeset_compiler
+     *
+     * @param[in] on_config 服务器配置函数指针
+     * @param[in] port OPC UA 服务器端口号，一般设置为 `4840U`
+     * @param[in] users 用户列表 @see UserConfig
+     */
+    Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users = {});
+
     Server(const Server &) = delete;
     Server(Server &&) = delete;
 
@@ -72,6 +87,7 @@ public:
      */
     inline void join() { _run.join(); }
 
+    //! 释放服务器资源
     ~Server();
 
     /****************************** 路径搜索 ******************************/
@@ -79,7 +95,7 @@ public:
     /**
      * @brief 获取路径搜索必要信息
      * @brief 需要配合管道运算符 `|` 完成路径搜索
-     * @code {.cpp}
+     * @code{.cpp}
      * auto dst_mode = src_node | svr.find("person") | svr.find("name");
      * @endcode
      *
@@ -112,8 +128,7 @@ public:
      * @brief 为既有的变量节点 VariableNode 添加值回调
      * @brief 值回调表示在对 **服务器中的** 变量节点进行读写的时候，会在读之前执行 `beforeRead`，在写之后执行 `afterWrite`
      *
-     * @param[in] id 既有的变量节点的 `UA_NodeId`，因变量节点可能位于任意一个父节点下，因此可以使用
-     * **路径搜索** 进行查找
+     * @param[in] id 既有的变量节点的 `UA_NodeId`，因变量节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
      * @param[in] before_read 可隐式转换为 `ValueCallBackBeforeRead` 函数指针类型的可调用对象
      * @param[in] after_write 可隐式转换为 `ValueCallBackAfterWrite` 函数指针类型的可调用对象
      * @return 是否添加成功
@@ -164,6 +179,14 @@ public:
     UA_NodeId addMethodNode(const Method &method, const UA_NodeId &parent_id = nodeObjectsFolder);
 
     /**
+     * @brief 为既有的方法节点 MethodNode 设置方法的回调函数
+     *
+     * @param[in] id 既有的方法节点的 `UA_NodeId`，因方法节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
+     * @param[in] on_method 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
+     */
+    void setMethodNodeCallBack(const UA_NodeId &id, UA_MethodCallback on_method);
+
+    /**
      * @brief 添加对象类型节点 ObjectTypeNode 至 `rm::nodeBaseObjectType` 中
      *
      * @param[in] otype `rm::ObjectType` 表示的对象类型
@@ -181,6 +204,14 @@ public:
     UA_NodeId addObjectNode(const Object &obj, UA_NodeId parent_id = nodeObjectsFolder);
 
     /**
+     * @brief 添加视图节点 ViewNode 至 `rm::nodeViewsFolder` 中
+     *
+     * @param[in] view `rm::View` 表示的视图
+     * @return 添加至服务器后，对应视图节点的唯一标识 `UA_NodeId`
+     */
+    UA_NodeId addViewNode(const View &view);
+
+    /**
      * @brief 添加事件类型至 `BaseEventType` 中
      *
      * @param[in] etype `rm::EventType` 表示的事件类型
@@ -190,7 +221,7 @@ public:
 
     /**
      * @brief 创建并触发事件
-     * 
+     *
      * @param[in] node_id 触发事件的节点 `UA_NodeId`
      * @param[in] event `rm::Event` 表示的事件
      * @note `Server` 的 `node_id` 是 `rm::nodeServer`

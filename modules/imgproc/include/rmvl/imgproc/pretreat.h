@@ -31,7 +31,7 @@ enum PixChannel : uint8_t
 /**
  * @brief 通道相减二值化
  *
- * @code {.cpp}
+ * @code{.cpp}
  * cv::Mat bin = src[ch1] - src[ch2];
  * @endcode
  *

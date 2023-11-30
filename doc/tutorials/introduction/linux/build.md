@@ -16,7 +16,7 @@
 
 #### OpenCV (*)
 
-OpenCV 是 RMVL 必需的依赖库，如果没有找到 OpenCV 库，RMVL 将无法构建，下面介绍 OpenCV 的安装方法。
+OpenCV @cite opencv 是 RMVL 必需的依赖库，如果没有找到 OpenCV 库，RMVL 将无法构建，下面介绍 OpenCV 的安装方法。
 
 **安装 OpenCV 依赖**
 

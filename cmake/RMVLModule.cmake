@@ -259,6 +259,12 @@ function(rmvl_add_test test_name test_kind)
   set(the_target rmvl_${test_name}_${test_suffix})
   add_executable(${the_target} ${test_src})
 
+  # Local include directories
+  target_include_directories(
+    ${the_target}
+    PRIVATE ${test_dir}
+  )
+
   # Add depends
   foreach(_dep ${TS_DEPENDS})
     target_link_libraries(

@@ -85,7 +85,7 @@ struct Method final
     /**
      * @brief 方法回调函数
      * @brief 函数原型为
-     * @code {.cpp}
+     * @code{.cpp}
      * UA_StatusCode foo(
      *     UA_Server *server, const UA_NodeId *sessionId, void *sessionContext, const UA_NodeId *methodId,
      *     void *methodContext, const UA_NodeId *objectId, void *objectContext, size_t inputSize, const UA_Variant *input,

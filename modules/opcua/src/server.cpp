@@ -54,6 +54,13 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
     }
 }
 
+Server::Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users)
+    : Server(port, users) // 委托构造
+{
+    if (on_config != nullptr)
+        on_config(_server);
+}
+
 void Server::start()
 {
     _running = true;
@@ -115,7 +122,7 @@ UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_i
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     // 获取变量节点的变量类型节点
     UA_NodeId type_id = nodeBaseDataVariableType;
-    const auto *p_type = val.getType();
+    const auto p_type = val.type();
     if (p_type != nullptr)
     {
         type_id = type_id | find(p_type->browse_name);
@@ -164,9 +171,7 @@ bool Server::write(const UA_NodeId &node, const Variable &val)
 
 bool Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
 {
-    UA_ValueCallback callback;
-    callback.onRead = before_read;
-    callback.onWrite = after_write;
+    UA_ValueCallback callback{before_read, after_write};
     auto status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
     if (status != UA_STATUSCODE_GOOD)
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
@@ -189,11 +194,11 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
         attr.arrayDimensions = variant.arrayDimensions;
     }
-    attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
+    attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     // 获取变量节点的变量类型节点
     UA_NodeId type_id = nodeBaseDataVariableType;
-    const auto *p_type = val.getType();
+    const auto p_type = val.type();
     if (p_type != nullptr)
     {
         type_id = type_id | find(p_type->browse_name);
@@ -210,9 +215,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     data_source.write = on_write;
     // 添加节点至服务器
     auto status = UA_Server_addDataSourceVariableNode(
-        _server, UA_NODEID_NULL, parent_id,
-        nodeOrganizes,
-        UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
+        _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
         type_id, attr, data_source, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -232,20 +235,17 @@ UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id
     // 提取数据至 `UA_Argument`
     std::vector<UA_Argument> inputs;
     inputs.reserve(method.iargs.size());
-    for (auto &arg : method.iargs)
+    for (const auto &arg : method.iargs)
         inputs.push_back(helper::cvtArgument(arg));
     std::vector<UA_Argument> outputs;
     outputs.reserve(method.oargs.size());
-    for (auto &arg : method.oargs)
+    for (const auto &arg : method.oargs)
         outputs.push_back(helper::cvtArgument(arg));
     // 添加节点
     UA_NodeId retval{UA_NODEID_NULL};
     auto status = UA_Server_addMethodNode(
-        _server, UA_NODEID_NULL, parent_id,
-        nodeHasComponent,
-        UA_QUALIFIEDNAME(1, helper::to_char(method.browse_name.c_str())),
-        attr, method.func, inputs.size(), inputs.data(),
-        outputs.size(), outputs.data(), nullptr, &retval);
+        _server, UA_NODEID_NULL, parent_id, nodeHasComponent, UA_QUALIFIEDNAME(1, helper::to_char(method.browse_name)),
+        attr, method.func, inputs.size(), inputs.data(), outputs.size(), outputs.data(), nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
@@ -262,6 +262,11 @@ UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id
         return UA_NODEID_NULL;
     }
     return retval;
+}
+
+void Server::setMethodNodeCallBack(const UA_NodeId &id, UA_MethodCallback on_method)
+{
+    UA_Server_setMethodNodeCallback(_server, id, on_method);
 }
 
 UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
@@ -329,7 +334,7 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(obj.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
     // 获取对象类型节点
-    const ObjectType *current = obj.getType();
+    const ObjectType *current = obj.type();
     UA_NodeId type_id{nodeBaseObjectType};
     std::stack<std::string> base_stack;
     while (current != nullptr)
@@ -344,15 +349,14 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     }
     if (UA_NodeId_isNull(&type_id))
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the object type of the object: \"%s\"", obj.browse_name.c_str());
+        UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+                       "The object node \"%s\" does not belong to any object type node", obj.browse_name.c_str());
         type_id = nodeBaseObjectType;
     }
     // 添加至服务器
     UA_NodeId retval = UA_NODEID_NULL;
     auto status = UA_Server_addObjectNode(
-        _server, UA_NODEID_NULL, parent_id,
-        nodeOrganizes,
-        UA_QUALIFIEDNAME(1, helper::to_char(obj.browse_name)),
+        _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(1, helper::to_char(obj.browse_name)),
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -368,6 +372,38 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
         else
             addVariableNode(variable, retval);
     }
+    return retval;
+}
+
+UA_NodeId Server::addViewNode(const View &view)
+{
+    // 准备数据
+    UA_NodeId retval;
+    UA_ViewAttributes attr = UA_ViewAttributes_default;
+    attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.display_name));
+    attr.description = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.description));
+    // 创建并添加 View 节点
+    auto status = UA_Server_addViewNode(
+        _server, UA_NODEID_NULL, nodeViewsFolder, nodeOrganizes,
+        UA_QUALIFIEDNAME(1, helper::to_char(view.browse_name)), attr, nullptr, &retval);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add view node, error: %s", UA_StatusCode_name(status));
+        return UA_NODEID_NULL;
+    }
+    // 添加引用
+    for (const auto &node : view.data())
+    {
+        UA_ExpandedNodeId exp = UA_EXPANDEDNODEID_NULL;
+        exp.nodeId = node;
+        status = UA_Server_addReference(_server, retval, nodeOrganizes, exp, true);
+        if (status != UA_STATUSCODE_GOOD)
+        {
+            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add reference, error: %s", UA_StatusCode_name(status));
+            return UA_NODEID_NULL;
+        }
+    }
+
     return retval;
 }
 
@@ -389,7 +425,7 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
         return UA_NODEID_NULL;
     }
     // 添加自定义数据
-    for (const auto &[browse_name, val] : etype.getProperties())
+    for (const auto &[browse_name, val] : etype.data())
     {
         UA_VariableAttributes val_attr = UA_VariableAttributes_default;
         val_attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(browse_name));
@@ -423,7 +459,7 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
 
 bool Server::triggerEvent(const UA_NodeId &node_id, const Event &event)
 {
-    UA_NodeId type_id = nodeBaseEventType | find(event.getType()->browse_name);
+    UA_NodeId type_id = nodeBaseEventType | find(event.type()->browse_name);
     if (UA_NodeId_isNull(&type_id))
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the event type ID during triggering event");
@@ -447,7 +483,7 @@ bool Server::triggerEvent(const UA_NodeId &node_id, const Event &event)
     UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
     UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
     // 设置事件自定义属性
-    for (const auto &[browse_name, prop] : event.getProperties())
+    for (const auto &[browse_name, prop] : event.data())
     {
         UA_NodeId sub_node_id = event_id | find(browse_name);
         if (!UA_NodeId_isNull(&sub_node_id))

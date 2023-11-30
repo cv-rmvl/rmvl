@@ -14,6 +14,7 @@
 #include <open62541/client_subscriptions.h>
 
 #include "object.hpp"
+#include "view.hpp"
 
 namespace rm
 {
@@ -47,7 +48,7 @@ public:
     /**
      * @brief 获取路径搜索必要信息
      * @brief 需要配合管道运算符 `|` 完成路径搜索
-     * @code {.cpp}
+     * @code{.cpp}
      * auto dst_mode = src_node | clt.find("person") | clt.find("name");
      * @endcode
      *
@@ -115,6 +116,14 @@ public:
     }
 
     /**
+     * @brief 添加视图节点 ViewNode 至 `ViewsFolder` 中
+     * 
+     * @param[in] view `rm::View` 表示的视图
+     * @return 添加至服务器后，对应视图节点的唯一标识 `UA_NodeId`
+     */
+    UA_NodeId addViewNode(const View &view);
+
+    /**
      * @brief 创建变量节点监视项，以实现订阅节点的功能
      * @brief
      * - 服务器在设定的采样频率 `opcua_param.SAMPLING_INTERVAL`
@@ -123,7 +132,7 @@ public:
      *   `on_change` 回调函数
      * @brief
      * - 类似于 ROS 中的订阅话题，这里是订阅变量节点
-     * @code {.cpp}
+     * @code{.cpp}
      * // on_change 回调函数的用法示例，假设订阅的变量节点为 Int32 类型
      * void on_change(UA_Client *client, UA_UInt32 sub_id, void *sub_context,
      *                UA_UInt32 mon_id, void *mon_context, UA_DataValue *value)
@@ -145,7 +154,7 @@ public:
      * @brief 创建事件监视项，以实现事件的订阅功能
      *
      * @param[in] node 待监视节点的 `UA_NodeId`
-     * @param[in] names 关注的事件属性名列表，参考 Event::getProperties()
+     * @param[in] names 关注的事件属性名列表，参考 Event::data()
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
@@ -170,7 +179,7 @@ public:
      *
      * @deprecated 函数名与 `Pub/Sub` 的功能容易混淆，请使用 `monitor()` 函数
      * @param[in] node 待监视节点的 `UA_NodeId`
-     * @param[in] names 关注的事件属性名列表，参考 Event::getProperties()
+     * @param[in] names 关注的事件属性名列表，参考 Event::data()
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */

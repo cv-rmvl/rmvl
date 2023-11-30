@@ -130,6 +130,38 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     return true;
 }
 
+UA_NodeId Client::addViewNode(const View &view)
+{
+    // 准备数据
+    UA_NodeId retval;
+    UA_ViewAttributes attr = UA_ViewAttributes_default;
+    attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.display_name));
+    attr.description = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.description));
+    // 创建并添加 View 节点
+    auto status = UA_Client_addViewNode(
+        _client, UA_NODEID_NULL, nodeViewsFolder, nodeOrganizes,
+        UA_QUALIFIEDNAME(1, helper::to_char(view.browse_name)), attr, &retval);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add view node, error: %s", UA_StatusCode_name(status));
+        return UA_NODEID_NULL;
+    }
+    // 添加引用
+    for (const auto &node : view.data())
+    {
+        UA_ExpandedNodeId exp = UA_EXPANDEDNODEID_NULL;
+        exp.nodeId = node;
+        status = UA_Client_addReference(_client, retval, nodeOrganizes, true, UA_STRING_NULL, exp, UA_NODECLASS_VARIABLE);
+        if (status != UA_STATUSCODE_GOOD)
+        {
+            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add reference, error: %s", UA_StatusCode_name(status));
+            return UA_NODEID_NULL;
+        }
+    }
+
+    return retval;
+}
+
 bool Client::monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
 {
     // 创建订阅

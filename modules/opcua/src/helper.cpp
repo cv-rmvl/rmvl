@@ -63,7 +63,7 @@ namespace rm::helper
 
 UA_Variant cvtVariable(const Variable &val)
 {
-    const std::any &data = val.getValue();
+    const std::any &data = val.data();
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
@@ -274,7 +274,7 @@ Variable cvtVariable(const UA_Variant &p_val)
 
 UA_Variant cvtVariable(const VariableType &vtype)
 {
-    const std::any &data = vtype.getValue();
+    const std::any &data = vtype.data();
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
