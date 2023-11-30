@@ -29,4 +29,4 @@
 
 #include "rmath/union_find.hpp"
 #include "rmath/ra_heap.hpp"
-#endif //! HAVE_RMVL_RMATH
+#endif // HAVE_RMVL_RMATH

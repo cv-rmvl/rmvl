@@ -17,11 +17,11 @@
 
 #ifdef HAVE_RMVL_CAMERA
 #include "rmvlpara/camera/camera.h"
-#endif //! HAVE_RMVL_CAMERA
+#endif // HAVE_RMVL_CAMERA
 
 #ifdef HAVE_RMVL_ML
 #include "rmvlpara/ml.hpp"
-#endif //! HAVE_RMVL_ML
+#endif // HAVE_RMVL_ML
 
 /////////////////////////////////////
 ///////     extra modules     ///////
@@ -29,34 +29,34 @@
 
 #ifdef HAVE_RMVL_FEATURE
 #include "rmvlpara/feature.hpp"
-#endif //! HAVE_RMVL_FEATURE
+#endif // HAVE_RMVL_FEATURE
 
 #ifdef HAVE_RMVL_COMBO
 #include "rmvlpara/combo.hpp"
-#endif //! HAVE_RMVL_COMBO
+#endif // HAVE_RMVL_COMBO
 
 #ifdef HAVE_RMVL_TRACKER
 #include "rmvlpara/tracker.hpp"
-#endif //! HAVE_RMVL_TRACKER
+#endif // HAVE_RMVL_TRACKER
 
 #ifdef HAVE_RMVL_GROUP
 #include "rmvlpara/group.hpp"
-#endif //! HAVE_RMVL_GROUP
+#endif // HAVE_RMVL_GROUP
 
 #ifdef HAVE_RMVL_DETECTOR
 #include "rmvlpara/detector.hpp"
-#endif //! HAVE_RMVL_DETECTOR
+#endif // HAVE_RMVL_DETECTOR
 
 #ifdef HAVE_RMVL_COMPENSATOR
 #include "rmvlpara/compensator.hpp"
-#endif //! HAVE_RMVL_COMPENSATOR
+#endif // HAVE_RMVL_COMPENSATOR
 
 #ifdef HAVE_RMVL_PREDICTOR
 #include "rmvlpara/predictor.hpp"
-#endif //! HAVE_RMVL_PREDICTOR
+#endif // HAVE_RMVL_PREDICTOR
 
 #ifdef HAVE_RMVL_DECIDER
 #include "rmvlpara/decider.hpp"
-#endif //! HAVE_RMVL_DECIDER
+#endif // HAVE_RMVL_DECIDER
 
 #endif // !RMVLPARA_ALL_HPP

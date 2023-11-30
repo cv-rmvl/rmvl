@@ -15,7 +15,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif //! __cplusplus
+#endif // __cplusplus
 
 struct apriltag_family;
 typedef struct apriltag_family apriltag_family_t;

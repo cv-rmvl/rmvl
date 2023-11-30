@@ -19,4 +19,9 @@
 @para_module_header_details@
 //! @} para_@module_name@
 
+//! @addtogroup para_@module_name@
+//! @{
+//! @brief 与 @ref @module_name@ 相关的参数模块，包含...
+//! @} para_@module_name@
+
 //! @} para

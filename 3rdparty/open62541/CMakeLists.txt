@@ -9,10 +9,8 @@ project(
   LANGUAGES C
 )
 
-rmvl_download(
-  ${OPEN62541_PKG} GIT
-  "https://github.com/open62541/open62541.git : v1.3.8"
-)
+option(UA_ENABLE_PUBSUB "Enable the PubSub protocol" ON)
+rmvl_download(${OPEN62541_PKG} GIT "https://github.com/open62541/open62541.git : v1.3.8")
 
 if(NOT BUILD_SHARED_LIBS)
   install(
