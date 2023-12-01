@@ -1,13 +1,11 @@
-if(NOT WITH_OPEN62541)
-  return()
+if(NOT BUILD_OPEN62541 AND WITH_OPEN62541)
+  find_package(open62541 REQUIRED)
 endif()
 
-if(NOT BUILD_OPEN62541)
-  find_package(open62541)
-endif()
 # generate parameters module
 rmvl_generate_para(opcua)
 # configure library module
+set(BUILD_rmvl_opcua_INIT ${WITH_OPEN62541})
 rmvl_add_module(
   opcua
   DEPENDS core
@@ -15,7 +13,7 @@ rmvl_add_module(
 )
 
 # add test
-if(BUILD_TESTS)
+if(BUILD_TESTS AND WITH_OPEN62541)
   rmvl_add_test(
     opcua Unit
     DEPENDS opcua
