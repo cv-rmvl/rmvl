@@ -105,8 +105,11 @@ macro(rmvl_add_module _name)
   if(NOT DEFINED BUILD_${the_module}_INIT)
     set(BUILD_${the_module}_INIT ON)
   endif()
-
+  if(DEFINED BUILD_${the_module})
+    unset(BUILD_${the_module} CACHE)
+  endif()
   option(BUILD_${the_module} "Include ${the_module} module into the RMVL build" ${BUILD_${the_module}_INIT}) # create option to enable/disable this module
+  
   if(BUILD_${the_module})
     # Add library
     if(MD_INTERFACE) # interface library

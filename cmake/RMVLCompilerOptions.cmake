@@ -201,25 +201,68 @@ option(BUILD_EXAMPLES "Build RMVL all examples" ON)
 option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
 
 # ----------------------------------------------------------------------------
+#   Add compile option
+#   Note:
+#     if the condition is met, set to the default value, otherwise set to the reverse value
+#   Usage:
+#     __rmvl_option(<option> <description> <default> <IF|OR> <condition>)
+#   Example:
+#     __rmvl_option(
+#       WITH_APRILTAG "Enable apriltag support" ON IF BUILD_APRILTAG
+#     )
+# ----------------------------------------------------------------------------
+macro(__rmvl_option _option _desc _value _op _cond)
+  # unset the option if it is defined
+  if(DEFINED ${_option})
+    unset(${_option} CACHE)
+  endif()
+  # if
+  if(${_op} STREQUAL "IF" OR ${_op} STREQUAL "if")
+    if(${_cond})
+      set(target_val ${_value})
+    else()
+      if(${_value})
+        set(target_val OFF) # NOT ON -> OFF
+      else()
+        set(target_val ON) # NOT OFF -> ON
+      endif()
+    endif()
+  # or
+  elseif(${_op} STREQUAL "OR" OR ${_op} STREQUAL "or")
+    if(${_cond} OR ${_value})
+      set(target_val ON)
+    else()
+      set(target_val OFF)
+    endif()
+  else()
+    message(FATAL_ERROR "Unknown operator: ${_op} in the option \"${_option}\"")
+  endif()
+  # set the option
+  option(${_option} ${_desc} ${target_val})
+endmacro()
+
+# ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
+# apriltag
 option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
-option(BUILD_OPEN62541 "Build the 3rd party: open62541" OFF)
+if(BUILD_APRILTAG)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/apriltag)
+endif()
+find_package(apriltag QUIET)
+__rmvl_option(WITH_APRILTAG "Enable apriltag support" ${apriltag_FOUND} OR BUILD_APRILTAG)
 
-option(WITH_APRILTAG "Enable apriltag support" ON)
-if(WITH_APRILTAG)
-  include(RMVLFindAprilTag)
+# open62541
+option(BUILD_OPEN62541 "Build the 3rd party: open62541" OFF)
+if(BUILD_OPEN62541)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/open62541)
 endif()
-option(WITH_OPEN62541 "Enable open62541 support" ON)
-if(WITH_OPEN62541)
-  include(RMVLFindOpen62541)
-endif()
-option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
-if(WITH_ONNXRUNTIME)
-  find_package(Ort QUIET)
-  unset(WITH_ONNXRUNTIME CACHE)
-  option(WITH_ONNXRUNTIME "Enable onnxruntime support" ${Ort_FOUND})
-endif()
+find_package(open62541 QUIET)
+__rmvl_option(WITH_OPEN62541 "Enable open62541 support" ${open62541_FOUND} OR BUILD_OPEN62541)
+
+# onnxruntime
+find_package(Ort QUIET)
+__rmvl_option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON IF ${Ort_FOUND})
 
 # ----------------------------------------------------------------------------
 #   Build performance and unit tests
