@@ -481,7 +481,7 @@ int main()
 
 #### 可视化配置 OPC UA 信息模型
 
-对于项目创建或导出等内容，此处不做过底盘介绍，可参考[此博客](https://wanghao1314.blog.csdn.net/article/details/104092781)了解上述内容。
+对于项目创建或导出等内容，此处不做过多介绍，可参考[此博客](https://wanghao1314.blog.csdn.net/article/details/104092781)了解上述内容。
 
 @note
 - 一般的，定义对象、变量、方法等内容均按照在代码中的顺序进行定义即可，但需要注意的是，添加了方法节点后，还需要在代码中设置该方法节点执行的回调函数，可参见 `rm::Server::setMethodNodeCallBack`。

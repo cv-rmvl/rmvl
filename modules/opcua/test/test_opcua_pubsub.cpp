@@ -9,15 +9,24 @@
  *
  */
 
+#include "rmvl/opcua/publisher.hpp"
+#include "rmvl/opcua/subscriber.hpp"
+
 #ifdef UA_ENABLE_PUBSUB
 
 #include <gtest/gtest.h>
 
-#include "rmvl/opcua/publisher.hpp"
-#include "rmvl/opcua/subscriber.hpp"
-
 namespace rm_test
 {
+
+TEST(OPC_UA_Publisher, publisher_config)
+{
+    // 创建发布者
+    rm::Publisher publisher(4840, "Demo", "opc.udp://224.0.1.20:4840", 100);
+    uaCreateVariable(test_double, 3.1);
+    auto node_id = publisher.addVariableNode(test_double);
+    publisher.publish("Pub Test Double", node_id);
+}
 
 } // namespace rm_test
 

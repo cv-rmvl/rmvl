@@ -11,6 +11,10 @@
 
 #pragma once
 
+#include "server.hpp"
+
+#ifdef UA_ENABLE_PUBSUB
+
 namespace rm
 {
 
@@ -25,3 +29,5 @@ class Subscriber
 //! @} opcua
 
 } // namespace rm
+
+#endif // UA_ENABLE_PUBSUB

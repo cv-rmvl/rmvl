@@ -11,11 +11,9 @@
 
 #pragma once
 
-#include <open62541/config.h>
+#include "server.hpp"
 
 #ifdef UA_ENABLE_PUBSUB
-
-#include "server.hpp"
 
 namespace rm
 {
@@ -45,10 +43,10 @@ public:
      *
      * @param[in] port 端口号
      * @param[in] name 发布者名称
-     * @param[in] address 网络地址，形如 `opc.udp://224.0.1.20:4840`
+     * @param[in] address 网络多播 IP 地址，形如 `opc.udp://224.0.1.20:4840`
      * @param[in] duration 发布周期，单位为 `ms`
-     * @param[in] tp 传输协议 ID，默认为 `UDP_UADP` @see TransportID
-     * @param[in] users 用户列表，默认为空 @see UserConfig
+     * @param[in] tp 传输协议 ID，默认为 `UDP_UADP`，可参考 @ref TransportID
+     * @param[in] users 用户列表，默认为空，可参考 @ref UserConfig
      */
     Publisher(uint16_t port, const std::string &name, const std::string &address, double duration,
               TransportID tp = TransportID::UDP_UADP, const std::vector<UserConfig> &users = {});

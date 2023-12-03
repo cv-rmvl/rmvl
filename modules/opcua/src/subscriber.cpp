@@ -9,9 +9,9 @@
  *
  */
 
-#ifdef UA_ENABLE_PUBSUB
-
 #include "opcua/subscriber.hpp"
+
+#ifdef UA_ENABLE_PUBSUB
 
 namespace rm
 {
