@@ -14,8 +14,6 @@
 #include <string>
 #include <unordered_map>
 
-// #include <open62541/types.h>
-
 #include "variable.hpp"
 
 namespace rm

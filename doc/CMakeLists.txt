@@ -43,6 +43,9 @@ set(
   CACHE PATH "RMVL_DOXYFILE_IN"
 )
 
+# pre-defined variables
+list(APPEND CMAKE_DOXYGEN_PREDEFINED "UA_ENABLE_PUBSUB")
+
 # List all the modules
 set(refs_extra)
 set(refs_modules)
