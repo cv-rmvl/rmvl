@@ -13,7 +13,8 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/opcua/server.hpp"
+#include "rmvl/opcua/publisher.hpp"
+#include "rmvl/opcua/subscriber.hpp"
 
 namespace rm_test
 {

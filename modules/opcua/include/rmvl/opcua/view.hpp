@@ -69,6 +69,7 @@ public:
      * view.add(node_1, node_2, node_3);
      * @endcode
      *
+     * @tparam UA_NodeId_ 节点 ID 类型，指代 `UA_NodeId`
      * @param[in] node_id 既存的待添加的节点 ID
      */
     template <typename... UA_NodeId_>
