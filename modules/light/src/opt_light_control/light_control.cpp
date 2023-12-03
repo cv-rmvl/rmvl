@@ -24,7 +24,7 @@ rm::OPTLightController::OPTLightController(rm::OPTLightController &&obj)
     obj._init = false;
 }
 
-bool rm::OPTLightController::connect(const IPConfig &ip_config)
+bool rm::OPTLightController::connect(const DevIpConfig &ip_config)
 {
     if (_init)
         disconnect();

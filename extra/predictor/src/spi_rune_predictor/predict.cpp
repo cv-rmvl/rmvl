@@ -35,9 +35,9 @@ inline void resetPmxm(size_t n, Mat &Pm, Mat &xm)
 }
 
 SpiRunePredictor::SpiRunePredictor() : _n(spi_rune_predictor_param.DIFF_ORDER),
-                                       _T(spi_rune_predictor_param.SAMPLE_INTERVAL)
+                                       _interval(spi_rune_predictor_param.SAMPLE_INTERVAL)
 {
-    resetPmxm(_n, _Pm, _xm);
+    resetPmxm(_n, _pm, _xm);
 }
 
 void SpiRunePredictor::identifier(const deque<double> &raw_datas)
@@ -55,8 +55,8 @@ void SpiRunePredictor::identifier(const deque<double> &raw_datas)
     Mat amt = am.t();
     double bm = raw_datas[0];
     // 最小二乘递推
-    _Pm = _Pm - (_Pm * amt * am * _Pm) / (1 + Mat(am * _Pm * amt).at<double>(0));
-    _xm = _xm + _Pm * amt * (bm - Mat(am * _xm).at<double>(0));
+    _pm = _pm - (_pm * amt * am * _pm) / (1 + Mat(am * _pm * amt).at<double>(0));
+    _xm = _xm + _pm * amt * (bm - Mat(am * _xm).at<double>(0));
 }
 
 PredictInfo SpiRunePredictor::predict(const vector<group::ptr> &groups, const unordered_map<tracker::ptr, double> &tof)
@@ -64,7 +64,7 @@ PredictInfo SpiRunePredictor::predict(const vector<group::ptr> &groups, const un
     PredictInfo info{};
     if (groups.empty() || groups.front()->data().empty())
     {
-        resetPmxm(_n, _Pm, _xm);
+        resetPmxm(_n, _pm, _xm);
         return info;
     }
     if (groups.size() > 1)
@@ -107,14 +107,14 @@ double SpiRunePredictor::anglePredict(const deque<double> &raw_datas, double tf)
     if (raw_datas.size() < spi_rune_predictor_param.MAX_NF + spi_rune_predictor_param.DIFF_ORDER)
         return sgn(raw_datas.front() - raw_datas.back()) * spi_rune_predictor_param.FIXED_ANGLE;
     size_t max_nf = spi_rune_predictor_param.MAX_NF;
-    double nf = floor(1000 * tf / _T) + 1;
+    double nf = floor(1000 * tf / _interval) + 1;
     // 范围限制
     if (nf > static_cast<double>(max_nf))
         nf = max_nf;
     else if (nf < 1)
         nf = 1;
-    double k1 = nf - 1000 * tf / _T; // 预测量取 nf - 1 的置信权重
-    double k2 = 1 - k1;              // 预测量取 nf 的置信权重
+    double k1 = nf - 1000 * tf / _interval; // 预测量取 nf - 1 的置信权重
+    double k2 = 1 - k1;                     // 预测量取 nf 的置信权重
     // 以 max_nf 为基准，实际 nf 进行预测需要滞后的帧数
     size_t delay_k2 = max_nf - static_cast<size_t>(nf); // 预测量取 nf 的滞后帧数
     size_t delay_k1 = delay_k2 + 1;                     // 预测量取 nf - 1 的滞后帧数

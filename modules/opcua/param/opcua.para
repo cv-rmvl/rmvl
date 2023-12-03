@@ -7,3 +7,5 @@ uint32_t MAX_KEEPALIVE_COUNT = 10 # 在没有任何通知的情况下，订阅�
 uint32_t MAX_NOTIFICATIONS = 100  # 服务器应该发送的期望的最大通知数（通知是服务器向客户端报告订阅的变化的方式）
 uint8_t PRIORITY = 0              # 订阅请求的优先级
 
+##################### PubSub #####################
+uint32_t KEY_FRAME_COUNT = 10 # 发布数据集的关键帧周期，每隔指定的周期会发布一次完整数据集

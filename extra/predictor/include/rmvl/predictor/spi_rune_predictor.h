@@ -24,10 +24,10 @@ namespace rm
 //! 系统参数辨识神符预测类
 class SpiRunePredictor final : public predictor
 {
-    const size_t _n; //!< 模型阶数
-    const double _T; //!< 采样间隔
-    cv::Mat _Pm;     //!< 协方差矩阵
-    cv::Mat _xm;     //!< 待求解系数向量
+    const size_t _n;        //!< 模型阶数
+    const double _interval; //!< 采样间隔
+    cv::Mat _pm;            //!< 协方差矩阵
+    cv::Mat _xm;            //!< 待求解系数向量
 
 public:
     //! 构造函数

@@ -20,12 +20,12 @@ namespace rm
 //! @addtogroup opt_light_control
 //! @{
 
-//! IP 配置聚合类
-struct IPConfig
+//! OPT 光源控制器 IP 配置信息
+struct DevIpConfig
 {
     std::string ip;              //!< IP 地址
     std::string subnet_mask;     //!< 子网掩码
-    std::string default_gateway; //!< 默认网管
+    std::string default_gateway; //!< 默认网关
 };
 
 //! OPT 奥普特光源控制器
@@ -53,7 +53,7 @@ public:
      * @param[in] ip_config IP 配置信息
      * @return 连接是否成功建立？
      */
-    bool connect(const IPConfig &ip_config);
+    bool connect(const DevIpConfig &ip_config);
 
     /**
      * @brief 使用设备序列号创建 EtherNet 以太网连接

@@ -13,7 +13,6 @@
 
 #include <open62541/plugin/accesscontrol_default.h>
 #include <open62541/plugin/log_stdout.h>
-#include <open62541/server.h>
 #include <open62541/server_config_default.h>
 
 #include "rmvl/opcua/server.hpp"
@@ -147,17 +146,16 @@ UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_i
     return retval;
 }
 
-bool Server::read(const UA_NodeId &node, Variable &val)
+Variable Server::read(const UA_NodeId &node)
 {
     UA_Variant p_val;
     auto status = UA_Server_readValue(_server, node, &p_val);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to read variable: %s", UA_StatusCode_name(status));
-        return false;
+        return {};
     }
-    val = helper::cvtVariable(p_val);
-    return true;
+    return helper::cvtVariable(p_val);
 }
 
 bool Server::write(const UA_NodeId &node, const Variable &val)
