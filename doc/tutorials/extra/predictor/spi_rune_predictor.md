@@ -4,7 +4,7 @@ k 步前向预估神符预测 {#tutorial_extra_spi_rune_predictor}
 @author 黄昊睿
 @author 赵曦
 @date 2023/07/16
-@version 2.0
+@version 2.1
 
 @prev_tutorial{tutorial_extra_gyro_predictor}
 
@@ -123,11 +123,30 @@ Q_m&=A_m^T\pmb{b}=\sum_{i=1}^{m-1}\pmb{a_i}^Tb_i+\pmb{a_m}^Tb_m\\
 \end{align}\tag{2-5}
 \f]
 
-上式即为递推最小二乘法的公式，但在其中，\f$P_m=\left(P_{m-1}^{-1}+\pmb{a_m}^T\pmb{a_m}\right)^{-1}\f$，求解\f$P_m\f$的递推形式需要进行两次求逆操作，会显著增加时间复杂度，需要对这一部分进行修改，在矩阵求逆过程中，有以下变换公式
+上式即为递推最小二乘法的公式，但在其中，\f$P_m=\left(P_{m-1}^{-1}+\pmb{a_m}^T\pmb{a_m}\right)^{-1}\f$，求解\f$P_m\f$的递推形式需要进行两次求逆操作，会显著增加时间复杂度，需要对这一部分进行修改，对于形如\f$\left(A^{-1}+BC\right)^{-1}\f$的式子，不妨令
 
-\f[
-\left(A+BC\right)^{-1}=A^{-1}-A^{-1}B\left(I+CA^{-1}B\right)^{-1}CA^{-1}\tag{2-6}
-\f]
+\f[\left(A^{-1}+BC\right)^{-1}=A+X\tag{2-6a}\f]
+
+因此满足
+
+\f[\left(A^{-1}+BC\right)(A+X)=I\tag{2-6b}\f]
+
+这是个求解\f$X\f$的过程，详细步骤如下
+
+\f[\begin{align}\left(A^{-1}+BC\right)(A+X)&=I\\
+BCA+A^{-1}X+BCX&=\pmb 0\\\left(A^{-1}+BC\right)X&=-BCA\\
+X&=-\left(A^{-1}+BC\right)^{-1}BCA\\
+&=-\left(BB^{-1}A^{-1}+BC\right)^{-1}BCA\\
+&=-\left[B\left(B^{-1}A^{-1}+C\right)\right]^{-1}BCA\\
+&=-\left(B^{-1}A^{-1}+C\right)^{-1}CA\\
+&=-\left(B^{-1}A^{-1}+CABB^{-1}A^{-1}\right)^{-1}CA\\
+&=-\left[\left(I+CAB\right)B^{-1}A^{-1}\right]^{-1}CA\\
+&=-AB\left(I+CAB\right)^{-1}CA
+\end{align}\f]
+
+因此，最终得到了矩阵求逆过程中有以下的变换公式
+
+\f[\boxed{\left(A^{-1}+BC\right)^{-1}=A-AB\left(I+CAB\right)^{-1}CA}\tag{2-6c}\f]
 
 因此，\f$P_m\f$可以表示为
 
