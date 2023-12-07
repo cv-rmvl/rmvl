@@ -3,7 +3,7 @@
 
 @author 赵曦
 @date 2023/11/24
-@version 1.0
+@version 2.0
 @brief OPC UA 和 open62541 库简介
 
 @prev_tutorial{tutorial_modules_serial}
@@ -435,11 +435,81 @@ int main()
 
 #### 无代理 Pub/Sub
 
+RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订阅机制，目前支持 `UADP` 的消息映射方式，对应的枚举类型是 `TransportID::UDP_UADP`。
 
+需要留意的是，OPC UA 的发布订阅模型仍然是建立在 @ref opcua_server_client 模型之上的，此外 @ref opcua 的 PubSub 在实现上是继承于 rm::Server 的，因此，RMVL 的发布订阅模型在使用时具备服务器的所有功能，初始化、释放资源等操作与服务器完全一致。
+
+**创建发布者**
+
+```cpp
+// publisher.cpp
+#include <rmvl/opcua/publisher.hpp>
+
+int main()
+{
+    // 创建 OPC UA 发布者，端口为 4840
+    rm::Publisher<rm::TransportID::UDP_UADP> pub("DemoNumberPub", "opc.udp://224.0.0.22:4840");
+    // 添加变量节点至发布者自身的服务器中
+    rm::Variable num = 3.14;
+    num.browse_name = "number";
+    num.display_name = "Number";
+    num.description = "数字";
+    auto num_node = pub.addVariableNode(num);
+    // 发布者的服务器运行
+    pub.start();
+    // 准备待发布的数据
+    std::vector<PublishedDataSet> pds_list;
+    pds_list.emplace_back("Number 1", num_node);
+
+    // 发布数据
+    pub.publish(pds_list, 100);
+
+    /* other code */
+    /* 例如 num_node 所对应的值可以直接在这里修改 */
+
+    // 线程阻塞，直到调用了 pub.stop()，线程才会继续执行。
+    pub.join();
+}
+```
+
+**创建订阅者**
+
+```cpp
+// subscriber.cpp
+#include <rmvl/opcua/subscriber.hpp>
+
+int main()
+{
+    // 创建 OPC UA 订阅者
+    rm::Subscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
+    // 发布者的服务器运行
+    sub.start();
+
+    // 准备需要订阅的数据
+    // 这里只订阅 1 个，如果订阅多个请使用 std::vector
+    rm::FieldMetaData meta_data{"Number 1", UA_TYPES_DOUBLE, -1};
+
+    /* 也可以通过创建变量对 meta_data 进行初始化，例如以下代码
+    rm::Variable num = 1.0; // 这个 1.0 只是代表是个 Double 类型的数据 
+    num.browse_name = "Number 1";
+    rm::FieldMetaData meta_data = num;
+    */
+    
+    // 订阅数据，meta_data 项的参数传入的是 std::vector，单个数据请使用初始化列表
+    auto nodes = sub.subscribe("DemoNumberPub", {meta_data});
+    // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
+    // 订阅返回值是一个 UA_NodeId 列表，存放订阅接收的数据的 NodeId
+
+    /* other code */
+
+    // 线程阻塞，直到调用了 sub.stop()，线程才会继续执行。
+    sub.join();
+}
+```
 
 #### 有代理 Pub/Sub
 
-
+RMVL 目前暂不支持有代理的发布订阅机制。
 
 ### 参数加载 {#opcua_parameters}
 
