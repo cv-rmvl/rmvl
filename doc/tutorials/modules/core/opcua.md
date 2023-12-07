@@ -485,6 +485,7 @@ int main()
 
 @note
 - 一般的，定义对象、变量、方法等内容均按照在代码中的顺序进行定义即可，但需要注意的是，添加了方法节点后，还需要在代码中设置该方法节点执行的回调函数，可参见 `rm::Server::setMethodNodeCallBack`。
+- `NamespaceArray` 的 `[1]` 的字符串需要更改为 `urn:open62541.server.application`
 
 #### 生成 \*.c/\*.h 文件
 

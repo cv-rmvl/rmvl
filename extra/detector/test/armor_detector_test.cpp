@@ -25,7 +25,7 @@ TEST_F(ArmorDetectorTest, single_armor_function_test)
     // waitKey(0);
     auto info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
     EXPECT_EQ(groups.size(), 1);
-    
+
     if (info.combos.size() == 1)
         EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
     else
@@ -66,7 +66,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
     info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
     trackers = groups.front()->data();
     EXPECT_EQ(trackers.size(), 1);
-    
+
     if (info.combos.size() == 1)
         EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
     else
@@ -80,7 +80,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
     // waitKey(0);
     info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
     EXPECT_EQ(groups.size(), 1);
-    
+
     if (info.combos.size() == 1)
         EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
     else
@@ -95,10 +95,9 @@ TEST_F(ArmorDetectorTest, more_armor_independence)
     buildArmorImg(Point(800, 500), -7);
 
     auto info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
-    
+
     sort(info.combos.begin(), info.combos.end(),
-         [](const combo::ptr &lhs, const combo::ptr &rhs)
-         {
+         [](const combo::ptr &lhs, const combo::ptr &rhs) {
              return lhs->getCenter().x < rhs->getCenter().x;
          });
     EXPECT_EQ(info.combos.size(), 3);
@@ -113,8 +112,7 @@ TEST_F(ArmorDetectorTest, more_armor_independence)
 // 多装甲板交错干扰
 TEST_F(ArmorDetectorTest, more_armor_disturb)
 {
-    auto reset = [&]() -> void
-    {
+    auto reset = [this]() {
         src = Mat::zeros(Size(1280, 1024), CV_8UC3);
     };
     // 4 灯条补给站
@@ -133,7 +131,7 @@ TEST_F(ArmorDetectorTest, more_armor_disturb)
     // imshow("src", src);
     // waitKey(0);
     info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
-    
+
     EXPECT_EQ(info.combos.size(), 2);
     // 2 装甲板上下相距较近、有部分交错
     reset();
@@ -142,6 +140,6 @@ TEST_F(ArmorDetectorTest, more_armor_disturb)
     // imshow("src", src);
     // waitKey(0);
     info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
-    
+
     EXPECT_EQ(info.combos.size(), 2);
 }

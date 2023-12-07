@@ -88,10 +88,9 @@ vector<LightBlob::ptr> GyroDetector::findLightBlobs(Mat &bin)
 vector<Armor::ptr> GyroDetector::findArmors(vector<LightBlob::ptr> &light_blobs)
 {
     // 灯条从左到右排序
-    sort(light_blobs.begin(), light_blobs.end(),
-         [&](LightBlob::ptr lhs, LightBlob::ptr rhs) {
-             return lhs->getCenter().x < rhs->getCenter().x;
-         });
+    sort(light_blobs.begin(), light_blobs.end(), [](LightBlob::const_ptr lhs, LightBlob::const_ptr rhs) {
+        return lhs->getCenter().x < rhs->getCenter().x;
+    });
     // 储存所有匹配到的装甲板
     vector<Armor::ptr> current_armors;
     if (light_blobs.size() < 2)
@@ -158,33 +157,31 @@ void GyroDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
 
 void GyroDetector::eraseFakeArmors(vector<Armor::ptr> &armors)
 {
-    armors.erase(remove_if(armors.begin(), armors.end(),
-                           [&](Armor::ptr &it) {
-                               return it->getType().RobotTypeID == RobotType::UNKNOWN;
-                           }),
+    armors.erase(remove_if(armors.begin(), armors.end(), [](Armor::const_ptr it) {
+                     return it->getType().RobotTypeID == RobotType::UNKNOWN;
+                 }),
                  armors.end());
 }
 
 void GyroDetector::eraseBrightBlobs(Mat src, vector<LightBlob::ptr> &blobs)
 {
-    blobs.erase(remove_if(blobs.begin(), blobs.end(),
-                          [&](LightBlob::ptr blob) -> bool {
-                              int total_brightness = 0;
-                              for (int i = -5; i <= 5; i++)
-                              {
-                                  if (i == 0)
-                                      continue;
-                                  int x = blob->getCenter().x - blob->getHeight() * i / 5;
-                                  x = (x > src.cols) ? src.cols - 1 : x;
-                                  x = (x < 0) ? 1 : x;
-                                  int y = blob->getCenter().y;
-                                  y = y < 0 ? 1 : y;
-                                  y = (y > src.rows) ? src.rows - 1 : y;
-                                  auto colors = src.at<Vec3b>(y, x);
-                                  int brightness = 0.1 * colors[0] + 0.6 * colors[1] + 0.3 * colors[2];
-                                  total_brightness += brightness;
-                              }
-                              return (total_brightness > 1100);
-                          }),
+    blobs.erase(remove_if(blobs.begin(), blobs.end(), [&src](LightBlob::const_ptr blob) {
+                    int total_brightness = 0;
+                    for (int i = -5; i <= 5; i++)
+                    {
+                        if (i == 0)
+                            continue;
+                        int x = blob->getCenter().x - blob->getHeight() * i / 5;
+                        x = (x > src.cols) ? src.cols - 1 : x;
+                        x = (x < 0) ? 1 : x;
+                        int y = blob->getCenter().y;
+                        y = y < 0 ? 1 : y;
+                        y = (y > src.rows) ? src.rows - 1 : y;
+                        auto colors = src.at<Vec3b>(y, x);
+                        int brightness = 0.1 * colors[0] + 0.6 * colors[1] + 0.3 * colors[2];
+                        total_brightness += brightness;
+                    }
+                    return (total_brightness > 1100);
+                }),
                 blobs.end());
 }

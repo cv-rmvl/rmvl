@@ -281,11 +281,9 @@ RuneCenter::ptr RuneDetector::getBestCenter(const vector<RuneTarget::ptr> &rune_
     }
 
     // 选择距离比值差最小的中心
-    return min_element(center_ratio_differences.begin(), center_ratio_differences.end(),
-                       [&](const auto &lhs, const auto &rhs)
-                       {
-                           return lhs.second < rhs.second;
-                       })
+    return min_element(center_ratio_differences.begin(), center_ratio_differences.end(), [](const auto &lhs, const auto &rhs) {
+               return lhs.second < rhs.second;
+           })
         ->first;
 }
 
@@ -301,7 +299,7 @@ vector<Rune::ptr> RuneDetector::getRune(const vector<RuneTarget::ptr> &rune_targ
     for (const auto &p_target : rune_targets)
     {
         DEBUG_INFO_("--------------------------------------");
-        Rune::ptr  rune = Rune::make_combo(p_target, p_center, _gyro_data, _tick);
+        Rune::ptr rune = Rune::make_combo(p_target, p_center, _gyro_data, _tick);
         if (rune != nullptr)
         {
             DEBUG_PASS_("rune pass");

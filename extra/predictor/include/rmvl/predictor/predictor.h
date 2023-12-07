@@ -46,11 +46,11 @@ enum : std::size_t
 struct PredictInfo
 {
     //! 静态响应预测增量 B
-    std::unordered_map<tracker::ptr, cv::Vec<double, 9>> static_prediction;
+    std::unordered_map<tracker::const_ptr, cv::Vec<double, 9>> static_prediction;
     //! 动态响应预测增量 Kt
-    std::unordered_map<tracker::ptr, cv::Vec<double, 9>> dynamic_prediction;
+    std::unordered_map<tracker::const_ptr, cv::Vec<double, 9>> dynamic_prediction;
     //! 射击延迟预测增量 Bs
-    std::unordered_map<tracker::ptr, cv::Vec<double, 9>> shoot_delay_prediction;
+    std::unordered_map<tracker::const_ptr, cv::Vec<double, 9>> shoot_delay_prediction;
 };
 
 //! 目标预测模块

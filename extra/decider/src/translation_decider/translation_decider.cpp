@@ -75,13 +75,11 @@ DecideInfo TranslationDecider::decide(const vector<group::ptr> &groups, RMStatus
 tracker::ptr TranslationDecider::getClosestTracker(Mat img, const vector<tracker::ptr> &trackers)
 {
     auto center = Point2f(img.size() / 2);
-    return *min_element(trackers.begin(), trackers.end(),
-                        [&](tracker::ptr lhs, tracker::ptr rhs)
-                        {
-                            Point2f t1_delta_point = lhs->front()->getCenter() - center;
-                            Point2f t2_delta_point = rhs->front()->getCenter() - center;
-                            // 目标相对角距图像坐标系中心点距离
-                            return (t1_delta_point.x * t1_delta_point.x + t1_delta_point.y * t1_delta_point.y) <
-                                   (t2_delta_point.x * t2_delta_point.x + t2_delta_point.y * t2_delta_point.y);
-                        });
+    return *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+        Point2f t1_delta_point = lhs->front()->getCenter() - center;
+        Point2f t2_delta_point = rhs->front()->getCenter() - center;
+        // 目标相对角距图像坐标系中心点距离
+        return (t1_delta_point.x * t1_delta_point.x + t1_delta_point.y * t1_delta_point.y) <
+               (t2_delta_point.x * t2_delta_point.x + t2_delta_point.y * t2_delta_point.y);
+    });
 }

@@ -49,7 +49,7 @@ GyroDecider::GyroDecider()
  * @param[out] point_p3d 目标预测点 (3D)
  * @param[out] point_dp 目标转角预测增量
  */
-static void calcPrediction(group::ptr p_group, tracker::ptr p_tracker, Vec3f translation_dp, float rotangle,
+static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, Vec3f translation_dp, float rotangle,
                            Point2f &point_p2d, Point3f &point_p3d, Point2f &point_dp)
 {
     GyroGroup::ptr p_gyro_group = GyroGroup::cast(p_group);
@@ -219,23 +219,22 @@ tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInf
     // 无用数据
     Point2f unused_pa, unused_pb;
 
-    return *min_element(trackers.begin(), trackers.end(),
-                        [&](tracker::ptr lhs, tracker::ptr rhs) {
-                            Point3f lhs_preaim_p3d; // 左操作数预测值 (3D)
-                            float lhs_preaim_angle = info.dynamic_prediction.at(lhs)(ANG_Y) +
-                                                     info.shoot_delay_prediction.at(lhs)(ANG_Y) +
-                                                     gyro_decider_param.PRE_AIM_ANGLE * sgn(GyroGroup::cast(p_group)->getRotatedSpeed());
-                            calcPrediction(p_group, lhs, {}, lhs_preaim_angle, unused_pa, lhs_preaim_p3d, unused_pb);
+    return *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+        Point3f lhs_preaim_p3d; // 左操作数预测值 (3D)
+        float lhs_preaim_angle = info.dynamic_prediction.at(lhs)(ANG_Y) +
+                                 info.shoot_delay_prediction.at(lhs)(ANG_Y) +
+                                 gyro_decider_param.PRE_AIM_ANGLE * sgn(GyroGroup::cast(p_group)->getRotatedSpeed());
+        calcPrediction(p_group, lhs, {}, lhs_preaim_angle, unused_pa, lhs_preaim_p3d, unused_pb);
 
-                            Point3f rhs_preaim_p3d; // 右操作数预测值 (3D)
-                            float rhs_preaim_angle = info.dynamic_prediction.at(rhs)(ANG_Y) +
-                                                     info.shoot_delay_prediction.at(rhs)(ANG_Y) +
-                                                     gyro_decider_param.PRE_AIM_ANGLE * sgn(GyroGroup::cast(p_group)->getRotatedSpeed());
-                            calcPrediction(p_group, rhs, {}, rhs_preaim_angle, unused_pa, rhs_preaim_p3d, unused_pb);
+        Point3f rhs_preaim_p3d; // 右操作数预测值 (3D)
+        float rhs_preaim_angle = info.dynamic_prediction.at(rhs)(ANG_Y) +
+                                 info.shoot_delay_prediction.at(rhs)(ANG_Y) +
+                                 gyro_decider_param.PRE_AIM_ANGLE * sgn(GyroGroup::cast(p_group)->getRotatedSpeed());
+        calcPrediction(p_group, rhs, {}, rhs_preaim_angle, unused_pa, rhs_preaim_p3d, unused_pb);
 
-                            return getDistance(lhs_preaim_p3d, Point3f(), CalPlane::xOz) <
-                                   getDistance(rhs_preaim_p3d, Point3f(), CalPlane::xOz);
-                        });
+        return getDistance(lhs_preaim_p3d, Point3f(), CalPlane::xOz) <
+               getDistance(rhs_preaim_p3d, Point3f(), CalPlane::xOz);
+    });
 }
 
 group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &groups)
@@ -243,21 +242,20 @@ group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &g
     if (groups.empty())
         return nullptr;
     // 获取最优 group
-    auto max_group = *max_element(groups.begin(), groups.end(),
-                                  [&](group::ptr g1, group::ptr g2) {
-                                      GyroGroup::ptr lhs = GyroGroup::cast(g1);
-                                      GyroGroup::ptr rhs = GyroGroup::cast(g2);
-                                      auto type_lhs = g1->getType().RobotTypeID;
-                                      auto type_rhs = g1->getType().RobotTypeID;
-                                      // 需要满足: 优先级 rhs > lhs
-                                      if (_priority.find(type_lhs) != _priority.end() &&
-                                          _priority.find(type_rhs) != _priority.end() &&
-                                          _priority[type_lhs] != _priority[type_rhs])
-                                          return _priority[type_lhs] < _priority[type_rhs];
-                                      else
-                                          return getDistance(lhs->getCenter3D(), Vec3f(), CalPlane::xOz) >
-                                                 getDistance(rhs->getCenter3D(), Vec3f(), CalPlane::xOz);
-                                  });
+    auto max_group = *max_element(groups.begin(), groups.end(), [&](group::const_ptr g1, group::ptr g2) {
+        GyroGroup::const_ptr lhs = GyroGroup::cast(g1);
+        GyroGroup::const_ptr rhs = GyroGroup::cast(g2);
+        auto type_lhs = g1->getType().RobotTypeID;
+        auto type_rhs = g1->getType().RobotTypeID;
+        // 需要满足: 优先级 rhs > lhs
+        if (_priority.find(type_lhs) != _priority.end() &&
+            _priority.find(type_rhs) != _priority.end() &&
+            _priority[type_lhs] != _priority[type_rhs])
+            return _priority[type_lhs] < _priority[type_rhs];
+        else
+            return getDistance(lhs->getCenter3D(), Vec3f(), CalPlane::xOz) >
+                   getDistance(rhs->getCenter3D(), Vec3f(), CalPlane::xOz);
+    });
     // 当前最高优先级
     if (_priority.find(max_group->getType().RobotTypeID) != _priority.end() &&
         _priority[max_group->getType().RobotTypeID] <= 0)

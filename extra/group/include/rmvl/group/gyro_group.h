@@ -28,7 +28,7 @@ namespace rm
 //! 整车状态序列组
 class GyroGroup final : public group
 {
-    double _tick;            //!< 时间点
+    double _tick;             //!< 时间点
     GyroData _gyro_data;      //!< 当前陀螺仪数据
     bool _is_tracked = false; //!< 是否为目标序列组
 
@@ -141,15 +141,15 @@ public:
     }
 
     //! 获取最新的车组旋转中心点
-    inline cv::Vec3f getCenter3D() { return _center3d; }
+    inline cv::Vec3f getCenter3D() const { return _center3d; }
     //! 获取旋转中心点移动速度
-    inline cv::Vec3f getSpeed3D() { return _speed3d; }
+    inline cv::Vec3f getSpeed3D() const { return _speed3d; }
     //! 获取相机坐标系自转角速度（俯视顺时针为正，滤波数据，弧度）
-    inline float getRotatedSpeed() { return _rotspeed; }
+    inline float getRotatedSpeed() const { return _rotspeed; }
     //! 获取陀螺仪数据
-    inline GyroData getGyroData() { return _gyro_data; }
+    inline GyroData getGyroData() const { return _gyro_data; }
     //! 获取旋转状态
-    inline RotStatus getRotStatus() { return _rot_status; }
+    inline RotStatus getRotStatus() const { return _rot_status; }
 
 private:
     /**

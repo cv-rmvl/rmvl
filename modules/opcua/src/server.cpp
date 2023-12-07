@@ -53,10 +53,11 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
     }
 }
 
-Server::Server(ServerUserConfig on_config)
+Server::Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users)
+    : Server(port, users) // 委托构造
 {
-    _server = UA_Server_new();
-    on_config(_server);
+    if (on_config != nullptr)
+        on_config(_server);
 }
 
 void Server::start()
