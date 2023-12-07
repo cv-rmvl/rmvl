@@ -53,11 +53,10 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
     }
 }
 
-Server::Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users)
-    : Server(port, users) // 委托构造
+Server::Server(ServerUserConfig on_config)
 {
-    if (on_config != nullptr)
-        on_config(_server);
+    _server = UA_Server_new();
+    on_config(_server);
 }
 
 void Server::start()
@@ -70,7 +69,10 @@ void Server::start()
     });
 }
 
-Server::~Server() { UA_Server_delete(_server); }
+void Server::deleteServer()
+{
+    UA_Server_delete(_server);
+}
 
 // ============================= 节点配置 =============================
 

@@ -22,10 +22,10 @@ namespace rm_test
 TEST(OPC_UA_Publisher, publisher_config)
 {
     // 创建发布者
-    rm::Publisher publisher(4840, "Demo", "opc.udp://224.0.1.20:4840", 100);
+    rm::Publisher<rm::TransportID::UDP_UADP> publisher("Demo", "opc.udp://224.0.1.20:4840", 4840);
     uaCreateVariable(test_double, 3.1);
     auto node_id = publisher.addVariableNode(test_double);
-    publisher.publish("Pub Test Double", node_id);
+    publisher.publish({{"Pub Test Double", node_id}}, 100);
 }
 
 } // namespace rm_test

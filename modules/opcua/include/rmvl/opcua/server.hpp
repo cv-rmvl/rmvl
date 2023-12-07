@@ -67,10 +67,8 @@ public:
      * - 关于 `*.xml` 文件的编写，参考 @ref opcua_nodeset_compiler
      *
      * @param[in] on_config 服务器配置函数指针
-     * @param[in] port OPC UA 服务器端口号，一般设置为 `4840U`
-     * @param[in] users 用户列表 @see UserConfig
      */
-    Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users = {});
+    Server(ServerUserConfig on_config);
 
     Server(const Server &) = delete;
     Server(Server &&) = delete;
@@ -89,7 +87,7 @@ public:
     inline void join() { _run.join(); }
 
     //! 释放服务器资源
-    ~Server();
+    inline ~Server() { deleteServer(); }
 
     /****************************** 路径搜索 ******************************/
 
@@ -228,6 +226,10 @@ public:
      * @return 是否创建并触发成功？
      */
     bool triggerEvent(const UA_NodeId &node_id, const Event &event);
+
+protected:
+    //! 释放服务器资源
+    void deleteServer();
 };
 
 //! @} opcua
