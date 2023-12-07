@@ -26,11 +26,9 @@ void RuneDetector::match(vector<tracker::ptr> &rune_trackers, const vector<combo
     // 匹配
     this->matchRunes(rune_trackers, combos);
     // 删除
-    rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(),
-                                  [&](tracker::ptr &p_tracker)
-                                  {
-                                      return p_tracker->getVanishNumber() >= rune_tracker_param.TRACK_FRAMES;
-                                  }),
+    rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(), [](tracker::const_ptr p_tracker) {
+                            return p_tracker->getVanishNumber() >= rune_tracker_param.TRACK_FRAMES;
+                        }),
                         rune_trackers.end());
 }
 
@@ -53,11 +51,10 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
         {
             // 离 p_tracker 最近的 active_rune
             combo::ptr closest_rune = *min_element(combos.begin(), combos.end(),
-                                                  [&p_tracker](combo::ptr lhs, combo::ptr rhs)
-                                                  {
-                                                      return getDeltaAngle(lhs->getAngle(), p_tracker->front()->getAngle()) <
-                                                             getDeltaAngle(rhs->getAngle(), p_tracker->front()->getAngle());
-                                                  });
+                                                   [&p_tracker](combo::ptr lhs, combo::ptr rhs) {
+                                                       return getDeltaAngle(lhs->getAngle(), p_tracker->front()->getAngle()) <
+                                                              getDeltaAngle(rhs->getAngle(), p_tracker->front()->getAngle());
+                                                   });
             p_tracker->update(closest_rune, _tick, _gyro_data);
             combo_set.erase(closest_rune);
         }
@@ -74,11 +71,10 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
         {
             // 离 active_rune 最近的 tracker
             tracker::ptr closest_tracker = *min_element(trackers.begin(), trackers.end(),
-                                                       [&p_combo](tracker::ptr lhs, tracker::ptr rhs)
-                                                       {
-                                                           return getDeltaAngle(p_combo->getAngle(), lhs->front()->getAngle()) <
-                                                                  getDeltaAngle(p_combo->getAngle(), rhs->front()->getAngle());
-                                                       });
+                                                        [&p_combo](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+                                                            return getDeltaAngle(p_combo->getAngle(), lhs->front()->getAngle()) <
+                                                                   getDeltaAngle(p_combo->getAngle(), rhs->front()->getAngle());
+                                                        });
             closest_tracker->update(p_combo, _tick, _gyro_data);
             tracker_set.erase(closest_tracker);
         }
@@ -96,12 +92,10 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
         for (size_t i = 0; i < trackers_size; i++)
         {
             // 离 tracker 最近的 p_combo
-            combo::ptr closest_combo = *min_element(combo_set.begin(), combo_set.end(),
-                                                   [&](combo::ptr lhs, combo::ptr rhs)
-                                                   {
-                                                       return getDeltaAngle(lhs->getAngle(), trackers[i]->front()->getAngle()) <
-                                                              getDeltaAngle(rhs->getAngle(), trackers[i]->front()->getAngle());
-                                                   });
+            combo::ptr closest_combo = *min_element(combo_set.begin(), combo_set.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
+                return getDeltaAngle(lhs->getAngle(), trackers[i]->front()->getAngle()) <
+                       getDeltaAngle(rhs->getAngle(), trackers[i]->front()->getAngle());
+            });
             // 获取角度差
             float min_delta_angle = getDeltaAngle(closest_combo->getAngle(), trackers[i]->front()->getAngle());
             // 判断是否角度差过大

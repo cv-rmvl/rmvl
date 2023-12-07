@@ -66,8 +66,7 @@ void ArmorDetector::matchArmors(vector<tracker::ptr> &trackers, const vector<com
         {
             // 离 p_tracker 最近的 combo 及其距离
             auto min_it = min_element(combos.begin(), combos.end(),
-                                      [&p_tracker](combo::const_ptr lhs, combo::const_ptr rhs)
-                                      {
+                                      [&p_tracker](combo::const_ptr lhs, combo::const_ptr rhs) {
                                           return getDistance(lhs->getCenter(), p_tracker->front()->getCenter()) <
                                                  getDistance(rhs->getCenter(), p_tracker->front()->getCenter());
                                       });
@@ -88,8 +87,7 @@ void ArmorDetector::matchArmors(vector<tracker::ptr> &trackers, const vector<com
             // 离 armor 最近的 tracker 及其距离
             auto min_dis_tracker =
                 min_element(trackers.begin(), trackers.end(),
-                            [&p_combo](tracker::const_ptr lhs, tracker::const_ptr rhs)
-                            {
+                            [&p_combo](tracker::const_ptr lhs, tracker::const_ptr rhs) {
                                 return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
                                        getDistance(p_combo->getCenter(), rhs->front()->getCenter());
                             });
@@ -112,8 +110,7 @@ void ArmorDetector::matchArmors(vector<tracker::ptr> &trackers, const vector<com
             // 离 tracker 最近的 combo
             auto min_it =
                 min_element(armor_set.begin(), armor_set.end(),
-                            [&trackers, &i](const combo::ptr &lhs, const combo::ptr &rhs)
-                            {
+                            [&trackers, &i](const combo::ptr &lhs, const combo::ptr &rhs) {
                                 return getDistance(lhs->getCenter(), trackers[i]->front()->getCenter()) <
                                        getDistance(rhs->getCenter(), trackers[i]->front()->getCenter());
                             });
@@ -136,21 +133,17 @@ void ArmorDetector::matchArmors(vector<tracker::ptr> &trackers, const vector<com
 void ArmorDetector::eraseNullTracker(vector<tracker::ptr> &trackers)
 {
     // 删除
-    trackers.erase(remove_if(trackers.begin(), trackers.end(),
-                             [&](tracker::ptr &p_tracker)
-                             {
-                                 return p_tracker->getVanishNumber() >= planar_tracker_param.TRACK_FRAMES;
-                             }),
+    trackers.erase(remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr p_tracker) {
+                       return p_tracker->getVanishNumber() >= planar_tracker_param.TRACK_FRAMES;
+                   }),
                    trackers.end());
 }
 
 void ArmorDetector::eraseFakeTracker(vector<tracker::ptr> &trackers)
 {
     // 删除
-    trackers.erase(remove_if(trackers.begin(), trackers.end(),
-                             [&](tracker::ptr &t1)
-                             {
-                                 return t1->getType().RobotTypeID == RobotType::UNKNOWN;
-                             }),
+    trackers.erase(remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr t1) {
+                       return t1->getType().RobotTypeID == RobotType::UNKNOWN;
+                   }),
                    trackers.end());
 }

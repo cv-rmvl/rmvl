@@ -9,11 +9,11 @@
  *
  */
 
-#include "rmvl/core/timer.hpp"
+#include "rmvl/decider/rune_decider.h"
 #include "rmvl/combo/rune.h"
+#include "rmvl/core/timer.hpp"
 #include "rmvl/rmath/transform.h"
 #include "rmvl/rmath/uty_math.hpp"
-#include "rmvl/decider/rune_decider.h"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/rune_decider.h"
@@ -77,11 +77,9 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     {
         // 已激活神符决策
         if (flag.RuneTypeID == RuneType::ACTIVE)
-            info.target = *min_element(true_trackers.begin(), true_trackers.end(),
-                                       [&](const auto &lhs, const auto &rhs)
-                                       {
-                                           return lhs->getCenter().y < rhs->getCenter().y;
-                                       });
+            info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
+                return lhs->getCenter().y < rhs->getCenter().y;
+            });
         // 未激活神符决策
         else
         {
@@ -97,11 +95,9 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
         if (flag.RuneTypeID == RuneType::ACTIVE)
         {
             // 寻找最下方神符
-            info.target = *min_element(true_trackers.begin(), true_trackers.end(),
-                                       [&](const auto &lhs, const auto &rhs)
-                                       {
-                                           return lhs->getCenter().y < rhs->getCenter().y;
-                                       });
+            info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
+                return lhs->getCenter().y < rhs->getCenter().y;
+            });
         }
         else
         {

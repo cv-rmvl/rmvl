@@ -158,7 +158,7 @@ void TagDetector::match(vector<tracker::ptr> &trackers, const vector<combo::ptr>
             // 离 tag 最近的 tracker 及其距离
             auto min_dis_tracker =
                 min_element(trackers.begin(), trackers.end(),
-                            [&p_combo](tracker::ptr lhs, tracker::ptr rhs) {
+                            [&p_combo](tracker::const_ptr lhs, tracker::const_ptr rhs) {
                                 return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
                                        getDistance(p_combo->getCenter(), rhs->front()->getCenter());
                             });
@@ -205,9 +205,8 @@ void TagDetector::match(vector<tracker::ptr> &trackers, const vector<combo::ptr>
 void TagDetector::eraseNullTracker(vector<tracker::ptr> &trackers)
 {
     // 删除
-    trackers.erase(remove_if(trackers.begin(), trackers.end(),
-                             [&](tracker::ptr &p_tracker) {
-                                 return p_tracker->getVanishNumber() >= planar_tracker_param.TRACK_FRAMES;
-                             }),
+    trackers.erase(remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr p_tracker) {
+                       return p_tracker->getVanishNumber() >= planar_tracker_param.TRACK_FRAMES;
+                   }),
                    trackers.end());
 }
