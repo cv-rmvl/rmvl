@@ -65,7 +65,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <size_t N>
-    VariableType(const char (&str)[N]) : _value(str), _data_type(typeflag[typeid(const char *)]), _dims(1) {}
+    VariableType(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _dims(1) {}
 
     /**
      * @brief 单值构造，设置默认值
@@ -74,7 +74,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    VariableType(Tp &&val) : _value(val), _data_type(typeflag[typeid(Tp)]), _dims(1) {}
+    VariableType(Tp &&val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _dims(1) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -83,7 +83,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag[typeid(Tp)]), _dims(arr.size()) {}
+    VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _dims(arr.size()) {}
 
     VariableType(const VariableType &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description),
                                             _value(val._value), _data_type(val._data_type), _dims(val._dims) {}
@@ -174,7 +174,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <unsigned int N>
-    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag[typeid(const char *)]), _dims(1), _access_level(3U) {}
+    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _dims(1), _access_level(3U) {}
 
     /**
      * @brief 单值构造
@@ -183,7 +183,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    Variable(const Tp &val) : _value(val), _data_type(typeflag[typeid(Tp)]), _dims(1), _access_level(3U) {}
+    Variable(const Tp &val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _dims(1), _access_level(3U) {}
 
     /**
      * @brief 列表构造
@@ -192,7 +192,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag[typeid(Tp)]), _dims(arr.size()), _access_level(3U) {}
+    Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _dims(arr.size()), _access_level(3U) {}
 
     /**
      * @brief 从变量类型构造新的变量节点
