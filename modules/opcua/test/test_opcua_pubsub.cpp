@@ -19,13 +19,26 @@
 namespace rm_test
 {
 
-TEST(OPC_UA_Publisher, publisher_config)
+TEST(OPC_UA_PubSub, pubsub_config)
 {
     // 创建发布者
-    rm::Publisher<rm::TransportID::UDP_UADP> publisher("Demo", "opc.udp://224.0.1.20:4840", 4840);
+    rm::Publisher<rm::TransportID::UDP_UADP> pub("NumberPub", "opc.udp://224.0.1.22", 8000);
     uaCreateVariable(test_double, 3.1);
-    auto node_id = publisher.addVariableNode(test_double);
-    publisher.publish({{"Pub Test Double", node_id}}, 100);
+    auto node_id = pub.addVariableNode(test_double);
+    pub.start();
+    EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 100));
+
+    // 创建订阅者
+    rm::Subscriber<rm::TransportID::UDP_UADP> sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
+    sub.start();
+    rm::FieldMetaData meta_data("NumberPub", UA_TYPES_DOUBLE, -1);
+    auto nodes = sub.subscribe("DoubleDemo", {meta_data});
+    EXPECT_EQ(nodes.size(), 1);
+
+    sub.stop();
+    pub.stop();
+    sub.join();
+    pub.join();
 }
 
 } // namespace rm_test

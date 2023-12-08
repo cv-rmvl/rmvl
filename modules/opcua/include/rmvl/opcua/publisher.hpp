@@ -66,8 +66,8 @@ public:
      * @brief 创建 OPC UA 发布者
      *
      * @param[in] pub_name 发布者名称
-     * @param[in] address 网络多播 IP 地址，形如 `opc.udp://224.0.0.22:4840`，端口号与参数 `port` 一致
-     * @param[in] port 端口号，与 @ref Server::Server 的端口号概念一致，默认为 `4840U`
+     * @param[in] address 不加端口的网络多播 IP 地址，形如 `opc.udp://224.0.1.22`
+     * @param[in] port 端口号，并且作为多播 IP 地址的端口号，与 @ref Server::Server 的端口号概念一致，默认为 `4840U`
      * @param[in] users 用户列表，默认为空，可参考 @ref UserConfig
      */
     Publisher(const std::string &pub_name, const std::string &address, uint16_t port = 4840U,

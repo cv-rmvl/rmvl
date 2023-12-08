@@ -39,6 +39,15 @@ struct FieldMetaData final
     FieldMetaData() = default;
 
     /**
+     * @brief 创建字段元数据
+     *
+     * @param[in] name_ 字段名称
+     * @param[in] type_ 字段类型，可参考 @ref UA_TypeFlag
+     * @param[in] value_rank_ 字段 ValueRank
+     */
+    FieldMetaData(const std::string &name_, UA_TypeFlag type_, int value_rank_) : name(name_), type(type_), value_rank(value_rank_) {}
+
+    /**
      * @brief 从变量创建字段元数据
      * @brief
      * - 变量的 `Variable::browse_name` 用于设置字段名称
@@ -98,8 +107,9 @@ public:
      *
      * @param[in] pub_name 发布者名称
      * @param[in] fields 数据集字段元数据列表
+     * @return 订阅的变量对应的 `UA_NodeId` 列表，每个 `UA_NodeId` 均存在于订阅者自身的服务器中
      */
-    bool subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
+    std::vector<UA_NodeId> subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
 };
 
 //! @} opcua
