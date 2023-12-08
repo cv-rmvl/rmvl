@@ -226,6 +226,15 @@ public:
     static inline Tp cast(const rm::Variable &val) { return std::any_cast<Tp>(val.data()); }
 
     /**
+     * @brief 将变量节点转化为指定类型的数据
+     *
+     * @tparam Tp 变量的数据类型
+     * @return 该数据类型的数据
+     */
+    template <typename Tp>
+    inline Tp cast() { return std::any_cast<Tp>(this->data()); }
+
+    /**
      * @brief 获取用 `rm::VariableType` 表示的变量类型
      *
      * @see _type

@@ -26,7 +26,7 @@ TEST(OPC_UA_PubSub, pubsub_config)
     uaCreateVariable(test_double, 3.1);
     auto node_id = pub.addVariableNode(test_double);
     pub.start();
-    EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 100));
+    EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 50));
 
     // 创建订阅者
     rm::Subscriber<rm::TransportID::UDP_UADP> sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
@@ -36,6 +36,9 @@ TEST(OPC_UA_PubSub, pubsub_config)
     EXPECT_EQ(nodes.size(), 1);
 
     pub.write(node_id, 3.4);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    auto sub_val = sub.read(nodes[0]);
+    EXPECT_EQ(sub_val.cast<double>(), 3.4);
 
     sub.stop();
     pub.stop();

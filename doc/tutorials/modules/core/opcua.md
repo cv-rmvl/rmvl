@@ -462,7 +462,7 @@ int main()
     pds_list.emplace_back("Number 1", num_node);
 
     // 发布数据
-    pub.publish(pds_list, 100);
+    pub.publish(pds_list, 50);
 
     /* other code */
     /* 例如 num_node 所对应的值可以直接在这里修改 */
@@ -482,12 +482,12 @@ int main()
 {
     // 创建 OPC UA 订阅者
     rm::Subscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
-    // 发布者的服务器运行
+    // 订阅者的服务器运行
     sub.start();
 
     // 准备需要订阅的数据
     // 这里只订阅 1 个，如果订阅多个请使用 std::vector
-    rm::FieldMetaData meta_data{"Number 1", UA_TYPES_DOUBLE, -1};
+    rm::FieldMetaData meta_data("Number 1", UA_TYPES_DOUBLE, UA_VALUERANK_SCALAR);
 
     /* 也可以通过创建变量对 meta_data 进行初始化，例如以下代码
     rm::Variable num = 1.0; // 这个 1.0 只是代表是个 Double 类型的数据 
@@ -495,13 +495,15 @@ int main()
     rm::FieldMetaData meta_data = num;
     */
     
-    // 订阅数据，meta_data 项的参数传入的是 std::vector，单个数据请使用初始化列表
+    // 订阅数据，第 2 个参数传入的是 std::vector 类型的数据，单个数据请使用初始化列表
     auto nodes = sub.subscribe("DemoNumberPub", {meta_data});
     // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
     // 订阅返回值是一个 UA_NodeId 列表，存放订阅接收的数据的 NodeId
 
-    /* other code */
-
+    // 读取订阅的已更新的数据
+    auto sub_val = sub.read(nodes.front());
+    std::printf("Sub value [1] = %f\n", sub_val.cast<double>());
+    
     // 线程阻塞，直到调用了 sub.stop()，线程才会继续执行。
     sub.join();
 }
