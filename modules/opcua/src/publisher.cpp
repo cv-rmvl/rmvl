@@ -29,31 +29,6 @@
 namespace rm
 {
 
-// #ifndef UA_ENABLE_PUBSUB_MQTT
-// static UA_PubSubTransportLayer UA_PubSubTransportLayerMQTT_nullptr()
-// {
-//     RMVL_Error(RMVL_StsInvFmt, "MQTT transport layer is not enabled, please use another transport layer like UDP.");
-//     return UA_PubSubTransportLayer{};
-// }
-// #endif // UA_ENABLE_PUBSUB_MQTT
-
-// // 传输协议 URI 映射
-// static constexpr const char *tp_profile[] = {
-//     "http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp",
-//     "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-uadp",
-//     "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-json",
-// };
-
-// // 传输层 URI 映射
-// static constexpr UA_PubSubTransportLayer (*tp_layer[])() = {
-//     UA_PubSubTransportLayerUDPMP,
-// #ifdef UA_ENABLE_PUBSUB_MQTT
-//     UA_PubSubTransportLayerMQTT, UA_PubSubTransportLayerMQTT
-// #else
-//     UA_PubSubTransportLayerMQTT_nullptr, UA_PubSubTransportLayerMQTT_nullptr
-// #endif // UA_ENABLE_PUBSUB_MQTT
-// };
-
 /************************************************************************************/
 /************************************** 发布者 **************************************/
 
@@ -66,7 +41,7 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     connect_config.name = UA_String_fromChars((_name + "Connection").c_str());
     connect_config.transportProfileUri = UA_String_fromChars("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp");
     connect_config.enabled = UA_TRUE;
-    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_String_fromChars(address.c_str())};
+    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_String_fromChars((address + ":" + std::to_string(port)).c_str())};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     // 用哈希值作为发布者 ID
     connect_config.publisherId.numeric = _strhash(_name + "Connection") % 0x8000000u;

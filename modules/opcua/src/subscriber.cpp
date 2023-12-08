@@ -33,6 +33,7 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
                                               const std::vector<UserConfig> &users) : Server(port, users), _name(sub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
+    UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
     UA_PubSubConnectionConfig connect_config{};
     connect_config.name = UA_String_fromChars((_name + "Connection").c_str());
     connect_config.transportProfileUri = UA_String_fromChars("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp");
@@ -48,7 +49,7 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     }
 }
 
-bool Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
+std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
 {
     //////////////// 添加 ReaderGroup (RG) ///////////////
     UA_ReaderGroupConfig rg_config{};
@@ -57,14 +58,14 @@ bool Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, c
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add reader group, \"%s\"", UA_StatusCode_name(status));
-        return false;
+        return {};
     }
     status = UA_Server_setReaderGroupOperational(_server, _rg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to set reader group operational, \"%s\"",
                      UA_StatusCode_name(status));
-        return false;
+        return {};
     }
 
     ////////////// 添加 DataSetReader (DSR) //////////////
@@ -76,20 +77,69 @@ bool Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, c
     dsr_config.dataSetWriterId = _strhash(pub_name + "DataSetWriter") % 0x8000u;
 
     // 设置数 DSR 中的元数据配置
-    dsr_config.dataSetMetaData.name = UA_String_fromChars((_name + "DataSetMetaData").c_str());
+    std::string dataset_name = _name + "DataSetMetaData";
+    dsr_config.dataSetMetaData.name = UA_String_fromChars(dataset_name.c_str());
     std::vector<UA_FieldMetaData> raw_fields(fields.size());
     for (size_t i = 0; i < fields.size(); i++)
     {
         UA_NodeId_copy(&UA_TYPES[fields[i].type].typeId, &raw_fields[i].dataType);
         raw_fields[i].builtInType = typeflag_ns0[fields[i].type];
         raw_fields[i].name = UA_String_fromChars(fields[i].name.c_str());
+        raw_fields[i].description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(fields[i].name));
         raw_fields[i].valueRank = fields[i].value_rank;
     }
     dsr_config.dataSetMetaData.fieldsSize = raw_fields.size();
-    dsr_config.dataSetMetaData.fields = raw_fields.data();    
+    dsr_config.dataSetMetaData.fields = raw_fields.data();
 
     status = UA_Server_addDataSetReader(_server, _rg_id, &dsr_config, &_dsr_id);
-    return true;
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data set reader, \"%s\"", UA_StatusCode_name(status));
+        return {};
+    }
+
+    /////////////////// 订阅数据集变量 ///////////////////
+    Object sub_obj;
+    sub_obj.browse_name = sub_obj.description = sub_obj.display_name = dataset_name;
+    auto obj_id = addObjectNode(sub_obj);
+    if (UA_NodeId_isNull(&obj_id))
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add object node, \"%s\"", UA_StatusCode_name(status));
+        return {};
+    }
+    // 根据数据集元数据 DataSetMetaData 的字段创建 FieldTargetVariable
+    std::vector<UA_FieldTargetVariable> target_vars(fields.size());
+    std::vector<UA_NodeId> retval;
+    retval.reserve(fields.size());
+    for (size_t i = 0; i < fields.size(); i++)
+    {
+        UA_VariableAttributes attr = UA_VariableAttributes_default;
+        attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(fields[i].name));
+        attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(fields[i].name));
+        attr.dataType = UA_TYPES[fields[i].type].typeId;
+        attr.accessLevel = UA_ACCESSLEVELMASK_READ;
+        UA_NodeId node_id;
+        status = UA_Server_addVariableNode(
+            _server, UA_NODEID_NULL, obj_id, nodeHasComponent,
+            UA_QUALIFIEDNAME(1, helper::to_char(fields[i].name)),
+            nodeBaseDataVariableType, attr, nullptr, &node_id);
+        if (status != UA_STATUSCODE_GOOD)
+        {
+            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add variable node, \"%s\"", UA_StatusCode_name(status));
+            continue;
+        }
+        UA_FieldTargetDataType_init(&target_vars[i].targetVariable);
+        target_vars[i].targetVariable.attributeId = UA_ATTRIBUTEID_VALUE;
+        target_vars[i].targetVariable.targetNodeId = node_id;
+        retval.push_back(node_id);
+    }
+    status = UA_Server_DataSetReader_createTargetVariables(_server, _dsr_id, target_vars.size(), target_vars.data());
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to create target variables, \"%s\"", UA_StatusCode_name(status));
+        return {};
+    }
+    return retval;
 }
 
 } // namespace rm
