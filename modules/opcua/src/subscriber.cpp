@@ -71,7 +71,7 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
     ////////////// 添加 DataSetReader (DSR) //////////////
     UA_DataSetReaderConfig dsr_config{};
     dsr_config.name = UA_String_fromChars((pub_name + "DataSetWriter").c_str());
-    UA_UInt16 publisher_id = _strhash(pub_name + "Connection") % 0x8000000u;
+    UA_UInt32 publisher_id = _strhash(pub_name + "Connection") % 0x8000000u;
     UA_Variant_setScalar(&dsr_config.publisherId, &publisher_id, &UA_TYPES[UA_TYPES_UINT16]);
     dsr_config.writerGroupId = _strhash(pub_name + "WriterGroup") % 0x8000u;
     dsr_config.dataSetWriterId = _strhash(pub_name + "DataSetWriter") % 0x8000u;
@@ -116,7 +116,8 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
         UA_VariableAttributes attr = UA_VariableAttributes_default;
         attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(fields[i].name));
         attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(fields[i].name));
-        attr.dataType = UA_TYPES[fields[i].type].typeId;
+        attr.dataType = raw_fields[i].dataType;
+        attr.valueRank = raw_fields[i].valueRank;
         attr.accessLevel = UA_ACCESSLEVELMASK_READ;
         UA_NodeId node_id;
         status = UA_Server_addVariableNode(
