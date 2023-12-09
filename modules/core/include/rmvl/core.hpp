@@ -30,6 +30,5 @@
 #include "core/version.hpp"
 
 #include "core/dataio.hpp"
-#include "core/kalman.hpp"
 #include "core/serial.hpp"
 #include "core/timer.hpp"

@@ -11,8 +11,9 @@
 
 #pragma once
 
-#include "rmvl/combo/armor.h"
 #include "rmvl/core/kalman.hpp"
+#include "rmvl/combo/armor.h"
+
 #include "tracker.h"
 
 namespace rm

@@ -19,9 +19,6 @@
  * @}
  */
 
-//! @addtogroup camera
-//! @{
-
 #include <rmvl/rmvl_modules.hpp>
 
 #ifdef HAVE_RMVL_CAMERA
@@ -36,5 +33,3 @@
 #endif // HAVE_RMVL_HIK_CAMERA
 
 #endif // HAVE_RMVL_CAMERA
-
-//! @} camera

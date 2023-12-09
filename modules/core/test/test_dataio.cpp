@@ -9,6 +9,8 @@
  *
  */
 
+#include <fstream>
+
 #include <gtest/gtest.h>
 
 #include "rmvl/core/dataio.hpp"
@@ -18,14 +20,18 @@ namespace rm_test
 
 TEST(DataIO, CornersIO)
 {
-    std::vector<std::vector<cv::Point2f>> corners = {{{0.0, 1.1}, {2.2, 3.3}},
-                                                     {{4.4, 5.5}, {6.6, 7.7}, {8.8, 9.9}}};
-    EXPECT_TRUE(rm::writeCorners("ts_dataio.yml", 2, corners));
+    std::vector<std::vector<std::array<float, 2>>> corners = {{{0.0f, 1.1f}, {2.2f, 3.3f}},
+                                                              {{4.4f, 5.5f}, {6.6f, 7.7f}, {8.8f, 9.9f}}};
+    std::ofstream ofs("ts_dataio.csv", std::ios::out | std::ios::trunc);
+    rm::writeCorners(ofs, corners);
 
     decltype(corners) ret;
-    EXPECT_TRUE(rm::readCorners("ts_dataio.yml", 2, ret));
-    EXPECT_EQ(ret[0][0], cv::Point2f(0.0, 1.1));
-    EXPECT_EQ(ret[1][2], cv::Point2f(8.8, 9.9));
+    std::ifstream ifs("ts_dataio.csv", std::ios::in);
+    rm::readCorners(ifs, ret);
+    EXPECT_EQ(ret[0][0][0], 0.0f);
+    EXPECT_EQ(ret[0][0][1], 1.1f);
+    EXPECT_EQ(ret[1][2][0], 8.8f);
+    EXPECT_EQ(ret[1][2][1], 9.9f);
 }
 
 } // namespace rm_test

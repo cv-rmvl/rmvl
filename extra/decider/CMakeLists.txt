@@ -10,7 +10,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_decider
-  DEPENDS decider camera 
+  DEPENDS decider camera
 )
 
 # TranslationDecider

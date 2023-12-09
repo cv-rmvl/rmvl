@@ -12,6 +12,7 @@
 #pragma once
 
 #include <opencv2/core/types.hpp>
+
 @def_new_group@
 namespace rm::para
 {

@@ -10,7 +10,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_group
-  DEPENDS group gyro_tracker 
+  DEPENDS group gyro_tracker
 )
 
 # rune_group
@@ -20,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   rune_group
-  DEPENDS group rune_tracker 
+  DEPENDS group rune_tracker
 )
 
 rmvl_generate_module_para(group)

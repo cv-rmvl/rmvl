@@ -95,8 +95,6 @@ enum : RMVLErrorCode
     RMVL_BadDynamicType = -12 //!< 动态类型转换错误 Bad dynamic_cast type
 };
 
-const char *rmvlErrorStr(RMVLErrorCode status);
-
 namespace rm
 {
 
@@ -297,13 +295,13 @@ template <typename Tp>
 #if __cplusplus < 202002L
 constexpr std::size_t size()
 {
-    static_assert(std::is_aggregate_v<Tp>);
+    static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
     return helper::size<Tp>(helper::size_tag<12>{});
 }
 #else
 consteval std::size_t size(auto &&...args)
 {
-    static_assert(std::is_aggregate_v<Tp>);
+    static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
     if constexpr (!requires { Tp{args...}; })
         return sizeof...(args) - 1;
     else
@@ -321,13 +319,13 @@ consteval std::size_t size(auto &&...args)
  * @param[in] f 可调用对象
  */
 template <typename Tp, typename Callable>
-void for_each(const Tp &val, Callable &&f)
+void for_each(Tp &&val, Callable &&f)
 {
-    static_assert(std::is_aggregate_v<Tp>);
+    static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
     if constexpr (size<Tp>() == 12u)
     {
         const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = val;
-        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10), f(11);
+        f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10), f(m11);
     }
     else if constexpr (size<Tp>() == 11u)
     {
@@ -397,7 +395,7 @@ void for_each(const Tp &val, Callable &&f)
 template <typename Tp>
 bool equal(const Tp &lhs, const Tp &rhs)
 {
-    static_assert(std::is_aggregate_v<Tp>);
+    static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
     if constexpr (size<Tp>() == 12u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11] = lhs;
