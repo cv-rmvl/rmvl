@@ -36,39 +36,39 @@ TEST(OPC_UA_Server, value_config)
 }
 
 // 服务器添加变量节点
-TEST(OPC_UA_Server, server_config_add_node)
+TEST(OPC_UA_Server, add_node)
 {
-    rm::Server server(4840);
+    rm::Server svr(4840);
     rm::Variable variable = 3.1415;
     variable.browse_name = "test_double";
     variable.description = "this is test double";
     variable.display_name = "测试双精度浮点数";
-    auto node = server.addVariableNode(variable);
+    auto node = svr.addVariableNode(variable);
     EXPECT_FALSE(UA_NodeId_isNull(&node));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 服务器添加变量类型节点
-TEST(OPC_UA_Server, server_config_add_type_node)
+TEST(OPC_UA_Server, add_type_node)
 {
-    rm::Server server(4842);
+    rm::Server svr(4842);
     rm::VariableType variable_type = "string_test";
     variable_type.browse_name = "test_string";
     variable_type.description = "this is test string";
     variable_type.display_name = "测试字符串";
-    auto node = server.addVariableTypeNode(variable_type);
+    auto node = svr.addVariableTypeNode(variable_type);
     EXPECT_FALSE(UA_NodeId_isNull(&node));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 服务器添加方法节点
-TEST(OPC_UA_Server, server_config_call_method)
+TEST(OPC_UA_Server, call_method)
 {
-    rm::Server server(4845);
+    rm::Server svr(4845);
     rm::Method method;
     method.browse_name = "test_method";
     method.description = "this is test method";
@@ -77,16 +77,16 @@ TEST(OPC_UA_Server, server_config_call_method)
                      void *, size_t, const UA_Variant *, size_t, UA_Variant *) -> UA_StatusCode {
         return UA_STATUSCODE_GOOD;
     };
-    server.addMethodNode(method);
-    server.start();
-    server.stop();
-    server.join();
+    svr.addMethodNode(method);
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 服务器添加对象节点
-TEST(OPC_UA_Server, server_config_add_object_node)
+TEST(OPC_UA_Server, add_object_node)
 {
-    rm::Server server(4846);
+    rm::Server svr(4846);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -96,17 +96,17 @@ TEST(OPC_UA_Server, server_config_add_object_node)
     val1.description = "this is test val1";
     val1.display_name = "测试变量 1";
     object.add(val1);
-    auto id = server.addObjectNode(object);
+    auto id = svr.addObjectNode(object);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 服务器添加对象类型节点
-TEST(OPC_UA_Server, server_config_add_object_type_node)
+TEST(OPC_UA_Server, add_object_type_node)
 {
-    rm::Server server(4847);
+    rm::Server svr(4847);
     rm::ObjectType object_type;
     object_type.browse_name = "test_object_type";
     object_type.description = "this is test object type";
@@ -116,17 +116,17 @@ TEST(OPC_UA_Server, server_config_add_object_type_node)
     val1.description = "this is test val1";
     val1.display_name = "测试变量 1";
     object_type.add(val1);
-    auto id = server.addObjectTypeNode(object_type);
+    auto id = svr.addObjectTypeNode(object_type);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 从对象类型节点派生对象节点，并添加到服务器
-TEST(OPC_UA_Server, create_object_by_object_type_and_add_to_server)
+TEST(OPC_UA_Server, create_object_by_object_type)
 {
-    rm::Server server(4848);
+    rm::Server svr(4848);
     rm::ObjectType object_type;
     object_type.browse_name = "test_object_type";
     object_type.description = "this is test object type";
@@ -136,22 +136,22 @@ TEST(OPC_UA_Server, create_object_by_object_type_and_add_to_server)
     val1.description = "this is test val1";
     val1.display_name = "测试变量 1";
     object_type.add(val1);
-    server.addObjectTypeNode(object_type);
+    svr.addObjectTypeNode(object_type);
     rm::Object object(object_type);
     object.browse_name = "test_object";
     object.description = "this is test object";
     object.display_name = "测试对象";
-    auto id = server.addObjectNode(object);
+    auto id = svr.addObjectNode(object);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 服务器节点服务端路径搜索
-TEST(OPC_UA_Server, server_config_find_node)
+TEST(OPC_UA_Server, find_node)
 {
-    rm::Server server(4850);
+    rm::Server svr(4850);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -161,36 +161,36 @@ TEST(OPC_UA_Server, server_config_find_node)
     val1.description = "this is test val1";
     val1.display_name = "测试变量 1";
     object.add(val1);
-    auto id = server.addObjectNode(object);
-    auto target = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | server.find("test_object");
+    auto id = svr.addObjectNode(object);
+    auto target = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | svr.find("test_object");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 添加自定义事件类型节点
-TEST(OPC_UA_Server, server_config_add_event_type_node)
+TEST(OPC_UA_Server, add_event_type_node)
 {
-    rm::Server server(4855);
+    rm::Server svr(4855);
     rm::EventType event_type;
     event_type.browse_name = "test_event_type";
     event_type.description = "this is test event type";
     event_type.display_name = "测试事件类型";
     int val = 3;
     event_type.add("test_val", val);
-    auto id = server.addEventTypeNode(event_type);
-    auto target = rm::nodeBaseEventType | server.find("test_event_type");
+    auto id = svr.addEventTypeNode(event_type);
+    auto target = rm::nodeBaseEventType | svr.find("test_event_type");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
-    server.start();
-    server.stop();
-    server.join();
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 手动触发事件
-TEST(OPC_UA_Server, server_config_trigger_event)
+TEST(OPC_UA_Server, trigger_event)
 {
-    rm::Server server(4860);
+    rm::Server svr(4860);
     // 添加事件类型
     rm::EventType event_type;
     event_type.browse_name = "test_event_type";
@@ -198,7 +198,7 @@ TEST(OPC_UA_Server, server_config_trigger_event)
     event_type.display_name = "测试事件类型";
     int val = 3;
     event_type.add("test_val", val);
-    server.addEventTypeNode(event_type);
+    svr.addEventTypeNode(event_type);
     // 创建事件
     rm::Event event(event_type);
     event.source_name = "test_event";
@@ -206,21 +206,46 @@ TEST(OPC_UA_Server, server_config_trigger_event)
     event.severity = 1;
     event["test_val1"] = 99;
     // 触发事件
-    EXPECT_TRUE(server.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event));
-    server.start();
-    server.stop();
-    server.join();
+    EXPECT_TRUE(svr.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event));
+    svr.start();
+    svr.stop();
+    svr.join();
 }
 
 // 从函数指针配置服务器
-TEST(OPC_UA_Server, server_config_function_ptr)
+TEST(OPC_UA_Server, function_ptr)
 {
-    rm::Server server(testnum, 4865);
-    server.start();
-    auto id = rm::nodeObjectsFolder | server.find("TestNumber");
+    rm::Server svr(testnum, 4865);
+    svr.start();
+    auto id = rm::nodeObjectsFolder | svr.find("TestNumber");
     EXPECT_FALSE(UA_NodeId_isNull(&id));
-    server.stop();
-    server.join();
+    svr.stop();
+    svr.join();
+}
+
+// 视图节点
+TEST(OPC_UA_Server, view_node)
+{
+    rm::Server svr(4870);
+    uaCreateVariable(demo1, 3.14);
+    auto node1 = svr.addVariableNode(demo1);
+    uaCreateVariable(demo2, 1);
+    svr.addVariableNode(demo2);
+    uaCreateVariable(demo3, "abc");
+    auto node3 = svr.addVariableNode(demo3);
+    svr.start();
+
+    rm::View view;
+    view.add(node1, node3);
+    view.browse_name = "test_view";
+    view.description = "this is test view";
+    view.display_name = "测试视图";
+    auto view_id = svr.addViewNode(view);
+    auto target_view_id = rm::nodeViewsFolder | svr.find("test_view");
+    EXPECT_TRUE(UA_NodeId_equal(&view_id, &target_view_id));
+
+    svr.stop();
+    svr.join();
 }
 
 } // namespace rm_test
