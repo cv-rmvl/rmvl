@@ -10,7 +10,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   planar_tracker
-  DEPENDS tracker armor 
+  DEPENDS tracker armor
 )
 
 # gyro_tracker
@@ -20,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_tracker
-  DEPENDS tracker armor 
+  DEPENDS tracker armor
 )
 
 # rune_tracker

@@ -14,9 +14,8 @@
 
 #include "rmvl/core/util.hpp"
 
-const char *rmvlErrorStr(RMVLErrorCode status)
+static constexpr const char *rmvlErrorStr(RMVLErrorCode status)
 {
-    static char buf[256];
     switch (status)
     {
     case RMVL_StsOk:
@@ -45,10 +44,9 @@ const char *rmvlErrorStr(RMVLErrorCode status)
         return "Invalid format";
     case RMVL_BadDynamicType:
         return "Bad dynamic_cast type";
+    default:
+        return "Unknown error/status code";
     }
-
-    sprintf(buf, "Unknown %s code %d", status >= 0 ? "status" : "error", status);
-    return buf;
 }
 
 std::string rm::format(const char *fmt, ...)

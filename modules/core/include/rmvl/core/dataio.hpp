@@ -11,7 +11,9 @@
 
 #pragma once
 
-#include <opencv2/core/types.hpp>
+#include <array>
+#include <iosfwd>
+#include <vector>
 
 namespace rm
 {
@@ -50,80 +52,67 @@ struct GyroData
     } rotation;
 
     /**
-     * @brief 将陀螺仪数据写入 YAML 文件中
-     * @note 默认以 `APPEND` 模式进行写入到结构体 `gyro_data_<?>` 中，`<?>` 表示写入的结构体标号，即参数 `idx`
+     * @brief 导出陀螺仪数据，可以是输出到控制台，也可以是输出到文件
+     * @brief
+     * - 以 `gyro_data` 的整体写入到输出流对象的末尾
      *
-     * @param[in] path 写入的文件路径
-     * @param[in] idx 写入的结构体标号
+     * @param[in] out 输出流对象
      * @param[in] data 待写入的陀螺仪数据
-     * @return 是否写入成功
      */
-    static bool write(const std::string &path, uint32_t idx, const GyroData &data) noexcept;
+    static void write(std::ostream &out, const GyroData &data) noexcept;
 
     /**
-     * @brief 从指定 YAML 文件中读取陀螺仪数据
-     * @note 访问指定下标的数据结构体 `gyro_data_<?>`，`<?>` 表示结构体标号，即参数 `idx`
+     * @brief 导入陀螺仪数据，可以是从控制台读取，也可以是从文件读取
+     * @brief
+     * - 读取的文件形如以下内容
+     * @code{.txt}
+     * 1.9, 2.11, 3.12, 4.13, 5.14, 6.15, 7.16, 8.17, 9.18, 10.19, 11.20, 12.21,
+     * 13.22, 14.23, 15.24, 16.25, 17.26, 18.27, 19.28, 20.29, 21.30, 22.31, 23.32, 24.33,
+     * @endcode
+     * @brief
+     * - 例如，第一次调用 `read` 方法时，陀螺仪平移的数据为 `(1.9, 2.11, 3.12, 4.13, 5.14, 6.15)`
+     *   旋转的数据为 `(7.16, 8.17, 9.18, 10.19, 11.20, 12.21)`
      *
-     * @param[in] path 读取的文件路径
-     * @param[in] idx 结构体标号
-     * @param[out] data 读取出的陀螺仪数据，读取失败则不对 `data` 做任何操作
-     * @return 是否读取成功
+     * @param[in] in 输入流对象
+     * @param[out] data 读取出的陀螺仪数据
      */
-    static bool read(const std::string &path, uint32_t idx, GyroData &data) noexcept;
+    static void read(std::istream &in, GyroData &data) noexcept;
 };
 
 /// @example samples/tutorial_code/dataio/sample_read_corners.cpp 角点数据读取例程
 /// @example samples/tutorial_code/dataio/sample_write_corners.cpp 角点数据写入例程
 
 /**
- * @brief 将角点数据写入 YAML 文件中
- * @details
- * 默认以 `APPEND` 模式进行写入到结构体 `corners_<?>` 中，`<?>` 表示写入的标号，即参数 `idx`
- * @note
- * YAML 文件参见 @ref readCorners
+ * @brief 导出角点数据
+ * @brief
+ * - 以 `corners` 的整体写入到输出流对象的末尾
+ * @brief
+ * - 文件内容可参见 @ref readCorners
  *
- * @param[in] path 写入的文件路径
- * @param[in] idx 写入的标号
+ * @param[in] out 输出流对象
  * @param[in] corners 待写入的角点数据
- * @return 是否写入成功
  */
-bool writeCorners(const std::string &path, uint32_t idx, const std::vector<std::vector<cv::Point2f>> &corners);
+void writeCorners(std::ostream &out, const std::vector<std::vector<std::array<float, 2>>> &corners);
 
 /**
- * @brief 从指定 YAML 文件中读取角点数据
- * @details
+ * @brief 导入角点数据
+ * @brief
  * - 访问指定下标的数据结构体 `corners_<?>`，`<?>` 表示对应的标号，即参数 `idx`
- * - YAML 文件形如以下内容
- * @code{.yml}
- * %YAML:1.0
+ * - 读取的文件形如以下内容
+ * @code{.txt}
+ * 1.9, 2.11,
+ * 3.12, 4.13, 5.14, 6.15,
  * ---
- * corners_1:
- *    -
- *       -
- *          x: 1.9
- *          y: 2.11
- *    -
- *       -
- *          x: 3.12
- *          y: 4.13
- *       -
- *          x: 5.14
- *          y: 6.15
- * ...
+ * 7.16, 8.17,
  * ---
- * corners_2:
- *    -
- *       -
- *          x: 7.16
- *          y: 8.17
  * @endcode
+ * @brief
+ * - 第一次调用 `readCorners` 时读取到的内容为 `{(1.9, 2.11)} 和 {(3.12, 4.13), (5.14, 6.15)}`
  *
- * @param[in] path 读取的文件路径
- * @param[in] idx 结构体标号
- * @param[out] corners 读取出的角点数据，读取失败则不对 `data` 做任何操作
- * @return 是否写入成功
+ * @param[in] is 输入流对象
+ * @param[out] corners 读取出的角点数据
  */
-bool readCorners(const std::string &path, uint32_t idx, std::vector<std::vector<cv::Point2f>> &corners);
+void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>> &corners);
 
 //! @} core_dataio
 

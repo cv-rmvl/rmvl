@@ -44,6 +44,7 @@ set(
 )
 
 # pre-defined variables
+list(APPEND CMAKE_DOXYGEN_PREDEFINED "__GNUC__")
 list(APPEND CMAKE_DOXYGEN_PREDEFINED "UA_ENABLE_PUBSUB")
 
 # List all the modules
