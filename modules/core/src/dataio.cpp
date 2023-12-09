@@ -10,6 +10,7 @@
  */
 
 #include <sstream>
+#include <algorithm>
 
 #include "rmvl/core/dataio.hpp"
 #include "rmvl/core/util.hpp"
