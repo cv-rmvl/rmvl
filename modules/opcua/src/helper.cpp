@@ -21,7 +21,7 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
     if (UA_NodeId_isNull(&origin))
         return origin;
     auto &&[p_server, browse_name] = fnis;
-    auto qualified_name = UA_QUALIFIEDNAME(1, rm::helper::to_char(browse_name.c_str()));
+    auto qualified_name = UA_QUALIFIEDNAME(1, rm::helper::to_char(browse_name));
     auto bpr = UA_Server_browseSimplifiedBrowsePath(p_server, origin, 1, &qualified_name);
     UA_NodeId retval = UA_NODEID_NULL;
     if (bpr.statusCode == UA_STATUSCODE_GOOD && bpr.targetsSize >= 1)

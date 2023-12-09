@@ -112,7 +112,7 @@ void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *v
 }
 
 // 订阅
-TEST(OPC_UA_ClientTest, client_subscription)
+TEST(OPC_UA_ClientTest, variable_monitor)
 {
     rm::Server svr(5003);
     setSvr(svr);
@@ -146,7 +146,7 @@ void onEvent(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, size_t size, UA_
     }
 }
 
-TEST(OPC_UA_ClientTest, client_event)
+TEST(OPC_UA_ClientTest, event_monitor)
 {
     rm::Server svr(5004);
     setSvr(svr);
