@@ -296,16 +296,16 @@ template <typename Tp>
 constexpr std::size_t size()
 {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
-    return helper::size<Tp>(helper::size_tag<12>{});
+    return helper::size<std::remove_reference_t<Tp>>(helper::size_tag<12>{});
 }
 #else
 consteval std::size_t size(auto &&...args)
 {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
-    if constexpr (!requires { Tp{args...}; })
+    if constexpr (!requires { std::remove_reference_t<Tp>{args...}; })
         return sizeof...(args) - 1;
     else
-        return size<Tp>(args..., helper::init{});
+        return size<std::remove_reference_t<Tp>>(args..., helper::init{});
 }
 #endif
 
@@ -319,67 +319,67 @@ consteval std::size_t size(auto &&...args)
  * @param[in] f 可调用对象
  */
 template <typename Tp, typename Callable>
-void for_each(Tp &&val, Callable &&f)
+inline void for_each(Tp &&val, Callable &&f)
 {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
-    if constexpr (size<Tp>() == 12u)
+    if constexpr (size<std::remove_reference_t<Tp>>() == 12u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = val;
+        auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10), f(m11);
     }
-    else if constexpr (size<Tp>() == 11u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 11u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = val;
+        auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10);
     }
-    else if constexpr (size<Tp>() == 10u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 10u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = val;
+        auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9);
     }
-    else if constexpr (size<Tp>() == 9u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 9u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5, m6, m7, m8] = val;
+        auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8);
     }
-    else if constexpr (size<Tp>() == 8u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 8u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5, m6, m7] = val;
+        auto &&[m0, m1, m2, m3, m4, m5, m6, m7] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7);
     }
-    else if constexpr (size<Tp>() == 7u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 7u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5, m6] = val;
+        auto &&[m0, m1, m2, m3, m4, m5, m6] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6);
     }
-    else if constexpr (size<Tp>() == 6u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 6u)
     {
-        const auto &[m0, m1, m2, m3, m4, m5] = val;
+        auto &&[m0, m1, m2, m3, m4, m5] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5);
     }
-    else if constexpr (size<Tp>() == 5u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 5u)
     {
-        const auto &[m0, m1, m2, m3, m4] = val;
+        auto &&[m0, m1, m2, m3, m4] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4);
     }
-    else if constexpr (size<Tp>() == 4u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 4u)
     {
-        const auto &[m0, m1, m2, m3] = val;
+        auto &&[m0, m1, m2, m3] = val;
         f(m0), f(m1), f(m2), f(m3);
     }
-    else if constexpr (size<Tp>() == 3u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 3u)
     {
-        const auto &[m0, m1, m2] = val;
+        auto &&[m0, m1, m2] = val;
         f(m0), f(m1), f(m2);
     }
-    else if constexpr (size<Tp>() == 2u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 2u)
     {
-        const auto &[m0, m1] = val;
+        auto &&[m0, m1] = val;
         f(m0), f(m1);
     }
-    else if constexpr (size<Tp>() == 1u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 1u)
     {
-        const auto &[m0] = val;
+        auto &&[m0] = val;
         f(m0);
     }
 }
@@ -393,76 +393,76 @@ void for_each(Tp &&val, Callable &&f)
  * @param[in] rhs 右操作数
  */
 template <typename Tp>
-bool equal(const Tp &lhs, const Tp &rhs)
+inline bool equal(const Tp &lhs, const Tp &rhs)
 {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
-    if constexpr (size<Tp>() == 12u)
+    if constexpr (size<std::remove_reference_t<Tp>>() == 12u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9 && l10 == r10 && l11 == r11;
     }
-    else if constexpr (size<Tp>() == 11u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 11u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9 && l10 == r10;
     }
-    else if constexpr (size<Tp>() == 10u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 10u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9;
     }
-    else if constexpr (size<Tp>() == 9u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 9u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8;
     }
-    else if constexpr (size<Tp>() == 8u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 8u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7;
     }
-    else if constexpr (size<Tp>() == 7u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 7u)
     {
         const auto &[l0, l1, l2, l3, l4, l5, l6] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6;
     }
-    else if constexpr (size<Tp>() == 6u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 6u)
     {
         const auto &[l0, l1, l2, l3, l4, l5] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5;
     }
-    else if constexpr (size<Tp>() == 5u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 5u)
     {
         const auto &[l0, l1, l2, l3, l4] = lhs;
         const auto &[r0, r1, r2, r3, r4] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4;
     }
-    else if constexpr (size<Tp>() == 4u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 4u)
     {
         const auto &[l0, l1, l2, l3] = lhs;
         const auto &[r0, r1, r2, r3] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3;
     }
-    else if constexpr (size<Tp>() == 3u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 3u)
     {
         const auto &[l0, l1, l2] = lhs;
         const auto &[r0, r1, r2] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2;
     }
-    else if constexpr (size<Tp>() == 2u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 2u)
     {
         const auto &[l0, l1] = lhs;
         const auto &[r0, r1] = rhs;
         return l0 == r0 && l1 == r1;
     }
-    else if constexpr (size<Tp>() == 1u)
+    else if constexpr (size<std::remove_reference_t<Tp>>() == 1u)
     {
         const auto &[l0] = lhs;
         const auto &[r0] = rhs;
