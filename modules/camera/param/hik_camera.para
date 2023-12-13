@@ -1,18 +1,15 @@
 #################### 光学参数 ####################
-int exposure = 800    # 相机曝光
-int gamma = 100       # 相机 Gamma 值
-int contrast = 100    # 相机对比度
-int saturation = 100  # 相机饱和度
-int sharpness = 100   # 相机锐度
-int gain = 64         # 相机全通道增益
-int b_gain = 100      # 相机蓝色增益
-int g_gain = 100      # 相机绿色增益
-int r_gain = 100      # 相机红色增益
-int grab_mode = 1     # 相机 grab 模式
-int retrieve_mode = 1 # 相机 retrieve 模式
+float exposure = 1500  # 相机曝光
+float saturation = 100 # 相机饱和度
+float gain = 64        # 相机数字增益
+uint32_t b_gain = 1500 # 相机蓝色增益
+uint32_t g_gain = 1500 # 相机绿色增益
+uint32_t r_gain = 1500 # 相机红色增益
 int auto_exposure = 0 # 相机自动曝光模式
 int auto_wb = 0       # 相机自动白平衡模式
 
 #################### 设备参数 ####################
-vector<int> lut_vec  # 相机 LUT
-string serial_number # 相机序列号
+int grab_mode = 1     # 相机 grab 模式
+int retrieve_mode = 1 # 相机 retrieve 模式
+vector<int> lut_vec   # 相机 LUT
+string serial_number  # 相机序列号

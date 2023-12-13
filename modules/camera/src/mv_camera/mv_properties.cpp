@@ -9,13 +9,12 @@
  *
  */
 
-#include "rmvl/camera/mv_camera.h"
+#include "mv_camera_impl.h"
 
-using namespace rm;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-bool MvCamera::set(int propId, double value)
+bool MvCamera::Impl::set(int propId, double value) noexcept
 {
     switch (propId)
     {
@@ -30,20 +29,20 @@ bool MvCamera::set(int propId, double value)
         _exposure = value;
         return CameraSetExposureTime(_hCamera, _exposure) == CAMERA_STATUS_SUCCESS;
     case CAMERA_GAIN:
-        _gain = value;
+        _gain = static_cast<int>(value);
         return CameraSetAnalogGain(_hCamera, _gain) == CAMERA_STATUS_SUCCESS;
     case CAMERA_AUTO_WB:
         return CameraSetWbMode(_hCamera, true) == CAMERA_STATUS_SUCCESS;
     case CAMERA_MANUAL_WB:
         return CameraSetWbMode(_hCamera, false) == CAMERA_STATUS_SUCCESS;
     case CAMERA_WB_BGAIN:
-        _b_gain = value;
+        _b_gain = static_cast<int>(value);
         return CameraSetGain(_hCamera, _r_gain, _g_gain, _b_gain) == CAMERA_STATUS_SUCCESS;
     case CAMERA_WB_GGAIN:
-        _g_gain = value;
+        _g_gain = static_cast<int>(value);
         return CameraSetGain(_hCamera, _r_gain, _g_gain, _b_gain) == CAMERA_STATUS_SUCCESS;
     case CAMERA_WB_RGAIN:
-        _r_gain = value;
+        _r_gain = static_cast<int>(value);
         return CameraSetGain(_hCamera, _r_gain, _g_gain, _b_gain) == CAMERA_STATUS_SUCCESS;
     case CAMERA_TRIGGER_COUNT:
         if (_grab_mode != GRAB_CONTINUOUS)
@@ -61,17 +60,17 @@ bool MvCamera::set(int propId, double value)
         else
             return false;
     case CAMERA_GAMMA:
-        _gamma = value;
-        return CameraSetGamma(_hCamera, static_cast<int>(_gamma)) == CAMERA_STATUS_SUCCESS;
+        _gamma = static_cast<int>(value);
+        return CameraSetGamma(_hCamera, _gamma) == CAMERA_STATUS_SUCCESS;
     case CAMERA_CONTRAST:
-        _contrast = value;
-        return CameraSetContrast(_hCamera, static_cast<int>(_contrast)) == CAMERA_STATUS_SUCCESS;
+        _contrast = static_cast<int>(value);
+        return CameraSetContrast(_hCamera, _contrast) == CAMERA_STATUS_SUCCESS;
     case CAMERA_SATURATION:
-        _saturation = value;
-        return CameraSetSaturation(_hCamera, static_cast<int>(_saturation)) == CAMERA_STATUS_SUCCESS;
+        _saturation = static_cast<int>(value);
+        return CameraSetSaturation(_hCamera, _saturation) == CAMERA_STATUS_SUCCESS;
     case CAMERA_SHARPNESS:
-        _sharpness = value;
-        return CameraSetSharpness(_hCamera, static_cast<int>(_sharpness)) == CAMERA_STATUS_SUCCESS;
+        _sharpness = static_cast<int>(value);
+        return CameraSetSharpness(_hCamera, _sharpness) == CAMERA_STATUS_SUCCESS;
     // Activities
     case CAMERA_ONCE_WB:
         return CameraSetOnceWB(_hCamera) == CAMERA_STATUS_SUCCESS;
@@ -86,7 +85,7 @@ bool MvCamera::set(int propId, double value)
     }
 }
 
-double MvCamera::get(int propId) const
+double MvCamera::Impl::get(int propId) const noexcept
 {
     switch (propId)
     {
@@ -130,3 +129,5 @@ double MvCamera::get(int propId) const
         return CAMERA_STATUS_FAILED;
     }
 }
+
+} // namespace rm

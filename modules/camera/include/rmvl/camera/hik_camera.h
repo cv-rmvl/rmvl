@@ -11,11 +11,10 @@
 
 #pragma once
 
-#include <opencv2/videoio.hpp>
-
 #include <MvCameraControl.h>
 
 #include "camutils.hpp"
+#include "rmvl/core/util.hpp"
 
 namespace rm
 {
@@ -29,26 +28,14 @@ namespace rm
 //! @example samples/camera/hik/sample_hik_writer.cpp 海康机器人工业相机录屏例程
 
 //! 海康机器人相机库 HikRobot camera library
-class HikCamera final : public cv::VideoCapture
+class HikCamera final
 {
-    // -------------------------- 相机信息 Device information -------------------------
-    void *_handle;                   //!< 相机设备句柄 Handle of the camera device
-    MV_CC_DEVICE_INFO_LIST _devices; //!< 设备信息列表 Device information list
-    GrabMode _grab_mode;             //!< 采集模式 Grab mode
-    RetrieveMode _retrieve_mode;     //!< 处理模式 Retrieve mode
-    std::string _serial;             //!< 相机序列号 Camera Serial Number (S/N)
-    bool _opened = false;            //!< 相机是否打开 Is the camera opened
-
-    // -------------------------- 图像信息 Image information --------------------------
-    MV_FRAME_OUT _p_out;          //!< 输出图像的数据及信息 Output image data and information
-    std::vector<uchar> _p_dstbuf; //!< 输出数据缓存 Output data buffer
-
-    using VideoCapture::grab;
-    using VideoCapture::open;
-
 public:
     using ptr = std::unique_ptr<HikCamera>;
     using const_ptr = std::unique_ptr<const HikCamera>;
+
+    //! Pointer to the implementation class
+    class Impl;
 
     /**
      * @brief 构造函数 Constructor
@@ -60,10 +47,10 @@ public:
     HikCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "");
 
     HikCamera(const HikCamera &) = delete;
-    HikCamera(HikCamera &&) = delete;
+    HikCamera(HikCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
 
     //! 析构函数 Destructor
-    ~HikCamera() override;
+    ~HikCamera();
 
     /**
      * @brief 构建 HikCamera 对象 Construct HikCamera object
@@ -75,9 +62,9 @@ public:
      * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
      * @param[in] serial 相机唯一序列号 Camera unique serial number
      */
-    static inline std::unique_ptr<HikCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "")
+    static std::unique_ptr<HikCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "")
     {
-        return std::make_unique<HikCamera>(grab_mode, retrieve_mode, serial);
+        return std::unique_ptr<HikCamera>(new HikCamera(grab_mode, retrieve_mode, serial));
     }
 
     /**
@@ -87,7 +74,7 @@ public:
      * @param[in] value 参数/事件值 The value of the parameter or activity
      * @return 是否设置成功 Set successfully?
      */
-    bool set(int propId, double value = 0.0) override;
+    bool set(int propId, double value = 0.0);
 
     /**
      * @brief 获取相机参数 Get the camera parameter
@@ -95,26 +82,10 @@ public:
      * @param[in] propId 参数编号 The ID of the parameter
      * @return 参数值 The value of the parameter
      */
-    double get(int propId) const override;
+    double get(int propId) const;
 
-    /**
-     * @brief 相机是否打开 Is the camera turned on?
-     */
-    inline bool isOpened() const override { return _opened; }
-
-    /**
-     * @brief 释放相机资源 Releasing camera resources
-     */
-    void release() override;
-
-    /**
-     * @brief 相机处理 Camera retrieve
-     *
-     * @param[out] image 输出图像 Output image
-     * @param[in] flag 相机处理模式 Camera retrieve mode
-     * @return 是否成功处理 Retrieve successfully?
-     */
-    bool retrieve(cv::OutputArray image, RetrieveMode flag) override;
+    //! 相机是否打开 Is the camera turned on?
+    bool isOpened() const;
 
     /**
      * @brief 从相机设备中读取图像 Read image from the camera device
@@ -122,25 +93,18 @@ public:
      * @param[out] image 待读入的图像 The image to read in
      * @return 是否读取成功 Read successfully?
      */
-    bool read(cv::OutputArray image) override;
+    bool read(cv::OutputArray image);
 
     /**
      * @brief 从相机设备中读取图像 Read image from the camera device
      *
      * @param image 待读入的图像 The image to read in
      */
-    virtual HikCamera &operator>>(cv::Mat &image) override
+    HikCamera &operator>>(cv::Mat &image)
     {
         read(image);
         return *this;
     }
-
-    /**
-     * @brief 打开相机 Open the camera device
-     *
-     * @return 是否成功打开 Open Successfully?
-     */
-    bool open();
 
     /**
      * @brief 相机重连 Camera reconnecting
@@ -150,13 +114,7 @@ public:
     bool reconnect();
 
 private:
-    /**
-     * @brief 错误码转字符串
-     *
-     * @param[in] code 错误码
-     * @return 字符串
-     */
-    const char *errorCode2Str(unsigned int code);
+    Impl *_impl;
 };
 
 //! @} hik_camera

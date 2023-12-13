@@ -147,7 +147,7 @@ public:
     //! 设置机器人类型 RobotType
     inline void setType(RobotType stat) { _type.RobotTypeID = stat; }
     //! 设置相机外参
-    inline void setExtrinsic(const CameraExtrinsics<float> &extrinsic) { _extrinsic = extrinsic; }
+    inline void setExtrinsic(const CameraExtrinsics &extrinsic) { _extrinsic = extrinsic; }
     //! 获取装甲板姿态法向量
     inline const cv::Vec2f &getPose() const { return _pose; }
 
@@ -160,7 +160,7 @@ private:
      * @param[in] gyro_data 陀螺仪数据
      * @return CameraExtrinsics - 相机外参
      */
-    CameraExtrinsics<float> calculateExtrinsic(const cv::Matx33f &cam_matrix, const cv::Matx51f &distCoeffs, const GyroData &gyro_data);
+    CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cam_matrix, const cv::Matx<float, 5, 1> &distCoeffs, const GyroData &gyro_data);
 
     /**
      * @brief 用来确定装甲板的种类 (大装甲或者小装甲)

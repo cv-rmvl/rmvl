@@ -9,6 +9,8 @@
  *
  */
 
+#include <opencv2/calib3d.hpp>
+
 #include "rmvl/group/gyro_group.h"
 #include "rmvl/rmath/transform.h"
 #include "rmvl/tracker/gyro_tracker.h"

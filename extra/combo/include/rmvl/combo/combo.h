@@ -11,6 +11,7 @@
 #pragma once
 
 #include "rmvl/camera/camutils.hpp"
+#include "rmvl/rmath/uty_math.hpp"
 #include "rmvl/types.hpp"
 
 #include "rmvl/core/dataio.hpp"
@@ -28,16 +29,16 @@ class combo
 protected:
     std::vector<feature::ptr> _features; //!< 特征列表
 
-    float _height{};                    //!< 高度
-    float _width{};                     //!< 宽度
-    float _angle{};                     //!< 角度
-    RMStatus _type{};                   //!< 类型
-    cv::Point2f _center;                //!< 中心点
-    cv::Point2f _relative_angle;        //!< 相对目标转角
-    GyroData _gyro_data;                //!< 当前陀螺仪数据
-    std::vector<cv::Point2f> _corners;  //!< 角点
-    CameraExtrinsics<float> _extrinsic; //!< 相机外参
-    double _tick{};                     //!< 捕获该组合体时的时间点
+    float _height{};                   //!< 高度
+    float _width{};                    //!< 宽度
+    float _angle{};                    //!< 角度
+    RMStatus _type{};                  //!< 类型
+    cv::Point2f _center;               //!< 中心点
+    cv::Point2f _relative_angle;       //!< 相对目标转角
+    GyroData _gyro_data;               //!< 当前陀螺仪数据
+    std::vector<cv::Point2f> _corners; //!< 角点
+    CameraExtrinsics _extrinsic;       //!< 相机外参
+    double _tick{};                    //!< 捕获该组合体时的时间点
 
 public:
     using ptr = std::shared_ptr<combo>;
@@ -56,7 +57,7 @@ public:
     //! 获取组合体角点
     inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
     //! 获取组合体相机外参
-    inline const CameraExtrinsics<float> &getExtrinsics() const { return _extrinsic; }
+    inline const CameraExtrinsics &getExtrinsics() const { return _extrinsic; }
     //! 获取组合体类型
     inline RMStatus getType() const { return _type; }
     //! 获取捕获该组合体的时间点

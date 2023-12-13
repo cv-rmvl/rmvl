@@ -35,7 +35,7 @@ protected:
     cv::Point2f _center;                //!< 追踪器中心点（可表示修正后）
     cv::Point2f _relative_angle;        //!< 相对目标转角（可表示修正后）
     std::vector<cv::Point2f> _corners;  //!< 追踪器角点（可表示修正后）
-    CameraExtrinsics<float> _extrinsic; //!< 相机外参（可表示修正后）
+    CameraExtrinsics _extrinsic; //!< 相机外参（可表示修正后）
     cv::Point2f _speed;                 //!< 相对目标转角速度
 
 public:
@@ -85,7 +85,7 @@ public:
     //! 修正后的相对角度（角度制）
     inline const cv::Point2f &getRelativeAngle() const { return _relative_angle; }
     //! 修正后的相机外参
-    inline const CameraExtrinsics<float> &getExtrinsics() const { return _extrinsic; }
+    inline const CameraExtrinsics &getExtrinsics() const { return _extrinsic; }
     //! 获取追踪器修正后的目标转角速度（角度制）
     inline const cv::Point2f &getSpeed() const { return _speed; }
 };

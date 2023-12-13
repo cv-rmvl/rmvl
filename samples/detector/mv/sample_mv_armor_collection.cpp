@@ -11,7 +11,6 @@
 
 using namespace cv;
 using namespace std;
-using namespace para;
 using namespace rm;
 
 namespace fs = std::filesystem;

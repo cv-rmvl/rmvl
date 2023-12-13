@@ -1,5 +1,5 @@
 #################### 光学参数 ####################
-int exposure = 800    # 相机曝光
+double exposure = 800 # 相机曝光
 int gamma = 100       # 相机 Gamma 值
 int contrast = 100    # 相机对比度
 int saturation = 100  # 相机饱和度

@@ -14,36 +14,35 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/hik_camera.h"
+#include "hik_camera_impl.h"
 
 namespace rm
 {
 
-//! MV_CC_PIXEL_CONVERT_PARAM 的初始化变量
-static MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init =
-    {.nWidth = 0,
-     .nHeight = 0,
-     .enSrcPixelType = PixelType_Gvsp_Undefined,
-     .pSrcData = nullptr,
-     .nSrcDataLen = 0,
-     .enDstPixelType = PixelType_Gvsp_Undefined,
-     .pDstBuffer = nullptr,
-     .nDstLen = 0,
-     .nDstBufferSize = 0,
-     .nRes = {0}};
-
 HikCamera::HikCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial)
+{
+    _impl = new HikCamera::Impl(grab_mode, retrieve_mode, serial);
+}
+
+HikCamera::~HikCamera() { delete _impl; }
+bool HikCamera::set(int propId, double value) { return _impl->set(propId, value); }
+double HikCamera::get(int propId) const { return _impl->get(propId); }
+bool HikCamera::read(cv::OutputArray image) { return _impl->read(image); }
+bool HikCamera::isOpened() const { return _impl->isOpened(); }
+bool HikCamera::reconnect() { return _impl->reconnect(); }
+
+//! MV_CC_PIXEL_CONVERT_PARAM 的初始化变量
+static MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init = {0, 0, PixelType_Gvsp_Undefined, nullptr, 0, PixelType_Gvsp_Undefined, nullptr, 0, 0, {0}};
+
+HikCamera::Impl::Impl(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial) noexcept
     : _grab_mode(grab_mode), _retrieve_mode(retrieve_mode), _serial(serial)
 {
     _opened = open();
 }
 
-HikCamera::~HikCamera()
-{
-    release();
-}
+HikCamera::Impl::~Impl() noexcept { release(); }
 
-void HikCamera::release()
+void HikCamera::Impl::release() noexcept
 {
     // 停止取流
     auto ret = MV_CC_StopGrabbing(_handle);
@@ -68,7 +67,7 @@ void HikCamera::release()
     }
 }
 
-bool HikCamera::open()
+bool HikCamera::Impl::open() noexcept
 {
     // ----------------------- 设备枚举 -----------------------
     int ret = MV_OK;
@@ -140,7 +139,7 @@ bool HikCamera::open()
  * @param[in] pixel_type
  * @return cv::ColorConversionCodes
  */
-inline cv::ColorConversionCodes pixelType2CVType(MvGvspPixelType pixel_type)
+static inline cv::ColorConversionCodes pixelType2CVType(MvGvspPixelType pixel_type)
 {
     static std::unordered_map<MvGvspPixelType, cv::ColorConversionCodes> convertion =
         {{PixelType_Gvsp_BayerGR8, cv::COLOR_BayerGR2RGB},
@@ -150,7 +149,7 @@ inline cv::ColorConversionCodes pixelType2CVType(MvGvspPixelType pixel_type)
     return convertion[pixel_type];
 }
 
-bool HikCamera::retrieve(cv::OutputArray image, RetrieveMode flag)
+bool HikCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcept
 {
     // --------------------- 前置信息准备 ---------------------
     auto &frame_info = _p_out.stFrameInfo;
@@ -221,7 +220,7 @@ bool HikCamera::retrieve(cv::OutputArray image, RetrieveMode flag)
     return false;
 }
 
-bool HikCamera::read(cv::OutputArray image)
+bool HikCamera::Impl::read(cv::OutputArray image) noexcept
 {
     // 获取图像地址
     auto ret = MV_CC_GetImageBuffer(_handle, &_p_out, 1000);
@@ -245,7 +244,7 @@ bool HikCamera::read(cv::OutputArray image)
     return !image.empty();
 }
 
-bool HikCamera::reconnect()
+bool HikCamera::Impl::reconnect() noexcept
 {
     INFO_("camera device reconnect");
     release();

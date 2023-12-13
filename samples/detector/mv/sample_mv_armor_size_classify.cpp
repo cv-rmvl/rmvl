@@ -10,7 +10,6 @@
 #include <opencv2/ml.hpp>
 
 using namespace rm;
-using namespace para;
 using namespace std;
 using namespace cv;
 

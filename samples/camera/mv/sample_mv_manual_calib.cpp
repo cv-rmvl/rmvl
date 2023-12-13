@@ -8,7 +8,6 @@
 #include "rmvl/camera/mv_camera.h"
 
 using namespace rm;
-using namespace para;
 using namespace std;
 using namespace cv;
 
