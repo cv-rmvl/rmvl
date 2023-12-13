@@ -11,13 +11,7 @@
 
 #pragma once
 
-#include <Eigen/Dense>
-
-#include <opencv2/calib3d.hpp>
-#include <opencv2/core/eigen.hpp>
-
-#include "rmvl/rmath/uty_math.hpp"
-#include "rmvlpara/camera/camera.h"
+#include <opencv2/core/mat.hpp>
 
 namespace rm
 {
@@ -76,89 +70,62 @@ enum CameraProperties : uint16_t
 };
 
 //! 相机外参
-template <typename Tp = float>
 class CameraExtrinsics
 {
-    Tp _yaw = 0;
-    Tp _pitch = 0;
-    Tp _roll = 0;
-    Tp _distance = 0;
-    cv::Vec<Tp, 3> _tvec;
-    cv::Vec<Tp, 3> _rvec;
-    cv::Matx<Tp, 3, 3> _r = cv::Matx<Tp, 3, 3>::eye();
-    cv::Matx<Tp, 4, 4> _t = cv::Matx<Tp, 4, 4>::eye();
+    float _yaw{};
+    float _pitch{};
+    float _roll{};
+    float _distance{};
+    cv::Vec3f _tvec;
+    cv::Vec3f _rvec;
+    cv::Matx33f _r = cv::Matx33f::eye();
+    cv::Matx44f _t = cv::Matx44f::eye();
 
 public:
     //! 获取平移向量
-    inline const cv::Vec<Tp, 3> &tvec() const { return _tvec; }
+    inline const cv::Vec3f &tvec() const { return _tvec; }
     //! 获取旋转向量
-    inline const cv::Vec<Tp, 3> &rvec() const { return _rvec; }
+    inline const cv::Vec3f &rvec() const { return _rvec; }
     //! 获取旋转矩阵
-    inline const cv::Matx<Tp, 3, 3> &R() const { return _r; }
+    inline const cv::Matx33f &R() const { return _r; }
     //! 获取外参矩阵
-    inline const cv::Matx<Tp, 4, 4> &T() const { return _t; }
+    inline const cv::Matx44f &T() const { return _t; }
     //! 获取yaw
-    inline Tp yaw() const { return _yaw; }
+    inline float yaw() const { return _yaw; }
     //! 获取pitch
-    inline Tp pitch() const { return _pitch; }
+    inline float pitch() const { return _pitch; }
     //! 获取roll
-    inline Tp roll() const { return _roll; }
+    inline float roll() const { return _roll; }
     //! 获取距离
-    inline Tp distance() const { return _distance; }
+    inline float distance() const { return _distance; }
 
-    //! 设置平移向量
-    inline void tvec(const cv::Vec<Tp, 3> &tvec)
-    {
-        _tvec = tvec;
-        // 同步更新T
-        for (int i = 0; i < 3; ++i)
-            _t(i, 3) = tvec(i);
-        // 同步更新距离
-        _distance = sqrt((tvec.t() * tvec)(0));
-    }
-    //! 设置旋转向量
-    inline void rvec(const cv::Vec<Tp, 3> &rvec)
-    {
-        _rvec = rvec;
-        // 同步更新R
-        Rodrigues(_rvec, _r);
-        updateEulerT();
-    }
-    //! 设置旋转矩阵
-    inline void R(const cv::Matx<Tp, 3, 3> &R)
-    {
-        _r = R;
-        // 同步更新旋转向量
-        Rodrigues(_r, _rvec);
-        updateEulerT();
-    }
+    /**
+     * @brief 设置平移向量
+     * 
+     * @param[in] tvec 平移向量
+     */
+    void tvec(const cv::Vec3f &tvec);
+
+    /**
+     * @brief 设置旋转向量
+     * 
+     * @param[in] rvec 旋转向量
+     */
+    void rvec(const cv::Vec3f &rvec);
+
+    /**
+     * @brief 设置旋转矩阵
+     * 
+     * @param[in] R 旋转矩阵
+     */
+    void R(const cv::Matx33f &R);
 
     /**
      * @brief 设置距离
      *
-     * @param distance 距离
+     * @param[in] distance 距离
      */
-    inline void distance(const Tp &distance) { _distance = distance; }
-
-private:
-    inline void updateEulerT()
-    {
-        // 同步更新T
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j)
-                _t(i, j) = _r(i, j);
-        // 同步更新欧拉角
-        Eigen::Matrix<Tp, 3, 3> rotated_matrix; // 旋转矩阵
-        // 类型转换
-        cv2eigen(_r, rotated_matrix);
-        // 获取欧拉角
-        Eigen::Matrix<Tp, 3, 1> euler_angles = rotated_matrix.eulerAngles(para::camera_param.EULER_0,
-                                                                          para::camera_param.EULER_1,
-                                                                          para::camera_param.EULER_2);
-        _roll = rad2deg(euler_angles[2]);
-        _pitch = rad2deg(euler_angles[1]);
-        _yaw = rad2deg(euler_angles[0]);
-    }
+    inline void distance(float distance) { _distance = distance; }
 };
 
 //! @} camera

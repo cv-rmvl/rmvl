@@ -9,13 +9,13 @@
  *
  */
 
-#include "rmvl/camera/hik_camera.h"
+#include "hik_camera_impl.h"
 
 using namespace rm;
 using namespace std;
 using namespace cv;
 
-bool HikCamera::set(int propId, double value)
+bool HikCamera::Impl::set(int propId, double value) noexcept
 {
     switch (propId)
     {
@@ -59,10 +59,10 @@ bool HikCamera::set(int propId, double value)
     }
 }
 
-double HikCamera::get(int propId) const
+double HikCamera::Impl::get(int propId) const noexcept
 {
-    MVCC_FLOATVALUE f_value = {.fCurValue = 0, .fMax = 0, .fMin = 0, .nReserved = {0}};
-    MVCC_INTVALUE i_value = {.nCurValue = 0, .nMax = 0, .nMin = 0, .nInc = 0, .nReserved = {0}};
+    MVCC_FLOATVALUE f_value = {0, 0, 0, {0}};
+    MVCC_INTVALUE i_value = {0, 0, 0, 0, {0}};
     switch (propId)
     {
     // Properties

@@ -13,13 +13,24 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/mv_camera.h"
+#include "mv_camera_impl.h"
 
-using namespace rm;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-MvCamera::MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, string_view serial, const vector<int> &decode_param)
+MvCamera::MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial, const std::vector<int> &decode_param)
+{
+    _impl = new MvCamera::Impl(grab_mode, retrieve_mode, serial, decode_param);
+}
+
+MvCamera::~MvCamera() { delete _impl; }
+bool MvCamera::set(int propId, double value) { return _impl->set(propId, value); }
+double MvCamera::get(int propId) const { return _impl->get(propId); }
+bool MvCamera::isOpened() const { return _impl->isOpened(); }
+bool MvCamera::read(cv::OutputArray image) { return _impl->read(image); }
+bool MvCamera::reconnect() { return _impl->reconnect(); }
+
+MvCamera::Impl::Impl(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial, const std::vector<int> &decode_param) noexcept
     : _camera_list(new tSdkCameraDevInfo[_camera_counts]), _grab_mode(grab_mode), _retrieve_mode(retrieve_mode)
 {
     // 需要解码参数的几种解码模式 Several decoding modes that require decoding parameters
@@ -33,7 +44,7 @@ MvCamera::MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, string_view s
     open();
 }
 
-MvCamera::~MvCamera()
+MvCamera::Impl::~Impl() noexcept
 {
     delete[] _camera_list;
     _camera_list = nullptr;
@@ -42,7 +53,7 @@ MvCamera::~MvCamera()
     release();
 }
 
-bool MvCamera::open()
+bool MvCamera::Impl::open() noexcept
 {
     CameraSdkInit(1);
     // 枚举设备，并建立设备列表
@@ -59,7 +70,7 @@ bool MvCamera::open()
         return false;
     }
     // Key: 序列号, Val: 相机设备信息哈希表
-    unordered_map<string, tSdkCameraDevInfo *> id_info;
+    std::unordered_map<std::string, tSdkCameraDevInfo *> id_info;
     for (INT enum_idx = 0; enum_idx < _camera_counts; ++enum_idx)
         id_info[_camera_list[enum_idx].acSn] = &_camera_list[enum_idx];
     // 若无序列号，初始化第一个相机
@@ -113,22 +124,22 @@ bool MvCamera::open()
  * @param[in] media_type
  * @return ColorConversionCodes
  */
-static inline ColorConversionCodes mediaType2CVType(UINT media_type)
+static inline cv::ColorConversionCodes mediaType2CVType(UINT media_type)
 {
-    static std::unordered_map<UINT, ColorConversionCodes> convertion =
-        {{CAMERA_MEDIA_TYPE_BAYGR8, COLOR_BayerGR2RGB},
-         {CAMERA_MEDIA_TYPE_BAYRG8, COLOR_BayerRG2RGB},
-         {CAMERA_MEDIA_TYPE_BAYGB8, COLOR_BayerGB2RGB},
-         {CAMERA_MEDIA_TYPE_BAYBG8, COLOR_BayerBG2RGB}};
+    static std::unordered_map<UINT, cv::ColorConversionCodes> convertion =
+        {{CAMERA_MEDIA_TYPE_BAYGR8, cv::COLOR_BayerGR2RGB},
+         {CAMERA_MEDIA_TYPE_BAYRG8, cv::COLOR_BayerRG2RGB},
+         {CAMERA_MEDIA_TYPE_BAYGB8, cv::COLOR_BayerGB2RGB},
+         {CAMERA_MEDIA_TYPE_BAYBG8, cv::COLOR_BayerBG2RGB}};
     return convertion[media_type];
 }
 
-bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
+bool MvCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcept
 {
     if (_channel != 1 && _channel != 3)
     {
         ERROR_("camera image _channel: %d.", _channel);
-        image.assign(Mat());
+        image.assign(cv::Mat());
         CameraReleaseImageBuffer(_hCamera, _pbyBuffer);
         return false;
     }
@@ -139,8 +150,8 @@ bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
         bool retflag = false;
         if (_pbyOut != nullptr)
         {
-            image.assign(Mat(
-                Size(_frame_info.iWidth, _frame_info.iHeight),
+            image.assign(cv::Mat(
+                cv::Size(_frame_info.iWidth, _frame_info.iHeight),
                 _frame_info.uiMediaType == CAMERA_MEDIA_TYPE_MONO8 ? CV_8UC1 : CV_8UC3,
                 _pbyOut));
             CameraReleaseImageBuffer(_hCamera, _pbyBuffer);
@@ -148,7 +159,7 @@ bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
         }
         else
         {
-            image.assign(Mat());
+            image.assign(cv::Mat());
             ERROR_("failed to retrieve, retrieve mode: %d.", _retrieve_mode);
             retflag = false;
         }
@@ -157,7 +168,7 @@ bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
     // CV
     else if (flag & RETRIEVE_CV)
     {
-        Mat bayerImg(Size(_frame_info.iWidth, _frame_info.iHeight), CV_8U, _pbyBuffer);
+        cv::Mat bayerImg(cv::Size(_frame_info.iWidth, _frame_info.iHeight), CV_8U, _pbyBuffer);
         if (_channel == 1)
             image.assign(bayerImg);
         else if (_channel == 3)
@@ -166,9 +177,9 @@ bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
             {
                 // use LUT to process 'bayerImg', and then convert to 3 channels
                 // image, which has the same effect with less computation
-                LUT(bayerImg, _look_up_table, bayerImg);
+                cv::LUT(bayerImg, _look_up_table, bayerImg);
             }
-            Mat bgrImg;
+            cv::Mat bgrImg;
             // cvtColor has a good effect processed by multy-thread，which is
             // suitable for the device with weak single core performance
             cvtColor(bayerImg, bgrImg, mediaType2CVType(_frame_info.uiMediaType));
@@ -179,11 +190,11 @@ bool MvCamera::retrieve(OutputArray image, RetrieveMode flag)
     }
 
     ERROR_("failed to retrieve, retrieve mode: %d.", _retrieve_mode);
-    image.assign(Mat());
+    image.assign(cv::Mat());
     return false;
 }
 
-bool MvCamera::initLUT(const vector<int> &lut)
+bool MvCamera::Impl::initLUT(const std::vector<int> &lut) noexcept
 {
     if (lut.size() != 256)
     {
@@ -193,11 +204,11 @@ bool MvCamera::initLUT(const vector<int> &lut)
     uchar table1[256];
     for (int i = 0; i < 256; i++)
         table1[i] = static_cast<uchar>(lut[i]);
-    _look_up_table = Mat(1, 256, CV_8U, table1);
+    _look_up_table = cv::Mat(1, 256, CV_8U, table1);
     return true;
 }
 
-bool MvCamera::reconnect()
+bool MvCamera::Impl::reconnect() noexcept
 {
     INFO_("camera device reconnect");
     release();
@@ -206,10 +217,7 @@ bool MvCamera::reconnect()
     _camera_counts = 8;
     open();
     // 还原参数设置
-    if (_auto_exposure)
-        set(CAMERA_AUTO_EXPOSURE);
-    else
-        set(CAMERA_MANUAL_EXPOSURE);
+    _auto_exposure ? set(CAMERA_AUTO_EXPOSURE, 0) : set(CAMERA_MANUAL_EXPOSURE, 0);
     set(CAMERA_EXPOSURE, _exposure);
     set(CAMERA_GAIN, _gain);
     set(CAMERA_WB_RGAIN, _r_gain);
@@ -217,3 +225,5 @@ bool MvCamera::reconnect()
     set(CAMERA_WB_BGAIN, _b_gain);
     return true;
 }
+
+} // namespace rm

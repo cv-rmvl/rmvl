@@ -9,12 +9,12 @@
  *
  */
 
-#include "rmvl/camera/hik_camera.h"
+#include "hik_camera_impl.h"
 
-using namespace rm;
-using namespace std;
+namespace rm
+{
 
-const char *HikCamera::errorCode2Str(unsigned int code)
+const char *HikCamera::Impl::errorCode2Str(unsigned int code) noexcept
 {
     switch (code)
     {
@@ -110,3 +110,5 @@ const char *HikCamera::errorCode2Str(unsigned int code)
         return "Successed, no error";
     }
 }
+
+} // namespace rm
