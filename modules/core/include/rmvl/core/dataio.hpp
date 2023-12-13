@@ -109,7 +109,7 @@ void writeCorners(std::ostream &out, const std::vector<std::vector<std::array<fl
  * @brief
  * - 第一次调用 `readCorners` 时读取到的内容为 `{(1.9, 2.11)} 和 {(3.12, 4.13), (5.14, 6.15)}`
  *
- * @param[in] is 输入流对象
+ * @param[in] in 输入流对象
  * @param[out] corners 读取出的角点数据
  */
 void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>> &corners);

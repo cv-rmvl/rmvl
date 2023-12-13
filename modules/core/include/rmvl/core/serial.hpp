@@ -23,12 +23,15 @@ namespace rm
 //! @addtogroup core
 //! @{
 //! @defgroup serial 串口通信模块
-//! @}
+//! @{
+//! @brief 基于 GNU C `<termios.h>` 的串行接口通信
+//! @} serial
+//! @} core
+
+#ifdef __GNUC__
 
 //! @addtogroup serial
 //! @{
-
-#ifdef __GNUC__
 
 //! 串行接口通信库
 class SerialPort
@@ -124,8 +127,8 @@ private:
     ssize_t fdread(void *data, size_t len);
 };
 
-#endif // __GNUC__
-
 //! @} serial
+
+#endif // __GNUC__
 
 } // namespace rm
