@@ -1,4 +1,4 @@
-卡尔曼滤波模块 {#tutorial_modules_kalman}
+卡尔曼滤波 {#tutorial_modules_kalman}
 ============
 
 @author 张华铨

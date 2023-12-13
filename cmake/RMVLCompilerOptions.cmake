@@ -4,7 +4,7 @@
 
 # Compile Standard
 set(max_version 17)
-foreach(ver 17 20)
+foreach(ver 17 20 23)
   rmvl_check_cxx(HAVE_CXX${ver} "cxx${ver}.cpp" "")
   if(HAVE_CXX${ver})
     set(max_version ${ver})
@@ -14,6 +14,8 @@ foreach(ver 17 20)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${ver}")
       set(HAVE_CXX${ver} ON)
       set(max_version ${ver})
+    else()
+      break()
     endif()
   endif()
 endforeach()

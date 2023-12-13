@@ -74,4 +74,4 @@ public:
     }
 };
 
-}; // namespace rm_test
+} // namespace rm_test

@@ -53,4 +53,4 @@ inline Timer timer;
 
 //! @} core_timer
 
-}; // namespace rm
+} // namespace rm

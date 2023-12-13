@@ -2,9 +2,6 @@
  * @file kalman.hpp
  * @author RoboMaster Vision Community
  * @brief 包含轻量级 `cv::Matx` 的卡尔曼滤波模块
- * @details 考虑到 OpenCV 中提供的 `cv::KalmanFilter` 是基于 `cv::Mat` 实现的，并且 `cv::Mat`
- *          的内存操作在运行时是在堆上打开的，因此会消耗大量的时间，所以现在使用 `cv::Matx`
- *          来复现卡尔曼滤波的功能。并简化部分功能的实现，以达到更方便使用的目的。
  * @version 2.0
  * @date 2022-10-05
  *
@@ -18,8 +15,17 @@
 
 //! @addtogroup core
 //! @{
-//!     @defgroup core_kalman 卡尔曼滤波器库
-//! @}
+//! @defgroup core_kalman 卡尔曼滤波器库
+//! @{
+//! @brief 使用 `cv::Matx` 改写的轻量级卡尔曼滤波模块
+//! @brief
+//! - 考虑到 OpenCV 中提供的 `cv::KalmanFilter` 是基于 `cv::Mat` 实现的，并且 `cv::Mat`
+//!   的内存操作在运行时是在堆上打开的，因此会消耗大量的时间，所以现使用 `cv::Matx`
+//!   来复现卡尔曼滤波的功能。并简化部分功能的实现，以达到轻量化的目的。
+//! @brief
+//! - 相关知识点可参考说明文档 @ref tutorial_modules_kalman
+//! @} core_kalman
+//! @} core
 
 namespace rm
 {
@@ -30,7 +36,6 @@ namespace rm
 /**
  * @brief 轻量级 `cv::Matx` 的卡尔曼滤波模块
  *
- * @note 相关知识点说明文档可参考 @ref tutorial_modules_kalman
  * @tparam Tp 数据类型
  * @tparam StateDim 状态向量的维度，类型是 `uint16_t`
  * @tparam MeasureDim 观测向量的维度，类型是 `uint16_t`
@@ -159,7 +164,7 @@ public:
      * @details 预测部分公式如下
      *          \f[\begin{align}\hat{\pmb x}^-&=A\hat{\pmb x}+B\pmb u\\P^-&=APA^T+Q\end{align}\f]
      *
-     * @param[in] control_vec 控制向量
+     * @param[in] control_vec 控制向量，即公式中的 \f$\pmb u\f$
      * @return 先验状态估计
      */
     inline auto predict(const cv::Matx<Tp, ControlDim, 1> &control_vec)
