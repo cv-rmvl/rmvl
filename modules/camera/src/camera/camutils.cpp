@@ -32,7 +32,7 @@ void rm::CameraExtrinsics::rvec(const cv::Vec3f &rvec)
 {
     _rvec = rvec;
     // 同步更新R
-    Rodrigues(_rvec, _r);
+    cv::Rodrigues(_rvec, _r);
     // 同步更新T
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
@@ -52,7 +52,7 @@ void rm::CameraExtrinsics::R(const cv::Matx33f &R)
 {
     _r = R;
     // 同步更新旋转向量
-    Rodrigues(_r, _rvec);
+    cv::Rodrigues(_r, _rvec);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
             _t(i, j) = _r(i, j);
