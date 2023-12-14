@@ -118,7 +118,7 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
         attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(fields[i].name));
         attr.dataType = raw_fields[i].dataType;
         attr.valueRank = raw_fields[i].valueRank;
-        attr.accessLevel = UA_ACCESSLEVELMASK_READ;
+        attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
         UA_NodeId node_id;
         status = UA_Server_addVariableNode(
             _server, UA_NODEID_NULL, obj_id, nodeHasComponent,

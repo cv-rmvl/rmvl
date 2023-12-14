@@ -101,7 +101,7 @@ public:
      */
     static inline cv::Vec2f verticalConvertToCamera(const cv::Vec2f &angle_vec, float diff_theta)
     {
-        return {angle_vec(0), angle_vec(1) * cos(deg2rad(diff_theta))};
+        return {angle_vec(0), angle_vec(1) * std::cos(deg2rad(diff_theta))};
     }
 
     //! 3D 空间下神符特征间距

@@ -30,7 +30,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   rune_tracker
-  DEPENDS tracker rune camera
+  DEPENDS tracker rune
 )
 
 rmvl_generate_module_para(tracker)
