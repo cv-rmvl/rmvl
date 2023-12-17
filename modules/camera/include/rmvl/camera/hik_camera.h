@@ -2,8 +2,8 @@
  * @file hik_camera.h
  * @author RoboMaster Vision Community
  * @brief Hik Robot 工业相机库
- * @version 1.0
- * @date 2023-06-13
+ * @version 2.0
+ * @date 2023-12-14
  *
  * @copyright Copyright 2023 (c), RoboMaster Vision Community
  *
@@ -18,6 +18,11 @@
 
 namespace rm
 {
+
+//! @addtogroup camera
+//! @{
+//! @defgroup hik_camera 海康机器人（HikRobot）工业相机库
+//! @}
 
 //! @addtogroup hik_camera
 //! @{

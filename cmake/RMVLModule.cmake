@@ -348,3 +348,39 @@ macro(rmvl_set_properties _target)
     set_target_properties(rmvl_${_target} ${ARGN})
   endif()
 endmacro(rmvl_set_properties _target)
+
+# ----------------------------------------------------------------------------
+#   将指定目录添加至运行时动态库链接的搜索路径
+#   用法:
+#   rmvl_link_directories(<target> [BEFORE]
+#     <INTERFACE|PUBLIC|PRIVATE> [items1...]
+#     [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])
+#   示例:
+#   rmvl_link_directories(
+#     xxxx
+#     PRIVATE /home/xxx/mylib/lib
+#   )
+# ----------------------------------------------------------------------------
+macro(rmvl_link_directories _target)
+  if(TARGET rmvl_${_target})
+    target_link_directories(rmvl_${_target} ${ARGN})
+  endif()
+endmacro()
+
+# ----------------------------------------------------------------------------
+#   将指定目标链接至指定的库
+#   用法:
+#   rmvl_link_libraries(<target> [BEFORE]
+#     <INTERFACE|PUBLIC|PRIVATE> [items1...]
+#     [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])
+#   示例:
+#   rmvl_link_libraries(
+#     my_module
+#     PRIVATE mylib
+#   )
+# ----------------------------------------------------------------------------
+macro(rmvl_link_libraries _target)
+  if(TARGET rmvl_${_target})
+    target_link_libraries(rmvl_${_target} ${ARGN})
+  endif()
+endmacro()
