@@ -1,9 +1,9 @@
 /**
  * @file mv_camera.h
  * @author RoboMaster Vision Community
- * @brief MindVision camera driver header file
- * @version 1.0
- * @date 2018-12-08
+ * @brief 迈德威视相机库
+ * @version 3.0
+ * @date 2023-12-14
  *
  * @copyright Copyright 2023 (c), RoboMaster Vision Community
  *
@@ -18,6 +18,11 @@
 
 namespace rm
 {
+
+//! @addtogroup camera
+//! @{
+//! @defgroup mv_camera 迈德威视（MindVision）相机库
+//! @}
 
 //! @addtogroup mv_camera
 //! @{
@@ -89,7 +94,7 @@ public:
     /**
      * @brief 从相机设备中读取图像 Read image from the camera device
      *
-     * @param[in] image 待读入的图像 The image to read in
+     * @param[out] image 待读入的图像 The image to read in
      * @return 是否读取成功 Read successfully?
      */
     bool read(cv::OutputArray image);

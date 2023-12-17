@@ -22,14 +22,15 @@
  * @} opcua
  */
 
-////////////////// Client/Server //////////////////
+#include <rmvl/rmvl_modules.hpp>
 
+#ifdef HAVE_RMVL_OPCUA
+////////////////// Client/Server //////////////////
 #include "opcua/client.hpp"
 #include "opcua/server.hpp"
-
 ///////////////////// Pub/Sub /////////////////////
-
 #ifdef UA_ENABLE_PUBSUB
 #include "opcua/publisher.hpp"
 #include "opcua/subscriber.hpp"
 #endif // UA_ENABLE_PUBSUB
+#endif // HAVE_RMVL_OPCUA

@@ -5,8 +5,8 @@ float gain = 64        # 相机数字增益
 uint32_t b_gain = 1500 # 相机蓝色增益
 uint32_t g_gain = 1500 # 相机绿色增益
 uint32_t r_gain = 1500 # 相机红色增益
-int auto_exposure = 0 # 相机自动曝光模式
-int auto_wb = 0       # 相机自动白平衡模式
+int auto_exposure = 0  # 相机自动曝光模式
+int auto_wb = 0        # 相机自动白平衡模式
 
 #################### 设备参数 ####################
 int grab_mode = 1     # 相机 grab 模式
