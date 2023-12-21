@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <CameraApi.h>
-
 #include "camutils.hpp"
 #include "rmvl/core/util.hpp"
 
@@ -33,7 +31,7 @@ namespace rm
 //! @example samples/camera/mv/sample_mv_multi.cpp 迈德威视多相机例程
 //! @example samples/camera/mv/sample_mv_writer.cpp 迈德威视相机录屏例程
 
-//! 迈德威视相机库 MindVision camera library
+//! 迈德威视相机库
 class MvCamera final
 {
 public:
@@ -44,14 +42,12 @@ public:
     class Impl;
 
     /**
-     * @brief 构造函数 Constructor
+     * @brief 构造 MvCamera 对象
      *
-     * @param[in] grab_mode 相机采集模式 Camera grab mode
-     * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
-     * @param[in] serial 相机唯一序列号 Camera unique serial number
-     * @param[in] decode_param 解码/转码参数 Decoding parameters
+     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] serial 相机唯一序列号
      */
-    MvCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "", const std::vector<int> &decode_param = std::vector<int>());
+    MvCamera(CameraConfig init_mode, std::string_view serial = "");
 
     MvCamera(const MvCamera &) = delete;
     MvCamera(MvCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
@@ -59,50 +55,48 @@ public:
     ~MvCamera();
 
     /**
-     * @brief 构建 MvCamera 对象 Construct MvCamera object
+     * @brief 构建 MvCamera 对象
      *
-     * @param[in] grab_mode 相机采集模式 Camera grab mode
-     * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
-     * @param[in] serial 相机唯一序列号 Camera unique serial number
-     * @param[in] decode_param 解码/转码参数 Decoding parameters
+     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] serial 相机唯一序列号
      */
-    static inline std::unique_ptr<MvCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "", const std::vector<int> &decode_param = std::vector<int>())
+    static inline std::unique_ptr<MvCamera> make_capture(CameraConfig init_mode, std::string_view serial = "")
     {
-        return std::make_unique<MvCamera>(grab_mode, retrieve_mode, serial, decode_param);
+        return std::make_unique<MvCamera>(init_mode, serial);
     }
 
     /**
-     * @brief 设置相机参数/事件 Set the camera parameter or activity
+     * @brief 设置相机参数/事件
      *
-     * @param[in] propId 参数/事件编号 The ID of the parameter or activity
-     * @param[in] value 参数/事件值 The value of the parameter or activity
-     * @return 是否设置成功 Set successfully?
+     * @param[in] propId 参数/事件编号
+     * @param[in] value 参数/事件值
+     * @return 是否设置成功
      */
     bool set(int propId, double value = 0.0);
 
     /**
-     * @brief 获取相机参数 Get the camera parameter
+     * @brief 获取相机参数
      *
-     * @param[in] propId 参数编号 The ID of the parameter
-     * @return 参数值 The value of the parameter
+     * @param[in] propId 参数编号
+     * @return 参数值
      */
     double get(int propId) const;
 
-    //! 相机是否打开 Camera is turned on?
+    //! 相机是否打开
     bool isOpened() const;
 
     /**
-     * @brief 从相机设备中读取图像 Read image from the camera device
+     * @brief 从相机设备中读取图像
      *
-     * @param[out] image 待读入的图像 The image to read in
-     * @return 是否读取成功 Read successfully?
+     * @param[out] image 待读入的图像
+     * @return 是否读取成功
      */
     bool read(cv::OutputArray image);
 
     /**
-     * @brief 从相机设备中读取图像 Read image from the camera device
+     * @brief 从相机设备中读取图像
      *
-     * @param[out] image 待读入的图像 The image to read in
+     * @param[out] image 待读入的图像
      */
     inline MvCamera &operator>>(cv::Mat &image)
     {
@@ -111,9 +105,9 @@ public:
     }
 
     /**
-     * @brief 相机重连 Camera reconnecting
+     * @brief 相机重连
      *
-     * @return 是否成功重连 Reconnect successfully?
+     * @return 是否成功重连
      */
     bool reconnect();
 

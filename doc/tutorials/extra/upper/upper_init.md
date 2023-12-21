@@ -66,7 +66,7 @@ std::vector<rm::group::ptr> groups;
 
 ```cpp
 // 创建并初始化相机
-auto p_capture = rm::HikCamera::make_capture(rm::GRAB_CONTINUOUS, rm::RETRIEVE_CV);
+auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
 ```
 
 即可完成相机的初始化。
@@ -106,12 +106,17 @@ struct SendStruct
 };
 #pragma pack()
 
+/*
+    不使用 #pragma pack 预处理器宏实现取消内存对齐，也可以使用
+    C++11 提供的关键字 alignas，例如下面的接收协议
+*/
+
 // 接收协议
-struct ReceiveStruct
+struct alignas(1) ReceiveStruct
 {
     uint8_t test;
     /* code */
-} __attribute__((packed));
+};
 
 /* code */
 
@@ -127,6 +132,7 @@ int main()
 ```
 
 @note
+- 取消内存对齐可参考 [alignas](https://zh.cppreference.com/w/cpp/language/alignas) 和 [pragma pack](https://zh.cppreference.com/w/cpp/preprocessor/impl#.23pragma_pack)
 - 初始化硬件设备同时要定义好串口通信协议
 - 串口通信协议可参考 @ref serialport_protocol 小节
 

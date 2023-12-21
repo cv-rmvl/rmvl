@@ -13,6 +13,8 @@
 
 #include "camutils.hpp"
 
+#include "rmvl/core/util.hpp"
+
 namespace rm
 {
 
@@ -28,11 +30,36 @@ namespace rm
 class OptCamera final
 {
 public:
-    using ptr = std::unique_ptr<MvCamera>;
-    using const_ptr = std::unique_ptr<const MvCamera>;
+    using ptr = std::unique_ptr<OptCamera>;
+    using const_ptr = std::unique_ptr<const OptCamera>;
 
     //! Pointer to the implementation class
     class Impl;
+
+    /**
+     * @brief 创建 OptCamera 对象
+     *
+     * @param[in] init_mode 相机初始化配置模式，需要配置 HandleMode、GrabMode 和 RetrieveMode，如果 GrabMode
+     *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1` 
+     * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
+     */
+    OptCamera(CameraConfig init_mode, std::string_view handle_info = "");
+    
+    OptCamera(const OptCamera &) = delete;
+    OptCamera(OptCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
+    ~OptCamera();
+
+    /**
+     * @brief 构建 OptCamera 对象
+     *
+     * @param[in] init_mode 相机初始化配置模式，需要配置 HandleMode、GrabMode 和 RetrieveMode，如果 GrabMode
+     *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1` 
+     * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
+     */
+    static std::unique_ptr<OptCamera> make_capture(CameraConfig init_mode, std::string_view handle_info = "")
+    {
+        return std::unique_ptr<OptCamera>(new OptCamera(init_mode, handle_info));
+    }
 
     /**
      * @brief 设置相机参数、触发相机事件

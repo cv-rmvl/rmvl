@@ -33,7 +33,7 @@ sudo apt install doxygen doxygen-gui graphviz
 生成文档 {#tutorial_documentation_generate}
 -----
 
-- 获取 RMVL 源码（version: 2.7 之后版本均可）
+- 获取 RMVL 源码
 - 在项目文件夹顶层创建 `build` 文件夹，并 `cd build`
 - 运行 `cmake`，或使用 `cmake-gui`
   @code{.sh}
@@ -43,7 +43,7 @@ sudo apt install doxygen doxygen-gui graphviz
   @code{.sh}
   make doxygen
   @endcode
-- 在你的浏览器中打开 <i>'html/index.html'</i> 文件
+- 在你的浏览器中打开 <i>'doc/doxygen/html/index.html'</i> 文件
 
 快速开始 {#tutorial_documentation_quick_start}
 ============

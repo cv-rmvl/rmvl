@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <MvCameraControl.h>
 
 #include "rmvl/camera/hik_camera.h"
 
@@ -43,7 +44,7 @@ int main()
     if (sn == "q")
         return 0;
 
-    HikCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV, sn.c_str());
+    HikCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV), sn.c_str());
 
     int exposure = 1000;
     int gain = 0;

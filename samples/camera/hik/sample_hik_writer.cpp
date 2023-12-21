@@ -9,7 +9,7 @@ using namespace cv;
 
 int main()
 {
-    HikCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    HikCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
 
     Mat tmp;
     while (!capture.read(tmp))

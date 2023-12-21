@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <MvCameraControl.h>
+
 #include "rmvl/camera/hik_camera.h"
 
 namespace rm
@@ -34,11 +36,10 @@ public:
     /**
      * @brief 构造函数
      *
-     * @param grab_mode 相机采集模式
-     * @param retrieve_mode 相机处理模式
+     * @param init_mode 相机初始化配置模式
      * @param serial 相机唯一序列号
      */
-    Impl(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "") noexcept;
+    Impl(CameraConfig init_mode, std::string_view serial) noexcept;
 
     //! 析构函数
     ~Impl() noexcept;
