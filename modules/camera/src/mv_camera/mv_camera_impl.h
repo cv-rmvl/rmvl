@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <CameraApi.h>
+
 #include "rmvl/camera/mv_camera.h"
 
 namespace rm
@@ -21,7 +23,7 @@ class MvCamera::Impl
     // ------------------------- 相机信息 -------------------------
     bool _is_opened = false;         //!< 相机是否打开
     std::string _camera_id;          //!< 指定相机的串口号
-    CameraHandle _hCamera;           //!< 相机设备句柄
+    CameraHandle _handle;            //!< 相机设备句柄
     INT _camera_counts = 8;          //!< 相机设备数量
     tSdkCameraDevInfo *_camera_list; //!< 相机设备信息列表
     CameraSdkStatus _status;         //!< 相机状态
@@ -31,7 +33,6 @@ class MvCamera::Impl
     BYTE *_pbyOut = nullptr;     //!< 处理后的缓冲区指针
     GrabMode _grab_mode;         //!< 图像采集模式
     RetrieveMode _retrieve_mode; //!< 图像处理模式
-    cv::Mat _look_up_table;      //!< 单通道 LUT 表
 
     // ------------------------- 图像信息 -------------------------
     tSdkFrameHead _frame_info;   //!< 图像帧头信息
@@ -48,8 +49,7 @@ class MvCamera::Impl
     int _sharpness = 0;          //!< 图像锐度
 
 public:
-    Impl(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial,
-                 const std::vector<int> &decode_param) noexcept;
+    Impl(CameraConfig init_mode, std::string_view serial) noexcept;
 
     ~Impl() noexcept;
 
@@ -59,39 +59,20 @@ public:
     //! 获取相机参数
     double get(int propId) const noexcept;
 
-    //! 相机是否打开 Camera is turned on?
+    //! 相机是否打开
     inline bool isOpened() const noexcept { return _is_opened; }
 
-    /**
-     * @brief 相机采集 Camera grabbing
-     *
-     * @return 是否成功采集 Success to grab?
-     */
-    inline bool grab() noexcept
-    {
-        _status = CameraGetImageBuffer(_hCamera, &_frame_info, &_pbyBuffer, 1000);
-        return _status == CAMERA_STATUS_SUCCESS;
-    }
+    //! 相机采集
+    inline bool grab() noexcept { return CameraGetImageBuffer(_handle, &_frame_info, &_pbyBuffer, 1000) == CAMERA_STATUS_SUCCESS; }
 
-    /**
-     * @brief 相机处理
-     *
-     * @param image 输出图像
-     * @param flag 相机处理模式
-     * @return 是否成功处理
-     */
-    bool retrieve(cv::OutputArray image, RetrieveMode flag) noexcept;
+    //! 相机处理
+    bool retrieve(cv::OutputArray image) noexcept;
 
-    /**
-     * @brief 从相机设备中读取图像
-     *
-     * @param image 待读入的图像
-     * @return 是否读取成功
-     */
+    //! 从相机设备中读取图像
     inline bool read(cv::OutputArray image) noexcept
     {
         if (grab())
-            retrieve(image, _retrieve_mode);
+            retrieve(image);
         else
             reconnect();
         return !image.empty();
@@ -105,15 +86,7 @@ public:
 
 private:
     //! 释放相机资源
-    inline void release() noexcept { CameraUnInit(_hCamera); }
-
-    /**
-     * @brief LUT 表映射
-     *
-     * @param lut std::vector 类型的 LUT 映射表
-     * @return 是否转换成功
-     */
-    bool initLUT(const std::vector<int> &lut) noexcept;
+    inline void release() noexcept { CameraUnInit(_handle); }
 };
 
 } // namespace rm

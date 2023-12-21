@@ -9,7 +9,7 @@ using namespace cv;
 
 int main()
 {
-    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
 
     Mat tmp;
     while (!capture.read(tmp))

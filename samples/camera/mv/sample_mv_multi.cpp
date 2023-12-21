@@ -5,6 +5,8 @@
 
 #include "rmvl/camera/mv_camera.h"
 
+#include <CameraApi.h>
+
 using namespace rm;
 using namespace std;
 using namespace cv;
@@ -33,7 +35,7 @@ int main()
     cin >> sn;
     if (sn == "q")
         return 0;
-    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV, sn.c_str());
+    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV), sn.c_str());
 
     int exposure = 1000;
     int gain = 64;

@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <MvCameraControl.h>
-
 #include "camutils.hpp"
 #include "rmvl/core/util.hpp"
 
@@ -32,7 +30,7 @@ namespace rm
 //! @example samples/camera/hik/sample_hik_multi.cpp 海康机器人工业相机——多相机例程
 //! @example samples/camera/hik/sample_hik_writer.cpp 海康机器人工业相机录屏例程
 
-//! 海康机器人相机库 HikRobot camera library
+//! 海康机器人相机库
 class HikCamera final
 {
 public:
@@ -43,67 +41,60 @@ public:
     class Impl;
 
     /**
-     * @brief 构造函数 Constructor
+     * @brief 创建 HikCamera 对象
      *
-     * @param[in] grab_mode 相机采集模式 Camera grab mode
-     * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
-     * @param[in] serial 相机唯一序列号 Camera unique serial number
+     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] serial 相机唯一序列号
      */
-    HikCamera(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "");
+    HikCamera(CameraConfig init_mode, std::string_view serial = "");
 
     HikCamera(const HikCamera &) = delete;
     HikCamera(HikCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
 
-    //! 析构函数 Destructor
+    //! 析构函数
     ~HikCamera();
 
     /**
-     * @brief 构建 HikCamera 对象 Construct HikCamera object
+     * @brief 构建 HikCamera 对象
      * @note 此相机库仅支持 USB 相机设备，暂时对 GigE 网口相机不兼容
-     * @note This camera library only supports USB camera devices and is temporarily not
-     *       compatible with GigE netport cameras
      *
-     * @param[in] grab_mode 相机采集模式 Camera grab mode
-     * @param[in] retrieve_mode 相机处理模式 Camera retrieve mode
-     * @param[in] serial 相机唯一序列号 Camera unique serial number
+     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] serial 相机唯一序列号
      */
-    static std::unique_ptr<HikCamera> make_capture(GrabMode grab_mode, RetrieveMode retrieve_mode, std::string_view serial = "")
-    {
-        return std::unique_ptr<HikCamera>(new HikCamera(grab_mode, retrieve_mode, serial));
-    }
+    static std::unique_ptr<HikCamera> make_capture(CameraConfig init_mode, std::string_view serial = "") { return std::unique_ptr<HikCamera>(new HikCamera(init_mode, serial)); }
 
     /**
-     * @brief 设置相机参数/事件 Set the camera parameter or activity
+     * @brief 设置相机参数/事件
      *
-     * @param[in] propId 参数/事件编号 The ID of the parameter or activity
-     * @param[in] value 参数/事件值 The value of the parameter or activity
-     * @return 是否设置成功 Set successfully?
+     * @param[in] propId 参数/事件编号
+     * @param[in] value 参数/事件值
+     * @return 是否设置成功
      */
     bool set(int propId, double value = 0.0);
 
     /**
-     * @brief 获取相机参数 Get the camera parameter
+     * @brief 获取相机参数
      *
-     * @param[in] propId 参数编号 The ID of the parameter
-     * @return 参数值 The value of the parameter
+     * @param[in] propId 参数编号
+     * @return 参数值
      */
     double get(int propId) const;
 
-    //! 相机是否打开 Is the camera turned on?
+    //! 相机是否打开
     bool isOpened() const;
 
     /**
-     * @brief 从相机设备中读取图像 Read image from the camera device
+     * @brief 从相机设备中读取图像
      *
-     * @param[out] image 待读入的图像 The image to read in
-     * @return 是否读取成功 Read successfully?
+     * @param[out] image 待读入的图像
+     * @return 是否读取成功
      */
     bool read(cv::OutputArray image);
 
     /**
-     * @brief 从相机设备中读取图像 Read image from the camera device
+     * @brief 从相机设备中读取图像
      *
-     * @param image 待读入的图像 The image to read in
+     * @param image 待读入的图像
      */
     HikCamera &operator>>(cv::Mat &image)
     {
@@ -112,9 +103,9 @@ public:
     }
 
     /**
-     * @brief 相机重连 Camera reconnecting
+     * @brief 相机重连
      *
-     * @return 是否成功重连 Reconnect successfully?
+     * @return 是否成功重连
      */
     bool reconnect();
 

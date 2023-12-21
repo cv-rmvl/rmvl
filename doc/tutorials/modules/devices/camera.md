@@ -11,7 +11,10 @@
 
 ------
 
-相关类 rm::MvCamera, rm::HikCamera.
+相关类
+- 迈德威视工业相机 rm::MvCamera
+- 海康机器人工业相机 rm::HikCamera
+- 奥普特机器视觉工业相机 rm::OptCamera
 
 ## 1. 如何使用
 
@@ -19,49 +22,138 @@
 
 ### 1.1 初始化
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 
 创建 MvCamera 对象即可初始化相机，例如：
 
 ```cpp
-MvCamera capture1(GRAB_CONTINUOUS, RETRIEVE_SDK, "0123456789");
-MvCamera capture2(GRAB_SOFTWARE, RETRIEVE_CV, "0123456789");
+MvCamera capture1(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::SDK), "0123456789");
+MvCamera capture2(rm::CameraConfig{}.set(rm::GrabMode::Software).set(rm::RetrieveMode::OpenCV), "0123456789");
 ```
 
 @end_toggle
 
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 
 创建 HikCamera 对象即可初始化相机，例如：
 
 ```cpp
-HikCamera capture1(GRAB_CONTINUOUS, RETRIEVE_SDK, "0123456789");
-HikCamera capture2(GRAB_SOFTWARE, RETRIEVE_CV, "0123456789");
+HikCamera capture1(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::SDK), "0123456789");
+HikCamera capture2(rm::CameraConfig{}.set(rm::GrabMode::Software).set(rm::RetrieveMode::OpenCV), "0123456789");
 ```
 
 @end_toggle
 
-第 1 个参数为 **相机采集模式** ，见下表
+@add_toggle{Opt}
 
-| 采集方式 |   枚举标识符    |                         含义                         |
-| :------: | :-------------: | ---------------------------------------------------- |
-| 连续采集 | GRAB_CONTINUOUS | 连续触发相机，每次 `grab` 方法被执行后，均会触发相机的采样功能，一般调用 `read` 方法可间接调用 `grab`。 |
-|  软触发  |  GRAB_SOFTWARE  | 软件触发，需要手动设置触发帧，`grab` 方法只有在被设置触发帧之后的下一次执行有效，否则会阻塞以等待接收到触发帧，在 `1s` 内如果没有收到触发帧，则会被认为 `grab` 失败。 |
-|  硬触发  |  GRAB_HARDWARE  | 硬件触发，通过向相机的航空接头传输高低电平信号来设置触发帧，信号的有效性可通过软件设置，例如设置高电平、低电平、上升边沿、下降边沿的一种为触发方式，`grab` 方法同软触发。 |
+创建 OptCamera 对象即可初始化相机，例如：
+
+```cpp
+OptCamera capture1(rm::CameraConfig{}.set(rm::HandleMode::IP)
+                                     .set(rm::GrabMode::Continuous)
+                                     .set(rm::RetrieveMode::SDK),
+                   "192.168.1.100");
+OptCamera capture2(rm::CameraConfig{}.set(rm::HandleMode::Index)
+                                     .set(rm::GrabMode::Continuous)
+                                     .set(rm::RetrieveMode::SDK),
+                   "1");
+```
+@end_toggle
+
+第 1 个参数为 **相机初始化模式** ，包含
+
+- 相机外部触发通道
+- 相机采集模式
+- 相机句柄创建方式
+- 相机数据处理模式
+
+4 个待配置的数据，见下表
+
+<table class="markdownTable">
+  <tr class="markdownTableHead">
+    <th class="markdownTableHeadCenter" width="140">初始化配置模式</th>
+    <th class="markdownTableHeadCenter" width="120">含义</th>
+    <th class="markdownTableHeadCenter" width="190">标识符</th>
+    <th class="markdownTableHeadCenter">功能</th>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter" rowspan="4">相机外部触发通道</td>
+    <td class="markdownTableBodyCenter">通道 0</td>
+    <td class="markdownTableBodyCenter"><code>TriggerChannel::Chn0</code></td>
+    <td class="markdownTableBodyCenter">通道 0 生效</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyCenter">通道 1</td>
+    <td class="markdownTableBodyCenter"><code>TriggerChannel::Chn1</code></td>
+    <td class="markdownTableBodyCenter">通道 1 生效</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter">通道 2</td>
+    <td class="markdownTableBodyCenter"><code>TriggerChannel::Chn2</code></td>
+    <td class="markdownTableBodyCenter">通道 2 生效</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyCenter">通道 3</td>
+    <td class="markdownTableBodyCenter"><code>TriggerChannel::Chn3</code></td>
+    <td class="markdownTableBodyCenter">通道 3 生效</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter" rowspan="3">采集方式</td>
+    <td class="markdownTableBodyCenter">连续采集</td>
+    <td class="markdownTableBodyCenter"><code>GrabMode::Continuous</code></td>
+    <td class="markdownTableBodyCenter">连续触发相机，当 <code>grab</code> 方法被执行后，相机将开始连续采集，一般调用 <code>read</code>
+      或在相机构造之初可自动开启相机 Grabbing。</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyCenter">软触发</td>
+    <td class="markdownTableBodyCenter"><code>GrabMode::Software</code></td>
+    <td class="markdownTableBodyCenter">软件触发，需要手动设置触发帧，当相机开始取流（Grabbing）时，只有在被设置触发帧之后的下一次执行有效，否则会阻塞以等待接收到触发帧，RMVL 相机库目前仅支持同步的相机数据处理，在指定时间内如果没有收到触发帧，则会被认为相机读取 <code>read</code> 失败。</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter">硬触发</td>
+    <td class="markdownTableBodyCenter"><code>GrabMode::Hardware</code></td>
+    <td class="markdownTableBodyCenter">
+      硬件触发，通过向相机的航空接头等串行通信接口传输高低电平信号来设置触发帧，信号的有效性可通过软件设置，例如设置高电平、低电平、上升边沿、下降边沿的一种为触发方式，有关相机取流的细节同软触发。</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyCenter" rowspan="4">相机句柄模式</td>
+    <td class="markdownTableBodyCenter">索引号</td>
+    <td class="markdownTableBodyCenter"><code>HandleMode::Index</code></td>
+    <td class="markdownTableBodyCenter">相机的索引号 `(0, 1, 2 ...)`</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter">序列号</td>
+    <td class="markdownTableBodyCenter"><code>HandleMode::Key</code></td>
+    <td class="markdownTableBodyCenter">制造商：序列号 S/N</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyCenter">ID</td>
+    <td class="markdownTableBodyCenter"><code>HandleMode::ID</code></td>
+    <td class="markdownTableBodyCenter">手动设置的相机 ID</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter">IP</td>
+    <td class="markdownTableBodyCenter"><code>HandleMode::IP</code></td>
+    <td class="markdownTableBodyCenter">IP 地址，形如 <code>192.168.1.100</code></td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyCenter" rowspan="2">相机数据处理模式</td>
+    <td class="markdownTableBodyCenter">使用 OpenCV</td>
+    <td class="markdownTableBodyCenter"><code>RetrieveMode::OpenCV</code></td>
+    <td class="markdownTableBodyCenter">OpenCV 的 <code>imgproc</code> 模块提供了有关数据处理的接口，例如 <code>cv::cvtColor</code> 可以用于色彩空间转换</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyCenter">使用厂商 SDK</td>
+    <td class="markdownTableBodyCenter"><code>RetrieveMode::SDK</code></td>
+    <td class="markdownTableBodyCenter">SDK 中提供了有关数据处理的接口，主要用于相机解码、色彩空间转换等操作</td>
+  </tr>
+</table>
 
 详细的触发方式 @see
 
-- <a href="https://vision.scutbot.cn/HikRobot/index.html" target="_blank"> HikRobot 工业相机手册 </a>
+- <a href="https://vision.scutbot.cn/HikRobot/index.html" target="_blank"> Hik 工业相机手册 </a>
 
-- <a href="https://vision.scutbot.cn/MindVision/mv.pdf" target="_blank"> MindVision 手册 </a>
-
-第 2 个参数为 **相机处理模式** ，见下表
-
-|         处理模式         |  枚举标识符  | 十六进制数 | 含义                                                         |
-| :----------------------: | :----------: | :--------: | ------------------------------------------------------------ |
-|  使用官方 SDK 进行处理   | RETRIEVE_SDK |   `0x01`   | 相机在捕获到 raw 图像后，采用 SDK 提供的函数进行处理，兼容性高，不依赖第三方库，但效率较低。 |
-| 使用 `cvtColor` 进行处理 | RETRIEVE_CV  |   `0x02`   | 第三方库采用 OpenCV，使用 `cv::cvtColor` 进行转码操作，对多核 CPU 设备性能较高。 |
-|   使用 `LUT` 进行处理    | RETRIEVE_LUT |   `0x10`   | Look-Up Table 单通道像素映射表，使用 `cv::LUT` 将 raw 图像像素值作映射，再进行转码操作。 |
+- <a href="https://vision.scutbot.cn/Mv/mv.pdf" target="_blank"> Mv 手册 </a>
 
 ### 1.2 光学参数设置
 
@@ -107,7 +199,7 @@ capture.set(CAMERA_SATURATION, 100); // 设置饱和度为 100
 capture.set(CAMERA_SHARPNESS, 100);  // 设置锐度为 100
 ```
 
-@note HikRobot 工业相机暂不支持修改 Gamma
+@note Hik 工业相机暂不支持修改 Gamma
 
 ### 1.3 处理参数设置
 
@@ -145,12 +237,12 @@ cd build
 
 单相机例程，在 build 文件夹下执行以下命令
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 ```bash
 bin/sample_mv_mono
 ```
 @end_toggle
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 ```bash
 bin/sample_hik_mono
 ```
@@ -164,12 +256,12 @@ bin/sample_hik_mono
 
 多相机例程，在 `build` 文件夹下执行以下命令
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 ```bash
 bin/sample_mv_multi
 ```
 @end_toggle
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 ```bash
 bin/sample_hik_multi
 ```
@@ -185,12 +277,12 @@ bin/sample_hik_multi
 
 相机录屏例程，在 build 文件夹下执行以下命令
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 ```bash
 bin/sample_mv_writer
 ```
 @end_toggle
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 ```bash
 bin/sample_hik_writer
 ```
@@ -198,12 +290,12 @@ bin/sample_hik_writer
 
 相机按照连续采样、`cvtColor` 处理方式运行，`-o` 可指定输出文件名，否则默认输出到 `ts.avi`，例如
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 ```bash
 bin/sample_mv_writer -o=aaa.avi
 ```
 @end_toggle
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 ```bash
 bin/sample_hik_writer -o=aaa.avi
 ```
@@ -215,12 +307,12 @@ bin/sample_hik_writer -o=aaa.avi
 
 相机标定程序，在 `build` 文件夹下执行以下命令
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 ```bash
 bin/sample_mv_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 ```
 @end_toggle
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 ```bash
 bin/sample_hik_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 ```
@@ -228,12 +320,12 @@ bin/sample_hik_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 
 `<?>` 表示可调节，具体帮助可直接执行以下命令
 
-@add_toggle{MindVision}
+@add_toggle{Mv}
 ```bash
 bin/sample_mv_calibration -help
 ```
 @end_toggle
-@add_toggle{HikRobot}
+@add_toggle{Hik}
 ```bash
 bin/sample_hik_calibration -help
 ```
@@ -248,7 +340,7 @@ bin/sample_hik_calibration -help
 ```cpp
 int main()
 {
-    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
     Mat frame;
     while(capture.read(frame))
     {
@@ -264,7 +356,7 @@ int main()
 ```cpp
 int main()
 {
-    MvCamera capture(GRAB_SOFTWARE, RETRIEVE_CV);
+    MvCamera capture(GrabMode::Software, RetrieveMode::OpenCV);
 
     bool run = true;
     thread th(

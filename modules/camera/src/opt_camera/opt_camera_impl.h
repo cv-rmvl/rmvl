@@ -16,39 +16,42 @@
 
 #include "rmvl/camera/opt_camera.h"
 
-//! Redefines the mode of creating the camera handle
-using CameraMode = OPT_ECreateHandleMode;
-
-#define HANDLE_INDEX modeByIndex     //!< Index (0, 1, 2 ...)
-#define HANDLE_KEY modeByCameraKey   //!< Manufacture: S/N
-#define HANDLE_ID modeByDeviceUserID //!< Manual ID
-#define HANDLE_IP modeByIPAddress    //!< IP Address
-
 namespace rm
 {
 
 class OptCamera::Impl
 {
     // 设备信息
-    CameraMode _camera_mode;     //!< 相机句柄创建方式
-    std::string _camera_info;    //!< 相机句柄的字符串信息
-    OPT_HANDLE _hCamera;         //!< 相机设备句柄
-    OPT_DeviceList _device_list; //!< 设备列表
-    uint _buffer_size{10};       //!< 相机帧缓存数量
-    bool _is_opened{};           //!< 相机是否打开
+    CameraConfig _init_mode;       //!< 相机初始化配置模式
+    std::string _camera_info;      //!< 相机句柄的字符串信息
+    OPT_HANDLE _handle{};          //!< 相机设备句柄
+    OPT_DeviceList _device_list{}; //!< 设备列表
+    uint _buffer_size{10};         //!< 相机帧缓存数量
+    bool _is_opened{};             //!< 相机是否打开
 
     // 图像数据
     OPT_Frame _src_frame; //!< SDK 直接得到的 Frame 类型指针
 
-    // 图像信息
-    double _retrieve_mode{RETRIEVE_SDK}; //!< 检索模式
-    double _exposure_time{-1};           //!< 曝光时间 ms
-    double _gain{-1};                    //!< 全通道增益
-    double _r_gain{-1};                  //!< 红色增益
-    double _g_gain{-1};                  //!< 绿色增益
-    double _b_gain{-1};                  //!< 蓝色增益
-    double _gamma{-1};                   //!< Gamma
-    double _saturation{-1};              //!< 饱和度
+public:
+    Impl(CameraConfig init_mode, std::string_view handle_info) noexcept;
+    ~Impl() noexcept;
+
+    //! 打开相机
+    bool open() noexcept;
+    //! 相机重连
+    bool reconnect() noexcept;
+    //! 设置相机参数
+    bool set(int propId, double value) noexcept;
+    //! 获取相机参数
+    double get(int propId) const noexcept;
+    //! 相机处理
+    bool retrieve(cv::OutputArray image) noexcept;
+    //! 读取图片
+    bool read(cv::OutputArray image) noexcept;
+    //! 相机设备是否打开
+    inline bool isOpened() const noexcept { return _is_opened; }
+    //! 释放资源
+    void release() noexcept;
 };
 
 } // namespace rm

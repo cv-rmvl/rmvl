@@ -136,7 +136,7 @@ auto decide_info = p_decider->decide(groups);
 ```cpp
 #include <rmvl/camera.hpp>
 
-rm::MvCamera mv(rm::GRAB_CONTINUOUS, rm::RETRIEVE_CV);
+rm::MvCamera mv(rm::CameraConfig{});
 ```
 
 或使用
@@ -146,7 +146,7 @@ rm::MvCamera mv(rm::GRAB_CONTINUOUS, rm::RETRIEVE_CV);
 
 using namespace rm;
 
-MvCamera mv(GRAB_CONTINUOUS, RETRIEVE_CV);
+rm::MvCamera mv(CameraConfig{});
 ```
 
 第二种方式引入了整个命名空间，容易造成访问冲突，在不影响可读性的情况下建议使用第一种方案。RMVL 中的嵌套命名空间较少，并且一般很少直接使用，不会对可读性造成很大的影响。

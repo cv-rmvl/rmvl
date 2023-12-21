@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 
     bool undistortImage = false;
     int flags = 0;
-    MvCamera capture(GRAB_CONTINUOUS, RETRIEVE_CV);
+    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
 
     FileStorage fs("out_para.yml", FileStorage::READ);
 
