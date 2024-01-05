@@ -14,7 +14,7 @@
 
 #include "rmvl/core/util.hpp"
 
-static constexpr const char *rmvlErrorStr(RMVLErrorCode status)
+static constexpr const char *rmvlErrorStr(int status)
 {
     switch (status)
     {
@@ -60,7 +60,7 @@ std::string rm::format(const char *fmt, ...)
     return str;
 }
 
-rm::Exception::Exception(RMVLErrorCode _code, const std::string &_err, const std::string &_func,
+rm::Exception::Exception(int _code, const std::string &_err, const std::string &_func,
                          const std::string &_file, int _line)
     : code(_code), err(_err), func(_func), file(_file), line(_line)
 {
