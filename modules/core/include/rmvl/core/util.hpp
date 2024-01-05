@@ -78,7 +78,7 @@
 typedef int RMVLErrorCode; //!< 重定义 `int` 为 RMVLErrorCode
 
 //! @brief RMVL 错误码
-enum : RMVLErrorCode
+enum RMVLErrorCode : int
 {
     RMVL_StsOk = 0,           //!< 没有错误 No Error
     RMVL_StsBackTrace = -1,   //!< 回溯 Backtrace
