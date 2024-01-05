@@ -75,8 +75,6 @@
 #define DEBUG_PASS_(...) PASS_(__VA_ARGS__)
 #endif
 
-typedef int RMVLErrorCode; //!< 重定义 `int` 为 RMVLErrorCode
-
 //! @brief RMVL 错误码
 enum RMVLErrorCode : int
 {
