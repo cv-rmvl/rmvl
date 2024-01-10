@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_serial}
 
-@next_tutorial{tutorial_modules_kalman}
+@next_tutorial{tutorial_modules_interpolation}
 
 @tableofcontents
 

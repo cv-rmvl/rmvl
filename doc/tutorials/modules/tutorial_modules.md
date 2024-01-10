@@ -19,8 +19,16 @@
 
 #### 1.2 算法类
 
-- @subpage tutorial_modules_kalman
+##### 数值计算
+
+- @subpage tutorial_modules_interpolation
 - @subpage tutorial_modules_least_square
+- @subpage tutorial_modules_func_iteration
+- @subpage tutorial_modules_runge_kutta
+
+##### 数据处理
+
+- @subpage tutorial_modules_kalman
 
 ### 2. 数据结构与算法
 
