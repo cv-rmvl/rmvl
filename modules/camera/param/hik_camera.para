@@ -11,5 +11,4 @@ int auto_wb = 0        # 相机自动白平衡模式
 #################### 设备参数 ####################
 int grab_mode = 1     # 相机 grab 模式
 int retrieve_mode = 1 # 相机 retrieve 模式
-vector<int> lut_vec   # 相机 LUT
 string serial_number  # 相机序列号

@@ -80,3 +80,40 @@ l_2(x)&=\prod\limits_{j=0,j\neq2}^2\frac{x-x_j}{x_i-x_j}=\frac{(x-1)(x-2)}{(3-1)
 @note 一般的，\f$n\f$点\f$n\f$次插值得到的插值多项式是<span style="color: red">**唯一**</span>的，读者可以自行使用待定系数法验证
 
 ### 2. Newton 插值多项式
+
+相关类 rm::Interpolator
+
+---
+
+Lagrange 插值基函数存在一些问题，比如当我们需要在原先节点的基础上再次增加若干个节点，这会导致之前计算出的基函数全部失效，需要重新计算。为此我们需要引入新的插值基函数，这里使用 Newton 插值基函数来避免这一问题。
+
+Newton 插值基函数的表达式如下
+
+\f[l_i(x)=\left\{\begin{array}{lr}1&i=0\\\prod\limits_{j=0}^{i-1}(x-x_j)&i\neq0\end{array}\right.\tag{2-1}\f]
+
+Newton 插值多项式可以写为以下形式
+
+\f[p(x)=a_0l_0(x)+a_1l_1(x)+a_2l_2(x)+\cdots+a_{n-1}l_{n-1}(x)\tag{2-2}\f]
+
+其中插值系数\f$a_i\ (i=0,1,2,\cdots,n-1)\f$表示为
+
+\f[\begin{align}a_0&=f\left(x_0\right)\\a_1&=f\left[x_0,x_1\right]=\frac{f(x_0)-f(x_1)}{x_0-x_1}\\
+a_2&=f\left[x_0,x_1,x_2\right]=\frac{f\left[x_0,x_1\right]-f\left[x_1,x_2\right]}{x_0-x_2}\\
+&\ \vdots\\a_{n-1}&=f\left[x_0,x_1,\cdots,x_{n-1}\right]\end{align}\tag{2-3}\f]
+
+<span style="color: green">**示例**</span>
+
+使用以下节点进行 3 次插值
+
+|  \f$x\f$   | \f$0\f$ | \f$1\f$ | \f$2\f$ | \f$3\f$ |
+| :--------: | :-----: | :-----: | :-----: | :-----: |
+| \f$f(x)\f$ | \f$0\f$ | \f$1\f$ | \f$3\f$ | \f$2\f$ |
+
+列差商表
+
+\f[\begin{array}{c|cc}x&f(x)&1阶&2阶&3阶\\\hline0&0\\1&1&\frac{1-0}{1-0}=1\\2&3&\frac{3-1}{2-1}=2&\frac{2-1}
+{2-0}=\frac12\\3&2&\frac{2-3}{3-2}=-1&\frac{-1-2}{3-1}=-\frac32&\frac{-\frac32-\frac12}{3-0}=-\frac23\\\end{array}\f]
+
+可以得到
+
+\f[\begin{align}p(x)&=0+x+\frac12x(x-1)-\frac23x(x-1)(x-2)\\&=-\frac23x^3+\frac52x^2-\frac56x\end{align}\f]
