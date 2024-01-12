@@ -17,7 +17,7 @@ namespace rm
 
 ///////////////////// 函数插值 /////////////////////
 
-Interpolation::Interpolation(const std::vector<double> &xs, const std::vector<double> &ys)
+Interpolator::Interpolator(const std::vector<double> &xs, const std::vector<double> &ys)
 {
     RMVL_Assert(xs.size() == ys.size());
     _xs = xs;
@@ -34,7 +34,7 @@ Interpolation::Interpolation(const std::vector<double> &xs, const std::vector<do
             _diffquot[i][k] = (_diffquot[i][k - 1] - _diffquot[i - 1][k - 1]) / (_xs[i] - _xs[i - k]);
 }
 
-Interpolation &Interpolation::add(double x, double y)
+Interpolator &Interpolator::add(double x, double y)
 {
     _xs.push_back(x);
     _diffquot.emplace_back(_xs.size());
@@ -47,7 +47,7 @@ Interpolation &Interpolation::add(double x, double y)
     return *this;
 }
 
-double Interpolation::operator()(double x) const
+double Interpolator::operator()(double x) const
 {
     double y{};
     double xprod{1.0};
@@ -57,6 +57,14 @@ double Interpolation::operator()(double x) const
         xprod *= (x - _xs[i]);
     }
     return y;
+}
+
+CurveFitter::CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order) : _num(order.count())
+{
+    RMVL_Assert(xs.size() == ys.size());
+    RMVL_Assert(_num > 0);
+    // 构建法方程的系数矩阵
+    _g.resize(_num * _num);
 }
 
 } // namespace rm
