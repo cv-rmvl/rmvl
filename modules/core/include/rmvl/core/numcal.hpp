@@ -127,10 +127,10 @@ public:
     /**
      * @brief 创建曲线拟合器对象
      *
-     * @param[in] xs 已知节点的 x 坐标 \f$x_0,x_1,\cdots,x_n\f$
-     * @param[in] ys 已知节点的 y 坐标 \f$f(x_0),f(x_1),\cdots,f(x_n)\f$
-     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 a0 ~ a7，\f$a_0,a_1,\cdots,a_7\f$，例如
-     *                  `0b01000101` 表示拟合曲线为 \f[f(x)=a_0+a_2x^2+a_6x^6\f]
+     * @param[in] xs 已知节点的 x 坐标列表 \f$\text{xs}=\{x_0,x_1,\cdots,x_n\}\f$
+     * @param[in] ys 已知节点的 y 坐标列表 \f$\text{ys}=\{f(x_0),f(x_1),\cdots,f(x_n)\}\f$
+     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 a0 ~ a7，即\f[f(x)=a_0+a_1x+\cdots+a_7x^7\tag1\f]
+     *                  例如 `0b01000101` 表示拟合曲线为 \f[f(x)=a_0+a_2x^2+a_6x^6\tag2\f]
      */
     CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order);
 
@@ -143,11 +143,18 @@ public:
     double operator()(double x) const;
 };
 
-/////////////////// 递推最小二乘 ///////////////////
-
 ////////////// 非线性方程（组）数值解 //////////////
 
 ///////////////// 常微分方程数值解 /////////////////
+
+/**
+ * @brief 常微分方程数值求解器
+ * @brief
+ * - 使用 Runge-Kutta 法求解常微分方程（组）
+ */
+class RungeKutta
+{
+};
 
 //! @} core_numcal
 
