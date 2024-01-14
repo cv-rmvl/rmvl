@@ -144,7 +144,7 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
         else
         {
             image.assign(cv::Mat());
-            ERROR_("mv - failed to retrieve, retrieve mode: %d.", _retrieve_mode);
+            ERROR_("mv - failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
             retflag = false;
         }
         return retflag;
@@ -167,7 +167,7 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
         return true;
     }
 
-    ERROR_("mv - failed to retrieve, retrieve mode: %d.", _retrieve_mode);
+    ERROR_("mv - failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
     image.assign(cv::Mat());
     return false;
 }

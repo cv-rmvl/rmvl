@@ -9,8 +9,11 @@
  *
  */
 
-#include <rmvl/core/numcal.hpp>
-#include <rmvl/core/util.hpp>
+#include <iostream>
+#include <opencv2/core.hpp>
+
+#include "rmvl/core/numcal.hpp"
+#include "rmvl/core/util.hpp"
 
 namespace rm
 {
@@ -59,12 +62,44 @@ double Interpolator::operator()(double x) const
     return y;
 }
 
-CurveFitter::CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order) : _num(order.count())
+CurveFitter::CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order)
 {
     RMVL_Assert(xs.size() == ys.size());
-    RMVL_Assert(_num > 0);
-    // 构建法方程的系数矩阵
-    _g.resize(_num * _num);
+    if (order.count() > xs.size())
+        RMVL_Error(RMVL_StsBadArg, "The number of 1 in \"order\" must be less than or equal to the number of nodes.");
+    // 提取 order 中为 1 的位的索引（从低到高）
+    _idx.reserve(order.count());
+    for (std::size_t i = 0; i < order.size(); i++)
+        if (order.test(i))
+            _idx.push_back(i);
+    // 构建法方程系数矩阵 G
+    cv::Mat G(_idx.size(), _idx.size(), CV_64FC1);
+    std::for_each(_idx.cbegin(), _idx.cend(), [&](std::size_t i) {
+        std::for_each(_idx.cbegin(), _idx.cend(), [&](std::size_t j) {
+            G.at<double>(i, j) = 0.0;
+            std::for_each(xs.cbegin(), xs.cend(), [&](std::size_t val) { G.at<double>(i, j) += std::pow(val, i + j); });
+        });
+    });
+    // 构建法方程系数矩阵 b
+    cv::Mat b(_idx.size(), 1, CV_64FC1);
+    std::for_each(_idx.cbegin(), _idx.cend(), [&](std::size_t i) {
+        b.at<double>(i) = 0.0;
+        for (std::size_t k = 0; k < xs.size(); k++)
+            b.at<double>(i) += std::pow(xs[k], i) * ys[k];
+    });
+    // 求解法方程
+    _coeffs.reserve(_idx.size());
+    cv::Mat coeffs_mat;
+    cv::solve(G, b, coeffs_mat, cv::DECOMP_CHOLESKY);
+    std::for_each(coeffs_mat.begin<double>(), coeffs_mat.end<double>(), [&](double val) { _coeffs.push_back(val); });
+}
+
+double CurveFitter::operator()(double x) const
+{
+    double retval{};
+    for (std::size_t i = 0; i < _idx.size(); i++)
+        retval += _coeffs[i] * std::pow(x, _idx[i]);
+    return retval;
 }
 
 } // namespace rm
