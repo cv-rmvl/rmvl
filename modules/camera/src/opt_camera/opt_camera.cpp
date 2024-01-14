@@ -241,7 +241,7 @@ bool OptCamera::Impl::retrieve(cv::OutputArray image) noexcept
         return true;
     };
     // retrieve failed
-    ERROR_("opt - Failed to retrieve, unsupported mode: %d.", flag);
+    ERROR_("opt - Failed to retrieve, unsupported mode: %d.", static_cast<int>(flag));
     image.assign(cv::Mat());
     return false;
 }

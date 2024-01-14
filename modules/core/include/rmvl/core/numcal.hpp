@@ -120,8 +120,8 @@ public:
  */
 class CurveFitter
 {
-    const std::size_t _num; //!< 节点个数
-    std::vector<double> _g; //!< 铺平的法方程系数矩阵 G
+    std::vector<std::size_t> _idx; //!< 拟合曲线的阶数（从低到高）
+    std::vector<double> _coeffs;   //!< 拟合曲线的系数
 
 public:
     /**
@@ -129,14 +129,18 @@ public:
      *
      * @param[in] xs 已知节点的 x 坐标 \f$x_0,x_1,\cdots,x_n\f$
      * @param[in] ys 已知节点的 y 坐标 \f$f(x_0),f(x_1),\cdots,f(x_n)\f$
-     * @param[in] order 拟合曲线的阶数，参数从最高位到最低位依次为 \f$a_0,a_1,\cdots,a_7\f$，例如
-     *                  `0b10100011` 表示拟合曲线为 \f[f(x)=a_0+a_2x^2+a_6x^6+a_7x^7\f]
+     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 a0 ~ a7，\f$a_0,a_1,\cdots,a_7\f$，例如
+     *                  `0b01000101` 表示拟合曲线为 \f[f(x)=a_0+a_2x^2+a_6x^6\f]
      */
     CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order);
 
-private:
-    inline double &operator()(std::size_t i, std::size_t j) noexcept { return _g[i * _num + j]; }
-    inline double operator()(std::size_t i, std::size_t j) const noexcept { return _g[i * _num + j]; }
+    /**
+     * @brief 计算拟合曲线在指定点的函数值
+     *
+     * @param[in] x 指定点的 x 坐标
+     * @return 拟合曲线在指定点的函数值
+     */
+    double operator()(double x) const;
 };
 
 /////////////////// 递推最小二乘 ///////////////////
