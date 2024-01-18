@@ -1,4 +1,4 @@
-视觉库安装总览 {#tutorial_install_overview}
+安装总览 {#tutorial_install_overview}
 ============
 
 @next_tutorial{tutorial_configuration_options}

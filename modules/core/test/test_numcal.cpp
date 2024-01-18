@@ -39,4 +39,14 @@ TEST(NumberCalculation, curve_fitter)
     EXPECT_LE(foo(0) + 0.5, 1e-5);
 }
 
+TEST(NumberCalculation, nonlinear_solver)
+{
+    rm::NonlinearSolver foo;
+    foo = [](double x) { return x * x - 4; }; // f(x)
+    EXPECT_LE(foo(2.5) - 2, 1e-5);            // fo(2) = 0
+    EXPECT_LE(foo(1.5) - 2, 1e-5);            // fo(2) = 0
+    EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
+    EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
+}
+
 } // namespace rm_test

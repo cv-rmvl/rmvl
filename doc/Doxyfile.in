@@ -1,7 +1,7 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = RMVL
 PROJECT_NUMBER         = @RMVL_VERSION@
-PROJECT_BRIEF          = "RoboMaster Vision Library"
+PROJECT_BRIEF          = "Robotic Manipulation and Vision Library"
 PROJECT_LOGO           = @CMAKE_CURRENT_SOURCE_DIR@/rmvl-logo.png
 OUTPUT_DIRECTORY       = @CMAKE_DOXYGEN_OUTPUT_PATH@
 CREATE_SUBDIRS         = YES

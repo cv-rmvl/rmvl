@@ -20,8 +20,6 @@ Doxygen 概述 {#tutorial_documentation_overview}
 - 使用 Markdown 标记语法，以及纯粹的 HTML 文本格式
 - 以不同的格式生成文档，例如 HTML、LaTeX、man 等
 
-RMVL 视觉库现有的文档都已转化为了 Doxygen 格式。
-
 安装 {#tutorial_documentation_install}
 -----
 

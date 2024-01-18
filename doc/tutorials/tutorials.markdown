@@ -1,4 +1,4 @@
-视觉库使用教程 {#tutorials}
+RMVL 使用教程 {#tutorials}
 ============
 
 - @subpage tutorial_table_of_content_config

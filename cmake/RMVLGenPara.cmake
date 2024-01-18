@@ -7,7 +7,7 @@
 # 以及以下次要功能：
 #
 #   1. para_parser:   解析 *.para 参数规范文件
-#   2. type_correct:  为 *.para 文件中的类型符号增加作用域
+#   2. _type_correct:  为 *.para 文件中的类型符号增加作用域
 #   3. system_date:   获取系统日期
 # =====================================================================================
 
@@ -50,16 +50,16 @@ endfunction()
 #     string   -> std::string     vector   -> std::vector
 #     Point... -> cv::Point...    Matx...  -> cv::Matx...
 #   用法:
-#     type_correct(
+#     _type_correct(
 #       <value_type> <out_value_type>
 #     )
 #   示例:
-#     type_correct(
+#     _type_correct(
 #       "${type_sym}" # 传入字符串
 #       type_sym      # 传出字符串: 已经修正过的字符串
 #     )
 # ----------------------------------------------------------------------------
-function(type_correct value_type out_value_type)
+function(_type_correct value_type out_value_type)
   set(retval ${value_type})
   string(REGEX REPLACE "string" "std::string" retval "${retval}")
   string(REGEX REPLACE "vector" "std::vector" retval "${retval}")
@@ -75,7 +75,7 @@ function(type_correct value_type out_value_type)
   string(REGEX REPLACE "16f" "<float, 1, 6>" retval "${retval}")
   string(REGEX REPLACE "16d" "<double, 1, 6>" retval "${retval}")
   set(${out_value_type} ${retval} PARENT_SCOPE)
-endfunction(type_correct value_type out_value_type)
+endfunction(_type_correct value_type out_value_type)
 
 # ----------------------------------------------------------------------------
 #   将指定的 *.para 参数规范文件解析成 C++ 风格的内容
@@ -116,7 +116,7 @@ function(para_parser file_name header_details source_details)
         continue()
       endif()
       # correct the value type
-      type_correct("${type_sym}" type_sym)
+      _type_correct("${type_sym}" type_sym)
       # get id symbol
       list(GET line_str 1 id_sym)
       # get default value and comment
@@ -133,7 +133,7 @@ function(para_parser file_name header_details source_details)
         string(SUBSTRING "${default_cmt}" ${cmt_idx} -1 comment_sym)
       endif()
       # correct default_sym
-      type_correct("${default_sym}" default_sym)
+      _type_correct("${default_sym}" default_sym)
       string(REGEX REPLACE "," ", " default_sym "${default_sym}")
     else()
       continue()

@@ -30,8 +30,6 @@ namespace rm::para
 struct @class_name@
 {
 @para_header_details@
-    @class_name@() = default;
-
     /**
      * @brief 从指定 `YAML` 文件中加载 `@class_name@`
      *
