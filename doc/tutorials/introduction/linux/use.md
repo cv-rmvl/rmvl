@@ -1,4 +1,4 @@
-通过 gcc 和 CMake 使用视觉库 {#tutorial_use}
+通过 gcc 和 CMake 使用 RMVL {#tutorial_use}
 ============
 
 @brief RMVL 部署示例（涉及 extra 模块）

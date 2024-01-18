@@ -1,4 +1,4 @@
-构建视觉库 {#tutorial_build}
+构建 RMVL {#tutorial_build}
 ============
 
 @brief RMVL 的依赖安装与编译（构建）

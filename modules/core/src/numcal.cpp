@@ -15,6 +15,8 @@
 #include "rmvl/core/numcal.hpp"
 #include "rmvl/core/util.hpp"
 
+#include "rmvlpara/core.hpp"
+
 namespace rm
 {
 
@@ -100,6 +102,21 @@ double CurveFitter::operator()(double x) const
     for (std::size_t i = 0; i < _idx.size(); i++)
         retval += _coeffs[i] * std::pow(x, _idx[i]);
     return retval;
+}
+
+double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) const
+{
+    double xk{x0};
+    for (std::size_t i = 0; i < max_iter; i++)
+    {
+        double yk = _func(xk);
+        if (std::abs(yk) < eps)
+            break;
+        xk -= para::core_param.SECANT_STEP * yk / (_func(xk + para::core_param.SECANT_STEP) - yk);
+        if (std::isinf(xk) || std::isnan(xk))
+            RMVL_Error(RMVL_StsDivByZero, "The iteration is divergent");
+    }
+    return xk;
 }
 
 } // namespace rm

@@ -143,7 +143,44 @@ public:
     double operator()(double x) const;
 };
 
-////////////// 非线性方程（组）数值解 //////////////
+///////////////// 非线性方程数值解 /////////////////
+
+/**
+ * @brief 非线性方程求解器
+ * @brief
+ * - 使用离散 Newton 迭代法求解非线性方程，详见 @ref tutorial_modules_func_iteration
+ */
+class NonlinearSolver
+{
+    std::function<double(double)> _func; //!< 非线性方程函数对象
+
+public:
+    NonlinearSolver() = default;
+
+    /**
+     * @brief 创建非线性方程求解器对象
+     *
+     * @param[in] f 非线性方程 \f$f(x)=0\f$ 的函数对象 \f$f(x)\f$
+     */
+    NonlinearSolver(const std::function<double(double)> &f) : _func(f) {}
+
+    /**
+     * @brief 修改非线性方程 \f$f(x)=0\f$ 的函数对象
+     *
+     * @param[in] f 非线性方程 \f$f(x)=0\f$ 的函数对象 \f$f(x)\f$
+     */
+    void operator=(const std::function<double(double)> &f) { _func = f; }
+
+    /**
+     * @brief 使用离散 Newton 迭代法求解非线性方程 \f$f(x)=0\f$
+     *
+     * @param[in] x0 迭代初始值
+     * @param[in] eps 精度要求
+     * @param[in] max_iter 最大迭代次数
+     * @return 迭代结果
+     */
+    double operator()(double x0, double eps = 1e-5, std::size_t max_iter = 50) const;
+};
 
 ///////////////// 常微分方程数值解 /////////////////
 
