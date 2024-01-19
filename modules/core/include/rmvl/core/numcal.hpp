@@ -129,8 +129,9 @@ public:
      *
      * @param[in] xs 已知节点的 x 坐标列表 \f$\text{xs}=\{x_0,x_1,\cdots,x_n\}\f$
      * @param[in] ys 已知节点的 y 坐标列表 \f$\text{ys}=\{f(x_0),f(x_1),\cdots,f(x_n)\}\f$
-     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 a0 ~ a7，即\f[f(x)=a_0+a_1x+\cdots+a_7x^7\tag1\f]
-     *                  例如 `0b01000101` 表示拟合曲线为 \f[f(x)=a_0+a_2x^2+a_6x^6\tag2\f]
+     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 a0 ~ a7，即
+     *                  \f[f(x)=a_0+a_1x+\cdots+a_7x^7\tag1\f]例如 `0b01000101` 表示拟合曲线为
+     *                  \f[f(x)=a_0+a_2x^2+a_6x^6\tag2\f]
      */
     CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order);
 
@@ -161,6 +162,8 @@ public:
      * @brief 创建非线性方程求解器对象
      *
      * @param[in] f 非线性方程 \f$f(x)=0\f$ 的函数对象 \f$f(x)\f$
+     * @note
+     * - 可以是函数指针、函数对象、lambda 表达式等，可隐式转换为 `double (*)(double)`
      */
     NonlinearSolver(const std::function<double(double)> &f) : _func(f) {}
 
@@ -168,6 +171,8 @@ public:
      * @brief 修改非线性方程 \f$f(x)=0\f$ 的函数对象
      *
      * @param[in] f 非线性方程 \f$f(x)=0\f$ 的函数对象 \f$f(x)\f$
+     * @note
+     * - 可以是函数指针、函数对象、lambda 表达式等，可隐式转换为 `double (*)(double)`
      */
     void operator=(const std::function<double(double)> &f) { _func = f; }
 
@@ -184,13 +189,104 @@ public:
 
 ///////////////// 常微分方程数值解 /////////////////
 
+//! Runge-Kutta 阶数类型
+enum class RkType
+{
+    Butcher, //!< 指定 `Butcher` 表的 Runge-Kutta 法
+    RK2,     //!< 2 阶 2 级 Runge-Kutta 法（中点公式）
+    RK3,     //!< 3 阶 3 级 Runge-Kutta 法（Heun 公式）
+    RK4,     //!< 4 阶 4 级 Runge-Kutta 法（经典 Runge-Kutta 公式）
+};
+
 /**
  * @brief 常微分方程数值求解器
  * @brief
  * - 使用 Runge-Kutta 法求解常微分方程（组）
+ * @brief
+ * - 详见 @ref tutorial_modules_runge_kutta
  */
-class RungeKutta
+template <RkType OrderType>
+class RungeKutta;
+
+//! Butcher 表 Runge-Kutta 求解器
+template <>
+class RungeKutta<RkType::Butcher>
 {
+    std::vector<double> _k; //!< 加权系数
+
+protected:
+    std::function<double(double, double)> _func; //!< 常微分方程函数对象
+
+    std::vector<double> _p;              //!< Butcher 表 \f$\pmb p\f$ 向量
+    std::vector<double> _lambda;         //!< Butcher 表 \f$\pmb\lambda\f$ 向量
+    std::vector<std::vector<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
+
+public:
+    /**
+     * @brief 创建常微分方程数值求解器对象
+     *
+     * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
+     * @param[in] p Butcher 表 \f$\pmb p\f$ 向量
+     * @param[in] lambda Butcher 表 \f$\pmb\lambda\f$ 向量
+     * @param[in] r Butcher 表 \f$R\f$ 矩阵
+     */
+    RungeKutta(const std::function<double(double, double)> &f, const std::vector<double> &p,
+               const std::vector<double> &lambda, const std::vector<std::vector<double>> &r);
+
+    /**
+     * @brief 计算常微分方程的数值解
+     *
+     * @param[in] x0 初始点的 x 坐标
+     * @param[in] y0 初始点的 y 坐标
+     * @param[in] h 步长
+     * @param[in] n 迭代次数
+     *
+     * @return 数值解
+     */
+    double operator()(double x0, double y0, double h, std::size_t n);
+};
+
+RungeKutta(const std::function<double(double, double)> &, const std::vector<double> &,
+           const std::vector<double> &, const std::vector<std::vector<double>> &)
+    -> RungeKutta<RkType::Butcher>;
+
+//! 2 阶 2 级 Runge-Kutta 求解器
+template <>
+class RungeKutta<RkType::RK2> : public RungeKutta<RkType::Butcher>
+{
+public:
+    /**
+     * @brief 创建 2 阶 2 级 Runge-Kutta 常微分方程数值求解器对象
+     *
+     * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
+     */
+    RungeKutta(const std::function<double(double, double)> &f);
+};
+
+//! 3 阶 3 级 Runge-Kutta 求解器
+template <>
+class RungeKutta<RkType::RK3> : public RungeKutta<RkType::Butcher>
+{
+public:
+    /**
+     * @brief 创建 3 阶 3 级 Runge-Kutta 常微分方程数值求解器对象
+     *
+     * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
+     */
+    RungeKutta(const std::function<double(double, double)> &f);
+};
+
+//! 4 阶 4 级 Runge-Kutta 求解器
+template <>
+class RungeKutta<RkType::RK4> : public RungeKutta<RkType::Butcher>
+{
+public:
+    /**
+     * @brief 创建 4 阶 4 级 Runge-Kutta 常微分方程数值求解器对象
+     *
+     * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
+     */
+    RungeKutta(const std::function<double(double, double)> &f);
 };
 
 //! @} core_numcal
