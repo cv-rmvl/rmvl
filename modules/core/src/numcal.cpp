@@ -9,7 +9,8 @@
  *
  */
 
-#include <iostream>
+#include <numeric>
+
 #include <opencv2/core.hpp>
 
 #include "rmvl/core/numcal.hpp"
@@ -118,5 +119,47 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
     }
     return xk;
 }
+
+RungeKutta<RkType::Butcher>::RungeKutta(const std::function<double(double, double)> &f, const std::vector<double> &p,
+                                        const std::vector<double> &lambda, const std::vector<std::vector<double>> &r)
+    : _k(p.size()), _func(f), _p(p), _lambda(lambda), _r(r)
+{
+    if (_p.size() != _r.size() || _p.size() != _lambda.size())
+        RMVL_Error(RMVL_StsBadArg, "The size of \"p\", \"lambda\" and \"R.rows\" must be equal.");
+    for (std::size_t i = 0; i < _r.size(); i++)
+        if (_r[i].size() < _r.size())
+            RMVL_Error(RMVL_StsBadArg, "\"r[i].size()\" must be greater than or equal to the \"i\".");
+}
+
+double RungeKutta<RkType::Butcher>::operator()(double x0, double y0, double h, std::size_t n)
+{
+    double x{x0}, y{y0};
+    for (std::size_t idx = 0; idx < n; idx++)
+    {
+        for (std::size_t i = 0; i < _k.size(); i++)
+            _k[i] = _func(x + _p[i] * h, y + h * std::inner_product(_r[i].begin(), _r[i].end(), _k.begin(), 0.0));
+        x += h;
+        y += h * std::inner_product(_lambda.begin(), _lambda.end(), _k.begin(), 0.0);
+    }
+    return y;
+}
+
+RungeKutta<RkType::RK2>::RungeKutta(const std::function<double(double, double)> &f)
+    : RungeKutta<RkType::Butcher>(f, {0.0, 0.5}, {0.0, 1.0},
+                                  {{0.0, 0.0},
+                                   {0.5, 0.0}}) {}
+
+RungeKutta<RkType::RK3>::RungeKutta(const std::function<double(double, double)> &f)
+    : RungeKutta<RkType::Butcher>(f, {0.0, 0.5, 1.0}, {1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0},
+                                  {{0.0, 0.0, 0.0},
+                                   {0.5, 0.0, 0.0},
+                                   {-1.0, 2.0, 0.0}}) {}
+
+RungeKutta<RkType::RK4>::RungeKutta(const std::function<double(double, double)> &f)
+    : RungeKutta<RkType::Butcher>(f, {0.0, 0.5, 0.5, 1.0}, {1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0},
+                                  {{0.0, 0.0, 0.0, 0.0},
+                                   {0.5, 0.0, 0.0, 0.0},
+                                   {0.0, 0.5, 0.0, 0.0},
+                                   {0.0, 0.0, 1.0, 0.0}}) {}
 
 } // namespace rm

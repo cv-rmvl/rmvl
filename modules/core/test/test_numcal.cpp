@@ -9,6 +9,8 @@
  *
  */
 
+#include <cmath>
+
 #include <gtest/gtest.h>
 
 #include "rmvl/core/numcal.hpp"
@@ -47,6 +49,27 @@ TEST(NumberCalculation, nonlinear_solver)
     EXPECT_LE(foo(1.5) - 2, 1e-5);            // fo(2) = 0
     EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
     EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
+}
+
+TEST(NumberCalculation, runge_kutta)
+{
+    auto f = []([[maybe_unused]] double x, double y) { return -2 * y - 2; }; // e^{-2x} - 1
+
+    rm::RungeKutta rkb(f, {0.0, 2.0 / 3.0}, {0.25, 0.75}, {{0.0, 0.0}, {2.0 / 3.0, 0.0}});
+    double resb = rkb(0, 0, 0.01, 100);
+    EXPECT_LE(std::abs(resb - std::expm1(-2)), 1e-4);
+
+    rm::RungeKutta<rm::RkType::RK2> rk2(f);
+    double res2 = rk2(0, 0, 0.01, 100);
+    EXPECT_LE(std::abs(res2 - std::expm1(-2)), 1e-4);
+
+    rm::RungeKutta<rm::RkType::RK3> rk3(f);
+    double res3 = rk3(0, 0, 0.01, 100);
+    EXPECT_LE(std::abs(res3 - std::expm1(-2)), 1e-5);
+
+    rm::RungeKutta<rm::RkType::RK4> rk4(f);
+    double res4 = rk4(0, 0, 0.01, 100);
+    EXPECT_LE(std::abs(res4 - std::expm1(-2)), 1e-6);
 }
 
 } // namespace rm_test
