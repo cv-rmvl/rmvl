@@ -20,7 +20,7 @@
 //! @{
 //! @defgroup core_numcal 数值计算模块
 //! @{
-//! @brief 包含函数插值、曲线拟合、递推最小二乘、非线性方程（组）数值解、常微分方程数值解等数值计算算法
+//! @brief 包含函数插值、曲线拟合、非线性方程（组）数值解、常微分方程数值解等数值计算算法
 //! @} core_numcal
 //! @} core
 
@@ -201,14 +201,19 @@ enum class RkType
 /**
  * @brief 常微分方程数值求解器
  * @brief
- * - 使用 Runge-Kutta 法求解常微分方程（组）
+ * - 使用 Runge-Kutta 法求解常微分方程（组），算法介绍见 @ref tutorial_modules_runge_kutta
  * @brief
- * - 详见 @ref tutorial_modules_runge_kutta
+ * - 包含 4 个特化模板类，分别对应 4 阶 4 级、3 阶 3 级、2 阶 2 级、Butcher 表 Runge-Kutta 求解器
+ * @tparam OrderType Runge-Kutta 阶数类型
  */
 template <RkType OrderType>
 class RungeKutta;
 
-//! Butcher 表 Runge-Kutta 求解器
+/**
+ * @brief Butcher 表 Runge-Kutta 求解器
+ * @brief
+ * - 算法介绍见 @ref tutorial_modules_runge_kutta
+ */
 template <>
 class RungeKutta<RkType::Butcher>
 {
@@ -246,9 +251,14 @@ public:
     double operator()(double x0, double y0, double h, std::size_t n);
 };
 
+//! @} core_numcal
+
 RungeKutta(const std::function<double(double, double)> &, const std::vector<double> &,
            const std::vector<double> &, const std::vector<std::vector<double>> &)
     -> RungeKutta<RkType::Butcher>;
+
+//! @addtogroup core_numcal
+//! @{
 
 //! 2 阶 2 级 Runge-Kutta 求解器
 template <>

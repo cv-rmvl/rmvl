@@ -14,6 +14,12 @@ RMVL 最初是面向 RoboMaster 赛事的视觉库，因此称为 RoboMaster Vis
 
 * 工单: <https://github.com/cv-rmvl/rmvl/issues>
 
+* VSCode 扩展插件
+
+  * 名称: RMVL Parameters amd CMake
+
+  * 仓库: <https://github.com/cv-rmvl/rmvl-vscode-extension>
+
 ### 贡献
 
 * 在发起合并请求之前，请先阅读[贡献指南](https://github.com/cv-rmvl/rmvl/wiki/How_to_contribute)。
