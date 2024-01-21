@@ -194,7 +194,7 @@ enum class RkType
 {
     Butcher, //!< 指定 `Butcher` 表的 Runge-Kutta 法
     RK2,     //!< 2 阶 2 级 Runge-Kutta 法（中点公式）
-    RK3,     //!< 3 阶 3 级 Runge-Kutta 法（Heun 公式）
+    RK3,     //!< 3 阶 3 级 Runge-Kutta 法
     RK4,     //!< 4 阶 4 级 Runge-Kutta 法（经典 Runge-Kutta 公式）
 };
 
