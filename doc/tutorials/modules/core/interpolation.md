@@ -67,6 +67,8 @@ p(x_n)&=a_0+a_1x_n+a_2x_n^2+\cdots+a_{n-1}x_n^{n-1}=f(x_n)=y_n
 | :--------: | :-----: | :-----: | :-----: |
 | \f$f(x)\f$ | \f$2\f$ | \f$1\f$ | \f$2\f$ |
 
+**解答**
+
 \f[\begin{align}
 l_0(x)&=\prod\limits_{j=0,j\neq0}^2\frac{x-x_j}{x_i-x_j}=\frac{(x-2)(x-3)}{(1-2)(1-3)}=\frac12(x-2)(x-3)\\
 l_1(x)&=\prod\limits_{j=0,j\neq1}^2\frac{x-x_j}{x_i-x_j}=\frac{(x-1)(x-3)}{(2-1)(2-3)}=-(x-1)(x-3)\\
@@ -108,6 +110,8 @@ a_2&=f\left[x_0,x_1,x_2\right]=\frac{f\left[x_0,x_1\right]-f\left[x_1,x_2\right]
 |  \f$x\f$   | \f$0\f$ | \f$1\f$ | \f$2\f$ | \f$3\f$ |
 | :--------: | :-----: | :-----: | :-----: | :-----: |
 | \f$f(x)\f$ | \f$0\f$ | \f$1\f$ | \f$3\f$ | \f$2\f$ |
+
+**解答**
 
 列差商表
 

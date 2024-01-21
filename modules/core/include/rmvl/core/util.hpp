@@ -93,8 +93,13 @@ enum RMVLErrorCode : int
     RMVL_BadDynamicType = -12 //!< 动态类型转换错误 Bad dynamic_cast type
 };
 
+//! @} core
+
 namespace rm
 {
+
+//! @addtogroup core
+//! @{
 
 /**
  * @brief 返回使用类 `printf` 表达式格式化的文本字符串。
@@ -138,7 +143,7 @@ public:
      * @brief 完整的构造函数。通常不显式调用构造函数。而是使用宏 RMVL_Error() 、 RMVL_Error_()
      *        和 RMVL_Assert()
      */
-    Exception(int _code, const std::string &_err, const std::string &_func, const std::string &_file, int _line);
+    Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line);
 
     virtual ~Exception() noexcept = default;
 
@@ -174,7 +179,7 @@ inline void throwError(const Exception &exc) { throw exc; }
  * @param[in] _line 源文件中发生错误的行号
  * @see RMVL_Error, RMVL_Error_, RMVL_Assert
  */
-void error(int _code, const std::string &_err, const char *_func, const char *_file, int _line);
+void error(int _code, std::string_view _err, const char *_func, const char *_file, int _line);
 
 /**
  * @brief 返回完整的配置输出
@@ -184,7 +189,12 @@ void error(int _code, const std::string &_err, const char *_func, const char *_f
  */
 const char *getBuildInformation();
 
+//! @} core
+
 } // namespace rm
+
+//! @addtogroup core
+//! @{
 
 /**
  * @brief 调用错误处理程序
@@ -226,6 +236,8 @@ const char *getBuildInformation();
 #else
 #define RMVL_DbgAssert(expr) RMVL_Assert(expr)
 #endif
+
+//! @} core
 
 namespace rm
 {
@@ -281,6 +293,9 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 #endif
 
 } // namespace helper
+
+//! @addtogroup core
+//! @{
 
 /**
  * @brief 获取指定类型的成员个数
@@ -468,7 +483,12 @@ inline bool equal(const Tp &lhs, const Tp &rhs)
     }
 }
 
+//! @} core
+
 } // namespace reflect
+
+//! @addtogroup core
+//! @{
 
 /**
  * @brief 专为聚合类添加的 hash 生成可调用对象
@@ -519,6 +539,6 @@ struct hash_traits<Tp, std::enable_if_t<std::is_aggregate_v<Tp>>>
     using hash_func = hash_aggregate<Tp>;
 };
 
-} // namespace rm
-
 //! @} core
+
+} // namespace rm

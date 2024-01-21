@@ -60,8 +60,7 @@ std::string rm::format(const char *fmt, ...)
     return str;
 }
 
-rm::Exception::Exception(int _code, const std::string &_err, const std::string &_func,
-                         const std::string &_file, int _line)
+rm::Exception::Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line)
     : code(_code), err(_err), func(_func), file(_file), line(_line)
 {
     if (!func.empty())
@@ -74,7 +73,7 @@ rm::Exception::Exception(int _code, const std::string &_err, const std::string &
                          file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
 }
 
-void rm::error(int _code, const std::string &_err, const char *_func, const char *_file, int _line)
+void rm::error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
 {
     rm::Exception exc(_code, _err, _func, _file, _line);
 

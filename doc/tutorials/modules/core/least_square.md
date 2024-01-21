@@ -72,9 +72,7 @@
 
 其中 \f$\pmb y-\pmb b\f$ 就是公式 \f$\text{(1-2a)}\f$ 中的 \f$\pmb\beta\f$，写成矩阵形式
 
-\f[
-\pmb a^T(\pmb y-\pmb b)=0\tag{1-5}
-\f]
+\f[\pmb a^T(\pmb y-\pmb b)=0\tag{1-5}\f]
 
 为此我们得到了最小二乘解 \f$\pmb y\f$ 的表达式，这也为后文超定线性方程组的最小二乘解提供了理论基础。
 
