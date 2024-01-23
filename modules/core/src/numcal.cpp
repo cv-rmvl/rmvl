@@ -120,10 +120,14 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
     return xk;
 }
 
-RungeKutta<RkType::Butcher>::RungeKutta(const std::function<double(double, double)> &f, const std::vector<double> &p,
-                                        const std::vector<double> &lambda, const std::vector<std::vector<double>> &r)
-    : _k(p.size()), _func(f), _p(p), _lambda(lambda), _r(r)
+RungeKutta<RkType::Butcher>::RungeKutta(
+    const std::vector<ODE> &fs, const std::vector<double> &p,
+    const std::vector<double> &lambda, const std::vector<std::vector<double>> &r)
+    : _ks(p.size()), _fs(fs), _p(p), _lambda(lambda), _r(r)
 {
+    // Initialize "ks"
+    std::for_each(_ks.begin(), _ks.end(), [this](auto &k) { k.resize(_fs.size()); });
+    // Check the size of p, lambda and R.rows
     if (_p.size() != _r.size() || _p.size() != _lambda.size())
         RMVL_Error(RMVL_StsBadArg, "The size of \"p\", \"lambda\" and \"R.rows\" must be equal.");
     for (std::size_t i = 0; i < _r.size(); i++)
@@ -131,32 +135,81 @@ RungeKutta<RkType::Butcher>::RungeKutta(const std::function<double(double, doubl
             RMVL_Error(RMVL_StsBadArg, "\"r[i].size()\" must be greater than or equal to the \"i\".");
 }
 
-double RungeKutta<RkType::Butcher>::operator()(double x0, double y0, double h, std::size_t n)
+// 加法
+template <typename T>
+inline static std::vector<T> operator+(const std::vector<T> &vec1, const std::vector<T> &vec2)
 {
-    double x{x0}, y{y0};
-    for (std::size_t idx = 0; idx < n; idx++)
-    {
-        for (std::size_t i = 0; i < _k.size(); i++)
-            _k[i] = _func(x + _p[i] * h, y + h * std::inner_product(_r[i].begin(), _r[i].end(), _k.begin(), 0.0));
-        x += h;
-        y += h * std::inner_product(_lambda.begin(), _lambda.end(), _k.begin(), 0.0);
-    }
-    return y;
+    std::vector<T> retval(vec1.size());
+    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), retval.begin(), std::plus<T>());
+    return retval;
 }
 
-RungeKutta<RkType::RK2>::RungeKutta(const std::function<double(double, double)> &f)
-    : RungeKutta<RkType::Butcher>(f, {0.0, 0.5}, {0.0, 1.0},
+// 自加
+template <typename T>
+inline static std::vector<T> &operator+=(std::vector<T> &vec1, const std::vector<T> &vec2)
+{
+    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), vec1.begin(), std::plus<T>());
+    return vec1;
+}
+
+// 数乘
+template <typename T>
+inline static std::vector<T> operator*(const std::vector<T> &vec, T val)
+{
+    std::vector<T> retval(vec.size());
+    std::transform(vec.cbegin(), vec.cend(), retval.begin(), [val](T x) { return x * val; });
+    return retval;
+}
+
+// 数乘
+template <typename T>
+inline static std::vector<T> operator*(T val, const std::vector<T> &vec) { return vec * val; }
+
+std::vector<double> RungeKutta<RkType::Butcher>::operator()(double t0, const std::vector<double> &x0,
+                                                            double h, std::size_t n)
+{
+    double t{t0};
+    std::vector<double> x{x0};
+    for (std::size_t idx = 0; idx < n; idx++)
+    {
+        // 依次计算每个加权平均系数 k_i
+        for (std::size_t i = 0; i < _ks.size(); i++)
+        {
+            // 计算 (a_i, k)
+            std::vector<double> inner_prod(_fs.size());
+            for (std::size_t n = 0; n < i; n++)
+                inner_prod += _r[i][n] * _ks[n]; // \sum_r^i a_{ir}k_r
+            // 计算 F
+            for (std::size_t j = 0; j < _fs.size(); j++)
+                _ks[i][j] = _fs[j](t + _p[i] * h, x + h * inner_prod);
+        }
+        // 更新 t 和 x
+        t += h;
+        for (std::size_t j = 0; j < _fs.size(); j++)
+        {
+            double inner_prod{};
+            for (std::size_t i = 0; i < _ks.size(); i++)
+                inner_prod += h * _lambda[i] * _ks[i][j];
+            x[j] += inner_prod;
+        }
+        printf("t = %f, x = %f\n", t, x[0]);
+    }
+    return x;
+}
+
+RungeKutta<RkType::RK2>::RungeKutta(const std::vector<ODE> &fs)
+    : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5}, {0.0, 1.0},
                                   {{0.0, 0.0},
                                    {0.5, 0.0}}) {}
 
-RungeKutta<RkType::RK3>::RungeKutta(const std::function<double(double, double)> &f)
-    : RungeKutta<RkType::Butcher>(f, {0.0, 0.5, 1.0}, {1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0},
+RungeKutta<RkType::RK3>::RungeKutta(const std::vector<ODE> &fs)
+    : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5, 1.0}, {1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0},
                                   {{0.0, 0.0, 0.0},
                                    {0.5, 0.0, 0.0},
                                    {-1.0, 2.0, 0.0}}) {}
 
-RungeKutta<RkType::RK4>::RungeKutta(const std::function<double(double, double)> &f)
-    : RungeKutta<RkType::Butcher>(f, {0.0, 0.5, 0.5, 1.0}, {1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0},
+RungeKutta<RkType::RK4>::RungeKutta(const std::vector<ODE> &fs)
+    : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5, 0.5, 1.0}, {1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0},
                                   {{0.0, 0.0, 0.0, 0.0},
                                    {0.5, 0.0, 0.0, 0.0},
                                    {0.0, 0.5, 0.0, 0.0},
