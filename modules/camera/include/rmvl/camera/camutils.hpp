@@ -11,7 +11,6 @@
 
 #pragma once
 
-//! @warning 此处若仅包含 <opencv2/core/mat.hpp> 会链接错误，原因暂时不清楚
 #include <opencv2/core.hpp>
 
 namespace rm

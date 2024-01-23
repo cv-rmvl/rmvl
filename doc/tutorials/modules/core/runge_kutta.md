@@ -106,7 +106,7 @@ y(0.6)\approx y_6=\hf5{0.646995}\\
 y(0.7)\approx y_7=\hf6{0.795680}\\
 y(0.8)\approx y_8=\hf7{0.980355}\f]
 
-#### 2.3 局部阶段误差、精度的 “阶”
+#### 2.3 局部阶段误差
 
 上文的 4 种 Euler 单步法公式，使用哪种精度更高？这里要引入局部阶段误差的概念，因为每一次求解\f$x_i\f$都会引入误差，并且误差会进行累积，局部截断误差不考虑迭代求解\f$x_n\f$及之前的累积误差，仅考虑从\f$x_n\f$到\f$x_{n+1}\f$产生的误差，即认为\f$x_n=x(t_n)\f$。对于显式 Euler 单步法，可以计算出其局部截断误差\f$T_{n+1}\f$。
 
@@ -145,6 +145,14 @@ k_1&=f(t_n,x_n)\\k_2&=f(t_n+h,x_n+hk_1)
 
 #### 3.1 二阶 Runge-Kutta 公式
 
+@note 此小节为 2 阶 Runge-Kutta 公式族的推导，涉及到多元函数\f$f(x,y)\f$的全导数
+\f[\begin{align}\frac{\mathrm df}{\mathrm dx}&=\frac{\partial f}{\partial x}+\frac{\partial f}{\partial y}·\frac{\mathrm dy}{\mathrm dx}\\
+f'&=f_x+f_yy'\end{align}\tag{i}\f]
+以及多元函数\f$f(x,y)\f$的 Taylor 展开，令\f$\pmb x=(x-x_0,\ y-y_0)^T\f$，则多元函数 Taylor 展开如下
+\f[f(x,y)=f(x_0,y_0)+\begin{bmatrix}f_x(x_0,y_0)&f_y(x_0,y_0)\end{bmatrix}\pmb x+
+\frac1{2!}\pmb x^T\begin{bmatrix}f_{xx}(x_0,y_0)&f_{xy}(x_0,y_0)\\f_{yx}(x_0,y_0)&f_{yy}(x_0,y_0)\end{bmatrix}\pmb x+o^n\tag{ii}\f]
+<span style="color: red">若仅想了解最终结果，请跳过此小节</span>
+
 \f[\left\{\begin{align}
 x_{n+1}&=x_n+h(\lambda_1k_1+\lambda_2k_2)\\
 k_1&=f(t_n,x_n)\\k_2&=f(t_n+ph,x_n+phk_1)
@@ -158,7 +166,8 @@ k_1&=f(t_n,x_n)\\k_2&=f(t_n+ph,x_n+phk_1)
 x(t_{n+1})&=x(t_n)+hx'(t_n)+\frac{h^2}2x''(t_n)+o(h^3)\\
 &=x(t_n)+hf(t_n,x(t_n))+\frac{h^2}2\frac{\mathrm d}{\mathrm dt}f(t_n,x(t_n))+o(h^3)\\
 &=x(t_n)+hf(t_n,x(t_n))+\frac{h^2}2\left[\frac{\partial f(t_n,x(t_n))}{\partial t}+\frac{\partial f(t_n,x(t_n))}{\partial x}·\frac{\mathrm dx}{\mathrm dt}\right]+o(h^3)\\
-令f(t_n,x(t_n))=(f)_{(n)},有\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}(f)_{(n)}\right]+o(h^3)\\
+令f(t_n,x(t_n))=(f)_{(n)},有\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}\frac{\mathrm dx}{\mathrm dt}\right]+o(h^3)\\
+由f(t_n,x(t_n))=\frac{\mathrm dx}{\mathrm dt},有\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}(f)_{(n)}\right]+o(h^3)\\
 &=x(t_n)+h(f)_{(n)}+\frac{h^2}2(f_t+f_xf)_{(n)}+o(h^3)
 \end{align}\tag{3-3}\f]
 
@@ -181,7 +190,7 @@ T_{n+1}&=x(t_{n+1})-x_{n+1}\\
 我们希望这个公式具有 2 阶精度，即局部截断误差的主项为 0，因此有
 
 \f[\left\{\begin{align}
-&1-\lambda_1+\lambda_2=1\\
+&\lambda_1+\lambda_2=1\\
 &p\lambda_2=\frac12
 \end{align}\right.\tag{3-6}\f]
 
@@ -207,13 +216,12 @@ a_{11}&a_{12}\\p_2&a_{21}&a_{22}\\\hline&\lambda_1&\lambda_2\end{array}\tag{3-9}
 
 \f[\begin{array}{c|cc}0&0&0\\1&1&0\\\hline&\frac12&\frac12\end{array}\tag{3-10}\f]
 
-一般的，对于以下\f$n\f$阶公式
+一般的，对于一阶方程\f$x'=f(t,x),\ x(t_0)=x^{(0)}\f$，有以下\f$n\f$阶公式
 
 \f[\left\{\begin{align}
 x_{n+1}&=x_n+h(\lambda_1k_1+\lambda_2k_2+\cdots+\lambda_nk_n)\\
 k_1&=f(t_n+p_1h,x_n+h(a_{11}k_1+a_{12}k_2+\cdots+a_{1n}k_n))\\
-k_2&=f(t_n+p_2h,x_n+h(a_{21}k_1+a_{22}k_2+\cdots+a_{2n}k_n))\\
-&\vdots\\
+k_2&=f(t_n+p_2h,x_n+h(a_{21}k_1+a_{22}k_2+\cdots+a_{2n}k_n))\\&\vdots\\
 k_n&=f(t_n+p_nh,x_n+h(a_{n1}k_1+a_{n2}k_2+\cdots+a_{nn}k_n))\\
 \end{align}\right.\tag{3-11}\f]
 
@@ -239,3 +247,18 @@ p_n&a_{n1}&a_{n2}&\cdots&a_{nn}\\
 
 \f[\begin{array}{c|cccc}0&0&0&0&0\\\frac12&\frac12&0&0&0\\\frac12&0&\frac12&0&
 0\\1&0&0&1&0\\\hline&\frac16&\frac13&\frac13&\frac16\end{array}\tag{3-13b}\f]
+
+#### 3.4 方程组的 Runge-Kutta 公式
+
+对于一阶方程组\f$\pmb x'=\pmb F(t,\pmb x),\ \pmb x(t_0)=\pmb x^{(0)}\f$，公式\f$\text{(3-11)}\f$可以改写为
+
+\f[\left\{\begin{align}
+\pmb x_{n+1}&=\pmb x_n+h(\lambda_1\pmb k_1+\lambda_2\pmb k_2+\cdots+\lambda_n\pmb k_n)\\
+\pmb k_1&=\pmb F(t_n+p_1h,\pmb x_n+h(a_{11}\pmb k_1+a_{12}\pmb k_2+\cdots+a_{1n}\pmb k_n))\\
+\pmb k_2&=\pmb F(t_n+p_2h,\pmb x_n+h(a_{21}\pmb k_1+a_{22}\pmb k_2+\cdots+a_{2n}\pmb k_n))\\&\vdots\\
+\pmb k_n&=\pmb F(t_n+p_nh,\pmb x_n+h(a_{n1}\pmb k_1+a_{n2}\pmb k_2+\cdots+a_{nn}\pmb k_n))\\
+\end{align}\right.\tag{3-14}\f]
+
+公式\f$\text{(3-14)}\f$与\f$\text{(3-11)}\f$基本一致，因此同样可以使用 Butcher 表来描述常微分方程组的 Runge-Kutta 公式。
+
+RMVL 的相关类请参考 rm::RungeKutta
