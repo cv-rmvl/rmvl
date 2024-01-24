@@ -121,7 +121,7 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
 }
 
 RungeKutta<RkType::Butcher>::RungeKutta(
-    const std::vector<ODE> &fs, const std::vector<double> &p,
+    const Odes &fs, const std::vector<double> &p,
     const std::vector<double> &lambda, const std::vector<std::vector<double>> &r)
     : _ks(p.size()), _fs(fs), _p(p), _lambda(lambda), _r(r)
 {
@@ -165,8 +165,7 @@ inline static std::vector<T> operator*(const std::vector<T> &vec, T val)
 template <typename T>
 inline static std::vector<T> operator*(T val, const std::vector<T> &vec) { return vec * val; }
 
-std::vector<double> RungeKutta<RkType::Butcher>::operator()(double t0, const std::vector<double> &x0,
-                                                            double h, std::size_t n)
+std::vector<double> RungeKutta<RkType::Butcher>::solve(double t0, const std::vector<double> &x0, double h, std::size_t n)
 {
     double t{t0};
     std::vector<double> x{x0};
@@ -192,23 +191,22 @@ std::vector<double> RungeKutta<RkType::Butcher>::operator()(double t0, const std
                 inner_prod += h * _lambda[i] * _ks[i][j];
             x[j] += inner_prod;
         }
-        printf("t = %f, x = %f\n", t, x[0]);
     }
     return x;
 }
 
-RungeKutta<RkType::RK2>::RungeKutta(const std::vector<ODE> &fs)
+RungeKutta<RkType::RK2>::RungeKutta(const Odes &fs)
     : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5}, {0.0, 1.0},
                                   {{0.0, 0.0},
                                    {0.5, 0.0}}) {}
 
-RungeKutta<RkType::RK3>::RungeKutta(const std::vector<ODE> &fs)
+RungeKutta<RkType::RK3>::RungeKutta(const Odes &fs)
     : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5, 1.0}, {1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0},
                                   {{0.0, 0.0, 0.0},
                                    {0.5, 0.0, 0.0},
                                    {-1.0, 2.0, 0.0}}) {}
 
-RungeKutta<RkType::RK4>::RungeKutta(const std::vector<ODE> &fs)
+RungeKutta<RkType::RK4>::RungeKutta(const Odes &fs)
     : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5, 0.5, 1.0}, {1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0},
                                   {{0.0, 0.0, 0.0, 0.0},
                                    {0.5, 0.0, 0.0, 0.0},

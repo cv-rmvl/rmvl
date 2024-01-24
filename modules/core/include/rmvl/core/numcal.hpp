@@ -198,8 +198,10 @@ enum class RkType
     RK4,     //!< 4 阶 4 级 Runge-Kutta 法（经典 Runge-Kutta 公式）
 };
 
-// 常微分方程
-using ODE = std::function<double(double, const std::vector<double> &)>;
+//! 常微分方程
+using Ode = std::function<double(double, const std::vector<double> &)>;
+//! 常微分方程组
+using Odes = std::vector<Ode>;
 
 /**
  * @brief 常微分方程数值求解器
@@ -226,14 +228,13 @@ class RungeKutta<RkType::Butcher>
 
 protected:
     //! 一阶常微分方程组的函数对象 \f$\dot{\pmb x}=\pmb F(t, \pmb x)\f$
-    std::vector<ODE> _fs;
+    Odes _fs;
 
     std::vector<double> _p;              //!< Butcher 表 \f$\pmb p\f$ 向量
     std::vector<double> _lambda;         //!< Butcher 表 \f$\pmb\lambda\f$ 向量
     std::vector<std::vector<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
 
 public:
-
     /**
      * @brief 创建一阶常微分方程组数值求解器对象
      *
@@ -242,7 +243,7 @@ public:
      * @param[in] lambda Butcher 表 \f$\pmb\lambda\f$ 向量
      * @param[in] r Butcher 表 \f$R\f$ 矩阵
      */
-    RungeKutta(const std::vector<ODE> &fs, const std::vector<double> &p,
+    RungeKutta(const Odes &fs, const std::vector<double> &p,
                const std::vector<double> &lambda, const std::vector<std::vector<double>> &r);
 
     /**
@@ -255,12 +256,12 @@ public:
      *
      * @return 数值解
      */
-    std::vector<double> operator()(double t0, const std::vector<double> &x0, double h, std::size_t n);
+    std::vector<double> solve(double t0, const std::vector<double> &x0, double h, std::size_t n);
 };
 
 //! @} core_numcal
 
-RungeKutta(const std::vector<ODE> &, const std::vector<double> &, const std::vector<double> &,
+RungeKutta(const Odes &, const std::vector<double> &, const std::vector<double> &,
            const std::vector<std::vector<double>> &) -> RungeKutta<RkType::Butcher>;
 
 //! @addtogroup core_numcal
@@ -276,7 +277,7 @@ public:
      *
      * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
      */
-    RungeKutta(const std::vector<ODE> &f);
+    RungeKutta(const Odes &f);
 };
 
 //! 3 阶 3 级 Runge-Kutta 求解器
@@ -289,7 +290,7 @@ public:
      *
      * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
      */
-    RungeKutta(const std::vector<ODE> &f);
+    RungeKutta(const Odes &f);
 };
 
 //! 4 阶 4 级 Runge-Kutta 求解器
@@ -302,7 +303,7 @@ public:
      *
      * @param[in] f 常微分方程 \f$y'=f(x,y)\f$ 的函数对象 \f$f(x,y)\f$
      */
-    RungeKutta(const std::vector<ODE> &f);
+    RungeKutta(const Odes &f);
 };
 
 //! @} core_numcal
