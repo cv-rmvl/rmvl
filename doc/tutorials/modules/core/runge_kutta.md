@@ -393,7 +393,7 @@ l_2&=f_2(t_n+\frac h2,x_{1_n}+\frac h2k_1,x_{2_n}+\frac h2l_1)\end{align}\f]
   ```
 </div>
 
-因此，在\f$t=1\f$时，\f$x\approx0.587286\f$
+因此，在\f$t=1\f$时，\f$x\approx(0.587286,-0.219401)^T\f$
 
 ② 精确解
 
@@ -441,7 +441,7 @@ e^{At}X(0)=\mat00e^{-t}+\mat1{-1}e^{-2t}=\mat1{-1}e^{-2t}\tag{f}\f]
 整理得
 
 \f[\begin{align}X&=e^{At}X(0)+\int_0^te^{A(t-\tau)}B(\tau)\mathrm d\tau\\
-&=\mat{0.75}{-0.75}e^{-2t}+\mat2{-1}e^{-t}+\mat{1.5}{-0.5}t+\mat{-1.75}{0.75}\end{align}\f]
+&=\mat{0.75}{-0.75}e^{-2t}+\mat2{-1}e^{-t}+\mat{1.5}{-0.5}t+\mat{-1.75}{0.75}\end{align}\tag{h}\f]
 
 把 \f$t=1\f$ 代入上式，可得\f$X=\mat{0.75e^{-2}+2e^{-1}-0.25}{-0.75e^{-2}-e^{-1}+0.25}\approx\mat{0.587260}{-0.219381}\f$，数值解\f$X=\mat{0.587286}{-0.219401}\f$与之相符。
 
