@@ -9,7 +9,8 @@
  *
  */
 
-#include "rmvl/core.hpp"
+#include "rmvl/core/util.hpp"
+#include "rmvl/core/version.hpp"
 
 const char *help = "\t-?, -h, -help, -usage\n\t\t帮助信息\n"
                    "\t-v, -verbose\n\t\t编译配置信息";

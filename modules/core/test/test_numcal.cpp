@@ -51,26 +51,49 @@ TEST(NumberCalculation, nonlinear_solver)
     EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
 }
 
-TEST(NumberCalculation, runge_kutta_1_order)
+TEST(NumberCalculation, runge_kutta_ode)
 {
-    auto f = []([[maybe_unused]] double t, const std::vector<double> &xs) { return -2 * xs[0] - 2; }; // e^{-2x} - 1
-    std::vector<rm::ODE> fs = {f};
+    auto f = [](double, const std::vector<double> &xs) { return -2 * xs[0] - 2; }; // e^{-2x} - 1
+    std::vector<rm::Ode> fs = {f};
 
     rm::RungeKutta rkb(fs, {0.0, 2.0 / 3.0}, {0.25, 0.75}, {{0.0, 0.0}, {2.0 / 3.0, 0.0}});
-    auto resb = rkb(0, {0}, 0.01, 100);
+    auto resb = rkb.solve(0, {0}, 0.01, 100);
     EXPECT_LE(std::abs(resb.front() - std::expm1(-2)), 1e-4);
 
     rm::RungeKutta<rm::RkType::RK2> rk2(fs);
-    auto res2 = rk2(0, {0}, 0.01, 100);
+    auto res2 = rk2.solve(0, {0}, 0.01, 100);
     EXPECT_LE(std::abs(res2.front() - std::expm1(-2)), 1e-4);
 
     rm::RungeKutta<rm::RkType::RK3> rk3(fs);
-    auto res3 = rk3(0, {0}, 0.01, 100);
+    auto res3 = rk3.solve(0, {0}, 0.01, 100);
     EXPECT_LE(std::abs(res3.front() - std::expm1(-2)), 1e-5);
 
     rm::RungeKutta<rm::RkType::RK4> rk4(fs);
-    auto res4 = rk4(0, {0}, 0.01, 100);
+    auto res4 = rk4.solve(0, {0}, 0.01, 100);
     EXPECT_LE(std::abs(res4.front() - std::expm1(-2)), 1e-6);
+}
+
+TEST(NumberCalculation, runge_kutta_odes)
+{
+    rm::Ode dot_x1 = [](double t, const std::vector<double> &x) { return 2 * x[1] + t; };
+    rm::Ode dot_x2 = [](double, const std::vector<double> &x) { return -x[0] - 3 * x[1]; };
+    rm::Odes fs = {dot_x1, dot_x2};
+    //     ┌  3/4 ┐          ┌  2 ┐         ┌  3/2 ┐    ┌ -7/4 ┐
+    // X = │      │e^{-2t} + │    │e^{-t} + │      │t + │      │
+    //     └ -3/4 ┘          └ -1 ┘         └ -1/2 ┘    └  3/4 ┘
+    double real_x1 = 3.0 / 4.0 * std::exp(-2) + 2 * std::exp(-1) + 3.0 / 2.0 - 7.0 / 4.0;
+    double real_x2 = -3.0 / 4.0 * std::exp(-2) - std::exp(-1) - 1.0 / 2.0 + 3.0 / 4.0;
+    
+    rm::RungeKutta<rm::RkType::RK2> rk2(fs);
+    auto res2 = rk2.solve(0, {1, -1}, 0.01, 100);
+    EXPECT_EQ(res2.size(), 2);
+    EXPECT_LE(std::abs(res2[0] - real_x1), 1e-4);
+    EXPECT_LE(std::abs(res2[1] - real_x2), 1e-4);
+
+    rm::RungeKutta<rm::RkType::RK4> rk4(fs);
+    auto res4 = rk4.solve(0, {1, -1}, 0.01, 100);
+    EXPECT_LE(std::abs(res4[0] - real_x1), 1e-6);
+    EXPECT_LE(std::abs(res4[1] - real_x2), 1e-6);
 }
 
 } // namespace rm_test
