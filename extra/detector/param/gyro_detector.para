@@ -12,3 +12,6 @@ float MIN_X_DISTANCE_RATIO = 2  # 两个装甲板允许合并至一个集合时�
 float MAX_Y_DISTANCE_RATIO = 3  # 两个装甲板允许合并至一个集合时，中心点的垂直距离 dy 与装甲板高度的最大比值
 
 float MIN_CENTER_DIS = 30 # 序列组之间的最小间距，小于该值则需要弃用其中一个 group
+
+float MODEL_MEAN = 0.449 # 分类网络归一化后的颜色均值
+float MODEL_STD = 0.226  # 分类网络归一化后的颜色标准差

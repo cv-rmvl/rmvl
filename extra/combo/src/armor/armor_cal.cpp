@@ -167,6 +167,5 @@ Mat Armor::getNumberROI(Mat src, combo::ptr p_combo)
     cvtColor(roi, roi, COLOR_BGR2GRAY);
     resize(roi, roi, Size(armor_param.ROI_SIZE, armor_param.ROI_SIZE));
     threshold(roi, roi, 0, 255, THRESH_OTSU);
-    cvtColor(roi, roi, COLOR_GRAY2BGR);
     return roi;
 }
