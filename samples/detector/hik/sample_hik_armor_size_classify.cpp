@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     armor_responses = Mat::zeros(collect_num * 2, 1, CV_32SC1);
 
     // 设置相机参数
-    capture = HikCamera::make_capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+    capture = HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV));
     if (!capture->isOpened())
     {
         printf("相机打开失败\n");

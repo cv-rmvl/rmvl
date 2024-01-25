@@ -40,7 +40,7 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
   | 海康机器人 *HIKROBOT* | Hik  |
   | 迈德威视 *Mindvision* |  Mv  |
   
-  点击[此处](@ref tutorial_build)可以安装以上相机的 SDK
+  点击[此处](@ref tutorial_install)可以安装以上相机的 SDK
   
 - @ref ml (**ml**)，@ref rmath (**rmath**)
 

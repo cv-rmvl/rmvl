@@ -14,6 +14,6 @@
 
 ## 1. 如何使用
 
-使用前需安装光源控制器驱动，详情参考：@ref tutorial_build
+使用前需安装光源控制器驱动，详情参考：@ref tutorial_install
 
 

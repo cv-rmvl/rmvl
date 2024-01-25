@@ -35,7 +35,7 @@ int main()
     cin >> sn;
     if (sn == "q")
         return 0;
-    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV), sn.c_str());
+    MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV), sn.c_str());
 
     int exposure = 1000;
     int gain = 64;

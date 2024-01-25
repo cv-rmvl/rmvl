@@ -34,12 +34,11 @@ namespace rm
 //! 迈德威视相机库
 class MvCamera final
 {
+    class Impl;
+
 public:
     using ptr = std::unique_ptr<MvCamera>;
     using const_ptr = std::unique_ptr<const MvCamera>;
-
-    //! Pointer to the implementation class
-    class Impl;
 
     /**
      * @brief 构造 MvCamera 对象
