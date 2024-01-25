@@ -42,7 +42,7 @@ void GyroDetector::find(Mat &src, vector<feature::ptr> &features, vector<combo::
             for (const auto &armor : armors)
             {
                 Mat roi = Armor::getNumberROI(src, armor);
-                auto type = _ort->inference({roi})[0];
+                auto type = _ort->inference({roi}, {gyro_detector_param.MODEL_MEAN}, {gyro_detector_param.MODEL_STD})[0];
                 armor->setType(_robot_t[type]);
                 rois.emplace_back(roi);
             }

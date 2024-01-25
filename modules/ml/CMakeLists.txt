@@ -10,11 +10,6 @@ rmvl_add_module(
 if(WITH_ONNXRUNTIME)
   find_package(Ort)
 endif()
-
-rmvl_generate_para(
-  ort
-  MODULE ml
-)
   
 set(BUILD_rmvl_ort_INIT ${WITH_ONNXRUNTIME})
 
@@ -24,8 +19,6 @@ rmvl_add_module(
   EXTRA_HEADER ${Ort_INCLUDE_DIRS}
   EXTERNAL ${Ort_LIBS}
 )
-
-rmvl_generate_module_para(ml)
 
 # test
 if(BUILD_TESTS)

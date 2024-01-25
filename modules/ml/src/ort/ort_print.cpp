@@ -9,12 +9,12 @@
  *
  */
 
-#include "rmvl/ml/ort.h"
+#include "ort_impl.h"
 
 using namespace std;
 using namespace Ort;
 
-void rm::OnnxRT::printModelInfo()
+void rm::OnnxRT::Impl::printModelInfo() noexcept
 {
     printf("-------------- Input Layer --------------\n");
     int input_node = _p_session->GetInputCount();
