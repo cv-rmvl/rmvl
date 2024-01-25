@@ -15,7 +15,7 @@ static int r_gain = 1200;
 static int g_gain = 1200;
 static int b_gain = 1200;
 
-static HikCamera cap(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+static HikCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV));
 
 inline void exposureCallBack(int pos, void *) { exposure = pos, cap.set(CAMERA_EXPOSURE, exposure); }
 inline void gainCallBack(int pos, void *) { gain = pos, cap.set(CAMERA_GAIN, gain); }

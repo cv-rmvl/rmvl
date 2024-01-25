@@ -15,7 +15,7 @@ static int r_gain = 100;
 static int g_gain = 100;
 static int b_gain = 100;
 
-MvCamera cap(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+MvCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::SDK));
 
 void exposureCallBack(int pos, void *)
 {

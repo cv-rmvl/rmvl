@@ -2,7 +2,7 @@ RMVL 的编译、配置选项 {#tutorial_configuration_options}
 ============
 
 @prev_tutorial{tutorial_install_overview}
-@next_tutorial{tutorial_build}
+@next_tutorial{tutorial_install}
 
 @tableofcontents
 

@@ -66,7 +66,7 @@ std::vector<rm::group::ptr> groups;
 
 ```cpp
 // 创建并初始化相机
-auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 ```
 
 即可完成相机的初始化。

@@ -18,7 +18,7 @@ static Matx<double, 3, 3> cameraMatrix = {1250, 0, 640,
 // 畸变系数
 static Matx<double, 5, 1> distCoeffs = {0, 0, 0, 0, 0};
 
-static MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+static MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV));
 
 void cameraMatrixCallBack(int pos, void *mat_pos_)
 {

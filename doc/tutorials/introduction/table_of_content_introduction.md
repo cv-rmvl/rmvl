@@ -10,7 +10,6 @@
 
 #### Linux 平台
 
-- @subpage tutorial_build
 - @subpage tutorial_install
 - @subpage tutorial_use
 

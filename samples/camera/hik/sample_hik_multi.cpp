@@ -44,7 +44,7 @@ int main()
     if (sn == "q")
         return 0;
 
-    HikCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV), sn.c_str());
+    HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV), sn.c_str());
 
     int exposure = 1000;
     int gain = 0;

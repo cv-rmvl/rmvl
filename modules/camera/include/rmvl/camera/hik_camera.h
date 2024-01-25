@@ -33,12 +33,11 @@ namespace rm
 //! 海康机器人相机库
 class HikCamera final
 {
+    class Impl;
+
 public:
     using ptr = std::unique_ptr<HikCamera>;
     using const_ptr = std::unique_ptr<const HikCamera>;
-
-    //! Pointer to the implementation class
-    class Impl;
 
     /**
      * @brief 创建 HikCamera 对象
@@ -50,8 +49,6 @@ public:
 
     HikCamera(const HikCamera &) = delete;
     HikCamera(HikCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
-
-    //! 析构函数
     ~HikCamera();
 
     /**

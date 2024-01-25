@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         printf("已发现 \033[33m\"%s\"\033[0m 文件夹\n", path.c_str());
 
     // 相机初始化
-    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+    MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV));
     if (!capture.isOpened())
     {
         printf("相机打开失败\n");

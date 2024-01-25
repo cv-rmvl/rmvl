@@ -62,48 +62,31 @@ struct CameraConfig
     RetrieveMode retrieve_mode : 4 {RetrieveMode::OpenCV};     //!< 数据处理模式
 
     /**
-     * @brief 设置触发通道
+     * @brief 创建相机初始化配置模式
      *
-     * @param[in] chn 触发通道
+     * @param[in] modes 配置模式参数包
      */
-    inline CameraConfig &set(TriggerChannel chn)
+    template <typename... Args>
+    static inline CameraConfig create(Args... modes)
     {
-        trigger_channel = chn;
-        return *this;
+        CameraConfig config;
+        config.set(modes...);
+        return config;
     }
 
     /**
-     * @brief 设置采集模式
+     * @brief 设置配置模式
      *
-     * @param[in] mode 采集模式
+     * @param[in] modes 配置模式参数包
      */
-    inline CameraConfig &set(GrabMode mode)
-    {
-        grab_mode = mode;
-        return *this;
-    }
+    template <typename... Args>
+    inline void set(Args... modes) { [[maybe_unused]] int _[] = {(conf(modes), 0)...}; }
 
-    /**
-     * @brief 设置句柄创建方式
-     *
-     * @param[in] mode 句柄创建方式
-     */
-    inline CameraConfig &set(HandleMode mode)
-    {
-        handle_mode = mode;
-        return *this;
-    }
-
-    /**
-     * @brief 设置数据处理模式
-     *
-     * @param[in] mode 数据处理模式
-     */
-    inline CameraConfig &set(RetrieveMode mode)
-    {
-        retrieve_mode = mode;
-        return *this;
-    }
+private:
+    inline void conf(TriggerChannel chn) { trigger_channel = chn; }
+    inline void conf(GrabMode mode) { grab_mode = mode; }
+    inline void conf(HandleMode mode) { handle_mode = mode; }
+    inline void conf(RetrieveMode mode) { retrieve_mode = mode; }
 };
 
 //! 相机运行时属性

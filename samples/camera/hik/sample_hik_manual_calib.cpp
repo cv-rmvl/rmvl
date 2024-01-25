@@ -14,7 +14,7 @@ static cv::Matx<double, 3, 3> cameraMatrix = {1250, 0, 640,
 // 畸变系数
 static cv::Matx<double, 5, 1> distCoeffs = {0, 0, 0, 0, 0};
 
-static rm::HikCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
+static rm::HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
 void cameraMatrixCallBack(int pos, void *mat_pos_)
 {

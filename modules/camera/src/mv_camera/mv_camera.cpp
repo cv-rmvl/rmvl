@@ -154,7 +154,10 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
     {
         cv::Mat bayerImg(cv::Size(_frame_info.iWidth, _frame_info.iHeight), CV_8U, _pbyBuffer);
         if (_channel == 1)
+        {
+            cv::flip(bayerImg, bayerImg, 0);
             image.assign(bayerImg);
+        }
         else if (_channel == 3)
         {
             cv::Mat bgrImg;

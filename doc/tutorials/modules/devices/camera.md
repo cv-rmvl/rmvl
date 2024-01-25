@@ -18,7 +18,7 @@
 
 ## 1. 如何使用
 
-使用前需安装相机驱动，详情参考：@ref tutorial_build
+使用前需安装相机驱动，详情参考：@ref tutorial_install
 
 ### 1.1 初始化
 
@@ -27,8 +27,8 @@
 创建 MvCamera 对象即可初始化相机，例如：
 
 ```cpp
-MvCamera capture1(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::SDK), "0123456789");
-MvCamera capture2(rm::CameraConfig{}.set(rm::GrabMode::Software).set(rm::RetrieveMode::OpenCV), "0123456789");
+rm::MvCamera capture1(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::SDK), "0123456789");
+rm::MvCamera capture2(rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV), "0123456789");
 ```
 
 @end_toggle
@@ -38,8 +38,8 @@ MvCamera capture2(rm::CameraConfig{}.set(rm::GrabMode::Software).set(rm::Retriev
 创建 HikCamera 对象即可初始化相机，例如：
 
 ```cpp
-HikCamera capture1(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::SDK), "0123456789");
-HikCamera capture2(rm::CameraConfig{}.set(rm::GrabMode::Software).set(rm::RetrieveMode::OpenCV), "0123456789");
+rm::HikCamera capture1(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::SDK), "0123456789");
+rm::HikCamera capture2(rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV), "0123456789");
 ```
 
 @end_toggle
@@ -49,14 +49,14 @@ HikCamera capture2(rm::CameraConfig{}.set(rm::GrabMode::Software).set(rm::Retrie
 创建 OptCamera 对象即可初始化相机，例如：
 
 ```cpp
-OptCamera capture1(rm::CameraConfig{}.set(rm::HandleMode::IP)
-                                     .set(rm::GrabMode::Continuous)
-                                     .set(rm::RetrieveMode::SDK),
-                   "192.168.1.100");
-OptCamera capture2(rm::CameraConfig{}.set(rm::HandleMode::Index)
-                                     .set(rm::GrabMode::Continuous)
-                                     .set(rm::RetrieveMode::SDK),
-                   "1");
+rm::OptCamera capture1(rm::CameraConfig::create(rm::HandleMode::IP,
+                                                rm::GrabMode::Continuous,
+                                                rm::RetrieveMode::SDK),
+                       "192.168.1.100");
+rm::OptCamera capture2(rm::CameraConfig::create(rm::HandleMode::Index,
+                                                rm::GrabMode::Continuous,
+                                                rm::RetrieveMode::SDK),
+                       "1");
 ```
 @end_toggle
 
@@ -340,12 +340,12 @@ bin/sample_hik_calibration -help
 ```cpp
 int main()
 {
-    MvCamera capture(rm::CameraConfig{}.set(rm::GrabMode::Continuous).set(rm::RetrieveMode::OpenCV));
-    Mat frame;
+    rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
+    cv::Mat frame;
     while(capture.read(frame))
     {
-        imshow("frame", frame);
-        if (waitKey(1) == 27)
+        cv::imshow("frame", frame);
+        if (cv::waitKey(1) == 27)
             break;
     }
 }
@@ -356,24 +356,23 @@ int main()
 ```cpp
 int main()
 {
-    MvCamera capture(GrabMode::Software, RetrieveMode::OpenCV);
+    auto camera_config = rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV)
+    rm::MvCamera capture(camera_config);
 
     bool run = true;
-    thread th(
-        [&run]()
+    std::thread th([&run]() {
+        while (run)
         {
-            while (run)
-            {
-                this_thread::sleep_for(chrono::milliseconds(10));
-                capture.set(CAMERA_SOFT_TRIGGER); // 触发
-            }
-        });
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            capture.set(rm::CAMERA_SOFT_TRIGGER); // 触发
+        }
+    });
 
-    Mat frame;
+    cv::Mat frame;
     while (capture.read(frame))
     {
-        imshow("frame", frame);
-        if (waitKey(1) == 27)
+        cv::imshow("frame", frame);
+        if (cv::waitKey(1) == 27)
         {
             run = false;
             break;
