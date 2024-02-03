@@ -76,7 +76,7 @@ public:
     {
         bool retval{false};
         constexpr int LENGTH = 512;
-        constexpr int SIZE = sizeof(SerialPort);
+        constexpr int SIZE = sizeof(Tp);
         unsigned char buffer[LENGTH] = {0};
         ssize_t len_result = fdread(buffer, LENGTH);
         for (ssize_t i = 0; (i + SIZE + 1) < len_result; i++)
