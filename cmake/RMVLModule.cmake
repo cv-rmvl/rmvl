@@ -192,6 +192,7 @@ macro(rmvl_add_module _name)
     install(
       TARGETS ${the_module}
       EXPORT RMVLModules
+      ARCHIVE DESTINATION ${RMVL_LIB_INSTALL_PATH}
       LIBRARY DESTINATION ${RMVL_LIB_INSTALL_PATH}
     )
 
