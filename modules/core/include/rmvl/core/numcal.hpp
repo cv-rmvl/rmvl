@@ -230,6 +230,8 @@ class RungeKutta<RkType::Butcher>
 protected:
     //! 一阶常微分方程组的函数对象 \f$\dot{\pmb x}=\pmb F(t, \pmb x)\f$
     Odes _fs;
+    double _t0;              //!< 初值的自变量 \f$t\f$
+    std::vector<double> _x0; //!< 初值的因变量 \f$\pmb x(t)\f$
 
     std::vector<double> _p;              //!< Butcher 表 \f$\pmb p\f$ 向量
     std::vector<double> _lambda;         //!< Butcher 表 \f$\pmb\lambda\f$ 向量
@@ -237,7 +239,7 @@ protected:
 
 public:
     /**
-     * @brief 创建一阶常微分方程（组）数值求解器对象
+     * @brief 创建一阶常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      * @param[in] p Butcher 表 \f$\pmb p\f$ 向量
@@ -248,16 +250,41 @@ public:
                const std::vector<double> &lambda, const std::vector<std::vector<double>> &r);
 
     /**
-     * @brief 计算常微分方程的数值解
+     * @brief 设置常微分方程（组）的初值
      *
      * @param[in] t0 初始位置的自变量 \f$t\f$
      * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
+     */
+    inline void init(double t0, const std::vector<double> &x0) { _t0 = t0, _x0 = x0; }
+
+    /**
+     * @brief 设置常微分方程（组）的初值
+     *
+     * @param[in] t0 初始位置的自变量 \f$t\f$
+     * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
+     */
+    inline void init(double t0, std::vector<double> &&x0) { _t0 = t0, _x0 = std::move(x0); }
+
+    /**
+     * @brief 计算常微分方程（组）的数值解
+     *
      * @param[in] h 步长
      * @param[in] n 迭代次数
      *
-     * @return 数值解
+     * @return 从初始位置开始迭代 \f$n\f$ 次后共 \f$n+1\f$ 个数值解，自变量可通过 \f$t_0+ih\f$ 计算得到
      */
-    std::vector<double> solve(double t0, const std::vector<double> &x0, double h, std::size_t n);
+    std::vector<std::vector<double>> solve(double h, std::size_t n);
+
+#if __cplusplus >= 202300L
+    /**
+     * @brief 常微分方程（组）数值解生成器
+     *
+     * @param[in] h 步长
+     * @param[in] n 迭代次数
+     * @return 从初始位置开始迭代计算的生成器，初值不会被 `co_yield`，共生成 \f$n\f$ 个数值解
+     */
+    std::generator<std::vector<double>> generate(double h, std::size_t n);
+#endif
 };
 
 //! @} core_numcal
@@ -274,7 +301,7 @@ class RungeKutta<RkType::RK2> : public RungeKutta<RkType::Butcher>
 {
 public:
     /**
-     * @brief 创建 2 阶 2 级 Runge-Kutta 常微分方程（组）数值求解器对象
+     * @brief 创建 2 阶 2 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
@@ -287,7 +314,7 @@ class RungeKutta<RkType::RK3> : public RungeKutta<RkType::Butcher>
 {
 public:
     /**
-     * @brief 创建 3 阶 3 级 Runge-Kutta 常微分方程（组）数值求解器对象
+     * @brief 创建 3 阶 3 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
@@ -300,7 +327,7 @@ class RungeKutta<RkType::RK4> : public RungeKutta<RkType::Butcher>
 {
 public:
     /**
-     * @brief 创建 4 阶 4 级 Runge-Kutta 常微分方程（组）数值求解器对象
+     * @brief 创建 4 阶 4 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
