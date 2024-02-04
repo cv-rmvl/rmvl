@@ -165,35 +165,74 @@ inline static std::vector<T> operator*(const std::vector<T> &vec, T val)
 template <typename T>
 inline static std::vector<T> operator*(T val, const std::vector<T> &vec) { return vec * val; }
 
-std::vector<double> RungeKutta<RkType::Butcher>::solve(double t0, const std::vector<double> &x0, double h, std::size_t n)
+/**
+ * @brief 计算数值解
+ *
+ * @param[in] r Butcher 表 R 矩阵
+ * @param[in] p Butcher 表 p 向量
+ * @param[in] lambda Butcher 表 λ 向量
+ * @param[in] fs 一阶常微分方程组的函数对象
+ * @param[in] h 步长
+ * @param[in out] t 初始位置的自变量
+ * @param[in out] x 初始位置的因变量
+ * @param[in out] ks 加权平均系数 k
+ */
+static void calcRK(const std::vector<std::vector<double>> &r, const std::vector<double> &p, const std::vector<double> &lambda,
+                   const Odes &fs, const double h, double &t, std::vector<double> &x, std::vector<std::vector<double>> &ks)
 {
-    double t{t0};
-    std::vector<double> x{x0};
+    // 依次计算每个加权平均系数 k_i
+    for (std::size_t i = 0; i < ks.size(); i++)
+    {
+        // 计算 (a_i, k)
+        std::vector<double> inner_prod(fs.size());
+        for (std::size_t n = 0; n < i; n++)
+            inner_prod += r[i][n] * ks[n]; // \sum_r^i a_{ir}k_r
+        // 计算 F
+        for (std::size_t j = 0; j < fs.size(); j++)
+            ks[i][j] = fs[j](t + p[i] * h, x + h * inner_prod);
+    }
+    // 更新 t 和 x
+    t += h;
+    for (std::size_t j = 0; j < fs.size(); j++)
+    {
+        double inner_prod{};
+        for (std::size_t i = 0; i < ks.size(); i++)
+            inner_prod += h * lambda[i] * ks[i][j];
+        x[j] += inner_prod;
+    }
+}
+
+std::vector<std::vector<double>> RungeKutta<RkType::Butcher>::solve(double h, std::size_t n)
+{
+    if (_x0.empty())
+        RMVL_Error(RMVL_StsBadArg, "The initial value must be set.");
+    double t{_t0};
+    std::vector<double> x{_x0};
+    std::vector<std::vector<double>> retval(n + 1);
+    retval[0] = x;
     for (std::size_t idx = 0; idx < n; idx++)
     {
-        // 依次计算每个加权平均系数 k_i
-        for (std::size_t i = 0; i < _ks.size(); i++)
-        {
-            // 计算 (a_i, k)
-            std::vector<double> inner_prod(_fs.size());
-            for (std::size_t n = 0; n < i; n++)
-                inner_prod += _r[i][n] * _ks[n]; // \sum_r^i a_{ir}k_r
-            // 计算 F
-            for (std::size_t j = 0; j < _fs.size(); j++)
-                _ks[i][j] = _fs[j](t + _p[i] * h, x + h * inner_prod);
-        }
-        // 更新 t 和 x
-        t += h;
-        for (std::size_t j = 0; j < _fs.size(); j++)
-        {
-            double inner_prod{};
-            for (std::size_t i = 0; i < _ks.size(); i++)
-                inner_prod += h * _lambda[i] * _ks[i][j];
-            x[j] += inner_prod;
-        }
+        calcRK(_r, _p, _lambda, _fs, h, t, x, _ks);
+        // 保存结果
+        retval[idx + 1] = x;
     }
-    return x;
+    return retval;
 }
+
+#if __cplusplus >= 202300L
+std::generator<std::vector<double>> RungeKutta<RkType::Butcher>::generate(double h, std::size_t n)
+{
+    if (_x0.empty())
+        RMVL_Error(RMVL_StsBadArg, "The initial value must be set.");
+    double t{_t0};
+    std::vector<double> x{_x0};
+    for (std::size_t idx = 0; idx < n; idx++)
+    {
+        calcRK(_r, _p, _lambda, _fs, h, t, x, _ks);
+        co_yield x;
+    }
+}
+#endif
 
 RungeKutta<RkType::RK2>::RungeKutta(const Odes &fs)
     : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5}, {0.0, 1.0},
