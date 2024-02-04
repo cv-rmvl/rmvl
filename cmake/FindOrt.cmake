@@ -3,10 +3,10 @@ if(NOT ort_root_path)
 endif()
 
 # add the include directories path
-set(Ort_INCLUDE_DIR "${ort_root_path}/include/onnxruntime")
 find_path(
   Ort_INCLUDE_DIR
-  PATH "${Ort_INCLUDE_DIR}"
+  PATHS "${ort_root_path}/include/onnxruntime"
+  NAMES "onnxruntime_cxx_api.h"
   NO_DEFAULT_PATH
 )
 
