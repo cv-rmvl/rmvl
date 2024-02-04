@@ -151,9 +151,9 @@ rm::OptCamera capture2(rm::CameraConfig::create(rm::HandleMode::Index,
 
 详细的触发方式 @see
 
-- <a href="https://vision.scutbot.cn/HikRobot/index.html" target="_blank"> Hik 工业相机手册 </a>
+- <a href="https://vision.scutbot.cn/HikRobot/index.html" target="_blank"> HIKROBOT 工业相机用户手册</a>
 
-- <a href="https://vision.scutbot.cn/Mv/mv.pdf" target="_blank"> Mv 手册 </a>
+- <a href="https://vision.scutbot.cn/Mv/mv.pdf" target="_blank"> 迈德威视工业相机用户手册</a>
 
 ### 1.2 光学参数设置
 

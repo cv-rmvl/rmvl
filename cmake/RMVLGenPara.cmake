@@ -6,9 +6,7 @@
 #
 # 以及以下次要功能：
 #
-#   1. para_parser:   解析 *.para 参数规范文件
-#   2. _type_correct:  为 *.para 文件中的类型符号增加作用域
-#   3. system_date:   获取系统日期
+#   1. system_date:   获取系统日期
 # =====================================================================================
 
 # ----------------------------------------------------------------------------
@@ -80,22 +78,27 @@ endfunction(_type_correct value_type out_value_type)
 # ----------------------------------------------------------------------------
 #   将指定的 *.para 参数规范文件解析成 C++ 风格的内容
 #   用法:
-#     para_parser(
+#     _para_parser(
 #       <file_name>
 #       <header_details> <source_details>
 #     )
 #   示例:
-#     para_parser(
+#     _para_parser(
 #       armor.para           # 名为 armor.para 的参数规范文件
 #       armor_header_details # 对应 .h/.hpp 文件的细节
 #       armor_source_details # 对应 .cpp 文件的实现细节
+#       status               # 返回值: 解析是否成功，成功返回 TRUE，失败返回 FALSE
 #     )
 # ----------------------------------------------------------------------------
-function(para_parser file_name header_details source_details)
+function(_para_parser file_name header_details source_details status)
   # init
   set(ret_header "")
   set(ret_source "")
   file(READ ${file_name} out_val)
+  if(NOT out_val)
+    set(${status} FALSE PARENT_SCOPE)
+    return()
+  endif()
   string(REGEX REPLACE "\n" ";" out_val "${out_val}")
   # parser each line
   foreach(substr ${out_val})
@@ -157,7 +160,8 @@ function(para_parser file_name header_details source_details)
   endforeach(substr ${out_val})
   set(${header_details} "${ret_header}" PARENT_SCOPE)
   set(${source_details} "${ret_source}" PARENT_SCOPE)
-endfunction(para_parser file_name header_details source_details)
+  set(${status} TRUE PARENT_SCOPE)
+endfunction(_para_parser file_name header_details source_details)
 
 # ----------------------------------------------------------------------------
 #   根据指定的目标名在 param 文件夹下对应的 *.para 参数规范文件和可选的模块名生成对应的 C++ 代码
@@ -186,28 +190,30 @@ function(rmvl_generate_para target_name)
     list(APPEND class_name "${first_c}${remain_c}")
     string(REGEX REPLACE ";" "" class_name "${class_name}")
   endforeach()
-  ############################## message ##############################
+  ########################### message begin ###########################
   if("${PARA_MODULE}" STREQUAL "")
     set(module_name "${target_name}")
   else()
     set(module_name "${PARA_MODULE}")
   endif()
   set(file_name "param/${target_name}.para")
-  set(para_msg "Convert the \"${file_name}\" to C++ class \"${class_name}\"")
+  set(para_msg "Performing Conversion ${target_name}.para")
   if(PARA_MODULE)
-    set(para_msg "${para_msg} with module \"${module_name}\".")
+    message(STATUS "${para_msg} (for ${module_name})")
   else()
-    set(para_msg "${para_msg} without module, but creates a new module \"${module_name}\".")
+    message(STATUS "${para_msg}")
   endif()
-  message(STATUS ${para_msg})
-  unset(para_msg)
   ###################### Generate C++ class file ######################
   string(FIND "${RMVLPARA_${module_name}}" "${target_name}" target_idx)
   if(target_idx EQUAL -1)
     set(RMVLPARA_${module_name} "${RMVLPARA_${module_name}}" "${target_name}" CACHE INTERNAL "${module_name} parameters")
   endif()  
   # parser
-  para_parser(${file_name} para_header_details para_source_details)
+  _para_parser(${file_name} para_header_details para_source_details para_status)
+  if(NOT para_status)
+    message(STATUS "${para_msg} - Failed")
+    return()
+  endif()
   set(para_include_path)
   # has module
   if(PARA_MODULE)
@@ -239,6 +245,8 @@ function(rmvl_generate_para target_name)
     @ONLY
   )
   unset(para_include_path)
+  ############################ message end ############################
+  message(STATUS "${para_msg} - Success")
 endfunction(rmvl_generate_para target_name)
 
 # ----------------------------------------------------------------------------
@@ -251,6 +259,10 @@ endfunction(rmvl_generate_para target_name)
 #     rmvl_generate_module_para(combo)
 # ----------------------------------------------------------------------------
 function(rmvl_generate_module_para module_name)
+  ########################### message begin ###########################
+  set(para_msg "Performing Conversion ${module_name} Module")
+  message(STATUS "${para_msg}")
+  ######################## Generate C++ header ########################
   system_date(year month day)
   set(para_module_header_details "")
   foreach(_sub ${RMVLPARA_${module_name}})
@@ -265,4 +277,6 @@ function(rmvl_generate_module_para module_name)
     ${CMAKE_CURRENT_LIST_DIR}/include/rmvlpara/${module_name}.hpp
     @ONLY
   )
+  ############################ message end ############################
+  message(STATUS "${para_msg} - done")
 endfunction(rmvl_generate_module_para module_name)

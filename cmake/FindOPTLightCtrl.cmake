@@ -1,10 +1,10 @@
 set(OPTLightCtrl_root_path "/opt/OPT/OPTController")
 
 # add the include directories path
-list(APPEND OPTLightCtrl_INCLUDE_DIR "${OPTLightCtrl_root_path}/include")
 find_path(
   OPTLightCtrl_INCLUDE_DIR
-  PATH "${OPTLightCtrl_INCLUDE_DIR}"
+  NAMES "OPTController.h"
+  PATHS "${OPTLightCtrl_root_path}/include"
   NO_DEFAULT_PATH
 )
 
@@ -25,5 +25,5 @@ include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
   OPTLightCtrl
-  REQUIRED_VARS OPTLightCtrl_LIB
+  REQUIRED_VARS OPTLightCtrl_LIB OPTLightCtrl_INCLUDE_DIR
 )

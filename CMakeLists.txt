@@ -38,7 +38,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # ----------------------------------------------------------------------------
 #  RMVL utilities macro and function
 # ----------------------------------------------------------------------------
-include(RMVLUtils)
+include(cmake/RMVLUtils.cmake)
 
 # Build Type
 if(NOT CMAKE_BUILD_TYPE)
@@ -49,27 +49,27 @@ endif()
 #  Build
 # ----------------------------------------------------------------------------
 # RMVL Install layout 
-include(RMVLInstall)
-include(RMVLModule)
-include(RMVLExtraTarget)
+include(cmake/RMVLInstall.cmake)
+include(cmake/RMVLModule.cmake)
+include(cmake/RMVLExtraTarget.cmake)
 
 include_directories(${CMAKE_BINARY_DIR})
 
 # ----------------------------------------------------------------------------
 #  RMVL compile configure and options
 # ----------------------------------------------------------------------------
-include(RMVLCompilerOptions)
+include(cmake/RMVLCompilerOptions.cmake)
 
 # ----------------------------------------------------------------------------
 #  Get actual RMVL version number from sources
 # ----------------------------------------------------------------------------
-include(RMVLVersion)
+include(cmake/RMVLVersion.cmake)
 
 # ----------------------------------------------------------------------------
 #  RMVL parameters and miscellaneous generation
 # ----------------------------------------------------------------------------
 set(para_template_path "${CMAKE_SOURCE_DIR}/cmake/templates" CACHE STRING "GenPara template path" FORCE)
-include(RMVLGenPara)
+include(cmake/RMVLGenPara.cmake)
 
 # ----------------------------------------------------------------------------
 #  Process subdirectories
@@ -108,9 +108,9 @@ endif()
 # ----------------------------------------------------------------------------
 #  Finalization: generate configuration-based files
 # ----------------------------------------------------------------------------
-include(RMVLGenHeaders)
+include(cmake/RMVLGenHeaders.cmake)
 
-include(RMVLGenConfig)
+include(cmake/RMVLGenConfig.cmake)
 
 # ----------------------------------------------------------------------------
 #  Summary:
