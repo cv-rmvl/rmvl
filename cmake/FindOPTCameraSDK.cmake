@@ -1,10 +1,10 @@
 set(OPTCameraSDK_root_path "/opt/OPT/OPTCameraDemo")
 
 # add the include directories path
-list(APPEND OPTCameraSDK_INCLUDE_DIR "${OPTCameraSDK_root_path}/include")
 find_path(
   OPTCameraSDK_INCLUDE_DIR
-  PATH "${OPTCameraSDK_INCLUDE_DIR}"
+  NAMES "OPTApi.h"
+  PATHS "${OPTCameraSDK_root_path}/include"
   NO_DEFAULT_PATH
 )
 
@@ -25,5 +25,5 @@ include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
   OPTCameraSDK
-  REQUIRED_VARS OPTCameraSDK_LIB
+  REQUIRED_VARS OPTCameraSDK_LIB OPTCameraSDK_INCLUDE_DIR
 )

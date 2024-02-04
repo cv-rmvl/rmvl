@@ -5,10 +5,10 @@ if(MVCAM_SDK_PATH STREQUAL "")
 endif()
 
 # add the include directories path
-list(APPEND HikSDK_INCLUDE_DIR "${MVCAM_SDK_PATH}/include")
 find_path(
   HikSDK_INCLUDE_DIR
-  PATH "${HikSDK_INCLUDE_DIR}"
+  NAMES "MvCameraControl.h"
+  PATHS "${MVCAM_SDK_PATH}/include"
   NO_DEFAULT_PATH
 )
 
@@ -16,7 +16,7 @@ find_path(
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "amd64")
   set(ARCH_HIKLIB "64")
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86" OR arch STREQUAL "i386")
-  set(arARCH_HIKLIBch "32")
+  set(ARCH_HIKLIB "32")
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
   set(ARCH_HIKLIB "arm64")
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
