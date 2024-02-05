@@ -275,7 +275,7 @@ public:
      */
     std::vector<std::vector<double>> solve(double h, std::size_t n);
 
-#if __cplusplus >= 202300L
+#if __cpp_lib_generator >= 202207L
     /**
      * @brief 常微分方程（组）数值解生成器
      *
