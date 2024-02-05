@@ -177,8 +177,9 @@ inline static std::vector<T> operator*(T val, const std::vector<T> &vec) { retur
  * @param[in out] x 初始位置的因变量
  * @param[in out] ks 加权平均系数 k
  */
-static void calcRK(const std::vector<std::vector<double>> &r, const std::vector<double> &p, const std::vector<double> &lambda,
-                   const Odes &fs, const double h, double &t, std::vector<double> &x, std::vector<std::vector<double>> &ks)
+static inline void calcRK(const std::vector<std::vector<double>> &r, const std::vector<double> &p,
+                          const std::vector<double> &lambda, const Odes &fs, const double h,
+                          double &t, std::vector<double> &x, std::vector<std::vector<double>> &ks)
 {
     // 依次计算每个加权平均系数 k_i
     for (std::size_t i = 0; i < ks.size(); i++)
@@ -219,7 +220,7 @@ std::vector<std::vector<double>> RungeKutta<RkType::Butcher>::solve(double h, st
     return retval;
 }
 
-#if __cplusplus >= 202300L
+#if __cpp_lib_generator >= 202207L
 std::generator<std::vector<double>> RungeKutta<RkType::Butcher>::generate(double h, std::size_t n)
 {
     if (_x0.empty())

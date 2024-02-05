@@ -14,7 +14,7 @@
 #include <cmath>
 #include <unordered_map>
 
-#if __cplusplus > 201703L
+#if __cpp_lib_math_constants >= 201907L
 #include <numbers>
 #endif
 
@@ -35,7 +35,7 @@ constexpr double FLOAT_MAX{MAXFLOAT};
 constexpr double FLOAT_MAX{HUGE};
 #endif
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_math_constants >= 201907L
 constexpr double PI = std::numbers::pi;        //!< 圆周率: \f$\pi\f$
 constexpr double e = std::numbers::e;          //!< 自然对数底数: \f$e\f$
 constexpr double SQRT_2 = std::numbers::sqrt2; //!< 根号 2: \f$\sqrt2\f$

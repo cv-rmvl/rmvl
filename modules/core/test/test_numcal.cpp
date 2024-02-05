@@ -87,7 +87,7 @@ TEST(NumberCalculation, runge_kutta_odes)
     //     └ -3/4 ┘          └ -1 ┘         └ -1/2 ┘    └  3/4 ┘
     double real_x1 = 3.0 / 4.0 * std::exp(-2) + 2 * std::exp(-1) + 3.0 / 2.0 - 7.0 / 4.0;
     double real_x2 = -3.0 / 4.0 * std::exp(-2) - std::exp(-1) - 1.0 / 2.0 + 3.0 / 4.0;
-    
+
     rm::RungeKutta<rm::RkType::RK2> rk2(fs);
     rk2.init(0, {1, -1});
     auto res2 = rk2.solve(0.01, 100).back();
@@ -101,5 +101,24 @@ TEST(NumberCalculation, runge_kutta_odes)
     EXPECT_LE(std::abs(res4[0] - real_x1), 1e-6);
     EXPECT_LE(std::abs(res4[1] - real_x2), 1e-6);
 }
+
+#if __cpp_lib_generator >= 202207L
+TEST(NumberCalculation, runge_kutta_ode_generator)
+{
+    auto f = [](double, const std::vector<double> &xs) { return 1; }; // x + 1
+    std::vector<rm::Ode> fs = {f};
+
+    rm::RungeKutta<rm::RkType::RK2> rk2(fs);
+    rk2.init(0, {1});
+    std::vector<std::vector<double>> all_res;
+    all_res.reserve(10);
+    all_res.push_back({1}); // 初值
+    for (auto res2 : rk2.generate(1, 9))
+        all_res.push_back(res2);
+
+    for (std::size_t i = 0; i < 10; i++)
+        EXPECT_EQ(all_res[i].front(), i + 1);
+}
+#endif
 
 } // namespace rm_test

@@ -43,8 +43,13 @@ set(
   CACHE PATH "RMVL_DOXYFILE_IN"
 )
 
-# pre-defined variables
+# pre-defined variables (cpp)
 set(CMAKE_DOXYGEN_PREDEFINED "__GNUC__ \\\n")
+set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}__cplusplus=202300L \\\n")
+set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}__cpp_lib_generator=202207L \\\n")
+set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}__cpp_lib_math_constants=201907L \\\n")
+
+# pre-defined variables (project)
 set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}UA_ENABLE_PUBSUB")
 
 # List all the modules
