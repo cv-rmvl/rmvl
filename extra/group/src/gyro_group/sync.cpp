@@ -20,6 +20,7 @@ using namespace cv;
 using namespace std;
 using namespace para;
 using namespace rm;
+using namespace rm::numeric_literals;
 
 void GyroGroup::sync(const GyroData &gyro_data, double tick)
 {

@@ -9,6 +9,8 @@
  *
  */
 
+#pragma once
+
 #include "compensator.h"
 
 namespace rm
@@ -21,32 +23,25 @@ namespace rm
 class GravityCompensator final : public compensator
 {
 public:
-    GravityCompensator();
+    GravityCompensator() noexcept;
+    ~GravityCompensator();
 
     //! 构造 GravityCompensator
-    static inline std::unique_ptr<GravityCompensator> make_compensator()
-    {
-        return std::make_unique<GravityCompensator>();
-    }
+    static inline auto make_compensator() { return std::make_unique<GravityCompensator>(); }
 
     /**
-     * @brief 补偿核心函数
+     * @brief 补偿函数，考虑空气阻力，使用 2 阶龙格库塔方法（中点公式）计算弹道
      *
      * @param[in] groups 所有序列组
      * @param[in] shoot_speed 子弹射速 (m/s)
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    CompensateInfo compensate(const std::vector<group::ptr> &groups,
-                              uint8_t shoot_speed, CompensateType com_flag) override;
+    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) override;
 
 private:
-    /**
-     * @brief 更新静态补偿量
-     *
-     * @param[in] com_flag 补偿类型
-     */
-    void updateStaticCom(CompensateType com_flag);
+    class Impl;
+    Impl *_impl;
 };
 
 //! @} compensator
