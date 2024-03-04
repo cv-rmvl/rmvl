@@ -1,14 +1,14 @@
-set(MVCAM_SDK_PATH "$ENV{MVCAM_SDK_PATH}")
-if(MVCAM_SDK_PATH STREQUAL "")
+set(mvcam_sdk_path "$ENV{MVCAM_SDK_PATH}")
+if(mvcam_sdk_path STREQUAL "")
   set(HikSDK_FOUND FALSE)
   return()
 endif()
 
 # add the include directories path
 find_path(
-  HikSDK_INCLUDE_DIR
+  HikSDK_INCLUDE_DIRS
   NAMES "MvCameraControl.h"
-  PATHS "${MVCAM_SDK_PATH}/include"
+  PATHS "${mvcam_sdk_path}/include"
   NO_DEFAULT_PATH
 )
 
@@ -28,20 +28,17 @@ else()
 endif()
 
 find_library(
-  HikSDK_LIB
+  HikSDK_LIBS
   NAMES "libMvCameraControl.so"
-  PATHS "${MVCAM_SDK_PATH}/lib/${ARCH_HIKLIB}"
+  PATHS "${mvcam_sdk_path}/lib/${ARCH_HIKLIB}"
   NO_DEFAULT_PATH
 )
 
-mark_as_advanced(ARCH_HIKLIB HikSDK_INCLUDE_DIR HikSDK_LIB)
-
-set(HikSDK_INCLUDE_DIRS "${HikSDK_INCLUDE_DIR}")
-set(HikSDK_LIBS "${HikSDK_LIB}")
+mark_as_advanced(ARCH_HIKLIB HikSDK_INCLUDE_DIRS HikSDK_LIBS)
 
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
   HikSDK
-  REQUIRED_VARS HikSDK_LIB HikSDK_INCLUDE_DIR
+  REQUIRED_VARS HikSDK_LIBS HikSDK_INCLUDE_DIRS
 )

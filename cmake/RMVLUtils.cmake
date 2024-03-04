@@ -14,7 +14,7 @@ macro(rmvl_check_cxx result src standard)
   try_compile(
     ${result}
     ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/cpp${standard}
-    SOURCES ${CMAKE_CURRENT_LIST_DIR}/check/${src}
+    SOURCES ${PROJECT_SOURCE_DIR}/cmake/check/${src}
     COMPILE_DEFINITIONS "${standard}"
   )
 
@@ -25,6 +25,7 @@ macro(rmvl_check_cxx result src standard)
     set(${result} "" CACHE INTERNAL "Test ${result}")
     message(STATUS "Performing Test ${result} - Failed")
   endif()
+  unset(build_args)
 endmacro()
 
 set(RMVL_BUILD_INFO_STR "" CACHE INTERNAL "")
