@@ -24,8 +24,8 @@
 
 可写成一阶方程组的形式，令\f$x_1=x,\quad x_2=\dot x\f$，有
 
-\f[\left\{\begin{align}
-\dot x_1&=x_2\\
+\f[\def\mat#1#2{\begin{bmatrix}#1\\#2\end{bmatrix}}
+\left\{\begin{align}\dot x_1&=x_2\\
 \dot x_2&=-\frac kmx_1-\frac cmx_2+\frac1mp(t)
 \end{align}\right.\tag{1-2}\f]
 
@@ -206,7 +206,7 @@ k_2&=f\left(t_n+\frac h2,x_n+\frac h2k_1\right)\end{align}\tag{3-7}\f]
 \f[\left\{\begin{align}x_{n+1}&=x_n+h(\lambda_1k_1+\lambda_2k_2)\\k_1&=f(t_n+p_1h,x_n+h(a_{11}
 k_1+a_{12}k_2))\\k_2&=f(t_n+p_2h,x_n+h(a_{21}k_1+a_{22}k_2))\end{align}\right.\tag{3-8}\f]
 
-令\f$\pmb p=(p_1,p_2)T,\quad\pmb\lambda=(\lambda_1,\lambda_2),\quad
+令\f$\pmb p=\mat{p_1}{p_2},\quad\pmb\lambda=(\lambda_1,\lambda_2),\quad
 R=\begin{bmatrix}a_{11}&a_{12}\\a_{21}&a_{22}\end{bmatrix}\f$，则
 
 \f[\begin{array}{c|c}\pmb p&R\\\hline&\pmb\lambda\end{array}=\begin{array}{c|cc}p_1&
@@ -272,7 +272,7 @@ RMVL 的相关类请参考 rm::RungeKutta
 
 **解答**
 
-① 数值解
+<span style="color: orange">**① 数值解**</span>
 
 使用中点公式：
 
@@ -395,12 +395,11 @@ l_2&=f_2(t_n+\frac h2,x_{1_n}+\frac h2k_1,x_{2_n}+\frac h2l_1)\end{align}\f]
 
 因此，在\f$t=1\f$时，\f$x\approx(0.587286,-0.219401)^T\f$
 
-② 精确解
+<span style="color: orange">**② 精确解**</span>
 
 对待求的初值问题写成矩阵形式
 
-\f[\dot X=\begin{bmatrix}0&2\\-1&-3\end{bmatrix}X+\begin{bmatrix}1\\0
-\end{bmatrix}t,\quad X(0)=\begin{bmatrix}1\\-1\end{bmatrix}\f]
+\f[\dot X=\begin{bmatrix}0&2\\-1&-3\end{bmatrix}X+\mat10t,\quad X(0)=\mat1{-1}\f]
 
 由矩阵分析的知识，可以知道，对于形如\f[\dot X=AX+B(t)\tag{a}\f]的矩阵微分方程，其解为
 
@@ -430,8 +429,7 @@ l_2&=f_2(t_n+\frac h2,x_{1_n}+\frac h2k_1,x_{2_n}+\frac h2l_1)\end{align}\f]
 
 可以算出
 
-\f[\def\mat#1#2{\begin{bmatrix}#1\\#2\end{bmatrix}}
-e^{At}X(0)=\mat00e^{-t}+\mat1{-1}e^{-2t}=\mat1{-1}e^{-2t}\tag{f}\f]
+\f[e^{At}X(0)=\mat00e^{-t}+\mat1{-1}e^{-2t}=\mat1{-1}e^{-2t}\tag{f}\f]
 
 同理有
 

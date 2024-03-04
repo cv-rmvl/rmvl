@@ -37,7 +37,7 @@ endmacro(rmvl_compile_definitions _target)
 # ----------------------------------------------------------------------------
 #   将指定路径下的所有文件安装至特定目标
 #   用法:
-#     rmvl_install_directories(<directory> [DST_LIB])
+#     rmvl_install_directories(<directory> [DESTINATION])
 #   示例:
 #     rmvl_install_directories(include/rmvl)
 # ----------------------------------------------------------------------------
@@ -82,8 +82,8 @@ endfunction(rmvl_install_directories)
 #   示例:
 #     rmvl_add_module(
 #       my_module               # 需要生成的模块 (文件夹名)
-#       EXTRA_HEADER xxx_h      # 参与构建的其余头文件目录
-#       EXTRA_SOURCE xxx_src    # 参与构建的其余头文件目录
+#       EXTRA_HEADER xxx_h      # 参与构建的除 include 文件夹以外的其余头文件目录
+#       EXTRA_SOURCE xxx_src    # 参与构建的除 src 文件夹以外的其余源文件目录
 #       DEPENDS core            # 依赖的 RMVL 模块 (文件夹名)
 #       EXTERNAL ${OpenCV_LIBS} # 依赖的第三方目标库
 #     )
@@ -95,7 +95,6 @@ macro(rmvl_add_module _name)
   cmake_parse_arguments(MD "${options}" "" "${multi_args}" ${ARGN})
 
   # Module information
-  unset(the_module)
   set(the_module rmvl_${_name})
   set(
     RMVL_MODULE_${the_module}_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -202,7 +201,8 @@ macro(rmvl_add_module _name)
       set(RMVL_MODULES_INTERFACE ${RMVL_MODULES_INTERFACE} "${the_module}" CACHE INTERNAL "List of RMVL interface modules marked for export" FORCE)
     endif(NOT MD_INTERFACE)
     set(RMVL_MODULES_BUILD ${RMVL_MODULES_BUILD} "${the_module}" CACHE INTERNAL "List of RMVL modules included into the build" FORCE)
-  endif(BUILD_${the_module})
+  endif()
+  unset(the_module)
 endmacro(rmvl_add_module _name)
 
 # ----------------------------------------------------------------------------
