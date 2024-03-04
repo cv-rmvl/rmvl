@@ -4,7 +4,7 @@ endif()
 
 # add the include directories path
 find_path(
-  Ort_INCLUDE_DIR
+  Ort_INCLUDE_DIRS
   PATHS "${ort_root_path}/include/onnxruntime"
   NAMES "onnxruntime_cxx_api.h"
   NO_DEFAULT_PATH
@@ -12,18 +12,15 @@ find_path(
 
 # add libraries
 find_library(
-  Ort_LIB
+  Ort_LIBS
   NAMES "libonnxruntime.so"
   PATHS "${ort_root_path}/lib"
   NO_DEFAULT_PATH
 )
 
-set(Ort_INCLUDE_DIRS "${Ort_INCLUDE_DIR}")
-set(Ort_LIBS "${Ort_LIB}")
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
   Ort
-  REQUIRED_VARS Ort_LIB
+  REQUIRED_VARS Ort_LIBS Ort_INCLUDE_DIRS
 )

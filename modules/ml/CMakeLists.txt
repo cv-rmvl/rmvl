@@ -10,7 +10,7 @@ rmvl_add_module(
 if(WITH_ONNXRUNTIME)
   find_package(Ort)
 endif()
-  
+
 set(BUILD_rmvl_ort_INIT ${WITH_ONNXRUNTIME})
 
 rmvl_add_module(
