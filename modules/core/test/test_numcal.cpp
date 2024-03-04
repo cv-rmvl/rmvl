@@ -61,17 +61,17 @@ TEST(NumberCalculation, runge_kutta_ode)
     auto resb = rkb.solve(0.01, 100).back();
     EXPECT_LE(std::abs(resb.front() - std::expm1(-2)), 1e-4);
 
-    rm::RungeKutta<rm::RkType::RK2> rk2(fs);
+    rm::RungeKutta2 rk2(fs);
     rk2.init(0, {0});
     auto res2 = rk2.solve(0.01, 100).back();
     EXPECT_LE(std::abs(res2.front() - std::expm1(-2)), 1e-4);
 
-    rm::RungeKutta<rm::RkType::RK3> rk3(fs);
+    rm::RungeKutta3 rk3(fs);
     rk3.init(0, {0});
     auto res3 = rk3.solve(0.01, 100).back();
     EXPECT_LE(std::abs(res3.front() - std::expm1(-2)), 1e-5);
 
-    rm::RungeKutta<rm::RkType::RK4> rk4(fs);
+    rm::RungeKutta4 rk4(fs);
     rk4.init(0, {0});
     auto res4 = rk4.solve(0.01, 100).back();
     EXPECT_LE(std::abs(res4.front() - std::expm1(-2)), 1e-6);
@@ -88,14 +88,14 @@ TEST(NumberCalculation, runge_kutta_odes)
     double real_x1 = 3.0 / 4.0 * std::exp(-2) + 2 * std::exp(-1) + 3.0 / 2.0 - 7.0 / 4.0;
     double real_x2 = -3.0 / 4.0 * std::exp(-2) - std::exp(-1) - 1.0 / 2.0 + 3.0 / 4.0;
 
-    rm::RungeKutta<rm::RkType::RK2> rk2(fs);
+    rm::RungeKutta2 rk2(fs);
     rk2.init(0, {1, -1});
     auto res2 = rk2.solve(0.01, 100).back();
     EXPECT_EQ(res2.size(), 2);
     EXPECT_LE(std::abs(res2[0] - real_x1), 1e-4);
     EXPECT_LE(std::abs(res2[1] - real_x2), 1e-4);
 
-    rm::RungeKutta<rm::RkType::RK4> rk4(fs);
+    rm::RungeKutta4 rk4(fs);
     rk4.init(0, {1, -1});
     auto res4 = rk4.solve(0.01, 100).back();
     EXPECT_LE(std::abs(res4[0] - real_x1), 1e-6);
@@ -108,7 +108,7 @@ TEST(NumberCalculation, runge_kutta_ode_generator)
     auto f = [](double, const std::vector<double> &xs) { return 1; }; // x + 1
     std::vector<rm::Ode> fs = {f};
 
-    rm::RungeKutta<rm::RkType::RK2> rk2(fs);
+    rm::RungeKutta2 rk2(fs);
     rk2.init(0, {1});
     std::vector<std::vector<double>> all_res;
     all_res.reserve(10);

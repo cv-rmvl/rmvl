@@ -120,7 +120,7 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
     return xk;
 }
 
-RungeKutta<RkType::Butcher>::RungeKutta(
+RungeKutta::RungeKutta(
     const Odes &fs, const std::vector<double> &p,
     const std::vector<double> &lambda, const std::vector<std::vector<double>> &r)
     : _ks(p.size()), _fs(fs), _p(p), _lambda(lambda), _r(r)
@@ -203,7 +203,7 @@ static inline void calcRK(const std::vector<std::vector<double>> &r, const std::
     }
 }
 
-std::vector<std::vector<double>> RungeKutta<RkType::Butcher>::solve(double h, std::size_t n)
+std::vector<std::vector<double>> RungeKutta::solve(double h, std::size_t n)
 {
     if (_x0.empty())
         RMVL_Error(RMVL_StsBadArg, "The initial value must be set.");
@@ -235,22 +235,19 @@ std::generator<std::vector<double>> RungeKutta<RkType::Butcher>::generate(double
 }
 #endif
 
-RungeKutta<RkType::RK2>::RungeKutta(const Odes &fs)
-    : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5}, {0.0, 1.0},
-                                  {{0.0, 0.0},
-                                   {0.5, 0.0}}) {}
+RungeKutta2::RungeKutta2(const Odes &fs) : RungeKutta(fs, {0.0, 0.5}, {0.0, 1.0},
+                                                      {{0.0, 0.0},
+                                                       {0.5, 0.0}}) {}
 
-RungeKutta<RkType::RK3>::RungeKutta(const Odes &fs)
-    : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5, 1.0}, {1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0},
-                                  {{0.0, 0.0, 0.0},
-                                   {0.5, 0.0, 0.0},
-                                   {-1.0, 2.0, 0.0}}) {}
+RungeKutta3::RungeKutta3(const Odes &fs) : RungeKutta(fs, {0.0, 0.5, 1.0}, {1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0},
+                                                      {{0.0, 0.0, 0.0},
+                                                       {0.5, 0.0, 0.0},
+                                                       {-1.0, 2.0, 0.0}}) {}
 
-RungeKutta<RkType::RK4>::RungeKutta(const Odes &fs)
-    : RungeKutta<RkType::Butcher>(fs, {0.0, 0.5, 0.5, 1.0}, {1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0},
-                                  {{0.0, 0.0, 0.0, 0.0},
-                                   {0.5, 0.0, 0.0, 0.0},
-                                   {0.0, 0.5, 0.0, 0.0},
-                                   {0.0, 0.0, 1.0, 0.0}}) {}
+RungeKutta4::RungeKutta4(const Odes &fs) : RungeKutta(fs, {0.0, 0.5, 0.5, 1.0}, {1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0},
+                                                      {{0.0, 0.0, 0.0, 0.0},
+                                                       {0.5, 0.0, 0.0, 0.0},
+                                                       {0.0, 0.5, 0.0, 0.0},
+                                                       {0.0, 0.0, 1.0, 0.0}}) {}
 
 } // namespace rm
