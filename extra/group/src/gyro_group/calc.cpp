@@ -23,6 +23,7 @@ using namespace cv;
 using namespace rm;
 using namespace std;
 using namespace para;
+using namespace rm::numeric_literals;
 
 int GyroGroup::calcArmorNum(const vector<combo::ptr> &ref_combos)
 {

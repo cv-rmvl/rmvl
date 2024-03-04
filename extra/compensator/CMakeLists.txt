@@ -1,5 +1,5 @@
 rmvl_add_module(
-  compensator
+  compensator INTERFACE
   DEPENDS group
 )
 
@@ -26,3 +26,12 @@ rmvl_add_module(
 )
 
 rmvl_generate_module_para(compensator)
+
+# Tests
+if(BUILD_TESTS)
+  rmvl_add_test(
+    compensator Unit
+    DEPENDS gravity_compensator
+    DEPEND_TESTS GTest::gtest_main
+  )
+endif()
