@@ -58,7 +58,7 @@ public:
      * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
      * @param[in] serial 相机唯一序列号
      */
-    static std::unique_ptr<HikCamera> make_capture(CameraConfig init_mode, std::string_view serial = "") { return std::unique_ptr<HikCamera>(new HikCamera(init_mode, serial)); }
+    static inline std::unique_ptr<HikCamera> make_capture(CameraConfig init_mode, std::string_view serial = "") { return std::make_unique<HikCamera>(init_mode, serial); }
 
     /**
      * @brief 设置相机参数/事件
