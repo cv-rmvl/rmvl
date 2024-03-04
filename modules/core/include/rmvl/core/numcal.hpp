@@ -189,40 +189,19 @@ public:
 
 ////////////// 常微分方程（组）数值解 //////////////
 
-//! Runge-Kutta 阶数类型
-enum class RkType
-{
-    Butcher, //!< 指定 `Butcher` 表的 Runge-Kutta 法
-    RK2,     //!< 2 阶 2 级 Runge-Kutta 方法（中点公式）
-    RK3,     //!< 3 阶 3 级 Runge-Kutta 方法
-    RK4,     //!< 4 阶 4 级 Runge-Kutta 方法（经典 Runge-Kutta 公式）
-};
-
 //! 常微分方程
 using Ode = std::function<double(double, const std::vector<double> &)>;
 //! 常微分方程组
 using Odes = std::vector<Ode>;
 
 /**
- * @brief 常微分方程（组）数值求解器
+ * @brief Butcher 表形式的常微分方程（组）数值求解器
  * @brief
  * - 使用 Runge-Kutta 法求解常微分方程（组），算法介绍见 @ref tutorial_modules_runge_kutta
  * @brief
- * - 包含 4 个特化模板类，分别对应 4 阶 4 级、3 阶 3 级、2 阶 2 级、Butcher 表 Runge-Kutta 求解器，其中通用求解器为
- *   `rm::RungeKutta<RkType::Butcher>`，其他 3 个模板类均继承自该模板类，并提供了固定的 Butcher 表参数
- *
- * @tparam OrderType Runge-Kutta 阶数类型
+ * - 该 Runge-Kutta 数值求解器为通用求解器，提供了一般的 Runge-Kutta 法求解常微分方程（组）的接口
  */
-template <RkType OrderType>
-class RungeKutta;
-
-/**
- * @brief Butcher 表 Runge-Kutta 求解器
- * @brief
- * - 算法介绍见 @ref tutorial_modules_runge_kutta
- */
-template <>
-class RungeKutta<RkType::Butcher>
+class RungeKutta
 {
     // 加权系数，`k[i][j]`: `i` 表示第 `i` 个加权系数组，`j` 表示来自第 `j` 条方程
     std::vector<std::vector<double>> _ks;
@@ -252,7 +231,7 @@ public:
     /**
      * @brief 设置常微分方程（组）的初值
      *
-     * @param[in] t0 初始位置的自变量 \f$t\f$
+     * @param[in] t0 初始位置的自变量 \f$t_0\f$
      * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
      */
     inline void init(double t0, const std::vector<double> &x0) { _t0 = t0, _x0 = x0; }
@@ -260,7 +239,7 @@ public:
     /**
      * @brief 设置常微分方程（组）的初值
      *
-     * @param[in] t0 初始位置的自变量 \f$t\f$
+     * @param[in] t0 初始位置的自变量 \f$t_0\f$
      * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
      */
     inline void init(double t0, std::vector<double> &&x0) { _t0 = t0, _x0 = std::move(x0); }
@@ -287,17 +266,8 @@ public:
 #endif
 };
 
-//! @} core_numcal
-
-RungeKutta(const Odes &, const std::vector<double> &, const std::vector<double> &,
-           const std::vector<std::vector<double>> &) -> RungeKutta<RkType::Butcher>;
-
-//! @addtogroup core_numcal
-//! @{
-
 //! 2 阶 2 级 Runge-Kutta 求解器
-template <>
-class RungeKutta<RkType::RK2> : public RungeKutta<RkType::Butcher>
+class RungeKutta2 : public RungeKutta
 {
 public:
     /**
@@ -305,12 +275,11 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
-    RungeKutta(const Odes &fs);
+    RungeKutta2(const Odes &fs);
 };
 
 //! 3 阶 3 级 Runge-Kutta 求解器
-template <>
-class RungeKutta<RkType::RK3> : public RungeKutta<RkType::Butcher>
+class RungeKutta3 : public RungeKutta
 {
 public:
     /**
@@ -318,12 +287,11 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
-    RungeKutta(const Odes &fs);
+    RungeKutta3(const Odes &fs);
 };
 
 //! 4 阶 4 级 Runge-Kutta 求解器
-template <>
-class RungeKutta<RkType::RK4> : public RungeKutta<RkType::Butcher>
+class RungeKutta4 : public RungeKutta
 {
 public:
     /**
@@ -331,7 +299,7 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
-    RungeKutta(const Odes &fs);
+    RungeKutta4(const Odes &fs);
 };
 
 //! @} core_numcal
