@@ -24,7 +24,7 @@ rm::OPTLightController::OPTLightController(rm::OPTLightController &&obj)
     obj._init = false;
 }
 
-bool rm::OPTLightController::connect(const DevIpConfig &ip_config)
+bool rm::OPTLightController::connect(const LightIpConfig &ip_config)
 {
     if (_init)
         disconnect();
@@ -32,12 +32,12 @@ bool rm::OPTLightController::connect(const DevIpConfig &ip_config)
     return OPTController_CreateEtheConnectionByIP(const_cast<char *>(ip_config.ip.c_str()), &_handle) == OPT_SUCCEED;
 }
 
-bool rm::OPTLightController::connect(const std::string &SN)
+bool rm::OPTLightController::connect(std::string_view SN)
 {
     if (_init)
         disconnect();
     _init = true;
-    if (OPTController_CreateEtheConnectionBySN(const_cast<char *>(SN.c_str()), &_handle) == OPT_SUCCEED)
+    if (OPTController_CreateEtheConnectionBySN(const_cast<char *>(SN.data()), &_handle) == OPT_SUCCEED)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         return true;
