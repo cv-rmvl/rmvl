@@ -1,3 +1,15 @@
-float YAW_COMPENSATE = 0.f   # yaw 静态补偿 (相机比测速模块高出的角度)
-float PITCH_COMPENSATE = 0.f # pitch 静态补偿 (相机比测速模块高出的角度)
-float MINIMUM_COM = 0.5f     # 手动补偿最小步进
+#################### 物理参数 ####################
+double g = 9.788     # 重力加速度，单位 m/s^2
+double m = 0.041     # 质量，单位 kg
+double rho = 1.29    # 空气密度，单位 kg/m^3
+double A = 1.4186e-3 # 参考面积，单位 m^2
+double V = 4.0194e-5  # 体积，单位 m^3
+double Cd = 0.26     # 阻力系数
+double Cl = 0.2      # 升力系数
+
+################## 补偿调节参数 ##################
+double h = 0.02            # 龙格库塔迭代步长
+size_t MAX_COM = 100       # 最大补偿步进
+float YAW_COMPENSATE = 0   # yaw 静态补偿 (相机比测速模块高出的角度)
+float PITCH_COMPENSATE = 0 # pitch 静态补偿 (相机比测速模块高出的角度)
+float MINIMUM_COM = 0.5    # 手动补偿最小步进

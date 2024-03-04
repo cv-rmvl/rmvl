@@ -19,6 +19,7 @@
 using namespace std;
 using namespace cv;
 using namespace rm;
+using namespace rm::numeric_literals;
 
 namespace rm_test
 {

@@ -9,6 +9,8 @@
  *
  */
 
+#pragma once
+
 #include "compensator.h"
 
 namespace rm
@@ -21,32 +23,21 @@ namespace rm
 class GyroCompensator final : public compensator
 {
 public:
+    //! 创建 GyroCompensator 对象
     GyroCompensator();
 
-    //! 构造 GyroCompensator
-    static inline std::unique_ptr<GyroCompensator> make_compensator()
-    {
-        return std::make_unique<GyroCompensator>();
-    }
+    //! 使用静态工厂函数创建 GyroCompensator 对象
+    static inline auto make_compensator() { return std::make_unique<GyroCompensator>(); }
 
     /**
-     * @brief 补偿核心函数
+     * @brief 补偿函数，未考虑空气阻力，仅使用抛物线模型 \cite icra2019
      *
      * @param[in] groups 所有序列组
      * @param[in] shoot_speed 子弹射速 (m/s)
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    CompensateInfo compensate(const std::vector<group::ptr> &groups,
-                              uint8_t shoot_speed, CompensateType com_flag) override;
-
-private:
-    /**
-     * @brief 更新静态补偿量
-     *
-     * @param[in] com_flag 补偿类型
-     */
-    void updateStaticCom(CompensateType com_flag);
+    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) override;
 };
 
 //! @} compensator

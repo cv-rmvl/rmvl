@@ -36,9 +36,9 @@ constexpr double FLOAT_MAX{HUGE};
 #endif
 
 #if __cpp_lib_math_constants >= 201907L
-constexpr double PI = std::numbers::pi;        //!< 圆周率: \f$\pi\f$
-constexpr double e = std::numbers::e;          //!< 自然对数底数: \f$e\f$
-constexpr double SQRT_2 = std::numbers::sqrt2; //!< 根号 2: \f$\sqrt2\f$
+constexpr double PI = ::std::numbers::pi;        //!< 圆周率: \f$\pi\f$
+constexpr double e = ::std::numbers::e;          //!< 自然对数底数: \f$e\f$
+constexpr double SQRT_2 = ::std::numbers::sqrt2; //!< 根号 2: \f$\sqrt2\f$
 #else
 constexpr double PI = 3.14159265358979323; //!< 圆周率: \f$\pi\f$
 constexpr double e = 2.7182818459045;      //!< 自然对数底数: \f$e\f$
@@ -47,7 +47,9 @@ constexpr double SQRT_2 = 1.4142135623731; //!< 根号 2: \f$\sqrt2\f$
 
 constexpr double PI_2 = PI / 2.; //!< PI / 2: \f$\frac\pi2\f$
 constexpr double PI_4 = PI / 4.; //!< PI / 4: \f$\frac\pi4\f$
-constexpr double g = 9.788;      //!< 重力加速度: \f$g\f$
+
+namespace numeric_literals
+{
 
 constexpr double operator""_PI(long double num) { return num * PI; }
 constexpr double operator""_PI(long long unsigned num) { return num * PI; }
@@ -57,6 +59,8 @@ constexpr double operator""_to_rad(long long unsigned num) { return num * PI / 1
 
 constexpr double operator""_to_deg(long double num) { return num * 180. / PI; }
 constexpr double operator""_to_deg(long long unsigned num) { return num * 180. / PI; }
+
+} // namespace numeric_literals
 
 } // namespace rm
 

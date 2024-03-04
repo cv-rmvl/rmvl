@@ -63,34 +63,7 @@ public:
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    virtual CompensateInfo compensate(const std::vector<group::ptr> &groups, uint8_t shoot_speed,
-                                      CompensateType com_flag) = 0;
-
-    /**
-     * @brief 获得补偿角度
-     * @note
-     * - 使用不动点迭代法进行补偿量的求解 \cite icra2019
-     * - 需要严格满足相机对水平方向的夹角等于 `gyro_angle.y`
-     *
-     * @param[in] x 目标离相机的水平宽度
-     * @param[in] y 目标离相机的铅垂高度
-     * @param[in] velocity 枪口射速
-     *
-     * @return 补偿角度
-     */
-    static double getPitch(double x, double y, double velocity);
-
-private:
-    /**
-     * @brief 计算真实的 y 坐标
-     *
-     * @param[in] distance 相机到装甲板的水平距离 (m)
-     * @param[in] velocity 枪口射速 (m/s)
-     * @param[in] angle 枪口与水平方向的夹角 (rad)
-     *
-     * @return 世界坐标系下真实的 y 坐标
-     */
-    static double bulletModel(double distance, double velocity, double angle);
+    virtual CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) = 0;
 };
 
 //! @} compensator
