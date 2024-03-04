@@ -21,7 +21,7 @@ namespace rm
 //! @{
 
 //! OPT 光源控制器 IP 配置信息
-struct DevIpConfig
+struct LightIpConfig
 {
     std::string ip;              //!< IP 地址
     std::string subnet_mask;     //!< 子网掩码
@@ -53,7 +53,7 @@ public:
      * @param[in] ip_config IP 配置信息
      * @return 连接是否成功建立？
      */
-    bool connect(const DevIpConfig &ip_config);
+    bool connect(const LightIpConfig &ip_config);
 
     /**
      * @brief 使用设备序列号创建 EtherNet 以太网连接
@@ -61,7 +61,7 @@ public:
      * @param[in] SN 设备序列号
      * @return 连接是否成功建立？
      */
-    bool connect(const std::string &SN);
+    bool connect(std::string_view SN);
 
     /**
      * @brief 断开已存在网口的连接
@@ -71,8 +71,7 @@ public:
     /**
      * @brief 打开指定通道
      *
-     * @param[in] channels 要打开的通道的索引组成的 `std::vector` ，范围:[1 ~ 32]（十进制格式）
-     *
+     * @param[in] channels 要打开的通道的索引组成的 `std::vector` ，范围: [1 ~ 32]（十进制格式）
      * @return 指定通道是否打开成功？
      */
     bool openChannels(const std::vector<int> &channels);
