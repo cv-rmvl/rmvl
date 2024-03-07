@@ -50,7 +50,7 @@ void setSvr(rm::Server &svr)
     svr.addMethodNode(method);
     // 添加对象节点，包含字符串变量和乘法方法
     svr.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
 }
 
 // 路径搜索
@@ -122,6 +122,7 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     EXPECT_TRUE(client.monitor(node_id, onChange, 5));
     // 数据更新
     client.write(node_id, 66);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     client.spinOnce();
     EXPECT_EQ(type_name, "Int32");
     EXPECT_EQ(receive_data, 66);

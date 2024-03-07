@@ -35,10 +35,11 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     //////////////////// 添加连接配置 ////////////////////
     UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
     UA_PubSubConnectionConfig connect_config{};
-    connect_config.name = UA_String_fromChars((_name + "Connection").c_str());
-    connect_config.transportProfileUri = UA_String_fromChars("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp");
+    std::string cn_name_str = _name + "Connection";
+    connect_config.name = UA_STRING(helper::to_char(cn_name_str));
+    connect_config.transportProfileUri = UA_STRING(const_cast<char *>("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp"));
     connect_config.enabled = UA_TRUE;
-    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_String_fromChars(address.c_str())};
+    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(address))};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     connect_config.publisherId.numeric = UA_UInt32_random();
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
@@ -53,7 +54,8 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
 {
     //////////////// 添加 ReaderGroup (RG) ///////////////
     UA_ReaderGroupConfig rg_config{};
-    rg_config.name = UA_String_fromChars((pub_name + "ReaderGroup").c_str());
+    std::string pub_name_str = pub_name + "ReaderGroup";
+    rg_config.name = UA_STRING(helper::to_char(pub_name_str));
     auto status = UA_Server_addReaderGroup(_server, _connection_id, &rg_config, &_rg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -70,7 +72,8 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
 
     ////////////// 添加 DataSetReader (DSR) //////////////
     UA_DataSetReaderConfig dsr_config{};
-    dsr_config.name = UA_String_fromChars((pub_name + "DataSetWriter").c_str());
+    std::string dsr_name = pub_name + "DataSetReader";
+    dsr_config.name = UA_STRING(helper::to_char(dsr_name));
     UA_UInt32 publisher_id = _strhash(pub_name + "Connection") % 0x8000000u;
     UA_Variant_setScalar(&dsr_config.publisherId, &publisher_id, &UA_TYPES[UA_TYPES_UINT16]);
     dsr_config.writerGroupId = _strhash(pub_name + "WriterGroup") % 0x8000u;
@@ -78,13 +81,13 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
 
     // 设置数 DSR 中的元数据配置
     std::string dataset_name = _name + "DataSetMetaData";
-    dsr_config.dataSetMetaData.name = UA_String_fromChars(dataset_name.c_str());
+    dsr_config.dataSetMetaData.name = UA_STRING(helper::to_char(dataset_name));
     std::vector<UA_FieldMetaData> raw_fields(fields.size());
     for (size_t i = 0; i < fields.size(); i++)
     {
         UA_NodeId_copy(&UA_TYPES[fields[i].type].typeId, &raw_fields[i].dataType);
         raw_fields[i].builtInType = typeflag_ns0[fields[i].type];
-        raw_fields[i].name = UA_String_fromChars(fields[i].name.c_str());
+        raw_fields[i].name = UA_STRING(helper::to_char(fields[i].name));
         raw_fields[i].description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(fields[i].name));
         raw_fields[i].valueRank = fields[i].value_rank;
     }

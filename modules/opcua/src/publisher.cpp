@@ -38,11 +38,13 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     //////////////////// 添加连接配置 ////////////////////
     UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
     UA_PubSubConnectionConfig connect_config{};
-    connect_config.name = UA_String_fromChars((_name + "Connection").c_str());
-    connect_config.transportProfileUri = UA_String_fromChars("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp");
+    std::string cn_name_str = _name + "Connection";
+    connect_config.name = UA_STRING(helper::to_char(cn_name_str));
+    connect_config.transportProfileUri = UA_STRING(const_cast<char *>("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp"));
     connect_config.enabled = UA_TRUE;
-    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_String_fromChars((address + ":" + std::to_string(port)).c_str())};
-    UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
+    std::string url_str = address + ":" + std::to_string(port);
+    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(url_str))};
+    UA_Variant_setScalar(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     // 用哈希值作为发布者 ID
     connect_config.publisherId.numeric = _strhash(_name + "Connection") % 0x8000000u;
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
@@ -54,7 +56,8 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     //////////// 添加 PublishedDataSet (PDS) /////////////
     UA_PublishedDataSetConfig pds_config{};
     pds_config.publishedDataSetType = UA_PUBSUB_DATASET_PUBLISHEDITEMS;
-    pds_config.name = UA_String_fromChars((_name + "PublishedDataSet").c_str());
+    std::string pds_name_str = _name + "PublishedDataSet";
+    pds_config.name = UA_STRING(helper::to_char(pds_name_str));
     auto pds_status = UA_Server_addPublishedDataSet(_server, &pds_config, &_pds_id);
     if (pds_status.addResult != UA_STATUSCODE_GOOD)
     {
@@ -64,11 +67,11 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     }
 }
 
-static UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd)
+static inline UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd)
 {
     UA_DataSetFieldConfig dsf_config{};
     dsf_config.dataSetFieldType = UA_PUBSUB_DATASETFIELD_VARIABLE;
-    dsf_config.field.variable.fieldNameAlias = UA_String_fromChars(pd.name.c_str());
+    dsf_config.field.variable.fieldNameAlias = UA_STRING(helper::to_char(pd.name));
     dsf_config.field.variable.promotedField = false;
     dsf_config.field.variable.publishParameters.publishedVariable = pd.node_id;
     dsf_config.field.variable.publishParameters.attributeId = UA_ATTRIBUTEID_VALUE;
@@ -99,7 +102,8 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
 
     //////////////// 添加 WriterGroup (WG) ///////////////
     UA_WriterGroupConfig wg_config{};
-    wg_config.name = UA_String_fromChars((_name + "WriterGroup").c_str());
+    std::string wg_name_str = _name + "WriterGroup";
+    wg_config.name = UA_STRING(helper::to_char(wg_name_str));
     wg_config.publishingInterval = duration;
     wg_config.enabled = UA_FALSE;
     wg_config.writerGroupId = _strhash(_name + "WriterGroup") % 0x8000u;
@@ -128,7 +132,8 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     }
     ////////////// 添加 DataSetWriter (DSW) //////////////
     UA_DataSetWriterConfig dsw_config{};
-    dsw_config.name = UA_String_fromChars((_name + "DataSetWriter").c_str());
+    std::string dsw_name_str = _name + "DataSetWriter";
+    dsw_config.name = UA_STRING(helper::to_char(dsw_name_str));
     dsw_config.dataSetWriterId = _strhash(_name + "DataSetWriter") % 0x8000u;
     dsw_config.keyFrameCount = para::opcua_param.KEY_FRAME_COUNT;
     status = UA_Server_addDataSetWriter(_server, _wg_id, _pds_id, &dsw_config, &_dsw_id);

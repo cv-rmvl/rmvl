@@ -2,8 +2,8 @@
  * @file publisher.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 发布者
- * @version 1.0
- * @date 2023-11-30
+ * @version 2.1
+ * @date 2024-03-07
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -24,11 +24,11 @@ namespace rm
 /**
  * @brief 待发布的数据集 (PDS)
  * @brief
- * - 包含变量节点发布的名称及其对应的 ID
+ * - 包含变量节点发布的字段名称及其对应的 ID
  */
 struct PublishedDataSet
 {
-    std::string name;  //!< 变量节点发布的名称
+    std::string name;  //!< 变量节点发布的字段名称
     UA_NodeId node_id; //!< 变量节点 ID
 };
 
