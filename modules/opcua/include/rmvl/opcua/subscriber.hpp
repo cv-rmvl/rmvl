@@ -2,8 +2,8 @@
  * @file subscriber.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 订阅者
- * @version 1.0
- * @date 2023-11-30
+ * @version 2.1
+ * @date 2024-03-07
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -54,12 +54,12 @@ struct FieldMetaData final
      * @brief
      * - 变量的 `Variable::getDataType()` 用于设置字段类型
      * @brief
-     * - 变量的 `Variable::getValueRank()` 用于设置字段 ValueRank
+     * - 变量的 `Variable::size()` 用于辅助设置字段 ValueRank
      *
      * @param[in] val 变量，可参考 @ref rm::Variable
      * @return FieldMetaData 字段元数据
      */
-    FieldMetaData(const Variable &val) : name(val.browse_name), type(val.getDataType()), value_rank(val.getValueRank()) {}
+    FieldMetaData(const Variable &val) : name(val.browse_name), type(val.getDataType()), value_rank(val.size() == 1 ? UA_VALUERANK_SCALAR : 1) {}
 };
 
 /**

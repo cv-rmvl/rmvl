@@ -17,6 +17,8 @@
 
 #include "rmvl/opcua/server.hpp"
 
+#include "cvt.hpp"
+
 namespace rm
 {
 
@@ -28,7 +30,8 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
 
     UA_ServerConfig *config = UA_Server_getConfig(_server);
     UA_ServerConfig_setMinimal(config, port, nullptr);
-
+    config->samplingIntervalLimits.min = 2.0;
+    config->publishingIntervalLimits.min = 2.0;
     if (!users.empty())
     {
         std::vector<UA_UsernamePasswordLogin> usr_passwd;
@@ -53,8 +56,7 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
     }
 }
 
-Server::Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users)
-    : Server(port, users) // 委托构造
+Server::Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users) : Server(port, users)
 {
     if (on_config != nullptr)
         on_config(_server);
@@ -84,7 +86,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
     // 设置属性
     attr.value = variant;
     attr.dataType = variant.type->typeId;
-    attr.valueRank = vtype.getValueRank();
+    attr.valueRank = vtype.size() == 1 ? UA_VALUERANK_SCALAR : 1;
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
@@ -97,6 +99,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
         _server, UA_NODEID_NULL, nodeBaseDataVariableType, nodeHasSubtype,
         UA_QUALIFIEDNAME(1, helper::to_char(vtype.browse_name)),
         UA_NODEID_NULL, attr, nullptr, &retval);
+    UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add variable type node: %s", UA_StatusCode_name(status));
@@ -114,7 +117,7 @@ UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_i
     attr.value = variant;
     attr.dataType = variant.type->typeId;
     attr.accessLevel = val.getAccessLevel();
-    attr.valueRank = val.getValueRank();
+    attr.valueRank = val.size() == 1 ? UA_VALUERANK_SCALAR : 1;
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
@@ -146,25 +149,27 @@ UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_i
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add variable node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
+    UA_Variant_clear(&variant);
     return retval;
 }
 
 Variable Server::read(const UA_NodeId &node)
 {
     UA_Variant p_val;
+    UA_Variant_init(&p_val);
     auto status = UA_Server_readValue(_server, node, &p_val);
     if (status != UA_STATUSCODE_GOOD)
-    {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to read variable: %s", UA_StatusCode_name(status));
         return {};
-    }
-    return helper::cvtVariable(p_val);
+    Variable retval = helper::cvtVariable(p_val);
+    UA_Variant_clear(&p_val);
+    return retval;
 }
 
 bool Server::write(const UA_NodeId &node, const Variable &val)
 {
     auto variant = helper::cvtVariable(val);
     auto status = UA_Server_writeValue(_server, node, variant);
+    UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to write variable, error code: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
@@ -186,15 +191,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     UA_Variant variant = helper::cvtVariable(val);
     // 设置属性
-    attr.value = variant;
-    attr.dataType = variant.type->typeId;
     attr.accessLevel = val.getAccessLevel();
-    attr.valueRank = val.getValueRank();
-    if (attr.valueRank != UA_VALUERANK_SCALAR)
-    {
-        attr.arrayDimensionsSize = variant.arrayDimensionsSize;
-        attr.arrayDimensions = variant.arrayDimensions;
-    }
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     // 获取变量节点的变量类型节点
@@ -218,6 +215,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     auto status = UA_Server_addDataSourceVariableNode(
         _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(1, helper::to_char(val.browse_name)),
         type_id, attr, data_source, nullptr, &retval);
+    UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data source variable node: %s", UA_StatusCode_name(status));

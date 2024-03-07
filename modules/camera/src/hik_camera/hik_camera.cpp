@@ -28,7 +28,8 @@ bool HikCamera::isOpened() const { return _impl->isOpened(); }
 bool HikCamera::reconnect() { return _impl->reconnect(); }
 
 //! MV_CC_PIXEL_CONVERT_PARAM 的初始化变量
-static MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init = {0, 0, PixelType_Gvsp_Undefined, nullptr, 0, PixelType_Gvsp_Undefined, nullptr, 0, 0, {0}};
+static const MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init =
+    {0, 0, PixelType_Gvsp_Undefined, nullptr, 0, PixelType_Gvsp_Undefined, nullptr, 0, 0, {0}};
 
 HikCamera::Impl::Impl(CameraConfig init_mode, std::string_view serial) noexcept
     : _grab_mode(init_mode.grab_mode), _retrieve_mode(init_mode.retrieve_mode), _serial(serial) { _opened = open(); }
@@ -145,11 +146,11 @@ static inline cv::ColorConversionCodes pixelType2CVType(MvGvspPixelType pixel_ty
 bool HikCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcept
 {
     // --------------------- 前置信息准备 ---------------------
-    auto &frame_info = _p_out.stFrameInfo;
+    const auto &frame_info = _p_out.stFrameInfo;
     // 当前格式
     auto pixel_type = frame_info.enPixelType;
     // 单通道标志位集合
-    std::unordered_set<MvGvspPixelType> mono_set =
+    static std::unordered_set<MvGvspPixelType> mono_set =
         {PixelType_Gvsp_Mono1p, PixelType_Gvsp_Mono2p, PixelType_Gvsp_Mono4p,
          PixelType_Gvsp_Mono8, PixelType_Gvsp_Mono8_Signed,
          PixelType_Gvsp_Mono10, PixelType_Gvsp_Mono10_Packed,
@@ -171,7 +172,7 @@ bool HikCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcep
     // MV_CC_ConvertPixelType
     if (flag == RetrieveMode::SDK)
     {
-        MV_CC_PIXEL_CONVERT_PARAM cvt_param = MV_CC_PIXEL_CONVERT_PARAM_Init;
+        MV_CC_PIXEL_CONVERT_PARAM cvt_param{MV_CC_PIXEL_CONVERT_PARAM_Init};
         cvt_param.nWidth = frame_info.nWidth;              // 图像宽
         cvt_param.nHeight = frame_info.nHeight;            // 图像高
         cvt_param.pSrcData = _p_out.pBufAddr;              // 输入数据缓存
@@ -221,7 +222,7 @@ bool HikCamera::Impl::read(cv::OutputArray image) noexcept
         retrieve(image, _retrieve_mode);
     else
     {
-        WARNING_("No data in getting image buffer");
+        WARNING_("hik - No data in getting image buffer");
         reconnect();
     }
     // 释放图像缓存

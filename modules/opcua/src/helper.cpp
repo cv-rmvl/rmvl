@@ -14,7 +14,8 @@
 #include <open62541/server.h>
 
 #include "rmvl/opcua/method.hpp"
-#include "rmvl/opcua/variable.hpp"
+
+#include "cvt.hpp"
 
 UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
 {
@@ -66,13 +67,12 @@ UA_Variant cvtVariable(const Variable &val)
     const std::any &data = val.data();
 
     UA_Variant p_val;
-    UA_Variant_init(&p_val);
     if (val.size() == 1)
     {
         switch (val.getDataType())
         {
         case UA_TYPES_STRING: {
-            UA_String str = UA_STRING_ALLOC(std::any_cast<const char *>(data));
+            UA_String str = UA_STRING(const_cast<char *>(std::any_cast<const char *>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
         }
         break;
@@ -199,7 +199,8 @@ UA_Variant cvtVariable(const Variable &val)
         }
         p_val.arrayLength = val.size();
         p_val.arrayDimensionsSize = 1;
-        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(val.size());
+        p_val.arrayDimensions = reinterpret_cast<UA_UInt32 *>(UA_malloc(sizeof(UA_UInt32)));
+        *p_val.arrayDimensions = val.size();
     }
     return p_val;
 }
@@ -410,7 +411,8 @@ UA_Variant cvtVariable(const VariableType &vtype)
         }
         p_val.arrayLength = vtype.size();
         p_val.arrayDimensionsSize = 1;
-        p_val.arrayDimensions = &const_cast<UA_UInt32 &>(vtype.size());
+        p_val.arrayDimensions = reinterpret_cast<UA_UInt32 *>(UA_malloc(sizeof(UA_UInt32)));
+        *p_val.arrayDimensions = vtype.size();
     }
     return p_val;
 }
@@ -419,8 +421,8 @@ UA_Argument cvtArgument(const Argument &arg)
 {
     UA_Argument argument;
     UA_Argument_init(&argument);
-    argument.name = UA_STRING_ALLOC(arg.name.c_str());
-    argument.description = UA_LOCALIZEDTEXT_ALLOC(zh_CN(), arg.name.c_str());
+    argument.name = UA_STRING(to_char(arg.name));
+    argument.description = UA_LOCALIZEDTEXT(zh_CN(), to_char(arg.name));
     argument.dataType = UA_TYPES[arg.data_type].typeId;
     RMVL_Assert(arg.dims);
     if (arg.dims == 1)

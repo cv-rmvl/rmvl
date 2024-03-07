@@ -2,8 +2,8 @@
  * @file client.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 客户端
- * @version 1.0
- * @date 2023-10-29
+ * @version 2.1
+ * @date 2024-03-07
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -59,6 +59,9 @@ public:
     inline FindNodeInClient find(const std::string &browse_name) { return {_client, browse_name}; }
 
     /****************************** 功能配置 ******************************/
+
+    //! 是否成功创建客户端
+    inline bool ok() const { return _client != nullptr; }
 
     /**
      * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
