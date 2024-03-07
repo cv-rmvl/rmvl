@@ -2,8 +2,8 @@
  * @file variable.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 变量（类型）
- * @version 1.0
- * @date 2023-10-20
+ * @version 2.1
+ * @date 2024-03-07
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -55,8 +55,8 @@ private:
     std::any _value;
     //! 数据类型
     UA_TypeFlag _data_type{};
-    //! 维数
-    UA_UInt32 _dims{};
+    //! 数据大小
+    UA_UInt32 _size{};
 
 public:
     /**
@@ -65,7 +65,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <size_t N>
-    VariableType(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _dims(1) {}
+    VariableType(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _size(1) {}
 
     /**
      * @brief 单值构造，设置默认值
@@ -74,7 +74,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    VariableType(Tp &&val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _dims(1) {}
+    VariableType(Tp &&val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _size(1) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -83,13 +83,14 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _dims(arr.size()) {}
+    VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _size(arr.size()) {}
 
     VariableType(const VariableType &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description),
-                                            _value(val._value), _data_type(val._data_type), _dims(val._dims) {}
+                                            _value(val._value), _data_type(val._data_type), _size(val._size) {}
 
-    VariableType(VariableType &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
-                                       _value(std::move(val._value)), _data_type(std::exchange(val._data_type, 0)), _dims(std::exchange(val._dims, 0)) {}
+    VariableType(VariableType &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)),
+                                       description(std::move(val.description)), _value(std::move(val._value)),
+                                       _data_type(std::exchange(val._data_type, 0)), _size(std::exchange(val._size, 0)) {}
 
     VariableType &operator=(const VariableType &val);
 
@@ -111,16 +112,8 @@ public:
     //! 获取数据类型
     inline UA_TypeFlag getDataType() const { return _data_type; }
 
-    //! 获取数组维度 @note 单独的数则返回 `1`，未初始化则返回 `0`
-    inline const UA_UInt32 &size() const { return _dims; }
-
-    /**
-     * @brief 获取默认数据的阶数、秩
-     *
-     * @return 阶数
-     * @retval `UA_VALUERANK_SCALAR` 或 `1`
-     */
-    inline int getValueRank() const { return _dims == 1 ? UA_VALUERANK_SCALAR : 1; }
+    //! 获取大小 @note 未初始化则返回 `0`
+    inline UA_UInt32 size() const { return _size; }
 };
 
 //! OPC UA 变量
@@ -160,8 +153,8 @@ private:
     std::any _value;
     //! 数据类型
     UA_TypeFlag _data_type{};
-    //! 维数
-    UA_UInt32 _dims{};
+    //! 数据大小
+    UA_UInt32 _size{};
     //! 访问性
     uint8_t _access_level{};
 
@@ -174,7 +167,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <unsigned int N>
-    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _dims(1), _access_level(3U) {}
+    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _size(1), _access_level(3U) {}
 
     /**
      * @brief 单值构造
@@ -183,7 +176,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    Variable(const Tp &val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _dims(1), _access_level(3U) {}
+    Variable(const Tp &val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _size(1), _access_level(3U) {}
 
     /**
      * @brief 列表构造
@@ -192,7 +185,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _dims(arr.size()), _access_level(3U) {}
+    Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _size(arr.size()), _access_level(3U) {}
 
     /**
      * @brief 从变量类型构造新的变量节点
@@ -200,20 +193,39 @@ public:
      * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
      */
     explicit Variable(VariableType &vtype) : _type(&vtype), _value(vtype.data()), _data_type(vtype.getDataType()),
-                                             _dims(vtype.size()), _access_level(3U) {}
+                                             _size(vtype.size()), _access_level(3U) {}
 
     Variable(const Variable &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description), _type(val._type),
-                                    _value(val._value), _data_type(val._data_type), _dims(val._dims), _access_level(val._access_level) {}
+                                    _value(val._value), _data_type(val._data_type), _size(val._size), _access_level(val._access_level) {}
 
-    Variable(Variable &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)), _type(std::exchange(val._type, nullptr)),
-                               _value(std::move(val._value)), _data_type(std::exchange(val._data_type, 0)), _dims(std::exchange(val._dims, 0)), _access_level(std::exchange(val._access_level, 0)) {}
+    Variable(Variable &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
+                               _type(std::exchange(val._type, nullptr)), _value(std::move(val._value)), _data_type(std::exchange(val._data_type, 0)),
+                               _size(std::exchange(val._size, 0)), _access_level(std::exchange(val._access_level, 0)) {}
 
     Variable &operator=(const Variable &val);
 
     Variable &operator=(Variable &&val);
 
+    /**
+     * @brief 比较两个变量是否相等，当且仅当两个变量的数据类型、维数、数据值均相等时返回
+     *        `true`，而不考虑变量的名称、描述等信息
+     *
+     * @param[in] val 另一个变量
+     * @return 是否相等
+     */
+    bool operator==(const Variable &val) const;
+
+    /**
+     * @brief 比较两个变量是否不等
+     * @see `rm::Variable::operator==`
+     *
+     * @param[in] val 另一个变量
+     * @return 是否不等
+     */
+    inline bool operator!=(const Variable &val) const { return !(*this == val); }
+
     //! 判断变量节点是否为空
-    constexpr bool empty() const { return _dims == 0; }
+    constexpr bool empty() const { return _size == 0; }
 
     /**
      * @brief 将变量节点转化为指定类型的数据
@@ -248,8 +260,8 @@ public:
     //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
     inline UA_TypeFlag getDataType() const { return _data_type; }
 
-    //! 获取数组维度指针 @note 单独的数则返回 `1`，未初始化则返回 `0`
-    inline const UA_UInt32 &size() const { return _dims; }
+    //! 获取大小 @note 未初始化则返回 `0`
+    inline UA_UInt32 size() const { return _size; }
 
     /**
      * @brief 设置访问性
@@ -260,52 +272,7 @@ public:
 
     //! 获取访问性
     inline uint8_t getAccessLevel() const { return _access_level; }
-
-    /**
-     * @brief 获取数据阶数、秩
-     *
-     * @return 数据阶数
-     * @retval `UA_VALUERANK_SCALAR` 或 `1`
-     */
-    inline int getValueRank() const { return _dims == 1 ? UA_VALUERANK_SCALAR : 1; }
 };
-
-//! @} opcua
-
-namespace helper
-{
-
-/**
- * @brief `rm::Variable` 转化为 `UA_Variant`
- *
- * @warning 此方法一般不直接使用
- * @param[in] val `rm::Variable` 表示的变量
- * @return `UA_Variant` 表示变量节点的内置数据
- */
-UA_Variant cvtVariable(const Variable &val);
-
-/**
- * @brief `UA_Variant` 转化为 `rm::Variable`
- *
- * @warning 此方法一般不直接使用
- * @param[in] p_val `UA_Variant` 表示的变量
- * @return 用 `rm::Variable` 表示的变量节点
- */
-Variable cvtVariable(const UA_Variant &p_val);
-
-/**
- * @brief `rm::VariableType` 转化为 `UA_Variant`
- *
- * @warning 此方法一般不直接使用
- * @param[in] vtype `rm::VariableType` 表示的变量类型
- * @return 用 `UA_Variant` 表示的变量类型节点的内置数据
- */
-UA_Variant cvtVariable(const VariableType &vtype);
-
-} // namespace helper
-
-//! @addtogroup opcua
-//! @{
 
 /**
  * @brief 创建变量类型，BrowseName、DisplayName、Description 均为变量类型的名称

@@ -17,6 +17,8 @@
 #include "rmvl/opcua/client.hpp"
 #include "rmvlpara/opcua.hpp"
 
+#include "cvt.hpp"
+
 namespace rm
 {
 
@@ -46,6 +48,8 @@ Client::Client(std::string_view address, UserConfig usr)
 
 Client::~Client()
 {
+    if (_client == nullptr)
+        return;
     auto status = UA_Client_disconnect(_client);
     if (status != UA_STATUSCODE_GOOD)
         UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to disconnect the client");
@@ -75,22 +79,21 @@ void Client::spinOnce() { UA_Client_run_iterate(_client, para::opcua_param.SPIN_
 
 Variable Client::read(const UA_NodeId &node)
 {
-    UA_Variant variant;
-
-    UA_StatusCode status = UA_Client_readValueAttribute(_client, node, &variant);
+    UA_Variant p_val;
+    UA_Variant_init(&p_val);
+    UA_StatusCode status = UA_Client_readValueAttribute(_client, node, &p_val);
     if (status != UA_STATUSCODE_GOOD)
-    {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to read value from the specific node, error: %s", UA_StatusCode_name(status));
         return {};
-    }
-    // 变量节点信息
-    return helper::cvtVariable(variant);
+    Variable retval = helper::cvtVariable(p_val);
+    UA_Variant_clear(&p_val);
+    return retval;
 }
 
 bool Client::write(const UA_NodeId &node, const Variable &val)
 {
     UA_Variant new_variant = helper::cvtVariable(val);
     auto status = UA_Client_writeValueAttribute(_client, node, &new_variant);
+    UA_Variant_clear(&new_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to write value to the specific node, error: %s", UA_StatusCode_name(status));
@@ -118,6 +121,8 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     // 调用方法
     UA_StatusCode status = UA_Client_call(_client, obj_node, method_node, input_variants.size(),
                                           input_variants.data(), &output_size, &output_variants);
+    for (auto &input_variant : input_variants)
+        UA_Variant_clear(&input_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method, node id: %d, error code: %s",
@@ -127,6 +132,8 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     outputs.reserve(output_size);
     for (size_t i = 0; i < output_size; ++i)
         outputs.push_back(helper::cvtVariable(output_variants[i]));
+    for (size_t i = 0; i < output_size; ++i)
+        UA_Variant_clear(&output_variants[i]);
     return true;
 }
 

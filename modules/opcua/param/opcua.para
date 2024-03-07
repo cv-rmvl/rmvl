@@ -1,9 +1,9 @@
 uint32_t SPIN_TIMEOUT = 500 # 服务器超时响应的时间，单位 (ms)
 
-double SAMPLING_INTERVAL = 50     # 服务器监视变量的采样速度，单位 (ms)
-double PUBLISHING_INTERVAL = 100  # 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms)
+double SAMPLING_INTERVAL = 2      # 服务器监视变量的采样速度，单位 (ms)，不得小于 2ms
+double PUBLISHING_INTERVAL = 2    # 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms)，不得小于 2ms
 uint32_t LIFETIME_COUNT = 100     # 在没有发布任何消息的情况下，订阅请求所期望的能够保持活动状态的最大发布周期数
-uint32_t MAX_KEEPALIVE_COUNT = 10 # 在没有任何通知的情况下，订阅请求所期望的服务器应该发送的最大 “保活” 消息数
+uint32_t MAX_KEEPALIVE_COUNT = 50 # 在没有任何通知的情况下，订阅请求所期望的服务器应该发送的最大 “保活” 消息数
 uint32_t MAX_NOTIFICATIONS = 100  # 服务器应该发送的期望的最大通知数（通知是服务器向客户端报告订阅的变化的方式）
 uint8_t PRIORITY = 0              # 订阅请求的优先级
 

@@ -23,7 +23,7 @@ VariableType &VariableType::operator=(const VariableType &val)
     description = val.description;
     _value = val._value;
     _data_type = val._data_type;
-    _dims = val._dims;
+    _size = val._size;
     return *this;
 }
 
@@ -34,7 +34,7 @@ VariableType &VariableType::operator=(VariableType &&val)
     description = std::move(val.description);
     _value = std::move(val._value);
     _data_type = std::exchange(val._data_type, 0);
-    _dims = std::exchange(val._dims, 0);
+    _size = std::exchange(val._size, 0);
     return *this;
 }
 
@@ -46,7 +46,7 @@ Variable &Variable::operator=(const Variable &val)
     _type = val._type;
     _value = val._value;
     _data_type = val._data_type;
-    _dims = val._dims;
+    _size = val._size;
     _access_level = val._access_level;
     return *this;
 }
@@ -59,9 +59,77 @@ Variable &Variable::operator=(Variable &&val)
     _type = std::exchange(val._type, nullptr);
     _value = std::move(val._value);
     _data_type = std::exchange(val._data_type, 0);
-    _dims = std::exchange(val._dims, 0);
+    _size = std::exchange(val._size, 0);
     _access_level = std::exchange(val._access_level, 0);
     return *this;
+}
+
+bool Variable::operator==(const Variable &val) const
+{
+    if (_data_type != val._data_type)
+        return false;
+    if (_size != val._size)
+        return false;
+    if (_size == 1)
+    {
+        switch (_data_type)
+        {
+        case UA_TYPES_BOOLEAN:
+            return std::any_cast<bool>(_value) == std::any_cast<bool>(val._value);
+        case UA_TYPES_SBYTE:
+            return std::any_cast<int8_t>(_value) == std::any_cast<int8_t>(val._value);
+        case UA_TYPES_BYTE:
+            return std::any_cast<uint8_t>(_value) == std::any_cast<uint8_t>(val._value);
+        case UA_TYPES_INT16:
+            return std::any_cast<int16_t>(_value) == std::any_cast<int16_t>(val._value);
+        case UA_TYPES_UINT16:
+            return std::any_cast<uint16_t>(_value) == std::any_cast<uint16_t>(val._value);
+        case UA_TYPES_INT32:
+            return std::any_cast<int32_t>(_value) == std::any_cast<int32_t>(val._value);
+        case UA_TYPES_UINT32:
+            return std::any_cast<uint32_t>(_value) == std::any_cast<uint32_t>(val._value);
+        case UA_TYPES_INT64:
+            return std::any_cast<int64_t>(_value) == std::any_cast<int64_t>(val._value);
+        case UA_TYPES_UINT64:
+            return std::any_cast<uint64_t>(_value) == std::any_cast<uint64_t>(val._value);
+        case UA_TYPES_FLOAT:
+            return std::any_cast<float>(_value) == std::any_cast<float>(val._value);
+        case UA_TYPES_DOUBLE:
+            return std::any_cast<double>(_value) == std::any_cast<double>(val._value);
+        case UA_TYPES_STRING:
+            return std::any_cast<const char *>(_value) == std::any_cast<const char *>(val._value);
+        default:
+            return false;
+        }
+    }
+    else
+    {
+        switch (_data_type)
+        {
+        case UA_TYPES_SBYTE:
+            return std::any_cast<std::vector<int8_t>>(_value) == std::any_cast<std::vector<int8_t>>(val._value);
+        case UA_TYPES_BYTE:
+            return std::any_cast<std::vector<uint8_t>>(_value) == std::any_cast<std::vector<uint8_t>>(val._value);
+        case UA_TYPES_INT16:
+            return std::any_cast<std::vector<int16_t>>(_value) == std::any_cast<std::vector<int16_t>>(val._value);
+        case UA_TYPES_UINT16:
+            return std::any_cast<std::vector<uint16_t>>(_value) == std::any_cast<std::vector<uint16_t>>(val._value);
+        case UA_TYPES_INT32:
+            return std::any_cast<std::vector<int32_t>>(_value) == std::any_cast<std::vector<int32_t>>(val._value);
+        case UA_TYPES_UINT32:
+            return std::any_cast<std::vector<uint32_t>>(_value) == std::any_cast<std::vector<uint32_t>>(val._value);
+        case UA_TYPES_INT64:
+            return std::any_cast<std::vector<int64_t>>(_value) == std::any_cast<std::vector<int64_t>>(val._value);
+        case UA_TYPES_UINT64:
+            return std::any_cast<std::vector<uint64_t>>(_value) == std::any_cast<std::vector<uint64_t>>(val._value);
+        case UA_TYPES_FLOAT:
+            return std::any_cast<std::vector<float>>(_value) == std::any_cast<std::vector<float>>(val._value);
+        case UA_TYPES_DOUBLE:
+            return std::any_cast<std::vector<double>>(_value) == std::any_cast<std::vector<double>>(val._value);
+        default:
+            return false;
+        }
+    }
 }
 
 Argument &Argument::operator=(const Argument &val)
