@@ -23,10 +23,9 @@ class HikCamera::Impl
     // -------------------------- 相机信息 --------------------------
     void *_handle;                   //!< 相机设备句柄
     MV_CC_DEVICE_INFO_LIST _devices; //!< 设备信息列表
-    GrabMode _grab_mode;             //!< 采集模式
-    RetrieveMode _retrieve_mode;     //!< 处理模式
+    CameraConfig _init_mode;         //!< 初始化配置模式
     std::string _serial;             //!< 相机序列号 S/N
-    bool _opened = false;            //!< 相机是否打开
+    bool _opened{};                  //!< 相机是否打开
 
     // -------------------------- 图像信息 --------------------------
     MV_FRAME_OUT _p_out;          //!< 输出图像的数据及信息

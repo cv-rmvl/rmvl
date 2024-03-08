@@ -74,7 +74,7 @@ bool MvCamera::Impl::set(int propId, double value) noexcept
     // Activities
     case CAMERA_ONCE_WB:
         return CameraSetOnceWB(_handle) == CAMERA_STATUS_SUCCESS;
-    case CAMERA_SOFT_TRIGGER:
+    case CAMERA_TRIGGER_SOFT:
         if (_grab_mode != GrabMode::Continuous)
             return CameraSoftTrigger(_handle) == CAMERA_STATUS_SUCCESS;
         else

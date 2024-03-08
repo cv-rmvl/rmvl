@@ -32,7 +32,7 @@ static const MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init =
     {0, 0, PixelType_Gvsp_Undefined, nullptr, 0, PixelType_Gvsp_Undefined, nullptr, 0, 0, {0}};
 
 HikCamera::Impl::Impl(CameraConfig init_mode, std::string_view serial) noexcept
-    : _grab_mode(init_mode.grab_mode), _retrieve_mode(init_mode.retrieve_mode), _serial(serial) { _opened = open(); }
+    : _init_mode(init_mode), _serial(serial) { _opened = open(); }
 
 HikCamera::Impl::~Impl() noexcept { release(); }
 
@@ -63,6 +63,9 @@ void HikCamera::Impl::release() noexcept
 
 bool HikCamera::Impl::open() noexcept
 {
+    // 提取初始化模式
+    auto grab_mode = _init_mode.grab_mode;
+    auto trigger_chn = _init_mode.trigger_channel;
     // ----------------------- 设备枚举 -----------------------
     int ret = MV_OK;
     ret = MV_CC_EnumDevices(MV_USB_DEVICE, &_devices);
@@ -108,16 +111,41 @@ bool HikCamera::Impl::open() noexcept
         return false;
     }
     // --------------------- 设置工作模式 ---------------------
-    if (_grab_mode == GrabMode::Continuous)
-        ret = MV_CC_SetEnumValue(_handle, "TriggerMode", 0); // 连续采样
+    if (grab_mode == GrabMode::Continuous)
+        ret = MV_CC_SetEnumValue(_handle, "TriggerMode", MV_TRIGGER_MODE_OFF); // 连续采样
     else
-        ret = MV_CC_SetEnumValue(_handle, "TriggerMode", 1); // 触发模式
+        ret = MV_CC_SetEnumValue(_handle, "TriggerMode", MV_TRIGGER_MODE_ON); // 触发模式
     if (ret != MV_OK)
     {
         ERROR_("hik - failed to set trigger mode (error: \"%s\")", errorCode2Str(ret));
         return false;
     }
-    // 开始取流
+    // ---------------------- 设置触发源 ----------------------
+    if (grab_mode == GrabMode::Software)
+        ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_SOFTWARE); // 软触发
+    else if (grab_mode == GrabMode::Hardware)
+    {
+        // 硬触发通道选择
+        switch (trigger_chn)
+        {
+        case TriggerChannel::Chn0:
+            ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE0); 
+            break;
+        case TriggerChannel::Chn1:
+            ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE1);
+            break;
+        case TriggerChannel::Chn2:
+            ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE2);
+            break;
+        case TriggerChannel::Chn3:
+            ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE3);
+            break;
+        default:
+            ERROR_("hik - invalid trigger channel: %d", static_cast<int>(trigger_chn));
+            return false;
+        }
+    }
+    // ----------------------- 开始取流 -----------------------
     ret = MV_CC_StartGrabbing(_handle);
     if (ret != MV_OK)
     {
@@ -208,7 +236,7 @@ bool HikCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcep
     }
     // 无效参数
     else
-        ERROR_("hik - failed to retrieve, invalid retrieve mode: %d.", static_cast<int>(_retrieve_mode));
+        ERROR_("hik - failed to retrieve, invalid retrieve mode: %d.", static_cast<int>(_init_mode.retrieve_mode));
     // 处理失败默认操作
     image.assign(cv::Mat());
     return false;
@@ -219,11 +247,12 @@ bool HikCamera::Impl::read(cv::OutputArray image) noexcept
     // 获取图像地址
     auto ret = MV_CC_GetImageBuffer(_handle, &_p_out, 1000);
     if (ret == MV_OK)
-        retrieve(image, _retrieve_mode);
+        retrieve(image, _init_mode.retrieve_mode);
     else
     {
         WARNING_("hik - No data in getting image buffer");
         reconnect();
+        return false;
     }
     // 释放图像缓存
     if (_p_out.pBufAddr != nullptr)

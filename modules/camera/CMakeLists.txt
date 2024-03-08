@@ -1,13 +1,11 @@
-find_package(OpenCV REQUIRED)
-
 rmvl_generate_para(
   camera
   MODULE camera
 )
+
 rmvl_add_module(
   camera
   DEPENDS rmath
-  EXTERNAL ${OpenCV_LIBS}
 )
 
 # --------------------------------------------------------------------------
