@@ -4,6 +4,18 @@
 #error "C++23 is not supported"
 #endif
 
+// 显式对象成员函数
+struct S
+{
+    int a{};
+
+    void f(this S self, int i)
+    {
+        self.a = i;
+    }
+};
+
+// 打印库
 #include <print>
 
 int main()

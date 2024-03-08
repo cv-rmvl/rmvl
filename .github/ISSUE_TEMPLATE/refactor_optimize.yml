@@ -11,7 +11,7 @@ body:
 
 - type: textarea
   attributes:
-    label: 描待优化、重构的内容
+    label: 描述待优化、重构的内容
     description: |
       描述现阶段代码存在的安全性、功能性上待优化，或者代码逻辑上、架构上待重构的内容
     placeholder: |
