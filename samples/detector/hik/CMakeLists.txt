@@ -2,11 +2,13 @@ if(NOT BUILD_rmvl_hik_camera OR NOT BUILD_rmvl_armor_detector)
   return()
 endif()
 
-rmvl_add_exe(
-  rmvl_hik_armor_collection
-  SOURCES sample_hik_armor_collection.cpp
-  DEPENDS hik_camera armor_detector
-)
+if(HAVE_STD_FILESYSTEM)
+  rmvl_add_exe(
+    rmvl_hik_armor_collection
+    SOURCES sample_hik_armor_collection.cpp
+    DEPENDS hik_camera armor_detector
+  )
+endif()
 
 rmvl_add_exe(
   rmvl_hik_armor_size_classify

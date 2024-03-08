@@ -177,6 +177,10 @@ endfunction(_para_parser file_name header_details source_details)
 #     )
 # ----------------------------------------------------------------------------
 function(rmvl_generate_para target_name)
+  if(DEFINED BUILD_${the_module}_INIT AND NOT BUILD_${the_module}_INIT)
+    message(STATUS "Performing Conversion ${target_name}.para - skipped")
+    return()
+  endif()
   system_date(year month day)
   set(one_value MODULE)
   cmake_parse_arguments(PARA "" "${one_value}" "" ${ARGN})
@@ -211,7 +215,7 @@ function(rmvl_generate_para target_name)
   # parser
   _para_parser(${file_name} para_header_details para_source_details para_status)
   if(NOT para_status)
-    message(STATUS "${para_msg} - Failed")
+    message(STATUS "${para_msg} - failed")
     return()
   endif()
   set(para_include_path)
@@ -246,7 +250,7 @@ function(rmvl_generate_para target_name)
   )
   unset(para_include_path)
   ############################ message end ############################
-  message(STATUS "${para_msg} - Success")
+  message(STATUS "${para_msg} - done")
 endfunction(rmvl_generate_para target_name)
 
 # ----------------------------------------------------------------------------

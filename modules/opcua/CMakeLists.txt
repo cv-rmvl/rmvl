@@ -9,7 +9,7 @@ set(BUILD_rmvl_opcua_INIT ${WITH_OPEN62541})
 rmvl_add_module(
   opcua
   DEPENDS core
-  EXTERNAL open62541
+  EXTERNAL open62541::open62541
 )
 
 # add test

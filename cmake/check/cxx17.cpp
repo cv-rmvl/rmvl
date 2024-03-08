@@ -33,8 +33,7 @@ constexpr int f()
 template <typename... Args>
 inline auto sum_add_1(Args... args) { return (args + ... + 1); }
 
-// 库支持
-#include <filesystem>
+// 库支持（以 GCC 7 为最低标准）
 #include <optional>
 #include <variant>
 #include <any>
