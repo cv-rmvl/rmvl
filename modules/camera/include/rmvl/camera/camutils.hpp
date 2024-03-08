@@ -56,10 +56,10 @@ enum class RetrieveMode : uint8_t
 //! 相机初始化配置模式
 struct CameraConfig
 {
-    TriggerChannel trigger_channel : 4 {TriggerChannel::Chn1}; //!< 触发通道
-    GrabMode grab_mode : 4 {GrabMode::Continuous};             //!< 采集模式
-    HandleMode handle_mode : 4 {HandleMode::Key};              //!< 句柄创建方式
-    RetrieveMode retrieve_mode : 4 {RetrieveMode::OpenCV};     //!< 数据处理模式
+    TriggerChannel trigger_channel{TriggerChannel::Chn1}; //!< 触发通道
+    GrabMode grab_mode{GrabMode::Continuous};             //!< 采集模式
+    HandleMode handle_mode{HandleMode::Key};              //!< 句柄创建方式
+    RetrieveMode retrieve_mode{RetrieveMode::OpenCV};     //!< 数据处理模式
 
     /**
      * @brief 创建相机初始化配置模式

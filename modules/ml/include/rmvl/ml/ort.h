@@ -13,8 +13,6 @@
 
 #include <opencv2/core/mat.hpp>
 
-#include <onnxruntime_cxx_api.h>
-
 namespace rm
 {
 

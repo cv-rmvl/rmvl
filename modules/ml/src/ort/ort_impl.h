@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <opencv2/core/mat.hpp>
-
 #include <onnxruntime_cxx_api.h>
 
 #include "rmvl/ml/ort.h"
