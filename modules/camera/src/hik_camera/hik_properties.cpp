@@ -21,17 +21,21 @@ bool HikCamera::Impl::set(int propId, double value) noexcept
     {
     // Properties
     case CAMERA_AUTO_EXPOSURE:
-        return MV_CC_SetEnumValue(_handle, "ExposureAuto", 2) == MV_OK; // Continuous
+        return MV_CC_SetEnumValue(_handle, "ExposureAuto", MV_EXPOSURE_AUTO_MODE_CONTINUOUS) == MV_OK;
     case CAMERA_MANUAL_EXPOSURE:
-        return MV_CC_SetEnumValue(_handle, "ExposureAuto", 0) == MV_OK; // Off
+        return MV_CC_SetEnumValue(_handle, "ExposureAuto", MV_EXPOSURE_AUTO_MODE_OFF) == MV_OK;
+    case CAMERA_ONCE_EXPOSURE:
+        return MV_CC_SetEnumValue(_handle, "ExposureAuto", MV_EXPOSURE_AUTO_MODE_ONCE) == MV_OK;
+    case CAMERA_AUTO_WB:
+        return MV_CC_SetEnumValue(_handle, "BalanceWhiteAuto", MV_BALANCEWHITE_AUTO_CONTINUOUS) == MV_OK;
+    case CAMERA_MANUAL_WB:
+        return MV_CC_SetEnumValue(_handle, "BalanceWhiteAuto", MV_BALANCEWHITE_AUTO_OFF) == MV_OK;
+    case CAMERA_ONCE_WB:
+        return MV_CC_SetEnumValue(_handle, "BalanceWhiteAuto", MV_BALANCEWHITE_AUTO_ONCE) == MV_OK;
     case CAMERA_EXPOSURE:
         return MV_CC_SetFloatValue(_handle, "ExposureTime", static_cast<float>(value)) == MV_OK;
     case CAMERA_GAIN:
         return MV_CC_SetFloatValue(_handle, "Gain", static_cast<float>(value)) == MV_OK;
-    case CAMERA_AUTO_WB:
-        return MV_CC_SetEnumValue(_handle, "BalanceWhiteAuto", 1) == MV_OK; // Continuous
-    case CAMERA_MANUAL_WB:
-        return MV_CC_SetEnumValue(_handle, "BalanceWhiteAuto", 0) == MV_OK; // Off
     case CAMERA_WB_BGAIN:
         return MV_CC_SetEnumValue(_handle, "BalanceRatioSelector", 2) == MV_OK && // Blue
                MV_CC_SetIntValue(_handle, "BalanceRatio", static_cast<unsigned int>(value)) == MV_OK;
@@ -48,10 +52,7 @@ bool HikCamera::Impl::set(int propId, double value) noexcept
     case CAMERA_SATURATION:
         return MV_CC_SetBoolValue(_handle, "SaturationEnable", true) == MV_OK &&
                MV_CC_SetFloatValue(_handle, "Saturation", static_cast<float>(value)) == MV_OK;
-    // Activities
-    case CAMERA_ONCE_WB:
-        return MV_CC_SetEnumValue(_handle, "BalanceWhiteAuto", 2) == MV_OK; // Once
-    case CAMERA_SOFT_TRIGGER:
+    case CAMERA_TRIGGER_SOFT:
         return MV_CC_SetCommandValue(_handle, "TriggerSoftware") == MV_OK;
     default:
         ERROR_("Try to set undefined variable, id: %d.", propId);

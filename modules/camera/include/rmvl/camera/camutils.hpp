@@ -93,33 +93,29 @@ private:
 enum CameraProperties : uint16_t
 {
     // ---------------- 设备属性 ----------------
-    CAMERA_AUTO_EXPOSURE = 0x1001,   //!< 自动曝光
-    CAMERA_AUTO_WB = 0x1002,         //!< 自动白平衡
-    CAMERA_MANUAL_EXPOSURE = 0x1003, //!< 手动曝光
-    CAMERA_MANUAL_WB = 0x1004,       //!< 手动白平衡
-    CAMERA_EXPOSURE = 0x1005,        //!< 曝光值
-    CAMERA_GAIN = 0x1006,            //!< 模拟增益
-    CAMERA_GAMMA = 0x1007,           //!< Gamma 值
-    CAMERA_WB_RGAIN = 0x1008,        //!< 白平衡红色分量
-    CAMERA_WB_GGAIN = 0x1009,        //!< 白平衡绿色分量
-    CAMERA_WB_BGAIN = 0x100a,        //!< 白平衡蓝色分量
-    CAMERA_CONTRAST = 0x100c,        //!< 对比度
-    CAMERA_SATURATION = 0x100d,      //!< 饱和度
-    CAMERA_SHARPNESS = 0x100e,       //!< 锐度
-    CAMERA_FRAME_HEIGHT = 0x100f,    //!< 图像帧高度
-    CAMERA_FRAME_WIDTH = 0x1010,     //!< 图像帧宽度
+    CAMERA_AUTO_EXPOSURE = 0x1,   //!< 自动曝光
+    CAMERA_MANUAL_EXPOSURE = 0x2, //!< 手动曝光
+    CAMERA_ONCE_EXPOSURE = 0x3,   //!< 单次曝光
+    CAMERA_AUTO_WB = 0x10,        //!< 自动白平衡
+    CAMERA_MANUAL_WB = 0x11,      //!< 手动白平衡
+    CAMERA_ONCE_WB = 0x12,        //!< 单次白平衡
+    CAMERA_EXPOSURE = 0x20,       //!< 曝光值
+    CAMERA_GAIN = 0x21,           //!< 模拟增益
+    CAMERA_GAMMA = 0x22,          //!< Gamma 值
+    CAMERA_WB_RGAIN = 0x23,       //!< 白平衡红色分量
+    CAMERA_WB_GGAIN = 0x24,       //!< 白平衡绿色分量
+    CAMERA_WB_BGAIN = 0x25,       //!< 白平衡蓝色分量
+    CAMERA_CONTRAST = 0x26,       //!< 对比度
+    CAMERA_SATURATION = 0x27,     //!< 饱和度
+    CAMERA_SHARPNESS = 0x28,      //!< 锐度
+    CAMERA_FRAME_HEIGHT = 0x30,   //!< 图像帧高度
+    CAMERA_FRAME_WIDTH = 0x31,    //!< 图像帧宽度
 
     // ---------------- 处理属性 ----------------
-    CAMERA_TRIGGER_DELAY = 0x1101,  //!< 硬触发采集延迟（微秒\f$μs\f$）
-    CAMERA_TRIGGER_COUNT = 0x1102,  //!< 单次触发时的触发帧数
-    CAMERA_TRIGGER_PERIOD = 0x1103, //!< 单次触发时多次采集的周期（微秒\f$μs\f$）
-};
-
-//! 相机运行时事件
-enum CameraEvents : uint16_t
-{
-    CAMERA_ONCE_WB = 0x2001,     //!< 执行一次白平衡
-    CAMERA_SOFT_TRIGGER = 0x2002 //!< 执行软触发
+    CAMERA_TRIGGER_DELAY = 0x40,  //!< 硬触发采集延迟（微秒\f$μs\f$）
+    CAMERA_TRIGGER_COUNT = 0x41,  //!< 单次触发时的触发帧数
+    CAMERA_TRIGGER_PERIOD = 0x42, //!< 单次触发时多次采集的周期（微秒\f$μs\f$）
+    CAMERA_TRIGGER_SOFT = 0x43,   //!< 执行软触发
 };
 
 //! 相机外参

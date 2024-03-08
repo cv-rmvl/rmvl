@@ -216,7 +216,7 @@ capture.set(CAMERA_TRIGGER_PERIOD, 100);
 
 ```cpp
 capture.set(CAMERA_ONCE_WB);      // 执行一次白平衡操作，仅在手动白平衡模式下有效
-capture.set(CAMERA_SOFT_TRIGGER); // 执行一次软触发，仅在软触发模式下有效
+capture.set(CAMERA_TRIGGER_SOFT); // 执行一次软触发，仅在软触发模式下有效
 ```
 
 ## 2. para 参数加载
@@ -364,7 +364,7 @@ int main()
         while (run)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            capture.set(rm::CAMERA_SOFT_TRIGGER); // 触发
+            capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
         }
     });
 
