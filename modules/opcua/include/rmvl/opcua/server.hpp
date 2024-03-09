@@ -26,6 +26,8 @@ namespace rm
 //! @addtogroup opcua
 //! @{
 
+//! @example samples/opcua/opcua_server.cpp OPC UA 服务器例程
+
 //! 值回调函数，Read 函数指针定义
 using ValueCallBackBeforeRead = void (*)(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
                                          const UA_NumericRange *, const UA_DataValue *);
