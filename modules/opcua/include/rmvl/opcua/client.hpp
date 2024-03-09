@@ -22,6 +22,8 @@ namespace rm
 //! @addtogroup opcua
 //! @{
 
+//! @example samples/opcua/opcua_client.cpp OPC UA 客户端例程
+
 //! OPC UA 客户端
 class Client
 {
