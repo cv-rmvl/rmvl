@@ -247,25 +247,25 @@ Variable cvtVariable(const UA_Variant &p_val)
         switch (type_flag)
         {
         case UA_TYPES_SBYTE:
-            return std::vector(reinterpret_cast<UA_SByte *>(data), reinterpret_cast<UA_SByte *>(data) + dims);
+            return std::vector<UA_SByte>(reinterpret_cast<UA_SByte *>(data), reinterpret_cast<UA_SByte *>(data) + dims);
         case UA_TYPES_BYTE:
-            return std::vector(reinterpret_cast<UA_Byte *>(data), reinterpret_cast<UA_Byte *>(data) + dims);
+            return std::vector<UA_Byte>(reinterpret_cast<UA_Byte *>(data), reinterpret_cast<UA_Byte *>(data) + dims);
         case UA_TYPES_INT16:
-            return std::vector(reinterpret_cast<UA_Int16 *>(data), reinterpret_cast<UA_Int16 *>(data) + dims);
+            return std::vector<UA_Int16>(reinterpret_cast<UA_Int16 *>(data), reinterpret_cast<UA_Int16 *>(data) + dims);
         case UA_TYPES_UINT16:
-            return std::vector(reinterpret_cast<UA_UInt16 *>(data), reinterpret_cast<UA_UInt16 *>(data) + dims);
+            return std::vector<UA_UInt16>(reinterpret_cast<UA_UInt16 *>(data), reinterpret_cast<UA_UInt16 *>(data) + dims);
         case UA_TYPES_INT32:
-            return std::vector(reinterpret_cast<UA_Int32 *>(data), reinterpret_cast<UA_Int32 *>(data) + dims);
+            return std::vector<UA_Int32>(reinterpret_cast<UA_Int32 *>(data), reinterpret_cast<UA_Int32 *>(data) + dims);
         case UA_TYPES_UINT32:
-            return std::vector(reinterpret_cast<UA_UInt32 *>(data), reinterpret_cast<UA_UInt32 *>(data) + dims);
+            return std::vector<UA_UInt32>(reinterpret_cast<UA_UInt32 *>(data), reinterpret_cast<UA_UInt32 *>(data) + dims);
         case UA_TYPES_INT64:
-            return std::vector(reinterpret_cast<UA_Int64 *>(data), reinterpret_cast<UA_Int64 *>(data) + dims);
+            return std::vector<UA_Int64>(reinterpret_cast<UA_Int64 *>(data), reinterpret_cast<UA_Int64 *>(data) + dims);
         case UA_TYPES_UINT64:
-            return std::vector(reinterpret_cast<UA_UInt64 *>(data), reinterpret_cast<UA_UInt64 *>(data) + dims);
+            return std::vector<UA_UInt64>(reinterpret_cast<UA_UInt64 *>(data), reinterpret_cast<UA_UInt64 *>(data) + dims);
         case UA_TYPES_FLOAT:
-            return std::vector(reinterpret_cast<UA_Float *>(data), reinterpret_cast<UA_Float *>(data) + dims);
+            return std::vector<UA_Float>(reinterpret_cast<UA_Float *>(data), reinterpret_cast<UA_Float *>(data) + dims);
         case UA_TYPES_DOUBLE:
-            return std::vector(reinterpret_cast<UA_Double *>(data), reinterpret_cast<UA_Double *>(data) + dims);
+            return std::vector<UA_Double>(reinterpret_cast<UA_Double *>(data), reinterpret_cast<UA_Double *>(data) + dims);
         default:
             RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", type_flag);
         }
