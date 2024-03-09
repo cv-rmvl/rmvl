@@ -67,10 +67,10 @@ struct CameraConfig
      * @param[in] modes 配置模式参数包
      */
     template <typename... Args>
-    static inline CameraConfig create(Args... modes)
+    static inline CameraConfig create(Args &&...modes)
     {
         CameraConfig config;
-        config.set(modes...);
+        config.set(std::forward<Args>(modes)...);
         return config;
     }
 

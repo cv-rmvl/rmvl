@@ -10,7 +10,7 @@ macro(rmvl_check_cxx result src standard)
   if(NOT "${standard}" STREQUAL "")
     set(build_args " ${standard}")
   endif()
-  message(STATUS "Preforming Test ${result} (check file: ${src}${build_args})")
+  message(STATUS "Performing Test ${result} (check file: ${src}${build_args})")
   try_compile(
     ${result}
     ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/cpp${standard}
