@@ -52,7 +52,7 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
         DEBUG_PASS_("rune 2.rune_radius_ratio : pass");
     }
 
-    return make_shared<Rune>(p_target, p_center, gyro_data, tick);
+    return std::make_shared<Rune>(p_target, p_center, gyro_data, tick);
 }
 
 Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, double tick)

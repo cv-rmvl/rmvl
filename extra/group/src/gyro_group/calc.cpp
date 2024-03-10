@@ -105,10 +105,9 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
     std::vector<float> rs(visible_num);       // 旋转半径
     // 排序，从右到左
     auto operate_combos = visible_combos;
-    sort(operate_combos.begin(), operate_combos.end(),
-         [](const combo::ptr &lhs, const combo::ptr &rhs) {
-             return lhs->getCenter().x > rhs->getCenter().x;
-         });
+    sort(operate_combos.begin(), operate_combos.end(), [](combo::const_ptr lhs, combo::const_ptr rhs) {
+        return lhs->getCenter().x > rhs->getCenter().x;
+    });
     for (size_t i = 0; i < visible_num; ++i)
     {
         Rs[i] = operate_combos[i]->getExtrinsics().R();

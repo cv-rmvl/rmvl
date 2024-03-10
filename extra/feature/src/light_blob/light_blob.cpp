@@ -108,7 +108,7 @@ std::shared_ptr<LightBlob> LightBlob::make_feature(const std::vector<cv::Point> 
             return nullptr;
     }
     // 构造返回
-    return make_shared<LightBlob>(contour, rotated_rect, lw_ratio, angle);
+    return std::make_shared<LightBlob>(contour, rotated_rect, lw_ratio, angle);
 }
 
 LightBlob::LightBlob(const std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float lw_ratio, float angle)
