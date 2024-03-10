@@ -15,10 +15,8 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/tracker/rune_tracker.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 /**
  * @brief 强制构造神符
@@ -37,21 +35,21 @@ Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick
     auto old_target = p_rune_target->getCenter();
     auto old_center = p_rune_center->getCenter();
     // 绕 center 旋转
-    Vec2f target_vec(old_target.x - old_center.x,
-                     old_target.y - old_center.y);
-    Matx22f rot = {cos(deg2rad(delta_angle)), sin(deg2rad(delta_angle)),
-                   -sin(deg2rad(delta_angle)), cos(deg2rad(delta_angle))};
+    cv::Vec2f target_vec(old_target.x - old_center.x,
+                         old_target.y - old_center.y);
+    cv::Matx22f rot = {std::cos(deg2rad(delta_angle)), std::sin(deg2rad(delta_angle)),
+                       -std::sin(deg2rad(delta_angle)), std::cos(deg2rad(delta_angle))};
     target_vec = rot * target_vec;
     // 获取新的神符中心图像中心点
-    auto old_gyro_angle = Point2f(ref_rune->getGyroData().rotation.yaw,
-                                  ref_rune->getGyroData().rotation.pitch);
-    auto new_gyro_angle = Point2f(gyro_data.rotation.yaw, gyro_data.rotation.pitch);
+    auto old_gyro_angle = cv::Point2f(ref_rune->getGyroData().rotation.yaw,
+                                      ref_rune->getGyroData().rotation.pitch);
+    auto new_gyro_angle = cv::Point2f(gyro_data.rotation.yaw, gyro_data.rotation.pitch);
     // -(new_gyro_angle - old_gyro_angle)
-    auto dpoint = calculateRelativeCenter(camera_param.cameraMatrix, old_gyro_angle - new_gyro_angle) -
-                  calculateRelativeCenter(camera_param.cameraMatrix, {});
+    auto dpoint = calculateRelativeCenter(para::camera_param.cameraMatrix, old_gyro_angle - new_gyro_angle) -
+                  calculateRelativeCenter(para::camera_param.cameraMatrix, {});
     // 获取新的神符靶心图像中心点
     auto new_center = old_center + dpoint;
-    auto new_target = new_center + Point2f(target_vec);
+    auto new_target = new_center + cv::Point2f(target_vec);
     // 强制构造
     auto p_new_rune_center = RuneCenter::make_feature(new_center);
     auto p_new_rune_target = RuneTarget::make_feature(new_target, p_rune_target->isActive());
@@ -68,9 +66,9 @@ void RuneTracker::vanishProcess(double tick, const GyroData &gyro_data)
     if (_combo_deque.size() >= 2)
         t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
     else
-        t = rune_tracker_param.SAMPLE_INTERVAL / 1000.;
-    _filter.setA(Matx22f{1, t,
-                         0, 1});
+        t = para::rune_tracker_param.SAMPLE_INTERVAL / 1000.;
+    _filter.setA(cv::Matx22f{1, t,
+                             0, 1});
     // 旋转状态先验估计
     auto rotate_pre = _filter.predict();
 
@@ -79,13 +77,14 @@ void RuneTracker::vanishProcess(double tick, const GyroData &gyro_data)
     _angle = p_rune->getAngle();
 
     float rad_angle = deg2rad(p_rune->getAngle());
-    float feature_dis = getDistance(p_rune->at(0)->getCenter(),
-                                    p_rune->at(1)->getCenter());
-    Point2f relative_center = {p_rune->at(1)->getCenter().x + cos(rad_angle) * feature_dis,
-                               p_rune->at(1)->getCenter().y - sin(rad_angle) * feature_dis};
+    float feature_dis = getDistance(p_rune->at(0)->getCenter(), p_rune->at(1)->getCenter());
+    cv::Point2f relative_center = {p_rune->at(1)->getCenter().x + std::cos(rad_angle) * feature_dis,
+                                   p_rune->at(1)->getCenter().y - std::sin(rad_angle) * feature_dis};
 
-    _relative_angle = calculateRelativeAngle(camera_param.cameraMatrix, relative_center);
+    _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, relative_center);
     // 直接更新后验估计
     _filter.correct(rotate_pre);
     _combo_deque.emplace_front(p_rune);
 }
+
+} // namespace rm

@@ -13,10 +13,8 @@
 
 #include "rmvlpara/tracker/planar_tracker.h"
 
-using namespace para;
-using namespace std;
-using namespace cv;
-using namespace rm;
+namespace rm
+{
 
 void PlanarTracker::updateData(combo::ptr p_combo)
 {
@@ -76,3 +74,5 @@ void PlanarTracker::updateType(RMStatus stat)
     if (_type_deque.size() < 12)
         _type = calculateModeNum(_type_deque.begin(), _type_deque.end());
 }
+
+} // namespace rm

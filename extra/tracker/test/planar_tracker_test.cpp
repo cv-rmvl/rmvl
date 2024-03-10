@@ -17,32 +17,27 @@
 
 #include "rmvlpara/camera/camera.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
-
 namespace rm_test
 {
 
 class PlanarTrackerTest : public testing::Test
 {
-    Mat src;
+    cv::Mat src;
 
 public:
-    double tick{Timer::now()};
-    GyroData gyro_data{};
+    double tick{rm::Timer::now()};
+    rm::GyroData gyro_data{};
 
     void SetUp() override
     {
-        camera_param.cameraMatrix = {1500, 0, 640,
-                                     0, 1500, 512,
-                                     0, 0, 1};
-        camera_param.distCoeffs = {-5.4755376911541398e-01,
-                                  3.4944810516243208e-01,
-                                  -5.7851122028406655e-03,
-                                  2.1845982977120020e-03,
-                                  0.};
+        rm::para::camera_param.cameraMatrix = {1500, 0, 640,
+                                               0, 1500, 512,
+                                               0, 0, 1};
+        rm::para::camera_param.distCoeffs = {-5.4755376911541398e-01,
+                                             3.4944810516243208e-01,
+                                             -5.7851122028406655e-03,
+                                             2.1845982977120020e-03,
+                                             0.};
     }
 
     void TearDown() override {}
@@ -54,11 +49,11 @@ public:
      * @param angle 装甲板倾角
      * @return
      */
-    Armor::ptr buildArmor(Point center, float angle)
+    rm::Armor::ptr buildArmor(cv::Point center, float angle)
     {
-        LightBlob::ptr left_blob = buildBlob(angle, center - Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
-        LightBlob::ptr right_blob = buildBlob(angle, center + Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
-        return Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
+        rm::LightBlob::ptr left_blob = buildBlob(angle, center - cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
+        rm::LightBlob::ptr right_blob = buildBlob(angle, center + cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
+        return rm::Armor::make_combo(left_blob, right_blob, rm::GyroData(), rm::Timer::now());
     }
 
     /**
@@ -68,15 +63,15 @@ public:
      * @param center 中心点
      * @return
      */
-    LightBlob::ptr buildBlob(float angle, Point center)
+    rm::LightBlob::ptr buildBlob(float angle, cv::Point center)
     {
-        src = Mat::zeros(Size(1280, 1024), CV_8UC1);
-        Point base_bias(static_cast<int>(-110 * sin(deg2rad(angle))),
-                        static_cast<int>(110 * cos(deg2rad(angle))));
-        line(src, center - base_bias / 2, center + base_bias / 2, Scalar(255), 12);
-        vector<vector<Point>> contours;
-        findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
-        return LightBlob::make_feature(contours.front());
+        src = cv::Mat::zeros(cv::Size(1280, 1024), CV_8UC1);
+        cv::Point base_bias(static_cast<int>(-110 * sin(rm::deg2rad(angle))),
+                            static_cast<int>(110 * cos(rm::deg2rad(angle))));
+        cv::line(src, center - base_bias / 2, center + base_bias / 2, cv::Scalar(255), 12);
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(src, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        return rm::LightBlob::make_feature(contours.front());
     }
 };
 
@@ -84,8 +79,8 @@ public:
 TEST_F(PlanarTrackerTest, initial_build_function_test)
 {
     // 传入真实装甲板
-    Armor::ptr armor = buildArmor(Point(500, 300), 8);
-    tracker::ptr p_tracker = PlanarTracker::make_tracker(armor);
+    rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
+    rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
     EXPECT_EQ(p_tracker->size(), 1);
     EXPECT_EQ(p_tracker->at(0), armor);
 }
@@ -94,9 +89,9 @@ TEST_F(PlanarTrackerTest, initial_build_function_test)
 TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
 {
     // 连续传入 2 个装甲板
-    Armor::ptr armor = buildArmor(Point(500, 300), 8);
-    tracker::ptr p_tracker = PlanarTracker::make_tracker(armor);
-    Armor::ptr armor2 = buildArmor(Point(505, 300), 8);
+    rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
+    rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
+    rm::Armor::ptr armor2 = buildArmor(cv::Point(505, 300), 8);
     p_tracker->update(armor2, tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_NE(p_tracker->getRelativeAngle(), armor2->getRelativeAngle());
@@ -106,9 +101,9 @@ TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
 TEST_F(PlanarTrackerTest, tracker_update_with_none)
 {
     // 传入装甲板后传入空
-    Armor::ptr armor = buildArmor(Point(500, 300), 8);
-    tracker::ptr p_tracker = PlanarTracker::make_tracker(armor);
-    Armor::ptr armor2 = nullptr;
+    rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
+    rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
+    rm::Armor::ptr armor2 = nullptr;
     p_tracker->update(armor2, tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_EQ(p_tracker->front()->getCenter(), armor->getCenter());
