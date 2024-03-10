@@ -15,13 +15,11 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
-                                    double tick, ArmorSizeType armor_size_type)
+std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
+                                         double tick, ArmorSizeType armor_size_type)
 {
     // 判空
     if (p_left == nullptr || p_right == nullptr)
@@ -54,23 +52,23 @@ shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_righ
     float combo_ratio = combo_width / combo_height;
 
     // --------------------------【更新匹配误差】--------------------------
-    float match_error = armor_param.ERROR_LENGTH_SCALE_RATIO * length_ratio +
-                        armor_param.ERROR_WIDTH_SCALE_RATIO * width_ratio +
-                        armor_param.ERROR_TILT_ANGLE_RATIO * corner_angle +
-                        armor_param.ERROR_ANGLE_SCALE_RATIO * angle_diff;
+    float match_error = para::armor_param.ERROR_LENGTH_SCALE_RATIO * length_ratio +
+                        para::armor_param.ERROR_WIDTH_SCALE_RATIO * width_ratio +
+                        para::armor_param.ERROR_TILT_ANGLE_RATIO * corner_angle +
+                        para::armor_param.ERROR_ANGLE_SCALE_RATIO * angle_diff;
     if (armor_size_type == ArmorSizeType::UNKNOWN)
     {
         // 判断是否构造
-        if (length_ratio >= armor_param.MAX_LENGTH_RATIO) // 长度偏差判断
+        if (length_ratio >= para::armor_param.MAX_LENGTH_RATIO) // 长度偏差判断
             return nullptr;
-        if (width_ratio >= armor_param.MAX_WIDTH_RATIO) // 宽度偏差判断
+        if (width_ratio >= para::armor_param.MAX_WIDTH_RATIO) // 宽度偏差判断
             return nullptr;
-        if (corner_angle >= armor_param.MAX_CORNER_ANGLE) // 装甲板错位角判断
+        if (corner_angle >= para::armor_param.MAX_CORNER_ANGLE) // 装甲板错位角判断
             return nullptr;
-        if (angle_diff >= armor_param.MAX_DELTA_ANGLE) // 角度差值判断
+        if (angle_diff >= para::armor_param.MAX_DELTA_ANGLE) // 角度差值判断
             return nullptr;
-        if (combo_ratio <= armor_param.MIN_COMBO_RATIO ||
-            combo_ratio >= armor_param.MAX_COMBO_RATIO) // 装甲板长宽比值判断
+        if (combo_ratio <= para::armor_param.MIN_COMBO_RATIO ||
+            combo_ratio >= para::armor_param.MAX_COMBO_RATIO) // 装甲板长宽比值判断
             return nullptr;
     }
 
@@ -91,7 +89,7 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
     // 获取装甲板中心
     _center = (p_left->getCenter() + p_right->getCenter()) / 2.f;
     // 获取相对角度
-    _relative_angle = calculateRelativeAngle(camera_param.cameraMatrix, _center);
+    _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, _center);
     // 获取当前装甲板对应的陀螺仪位置信息
     _gyro_data = gyro_data;
     // 装甲板角度
@@ -107,10 +105,12 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
                 p_right->getTopPoint(),     // 右上
                 p_right->getBottomPoint()}; // 右下
     // 计算相机外参
-    _extrinsic = calculateExtrinsic(camera_param.cameraMatrix, camera_param.distCoeffs, gyro_data);
+    _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, gyro_data);
     const auto &rmat = _extrinsic.R();
-    _pose = normalize(Vec2f(rmat(0, 2), rmat(2, 2)));
+    _pose = cv::normalize(cv::Vec2f(rmat(0, 2), rmat(2, 2)));
     // 设置组合体的特征容器
     _features = {p_left, p_right};
     _tick = tick;
 }
+
+} // namespace rm

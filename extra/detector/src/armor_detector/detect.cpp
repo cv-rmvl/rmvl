@@ -13,12 +13,10 @@
 
 #include "rmvlpara/detector/armor_detector.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-DetectInfo ArmorDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
+DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
                                  const GyroData &gyro_data, double tick)
 {
     DetectInfo info{};
@@ -30,7 +28,7 @@ DetectInfo ArmorDetector::detect(vector<group::ptr> &groups, Mat &src, PixChanne
         groups.emplace_back(DefaultGroup::make_group());
     // 二值化处理图像
     PixChannel ch_minus = color == RED ? BLUE : RED;
-    int thesh = color == RED ? armor_detector_param.GRAY_THRESHOLD_RED : armor_detector_param.GRAY_THRESHOLD_BLUE;
+    int thesh = color == RED ? para::armor_detector_param.GRAY_THRESHOLD_RED : para::armor_detector_param.GRAY_THRESHOLD_BLUE;
     info.bin = rm::binary(src, color, ch_minus, thesh);
 
     // 找到所有的灯条和装甲板
@@ -39,3 +37,5 @@ DetectInfo ArmorDetector::detect(vector<group::ptr> &groups, Mat &src, PixChanne
     match(groups, info.combos);
     return info;
 }
+
+} // namespace rm

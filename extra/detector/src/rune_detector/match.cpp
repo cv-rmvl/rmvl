@@ -16,23 +16,21 @@
 
 #include "rmvlpara/tracker/rune_tracker.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-void RuneDetector::match(vector<tracker::ptr> &rune_trackers, const vector<combo::ptr> &combos)
+void RuneDetector::match(std::vector<tracker::ptr> &rune_trackers, const std::vector<combo::ptr> &combos)
 {
     // 匹配
     this->matchRunes(rune_trackers, combos);
     // 删除
     rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(), [](tracker::const_ptr p_tracker) {
-                            return p_tracker->getVanishNumber() >= rune_tracker_param.TRACK_FRAMES;
+                            return p_tracker->getVanishNumber() >= para::rune_tracker_param.TRACK_FRAMES;
                         }),
                         rune_trackers.end());
 }
 
-void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo::ptr> &combos)
+void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos)
 {
     // 如果 trackers 为空先为每个识别到的 active_rune 开辟序列
     if (trackers.empty())
@@ -45,16 +43,15 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
     if (combos.size() > trackers.size())
     {
         // 初始化哈希表
-        unordered_set<combo::ptr> combo_set(combos.begin(), combos.end());
+        std::unordered_set<combo::ptr> combo_set(combos.begin(), combos.end());
         // 距离最近的神符匹配到相应序列中，并 update
         for (auto p_tracker : trackers)
         {
             // 离 p_tracker 最近的 active_rune
-            combo::ptr closest_rune = *min_element(combos.begin(), combos.end(),
-                                                   [&p_tracker](combo::ptr lhs, combo::ptr rhs) {
-                                                       return getDeltaAngle(lhs->getAngle(), p_tracker->front()->getAngle()) <
-                                                              getDeltaAngle(rhs->getAngle(), p_tracker->front()->getAngle());
-                                                   });
+            combo::ptr closest_rune = *min_element(combos.begin(), combos.end(), [&p_tracker](combo::ptr lhs, combo::ptr rhs) {
+                return getDeltaAngle(lhs->getAngle(), p_tracker->front()->getAngle()) <
+                       getDeltaAngle(rhs->getAngle(), p_tracker->front()->getAngle());
+            });
             p_tracker->update(closest_rune, _tick, _gyro_data);
             combo_set.erase(closest_rune);
         }
@@ -66,7 +63,7 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
     else if (combos.size() < trackers.size())
     {
         // 初始化哈希表
-        unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
+        std::unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
         for (auto p_combo : combos)
         {
             // 离 active_rune 最近的 tracker
@@ -86,7 +83,7 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
     else
     {
         // 初始化哈希表
-        unordered_set<combo::ptr> combo_set(combos.begin(), combos.end());
+        std::unordered_set<combo::ptr> combo_set(combos.begin(), combos.end());
         //! @note 防止出现迭代器非法化的情况，此处使用下标访问
         size_t trackers_size = trackers.size();
         for (size_t i = 0; i < trackers_size; i++)
@@ -110,3 +107,5 @@ void RuneDetector::matchRunes(vector<tracker::ptr> &trackers, const vector<combo
         }
     }
 }
+
+} // namespace rm

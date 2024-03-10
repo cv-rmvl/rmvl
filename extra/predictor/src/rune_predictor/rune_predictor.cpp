@@ -17,12 +17,10 @@
 #include "rmvlpara/predictor/rune_predictor.h"
 #include "rmvlpara/tracker/rune_tracker.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-PredictInfo RunePredictor::predict(const vector<group::ptr> &groups, const unordered_map<tracker::ptr, double> &tof)
+PredictInfo RunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof)
 {
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
@@ -36,8 +34,8 @@ PredictInfo RunePredictor::predict(const vector<group::ptr> &groups, const unord
         auto p_rune_tracker = RuneTracker::cast(p_tracker);
         double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
         // Kt + B 预测模型
-        double dKt = p_rune_tracker->getRotatedSpeed() * rune_predictor_param.PREDICT_K * tf;
-        double dB = p_rune_tracker->getRotatedSpeed() * rune_predictor_param.PREDICT_B;
+        double dKt = p_rune_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_K * tf;
+        double dB = p_rune_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_B;
         // 更新预测量
         auto &dynamic_vec = info.dynamic_prediction[p_tracker];
         dynamic_vec[ANG_Z] = dKt;
@@ -46,3 +44,5 @@ PredictInfo RunePredictor::predict(const vector<group::ptr> &groups, const unord
     }
     return info;
 }
+
+} // namespace rm

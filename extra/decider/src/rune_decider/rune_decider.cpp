@@ -18,10 +18,8 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/rune_decider.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 /**
  * @brief 从角度预测增量中获取实际目标转角增量、图像中的位置信息
@@ -31,21 +29,21 @@ using namespace cv;
  * @param[out] d_angle 实际目标转角增量信息
  * @param[out] d_center 实际图像中的位置信息
  */
-static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, Point2f &d_angle, Point2f &d_center)
+static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, cv::Point2f &d_angle, cv::Point2f &d_center)
 {
     auto p_rune = Rune::cast(ref_tracker->front());
     // 特征距离
-    Point2f rune_center = p_rune->at(1)->getCenter();
+    cv::Point2f rune_center = p_rune->at(1)->getCenter();
     float feature_distance = p_rune->getFeatureDis();
     // 动态预测点
-    Point2f predict_center;
+    cv::Point2f predict_center;
     predict_center.x = rune_center.x + feature_distance * cos(deg2rad(ref_tracker->getAngle() + d_predict));
     predict_center.y = rune_center.y - feature_distance * sin(deg2rad(ref_tracker->getAngle() + d_predict));
     // 平面修正
     auto correct_vec = Rune::verticalConvertToCamera(predict_center - rune_center,
                                                      ref_tracker->front()->getGyroData().rotation.pitch);
-    d_center = rune_center + Point2f(correct_vec);
-    d_angle = calculateRelativeAngle(camera_param.cameraMatrix, rune_center + Point2f(correct_vec)) -
+    d_center = rune_center + cv::Point2f(correct_vec);
+    d_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, rune_center + cv::Point2f(correct_vec)) -
               ref_tracker->getRelativeAngle();
 }
 
@@ -58,7 +56,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
     // 需要被考虑的真实追踪器
-    vector<tracker::ptr> true_trackers;
+    std::vector<tracker::ptr> true_trackers;
     true_trackers.reserve(5);
 
     for (auto &p_tracker : groups.front()->data())
@@ -116,7 +114,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
         auto dB = predict_info.static_prediction.at(info.target)(ANG_Z);
         auto comp = compensate_info.compensation.at(info.target);
 
-        Point2f d_angle, center, unused_v;
+        cv::Point2f d_angle, center, unused_v;
         getPredictMsgFromAngleZ(dKt, info.target, unused_v, center);
         getPredictMsgFromAngleZ(dKt + dB, info.target, d_angle, unused_v);
 
@@ -165,21 +163,21 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
 }
 
 bool RuneDecider::judgeShoot(tracker::ptr target_tracker, RuneType rune_mode,
-                             const Point2f &comp, const Point2f &center2d, Point2f &shoot_center)
+                             const cv::Point2f &comp, const cv::Point2f &center2d, cv::Point2f &shoot_center)
 {
     if (!target_tracker)
         return false;
     // 子弹落点转换为图像中的坐标点
-    shoot_center = calculateRelativeCenter(camera_param.cameraMatrix, -comp);
+    shoot_center = calculateRelativeCenter(para::camera_param.cameraMatrix, -comp);
     // 中心距离
     float center_dis = getDistance(center2d, shoot_center);
     // 判断
     switch (rune_mode)
     {
     case RuneType::ACTIVE: // 已激活
-        return center_dis <= rune_decider_param.DISTURB_RADIUS_RATIO * target_tracker->front()->at(1)->getWidth();
+        return center_dis <= para::rune_decider_param.DISTURB_RADIUS_RATIO * target_tracker->front()->at(1)->getWidth();
     default: // 默认: 未激活
-        return center_dis <= rune_decider_param.NORMAL_RADIUS_RATIO * target_tracker->front()->at(1)->getWidth();
+        return center_dis <= para::rune_decider_param.NORMAL_RADIUS_RATIO * target_tracker->front()->at(1)->getWidth();
     }
 }
 
@@ -187,7 +185,9 @@ void RuneDecider::triggerInit()
 {
     _is_changed = true;
     _start_tick = Timer::now();
-    _initial_frequency = rune_decider_param.INIT_FREQUENCY;
-    _miss_frequency = rune_decider_param.MISS_FREQUENCY;
+    _initial_frequency = para::rune_decider_param.INIT_FREQUENCY;
+    _miss_frequency = para::rune_decider_param.MISS_FREQUENCY;
     _send_times = 0;
 }
+
+} // namespace rm

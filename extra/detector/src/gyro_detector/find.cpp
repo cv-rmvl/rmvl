@@ -18,31 +18,29 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/gyro_detector.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-void GyroDetector::find(Mat &src, vector<feature::ptr> &features, vector<combo::ptr> &combos, vector<Mat> &rois)
+void GyroDetector::find(cv::Mat &src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos, std::vector<cv::Mat> &rois)
 {
     // ----------------------- light_blob -----------------------
     // 找到所有灯条
-    vector<LightBlob::ptr> blobs = findLightBlobs(src);
+    std::vector<LightBlob::ptr> blobs = findLightBlobs(src);
     // 删除过亮灯条
     eraseBrightBlobs(src, blobs);
     // ------------------------- armor --------------------------
     if (blobs.size() >= 2)
     {
         // 找到所有装甲板
-        vector<Armor::ptr> armors = findArmors(blobs);
+        std::vector<Armor::ptr> armors = findArmors(blobs);
         if (_ort)
         {
             rois.clear();
             rois.reserve(armors.size());
             for (const auto &armor : armors)
             {
-                Mat roi = Armor::getNumberROI(src, armor);
-                auto type = _ort->inference({roi}, {gyro_detector_param.MODEL_MEAN}, {gyro_detector_param.MODEL_STD})[0];
+                cv::Mat roi = Armor::getNumberROI(src, armor);
+                auto type = _ort->inference({roi}, {para::gyro_detector_param.MODEL_MEAN}, {para::gyro_detector_param.MODEL_STD})[0];
                 armor->setType(_robot_t[type]);
                 rois.emplace_back(roi);
             }
@@ -63,18 +61,18 @@ void GyroDetector::find(Mat &src, vector<feature::ptr> &features, vector<combo::
     }
 }
 
-vector<LightBlob::ptr> GyroDetector::findLightBlobs(Mat &bin)
+std::vector<LightBlob::ptr> GyroDetector::findLightBlobs(cv::Mat &bin)
 {
     // 储存找到的灯条
-    vector<LightBlob::ptr> light_blobs;
+    std::vector<LightBlob::ptr> light_blobs;
     // 储存查找出的轮廓
-    vector<vector<Point>> contours;
+    std::vector<std::vector<cv::Point>> contours;
     // 查找最外围轮廓
-    findContours(bin, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    cv::findContours(bin, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
     for (auto &contour : contours)
     {
         // 排除面积过小的误识别
-        if (contourArea(contour) < gyro_detector_param.MIN_CONTOUR_AREA)
+        if (cv::contourArea(contour) < para::gyro_detector_param.MIN_CONTOUR_AREA)
             continue;
         // 构造灯条对象
         LightBlob::ptr p_light = LightBlob::make_feature(contour);
@@ -85,14 +83,14 @@ vector<LightBlob::ptr> GyroDetector::findLightBlobs(Mat &bin)
     return light_blobs;
 }
 
-vector<Armor::ptr> GyroDetector::findArmors(vector<LightBlob::ptr> &light_blobs)
+std::vector<Armor::ptr> GyroDetector::findArmors(std::vector<LightBlob::ptr> &light_blobs)
 {
     // 灯条从左到右排序
     sort(light_blobs.begin(), light_blobs.end(), [](LightBlob::const_ptr lhs, LightBlob::const_ptr rhs) {
         return lhs->getCenter().x < rhs->getCenter().x;
     });
     // 储存所有匹配到的装甲板
-    vector<Armor::ptr> current_armors;
+    std::vector<Armor::ptr> current_armors;
     if (light_blobs.size() < 2)
         return current_armors;
     // -------------------------------------【匹配】-------------------------------------
@@ -132,9 +130,9 @@ void GyroDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
     // 判断大小是否允许被删除
     if (armors.size() < 2)
         return;
-    unordered_map<Armor::ptr, bool> armor_map; // [装甲板 : 能否删除]
+    std::unordered_map<Armor::const_ptr, bool> armor_map; // [装甲板 : 能否删除]
     for (const auto &armor : armors)
-        armor_map[armor] = false;
+        armor_map.at(armor) = false;
     // 设置是否删除的标志位
     for (size_t i = 0; i + 1 < armors.size(); i++)
     {
@@ -148,24 +146,23 @@ void GyroDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
         }
     }
     // 删除
-    armors.erase(remove_if(armors.begin(), armors.end(),
-                           [&armor_map](const Armor::ptr &val) {
-                               return armor_map[val];
-                           }),
+    armors.erase(std::remove_if(armors.begin(), armors.end(), [&](Armor::const_ptr val) {
+                     return armor_map.at(val);
+                 }),
                  armors.end());
 }
 
-void GyroDetector::eraseFakeArmors(vector<Armor::ptr> &armors)
+void GyroDetector::eraseFakeArmors(std::vector<Armor::ptr> &armors)
 {
-    armors.erase(remove_if(armors.begin(), armors.end(), [](Armor::const_ptr it) {
+    armors.erase(std::remove_if(armors.begin(), armors.end(), [](Armor::const_ptr it) {
                      return it->getType().RobotTypeID == RobotType::UNKNOWN;
                  }),
                  armors.end());
 }
 
-void GyroDetector::eraseBrightBlobs(Mat src, vector<LightBlob::ptr> &blobs)
+void GyroDetector::eraseBrightBlobs(cv::Mat src, std::vector<LightBlob::ptr> &blobs)
 {
-    blobs.erase(remove_if(blobs.begin(), blobs.end(), [&src](LightBlob::const_ptr blob) {
+    blobs.erase(std::remove_if(blobs.begin(), blobs.end(), [&](LightBlob::const_ptr blob) {
                     int total_brightness = 0;
                     for (int i = -5; i <= 5; i++)
                     {
@@ -177,7 +174,7 @@ void GyroDetector::eraseBrightBlobs(Mat src, vector<LightBlob::ptr> &blobs)
                         int y = blob->getCenter().y;
                         y = y < 0 ? 1 : y;
                         y = (y > src.rows) ? src.rows - 1 : y;
-                        auto colors = src.at<Vec3b>(y, x);
+                        auto colors = src.at<cv::Vec3b>(y, x);
                         int brightness = 0.1 * colors[0] + 0.6 * colors[1] + 0.3 * colors[2];
                         total_brightness += brightness;
                     }
@@ -185,3 +182,5 @@ void GyroDetector::eraseBrightBlobs(Mat src, vector<LightBlob::ptr> &blobs)
                 }),
                 blobs.end());
 }
+
+} // namespace rm

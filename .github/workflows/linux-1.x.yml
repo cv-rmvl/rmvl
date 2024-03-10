@@ -9,6 +9,8 @@ on:
       - master
 
 jobs:
+  ubuntu1804-x86_64:
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u18.yml@main
   ubuntu2004-x86_64:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u20.yml@main
   ubuntu2204-x86_64:
