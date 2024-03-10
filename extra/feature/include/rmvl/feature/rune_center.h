@@ -33,7 +33,7 @@ public:
 
     RuneCenter(const RuneCenter &) = delete;
     RuneCenter(RuneCenter &&) = delete;
-    RuneCenter(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect);
+    RuneCenter(const std::vector<cv::Point> &, cv::RotatedRect &);
     RuneCenter(const cv::Point2f &);
 
     /**
@@ -42,7 +42,7 @@ public:
      * @param[in] center 特征中心点
      * @return 如果成功，返回 RuneCenter 的共享指针，否则返回 nullptr
      */
-    static std::shared_ptr<RuneCenter> make_feature(const cv::Point2f &center);
+    static inline std::shared_ptr<RuneCenter> make_feature(const cv::Point2f &center) { return std::make_shared<RuneCenter>(center); }
 
     /**
      * @brief 使用轮廓和层次结构构造 RuneCenter 的构造接口
@@ -50,7 +50,7 @@ public:
      * @param[in] contour 轮廓
      * @return 如果成功，返回 RuneCenter 的共享指针，否则返回 nullptr
      */
-    static std::shared_ptr<RuneCenter> make_feature(std::vector<cv::Point> &contour);
+    static std::shared_ptr<RuneCenter> make_feature(const std::vector<cv::Point> &contour);
 
     /**
      * @brief 动态类型转换

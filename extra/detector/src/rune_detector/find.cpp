@@ -18,10 +18,8 @@
 #include "rmvlpara/combo/rune.h"
 #include "rmvlpara/detector/rune_detector.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 /**
  * @brief 未激活神符靶心等级向量判断
@@ -30,10 +28,10 @@ using namespace cv;
  * @param[in] idx 指定的等级向量的下标
  * @return 等级结构是否满足要求
  */
-inline bool isHierarchyInactive(const vector<Vec4i> &hierarchy, size_t idx)
+inline bool isHierarchyInactive(const std::vector<cv::Vec4i> &hierarchy, size_t idx)
 {
     bool is_inactive = 0;
-    vector<int> bro_hierarchy;
+    std::vector<int> bro_hierarchy;
     int index = idx;
     // 记录并列轮廓数量
     while (hierarchy[index][0] != -1)
@@ -66,7 +64,7 @@ inline bool isHierarchyInactive(const vector<Vec4i> &hierarchy, size_t idx)
  * @param[in] idx 指定的等级向量的下标
  * @return 等级结构是否满足要求
  */
-inline bool isHierarchyActive(const vector<vector<Point>> &contours, const vector<Vec4i> &hierarchy, size_t idx)
+inline bool isHierarchyActive(const std::vector<std::vector<cv::Point>> &contours, const std::vector<cv::Vec4i> &hierarchy, size_t idx)
 {
     if (
         // h[i] 无子轮廓，但有父轮廓，记为 hf[i]
@@ -74,17 +72,17 @@ inline bool isHierarchyActive(const vector<vector<Point>> &contours, const vecto
         // hf[i] 无父轮廓
         hierarchy[hierarchy[idx][3]][3] == -1)
     {
-        if (contourArea(contours[idx]) > rune_detector_param.BIG_TARGET_AREA)
+        if (cv::contourArea(contours[idx]) > para::rune_detector_param.BIG_TARGET_AREA)
             return true;
-        RotatedRect inner = fitEllipse(contours[idx]);
-        RotatedRect outer = fitEllipse(contours[hierarchy[idx][3]]);
-        Point2f inner_center = inner.center;
-        Point2f outer_center = outer.center;
+        cv::RotatedRect inner = cv::fitEllipse(contours[idx]);
+        cv::RotatedRect outer = cv::fitEllipse(contours[hierarchy[idx][3]]);
+        cv::Point2f inner_center = inner.center;
+        cv::Point2f outer_center = outer.center;
         auto dis = getDistance(inner_center, outer_center);
         auto size = (outer.size.width + outer.size.height) / 2.;
         // 偏移与最大直径的比值
         DEBUG_INFO_("target 0.ratio : %f", dis / size);
-        if (dis / size < rune_detector_param.CONCENTRICITY_RATIO)
+        if (dis / size < para::rune_detector_param.CONCENTRICITY_RATIO)
         {
             DEBUG_PASS_("target 0.ratio : pass");
             return true;
@@ -101,7 +99,7 @@ inline bool isHierarchyActive(const vector<vector<Point>> &contours, const vecto
  * @param[in] idx 指定的等级向量的下标
  * @return 等级结构是否满足要求
  */
-inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vector<Vec4i> &hierarchy, size_t idx)
+inline bool isHierarchyCenter(const std::vector<std::vector<cv::Point>> &contours, const std::vector<cv::Vec4i> &hierarchy, size_t idx)
 {
     // h[idx] 必须存在若干并列轮廓，并且无父轮廓
     if ((hierarchy[idx][0] == -1 && hierarchy[idx][1] == -1) || hierarchy[idx][3] != -1)
@@ -112,12 +110,12 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
     // h[idx] 有子轮廓，记为 hs[idx] 轮廓，hs[idx] 无子轮廓
     else if (hierarchy[hierarchy[idx][2]][2] == -1)
     {
-        RotatedRect outer = fitEllipse(contours[idx]);
-        Point2f outer_center = outer.center;
-        Point2f inner_center;
+        cv::RotatedRect outer = cv::fitEllipse(contours[idx]);
+        cv::Point2f outer_center = outer.center;
+        cv::Point2f inner_center;
         for (const auto &contour_point : contours[hierarchy[idx][2]])
         {
-            inner_center += (Point2f)contour_point;
+            inner_center += (cv::Point2f)contour_point;
         }
         int contours_num = contours[hierarchy[idx][2]].size();
         inner_center /= (float)contours[hierarchy[idx][2]].size();
@@ -125,7 +123,7 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
         auto size = (outer.size.width + outer.size.height) / 2.;
         // 偏移与最大直径的比值
         DEBUG_INFO_("center 0.ratio : %f", dis / size);
-        if (dis / size > rune_detector_param.CONCENTRICITY_RATIO)
+        if (dis / size > para::rune_detector_param.CONCENTRICITY_RATIO)
         {
             DEBUG_PASS_("center 0.ratio : pass");
             return true;
@@ -138,23 +136,23 @@ inline bool isHierarchyCenter(const vector<vector<Point>> &contours, const vecto
     return false;
 }
 
-void RuneDetector::find(Mat src, vector<feature::ptr> &features, vector<combo::ptr> &combos)
+void RuneDetector::find(cv::Mat src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos)
 {
-    vector<vector<Point>> contours; // 轮廓二维向量
-    vector<Vec4i> hierarchy;        // 轮廓等级向量
+    std::vector<std::vector<cv::Point>> contours; // 轮廓二维向量
+    std::vector<cv::Vec4i> hierarchy;             // 轮廓等级向量
     // 神符轮廓识别
-    findContours(src, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+    findContours(src, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
     // 神符旋转中心向量
-    vector<RuneCenter::ptr> rune_centers;
-    vector<RuneTarget::ptr> rune_targets;
+    std::vector<RuneCenter::ptr> rune_centers;
+    std::vector<RuneTarget::ptr> rune_targets;
     // 遍历轮廓构建特征
     for (size_t i = 0; i < contours.size(); i++)
     {
         // ======================== 轮廓面积筛选 ========================
-        double rune_area = contourArea(contours[i]);
+        double rune_area = cv::contourArea(contours[i]);
         // 极小面积杂光跳过匹配
-        if (rune_area < rune_detector_param.MIN_CONTOUR_AREA ||
-            rune_area > rune_detector_param.MAX_CONTOUR_AREA)
+        if (rune_area < para::rune_detector_param.MIN_CONTOUR_AREA ||
+            rune_area > para::rune_detector_param.MAX_CONTOUR_AREA)
             continue;
         DEBUG_INFO_("--------------------------------------");
         DEBUG_INFO_("rune_feature_area %ld : %f", i, rune_area);
@@ -214,7 +212,7 @@ void RuneDetector::find(Mat src, vector<feature::ptr> &features, vector<combo::p
     if (best_center == nullptr)
         return;
     // 获取尚未激活的神符
-    vector<Rune::ptr> runes = getRune(rune_targets, best_center);
+    std::vector<Rune::ptr> runes = getRune(rune_targets, best_center);
     // 更新特征、组合体集合
     for (const auto &p_rune_target : rune_targets)
         features.emplace_back(p_rune_target);
@@ -223,10 +221,10 @@ void RuneDetector::find(Mat src, vector<feature::ptr> &features, vector<combo::p
         combos.emplace_back(p_combo);
 }
 
-RuneCenter::ptr RuneDetector::getBestCenter(const vector<RuneTarget::ptr> &rune_targets, const vector<RuneCenter::ptr> &rune_centers)
+RuneCenter::ptr RuneDetector::getBestCenter(const std::vector<RuneTarget::ptr> &rune_targets, const std::vector<RuneCenter::ptr> &rune_centers)
 {
     // 神符中心集合
-    unordered_set<RuneCenter::ptr> center_set(rune_centers.begin(), rune_centers.end());
+    std::unordered_set<RuneCenter::ptr> center_set(rune_centers.begin(), rune_centers.end());
     // 筛除离神符连线中垂线过远的中心
     if (rune_targets.size() > 1)
     {
@@ -235,18 +233,18 @@ RuneCenter::ptr RuneDetector::getBestCenter(const vector<RuneTarget::ptr> &rune_
             for (size_t i = 0; i + 1 < rune_targets.size(); i++)
             {
                 // 靶心连线方向
-                Vec2f dvec = rune_targets[i]->getCenter() - rune_targets[i + 1]->getCenter();
-                Matx22f rotate = {0, 1,
-                                  -1, 0};
+                cv::Vec2f dvec = rune_targets[i]->getCenter() - rune_targets[i + 1]->getCenter();
+                cv::Matx22f rotate = {0, 1,
+                                      -1, 0};
                 // 靶心连线垂线
-                Vec2f vvec = rotate * dvec;
+                cv::Vec2f vvec = rotate * dvec;
                 // 靶心连线中点
-                Vec2f midp = (rune_targets[i]->getCenter() + rune_targets[i + 1]->getCenter()) / 2;
+                cv::Vec2f midp = (rune_targets[i]->getCenter() + rune_targets[i + 1]->getCenter()) / 2;
                 // 与中垂线的距离比值
-                float distance_ratio = getDistance(Vec4f(vvec(0), vvec(1), midp(0), midp(1)),
+                float distance_ratio = getDistance(cv::Vec4f(vvec(0), vvec(1), midp(0), midp(1)),
                                                    p_center->getCenter(), false) /
                                        p_center->getHeight();
-                if (distance_ratio > rune_param.MAX_MID_LINE_RATIO)
+                if (distance_ratio > para::rune_param.MAX_MID_LINE_RATIO)
                 {
                     center_set.erase(p_center);
                     break;
@@ -258,23 +256,23 @@ RuneCenter::ptr RuneDetector::getBestCenter(const vector<RuneTarget::ptr> &rune_
     if (center_set.empty())
         return nullptr;
     // [神符中心 : 距离比值差]
-    unordered_map<RuneCenter::ptr, float> center_ratio_differences;
+    std::unordered_map<RuneCenter::ptr, float> center_ratio_differences;
     center_ratio_differences.reserve(center_set.size());
     for (auto &p_center : center_set)
     {
         center_ratio_differences[p_center] = FLOAT_MAX;
         // 距离比值差序列
-        vector<float> dratio;
+        std::vector<float> dratio;
         dratio.reserve(rune_targets.size());
         for (auto &p_target : rune_targets)
         {
             // target 到 center 的距离与 center 尺寸的比值
             float radius_ratio = getDistance(p_target->getCenter(), p_center->getCenter()) / p_center->getHeight();
             // 扇叶为未激活且距离比值过大或过小，跳过
-            if (!p_target->isActive() && (radius_ratio < rune_param.MIN_RADIUS_RATIO ||
-                                          radius_ratio > rune_param.MAX_RADIUS_RATIO))
+            if (!p_target->isActive() && (radius_ratio < para::rune_param.MIN_RADIUS_RATIO ||
+                                          radius_ratio > para::rune_param.MAX_RADIUS_RATIO))
                 continue;
-            dratio.push_back(abs(rune_param.BEST_RADIUS_RATIO - radius_ratio));
+            dratio.push_back(std::abs(para::rune_param.BEST_RADIUS_RATIO - radius_ratio));
         }
         if (!dratio.empty())
             center_ratio_differences[p_center] = *min_element(dratio.begin(), dratio.end());
@@ -287,14 +285,14 @@ RuneCenter::ptr RuneDetector::getBestCenter(const vector<RuneTarget::ptr> &rune_
         ->first;
 }
 
-vector<Rune::ptr> RuneDetector::getRune(const vector<RuneTarget::ptr> &rune_targets, RuneCenter::ptr p_center)
+std::vector<Rune::ptr> RuneDetector::getRune(const std::vector<RuneTarget::ptr> &rune_targets, RuneCenter::ptr p_center)
 {
     if (rune_targets.empty())
         return {};
     if (!p_center)
         return {};
 
-    vector<Rune::ptr> retval;
+    std::vector<Rune::ptr> retval;
     // 神符外侧、神符支架两两匹配
     for (const auto &p_target : rune_targets)
     {
@@ -308,3 +306,5 @@ vector<Rune::ptr> RuneDetector::getRune(const vector<RuneTarget::ptr> &rune_targ
     }
     return retval;
 }
+
+} // namespace rm

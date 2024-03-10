@@ -43,8 +43,8 @@ public:
     RuneTarget() = default;
     RuneTarget(const RuneTarget &) = delete;
     RuneTarget(RuneTarget &&) = delete;
-    RuneTarget(std::vector<cv::Point> &, cv::RotatedRect &, bool is_active);
-    RuneTarget(cv::Point center, bool is_active);
+    RuneTarget(const std::vector<cv::Point> &, const cv::RotatedRect &, bool is_active);
+    RuneTarget(const cv::Point &center, bool is_active);
 
     /**
      * @brief 使用轮廓和层次结构构造 RuneTarget 的构造接口
@@ -53,7 +53,7 @@ public:
      * @param[in] is_active 是否激活？
      * @return 如果成功，返回 RuneTarget 的共享指针，否则返回 nullptr
      */
-    static std::shared_ptr<RuneTarget> make_feature(std::vector<cv::Point> &contour, bool is_active);
+    static std::shared_ptr<RuneTarget> make_feature(const std::vector<cv::Point> &contour, bool is_active);
 
     /**
      * @brief 使用特征中心点构造 RuneTarget 的构造接口
@@ -62,7 +62,7 @@ public:
      * @param[in] is_active 是否激活？
      * @return 如果成功，返回 RuneTarget 的共享指针，否则返回 nullptr
      */
-    static std::shared_ptr<RuneTarget> make_feature(cv::Point center, bool is_active);
+    static std::shared_ptr<RuneTarget> make_feature(const cv::Point &center, bool is_active);
 
     /**
      * @brief 动态类型转换

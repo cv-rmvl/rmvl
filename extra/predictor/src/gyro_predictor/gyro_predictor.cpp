@@ -15,13 +15,11 @@
 
 #include "rmvlpara/predictor/gyro_predictor.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-PredictInfo GyroPredictor::predict(const vector<group::ptr> &groups,
-                                   const unordered_map<tracker::ptr, double> &tof)
+PredictInfo GyroPredictor::predict(const std::vector<group::ptr> &groups,
+                                   const std::unordered_map<tracker::ptr, double> &tof)
 {
     // 预测信息
     PredictInfo info{};
@@ -33,12 +31,12 @@ PredictInfo GyroPredictor::predict(const vector<group::ptr> &groups,
             double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
             auto p_gyro_tracker = GyroTracker::cast(p_tracker);
             // 平移
-            auto dKt_T = p_gyro_group->getSpeed3D() * gyro_predictor_param.K * tf;
-            auto dB_T = p_gyro_group->getSpeed3D() * gyro_predictor_param.B;
+            auto dKt_T = p_gyro_group->getSpeed3D() * para::gyro_predictor_param.K * tf;
+            auto dB_T = p_gyro_group->getSpeed3D() * para::gyro_predictor_param.B;
             // 旋转
-            auto dKt_R = p_gyro_group->getRotatedSpeed() * gyro_predictor_param.K * tf;
-            auto dB_R = p_gyro_group->getRotatedSpeed() * gyro_predictor_param.B;
-            auto dBs_R = p_gyro_group->getRotatedSpeed() * gyro_predictor_param.SHOOT_B;
+            auto dKt_R = p_gyro_group->getRotatedSpeed() * para::gyro_predictor_param.K * tf;
+            auto dB_R = p_gyro_group->getRotatedSpeed() * para::gyro_predictor_param.B;
+            auto dBs_R = p_gyro_group->getRotatedSpeed() * para::gyro_predictor_param.SHOOT_B;
             // 更新预测量
             auto &dynamic_vec = info.dynamic_prediction[p_tracker];
             dynamic_vec(POS_X) = dKt_T(0);
@@ -56,3 +54,5 @@ PredictInfo GyroPredictor::predict(const vector<group::ptr> &groups,
     }
     return info;
 }
+
+} // namespace rm

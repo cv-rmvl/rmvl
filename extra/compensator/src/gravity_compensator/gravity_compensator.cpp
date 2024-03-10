@@ -31,7 +31,7 @@ CompensateInfo GravityCompensator::compensate(const std::vector<group::ptr> &gro
 
 GravityCompensator::Impl::Impl()
 {
-    using namespace para;
+    using para::gravity_compensator_param;
     double tmp = gravity_compensator_param.rho * gravity_compensator_param.A * gravity_compensator_param.V / (2 * gravity_compensator_param.m);
     double a22 = -tmp * gravity_compensator_param.Cd;
     double a24 = -tmp * gravity_compensator_param.Cl;
@@ -41,7 +41,7 @@ GravityCompensator::Impl::Impl()
     fs[0] = [](double, const std::vector<double> &x) { return x[1]; };
     fs[1] = [=](double, const std::vector<double> &x) { return a22 * x[1] + a24 * x[3]; };
     fs[2] = [](double, const std::vector<double> &x) { return x[3]; };
-    fs[3] = [=](double, const std::vector<double> &x) { return a42 * x[1] + a44 * x[3] - para::gravity_compensator_param.g; };
+    fs[3] = [=](double, const std::vector<double> &x) { return a42 * x[1] + a44 * x[3] - gravity_compensator_param.g; };
     _rk = std::make_unique<RungeKutta2>(fs);
 }
 

@@ -15,23 +15,21 @@
 
 #include "rmvlpara/feature/rune_target.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-shared_ptr<RuneTarget> RuneTarget::make_feature(vector<Point> &contour, bool is_active)
+std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point> &contour, bool is_active)
 {
     if (contour.size() < 5)
         return nullptr;
     // init
-    RotatedRect rotated_rect = fitEllipse(contour);
+    cv::RotatedRect rotated_rect = fitEllipse(contour);
     // ------------------------ 比例判断 ------------------------
-    float width = max(rotated_rect.size.width, rotated_rect.size.height);
-    float height = min(rotated_rect.size.width, rotated_rect.size.height);
+    float width = std::max(rotated_rect.size.width, rotated_rect.size.height);
+    float height = std::min(rotated_rect.size.width, rotated_rect.size.height);
     float ratio = width / height;
     DEBUG_INFO_("target 1.ratio : %f", ratio);
-    if (ratio > rune_target_param.MAX_RATIO || ratio < rune_target_param.MIN_RATIO)
+    if (ratio > para::rune_target_param.MAX_RATIO || ratio < para::rune_target_param.MIN_RATIO)
     {
         DEBUG_WARNING_("target 1.ratio : fail");
         return nullptr;
@@ -43,7 +41,7 @@ shared_ptr<RuneTarget> RuneTarget::make_feature(vector<Point> &contour, bool is_
     float rect_area = rotated_rect.size.area(); // 矩形面积
     float area_ratio = contour_area / rect_area;
     DEBUG_INFO_("target 2.area_ratio : %f", area_ratio);
-    if (area_ratio > rune_target_param.MAX_AREA_RATIO || area_ratio < rune_target_param.MIN_AREA_RATIO)
+    if (area_ratio > para::rune_target_param.MAX_AREA_RATIO || area_ratio < para::rune_target_param.MIN_AREA_RATIO)
     {
         DEBUG_WARNING_("target 2.area_ratio : fail");
         return nullptr;
@@ -54,8 +52,8 @@ shared_ptr<RuneTarget> RuneTarget::make_feature(vector<Point> &contour, bool is_
     float perimeter = arcLength(contour, true);
     float area_peri_ratio = contour_area / (perimeter * perimeter);
     DEBUG_INFO_("target 3.area_peri_ratio : %f", area_peri_ratio);
-    if (area_peri_ratio > rune_target_param.MAX_AREA_PERI_RATIO ||
-        area_peri_ratio < rune_target_param.MIN_AREA_PERI_RATIO)
+    if (area_peri_ratio > para::rune_target_param.MAX_AREA_PERI_RATIO ||
+        area_peri_ratio < para::rune_target_param.MIN_AREA_PERI_RATIO)
     {
         DEBUG_WARNING_("target 3.area_peri_ratio : fail");
         return nullptr;
@@ -64,22 +62,22 @@ shared_ptr<RuneTarget> RuneTarget::make_feature(vector<Point> &contour, bool is_
 
     // ---------------------- 绝对面积判断 ----------------------
     DEBUG_INFO_("target 4.contour_area : %f", contour_area);
-    if (contour_area < rune_target_param.MIN_AREA)
+    if (contour_area < para::rune_target_param.MIN_AREA)
     {
         DEBUG_WARNING_("target 4.contour_area : fail");
         return nullptr;
     }
     DEBUG_PASS_("target 4.contour_area : pass");
 
-    return make_shared<RuneTarget>(contour, rotated_rect, is_active);
+    return std::make_shared<RuneTarget>(contour, rotated_rect, is_active);
 }
 
-shared_ptr<RuneTarget> RuneTarget::make_feature(Point center, bool is_active)
+std::shared_ptr<RuneTarget> RuneTarget::make_feature(const cv::Point &center, bool is_active)
 {
-    return make_shared<RuneTarget>(center, is_active);
+    return std::make_shared<RuneTarget>(center, is_active);
 }
 
-RuneTarget::RuneTarget(Point center, bool is_active) : _is_active(is_active)
+RuneTarget::RuneTarget(const cv::Point &center, bool is_active) : _is_active(is_active)
 {
     _center = center;
     _angle = 0.f;
@@ -88,16 +86,16 @@ RuneTarget::RuneTarget(Point center, bool is_active) : _is_active(is_active)
     _ratio = 1;
 }
 
-RuneTarget::RuneTarget(vector<Point> &contour, RotatedRect &rotated_rect, bool is_active) : _rotated_rect(rotated_rect)
+RuneTarget::RuneTarget(const std::vector<cv::Point> &contour, const cv::RotatedRect &rotated_rect, bool is_active) : _rotated_rect(rotated_rect)
 {
     _contour = contour;
     _angle = 0.f;
     _center = _rotated_rect.center;
-    _width = max(_rotated_rect.size.width, _rotated_rect.size.height);
-    _height = min(_rotated_rect.size.width, _rotated_rect.size.height);
+    _width = std::max(_rotated_rect.size.width, _rotated_rect.size.height);
+    _height = std::min(_rotated_rect.size.width, _rotated_rect.size.height);
     _ratio = _width / _height;
 
-    vector<Point2f> corners;
+    std::vector<cv::Point2f> corners;
     corners.reserve(4);
     float radius = (_height + _width) / 4;
     _radius = radius;
@@ -108,3 +106,5 @@ RuneTarget::RuneTarget(vector<Point> &contour, RotatedRect &rotated_rect, bool i
     _corners = corners;
     _is_active = is_active;
 }
+
+} // namespace rm
