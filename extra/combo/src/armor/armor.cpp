@@ -72,10 +72,9 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
             return nullptr;
     }
 
-    auto ret = make_shared<Armor>(p_left, p_right, gyro_data, tick,
+    return std::make_shared<Armor>(p_left, p_right, gyro_data, tick,
                                   width_ratio, length_ratio, corner_angle, match_error,
                                   combo_height, combo_width, combo_ratio, armor_size_type);
-    return ret;
 }
 
 Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data, double tick,

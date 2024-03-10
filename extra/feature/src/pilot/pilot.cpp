@@ -80,7 +80,7 @@ std::shared_ptr<Pilot> Pilot::make_feature(std::vector<cv::Point> &contour, cv::
     else
         return nullptr;
 
-    return make_shared<Pilot>(contour, rotated_rect, width, height);
+    return std::make_shared<Pilot>(contour, rotated_rect, width, height);
 }
 
 Pilot::Pilot(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float width, float height)
