@@ -31,7 +31,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             return;
     // ------------ 更新消失帧数，取序列消失帧数最少者 ------------
     _vanish_num = min_element(_trackers.begin(), _trackers.end(),
-                              [](const auto &lhs, const auto &rhs) {
+		              [](const auto &lhs, const auto &rhs) {
                                   return lhs->getVanishNumber() < rhs->getVanishNumber();
                               })
                       ->get()
@@ -109,7 +109,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             cv::Matx33f new_rmat = rot * p_tracker->getExtrinsics().R();                                    // 新的旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo + cv::Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(p_tracker->front(), _gyro_data, new_rmat, new_tvec, _tick);
-            const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
+	    std::const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
         }
     }
     // 利用可见追踪器信息，完成强制构造与不可见追踪器的更新
@@ -131,7 +131,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             cv::Matx33f new_rmat = rot * visible_tracker->getExtrinsics().R();                              // 新的旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo + cv::Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(visible_tracker->front(), _gyro_data, new_rmat, new_tvec, _tick);
-            const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
+	    std::const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
         }
     }
     else // visible_num == 2
@@ -165,7 +165,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             auto p_armor = constructComboForced(visible_trackers[i]->front(), _gyro_data, new_rmat, new_tvec, _tick);
             // 同步高度差
             current_state.delta_y(_tracker_state[visible_trackers[i]].delta_y());
-            const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
+	    std::const_pointer_cast<tracker>(p_tracker)->update(p_armor, _tick, _gyro_data);
         }
     }
     // ----------------------【更新 RobotType】----------------------

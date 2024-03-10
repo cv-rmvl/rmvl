@@ -65,9 +65,9 @@ void GyroGroup::initGroup(const std::unordered_set<combo::ptr> &visible_combo_se
     for (auto p_tracker : _trackers)
     {
         if (visible_combo_set.find(p_tracker->front()) == visible_combo_set.end())
-            const_pointer_cast<GyroTracker>(GyroTracker::cast(p_tracker))->updateVanishState(GyroTracker::VANISH);
+            std::const_pointer_cast<GyroTracker>(GyroTracker::cast(p_tracker))->updateVanishState(GyroTracker::VANISH);
         else
-            const_pointer_cast<GyroTracker>(GyroTracker::cast(p_tracker))->updateVanishState(GyroTracker::APPEAR);
+            std::const_pointer_cast<GyroTracker>(GyroTracker::cast(p_tracker))->updateVanishState(GyroTracker::APPEAR);
     }
 }
 
