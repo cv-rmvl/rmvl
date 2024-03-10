@@ -15,7 +15,9 @@
 #include "rmvl/feature/light_blob.h"
 #include "rmvlpara/feature/light_blob.h"
 
-namespace rm::rm_test
+using namespace rm;
+
+namespace rm_test
 {
 
 TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
@@ -33,7 +35,7 @@ TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
     cv::Mat src = cv::Mat::zeros(cv::Size(150, 150), CV_8UC1);
     cv::line(src, cv::Point(75, 20), cv::Point(75, 130), cv::Scalar(255), 25);
     std::vector<std::vector<cv::Point>> contours;
-    findContours(src, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+    cv::findContours(src, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
     contour = contours.front();
     LightBlob::ptr blob2 = LightBlob::make_feature(contour);
     EXPECT_TRUE(blob2 != nullptr);
@@ -91,4 +93,4 @@ TEST(BuildLightBlobTest, fitEllipse_width_contourSize_judgeTable)
     EXPECT_FALSE(blob2 != nullptr);
 }
 
-} // namespace rm::rm_test
+} // namespace rm_test

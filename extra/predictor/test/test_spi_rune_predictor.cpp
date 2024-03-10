@@ -25,7 +25,9 @@
 
 #include "rmvlpara/predictor/spi_rune_predictor.h"
 
-namespace rm::rm_test
+using namespace rm;
+
+namespace rm_test
 {
 
 TEST(Run_Accuracy, data_from_0_300)
@@ -91,4 +93,4 @@ TEST(PredictModel, sin_data_from_0_600)
 {
 }
 
-} // namespace rm::rm_test
+} // namespace rm_test

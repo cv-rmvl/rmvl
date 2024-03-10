@@ -14,10 +14,8 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/tracker/planar_tracker.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 void PlanarTracker::vanishProcess([[maybe_unused]] double tick, [[maybe_unused]] const GyroData &gyro_data)
 {
@@ -44,3 +42,5 @@ void PlanarTracker::vanishProcess([[maybe_unused]] double tick, [[maybe_unused]]
     // // _motion_filter.correct(result);
     _combo_deque.emplace_back(combo);
 }
+
+} // namespace rm

@@ -12,10 +12,8 @@
 #include "rmvl/tracker/rune_tracker.h"
 #include "rmvlpara/tracker/rune_tracker.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 void RuneTracker::updateFromRune(combo::ptr p_combo)
 {
@@ -59,7 +57,7 @@ void RuneTracker::update(combo::ptr p_rune, double tick, const GyroData &gyro_da
         if (_combo_deque.size() >= 2)
             t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
         else
-            t = rune_tracker_param.SAMPLE_INTERVAL / 1000.;
+            t = para::rune_tracker_param.SAMPLE_INTERVAL / 1000.;
         updateRotateFilter(t);
         // 重置消失帧数
         _vanish_num = 0;
@@ -92,3 +90,5 @@ float RuneTracker::calculateTotalAngle()
         RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the combo::ptr is not equal to Rune::ptr ");
     return current_angle + 360.f * _round;
 }
+
+} // namespace rm
