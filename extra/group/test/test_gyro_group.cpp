@@ -39,7 +39,7 @@ class GyroGroupTest : public testing::Test
                         0, 1250, 512,
                         0, 0, 1};
         distCoeffs = cv::Matx51f::zeros();
-        para::armor_param.SMALL_ARMOR = world_points;
+        rm::para::armor_param.SMALL_ARMOR = world_points;
     }
 
 public:
