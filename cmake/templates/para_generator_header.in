@@ -44,5 +44,3 @@ inline @class_name@ @target_name@_param;
 //! @} para_@module_name@
 
 } // namespace rm::para
-
-namespace para = rm::para;

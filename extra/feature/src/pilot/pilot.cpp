@@ -11,24 +11,22 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/rmath.hpp"
 #include "rmvl/feature/pilot.h"
+#include "rmvl/rmath.hpp"
 
 #include "rmvlpara/feature/pilot.h"
 
-using namespace cv;
-using namespace std;
-using namespace para;
-using namespace rm;
-
-void Pilot::getTruePoint(vector<Point> &contour)
+namespace rm
 {
-    Point left = _center;
-    Point right = _center;
+
+void Pilot::getTruePoint(std::vector<cv::Point> &contour)
+{
+    cv::Point left = _center;
+    cv::Point right = _center;
     // 遍历每一个轮廓点
     for (const auto &point : contour)
     {
-        if (abs(point.y - _center.y) > _height / pilot_param.VERTEX_K)
+        if (abs(point.y - _center.y) > _height / para::pilot_param.VERTEX_K)
             continue;
         // 小于或大于一定值时才对其进行计算比较，节省运算
         if (point.x < _center.x) // 找出轮廓中最左边的点作为左极点
@@ -56,15 +54,15 @@ void Pilot::getTruePoint(vector<Point> &contour)
     }
 }
 
-shared_ptr<Pilot> Pilot::make_feature(vector<Point> &contour, Mat &bin)
+std::shared_ptr<Pilot> Pilot::make_feature(std::vector<cv::Point> &contour, cv::Mat &bin)
 {
-    RotatedRect rotated_rect = fitEllipse(contour);
-    Point2f center = rotated_rect.center;
+    cv::RotatedRect rotated_rect = cv::fitEllipse(contour);
+    cv::Point2f center = rotated_rect.center;
     if (center.x < 0 || center.x > bin.cols ||
         center.y < 0 || center.y > bin.rows)
         return nullptr;
-    float width = max(rotated_rect.size.width, rotated_rect.size.height);
-    float height = min(rotated_rect.size.width, rotated_rect.size.height);
+    float width = std::max(rotated_rect.size.width, rotated_rect.size.height);
+    float height = std::min(rotated_rect.size.width, rotated_rect.size.height);
     // 仅对二值图中绿色部分拟合形状进行筛选
     int row = center.y;
     int col_l = center.x - width / 3;
@@ -75,8 +73,8 @@ shared_ptr<Pilot> Pilot::make_feature(vector<Point> &contour, Mat &bin)
         if (contour.empty())
             return nullptr;
         float wh_ratio = width / height;
-        if (wh_ratio > pilot_param.MAX_RATIO ||
-            wh_ratio < pilot_param.MIN_RATIO)
+        if (wh_ratio > para::pilot_param.MAX_RATIO ||
+            wh_ratio < para::pilot_param.MIN_RATIO)
             return nullptr;
     }
     else
@@ -85,12 +83,12 @@ shared_ptr<Pilot> Pilot::make_feature(vector<Point> &contour, Mat &bin)
     return make_shared<Pilot>(contour, rotated_rect, width, height);
 }
 
-Pilot::Pilot(vector<Point> &contour, RotatedRect &rotated_rect, float width, float height)
+Pilot::Pilot(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float width, float height)
     : _rotated_rect(rotated_rect)
 {
-    if (isnan(width) || width < 0 || width > 100000.f)
+    if (std::isnan(width) || width < 0 || width > 100000.f)
         RMVL_Error_(RMVL_StsBadArg, "Argument \"width\" is invalid, value is %.5f", width);
-    if (isnan(height) || height < 0 || height > 100000.f)
+    if (std::isnan(height) || height < 0 || height > 100000.f)
         RMVL_Error_(RMVL_StsBadArg, "Argument \"height\" is invalid, value is %.5f", height);
     _width = width;
     _height = height;
@@ -100,11 +98,11 @@ Pilot::Pilot(vector<Point> &contour, RotatedRect &rotated_rect, float width, flo
     _corners = {_left, _right};
 }
 
-Pilot::Pilot(const float &last_width, const float &last_height, const Point2f &last_center, const float &last_angle, const vector<cv::Point2f> &last_corners)
+Pilot::Pilot(const float &last_width, const float &last_height, const cv::Point2f &last_center, const float &last_angle, const std::vector<cv::Point2f> &last_corners)
 {
-    if (isnan(last_width) || last_width < 0 || last_width > 100000.f)
+    if (std::isnan(last_width) || last_width < 0 || last_width > 100000.f)
         RMVL_Error_(RMVL_StsBadArg, "Argument \"width\" is invalid, value is %.5f", last_width);
-    if (isnan(last_height) || last_height < 0 || last_height > 100000.f)
+    if (std::isnan(last_height) || last_height < 0 || last_height > 100000.f)
         RMVL_Error_(RMVL_StsBadArg, "Argument \"height\" is invalid, value is %.5f", last_height);
     _width = last_width;
     _height = last_height;
@@ -112,3 +110,5 @@ Pilot::Pilot(const float &last_width, const float &last_height, const Point2f &l
     _angle = last_angle;
     _corners = last_corners;
 }
+
+} // namespace rm

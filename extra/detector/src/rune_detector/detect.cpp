@@ -14,12 +14,10 @@
 
 #include "rmvlpara/detector/rune_detector.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-DetectInfo RuneDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
+DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
                                 const GyroData &gyro_data, double tick)
 {
     if (groups.size() > 1)
@@ -34,7 +32,7 @@ DetectInfo RuneDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel
     auto rune_group = groups.front();
     // 二值化处理图像
     PixChannel ch_minus = color == RED ? BLUE : RED;
-    int thesh = color == RED ? rune_detector_param.GRAY_THRESHOLD_RED : rune_detector_param.GRAY_THRESHOLD_BLUE;
+    int thesh = color == RED ? para::rune_detector_param.GRAY_THRESHOLD_RED : para::rune_detector_param.GRAY_THRESHOLD_BLUE;
     info.bin = binary(info.src, color, ch_minus, thesh);
     // 寻找神符
     find(info.bin, info.features, info.combos);
@@ -50,3 +48,5 @@ DetectInfo RuneDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel
 
     return info;
 }
+
+} // namespace rm

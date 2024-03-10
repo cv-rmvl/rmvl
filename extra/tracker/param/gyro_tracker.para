@@ -1,4 +1,4 @@
-double SAMPLE_INTERVAL = 15 # 采样时间
+double SAMPLE_INTERVAL = 15 # 采样时间（单位: ms）
 float MAX_ROTSPEED = 20     # 模型旋转速度上限（单位: rad/s）
 float MIN_ROTSPEED = 0      # 模型旋转速度下限（单位: rad/s）
 

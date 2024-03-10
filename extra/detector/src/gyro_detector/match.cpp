@@ -16,10 +16,8 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/gyro_detector.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 /**
  * @brief 判断能否合并
@@ -33,7 +31,7 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
     // 宽度比值
     float width_ratio = (lhs->getWidth() > rhs->getWidth()) ? lhs->getWidth() / rhs->getWidth()
                                                             : rhs->getWidth() / lhs->getWidth();
-    if (width_ratio > gyro_detector_param.MAX_WIDTH_RATIO)
+    if (width_ratio > para::gyro_detector_param.MAX_WIDTH_RATIO)
     {
         DEBUG_INFO_("can't be union: width_ratio = %f", width_ratio);
         return false;
@@ -41,25 +39,25 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
     // 高度比值
     float height_ratio = (lhs->getHeight() > rhs->getHeight()) ? lhs->getHeight() / rhs->getHeight()
                                                                : rhs->getHeight() / lhs->getHeight();
-    if (height_ratio > gyro_detector_param.MAX_HEIGHT_RATIO)
+    if (height_ratio > para::gyro_detector_param.MAX_HEIGHT_RATIO)
     {
         DEBUG_INFO_("can't be union: height_ratio = %f", height_ratio);
         return false;
     }
-    float avg_height = max(lhs->getHeight(), rhs->getHeight());
+    float avg_height = std::max(lhs->getHeight(), rhs->getHeight());
     // 水平距离及与高度的比值
-    float dx = abs(lhs->getCenter().x - rhs->getCenter().x);
+    float dx = std::abs(lhs->getCenter().x - rhs->getCenter().x);
     float dx_ratio = dx / avg_height;
-    if (dx_ratio > gyro_detector_param.MAX_X_DISTANCE_RATIO ||
-        dx_ratio < gyro_detector_param.MIN_X_DISTANCE_RATIO)
+    if (dx_ratio > para::gyro_detector_param.MAX_X_DISTANCE_RATIO ||
+        dx_ratio < para::gyro_detector_param.MIN_X_DISTANCE_RATIO)
     {
         DEBUG_INFO_("can't be union: dx_ratio = %f", dx_ratio);
         return false;
     }
     // 垂直距离及与高度的比值
-    float dy = abs(lhs->getCenter().y - rhs->getCenter().y);
+    float dy = std::abs(lhs->getCenter().y - rhs->getCenter().y);
     float dy_ratio = dy / avg_height;
-    if (dy_ratio > gyro_detector_param.MAX_Y_DISTANCE_RATIO)
+    if (dy_ratio > para::gyro_detector_param.MAX_Y_DISTANCE_RATIO)
     {
         DEBUG_INFO_("can't be union: dy_ratio = %f", dy_ratio);
         return false;
@@ -69,8 +67,8 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
         return false;
     // 角度差距要稍大
     float delta_angle = lhs->getAngle() * rhs->getAngle();
-    if (delta_angle < gyro_detector_param.MIN_MULTIPLE_ANGLE ||
-        delta_angle > gyro_detector_param.MAX_MULTIPLE_ANGLE)
+    if (delta_angle < para::gyro_detector_param.MIN_MULTIPLE_ANGLE ||
+        delta_angle > para::gyro_detector_param.MAX_MULTIPLE_ANGLE)
     {
         DEBUG_INFO_("can't be union: delta_angle = %f", delta_angle);
         return false;
@@ -78,9 +76,9 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
     return true;
 }
 
-void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
+void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr> &combos)
 {
-    unordered_map<combo::ptr, vector<combo::ptr>> combo_maps; // [代表元素:同组装甲板的列表]
+    std::unordered_map<combo::ptr, std::vector<combo::ptr>> combo_maps; // [代表元素:同组装甲板的列表]
     // 用并查集进行同组装甲板合并
     if (!combos.empty())
     {
@@ -112,7 +110,7 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
     else
     {
         // 装甲板集合代表元素对应的序列组中轴线坐标 [代表元素:旋转中心点]
-        unordered_map<combo::const_ptr, Point3f> groups_center;
+        std::unordered_map<combo::const_ptr, cv::Point3f> groups_center;
         // 遍历装甲板组，构建 groups_center
         for (const auto &map_pair : combo_maps)
         {
@@ -120,19 +118,19 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
             const auto &combo_vec = map_pair.second;
             // 设置装甲板的中心、姿态、半径集合
             size_t combo_size = combo_vec.size();
-            vector<Vec3f> combos_t(combo_size); // t: 每个集合中的装甲板的平移向量
-            vector<Vec2f> combos_P(combo_size); // P: 每个集合中的装甲板的姿态法向量
-            vector<float> combos_r(combo_size); // r: 每个集合中的装甲板在整车模型中的旋转半径
+            std::vector<cv::Vec3f> combos_t(combo_size); // t: 每个集合中的装甲板的平移向量
+            std::vector<cv::Vec2f> combos_P(combo_size); // P: 每个集合中的装甲板的姿态法向量
+            std::vector<float> combos_r(combo_size);     // r: 每个集合中的装甲板在整车模型中的旋转半径
             // 为 combo_vec 的每一个装甲板设置 t, R, r 三个数据量
             for (size_t i = 0; i < combo_size; i++)
             {
                 combo::const_ptr p_combo = combo_vec[i];
                 combos_t[i] = p_combo->getExtrinsics().tvec();
                 combos_P[i] = Armor::cast(p_combo)->getPose();
-                combos_r[i] = gyro_group_param.INIT_RADIUS;
+                combos_r[i] = para::gyro_group_param.INIT_RADIUS;
             }
             // 解算序列组中轴线坐标
-            Vec3f group_center;
+            cv::Vec3f group_center;
             GyroGroup::calcGroupFrom3DMessage(combos_P, combos_t, combos_r, group_center);
             groups_center[represent] = group_center;
         }
@@ -141,7 +139,7 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
         if (combo_maps.size() > groups.size())
         {
             // 初始化代表装甲板集合
-            unordered_set<combo::ptr> represent_set;
+            std::unordered_set<combo::ptr> represent_set;
             for (const auto &[represent, combo_set] : combo_maps)
                 represent_set.insert(represent);
             // 距离最近的装甲板组匹配到相应的序列组中
@@ -150,8 +148,8 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
                 auto p_gyro_group = GyroGroup::cast(p_group);
                 // 离 p_group 最近的 group_center 及其距离
                 auto min_it = *min_element(represent_set.begin(), represent_set.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
-                    return getDistance(groups_center[lhs], Point3f(p_gyro_group->getCenter3D())) <
-                           getDistance(groups_center[rhs], Point3f(p_gyro_group->getCenter3D()));
+                    return getDistance(groups_center[lhs], cv::Point3f(p_gyro_group->getCenter3D())) <
+                           getDistance(groups_center[rhs], cv::Point3f(p_gyro_group->getCenter3D()));
                 });
                 matchOneGroup(p_group, combo_maps[min_it]);
                 represent_set.erase(min_it);
@@ -164,7 +162,7 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
         else if (combo_maps.size() < groups.size())
         {
             // 初始化序列组集合
-            unordered_set<GyroGroup::ptr> group_set(groups.size());
+            std::unordered_set<GyroGroup::ptr> group_set(groups.size());
             for (const auto &p_group : groups)
             {
                 auto p_gyro_group = GyroGroup::cast(p_group);
@@ -175,8 +173,8 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
             {
                 // 离 group_center 最近的 group 及其距离
                 auto min_it = min_element(group_set.begin(), group_set.end(), [&](GyroGroup::ptr lhs, GyroGroup::ptr rhs) {
-                    return getDistance(groups_center[combo_map.first], Point3f(lhs->getCenter3D())) <
-                           getDistance(groups_center[combo_map.first], Point3f(rhs->getCenter3D()));
+                    return getDistance(groups_center[combo_map.first], cv::Point3f(lhs->getCenter3D())) <
+                           getDistance(groups_center[combo_map.first], cv::Point3f(rhs->getCenter3D()));
                 });
                 matchOneGroup(*min_it, combo_map.second);
                 group_set.erase(*min_it);
@@ -189,7 +187,7 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
         else
         {
             // 初始化代表装甲板集合
-            unordered_set<combo::ptr> represent_set;
+            std::unordered_set<combo::ptr> represent_set;
             for (const auto &[represent, combo_set] : combo_maps)
                 represent_set.insert(represent);
             size_t before_size = groups.size();
@@ -200,13 +198,13 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
                     RMVL_Error(RMVL_BadDynamicType, "Dynamic type of p_gyro_group isn\'t equal to \"GyroGroup\"");
                 // 离 group 最近的 group_center
                 auto min_it = *min_element(represent_set.begin(), represent_set.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
-                    return getDistance(groups_center[lhs], Point3f(p_gyro_group->getCenter3D())) <
-                           getDistance(groups_center[rhs], Point3f(p_gyro_group->getCenter3D()));
+                    return getDistance(groups_center[lhs], cv::Point3f(p_gyro_group->getCenter3D())) <
+                           getDistance(groups_center[rhs], cv::Point3f(p_gyro_group->getCenter3D()));
                 });
                 // 最短距离
-                float min_dis = getDistance(groups_center[min_it], Point3f(p_gyro_group->getCenter3D()));
+                float min_dis = getDistance(groups_center[min_it], cv::Point3f(p_gyro_group->getCenter3D()));
                 // 判断是否突变
-                if (min_dis > gyro_detector_param.MAX_GROUP_DELTA_DIS)
+                if (min_dis > para::gyro_detector_param.MAX_GROUP_DELTA_DIS)
                 {
                     // 创建新序列，原来的序列组打入 nullptr
                     matchOneGroup(p_gyro_group, {});
@@ -219,7 +217,7 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
             }
         }
         // 为所有序列组进行同步，并记录出现异常的 group
-        unordered_set<group::const_ptr> remove_set;
+        std::unordered_set<group::const_ptr> remove_set;
         for (const auto &p_group : groups)
         {
             try
@@ -240,17 +238,16 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
     }
     // 删除四个 tracker 同时消失数量过多的 group
     groups.erase(remove_if(groups.begin(), groups.end(), [](group::const_ptr p_group) {
-                     return p_group->getVanishNumber() > gyro_group_param.TRACK_FRAMES;
+                     return p_group->getVanishNumber() > para::gyro_group_param.TRACK_FRAMES;
                  }),
                  groups.end());
     // 删除 2D 中心点相距过近的 group
-    sort(groups.begin(), groups.end(),
-         [](group::const_ptr lhs, group::const_ptr rhs) {
-             return lhs->getCenter().x < rhs->getCenter().x;
-         });
-    unordered_set<group::const_ptr> erase_group_set;
+    sort(groups.begin(), groups.end(), [](group::const_ptr lhs, group::const_ptr rhs) {
+        return lhs->getCenter().x < rhs->getCenter().x;
+    });
+    std::unordered_set<group::const_ptr> erase_group_set;
     for (size_t i = 1; i < groups.size(); ++i)
-        if (getDistance(groups[i]->getCenter(), groups[i - 1]->getCenter()) < gyro_detector_param.MIN_CENTER_DIS)
+        if (getDistance(groups[i]->getCenter(), groups[i - 1]->getCenter()) < para::gyro_detector_param.MIN_CENTER_DIS)
             erase_group_set.insert(groups[i]);
     groups.erase(remove_if(groups.begin(), groups.end(), [&erase_group_set](group::const_ptr p_group) {
                      return erase_group_set.find(p_group) != erase_group_set.end();
@@ -261,13 +258,12 @@ void GyroDetector::match(vector<group::ptr> &groups, vector<combo::ptr> &combos)
 void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr> &combos)
 {
     // 在所有追踪器
-    vector<tracker::ptr> trackers = group->data();
-    unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
+    std::vector<tracker::ptr> trackers = group->data();
+    std::unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
     // 根据距离 distance 排序，选出待匹配的 trackers
-    sort(trackers.begin(), trackers.end(),
-         [](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-             return lhs->getExtrinsics().distance() < rhs->getExtrinsics().distance();
-         });
+    sort(trackers.begin(), trackers.end(), [](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+        return lhs->getExtrinsics().distance() < rhs->getExtrinsics().distance();
+    });
     // 待匹配参考 tracker 的大小
     size_t ref_size = trackers.size();
     if (ref_size > 2)
@@ -282,7 +278,7 @@ void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr>
     {
         // 当前捕获到的新装甲板角点
         const auto &cur_p = p_combo->getCorners();
-        auto min_tracker = *min_element(trackers.begin(), trackers.end(), [&cur_p](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+        auto min_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
             const auto &lhs_p = lhs->front()->getCorners();
             const auto &rhs_p = rhs->front()->getCorners();
             return (getDistance(cur_p[0], lhs_p[0]) + getDistance(cur_p[1], lhs_p[1]) +
@@ -296,11 +292,11 @@ void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr>
         p_gyro_tracker->updateVanishState(GyroTracker::APPEAR); // 设置为可见
     }
     // 没有匹配到的序列设置为不可见
-    for (const auto &p_tracker : tracker_set)
+    for (auto p_tracker : tracker_set)
         GyroTracker::cast(p_tracker)->updateVanishState(GyroTracker::VANISH);
 }
 
-void GyroDetector::eraseFakeTracker(vector<tracker::ptr> &trackers)
+void GyroDetector::eraseFakeTracker(std::vector<tracker::ptr> &trackers)
 {
     // 删除
     trackers.erase(remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr p_tracker) {
@@ -308,3 +304,5 @@ void GyroDetector::eraseFakeTracker(vector<tracker::ptr> &trackers)
                    }),
                    trackers.end());
 }
+
+} // namespace rm

@@ -25,32 +25,27 @@
 
 #include "rmvlpara/predictor/spi_rune_predictor.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
-
-namespace rm_test
+namespace rm::rm_test
 {
 
 TEST(Run_Accuracy, data_from_0_300)
 {
     auto p_predictor = SpiRunePredictor::make_predictor();
-    auto p_center = RuneCenter::make_feature(Point(500, 500));
-    auto p_target = RuneTarget::make_feature(Point(600, 500), false);
+    auto p_center = RuneCenter::make_feature(cv::Point(500, 500));
+    auto p_target = RuneTarget::make_feature(cv::Point(600, 500), false);
     auto p_rune = Rune::make_combo(p_target, p_center, GyroData(), Timer::now(), true);
     auto p_tracker = RuneTracker::make_tracker(p_rune);
-    unordered_map<tracker::ptr, double> tof;
+    std::unordered_map<tracker::ptr, double> tof;
     tof.emplace(p_tracker, 0.02);
     auto p_group = RuneGroup::make_group();
     p_group->add(p_tracker);
-    vector<group::ptr> groups = {p_group};
+    std::vector<group::ptr> groups = {p_group};
 
     for (int i = 0; i < 300; ++i)
     {
-        Point target_point(500 + 100 * cos(deg2rad(i)),
+        cv::Point target_point(500 + 100 * cos(deg2rad(i)),
                            500 - 100 * sin(deg2rad(i)));
-        auto new_target = RuneTarget::make_feature(Point(600, 500), false);
+        auto new_target = RuneTarget::make_feature(cv::Point(600, 500), false);
         auto gyro_data = GyroData{};
         double tick = Timer::now();
 
@@ -66,12 +61,12 @@ TEST(Run_Accuracy, data_from_0_300)
 TEST(PredictModel, uniform_data_from_0_600)
 {
     auto p_predictor = SpiRunePredictor::make_predictor();
-    deque<double> datas;
+    std::deque<double> datas;
     for (int i = 0; i < 600; ++i)
     {
         // 获取原始数据
         datas.push_front(static_cast<double>(i) + 0.1);
-        if (datas.size() > spi_rune_predictor_param.MAX_NF + spi_rune_predictor_param.DIFF_ORDER + 2)
+        if (datas.size() > para::spi_rune_predictor_param.MAX_NF + para::spi_rune_predictor_param.DIFF_ORDER + 2)
             datas.pop_back();
         // 递推
         p_predictor->identifier(datas);
@@ -81,13 +76,13 @@ TEST(PredictModel, uniform_data_from_0_600)
         {
             EXPECT_EQ(pre, 0);
         }
-        else if (datas.size() < spi_rune_predictor_param.MAX_NF + spi_rune_predictor_param.DIFF_ORDER)
+        else if (datas.size() < para::spi_rune_predictor_param.MAX_NF + para::spi_rune_predictor_param.DIFF_ORDER)
         {
-            EXPECT_EQ(pre, spi_rune_predictor_param.FIXED_ANGLE);
+            EXPECT_EQ(pre, para::spi_rune_predictor_param.FIXED_ANGLE);
         }
         if (i > 300)
         {
-            EXPECT_GE(pre, spi_rune_predictor_param.FIXED_ANGLE / 2);
+            EXPECT_GE(pre, para::spi_rune_predictor_param.FIXED_ANGLE / 2);
         }
     }
 }
@@ -96,4 +91,4 @@ TEST(PredictModel, sin_data_from_0_600)
 {
 }
 
-} // namespace rm_test
+} // namespace rm::rm_test

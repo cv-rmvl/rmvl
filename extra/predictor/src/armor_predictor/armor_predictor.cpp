@@ -14,13 +14,10 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/predictor/armor_predictor.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-PredictInfo ArmorPredictor::predict(const vector<group::ptr> &groups,
-                                    const unordered_map<tracker::ptr, double> &tof)
+PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof)
 {
     // 预测信息
     PredictInfo info{};
@@ -30,10 +27,10 @@ PredictInfo ArmorPredictor::predict(const vector<group::ptr> &groups,
         {
             double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
 
-            double dB_yaw = p_tracker->getSpeed().x * armor_predictor_param.YAW_B;
-            double dB_pitch = p_tracker->getSpeed().y * armor_predictor_param.PITCH_B;
-            double dKt_yaw = p_tracker->getSpeed().x * armor_predictor_param.YAW_K * tf;
-            double dKt_pitch = p_tracker->getSpeed().y * armor_predictor_param.PITCH_K * tf;
+            double dB_yaw = p_tracker->getSpeed().x * para::armor_predictor_param.YAW_B;
+            double dB_pitch = p_tracker->getSpeed().y * para::armor_predictor_param.PITCH_B;
+            double dKt_yaw = p_tracker->getSpeed().x * para::armor_predictor_param.YAW_K * tf;
+            double dKt_pitch = p_tracker->getSpeed().y * para::armor_predictor_param.PITCH_K * tf;
 
             // 更新预测信息
             info.static_prediction[p_tracker][YAW] = dB_yaw;
@@ -44,3 +41,5 @@ PredictInfo ArmorPredictor::predict(const vector<group::ptr> &groups,
     }
     return info;
 }
+
+} // namespace rm

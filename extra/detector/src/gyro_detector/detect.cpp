@@ -14,12 +14,10 @@
 
 #include "rmvlpara/detector/gyro_detector.h"
 
-using namespace rm;
-using namespace para;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-DetectInfo GyroDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel color,
+DetectInfo GyroDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
                                 const GyroData &gyro_data, double tick)
 {
     // 识别信息
@@ -30,7 +28,7 @@ DetectInfo GyroDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel
 
     // 二值化处理图像
     PixChannel ch_minus = color == RED ? BLUE : RED;
-    int thesh = color == RED ? gyro_detector_param.GRAY_THRESHOLD_RED : gyro_detector_param.GRAY_THRESHOLD_BLUE;
+    int thesh = color == RED ? para::gyro_detector_param.GRAY_THRESHOLD_RED : para::gyro_detector_param.GRAY_THRESHOLD_BLUE;
     info.bin = binary(info.src, color, ch_minus, thesh);
 
     // 找到所有的灯条和装甲板
@@ -39,3 +37,5 @@ DetectInfo GyroDetector::detect(vector<group::ptr> &groups, Mat &src, PixChannel
     match(groups, info.combos);
     return info;
 }
+
+} // namespace rm

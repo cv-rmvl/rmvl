@@ -19,18 +19,17 @@
 #include "rmvlpara/combo/armor.h"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
-using namespace cv;
-using namespace rm;
-using namespace std;
-using namespace para;
-using namespace rm::numeric_literals;
+namespace rm
+{
 
-int GyroGroup::calcArmorNum(const vector<combo::ptr> &ref_combos)
+using namespace numeric_literals;
+
+int GyroGroup::calcArmorNum(const std::vector<combo::ptr> &ref_combos)
 {
     // 机器人类型集合
-    unordered_set<RobotType> robot_set;
+    std::unordered_set<RobotType> robot_set;
     // 装甲板大小集合
-    unordered_set<ArmorSizeType> armor_size_set;
+    std::unordered_set<ArmorSizeType> armor_size_set;
     for (auto ref_combo : ref_combos)
     {
         robot_set.insert(ref_combo->getType().RobotTypeID);
@@ -48,8 +47,8 @@ int GyroGroup::calcArmorNum(const vector<combo::ptr> &ref_combos)
     return 4;
 }
 
-void GyroGroup::calcGroupFrom3DMessage(const vector<Vec2f> &gyro_poses, const vector<Vec3f> &gyro_ts,
-                                       const vector<float> &rs, Vec3f &gyro_center)
+void GyroGroup::calcGroupFrom3DMessage(const std::vector<cv::Vec2f> &gyro_poses, const std::vector<cv::Vec3f> &gyro_ts,
+                                       const std::vector<float> &rs, cv::Vec3f &gyro_center)
 {
     // --------------------- 保证三个集合元素个数相同 ---------------------
     if (gyro_ts.size() != gyro_poses.size() || gyro_ts.size() != rs.size())
@@ -58,32 +57,31 @@ void GyroGroup::calcGroupFrom3DMessage(const vector<Vec2f> &gyro_poses, const ve
     if (combos_num != 1 && combos_num != 2)
         RMVL_Error_(RMVL_StsBadSize, "Bad number of armor plates in a combo_set: %zu", combos_num);
     if (combos_num == 1)
-        gyro_center = gyro_ts[0] + rs[0] * Vec3f(gyro_poses[0](0), 0, gyro_poses[0](1));
+        gyro_center = gyro_ts[0] + rs[0] * cv::Vec3f(gyro_poses[0](0), 0, gyro_poses[0](1));
     else // combos_num == 2
     {
         gyro_center = (gyro_ts[0] + gyro_ts[1]) / 2.f;
-        gyro_center(2) = (gyro_ts[0] + rs[0] * Vec3f(gyro_poses[0](0), 0, gyro_poses[0](1)) +
-                          gyro_ts[1] + rs[1] * Vec3f(gyro_poses[1](0), 0, gyro_poses[1](1)))(2) /
+        gyro_center(2) = (gyro_ts[0] + rs[0] * cv::Vec3f(gyro_poses[0](0), 0, gyro_poses[0](1)) +
+                          gyro_ts[1] + rs[1] * cv::Vec3f(gyro_poses[1](0), 0, gyro_poses[1](1)))(2) /
                          2.f;
     }
 }
 
-combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &gyro_data,
-                                           const Matx33f &gyro_rmat, const Vec3f &gyro_tvec, double tick)
+combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &gyro_data, const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick)
 {
     // 陀螺仪坐标系转化为相机坐标系
-    Matx33f cam_rmat;
-    Vec3f cam_tvec;
+    cv::Matx33f cam_rmat;
+    cv::Vec3f cam_tvec;
     Armor::gyroConvertToCamera(gyro_rmat, gyro_tvec, p_combo->getGyroData(), cam_rmat, cam_tvec);
 
     if (cam_tvec(2) <= 0)
         RMVL_Error_(RMVL_StsError, "Bad value of \"cam_tvec\", cam_tvec(2) = %.3f", cam_tvec(2));
     // rmat -> rvec
-    Vec3f cam_rvec;
+    cv::Vec3f cam_rvec;
     Rodrigues(cam_rmat, cam_rvec);
-    vector<Point2f> new_corners;
-    projectPoints(p_combo->getType().ArmorSizeTypeID == ArmorSizeType::SMALL ? armor_param.SMALL_ARMOR : armor_param.BIG_ARMOR,
-                  cam_rvec, cam_tvec, camera_param.cameraMatrix, camera_param.distCoeffs, new_corners);
+    std::vector<cv::Point2f> new_corners;
+    projectPoints(p_combo->getType().ArmorSizeTypeID == ArmorSizeType::SMALL ? para::armor_param.SMALL_ARMOR : para::armor_param.BIG_ARMOR,
+                  cam_rvec, cam_tvec, para::camera_param.cameraMatrix, para::camera_param.distCoeffs, new_corners);
     if (new_corners.size() != 4)
         RMVL_Error_(RMVL_StsBadSize, "Size of the \"new_corners\" are not equal to 4. (size = %zu)", new_corners.size());
     // 强制构造灯条与装甲板
@@ -92,8 +90,8 @@ combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &g
     return Armor::make_combo(left, right, gyro_data, tick, p_combo->getType().ArmorSizeTypeID);
 }
 
-void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<TrackerState> &state_vec,
-                             vector<combo::ptr> &combo_vec, Vec3f &group_center3d, Point2f &group_center2d)
+void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std::vector<TrackerState> &state_vec,
+                             std::vector<combo::ptr> &combo_vec, cv::Vec3f &group_center3d, cv::Point2f &group_center2d)
 {
     size_t visible_num = visible_combos.size();
     if (visible_num != 1 && visible_num != 2)
@@ -101,10 +99,10 @@ void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<Tr
     state_vec.resize(_armor_num);
     combo_vec.resize(_armor_num);
 
-    vector<Matx33f> Rs(visible_num); // 旋转矩阵
-    vector<Vec2f> Ps(visible_num);   // 姿态法向量
-    vector<Vec3f> ts(visible_num);   // 平移向量
-    vector<float> rs(visible_num);   // 旋转半径
+    std::vector<cv::Matx33f> Rs(visible_num); // 旋转矩阵
+    std::vector<cv::Vec2f> Ps(visible_num);   // 姿态法向量
+    std::vector<cv::Vec3f> ts(visible_num);   // 平移向量
+    std::vector<float> rs(visible_num);       // 旋转半径
     // 排序，从右到左
     auto operate_combos = visible_combos;
     sort(operate_combos.begin(), operate_combos.end(),
@@ -116,7 +114,7 @@ void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<Tr
         Rs[i] = operate_combos[i]->getExtrinsics().R();
         Ps[i] = Armor::cast(operate_combos[i])->getPose();
         ts[i] = operate_combos[i]->getExtrinsics().tvec();
-        rs[i] = gyro_group_param.INIT_RADIUS;
+        rs[i] = para::gyro_group_param.INIT_RADIUS;
     }
 
     if (visible_num == 1)
@@ -125,25 +123,25 @@ void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<Tr
         auto p_combo = operate_combos.front();
         calcGroupFrom3DMessage(Ps, ts, rs, group_center3d);
         float r = rs.front();
-        Vec3f center_tvec = group_center3d; // 车组旋转中心位置平移向量
+        cv::Vec3f center_tvec = group_center3d; // 车组旋转中心位置平移向量
         // 追踪器信息
         state_vec.front() = TrackerState(0, r, 0.f);
         combo_vec.front() = p_combo;
         // 旋转中心点像素坐标系坐标
-        auto I = Matx33f::eye();
-        Vec3f cam_tvec;
+        auto I = cv::Matx33f::eye();
+        cv::Vec3f cam_tvec;
         Armor::gyroConvertToCamera(I, center_tvec, _gyro_data, I, cam_tvec);
-        group_center2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeffs, cam_tvec);
+        group_center2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, cam_tvec);
 
         // 2、3、4 号追踪器
         for (int i = 0; i < _armor_num - 1; i++)
         {
             // 绕 y 轴旋转 90 * (i + 1) 度 (俯视图顺时针)
             auto y_rotate = euler2Mat(static_cast<float>(2_PI / _armor_num) * (i + 1), Y);
-            Matx33f new_R = y_rotate * Rs.front(); // 陀螺仪坐标系下的新旋转矩阵
+            cv::Matx33f new_R = y_rotate * Rs.front(); // 陀螺仪坐标系下的新旋转矩阵
             // 陀螺仪坐标系下的新装甲板到旋转中心点的方向向量
-            Vec3f new_pose = normalize(Vec3f(new_R(0, 2), 0, new_R(2, 2)));
-            Vec3f new_gyro_tvec = center_tvec - new_pose * r; // 陀螺仪坐标系下的新装甲板相机坐标系平移向量
+            cv::Vec3f new_pose = normalize(cv::Vec3f(new_R(0, 2), 0, new_R(2, 2)));
+            cv::Vec3f new_gyro_tvec = center_tvec - new_pose * r; // 陀螺仪坐标系下的新装甲板相机坐标系平移向量
             combo::ptr armor = constructComboForced(p_combo, _gyro_data, new_R, new_gyro_tvec, _tick);
             // 追踪器信息
             combo_vec[i + 1] = armor;
@@ -161,21 +159,21 @@ void GyroGroup::getGroupInfo(const vector<combo::ptr> &visible_combos, vector<Tr
             combo_vec[i] = operate_combos[i];
             state_vec[i] = TrackerState(i, rs[i], delta_y);
         }
-        const Vec3f &center_tvec = group_center3d;
+        const cv::Vec3f &center_tvec = group_center3d;
         // 旋转中心点像素坐标系坐标
-        auto I = Matx33f::eye();
-        Vec3f cam_tvec;
+        auto I = cv::Matx33f::eye();
+        cv::Vec3f cam_tvec;
         Armor::gyroConvertToCamera(I, center_tvec, _gyro_data, I, cam_tvec);
-        group_center2d = cameraConvertToPixel(camera_param.cameraMatrix, camera_param.distCoeffs, center_tvec);
+        group_center2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, center_tvec);
         // 第三、四块装甲板
         for (int i = 0; i < _armor_num - 2; i++)
         {
             // 绕 y 轴旋转 180 * (i + 1) 度 (俯视图顺时针)
-            Matx33f y_rotate = Matx33f::diag({-1, 0, -1});
-            Matx33f new_R = y_rotate * Rs[i];
+            cv::Matx33f y_rotate = cv::Matx33f::diag({-1, 0, -1});
+            cv::Matx33f new_R = y_rotate * Rs[i];
             // 新装甲板到旋转中心点的方向向量
-            Vec3f new_pose = normalize(Vec3f(new_R(0, 2), 0, new_R(2, 2)));
-            Vec3f new_tvec = center_tvec - new_pose * rs[i]; // 新装甲板平移向量
+            cv::Vec3f new_pose = normalize(cv::Vec3f(new_R(0, 2), 0, new_R(2, 2)));
+            cv::Vec3f new_tvec = center_tvec - new_pose * rs[i]; // 新装甲板平移向量
             combo::ptr armor = constructComboForced(operate_combos[i], _gyro_data, new_R, new_tvec, _tick);
             // 组合体信息
             combo_vec[i + 2] = armor;
@@ -189,13 +187,15 @@ void GyroGroup::updateRotStatus()
     // 当前为低速状态
     if (_rot_status == RotStatus::LOW_ROT_SPEED)
     {
-        if (abs(_rotspeed) > gyro_group_param.MIN_HIGH_ROT_SPEED)
+        if (abs(_rotspeed) > para::gyro_group_param.MIN_HIGH_ROT_SPEED)
             _rot_status = RotStatus::HIGH_ROT_SPEED;
     }
     // 当前为高速状态
     else
     {
-        if (abs(_rotspeed) < gyro_group_param.MAX_LOW_ROT_SPEED)
+        if (abs(_rotspeed) < para::gyro_group_param.MAX_LOW_ROT_SPEED)
             _rot_status = RotStatus::LOW_ROT_SPEED;
     }
 }
+
+} // namespace rm

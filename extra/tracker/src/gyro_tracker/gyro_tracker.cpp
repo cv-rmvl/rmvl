@@ -12,10 +12,8 @@
 #include "rmvl/tracker/gyro_tracker.h"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
-using namespace cv;
-using namespace std;
-using namespace para;
-using namespace rm;
+namespace rm
+{
 
 void GyroTracker::updateFromCombo(combo::ptr p_combo)
 {
@@ -39,7 +37,7 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     _type = p_armor->getType();
     _combo_deque.emplace_front(p_armor);
     _type_deque.emplace_front(_type.RobotTypeID);
-    _duration = gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
+    _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
     initFilter();
 }
 
@@ -59,8 +57,8 @@ void GyroTracker::update(combo::ptr p_armor, double, const GyroData &)
     if (_combo_deque.size() >= 2)
         _duration = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
     else
-        _duration = gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
-    if (isnan(_duration))
+        _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
+    if (std::isnan(_duration))
         RMVL_Error(RMVL_StsDivByZero, "\"t\" is nan");
     // 更新滤波器
     updateMotionFilter();
@@ -90,13 +88,13 @@ void GyroTracker::updateType(RMStatus stat)
  * @param[in] end 终止向量
  * @return 夹角（按照叉乘方向区分正负，俯视图顺时针为正，弧度）
  */
-static inline float calcAngleFrom2Vec(const Vec2f &start, const Vec2f &end)
+static inline float calcAngleFrom2Vec(const cv::Vec2f &start, const cv::Vec2f &end)
 {
-    if (start == Vec2f{})
+    if (start == cv::Vec2f{})
         RMVL_Error(RMVL_StsBadArg, "\"start\" is (0, 0)");
-    if (end == Vec2f{})
+    if (end == cv::Vec2f{})
         RMVL_Error(RMVL_StsBadArg, "\"end\" is (0, 0)");
-    Vec3f start3f{start(0), 0, start(1)}, end3f{end(0), 0, end(1)};
+    cv::Vec3f start3f{start(0), 0, start(1)}, end3f{end(0), 0, end(1)};
     return asin(start3f.cross(end3f)(1) / (norm(start3f) * norm(end3f)));
 }
 
@@ -112,10 +110,12 @@ float GyroTracker::calcRotationSpeed()
                      (static_cast<float>(pose_num - 1) * _duration);
     // 速度限幅
     float abs_rotspeed = abs(rotspeed);
-    if (abs_rotspeed > gyro_tracker_param.MAX_ROTSPEED)
-        return sgn(rotspeed) * gyro_tracker_param.MAX_ROTSPEED;
-    else if (abs_rotspeed < gyro_tracker_param.MIN_ROTSPEED)
-        return sgn(rotspeed) * gyro_tracker_param.MIN_ROTSPEED;
+    if (abs_rotspeed > para::gyro_tracker_param.MAX_ROTSPEED)
+        return sgn(rotspeed) * para::gyro_tracker_param.MAX_ROTSPEED;
+    else if (abs_rotspeed < para::gyro_tracker_param.MIN_ROTSPEED)
+        return sgn(rotspeed) * para::gyro_tracker_param.MIN_ROTSPEED;
     else
         return rotspeed;
 }
+
+} // namespace rm
