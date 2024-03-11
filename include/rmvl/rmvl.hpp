@@ -26,13 +26,9 @@
 #include "rmvl/camera.hpp"
 #endif // HAVE_RMVL_CAMERA
 
-#ifdef HAVE_RMVL_DATAIO
-#include "rmvl/dataio.hpp"
-#endif // HAVE_RMVL_DATAIO
-
-#ifdef HAVE_RMVL_FILTER
-#include "rmvl/filter.hpp"
-#endif // HAVE_RMVL_FILTER
+#ifdef HAVE_RMVL_LIGHT
+#include "rmvl/light.hpp"
+#endif // HAVE_RMVL_LIGHT
 
 #ifdef HAVE_RMVL_IMGPROC
 #include "rmvl/imgproc.hpp"
@@ -42,9 +38,17 @@
 #include "rmvl/rmath.hpp"
 #endif // HAVE_RMVL_RMATH
 
+#ifdef HAVE_RMVL_OPCUA
+#include "rmvl/opcua.hpp"
+#endif // HAVE_RMVL_OPCUA
+
 /////////////////////////////////////
-///////    extra modules    ///////
+///////     extra modules     ///////
 /////////////////////////////////////
+
+#ifdef HAVE_RMVL_TYPES
+#include "rmvl/types.hpp"
+#endif // HAVE_RMVL_TYPES
 
 #ifdef HAVE_RMVL_FEATURE
 #include "rmvl/feature.hpp"
@@ -77,9 +81,5 @@
 #ifdef HAVE_RMVL_DECIDER
 #include "rmvl/decider.hpp"
 #endif // HAVE_RMVL_DECIDER
-
-#ifdef HAVE_RMVL_TYPES
-#include "rmvl/types.hpp"
-#endif // HAVE_RMVL_TYPES
 
 #endif // RMVL_ALL_HPP
