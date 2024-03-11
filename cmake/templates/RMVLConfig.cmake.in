@@ -44,10 +44,6 @@ get_filename_component(RMVL_INSTALL_PATH "${RMVL_CONFIG_PATH}/@RMVL_INSTALL_PATH
 set(RMVL_LIB_COMPONENTS @RMVL_MODULES_CONFIGCMAKE@)
 set(__RMVL_INCLUDE_DIRS @RMVL_INCLUDE_DIRS_CONFIGCMAKE@)
 
-if(NOT OpenCV_FOUND)
-  find_package(OpenCV REQUIRED)
-endif(NOT OpenCV_FOUND)
-
 # ======================================================
 #  安装配置
 # ======================================================
@@ -76,8 +72,10 @@ foreach(__rmvlcomponent ${RMVL_LIB_COMPONENTS})
   set(RMVL_LIBS ${RMVL_LIBS} "${__rmvlcomponent}")
 endforeach()
 
-# We do not actually need REQUIRED_VARS to be checked for. Just use the
-# installation directory for the status.
+# 第三方库依赖
+@3RD_PKGS_CMAKEDEF@
+
+# 实际上无需检查 REQUIRED_VARS，只需使用安装目录作为状态。
 find_package_handle_standard_args(
   RMVL
   REQUIRED_VARS RMVL_INSTALL_PATH

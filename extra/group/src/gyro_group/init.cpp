@@ -31,7 +31,7 @@ GyroGroup::GyroGroup(const std::vector<combo::ptr> &first_combos, int armor_num)
     _tick = first_combos.front()->getTick();
     // 获取 RobotType
     std::vector<RobotType> robot_type_vec;
-    for_each(first_combos.begin(), first_combos.end(), [&robot_type_vec](combo::const_ptr val) {
+    for_each(first_combos.begin(), first_combos.end(), [&](combo::const_ptr val) {
         robot_type_vec.push_back(val->getType().RobotTypeID);
     });
     _type.RobotTypeID = calculateModeNum(robot_type_vec.begin(), robot_type_vec.end());
