@@ -23,6 +23,10 @@
 #include "rmvlpara/ml.hpp"
 #endif // HAVE_RMVL_ML
 
+#ifdef HAVE_RMVL_OPCUA
+#include "rmvlpara/opcua.hpp"
+#endif // HAVE_RMVL_OPCUA
+
 /////////////////////////////////////
 ///////     extra modules     ///////
 /////////////////////////////////////

@@ -325,7 +325,7 @@ constexpr Tp getDeltaAngle(Tp angle_1, Tp angle_2)
  * @return sec(x)
  */
 template <typename Tp>
-constexpr inline Tp sec(Tp x) { return 1 / cos(x); }
+constexpr Tp sec(Tp x) { return 1 / cos(x); }
 
 /**
  * @brief 余割 \f$\csc(x)\f$
@@ -335,7 +335,7 @@ constexpr inline Tp sec(Tp x) { return 1 / cos(x); }
  * @return csc(x)
  */
 template <typename Tp>
-constexpr inline Tp csc(Tp x) { return 1 / sin(x); }
+constexpr Tp csc(Tp x) { return 1 / sin(x); }
 
 /**
  * @brief 余切 \f$\cot(x)\f$
@@ -345,7 +345,7 @@ constexpr inline Tp csc(Tp x) { return 1 / sin(x); }
  * @return cot(x)
  */
 template <typename Tp>
-constexpr inline Tp cot(Tp x) { return 1 / tan(x); }
+constexpr Tp cot(Tp x) { return 1 / tan(x); }
 
 /**
  * @brief 符号函数
@@ -357,7 +357,7 @@ constexpr inline Tp cot(Tp x) { return 1 / tan(x); }
  *         \end{matrix}\right.\f]
  */
 template <typename Tp>
-constexpr inline Tp sgn(Tp x) { return (x > 0) ? 1 : ((x < 0) ? -1 : 0); }
+constexpr Tp sgn(Tp x) { return (x > 0) ? 1 : ((x < 0) ? -1 : 0); }
 
 /**
  * @brief 计算 sigmoid(x) 在某一点的函数值
