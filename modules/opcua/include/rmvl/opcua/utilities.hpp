@@ -112,10 +112,10 @@ constexpr UA_NodeId nodeHasProperty{0, UA_NODEIDTYPE_NUMERIC, UA_NS0ID_HASPROPER
 constexpr UA_NodeId nodeHasSubtype{0, UA_NODEIDTYPE_NUMERIC, UA_NS0ID_HASSUBTYPE};               //!< 引用类型节点：`HasSubtype` 节点 ID
 constexpr UA_NodeId nodeHasModellingRule{0, UA_NODEIDTYPE_NUMERIC, UA_NS0ID_HASMODELLINGRULE};   //!< 引用类型节点：`HasModellingRule` 节点 ID
 
-//! 目标节点信息（服务端指针、浏览名）
-using FindNodeInServer = ::std::tuple<UA_Server *, ::std::string>;
-//! 目标节点信息（客户端指针、浏览名）
-using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string>;
+//! 目标节点信息（服务端指针、浏览名、命名空间索引）
+using FindNodeInServer = ::std::tuple<UA_Server *, ::std::string, uint16_t>;
+//! 目标节点信息（客户端指针、浏览名、命名空间索引）
+using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string, uint16_t>;
 
 /**
  * @brief `UA_TypeFlag` 到对应 `NS0` 下的类型名的映射

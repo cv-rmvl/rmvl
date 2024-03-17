@@ -55,10 +55,11 @@ public:
      * @endcode
      *
      * @param[in] browse_name 浏览名
+     * @param[in] ns 命名空间索引，默认为 `1`
      * @return 目标节点信息
      * @retval fnic `[_client, browse_name]` 元组
      */
-    inline FindNodeInClient find(const std::string &browse_name) { return {_client, browse_name}; }
+    inline FindNodeInClient find(const std::string &browse_name, uint16_t ns = 1U) { return {_client, browse_name, ns}; }
 
     /****************************** 功能配置 ******************************/
 
