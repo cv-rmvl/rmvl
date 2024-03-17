@@ -21,8 +21,8 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
 {
     if (UA_NodeId_isNull(&origin))
         return origin;
-    auto &&[p_server, browse_name] = fnis;
-    auto qualified_name = UA_QUALIFIEDNAME(1, rm::helper::to_char(browse_name));
+    auto &&[p_server, browse_name, ns] = fnis;
+    auto qualified_name = UA_QUALIFIEDNAME(ns, rm::helper::to_char(browse_name));
     auto bpr = UA_Server_browseSimplifiedBrowsePath(p_server, origin, 1, &qualified_name);
     UA_NodeId retval = UA_NODEID_NULL;
     if (bpr.statusCode == UA_STATUSCODE_GOOD && bpr.targetsSize >= 1)
@@ -41,8 +41,8 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInClient &&fnic)
     browse_path.relativePath.elements = elem.get();
     browse_path.relativePath.elementsSize = 1;
 
-    auto &&[p_client, browse_name] = fnic;
-    elem->targetName = UA_QUALIFIEDNAME(1, rm::helper::to_char(browse_name));
+    auto &&[p_client, browse_name, ns] = fnic;
+    elem->targetName = UA_QUALIFIEDNAME(ns, rm::helper::to_char(browse_name));
 
     UA_TranslateBrowsePathsToNodeIdsRequest request;
     UA_TranslateBrowsePathsToNodeIdsRequest_init(&request);
