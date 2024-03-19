@@ -33,7 +33,7 @@ namespace rm
 /************************************** 发布者 **************************************/
 
 Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const std::string &address, uint16_t port,
-                                            const std::vector<UserConfig> &users) : Server(port, users), _name(pub_name)
+                                            const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
     UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());

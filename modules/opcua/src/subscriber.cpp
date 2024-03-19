@@ -30,7 +30,7 @@ namespace rm
 {
 
 Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const std::string &address, uint16_t port,
-                                              const std::vector<UserConfig> &users) : Server(port, users), _name(sub_name)
+                                              const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
     UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());

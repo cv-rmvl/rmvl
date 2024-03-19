@@ -38,7 +38,7 @@ TEST(OPC_UA_Server, value_config)
 // 服务器添加变量节点
 TEST(OPC_UA_Server, add_node)
 {
-    rm::Server svr(4840);
+    rm::Server svr(4840, "TestServer");
     rm::Variable variable = 3.1415;
     variable.browse_name = "test_double";
     variable.description = "this is test double";

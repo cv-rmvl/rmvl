@@ -24,12 +24,25 @@ namespace rm
 
 // ============================= 基本配置 =============================
 
-Server::Server(uint16_t port, const std::vector<UserConfig> &users)
+Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users)
 {
     _server = UA_Server_new();
 
     UA_ServerConfig *config = UA_Server_getConfig(_server);
     UA_ServerConfig_setMinimal(config, port, nullptr);
+    // 修改名字
+    if (!name.empty())
+    {
+        UA_LocalizedText_clear(&config->applicationDescription.applicationName);
+        config->applicationDescription.applicationName = UA_LOCALIZEDTEXT_ALLOC("en-US", name.data());
+        for (size_t i = 0; i < config->endpointsSize; ++i)
+        {
+            UA_LocalizedText *ptr = &config->endpoints[i].server.applicationName;
+            UA_LocalizedText_clear(ptr);
+            *ptr = UA_LOCALIZEDTEXT_ALLOC("en-US", name.data());
+        }
+    }
+    // 修改采样间隔和发布间隔
     config->samplingIntervalLimits.min = 2.0;
     config->publishingIntervalLimits.min = 2.0;
     if (!users.empty())
@@ -56,7 +69,7 @@ Server::Server(uint16_t port, const std::vector<UserConfig> &users)
     }
 }
 
-Server::Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users) : Server(port, users)
+Server::Server(ServerUserConfig on_config, uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users)
 {
     if (on_config != nullptr)
         on_config(_server);
