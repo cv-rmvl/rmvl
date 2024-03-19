@@ -64,16 +64,16 @@ function(_type_correct value_type out_value_type)
   string(REGEX REPLACE "Point" "cv::Point" retval "${retval}")
   string(REGEX REPLACE "Vec" "cv::Vec" retval "${retval}")
   string(REGEX REPLACE "Mat" "cv::Mat" retval "${retval}")
-  string(REGEX REPLACE "51f" "<float, 5, 1>" retval "${retval}")
-  string(REGEX REPLACE "51d" "<double, 5, 1>" retval "${retval}")
-  string(REGEX REPLACE "15f" "<float, 1, 5>" retval "${retval}")
-  string(REGEX REPLACE "15d" "<double, 1, 5>" retval "${retval}")
-  string(REGEX REPLACE "61f" "<float, 6, 1>" retval "${retval}")
-  string(REGEX REPLACE "61d" "<double, 6, 1>" retval "${retval}")
-  string(REGEX REPLACE "16f" "<float, 1, 6>" retval "${retval}")
-  string(REGEX REPLACE "16d" "<double, 1, 6>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])51f" "\\1<float, 5, 1>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])51d" "\\1<double, 5, 1>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])15f" "\\1<float, 1, 5>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])15d" "\\1<double, 1, 5>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])61f" "\\1<float, 6, 1>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])61d" "\\1<double, 6, 1>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])16f" "\\1<float, 1, 6>" retval "${retval}")
+  string(REGEX REPLACE "([^\\.])16d" "\\1<double, 1, 6>" retval "${retval}")
   set(${out_value_type} ${retval} PARENT_SCOPE)
-endfunction(_type_correct value_type out_value_type)
+endfunction()
 
 # ----------------------------------------------------------------------------
 #   将指定的 *.para 参数规范文件解析成 C++ 风格的内容
@@ -84,10 +84,10 @@ endfunction(_type_correct value_type out_value_type)
 #     )
 #   示例:
 #     _para_parser(
-#       armor.para           # 名为 armor.para 的参数规范文件
-#       armor_header_details # 对应 .h/.hpp 文件的细节
-#       armor_source_details # 对应 .cpp 文件的实现细节
-#       status               # 返回值: 解析是否成功，成功返回 TRUE，失败返回 FALSE
+#       core.para           # 名为 core.para 的参数规范文件
+#       core_header_details # 对应 .h/.hpp 文件的细节
+#       core_source_details # 对应 .cpp 文件的实现细节
+#       status              # 返回值: 解析是否成功，成功返回 TRUE，失败返回 FALSE
 #     )
 # ----------------------------------------------------------------------------
 function(_para_parser file_name header_details source_details status)
@@ -115,7 +115,7 @@ function(_para_parser file_name header_details source_details status)
     if(l GREATER 1)
       # get value type symbol
       list(GET line_str 0 type_sym)
-      if(type_sym MATCHES "#")
+      if(type_sym MATCHES "^#")
         continue()
       endif()
       # correct the value type
@@ -136,8 +136,10 @@ function(_para_parser file_name header_details source_details status)
         string(SUBSTRING "${default_cmt}" ${cmt_idx} -1 comment_sym)
       endif()
       # correct default_sym
-      _type_correct("${default_sym}" default_sym)
-      string(REGEX REPLACE "," ", " default_sym "${default_sym}")
+      if(NOT type_sym STREQUAL "std::string")
+        _type_correct("${default_sym}" default_sym)
+        string(REGEX REPLACE "," ", " default_sym "${default_sym}")
+      endif()
     else()
       continue()
     endif()
