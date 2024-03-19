@@ -43,15 +43,17 @@ sudo apt install libopencv-dev
 **安装 OpenCV 依赖**
 
 ```shell
-sudo apt install build-essential
-sudo apt install libgtk2.0-dev libavcodec-dev libavformat-dev libjpeg-dev libswscale-dev libtiff5-dev pkg-config
+# 建议安装的依赖
+sudo apt install build-essential libgtk2.0-dev pkg-config
+# 可选安装的依赖
+sudo apt install libavcodec-dev libavformat-dev libjpeg-dev libswscale-dev libtiff5-dev
 ```
 
 **下载并解压缩 OpenCV**
 
 ```shell
 wget https://codeload.github.com/opencv/opencv/tar.gz/refs/tags/4.7.0
-tar -xvf 4.7.0
+tar -xf 4.7.0
 ```
 
 **构建 OpenCV**
@@ -136,7 +138,7 @@ onnxruntime 库是目前数字识别所依赖的第三方库，如果有需要�
   ```
 - 解压
   ```shell
-  tar -xvf onnxruntime-linux-x64-1.12.0.tgz
+  tar -xf onnxruntime-linux-x64-1.12.0.tgz
   ```
 - 安装（复制头文件与库文件）
   ```shell
