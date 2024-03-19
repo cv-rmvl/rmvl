@@ -1,4 +1,4 @@
-uint32_t SPIN_TIMEOUT = 500 # 服务器超时响应的时间，单位 (ms)
+uint32_t SPIN_TIMEOUT = 10 # 服务器超时响应的时间，单位 (ms)
 
 double SAMPLING_INTERVAL = 2      # 服务器监视变量的采样速度，单位 (ms)，不得小于 2ms
 double PUBLISHING_INTERVAL = 2    # 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms)，不得小于 2ms

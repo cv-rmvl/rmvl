@@ -72,6 +72,10 @@ using Matx11f = Matx<float, 1, 1>;
 using Matx11d = Matx<double, 1, 1>;
 using Matx51f = Matx<float, 5, 1>;
 using Matx15f = Matx<float, 1, 5>;
+using Matx51d = Matx<double, 5, 1>;
+using Matx15d = Matx<double, 1, 5>;
+using Matx55f = Matx<float, 5, 5>;
+using Matx55d = Matx<double, 5, 5>;
 
 } // namespace cv
 

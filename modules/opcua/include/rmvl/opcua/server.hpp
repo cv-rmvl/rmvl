@@ -58,9 +58,10 @@ public:
      * @brief 创建 OPC UA 服务器
      *
      * @param[in] port OPC UA 服务器端口号，一般设置为 `4840U`
+     * @param[in] name OPC UA 服务器名称，为空则采用默认值 `open62541-based OPC UA Application`
      * @param[in] users 用户列表 @see UserConfig
      */
-    explicit Server(uint16_t port, const std::vector<UserConfig> &users = {});
+    Server(uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     /**
      * @brief 从服务器配置函数指针创建 OPC UA 服务器
@@ -70,9 +71,10 @@ public:
      *
      * @param[in] on_config 服务器配置函数指针
      * @param[in] port OPC UA 服务器端口号，一般设置为 `4840U`
+     * @param[in] name OPC UA 服务器名称，为空则采用默认值 `open62541-based OPC UA Application`
      * @param[in] users 用户列表 @see UserConfig
      */
-    Server(ServerUserConfig on_config, uint16_t port, const std::vector<UserConfig> &users = {});
+    Server(ServerUserConfig on_config, uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     Server(const Server &) = delete;
     Server(Server &&) = delete;

@@ -1,18 +1,23 @@
+#include <csignal>
+
 #include "rmvl/opcua/server.hpp"
+
+rm::Server *p_server{nullptr};
+
+inline void onHandle(int) { p_server->stop(); }
 
 int main()
 {
-    rm::Server server(4840U);
-    rm::Variable var = 42;
-    var.display_name = "VarDemo";
-    var.browse_name = "var_demo";
-    server.addVariableNode(var);
-    server.start();
+    signal(SIGINT, onHandle);
 
-    printf("\033[32mServer started for 20 seconds ...\033[0m\n");
-    std::this_thread::sleep_for(std::chrono::seconds(20));
-    printf("\033[32mServer stopped ...\033[0m\n");
-    server.stop();
+    rm::Server server(4840);
+    p_server = &server;
+
+    rm::Variable position = 5500;
+    position.display_name = "Position";
+    position.browse_name = "position";
+    server.addVariableNode(position);
+    server.start();
     server.join();
     return 0;
 }
