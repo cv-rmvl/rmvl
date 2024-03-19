@@ -34,11 +34,27 @@ TEST(NumberCalculation, function_interpolator)
     EXPECT_EQ(foo(4), -7); // a0 = 1, a1=-10/3, a2=3, a3=-2/3
 }
 
-TEST(NumberCalculation, curve_fitter)
+TEST(NumberCalculation, curve_fitter_ax_b)
 {
     rm::CurveFitter foo({1, 2, 3, 4}, {0, 2, 1, 3}, 0b11);
     EXPECT_LE(abs(foo(0.625)), 1e-5);
     EXPECT_LE(foo(0) + 0.5, 1e-5);
+}
+
+TEST(NumberCalculation, curve_fitter_ax2_bx_c)
+{
+    // 2x^2 + 3x - 1
+    rm::CurveFitter foo({0, 1, 2}, {-1, 4, 13}, 0b111);
+    // 2*3^2 + 3*3 - 1 = 26
+    EXPECT_LE(foo(3) - 26, 1e-5);
+}
+
+TEST(NumberCalculation, curve_fitter_ax3_cx_d)
+{
+    // x^3 - 4x + 1
+    rm::CurveFitter foo({0, 1, 2}, {1, -2, 1}, 0b1011);
+    // 3^3 - 4*3 + 1 = 16
+    EXPECT_LE(foo(3) - 16, 1e-5);
 }
 
 TEST(NumberCalculation, nonlinear_solver)
