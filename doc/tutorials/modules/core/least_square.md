@@ -318,22 +318,26 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 不同的 2 个数字向量的内积定义为 \f$(\pmb\alpha,\pmb\beta)=\sum\limits_{i=0}^sa_ib_i\f$，同样的，多项式不同的 2 个分量（例如 \f$\phi_1(t)=t\f$ 和 \f$\phi_2(t)=t^2\f$ 就是不同的分量）之间的内积可以定义为 \f$(\phi_p(t),\phi_q(t))=\sum\limits_{i=0}^{s-1}\phi_p(t_i)\phi_q(t_i)\f$，简记为 \f$(\phi_p,\phi_q)\f$。则有
 
 \f[\left\{\begin{align}
-(\phi_k,\phi_j)&=\sum_{i=0}^{s-1}\phi_k(t_i)\phi_j(t_i)\\
-(\phi_k,f)&=\sum_{i=0}^{s-1}\phi_k(t_i)f(t_i)\equiv d_k\\
+\sum_{i=0}^{s-1}\phi_k(t_i)\phi_j(t_i)&=(\phi_k,\phi_j)\\
+\sum_{i=0}^{s-1}\phi_k(t_i)f(t_i)&=(\phi_k,f)\equiv d_k\\
 \end{align}\right.\tag{4-4}\f]
 
 于是公式 \f$\text{(4-3)}\f$ 可以写成
 
-\f[\sum_{j=0}^{n-1}(\phi_k,\phi_j)=d_k\qquad(k=0,1,\cdots,n-1)\tag{4-5a}\f]
+\f[\sum_{j=0}^{n-1}(\phi_k,\phi_j)a_j=d_k\qquad(k=0,1,\cdots,n-1)\tag{4-5a}\f]
 
 或者展开写为
+
+\f[(\phi_k,\phi_0)a_0+(\phi_k,\phi_1)a_1+\cdots+(\phi_k,\phi_{n-1})a_{n-1}=d_k\qquad(k=0,1,\cdots,n-1)\tag{4-5b}\f]
+
+对每一个 \f$k\f$ 值，可以一并写成如下形式
 
 \f[\left\{\begin{matrix}
 (\phi_0,\phi_0)a_0&+&(\phi_0,\phi_1)a_1&+&\cdots&+&(\phi_0,\phi_{n-1})a_{n-1}&=&d_0\\
 (\phi_1,\phi_0)a_0&+&(\phi_1,\phi_1)a_1&+&\cdots&+&(\phi_1,\phi_{n-1})a_{n-1}&=&d_1\\
 \vdots&&\vdots&&&&\vdots&=&\vdots\\
 (\phi_{n-1},\phi_0)a_0&+&(\phi_{n-1},\phi_1)a_1&+&\cdots&+&(\phi_{n-1},\phi_{n-1})a_{n-1}&=&d_{n-1}\\
-\end{matrix}\right.\tag{4-5b}\f]
+\end{matrix}\right.\tag{4-5c}\f]
 
 上式称为 \f$a_0,a_1,\cdots,a_{n-1}\f$ 的<span style="color: red">法方程（组）</span>，是 \f$n\f$ 阶线性方程组，其系数矩阵是
 
@@ -344,7 +348,7 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 (\phi_{n-1},\phi_0)&(\phi_{n-1},\phi_1)&\cdots&(\phi_{n-1},\phi_{n-1})\\
 \end{bmatrix}\tag{4-6}\f]
 
-对于 \f$(\phi_p,\phi_q)\f$，可以写成矩阵的表示方式，即
+对于 \f$(\phi_p,\phi_q)\f$，依照公式\f$\text{(4-4)}\f$，可以写成矩阵的表示方式，即
 
 \f[\begin{align}(\phi_p,\phi_q)&=\sum_{i=0}^{s-1}\phi_p(t_i)\phi_q(t_i)\\&=[\phi_p(t_0),\phi_p(t_1),\cdots,\phi_p(t_{s-1})]
 \begin{bmatrix}\phi_i(t_0)\\\phi_i(t_1)\\\vdots\\\phi_q(t_{s-1})\end{bmatrix}\end{align}\tag{4-7}\f]
@@ -383,6 +387,8 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 \f[\boxed{\hat{\pmb a}=\left(A^TA\right)^{-1}A^T\pmb f}\tag{4-11}\f]
 
 这与公式 \f$\text{(2-7)}\f$ 完全一致。
+
+此外，对于形如 \f$G\pmb a=\pmb d\ (G=A^TA)\f$ 的方程组，我们在求解的时候可以使用平方根法，即 Cholesky 方法进行求解，OpenCV 中对应的枚举类型为 `cv::DECOMP_CHOLESKY`。
 
 对于<span style="color: green">**示例 3**</span>，可以依次计算出
 

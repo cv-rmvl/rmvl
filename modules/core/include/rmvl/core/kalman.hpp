@@ -219,12 +219,24 @@ using KF11f = KalmanFilter<float, 1U, 1U>;  //!< 1 × 1 卡尔曼滤波器，无
 using KF11d = KalmanFilter<double, 1U, 1U>; //!< 1 × 1 卡尔曼滤波器，无控制量
 using KF22f = KalmanFilter<float, 2U, 2U>;  //!< 2 × 2 卡尔曼滤波器，无控制量
 using KF22d = KalmanFilter<double, 2U, 2U>; //!< 2 × 2 卡尔曼滤波器，无控制量
+using KF21f = KalmanFilter<float, 2U, 1U>;  //!< 2 × 1 卡尔曼滤波器，无控制量
+using KF21d = KalmanFilter<double, 2U, 1U>; //!< 2 × 1 卡尔曼滤波器，无控制量
 using KF33f = KalmanFilter<float, 3U, 3U>;  //!< 3 × 3 卡尔曼滤波器，无控制量
 using KF33d = KalmanFilter<double, 3U, 3U>; //!< 3 × 3 卡尔曼滤波器，无控制量
+using KF31f = KalmanFilter<float, 3U, 1U>;  //!< 3 × 1 卡尔曼滤波器，无控制量
+using KF31d = KalmanFilter<double, 3U, 1U>; //!< 3 × 1 卡尔曼滤波器，无控制量
+using KF32f = KalmanFilter<float, 3U, 2U>;  //!< 3 × 2 卡尔曼滤波器，无控制量
+using KF32d = KalmanFilter<double, 3U, 2U>; //!< 3 × 2 卡尔曼滤波器，无控制量
 using KF44f = KalmanFilter<float, 4U, 4U>;  //!< 4 × 4 卡尔曼滤波器，无控制量
 using KF44d = KalmanFilter<double, 4U, 4U>; //!< 4 × 4 卡尔曼滤波器，无控制量
+using KF42f = KalmanFilter<float, 4U, 2U>;  //!< 4 × 2 卡尔曼滤波器，无控制量
+using KF42d = KalmanFilter<double, 4U, 2U>; //!< 4 × 2 卡尔曼滤波器，无控制量
 using KF66f = KalmanFilter<float, 6U, 6U>;  //!< 6 × 6 卡尔曼滤波器，无控制量
 using KF66d = KalmanFilter<double, 6U, 6U>; //!< 6 × 6 卡尔曼滤波器，无控制量
+using KF63f = KalmanFilter<float, 6U, 3U>;  //!< 6 × 3 卡尔曼滤波器，无控制量
+using KF63d = KalmanFilter<double, 6U, 3U>; //!< 6 × 3 卡尔曼滤波器，无控制量
+using KF64f = KalmanFilter<float, 6U, 4U>;  //!< 6 × 4 卡尔曼滤波器，无控制量
+using KF64d = KalmanFilter<double, 6U, 4U>; //!< 6 × 4 卡尔曼滤波器，无控制量
 
 //! @} kalman
 
