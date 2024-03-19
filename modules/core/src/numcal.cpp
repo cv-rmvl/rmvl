@@ -77,24 +77,28 @@ CurveFitter::CurveFitter(const std::vector<double> &xs, const std::vector<double
             _idx.push_back(i);
     // 构建法方程系数矩阵 G
     cv::Mat G(_idx.size(), _idx.size(), CV_64FC1);
-    std::for_each(_idx.cbegin(), _idx.cend(), [&](std::size_t i) {
-        std::for_each(_idx.cbegin(), _idx.cend(), [&](std::size_t j) {
+    for (size_t i = 0; i < _idx.size(); ++i)
+    {
+        for (size_t j = 0; j < _idx.size(); ++j)
+        {
             G.at<double>(i, j) = 0.0;
-            std::for_each(xs.cbegin(), xs.cend(), [&](std::size_t val) { G.at<double>(i, j) += std::pow(val, i + j); });
-        });
-    });
+            for (size_t k = 0; k < xs.size(); ++k)
+                G.at<double>(i, j) += std::pow(xs[k], _idx[i] + _idx[j]);
+        }
+    }
     // 构建法方程系数矩阵 b
     cv::Mat b(_idx.size(), 1, CV_64FC1);
-    std::for_each(_idx.cbegin(), _idx.cend(), [&](std::size_t i) {
+    for (size_t i = 0; i < _idx.size(); ++i)
+    {
         b.at<double>(i) = 0.0;
-        for (std::size_t k = 0; k < xs.size(); k++)
-            b.at<double>(i) += std::pow(xs[k], i) * ys[k];
-    });
+        for (size_t k = 0; k < xs.size(); ++k)
+            b.at<double>(i) += std::pow(xs[k], _idx[i]) * ys[k];
+    }
     // 求解法方程
     _coeffs.reserve(_idx.size());
     cv::Mat coeffs_mat;
     cv::solve(G, b, coeffs_mat, cv::DECOMP_CHOLESKY);
-    std::for_each(coeffs_mat.begin<double>(), coeffs_mat.end<double>(), [&](double val) { _coeffs.push_back(val); });
+    std::for_each(coeffs_mat.begin<double>(), coeffs_mat.end<double>(), [this](double val) { _coeffs.push_back(val); });
 }
 
 double CurveFitter::operator()(double x) const

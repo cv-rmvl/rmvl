@@ -12,6 +12,7 @@
 #pragma once
 
 #include <algorithm>
+#include <functional>
 #include <array>
 #include <bitset>
 #include <vector>
@@ -129,7 +130,7 @@ public:
      *
      * @param[in] xs 已知节点的 x 坐标列表 \f$\text{xs}=\{x_0,x_1,\cdots,x_n\}\f$
      * @param[in] ys 已知节点的 y 坐标列表 \f$\text{ys}=\{f(x_0),f(x_1),\cdots,f(x_n)\}\f$
-     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 a0 ~ a7，即
+     * @param[in] order 拟合曲线的阶数，参数从最 **低** 位到最 **高** 位依次为 \f$a_0\f$ ~ \f$a_7\f$，即
      *                  \f[f(x)=a_0+a_1x+\cdots+a_7x^7\tag1\f]例如 `0b01000101` 表示拟合曲线为
      *                  \f[f(x)=a_0+a_2x^2+a_6x^6\tag2\f]
      */
