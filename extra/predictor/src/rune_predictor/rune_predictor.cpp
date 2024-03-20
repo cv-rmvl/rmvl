@@ -37,10 +37,8 @@ PredictInfo RunePredictor::predict(const std::vector<group::ptr> &groups, const 
         double dKt = p_rune_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_K * tf;
         double dB = p_rune_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_B;
         // 更新预测量
-        auto &dynamic_vec = info.dynamic_prediction[p_tracker];
-        dynamic_vec[ANG_Z] = dKt;
-        auto &static_vec = info.static_prediction[p_tracker];
-        static_vec[ANG_Z] = dB;
+        info.dynamic_prediction.at(p_tracker)[ANG_Z] = dKt;
+        info.static_prediction.at(p_tracker)[ANG_Z] = dB;
     }
     return info;
 }

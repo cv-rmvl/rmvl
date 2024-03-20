@@ -41,7 +41,7 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     initFilter();
 }
 
-void GyroTracker::update(combo::ptr p_armor, double, const GyroData &)
+void GyroTracker::update(combo::ptr p_armor)
 {
     if (p_armor == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");

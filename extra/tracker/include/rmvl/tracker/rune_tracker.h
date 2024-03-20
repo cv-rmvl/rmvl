@@ -31,10 +31,9 @@ namespace rm
  */
 class RuneTracker final : public tracker
 {
-    int _round{};              //!< 圈数
-    float _rotated_speed;      //!< 神符旋转角速度
-    std::deque<float> _angles; //!< 角度容器
-    KF22f _filter;             //!< 神符的角度滤波器
+    int _round{};         //!< 圈数
+    float _rotated_speed; //!< 神符旋转角速度
+    KF21f _filter;        //!< 神符的角度滤波器
 
 public:
     using ptr = std::shared_ptr<RuneTracker>;
@@ -73,13 +72,19 @@ public:
     static inline RuneTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const RuneTracker>(p_tracker); }
 
     /**
-     * @brief 更新时间序列
+     * @brief 使用捕获的 `rm::Rune` 组合体更新追踪器
      *
      * @param[in] p_rune 神符共享指针
+     */
+    void update(combo::ptr p_rune) override;
+
+    /**
+     * @brief `rm::Rune` 目标丢失，使用时间点和陀螺仪数据更新追踪器
+     *
      * @param[in] tick 当前时间点
      * @param[in] gyro_data 云台数据
      */
-    void update(combo::ptr p_rune, double tick, const GyroData &gyro_data) override;
+    void update(double tick, const GyroData &gyro_data) override;
 
     /**
      * @brief 滤波器初始化

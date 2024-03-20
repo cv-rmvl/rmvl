@@ -37,13 +37,10 @@ RuneTracker::RuneTracker(combo::ptr p_rune)
     updateFromRune(p_rune);
 }
 
-void RuneTracker::update(combo::ptr p_rune, double tick, const GyroData &gyro_data)
+void RuneTracker::update(combo::ptr p_rune)
 {
     if (p_rune == nullptr)
-    {
-        ++_vanish_num;
-        vanishProcess(tick, gyro_data);
-    }
+        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is nullptr");
     else
     {
         _combo_deque.push_front(p_rune);
@@ -51,7 +48,6 @@ void RuneTracker::update(combo::ptr p_rune, double tick, const GyroData &gyro_da
         updateFromRune(p_rune);
         // 更新神符转动的圈数，并计算在考虑圈数时的完全值
         _angle = calculateTotalAngle();
-        _angles.push_front(_angle);
         // 更新滤波器
         float t = 0.f;
         if (_combo_deque.size() >= 2)
@@ -62,10 +58,8 @@ void RuneTracker::update(combo::ptr p_rune, double tick, const GyroData &gyro_da
         // 重置消失帧数
         _vanish_num = 0;
     }
-    if (_combo_deque.size() >= 32U)
+    if (_combo_deque.size() >= 8U)
         _combo_deque.pop_back();
-    if (_angles.size() >= 32U)
-        _angles.pop_back();
 }
 
 float RuneTracker::calculateTotalAngle()

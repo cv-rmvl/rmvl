@@ -92,19 +92,18 @@ TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
     rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
     rm::Armor::ptr armor2 = buildArmor(cv::Point(505, 300), 8);
-    p_tracker->update(armor2, tick, gyro_data);
+    p_tracker->update(armor2);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_NE(p_tracker->getRelativeAngle(), armor2->getRelativeAngle());
 }
 
-// 追踪器传入空掉帧处理功能验证
+// 追踪器掉帧处理功能验证
 TEST_F(PlanarTrackerTest, tracker_update_with_none)
 {
     // 传入装甲板后传入空
     rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
-    rm::Armor::ptr armor2 = nullptr;
-    p_tracker->update(armor2, tick, gyro_data);
+    p_tracker->update(tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_EQ(p_tracker->front()->getCenter(), armor->getCenter());
     EXPECT_EQ(p_tracker->getVanishNumber(), 1);

@@ -26,11 +26,15 @@ PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const
         for (auto p_tracker : p_group->data())
         {
             double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
-
-            double dB_yaw = p_tracker->getSpeed().x * para::armor_predictor_param.YAW_B;
-            double dB_pitch = p_tracker->getSpeed().y * para::armor_predictor_param.PITCH_B;
-            double dKt_yaw = p_tracker->getSpeed().x * para::armor_predictor_param.YAW_K * tf;
-            double dKt_pitch = p_tracker->getSpeed().y * para::armor_predictor_param.PITCH_K * tf;
+            // 获取陀螺仪角速度
+            cv::Point2f gyro_speed = {p_tracker->front()->getGyroData().rotation.yaw_speed,
+                                      p_tracker->front()->getGyroData().rotation.pitch_speed};
+            // 计算用于预测的合成角速度
+            cv::Point2f speed = p_tracker->getSpeed() + gyro_speed;
+            double dB_yaw = speed.x * para::armor_predictor_param.YAW_B;
+            double dB_pitch = speed.y * para::armor_predictor_param.PITCH_B;
+            double dKt_yaw = speed.x * para::armor_predictor_param.YAW_K * tf;
+            double dKt_pitch = speed.y * para::armor_predictor_param.PITCH_K * tf;
 
             // 更新预测信息
             info.static_prediction[p_tracker][YAW] = dB_yaw;

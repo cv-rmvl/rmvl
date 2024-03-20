@@ -27,7 +27,7 @@ namespace rm
  * @param[in] gyro_data 最新陀螺仪数据
  * @return 构造出的神符
  */
-Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const GyroData &gyro_data)
+static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const GyroData &gyro_data)
 {
     auto p_rune_target = RuneTarget::cast(ref_rune->at(0));
     auto p_rune_center = RuneCenter::cast(ref_rune->at(1));
@@ -56,19 +56,20 @@ Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick
     return Rune::make_combo(p_new_rune_target, p_new_rune_center, gyro_data, tick, true);
 }
 
-void RuneTracker::vanishProcess(double tick, const GyroData &gyro_data)
+void RuneTracker::update(double tick, const GyroData &gyro_data)
 {
     // 判空
-    if (_combo_deque.empty() || _vanish_num == 0)
+    if (_combo_deque.empty())
         return;
+    _vanish_num++;
     // 获取帧差时间
     float t = 0.f;
     if (_combo_deque.size() >= 2)
         t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
     else
         t = para::rune_tracker_param.SAMPLE_INTERVAL / 1000.;
-    _filter.setA(cv::Matx22f{1, t,
-                             0, 1});
+    _filter.setA({1, t,
+                  0, 1});
     // 旋转状态先验估计
     auto rotate_pre = _filter.predict();
 
@@ -83,7 +84,7 @@ void RuneTracker::vanishProcess(double tick, const GyroData &gyro_data)
 
     _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, relative_center);
     // 直接更新后验估计
-    _filter.correct(rotate_pre);
+    _filter.correct({rotate_pre(0)});
     _combo_deque.emplace_front(p_rune);
 }
 

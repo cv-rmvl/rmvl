@@ -70,19 +70,18 @@ PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, con
     // ------------------- 系统参数辨识过程 -------------------
     auto p_rune_group = RuneGroup::cast(groups.front());
     const auto &trackers = p_rune_group->data();
-    size_t trackers_num = trackers.size();
     const auto &raw_datas = p_rune_group->getRawDatas();
     identifier(raw_datas);
     // ---------------------- 预测量计算 ----------------------
-    for (size_t i = 0; i < trackers_num; ++i)
+    for (auto p_tracker : trackers)
     {
         // 静态预测角度增量
-        auto dB = staticPredict(trackers[i]);
+        auto dB = staticPredict(p_tracker);
         // 动态预测角度增量
-        double tf = (tof.find(trackers[i]) == tof.end()) ? 0. : tof.at(trackers[i]);
+        double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
         auto dKt = anglePredict(raw_datas, tf);
-        info.static_prediction[trackers[i]](ANG_Z) = dB;
-        info.dynamic_prediction[trackers[i]](ANG_Z) = dKt;
+        info.static_prediction[p_tracker](ANG_Z) = dB;
+        info.dynamic_prediction[p_tracker](ANG_Z) = dKt;
     }
     return info;
 }

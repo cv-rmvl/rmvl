@@ -52,7 +52,7 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
                 return getDeltaAngle(lhs->getAngle(), p_tracker->front()->getAngle()) <
                        getDeltaAngle(rhs->getAngle(), p_tracker->front()->getAngle());
             });
-            p_tracker->update(closest_rune, _tick, _gyro_data);
+            p_tracker->update(closest_rune);
             combo_set.erase(closest_rune);
         }
         // 没有匹配到的神符作为新的序列，创建新的 tracker
@@ -67,17 +67,16 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
         for (auto p_combo : combos)
         {
             // 离 active_rune 最近的 tracker
-            tracker::ptr closest_tracker = *min_element(trackers.begin(), trackers.end(),
-                                                        [&p_combo](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-                                                            return getDeltaAngle(p_combo->getAngle(), lhs->front()->getAngle()) <
-                                                                   getDeltaAngle(p_combo->getAngle(), rhs->front()->getAngle());
-                                                        });
-            closest_tracker->update(p_combo, _tick, _gyro_data);
+            tracker::ptr closest_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+                return getDeltaAngle(p_combo->getAngle(), lhs->front()->getAngle()) <
+                       getDeltaAngle(p_combo->getAngle(), rhs->front()->getAngle());
+            });
+            closest_tracker->update(p_combo);
             tracker_set.erase(closest_tracker);
         }
-        // 没有匹配到的序列传入 nullptr
-        for (auto &p_tracker : tracker_set)
-            p_tracker->update(nullptr, _tick, _gyro_data);
+        // 没有匹配到的序列则执行丢帧操作
+        for (auto p_tracker : tracker_set)
+            p_tracker->update(_tick, _gyro_data);
     }
     // 如果当前帧识别到的装甲板数量 = 序列数量
     else
@@ -97,10 +96,10 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
             float min_delta_angle = getDeltaAngle(closest_combo->getAngle(), trackers[i]->front()->getAngle());
             // 判断是否角度差过大
             if (min_delta_angle < 50.f)
-                trackers[i]->update(closest_combo, _tick, _gyro_data);
+                trackers[i]->update(closest_combo);
             else
             {
-                trackers[i]->update(nullptr, _tick, _gyro_data);
+                trackers[i]->update(_tick, _gyro_data);
                 trackers.emplace_back(RuneTracker::make_tracker(closest_combo));
             }
             combo_set.erase(closest_combo);
