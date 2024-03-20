@@ -125,12 +125,12 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
         return;
     }
 
-    // 如果当前帧识别到的装甲板数量 > 序列数量
+    // 如果当前帧识别到的视觉标签 `rm::Tag` 数量 > 序列数量
     if (combos.size() > trackers.size())
     {
-        // 初始化装甲板集合
+        // 初始化视觉标签 `rm::Tag` 集合
         std::unordered_set<combo::ptr> tag_set(combos.begin(), combos.end());
-        // 距离最近的装甲板匹配到相应的序列中, 并 update
+        // 距离最近的视觉标签 `rm::Tag` 匹配到相应的序列中, 并 update
         for (auto p_tracker : trackers)
         {
             // 离 p_tracker 最近的 combo 及其距离
@@ -138,59 +138,59 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
                 return getDistance(lhs->getCenter(), p_tracker->front()->getCenter()) <
                        getDistance(rhs->getCenter(), p_tracker->front()->getCenter());
             });
-            p_tracker->update(*min_it, _tick, _gyro_data);
+            p_tracker->update(*min_it);
             tag_set.erase(*min_it);
         }
-        // 没有匹配到的装甲板作为新的序列
+        // 没有匹配到的视觉标签 `rm::Tag` 作为新的序列
         for (const auto &p_combo : tag_set)
             trackers.emplace_back(PlanarTracker::make_tracker(p_combo));
     }
-    // 如果当前帧识别到的装甲板数量 < 序列数量
+    // 如果当前帧识别到的视觉标签 `rm::Tag` 数量 < 序列数量
     else if (combos.size() < trackers.size())
     {
         // 初始化追踪器集合
         std::unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
         for (const auto &p_combo : combos)
         {
-            // 离 tag 最近的 tracker 及其距离
-            auto min_dis_tracker = min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
+            // 离视觉标签最近的 tracker 及其距离
+            auto min_dis_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
                 return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
                        getDistance(p_combo->getCenter(), rhs->front()->getCenter());
             });
-            min_dis_tracker->get()->update(p_combo, _tick, _gyro_data);
-            tracker_set.erase(*min_dis_tracker);
+            min_dis_tracker->update(p_combo);
+            tracker_set.erase(min_dis_tracker);
         }
         // 没有匹配到的序列传入 nullptr
-        for (const auto &p_tracker : tracker_set)
-            p_tracker->update(nullptr, _tick, _gyro_data);
+        for (auto p_tracker : tracker_set)
+            p_tracker->update(_tick, _gyro_data);
     }
-    // 如果当前帧识别到的装甲板数量 = 序列数量
+    // 如果当前帧识别到的视觉标签 `rm::Tag` 数量 = 序列数量
     else
     {
-        // 初始化装甲板集合
+        // 初始化视觉标签 `rm::Tag` 集合
         std::unordered_set<combo::ptr> tag_set(combos.begin(), combos.end());
         // 防止出现迭代器非法化的情况，此处使用下标访问
         size_t before_size = trackers.size(); // 存储原始 trackers 大小
         for (size_t i = 0; i < before_size; i++)
         {
             // 离 tracker 最近的 combo
-            auto min_it = min_element(tag_set.begin(), tag_set.end(), [&](combo::const_ptr combo_1, combo::const_ptr combo_2) {
+            auto min_it = *min_element(tag_set.begin(), tag_set.end(), [&](combo::const_ptr combo_1, combo::const_ptr combo_2) {
                 return getDistance(combo_1->getCenter(), trackers[i]->front()->getCenter()) <
                        getDistance(combo_2->getCenter(), trackers[i]->front()->getCenter());
             });
             // 最短距离
-            float min_dis = getDistance(min_it->get()->getCenter(), trackers[i]->front()->getCenter());
+            float min_dis = getDistance(min_it->getCenter(), trackers[i]->front()->getCenter());
             // 判断是否突变
             //! @todo 这段掉帧处理需要增加其他信息，保证 tracker 的匹配正确
             if (isChange(min_dis))
             {
                 // 创建新序列，原来的序列打入 nullptr
-                trackers[i]->update(nullptr, _tick, _gyro_data);
-                trackers.emplace_back(PlanarTracker::make_tracker(*min_it));
+                trackers[i]->update(_tick, _gyro_data);
+                trackers.emplace_back(PlanarTracker::make_tracker(min_it));
             }
             else
-                trackers[i]->update(*min_it, _tick, _gyro_data);
-            tag_set.erase(*min_it);
+                trackers[i]->update(min_it);
+            tag_set.erase(min_it);
         }
     }
 }

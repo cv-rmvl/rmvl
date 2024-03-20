@@ -38,9 +38,9 @@ private:
     cv::Vec2f _pose;    //!< 修正后的装甲板姿态法向量
     float _rotspeed{};  //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
 
-    KF44f _motion_filter;   //!< 目标转角滤波器
-    KF66f _center3d_filter; //!< 位置滤波器
-    KF44f _pose_filter;     //!< 姿态滤波器
+    KF42f _motion_filter;   //!< 目标转角滤波器
+    KF63f _center3d_filter; //!< 位置滤波器
+    KF42f _pose_filter;     //!< 姿态滤波器
 
     std::deque<RobotType> _type_deque; //!< 装甲板状态队列（数字）
 
@@ -76,14 +76,14 @@ public:
      */
     static inline GyroTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const GyroTracker>(p_tracker); }
 
+    [[deprecated]] void update(double, const GyroData &) override{};
+
     /**
-     * @brief 更新时间序列
+     * @brief 使用捕获的 `combo` 更新平面目标追踪器
      *
-     * @param[in] p_armor 传入 tracker 的组合体
-     * @param[in] tick 时间点
-     * @param[in] gyro_data 云台数据
+     * @param[in] p_combo 待传入 tracker 的平面目标，必须严格保证不为空
      */
-    void update(combo::ptr p_armor, double tick, const GyroData &gyro_data) override;
+    void update(combo::ptr p_combo) override;
 
     /**
      * @brief 更新消失状态

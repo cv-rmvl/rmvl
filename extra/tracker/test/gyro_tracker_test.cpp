@@ -94,7 +94,7 @@ TEST_F(GyroTrackerTest, tracker_update_with_1_armor)
     Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     tracker::ptr p_tracker = GyroTracker::make_tracker(armor);
     Armor::ptr armor2 = buildArmor(cv::Point(505, 300), 8);
-    p_tracker->update(armor2, tick, gyro_data);
+    p_tracker->update(armor2);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_NE(p_tracker->getRelativeAngle(), armor2->getRelativeAngle());
 }

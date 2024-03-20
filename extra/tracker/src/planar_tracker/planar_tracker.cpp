@@ -38,31 +38,26 @@ PlanarTracker::PlanarTracker(combo::ptr p_combo)
     updateData(p_combo);
 }
 
-void PlanarTracker::update(combo::ptr p_combo, double tick, const GyroData &gyro_data)
+void PlanarTracker::update(combo::ptr p_combo)
 {
     if (p_combo == nullptr)
-    {
-        ++_vanish_num;
-        vanishProcess(tick, gyro_data);
-    }
-    else
-    {
-        updateData(p_combo);
-        _combo_deque.emplace_front(p_combo);
-        // 更新状态
-        updateType(p_combo->getType());
-        // 重置丢失帧数
-        _vanish_num = 0;
+        RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is nullptr");
 
-        // 更新距离 KF
-        updateDistanceFilter();
-        // 更新平面运动轨迹 KF
-        updateMotionFilter();
-    }
+    updateData(p_combo);
+    _combo_deque.emplace_front(p_combo);
+    // 更新状态
+    updateType(p_combo->getType());
+    // 重置丢失帧数
+    _vanish_num = 0;
+
+    // 更新距离 KF
+    updateDistanceFilter();
+    // 更新平面运动轨迹 KF
+    updateMotionFilter();
+
     if (_combo_deque.size() >= 12U)
         _combo_deque.pop_back();
 }
-
 
 void PlanarTracker::updateType(RMStatus stat)
 {

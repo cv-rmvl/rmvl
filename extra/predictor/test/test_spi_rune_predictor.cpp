@@ -52,7 +52,7 @@ TEST(Run_Accuracy, data_from_0_300)
         double tick = Timer::now();
 
         auto new_rune = Rune::make_combo(new_target, p_center, gyro_data, tick, true);
-        p_tracker->update(new_rune, tick, gyro_data);
+        p_tracker->update(new_rune);
         p_group->sync(gyro_data, tick);
 
         // predict

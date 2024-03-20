@@ -58,7 +58,6 @@ void GyroGroup::initGroup(const std::unordered_set<combo::ptr> &visible_combo_se
     for (int i = 0; i < _armor_num; i++)
         _tracker_state[tracker_vec[i]] = state_vec[i];
     // 旋转中心点坐标初始化
-    _center3d_deq.emplace_front(group_center3d);
     _center3d = group_center3d;
     _center = group_center2d;
     // 序列可见性初始化
@@ -76,9 +75,7 @@ void GyroGroup::initFilter()
     // 初始化旋转中心点位置滤波器
     _center3d_filter.setQ(para::gyro_group_param.CENTER3D_Q);
     _center3d_filter.setR(para::gyro_group_param.CENTER3D_R);
-    _center3d_filter.init(cv::Matx61f(_center3d(0), _center3d(1), _center3d(2),
-                                      _speed3d(0), _speed3d(1), _speed3d(2)),
-                          1e-2);
+    _center3d_filter.init(cv::Matx61f(_center3d(0), _center3d(1), _center3d(2), 0, 0, 0), 1e-2);
 }
 
 } // namespace rm

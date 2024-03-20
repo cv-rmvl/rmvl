@@ -28,15 +28,15 @@ protected:
     std::deque<combo::ptr> _combo_deque; //!< 组合体时间队列
     uint32_t _vanish_num{};              //!< 消失帧数
 
-    RMStatus _type{};                   //!< 追踪器类型
-    float _height{};                    //!< 追踪器高度（可表示修正后）
-    float _width{};                     //!< 追踪器宽度（可表示修正后）
-    float _angle{};                     //!< 追踪器角度（可表示修正后）
-    cv::Point2f _center;                //!< 追踪器中心点（可表示修正后）
-    cv::Point2f _relative_angle;        //!< 相对目标转角（可表示修正后）
-    std::vector<cv::Point2f> _corners;  //!< 追踪器角点（可表示修正后）
-    CameraExtrinsics _extrinsic; //!< 相机外参（可表示修正后）
-    cv::Point2f _speed;                 //!< 相对目标转角速度
+    RMStatus _type{};                  //!< 追踪器类型
+    float _height{};                   //!< 追踪器高度（可表示修正后）
+    float _width{};                    //!< 追踪器宽度（可表示修正后）
+    float _angle{};                    //!< 追踪器角度（可表示修正后）
+    cv::Point2f _center;               //!< 追踪器中心点（可表示修正后）
+    cv::Point2f _relative_angle;       //!< 相对目标转角（可表示修正后）
+    std::vector<cv::Point2f> _corners; //!< 追踪器角点（可表示修正后）
+    CameraExtrinsics _extrinsic;       //!< 相机外参（可表示修正后）
+    cv::Point2f _speed;                //!< 相对目标转角速度
 
 public:
     using ptr = std::shared_ptr<tracker>;
@@ -47,13 +47,20 @@ public:
     virtual ~tracker() = default;
 
     /**
-     * @brief 更新追踪器
+     * @brief 使用已捕获的 `combo` 更新追踪器
      *
-     * @param[in] p_combo 更新的组合体
      * @param[in] tick 当前时间点
      * @param[in] gyro_data 当前陀螺仪信息
      */
-    virtual void update(combo::ptr p_combo, double tick, const GyroData &gyro_data) = 0;
+    virtual void update(combo::ptr p_combo) = 0;
+
+    /**
+     * @brief 未捕获 `combo`，但使用其余数据更新追踪器（即目标丢失时的操作）
+     *
+     * @param[in] tick 当前时间点
+     * @param[in] gyro_data 当前陀螺仪信息
+     */
+    virtual void update(double tick, const GyroData &gyro_data) = 0;
 
     //! 获取时间队列中最新的组合体
     inline combo::ptr front() const { return _combo_deque.front(); }
@@ -108,13 +115,14 @@ public:
     static inline DefaultTracker::ptr make_tracker(combo::ptr p_combo) { return std::make_shared<DefaultTracker>(p_combo); }
 
     /**
-     * @brief 更新追踪器
+     * @brief 使用已捕获的 `combo` 更新追踪器
      *
      * @param[in] p_combo 更新的组合体
-     * @param[in] tick 当前时间点
-     * @param[in] gyro_data 当前陀螺仪信息
      */
-    void update(combo::ptr p_combo, double tick, const GyroData &gyro_data) override;
+    void update(combo::ptr p_combo) override;
+
+    //! 未捕获 `combo`，仅更新消失帧数
+    inline void update(double, const GyroData &) override { _vanish_num++; }
 
 private:
     /**

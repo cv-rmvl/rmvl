@@ -26,8 +26,8 @@ namespace rm
 class PlanarTracker final : public tracker
 {
 private:
-    KF22f _distance_filter;             //!< 距离滤波器
-    KF44f _motion_filter;               //!< 运动滤波器
+    KF21f _distance_filter;             //!< 距离滤波器
+    KF42f _motion_filter;               //!< 运动滤波器
     float _last_distance = 0;           //!< 目标上一帧的距离
     std::deque<float> _relative_speeds; //!< 图像速度的容器
     std::deque<RMStatus> _type_deque;   //!< 状态队列
@@ -51,13 +51,19 @@ public:
     static inline PlanarTracker::ptr make_tracker(combo::ptr p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
 
     /**
-     * @brief 更新时间序列
+     * @brief 丢失目标时，使用时间点和陀螺仪数据更新平面目标追踪器
      *
-     * @param[in] p_combo 传入 tracker 的平面目标
      * @param[in] tick 时间点
-     * @param[in] gyro_data 云台数据
+     * @param[in] gyro_data 陀螺仪数据
      */
-    void update(combo::ptr p_combo, double tick, const GyroData &gyro_data) override;
+    void update(double tick, const GyroData &gyro_data) override;
+
+    /**
+     * @brief 使用捕获的 `combo` 更新平面目标追踪器
+     *
+     * @param[in] p_combo 待传入 tracker 的平面目标，必须严格保证不为空
+     */
+    void update(combo::ptr p_combo) override;
 
 private:
     /**

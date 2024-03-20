@@ -286,8 +286,8 @@ void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr>
                    (getDistance(cur_p[0], rhs_p[0]) + getDistance(cur_p[1], rhs_p[1]) +
                     getDistance(cur_p[2], rhs_p[2]) + getDistance(cur_p[3], rhs_p[3]));
         });
-        min_tracker->update(p_combo, _tick, _gyro_data); // 更新追踪器
-        tracker_set.erase(min_tracker);                  // 移出待匹配追踪器序列
+        min_tracker->update(p_combo);   // 更新追踪器
+        tracker_set.erase(min_tracker); // 移出待匹配追踪器序列
         auto p_gyro_tracker = GyroTracker::cast(min_tracker);
         p_gyro_tracker->updateVanishState(GyroTracker::APPEAR); // 设置为可见
     }

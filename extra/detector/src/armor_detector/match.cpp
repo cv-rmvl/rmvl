@@ -67,7 +67,7 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
                 return getDistance(lhs->getCenter(), p_tracker->front()->getCenter()) <
                        getDistance(rhs->getCenter(), p_tracker->front()->getCenter());
             });
-            p_tracker->update(*min_it, _tick, _gyro_data);
+            p_tracker->update(*min_it);
             armor_set.erase(*min_it);
         }
         // 没有匹配到的装甲板作为新的序列
@@ -86,12 +86,12 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
                 return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
                        getDistance(p_combo->getCenter(), rhs->front()->getCenter());
             });
-            min_dis_tracker->get()->update(p_combo, _tick, _gyro_data);
+            min_dis_tracker->get()->update(p_combo);
             tracker_set.erase(*min_dis_tracker);
         }
         // 没有匹配到的序列传入 nullptr
         for (const auto &p_tracker : tracker_set)
-            p_tracker->update(nullptr, _tick, _gyro_data);
+            p_tracker->update(_tick, _gyro_data);
     }
     // 如果当前帧识别到的装甲板数量 = 序列数量
     else
@@ -113,11 +113,11 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
             if (isChange(trackers[i]->front(), *min_it, min_dis))
             {
                 // 创建新序列，原来的序列打入 nullptr
-                trackers[i]->update(nullptr, _tick, _gyro_data);
+                trackers[i]->update(_tick, _gyro_data);
                 trackers.emplace_back(PlanarTracker::make_tracker(*min_it));
             }
             else
-                trackers[i]->update(*min_it, _tick, _gyro_data);
+                trackers[i]->update(*min_it);
             armor_set.erase(*min_it);
         }
     }

@@ -35,10 +35,9 @@ class GyroGroup final : public group
     //! 追踪器状态哈希表 [追踪器 : 追踪器状态]
     std::unordered_map<tracker::ptr, TrackerState> _tracker_state;
 
-    KF66f _center3d_filter; //!< 旋转中心点位置滤波器
+    KF63f _center3d_filter; //!< 旋转中心点位置滤波器
 
-    std::deque<cv::Vec3f> _center3d_deq; //!< 旋转中心点坐标时间队列（原始数据）
-    std::deque<float> _rotspeed_deq;     //!< 旋转速度时间队列（原始数据）
+    std::deque<float> _rotspeed_deq; //!< 旋转速度时间队列（原始数据）
 
     cv::Vec3f _center3d;   //!< 陀螺仪坐标系下旋转中心点坐标（滤波数据）
     cv::Vec3f _speed3d;    //!< 旋转中心点平移速度（滤波数据）

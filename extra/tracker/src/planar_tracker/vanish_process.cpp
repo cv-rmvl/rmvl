@@ -11,16 +11,14 @@
 
 #include "rmvl/tracker/planar_tracker.h"
 
-#include "rmvlpara/camera/camera.h"
-#include "rmvlpara/tracker/planar_tracker.h"
-
 namespace rm
 {
 
-void PlanarTracker::vanishProcess([[maybe_unused]] double tick, [[maybe_unused]] const GyroData &gyro_data)
+void PlanarTracker::update([[maybe_unused]] double tick, [[maybe_unused]] const GyroData &gyro_data)
 {
-    if (_combo_deque.empty() || _vanish_num == 0)
+    if (_combo_deque.empty())
         return;
+    _vanish_num++;
     //! @note 后续完成 #10 后再进行完善
     combo::ptr combo = _combo_deque.front();
 
