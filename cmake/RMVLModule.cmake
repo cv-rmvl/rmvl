@@ -65,12 +65,8 @@ function(rmvl_install_directories _dir)
     set(install_dir ${CMAKE_INSTALL_PREFIX}/${_dir})
   endif()
 
-  install(
-    DIRECTORY ${dirs}
-    FILES ${files}
-    DESTINATION ${install_dir}
-    OPTIONAL
-  )
+  install(DIRECTORY ${dirs} DESTINATION ${install_dir} OPTIONAL)
+  install(FILES ${files} DESTINATION ${install_dir} OPTIONAL)
 endfunction(rmvl_install_directories)
 
 # ----------------------------------------------------------------------------

@@ -20,3 +20,6 @@ if(BUILD_TESTS AND WITH_OPEN62541)
     DEPEND_TESTS GTest::gtest_main
   )
 endif()
+
+# doxygen update
+_rmvl_update_doxygen_predefined("UA_ENABLE_PUBSUB")

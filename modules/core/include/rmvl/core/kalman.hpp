@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <opencv2/core/matx.hpp>
+#include <opencv2/core.hpp>
 
 //! @addtogroup core
 //! @{
@@ -51,17 +51,17 @@ class KalmanFilter
 
     cv::Matx<Tp, StateDim, StateDim> A;   //!< 状态转移矩阵 \f$A\f$
     cv::Matx<Tp, StateDim, StateDim> At;  //!< 状态转移矩阵 `A` 的转置矩阵 \f$A^T\f$
-    cv::Matx<Tp, StateDim, 1> x;          //!< 后验状态估计 \f$\hat x\f$
-    cv::Matx<Tp, StateDim, 1> x_;         //!< 先验状态估计 \f$\hat x^-\f$
-    cv::Matx<Tp, StateDim, ControlDim> B; //!< 控制量直接对状态量作用的矩阵：控制矩阵 `B` \f$B\f$
+    cv::Matx<Tp, StateDim, 1> x;          //!< 状态的后验估计 \f$\hat x\f$
+    cv::Matx<Tp, StateDim, 1> x_;         //!< 状态的先验估计 \f$\hat x^-\f$
+    cv::Matx<Tp, StateDim, ControlDim> B; //!< 控制矩阵 `B` \f$B\f$
     cv::Matx<Tp, ControlDim, 1> u;        //!< 控制向量 `u` \f$\vec{u}\f$
 
-    cv::Matx<Tp, MeasureDim, StateDim> H;   //!< 观测转换矩阵 \f$H\f$
-    cv::Matx<Tp, StateDim, MeasureDim> Ht;  //!< 观测转换矩阵 `H` 的转置矩阵 \f$H^T\f$
+    cv::Matx<Tp, MeasureDim, StateDim> H;   //!< 观测矩阵 \f$H\f$
+    cv::Matx<Tp, StateDim, MeasureDim> Ht;  //!< 观测矩阵 `H` 的转置矩阵 \f$H^T\f$
     cv::Matx<Tp, StateDim, StateDim> Q;     //!< 过程噪声协方差矩阵 \f$Q\f$
     cv::Matx<Tp, MeasureDim, MeasureDim> R; //!< 测量噪声协方差矩阵 \f$R\f$
-    cv::Matx<Tp, StateDim, StateDim> P;     //!< 后验状态误差协方差矩阵 \f$P\f$
-    cv::Matx<Tp, StateDim, StateDim> P_;    //!< 先验状态误差协方差矩阵 \f$P^-\f$
+    cv::Matx<Tp, StateDim, StateDim> P;     //!< 后验误差协方差矩阵 \f$P\f$
+    cv::Matx<Tp, StateDim, StateDim> P_;    //!< 先验误差协方差矩阵 \f$P^-\f$
     cv::Matx<Tp, StateDim, StateDim> I;     //!< 单位矩阵 `I` \f$I\f$
     cv::Matx<Tp, StateDim, MeasureDim> K;   //!< 卡尔曼增益 `K` \f$K\f$
     cv::Matx<Tp, MeasureDim, 1> z;          //!< 观测向量 `z` \f$\vec{z}\f$
@@ -153,24 +153,23 @@ public:
     inline void setQ(const cv::Matx<Tp, StateDim, StateDim> &process_err) { Q = process_err; }
 
     /**
-     * @brief 设置状态误差协方差矩阵 `P`
+     * @brief 设置误差协方差矩阵 `P`
      *
-     * @param[in] state_err 状态误差协方差矩阵 `P`
+     * @param[in] state_err 误差协方差矩阵 `P`
      */
     inline void setP(const cv::Matx<Tp, StateDim, StateDim> &state_err) { P_ = P = state_err; }
 
     /**
-     * @brief 含控制量的卡尔曼滤波的预测部分，包括状态向量的先验估计和误差协方差的先验估计
-     * @details 预测部分公式如下
-     *          \f[\begin{align}\hat{\pmb x}^-&=A\hat{\pmb x}+B\pmb u\\P^-&=APA^T+Q\end{align}\f]
+     * @brief 含系统输入的卡尔曼滤波的预测部分，包括状态向量的先验估计和误差协方差的先验估计
+     * @details 预测部分公式如下 \f[\begin{align}\hat{\pmb x}^-&=A\hat{\pmb x}+B\pmb u\\P^-&=APA^T+Q\end{align}\f]
      *
-     * @param[in] control_vec 控制向量，即公式中的 \f$\pmb u\f$
+     * @param[in] control_vec 系统输入向量，即公式中的 \f$\pmb u\f$
      * @return 先验状态估计
      */
     inline auto predict(const cv::Matx<Tp, ControlDim, 1> &control_vec)
     {
         u = control_vec;
-        // 估计先验状态，考虑控制向量
+        // 估计先验状态，考虑系统输入
         x_ = A * x + B * u;
         // 估计先验误差协方差
         P_ = A * P * At + Q;
@@ -178,7 +177,7 @@ public:
     }
 
     /**
-     * @brief 不含控制量的卡尔曼滤波的预测部分，包括状态向量的先验估计和误差协方差的先验估计
+     * @brief 不含系统输入的卡尔曼滤波的预测部分，包括状态量的先验估计和误差协方差的先验估计
      * @see predict(const cv::Matx<Tp, ControlDim, 1> &control)
      * @note 公式中 \f$B\pmb u = \pmb 0\f$
      *
@@ -194,22 +193,22 @@ public:
     }
 
     /**
-     * @brief 卡尔曼滤波器的校正部分，包括卡尔曼增益 `K` 的计算、状态向量的后验估计和误差协方差的校正
+     * @brief 卡尔曼滤波器校正部分，包含卡尔曼增益的计算、状态量的后验估计和误差协方差的后验估计
      * @details
      * 更新部分公式如下 \f[\begin{align}K&=P^-H^T\left(HP^-H^T+R\right)^{-1}\\\hat{\pmb x}&=
      * \hat{\pmb x}^-+K\left(\pmb z-H\hat{\pmb x}^-\right)\\P&=\left(I-KH\right)P^-\end{align}\f]
      *
-     * @param[in] measurement 观测向量
+     * @param[in] zk 观测量
      * @return 后验状态估计
      */
-    inline auto correct(const cv::Matx<Tp, MeasureDim, 1> &measurement)
+    inline auto correct(const cv::Matx<Tp, MeasureDim, 1> &zk)
     {
-        z = measurement;
+        z = zk;
         // 计算卡尔曼增益 `K`
         K = P_ * Ht * (H * P_ * Ht + R).inv();
-        // 估计后验状态，即完成状态的更新
+        // 后验估计
         x = x_ + K * (z - H * x_);
-        // 估计后验误差协方差，即校正、更新误差协方差
+        // 后验误差协方差
         P = (I - K * H) * P_;
         return x;
     }

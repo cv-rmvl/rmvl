@@ -49,8 +49,7 @@ public:
     /**
      * @brief 使用已捕获的 `combo` 更新追踪器
      *
-     * @param[in] tick 当前时间点
-     * @param[in] gyro_data 当前陀螺仪信息
+     * @param[in] p_combo 更新的组合体
      */
     virtual void update(combo::ptr p_combo) = 0;
 

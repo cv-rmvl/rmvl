@@ -28,6 +28,59 @@ macro(rmvl_check_cxx result src standard)
   unset(build_args)
 endmacro()
 
+# ----------------------------------------------------------------------------
+#   更新文档预定义
+#   用法示例:
+#   _rmvl_update_doxygen_predefined(xxx)
+# ----------------------------------------------------------------------------
+set(CMAKE_DOXYGEN_PREDEFINED "" CACHE INTERNAL "Doxygen Predefined" FORCE)
+macro(_rmvl_update_doxygen_predefined _name)
+  set(
+    CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED} ${_name}"
+    CACHE INTERNAL "Doxygen Predefined" FORCE
+  )
+endmacro()
+
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
+
+# ----------------------------------------------------------------------------
+#   检查指定的头文件是否存在，可选择将结果生成到指定的变量中，并更新文档预定义
+#   用法示例:
+#   rmvl_check_include_file(
+#     FILES math.h stdio.h string.h
+#     DETAILS DEFINITIONS
+#   )
+# ----------------------------------------------------------------------------
+macro(rmvl_check_include_file)
+  # parse arguments
+  cmake_parse_arguments(CIF "CXX" "DETAILS" "FILES" ${ARGN})
+  if(NOT CIF_FILES)
+    message(FATAL_ERROR "rmvl_check_include_file: FILES not specified")
+  endif()
+  foreach(f ${CIF_FILES})
+    # convert the name of the file to upper case
+    string(TOUPPER "${f}" fupper)
+    string(REPLACE "." "_" fupper "${fupper}")
+    if(CIF_CXX)
+      check_include_file_cxx(${f} HAVE_${fupper})
+    else()
+      check_include_file(${f} HAVE_${fupper})
+    endif()
+    # 如果 ${CIF_DETAILS} 不为空，则将结果保存到 ${CIF_DETAILS} 中
+    if(CIF_DETAILS)
+      if(HAVE_${fupper})
+        list(APPEND ${CIF_DETAILS} "HAVE_${fupper}")
+        _rmvl_update_doxygen_predefined("HAVE_${fupper}")
+      endif()
+    else()
+      if(HAVE_${fupper})
+        _rmvl_update_doxygen_predefined("HAVE_${fupper}")
+      endif()
+    endif()
+  endforeach()
+endmacro()
+
 set(RMVL_BUILD_INFO_STR "" CACHE INTERNAL "")
 function(rmvl_output_status msg)
   message(STATUS "${msg}")

@@ -9,18 +9,26 @@
  *
  */
 
-#include <cstring>
-
-#ifdef __GNUC__
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h>
-#endif // __GNUC__
-
-#include "rmvl/core/util.hpp"
 #include "rmvl/core/serial.hpp"
 
-#ifdef __GNUC__
+#include <cstring>
+
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif // HAVE_DIRENT_H
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif // HAVE_FCNTL_H
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif // HAVE_UNISTD_H
+
+#include "rmvl/core/util.hpp"
+
+#if defined(HAVE_DIRENT_H) && defined(HAVE_FCNTL_H) && \
+    defined(HAVE_UNISTD_H) && defined(HAVE_TERMIOS_H)
 
 void rm::SerialPort::open()
 {
@@ -148,4 +156,4 @@ ssize_t rm::SerialPort::fdread(void *data, size_t len)
     return len_result;
 }
 
-#endif // __GNUC__
+#endif
