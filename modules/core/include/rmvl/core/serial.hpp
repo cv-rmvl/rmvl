@@ -13,9 +13,9 @@
 
 #include <string>
 
-#ifdef __GNUC__
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#endif // __GNUC__
+#endif // HAVE_TERMIOS_H
 
 namespace rm
 {
@@ -28,7 +28,8 @@ namespace rm
 //! @} serial
 //! @} core
 
-#ifdef __GNUC__
+#if defined(HAVE_DIRENT_H) && defined(HAVE_FCNTL_H) && \
+    defined(HAVE_UNISTD_H) && defined(HAVE_TERMIOS_H)
 
 //! @addtogroup serial
 //! @{
@@ -129,6 +130,6 @@ private:
 
 //! @} serial
 
-#endif // __GNUC__
+#endif
 
 } // namespace rm

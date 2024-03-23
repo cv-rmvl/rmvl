@@ -2,7 +2,7 @@ if(NOT BUILD_rmvl_hik_camera OR NOT BUILD_rmvl_armor_detector)
   return()
 endif()
 
-if(HAVE_STD_FILESYSTEM)
+if(HAVE_FILESYSTEM)
   rmvl_add_exe(
     rmvl_hik_armor_collection
     SOURCES sample_hik_armor_collection.cpp

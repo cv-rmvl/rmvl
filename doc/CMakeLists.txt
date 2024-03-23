@@ -44,13 +44,9 @@ set(
 )
 
 # pre-defined variables (cpp)
-set(CMAKE_DOXYGEN_PREDEFINED "__GNUC__ \\\n")
-set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}__cplusplus=202300L \\\n")
-set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}__cpp_lib_generator=202207L \\\n")
-set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}__cpp_lib_math_constants=201907L \\\n")
-
-# pre-defined variables (project)
-set(CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED}UA_ENABLE_PUBSUB")
+_rmvl_update_doxygen_predefined("__cplusplus=202300L")
+_rmvl_update_doxygen_predefined("__cpp_lib_generator=202207L")
+_rmvl_update_doxygen_predefined("__cpp_lib_math_constants=201907L")
 
 # List all the modules
 set(refs_extra)
