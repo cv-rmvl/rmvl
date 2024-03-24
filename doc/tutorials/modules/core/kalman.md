@@ -2,10 +2,10 @@
 ============
 
 @author 张华铨
-@date 2022/10/11
-@version 1.0
-@brief 从一维进行 **KalmanFilter** 理论的介绍和公式推导，并在高维度进行类比和推广
-@todo **2.0** 从状态空间方程的角度以及最优化控制的角度推导
+@author 赵曦
+@date 2024/03/24
+@version 2.0
+@brief 卡尔曼滤波详细公式推导
 
 @prev_tutorial{tutorial_modules_runge_kutta}
 
@@ -17,253 +17,420 @@
 
 相关类 rm::KalmanFilter
 
-## 1. 卡尔曼滤波理论
+\f[
+\def\red#1{\color{red}{#1}}
+\def\blue#1{\color{blue}{#1}}
+\def\green#1{\color{green}{#1}}
+\def\white#1{\color{white}{#1}}
+\def\orange#1{\color{orange}{#1}}
+\def\Var{\mathrm{Var}}
+\def\Cov{\mathrm{Cov}}
+\def\tr{\mathrm{tr}}
+\f]
 
-### 1.1 卡尔曼滤波器是做什么的？
+### 1. 卡尔曼滤波
 
-估计目标的当前位置，并以最高置信度获得当前位置。
+#### 1.1 简介
 
-如果有一辆车以恒定速度行驶，现在我得到两个数据：汽车的当前位置和汽车的当前距离传感器数据，根据匀速公式计算
+卡尔曼滤波器是一个 Optimal Recursive Data Processing Algorithm，即最优化递归数字处理算法，与其说滤波器，倒不如说这是一个 **观测器** 。简单来说，卡尔曼滤波器能够估计目标的当前位置，并结合观测结果，以最高置信度获得当前位置。
+
+#### 1.2 初尝递归算法 {#kalman_recursive}
+
+<span style="color: green">**示例**</span>
+
+我们需要测量一个硬币的长度\f$x\f$，现测出了如下结果
+
+\f[\begin{align}z_1&=30.2\mathrm{mm}\\z_2&=29.7\mathrm{mm}\\z_3&=30.1\mathrm{mm}\\&\vdots\end{align}\f]
+
+我们要利用这些观测结果来估计硬币的真实长度，很自然的我们可以想到使用<span style="color: red">取平均</span>的方式，我们可以利用 \f$k\f$ 个观测值，求出硬币长度在第 \f$k\f$ 次的估计值 \f$\hat x_k\f$。
+
+\f[\hat x_k=\frac{z_1+z_2+\cdots+z_k}k\tag{1-1}\f]
+
+这是一条非常简单的取算数平均的公式，但是我们为了估计硬币的长度，需要用到所有的观测值，例如我们已经测了 5 次硬币的长度，并且使用公式 \f$\text{(1-1)}\f$ 得到了第 5 次的平均值（长度的估计值），在测完第 6 次长度准备计算第 6 次估计值的时候，使用公式 \f$\text{(1-1)}\f$ 还需要重新使用前 5 次的观测值。当观测次数非常高的时候，计算的压力就逐渐高起来了。
+
+针对这一问题，我们可以改写公式 \f$\text{(1-1)}\f$
+
+\f[\begin{align}\hat x_k&=\frac1k(z_1+z_2+\cdots+z_k)\\
+&=\frac1k(z_1+z_2+\cdots+z_{k-1})+\frac1kz_k\\
+&=\frac{k-1}k·\frac1{\red{k-1}}\red{(z_1+z_2+\cdots+z_{k-1})}+\frac1kz_k\\
+&=\frac{k-1}k\red{\hat x_{k-1}}-\frac1kz_k\\
+&=\hat x_{k-1}-\frac1k\hat x_{k-1}+\frac1kz_k\\
+&=\hat x_{k-1}+\frac1k(z_k-\hat x_{k-1})
+\end{align}\tag{1-2a}\f]
+
+这样我们就把硬币长度的估计值，改写成由上一次估计值和当前观测值共同作用的形式。并且我们发现，随着测量次数 \f$k\f$ 增大，\f$\frac1k\f$ 趋向于 \f$0\f$，\f$\hat x_k\f$ 趋向于 \f$\hat x_{k-1}\f$，这也就是说，随着 \f$k\f$ 增长，测量结果将不再重要。
+
+为了不失一般性，我们把公式 \f$\text{(1-2a)}\f$ 的结果改写成以下形式。
+
+\f[\boxed{\hat x_k=\hat x_{k-1}+\red{K_k}(z_k-\hat x_{k-1})}\tag{1-2b}\f]
+
+其中 \f$K_k\f$ 表示 Kalman Gain，即卡尔曼增益。对于 \f$K_k\f$，我们先给出他的计算结果。
+
+\f[K_k=\frac{e_{{EST}_{k-1}}}{e_{{EST}_{k-1}}+e_{{MEA}_k}}\tag{1-3}\f]
+
+其中，\f$e_{{EST}_{k-1}}\f$ 表示第 \f$k-1\f$ 次的估计误差，\f$e_{{MEA}_k}\f$ 表示第 \f$k\f$ 次的测量误差。可以得到，在 \f$k\f$ 时刻，
+
+1. 若 \f$e_{{EST}_{k-1}}\gg e_{{MEA}_k}\f$，则 \f$K_k\to1\f$，\f$\hat x_k=\hat x_{k-1}+1\times(z_k+\hat x_{k-1})=z_k\f$
+2. 若 \f$e_{{EST}_{k-1}}\ll e_{{MEA}_k}\f$，则 \f$K_k\to0\f$，\f$\hat x_k=\hat x_{k-1}+0\times(z_k+\hat x_{k-1})=\hat x_{k-1}\f$
+
+#### 1.3 数据融合 {#kalman_data_fusion}
+
+现在我们可以使用公式 \f$\text{(1-2b)}\f$ 的思想来研究数据融合。如果有一辆车以恒定速度行驶，现在得到了两个数据：
+
+- 根据匀速公式计算得到的汽车当前位置（算出来的，记作 \f$\blue{x_1}\f$）
+- 汽车的当前距离传感器数据（测出来的，记作 \f$\red{x_2}\f$）
 
 <img src="https://s1.ax1x.com/2022/10/11/xNlnw6.png" width=680 height=380 />
 
-由于自身的原因，它的位置不是由匀速运动公式得到的精确位置，它的距离传感器数据也不完全准确。两者都有一定的误差。那么我们现在如何估计汽车的实际位置呢？
+由于自身的原因，它的位置并不是由匀速运动公式得到的精确位置，它的距离传感器数据也不完全准确。两者都有一定的误差。那么我们现在如何估计汽车的实际位置呢？
 
-对于两者的置信度，不难想象，环境越复杂，公式得到的位置置信度越低。传感器越先进，置信度就越高。如果我们现在有了两条信息的置信度，我们就可以根据卡尔曼滤波对这两条数据进行处理，得到具有最高数学置信度的实际位置。
+我们使用公式 \f$\text{(1-2b)}\f$ 的思想，得到估计值
 
-### 1.2 重要变量的推导
+\f[\hat x=\blue{x_1}+\green{K_k}(\red{x_2}-\blue{x_1})\tag{1-4}\f]
 
-#### 1.2.1 方差和协方差
+我们的目标很明确，希望求出这个 \f$\green{K_k}\f$，使得估计值 \f$\hat x\f$ 是最优的，即 \f$\hat x\f$ 的方差 \f$\Var(\hat x)\f$ 最小，即 \f$\hat x\to x_{实际值}\f$。
 
-方差
+不妨令 \f$\left\{\begin{align}\blue{x_1=30\mathrm m\qquad\sigma_1=2\mathrm m}\\\red{x_2=32\mathrm m\qquad\sigma_2=4\mathrm m}\end{align}\right.\f$，则有
 
-\f[
-    Var(x)=\frac{\sum\limits_{i=1}^n(x_i-\bar{x})^2}{n}\tag1
-\f]
+\f[\begin{align}
+\Var(\hat x)&=\Var[x_1+K_k(x_2-x_1)]\\
+&=\Var(x_1-K_kx_1+K_kx_2)\\
+&=\Var[(1-K_k)x_1+K_kx_2]\\
+由x_1和x_2相互独立\quad&=\Var[(1-k)x_1]+\Var(K_kx_2)\\
+&=(1-K_k)^2\Var(x_1)+K_k^2\Var(x_2)\\
+&=(1-K_k)^2\sigma_1^2+K_k^2\sigma_2^2
+\end{align}\tag{1-5}\f]
 
-协方差
+要求 \f$\Var(\hat x)\f$ 的最小值，只需令 \f$\mathrm \Var(\hat x)'|_{K_k}=0\f$ 即可，即：
 
-\f[
-    Cov(x,y)=\frac{\sum\limits_{i=1}^n(x_i-\bar{x})(y_i-\bar{y})}{n}\tag2
-\f]
+\f[\frac{\mathrm d\Var(\hat x)}{\mathrm dK_k}=-2(1-K_k)\sigma_1^2+2K_k\sigma_2^2=0\tag{1-6}\f]
 
-#### 1.2.2 递归
+即
 
-如果使用同一个传感器多次测量一个数据（每次都会产生一个随机误差），就可以得到
+\f[K_k=\frac{\sigma_1^2}{\sigma_1^2+\sigma_2^2}\tag{1-7}\f]
 
-\f[
-z_1,\ z_2,\ z_3\ \dots\ z_n
-\f]
+代入数据后，有
 
-计算平均
+\f[\left\{\begin{align}
+K_k&=\frac{2^2}{2^2+4^2}=0.2\\
+\hat x&=30+0.2(32-30)=30.4\mathrm m\quad\orange{理论最优解}\\
+\sigma_{\hat x}^2&=(1-0.2)^22^2+0.2^24^2=3.2\quad(\sigma_{\hat x}=1.79)
+\end{align}\right.\f]
 
-\f[
-    \begin{array}{lll}
-    \hat x_n&=&\frac1n\sum\limits_{i=1}^nz_i\\
-    &=&\frac1n\sum\limits_{i=1}^{n-1}z_i+\frac1nz_n\\
-    &=&\frac{n-1}n\frac1{n-1}\sum\limits_{i=1}^{n-1}+\frac{1}{n}z_n\\
-    &=&\frac{n-1}{n}\hat{x}_{n-1}+\frac{1}{n}z_n\\
-    &=&\hat{x}_{n-1}+\frac{1}{n}(z_n-\hat{x}_{n-1})\\
-    &=&\hat{x}_{n-1}+K_n(z_n-\hat{x}_{n-1})\\
-    \end{array}\tag3
-\f]
+#### 1.4 协方差矩阵 {#kalman_covariance_matrix}
 
-\f$K_n\f$: 卡尔曼增益
+| 数据 |   \f$x\f$    |   \f$y\f$    |   \f$z\f$    |
+| :--: | :----------: | :----------: | :----------: |
+|  1   |  \f$x_1\f$   |  \f$y_1\f$   |  \f$z_1\f$   |
+|  2   |  \f$x_2\f$   |  \f$y_2\f$   |  \f$z_2\f$   |
+|  3   |  \f$x_3\f$   |  \f$y_3\f$   |  \f$z_3\f$   |
+| 平均 | \f$\bar x\f$ | \f$\bar y\f$ | \f$\bar z\f$ |
 
-卡尔曼滤波的特点：只需要最后一帧的数据， **不需要** 保留更多的数据。
+方差：表明单个变量的波动程度
 
-**若：**
+\f[\begin{align}
+\sigma_x^2&=\frac13\left[(x_1-\bar x)^2+(x_2-\bar x)^2+(x_3-\bar x)^2\right]=\frac13\sum_{i=1}^3(x-\bar x)^2\\
+\sigma_y^2&=\frac13\left[(y_1-\bar y)^2+(y_2-\bar y)^2+(y_3-\bar y)^2\right]=\frac13\sum_{i=1}^3(y-\bar y)^2\\
+\sigma_z^2&=\frac13\left[(z_1-\bar z)^2+(z_2-\bar z)^2+(z_3-\bar z)^2\right]=\frac13\sum_{i=1}^3(z-\bar z)^2
+\end{align}\tag{1-8}\f]
 
-- Error of estimation: \f$e_{EST}\f$
-- Error of meaturement: \f$e_{MEA}\f$
+协方差：表明变量之间的相关性，为正数表示正相关，为负数表示负相关，绝对值越大表示相关性越强
 
-**则：**
+\f[\begin{align}
+\sigma_x\sigma_y&=\frac13\sum_{i=1}^3(x-\bar x)(y-\bar y)\\
+\sigma_y\sigma_z&=\frac13\sum_{i=1}^3(y-\bar y)(z-\bar z)\\
+\sigma_x\sigma_z&=\frac13\sum_{i=1}^3(x-\bar x)(z-\bar z)
+\end{align}\tag{1-9}\f]
 
-\f[
-    K_n=\frac{e_{EST_{n-1}}}{e_{EST_{n-1}}+e_{MEA_n}}\tag4
-\f]
+协方差矩阵表示为
 
-- 根据公式\f$(3)\f$，可以得出以下结论
+\f[P=\begin{bmatrix}
+\sigma_x^2&\sigma_x\sigma_y&\sigma_x\sigma_z\\
+\sigma_y\sigma_x&\sigma_y^2&\sigma_y\sigma_z\\
+\sigma_z\sigma_x&\sigma_z\sigma_y&\sigma_z^2\\
+\end{bmatrix}\tag{1-10}\f]
 
-1. \f$e_{EST_{n-1}}\gg e_{MEA_n}\f$
+#### 1.5 卡尔曼增益推导 {#kalman_gain_derivate}
 
-\f[
-    K_n\rightarrow1\\
-    e\hat{x}_{n-1}=\hat{x}_{n-1}+z_n-\hat{x}_{n-1}=z_n\tag5
-\f]
+对于一个系统，可以使用状态空间方程来描述其运动
 
-2. \f$e_{EST_{n-1}}\ll e_{MEA_n}\f$
+\f[\left\{\begin{align}
+\dot{\pmb x}&=F\pmb x+G\pmb u\\
+\pmb z&=H\pmb x
+\end{align}\right.\tag{1-11}\f]
 
-\f[
-    K_n\rightarrow0\\
-    \hat{x}_n=\hat{x}_{n-1}\tag6
-\f]
+根据 @ref equations_runge_kutta 中精确解的公式 \f$\text{(b)}\f$，我们可以知道状态空间方程的解的表达式，即
 
-- Update:
+\f[\pmb x(t)=e^{F(t-t_0)}\pmb x(t_0)+\int_{t_0}^te^{F(t-\tau)}G\pmb u(\tau)\mathrm d\tau\tag{1-12}\f]
 
-\f[
-    e_{EST_n}=(1-K_n)e_{EST_{n-1}}\tag7
-\f]
+以\f$T\f$为周期离散采样+零阶保持器，可以得到
 
-@note \f$K_n\f$ 的导出过程与下面的 Kalman 公式的导出过程类似，这里不需要展开说明
+\f[\begin{align}
+\pmb x(t_k)&=e^{F(t_k-t_{k-1})}\pmb x(t_{k-1})+\int_{t_{k-1}}^{t_k}e^{F(t_k-\tau)}G\pmb u(\tau)\mathrm d\tau\\
+&=e^{FT}\pmb x(t_{k-1})+\int_{t_{k-1}}^{t_k}e^{F(t_k-\tau)}\mathrm d\tau·G\pmb u(t_{k-1})\\
+&=e^{FT}\pmb x(t_{k-1})+\left[-F^{-1}e^{F(t_k-\tau)}\right]_{t_{k-1}}^{t_k}·G\pmb u(t_{k-1})\\
+&=e^{FT}\pmb x(t_{k-1})+F^{-1}(e^{FT}-I)G\pmb u(t_{k-1})\\
+\pmb x_k&=\red{e^{FT}}\pmb x_{k-1}+\green{F^{-1}(e^{FT}-I)G}\pmb u_{k-1}\\
+简记为\quad\pmb x_k&=\red A\pmb x_{k-1}+\green B\pmb u_{k-1}
+\end{align}\tag{1-13a}\f]
 
-#### 1.2.3 数据融合
+因此我们可以得到离散系统的状态空间方程
 
-如果用两种不同的仪器同时测量一个数据（测量误差方差不同但已知），并且得到两个测量值:\f$z_1，\ z_2\f$，我们如何选择最优估计值？
+\f[\left\{\begin{align}
+\pmb x_k&=A\pmb x_{k-1}+B\pmb u_{k-1}\\
+\pmb z_k&=H\pmb x_k
+\end{align}\right.\tag{1-13b}\f]
 
-例如，如果\f$z_1，\ z_2\f$的误差满足正态分布：
+这其实是个不准确的结果，因为如果我们考虑上噪声，公式 \f$\text{(1-13b)}\f$ 应该改写为
 
-\f[
-    z_1=30,\ S_1=2\\
-    z_2=32,\ S_2=4
-\f]
+\f[\left\{\begin{align}
+\pmb x_k&=A\pmb x_{k-1}+B\pmb u_{k-1}\red{+\pmb w_{k-1}}&p(\pmb w)\sim N(0,Q)\\
+\pmb z_k&=H\pmb x_k\red{+\pmb v_k}&p(\pmb v)\sim N(0,R)
+\end{align}\right.\tag{1-13c}\f]
 
-\f[
-    \begin{array}{lll}
-    \hat{z}&=&z_1+K(z_2-z_1)\qquad K\text{ is the parameter to be solved}\\
-    S_z^2&=&\text{Var}(z_1+K(z_2-z_1))\\
-    &=&\text{Var}((1-K)z_1+Kz_2)\\
-    &=&(1-K)^2\text{Var}(z_1)+K^2\text{Var}(z_2)\\
-    &=&(1-K)^2S_1^2+K^2S_2^2
-    \end{array}\tag8
-\f]
+- \f$w_{k-1}\f$ 称为过程噪声，来自于算不准的部分，其中 \f$Q\f$ 满足以下形式（以 2 阶系统为例）
+  \f[\begin{align}Q&=E(\pmb w\pmb w^T)=E\begin{bmatrix}w_1^2&w_1w_2\\w_2w_1&w_2^2\end{bmatrix}=
+  \begin{bmatrix}Ew_1^2&E(w_1w_2)\\E(w_2w_1)&Ew_2^2\end{bmatrix}\\
+  由\left\{\begin{array}{l}\Var X=EX^2-(EX)^2\\E\pmb w=0\\\Cov(X,Y)=E(XY)-EXEY\end{array}\right.
+  &=\begin{bmatrix}\sigma_{w_1}^2&\sigma_{w_1}\sigma_{w_2}\\
+  \sigma_{w_2}\sigma_{w_1}&\sigma_{w_2}^2\end{bmatrix}\end{align}\f]
+  称为过程噪声协方差矩阵
+- \f$v_{k-1}\f$ 称为测量噪声，来自于测不准的部分，其中 \f$R\f$ 满足以下形式（以 2 阶系统为例）
+  \f[\begin{align}R&=E(\pmb v\pmb v^T)=E\begin{bmatrix}v_1^2&v_1v_2\\v_2v_1&v_2^2\end{bmatrix}=
+  由\begin{bmatrix}Ev_1^2&E(v_1v_2)\\E(v_2v_1)&Ev_2^2\end{bmatrix}\\
+  \left\{\begin{array}{l}\Var X=EX^2-(EX)^2\\E\pmb v=0\\\Cov(X,Y)=E(XY)-EXEY\end{array}\right.
+  &=\begin{bmatrix}\sigma_{v_1}^2&\sigma_{v_1}\sigma_{v_2}\\
+  \sigma_{v_2}\sigma_{v_1}&\sigma_{v_2}^2\end{bmatrix}\end{align}\f]
+  称为测量噪声协方差矩阵
 
-令
+但是，这两个误差我们无从得知，我们只能使用公式 \f$\text{(1-13b)}\f$ 的形式进行近似估计，通过 \f$\pmb x_k=A\pmb x_{k-1}+B\pmb u_{k-1}\f$ 算出来的 \f$\pmb x_k\f$ 称为<span style="color: red">先验状态估计</span>，一般写为
 
-\f[
-    \frac{\text{d}}{\text{d}x}((1-K)^2S_1^2+K^2S_2^2)=0\tag9
-\f]
+\f[\red{\hat{\pmb x}_k^-=A\pmb x_{k-1}+B\pmb u_{k-1}\tag{1-14}}\f]
 
-求解公式\f$(9)\f$，我们可以得到
+通过 \f$\pmb z_k=H\pmb x_k\f$ 得到的 \f$\pmb x_k\f$ 是测出来的结果，记为 \f$\hat{\pmb x}_{k_{MEA}}\f$，即
 
-\f[
-    K=\frac{S_1^2}{S_1^2+S_2^2}\tag{10}
-\f]
+\f[\hat{\pmb x}_{k_{MEA}}=H^+\pmb z_k\tag{1-15}\f]
 
-将\f$K\f$代入下列公式
+因为 \f$H^{-1}\f$ 可能不存在，这里先使用 M-P 广义逆 \f$H^+\f$ 来表示。
 
-\f[
-    \hat{z}=z_1+K(z_2-z_1)
-\f]
+@note 对于一个线性方程组 \f[A\pmb x=\pmb b\f]必定存在最小二乘解 \f[\pmb x=(A^TA)^{-1}A^T\pmb b\f]可以令 \f$A^+=(A^TA)^{-1}A^T\f$ 来表示 Moore-Penrose 广义逆。
 
-则
+目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\text{(1-4)}\f$ 中使用了算出来的 \f$\blue{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
 
-\f[
-    S_z^2=(1-K)^2S_1^2+K^2S_2^2\tag{11}
-\f]
+\f[\begin{align}
+\hat{\pmb x}_k&=\hat{\pmb x}_k^-+\green{G_k}(\hat{\pmb x}_{k_{MEA}}-\hat{\pmb x}_k^-)\\
+&=\hat{\pmb x}_k^-+\green{G_k}(H^+\pmb z_k-\hat{\pmb x}_k^-)
+\end{align}\tag{1-16}\f]
 
-最终我们可以计算：
+令 \f$G_k=K_kH\f$，可以得到
 
-\f[
-    K=0.2,\ z=30.4,\ S_z=1.79 
-\f]
+\f[\red{\hat{\pmb x}_k=\hat{\pmb x}_k^-+K_k(\pmb z_k-H\hat{\pmb x}_k^-)\tag{1-17}}\f]
 
-#### 1.2.4 状态空间方程
+我们的目标依然很明确，希望求出这个 \f$\green{K_k}\f$，使得后验状态估计值 \f$\hat{\pmb x}_k\f$ 是最优的，即 \f$\hat{\pmb x}_k\f$ 的方差 \f$\Var(\hat{\pmb x}_k)\f$ 最小，即 \f$\hat{\pmb x}_k\to \pmb x_k\f$。如何衡量 \f$\hat{\pmb x}_k\f$ 的方差 \f$\Var(\hat{\pmb x}_k)\f$？我们可以令状态误差 \f$\pmb e_k=\pmb x_k-\hat{\pmb x}_k\f$，那么此时 \f$p(\pmb e_k)\sim N(0,P_k)\f$，其中 \f$P_k\f$ 是误差协方差矩阵，并且满足
 
-\f[
-    \begin{array}{rrll}
-    x_k&=&Ax_{k-1}+Bu_{k-1}+w_{k-1}&w\sim N(0,Q)\\
-    z_k&=&Hx_k+v_k&v\sim N(0, R)
-    \end{array}\tag{12}
-\f]
+\f[P_k=\begin{bmatrix}\sigma_{e_1}^2&\cdots&\sigma_{e_1}\sigma_{e_n}\\\vdots&&\vdots\\\sigma_{e_n}\sigma_{e_1}&\cdots&\sigma_{e_n}^2\end{bmatrix}\tag{1-18}\f]
 
-例如
+方差 \f$\Var(\hat{\pmb x}_k)\f$ 最小，即 \f$\sum\limits_{i=1}^{n}\sigma_{e_i}^2\f$ 最小，即 \f$P_k\f$ 的迹 \f$\tr(P_k)\f$ 最小。
 
-\f[
-    \begin{array}{rrl}
-    p_k&=&p_{k-1}+v_{k-1}t+\frac12at^2\\v_k&=&v_{k-1}+at
-    \end{array}\tag{13}
-\f]
+对于状态误差，有
 
-将公式\f$(13)\f$转换为矩阵表示
+\f[\begin{align}
+\pmb e_k&=\pmb x_k-\hat{\pmb x}_k=\pmb x_k-\left(\hat{\pmb x}_k^-+K_k(\pmb z_k-H\hat{\pmb x}_k^-)\right)\\
+&=\pmb x_k-\hat{\pmb x}_k^--K_k\pmb z_k+K_kH\hat{\pmb x}_k^-\\
+&=\pmb x_k-\hat{\pmb x}_k^--K_k(H\pmb x_k+\pmb v_k)+K_kH\hat{\pmb x}_k^-\\
+&=\pmb x_k-\hat{\pmb x}_k^--K_kH\pmb x_k-K_k\pmb v_k+K_kH\hat{\pmb x}_k^-\\
+&=(\pmb x_k-\hat{\pmb x}_k^-)-K_kH(\pmb x_k-\hat{\pmb x}_k^-)-K_k\pmb v_k\\
+&=(I-K_kH)\blue{(\pmb x_k-\hat{\pmb x}_k^-)}-K_k\pmb v_k\\
+&=(I-K_kH)\blue{\pmb e_k^-}-K_k\pmb v_k
+\end{align}\tag{1-19}\f]
 
-\f[
-    \begin{bmatrix}p_k\\v_k\end{bmatrix}
-    =\begin{bmatrix}1&t\\0&1\end{bmatrix}
-    \begin{bmatrix}p_{k-1}\\v_{k-1}\end{bmatrix}+
-    \begin{bmatrix}\frac12t^2\\t\end{bmatrix}
-    a+\begin{bmatrix}w_{p_k}\\w_{v_k}\end{bmatrix}\tag{14-1}
-\f]
+则误差协方差矩阵可以表示为
 
-\f[
-    \begin{bmatrix}z_{p_k}\\z_{v_k}\end{bmatrix}=
-    \begin{bmatrix}1&0\\0&1\end{bmatrix}
-    \begin{bmatrix}p_k\\v_k\end{bmatrix}+
-    \begin{bmatrix}v_{p_k}\\v_{v_k}\end{bmatrix}\tag{14-2}
-\f]
+\f[\begin{align}P_k
+&=E\left(\pmb e_k\pmb e_k^T\right)=E\left[(\pmb x_k-\hat{\pmb x}_k)(\pmb x_k-\hat{\pmb x}_k)^T\right]\\
+&=E\left[\left((I-K_kH)\blue{\pmb e_k^-}-K_k\pmb v_k\right)\left((I-K_kH)\blue{\pmb e_k^-}-K_k\pmb v_k\right)^T\right]\\
+&=E\left[\left(\green{(I-K_kH)\pmb e_k^-}-\red{K_k\pmb v_k}\right)\left(\blue{{\pmb e_k^-}^T(I-K_kH)^T}-\orange{\pmb v_k^TK_k^T}\right)\right]\\
+&=E\left[\green{(I-K_kH)\pmb e_k^-}\blue{{\pmb e_k^-}^T(I-K_kH)^T}-\green{(I-K_kH)\pmb e_k^-}\orange{\pmb v_k^TK_k^T}-\right.\\
+&\white=\left.\red{K_k\pmb v_k}\blue{{\pmb e_k^-}^T(I-K_kH)^T}+\red{K_k\pmb v_k}\orange{\pmb v_k^TK_k^T}\right]\\
+&=\red{E(}(I-K_kH)\pmb e_k^-{\pmb e_k^-}^T(I-K_kH)^T\red{)}-\\
+&\white=\red{E(}(I-K_kH)\pmb e_k^-\pmb v_k^TK_k^T\red{)}-\\
+&\white=\red{E(}K_k\pmb v_k{\pmb e_k^-}^T(I-K_kH)^T\red{)}+\\
+&\white=\red{E(}K_k\pmb v_k\pmb v_k^TK_k^T\red{)}\\
+常数的期望可以提出来\quad&=(I-K_kH)\red{E(}\pmb e_k^-{\pmb e_k^-}^T\red{)}(I-K_kH)^T-\\
+&\white=(I-K_kH)\red{E(}\pmb e_k^-\pmb v_k^T\red{)}K_k^T-\\
+&\white=K_k\red{E(}\pmb v_k{\pmb e_k^-}^T\red{)}(I-K_kH)^T+\\
+&\white=K_k\red{E(}\pmb v_k\pmb v_k^T\red{)}K_k^T\\
+&=(I-K_kH)\red{P_k^-}(I-K_kH)^T+\\
+\pmb e_k^-和{\pmb v_k}^T相互独立\quad&\white=0+\\
+且期望为0\quad&\white=0+\\
+&\white=K_k\red{R}K_k^T\\
+&=\left(\green{P_k^-}-\red{K_kHP_k^-}\right)\left(\blue I-\orange{H^TK_k^T}\right)+K_kRK_k^T\\
+&=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
+P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_kRK_k^T
+\end{align}\tag{1-20}\f]
 
-### 1.3 卡尔曼滤波的公式
+因此，\f$P_k\f$ 的迹可以表示为
 
-#### 1.3.1 预测
+\f[\tr(P_k)=\tr(P_k^-)-2\tr(K_kHP_k^-)+\tr(K_kHP_k^-H^TK_k^T)+\tr(K_kRK_k^T)\tag{1-21}\f]
 
-\f[
-    \begin{array}{rml}
-    \hat x^-&=&A\hat x\\
-    P^-&=&APA^T+Q
-    \end{array}\tag{15}
-\f]
+希望 \f$\tr(P_k)\f$ 有最小值，则需要对 \f$K_k\f$ 求导，则有
 
-#### 1.3.2 更新
+\f[\frac{\mathrm d\tr(P_k)}{\mathrm dK_k}=0-2\frac{\mathrm d\tr(K_kHP_k^-)}{\mathrm dK_k}+\frac{\mathrm d\tr(K_kHP_k^-H^TK_k^T)}{\mathrm dK_k}+\frac{\mathrm d\tr(K_kRK_k^T)}{\mathrm dK_k}=0\tag{1-22}\f]
 
-\f[
-    \begin{array}{rml}
-    K&=&P^-H^T(HP^-H^T+R)^{-1}\\
-    \hat x&=&\hat x^-+K(z-H\hat x^-)\\
-    P&=&(I-KH)P^-\end{array}\tag{16}
-\f]
+对于形如 \f$\frac{\mathrm d\tr(AB)}{A}\f$ 的导数计算，可以通过拿一个 2 阶矩阵作为例子
 
-## 2. 卡尔曼滤波模块的用法
+> 令 \f[A=\begin{bmatrix}a_{11}&a_{12}\\a_{21}&a_{22}\end{bmatrix},\quad B=\begin{bmatrix}b_{11}&b_{12}\\b_{21}&b_{22}\end{bmatrix}\f]
+> 则 \f[AB=\begin{bmatrix}a_{11}b_{11}+a_{12}b_{21}&a_{11}b_{21}+a_{12}b_{22}\\a_{21}b_{11}+a_{22}b_{21}&a_{21}b_{12}+a_{22}b_{22}\end{bmatrix}\f]
+> 则 \f[\tr(AB)=a_{11}b_{11}+a_{12}b_{21}+a_{21}b_{12}+a_{22}b_{22}\f]
+> 则 \f[\frac{\mathrm d\tr(AB)}{\mathrm dA}=\begin{bmatrix}\frac{\partial\tr(AB)}{\partial a_{11}}&\frac{\partial\tr(AB)}{\partial a_{12}}\\\frac{\partial\tr(AB)}{\partial a_{21}}&\frac{\partial\tr(AB)}{\partial a_{22}}\end{bmatrix}=\begin{bmatrix}b_{11}&b_{21}\\b_{12}&b_{22}\end{bmatrix}=B^T\f]
 
-### 2.1 如何配置
+因此可以得到
+
+\f[\frac{\mathrm d\tr(AB)}{A}=B^T\tag{1-23a}\f]
+
+同理，我们也能验证如下结论
+
+\f[\begin{align}\frac{\mathrm d\tr(ABA^T)}{A}&=AB+AB^T\\
+当B对称时\quad&=2AB\end{align}\tag{1-23b}\f]
+
+那么，公式\f$\text{(1-22)}\f$可以写为
+
+\f[\begin{align}2\frac{\mathrm d\tr(K_kHP_k^-)}{\mathrm dK_k}
+&=\frac{\mathrm d\tr(K_kHP_k^-H^TK_k^T)}{\mathrm dK_k}+\frac{\mathrm d\tr(K_kRK_k^T)}{\mathrm dK_k}\\
+2{P_k^-}^TH^T&=2K_kHP_k^-H^T+2K_kR\\
+P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
+\end{align}\tag{1-24}\f]
+
+最终可以得到误差协方差矩阵的迹最小时的<span style="color: red">卡尔曼增益</span> \f$K_k\f$ 的表达式
+
+\f[\red{K_k=P_k^-H^T\left(HP_k^-H^T+R\right)^{-1}\tag{1-25}}\f]
+
+**讨论**
+
+- 当 \f$R\f$ 很大时，\f$K_k\to0,\quad\hat{\pmb x}_k=\hat{\pmb x}_k^-+0(\pmb z_k-H\hat{\pmb x}_k^-)=\red{\hat{\pmb x}_k^-}\f$
+- 当 \f$R\f$ 很小时，\f$K_k\to H^+,\quad\hat{\pmb x}_k=\hat{\pmb x}_k^-+H^+(\pmb z_k-H\hat{\pmb x}_k^-)=H^+\pmb z_k=\red{\hat{\pmb x}_{k_{MEA}}}\f$
+
+#### 1.6 误差协方差矩阵 {#kalman_error_covairance_matrix}
+
+我们在计算卡尔曼增益 \f$K_k\f$ 的时候出现了 \f$E\left(\pmb e_k^-{\pmb e_k^-}^T\right)\f$，并使用 \f$P_k^-\f$ 进行表示，代表先验的误差协方差矩阵，现在要做的就是求出先验误差协方差矩阵 \f$P_k^-\f$，同样可以由协方差矩阵的定义出发。
+
+首先先求 \f$\pmb e_k^-\f$
+
+\f[\begin{align}\pmb e_k^-&=\pmb x_k-\hat{\pmb x}_k^-\\
+&=A\pmb x_{k-1}+B\pmb u_{k-1}+\pmb w_{k-1}-A\hat{\pmb x}_{k-1}-B\pmb u_{k-1}\\
+&=A(\pmb x_{k-1}-\hat{\pmb x}_{k-1})+\pmb w_{k-1}\\
+&=A\pmb e_{k-1}+\pmb w_{k-1}\end{align}\tag{1-26}\f]
+
+因此先验误差协方差矩阵 \f$P_k^-\f$ 可以表示为
+
+\f[\begin{align}P_k^-
+&=E\left(\pmb e_k^-{\pmb e_k^-}^T\right)=E\left[(A\pmb e_{k-1}+\pmb w_{k-1})(A\pmb e_{k-1}+\pmb w_{k-1})^T\right]\\
+&=E\left[(A\pmb e_{k-1}+\pmb w_{k-1})(\pmb e_{k-1}^TA^T+\pmb w_{k-1}^T)\right]\\
+&=E\left[A\pmb e_{k-1}\pmb e_{k-1}^TA^T+A\pmb e_{k-1}\pmb w_{k-1}^T+\pmb w_{k-1}\pmb e_{k-1}^TA^T+\pmb w_{k-1}\pmb w_{k-1}^T\right]\\
+&=AE(\pmb e_{k-1}\pmb e_{k-1}^T)A^T+AE\pmb e_{k-1}E\pmb w_{k-1}^T+E\pmb w_{k-1}E\pmb e_{k-1}^TA^T+E(\pmb w_{k-1}\pmb w_{k-1}^T)\\
+&=AP_{k-1}A^T+0+0+Q
+\end{align}\tag{1-27}\f]
+
+最终可以得到<span style="color: red">先验误差协方差矩阵</span>的表达式
+
+\f[\red{P_k^-=AP_{k-1}A^T+Q\tag{1-28}}\f]
+
+在求解 \f$P_k^-\f$ 的时候用到了 \f$P_{k-1}\f$，因此需要进一步求解 \f$P_k\f$，从而为下一次 \f$P_{k+1}^-\f$ 所使用。
+
+由 @ref kalman_gain_derivate 的公式 \f$\text{(1-20)}\f$ 可以得到
+
+\f[\begin{align}P_k
+&=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
+&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+K_k(HP_k^-H^T+R)K_k^T\\
+代入\text{(1-25)}\quad&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+P_k^-H^TK_k^T\\
+&=P_k^--K_kHP_k^-
+\end{align}\tag{1-29}\f]
+
+即所谓后验误差协方差矩阵 \f$P_k\f$
+
+\f[\red{P_k=(I-K_kH)P_k^-\tag{1-30}}\f]
+
+#### 1.7 汇总 {#kalman_filter_fomulars}
+
+至此，Kalman Filter 的 5 大公式已经全部求出，分别是公式 \f$\text{(1-14)}\f$、公式 \f$\text{(1-17)}\f$、公式 \f$\text{(1-25)}\f$、公式 \f$\text{(1-28)}\f$ 和公式 \f$\text{(1-30)}\f$
+
+按照处理顺序，卡尔曼滤波器划分为两个部分
+
+**① 预测**
+
+1. <span style="color: blue">先验状态估计</span>
+   \f[\hat{\pmb x}_k^-=A\pmb x_{k-1}+B\pmb u_{k-1}\f]
+
+2. <span style="color: blue">计算先验误差协方差</span>
+   \f[P_k^-=AP_{k-1}A^T+Q\f]
+
+**② 校正（更新）**
+
+1. <span style="color: blue">计算卡尔曼增益</span>
+   \f[K_k=P_k^-H^T\left(HP_k^-H^T+R\right)^{-1}\f]
+
+2. <span style="color: blue">后验状态估计</span>
+   \f[\hat{\pmb x}_k=\hat{\pmb x}_k^-+K_k(\pmb z_k-H\hat{\pmb x}_k^-)\f]
+
+3. <span style="color: blue">更新后验误差协方差</span>
+   \f[P_k=(I-K_kH)P_k^-\f]
+
+---
+
+### 2. 卡尔曼滤波模块的用法
+
+#### 2.1 如何配置
 
 首先必须要寻找 RMVL 包，即 `find_package(RMVL [OPTIONS])`，之后可直接在中使用在 CMakeLists.txt 中链接库
 
 ```cmake
 target_link_libraries(
-    xxx
-    rmvl_core
+  xxx
+  PUBLIC rmvl_core
 )
 ```
 
-### 2.2 如何使用
+#### 2.2 如何使用
 
-#### 2.2.1 包含头文件
+###### 2.2.1 包含头文件
 
 ```cpp
 #include <rmvl/core/kalman.hpp>
 ```
 
-#### 2.2.2 创建并初始化卡尔曼滤波器对象
+###### 2.2.2 创建并初始化卡尔曼滤波器对象
 
 取
 - 数据类型 `Tp` = `double`
 - 状态量阶数 `StateDim` = `4`
-- 观测量阶数 `MeatureDim` = `4`
-- 控制量阶数 `ControlDim` = `1`
+- 观测量阶数 `MeatureDim` = `2`
+- 无系统输入
 
 可以得到以下代码
 
 ```cpp
-rm::KalmanFilter<double, 4, 4, 1> filter; // 简写可以写成 rm::KF44d filter
+rm::KalmanFilter<double, 4, 2> filter; // 简写可以写成 rm::KF42d filter
 
 filter.setR(/* ... */);
 filter.setQ(/* ... */);
-cv::Vec<float, state> init_vec = {/* ... */};
+cv::Vec4f init_vec = {/* ... */};
 filter.init(init_vec, pred_err);
 ```
 
-#### 2.2.3 运行
+###### 2.2.3 运行
 
 ```cpp
 filter.setA(/* ... */);
+filter.setH(/* ... */);
 // Prediction
 filter.predict();
 // Correction
-auto corr = filter.correct(/* ... */);
+cv::Vec2f zk = {/* ... */};
+auto corr = filter.correct(zk);
 ```
 
 ---------
 
-### 参考文献 {#ref_paper}
+#### 参考文献 {#ref_paper}
 
 - 卡尔曼滤波 @cite kalman
