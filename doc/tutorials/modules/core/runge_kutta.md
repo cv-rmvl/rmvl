@@ -248,7 +248,7 @@ p_n&a_{n1}&a_{n2}&\cdots&a_{nn}\\
 \f[\begin{array}{c|cccc}0&0&0&0&0\\\frac12&\frac12&0&0&0\\\frac12&0&\frac12&0&
 0\\1&0&0&1&0\\\hline&\frac16&\frac13&\frac13&\frac16\end{array}\tag{3-13b}\f]
 
-#### 3.4 方程组的 Runge-Kutta 公式
+#### 3.4 方程组的 Runge-Kutta 公式 {#equations_runge_kutta}
 
 对于一阶方程组\f$\pmb x'=\pmb F(t,\pmb x),\ \pmb x(t_0)=\pmb x^{(0)}\f$，公式\f$\text{(3-11)}\f$可以改写为
 
