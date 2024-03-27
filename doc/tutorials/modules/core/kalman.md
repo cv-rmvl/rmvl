@@ -9,7 +9,7 @@
 
 @prev_tutorial{tutorial_modules_runge_kutta}
 
-@next_tutorial{tutorial_modules_least_square}
+@next_tutorial{tutorial_modules_union_find}
 
 @tableofcontents
 
@@ -26,6 +26,7 @@
 \def\Var{\mathrm{Var}}
 \def\Cov{\mathrm{Cov}}
 \def\tr{\mathrm{tr}}
+\def\formular#1{\text{(#1)}}
 \f]
 
 ### 1. 卡尔曼滤波
@@ -46,9 +47,9 @@
 
 \f[\hat x_k=\frac{z_1+z_2+\cdots+z_k}k\tag{1-1}\f]
 
-这是一条非常简单的取算数平均的公式，但是我们为了估计硬币的长度，需要用到所有的观测值，例如我们已经测了 5 次硬币的长度，并且使用公式 \f$\text{(1-1)}\f$ 得到了第 5 次的平均值（长度的估计值），在测完第 6 次长度准备计算第 6 次估计值的时候，使用公式 \f$\text{(1-1)}\f$ 还需要重新使用前 5 次的观测值。当观测次数非常高的时候，计算的压力就逐渐高起来了。
+这是一条非常简单的取算数平均的公式，但是我们为了估计硬币的长度，需要用到所有的观测值，例如我们已经测了 5 次硬币的长度，并且使用公式 \f$\formular{1-1}\f$ 得到了第 5 次的平均值（长度的估计值），在测完第 6 次长度准备计算第 6 次估计值的时候，使用公式 \f$\formular{1-1}\f$ 还需要重新使用前 5 次的观测值。当观测次数非常高的时候，计算的压力就逐渐高起来了。
 
-针对这一问题，我们可以改写公式 \f$\text{(1-1)}\f$
+针对这一问题，我们可以改写公式 \f$\formular{1-1}\f$
 
 \f[\begin{align}\hat x_k&=\frac1k(z_1+z_2+\cdots+z_k)\\
 &=\frac1k(z_1+z_2+\cdots+z_{k-1})+\frac1kz_k\\
@@ -60,7 +61,7 @@
 
 这样我们就把硬币长度的估计值，改写成由上一次估计值和当前观测值共同作用的形式。并且我们发现，随着测量次数 \f$k\f$ 增大，\f$\frac1k\f$ 趋向于 \f$0\f$，\f$\hat x_k\f$ 趋向于 \f$\hat x_{k-1}\f$，这也就是说，随着 \f$k\f$ 增长，测量结果将不再重要。
 
-为了不失一般性，我们把公式 \f$\text{(1-2a)}\f$ 的结果改写成以下形式。
+为了不失一般性，我们把公式 \f$\formular{1-2a}\f$ 的结果改写成以下形式。
 
 \f[\boxed{\hat x_k=\hat x_{k-1}+\red{K_k}(z_k-\hat x_{k-1})}\tag{1-2b}\f]
 
@@ -70,12 +71,12 @@
 
 其中，\f$e_{{EST}_{k-1}}\f$ 表示第 \f$k-1\f$ 次的估计误差，\f$e_{{MEA}_k}\f$ 表示第 \f$k\f$ 次的测量误差。可以得到，在 \f$k\f$ 时刻，
 
-1. 若 \f$e_{{EST}_{k-1}}\gg e_{{MEA}_k}\f$，则 \f$K_k\to1\f$，\f$\hat x_k=\hat x_{k-1}+1\times(z_k+\hat x_{k-1})=z_k\f$
-2. 若 \f$e_{{EST}_{k-1}}\ll e_{{MEA}_k}\f$，则 \f$K_k\to0\f$，\f$\hat x_k=\hat x_{k-1}+0\times(z_k+\hat x_{k-1})=\hat x_{k-1}\f$
+1. 若 \f$e_{{EST}_{k-1}}\gg e_{{MEA}_k}\f$，则 \f$K_k\to1\f$，\f$\hat x_k=\hat x_{k-1}+1\times(z_k-\hat x_{k-1})=z_k\f$
+2. 若 \f$e_{{EST}_{k-1}}\ll e_{{MEA}_k}\f$，则 \f$K_k\to0\f$，\f$\hat x_k=\hat x_{k-1}+0\times(z_k-\hat x_{k-1})=\hat x_{k-1}\f$
 
 #### 1.3 数据融合 {#kalman_data_fusion}
 
-现在我们可以使用公式 \f$\text{(1-2b)}\f$ 的思想来研究数据融合。如果有一辆车以恒定速度行驶，现在得到了两个数据：
+现在我们可以使用公式 \f$\formular{1-2b}\f$ 的思想来研究数据融合。如果有一辆车以恒定速度行驶，现在得到了两个数据：
 
 - 根据匀速公式计算得到的汽车当前位置（算出来的，记作 \f$\blue{x_1}\f$）
 - 汽车的当前距离传感器数据（测出来的，记作 \f$\red{x_2}\f$）
@@ -84,7 +85,7 @@
 
 由于自身的原因，它的位置并不是由匀速运动公式得到的精确位置，它的距离传感器数据也不完全准确。两者都有一定的误差。那么我们现在如何估计汽车的实际位置呢？
 
-我们使用公式 \f$\text{(1-2b)}\f$ 的思想，得到估计值
+我们使用公式 \f$\formular{1-2b}\f$ 的思想，得到估计值
 
 \f[\hat x=\blue{x_1}+\green{K_k}(\red{x_2}-\blue{x_1})\tag{1-4}\f]
 
@@ -126,29 +127,69 @@ K_k&=\frac{2^2}{2^2+4^2}=0.2\\
 |  3   |  \f$x_3\f$   |  \f$y_3\f$   |  \f$z_3\f$   |
 | 平均 | \f$\bar x\f$ | \f$\bar y\f$ | \f$\bar z\f$ |
 
-方差：表明单个变量的波动程度
+**方差**
+
+表明单个变量的波动程度
 
 \f[\begin{align}
-\sigma_x^2&=\frac13\left[(x_1-\bar x)^2+(x_2-\bar x)^2+(x_3-\bar x)^2\right]=\frac13\sum_{i=1}^3(x-\bar x)^2\\
-\sigma_y^2&=\frac13\left[(y_1-\bar y)^2+(y_2-\bar y)^2+(y_3-\bar y)^2\right]=\frac13\sum_{i=1}^3(y-\bar y)^2\\
-\sigma_z^2&=\frac13\left[(z_1-\bar z)^2+(z_2-\bar z)^2+(z_3-\bar z)^2\right]=\frac13\sum_{i=1}^3(z-\bar z)^2
-\end{align}\tag{1-8}\f]
+\Var(x)&=\frac13\left[(x_1-\bar x)^2+(x_2-\bar x)^2+(x_3-\bar x)^2\right]=\frac13\sum_{i=1}^3(x-\bar x)^2\stackrel{\triangle}{=}\sigma_x^2\\
+\Var(y)&=\frac13\left[(y_1-\bar y)^2+(y_2-\bar y)^2+(y_3-\bar y)^2\right]=\frac13\sum_{i=1}^3(y-\bar y)^2\stackrel{\triangle}{=}\sigma_y^2\\
+\Var(z)&=\frac13\left[(z_1-\bar z)^2+(z_2-\bar z)^2+(z_3-\bar z)^2\right]=\frac13\sum_{i=1}^3(z-\bar z)^2\stackrel{\triangle}{=}\sigma_z^2
+\end{align}\f]
 
-协方差：表明变量之间的相关性，为正数表示正相关，为负数表示负相关，绝对值越大表示相关性越强
+一般的，方差具有以下推导公式
+
+\f[\begin{align}\Var(X)&=\frac1n\sum_{i=1}^n(X-\bar X)^2\\&=\frac1n\sum_{i=1}^n(X-EX)^2\\
+定义\quad&=\green{E\left[(X-EX)^2\right]}\\
+&=E\left[X^2-2X·EX+(EX)^2\right]\\&=EX^2-2EX·EX+(EX)^2\\
+&=\red{EX^2-(EX)^2}\tag{1-8}\end{align}\f]
+
+**协方差**
+
+表明变量之间的相关性，为正数表示正相关，为负数表示负相关，绝对值越大表示相关性越强
 
 \f[\begin{align}
-\sigma_x\sigma_y&=\frac13\sum_{i=1}^3(x-\bar x)(y-\bar y)\\
-\sigma_y\sigma_z&=\frac13\sum_{i=1}^3(y-\bar y)(z-\bar z)\\
-\sigma_x\sigma_z&=\frac13\sum_{i=1}^3(x-\bar x)(z-\bar z)
-\end{align}\tag{1-9}\f]
+\Cov(x,y)&=\frac13\left[(x_1-\bar x)(y_1-\bar y)+(x_2-\bar x)(y_2-\bar y)+(x_3-\bar x)(y_3-\bar y)\right]\\
+&=\frac13\sum_{i=1}^3(x-\bar x)(y-\bar y)\stackrel{\triangle}{=}\sigma_x\sigma_y\\
+\Cov(y,z)&=\frac13\left[(y_1-\bar y)(z_1-\bar z)+(y_2-\bar y)(z_2-\bar z)+(y_3-\bar y)(z_3-\bar z)\right]\\
+&=\frac13\sum_{i=1}^3(y-\bar y)(z-\bar z)\stackrel{\triangle}{=}\sigma_y\sigma_z\\
+\Cov(x,z)&=\frac13\left[(x_1-\bar x)(z_1-\bar z)+(x_2-\bar x)(z_2-\bar z)+(x_3-\bar x)(z_3-\bar z)\right]\\
+&=\frac13\sum_{i=1}^3(x-\bar x)(z-\bar z)\stackrel{\triangle}{=}\sigma_x\sigma_z
+\end{align}\f]
 
-协方差矩阵表示为
+一般的，协方差具有以下推导公式
 
-\f[P=\begin{bmatrix}
-\sigma_x^2&\sigma_x\sigma_y&\sigma_x\sigma_z\\
-\sigma_y\sigma_x&\sigma_y^2&\sigma_y\sigma_z\\
-\sigma_z\sigma_x&\sigma_z\sigma_y&\sigma_z^2\\
-\end{bmatrix}\tag{1-10}\f]
+\f[\begin{align}\Cov(X,Y)
+&=\frac1n\sum_{i=1}^n(X-\bar X)(Y-\bar Y)\\
+&=\frac1n\sum_{i=1}^n(X-EX)(Y-EY)\\
+定义\quad&=\green{E\left[(X-EX)(Y-EY)\right]}\\
+&=E(XY-X·EY-Y·EX+EX·EY)\\
+&=E(XY)-EX·EY-EY·EX+EX·EY\\
+&=\red{E(XY)-EXEY}
+\tag{1-9}\end{align}\f]
+
+**协方差矩阵**
+
+按照协方差的定义出发，可以有
+
+\f[\begin{align}\Cov(x_i,x_j)
+&=E\left[(x_i-Ex_i)(x_j-Ex_j)\right]=\sigma_{x_i}\sigma_{x_j}\\
+令误差e_i=x_i-E(x_i)\quad&=\green{E(e_ie_j)}
+\tag{1-10a}\end{align}\f]
+
+若取 \f$i,j=1,2,\cdots,n\f$，则可以得到协方差矩阵 \f$P\f$，表示为
+
+\f[\begin{align}P&=\begin{bmatrix}
+\sigma_{x_1}^2&\sigma_{x_1}\sigma_{x_2}&\cdots&\sigma_{x_1}\sigma_{x_n}\\
+\sigma_{x_2}\sigma_{x_1}&\sigma_{x_2}^2&\cdots&\sigma_{x_2}\sigma_{x_n}\\
+\vdots&\vdots&\ddots&\vdots\\
+\sigma_{x_n}\sigma_{x_1}&\sigma_{x_n}\sigma_{x_2}&\cdots&\sigma_{x_n}^2
+\end{bmatrix}\\&=\begin{bmatrix}Ee_1^2&Ee_1Ee_2&\cdots&Ee_1Ee_n\\
+Ee_2Ee_1&Ee_2^2&\cdots&Ee_2Ee_n\\\vdots&\vdots&\ddots&\vdots\\
+Ee_nEe_1&Ee_nEe_2&\cdots&Ee_n^2\end{bmatrix}\\&=
+E\begin{bmatrix}e_1^2&e_1e_2&\cdots&e_1e_n\\
+e_2e_1&e_2^2&\cdots&e_2e_n\\\vdots&\vdots&\ddots&\vdots\\
+e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag{1-10b}\end{align}\f]
 
 #### 1.5 卡尔曼增益推导 {#kalman_gain_derivate}
 
@@ -181,29 +222,25 @@ K_k&=\frac{2^2}{2^2+4^2}=0.2\\
 \pmb z_k&=H\pmb x_k
 \end{align}\right.\tag{1-13b}\f]
 
-这其实是个不准确的结果，因为如果我们考虑上噪声，公式 \f$\text{(1-13b)}\f$ 应该改写为
+这其实是个不准确的结果，因为如果我们考虑上噪声，公式 \f$\formular{1-13b}\f$ 应该改写为
 
 \f[\left\{\begin{align}
 \pmb x_k&=A\pmb x_{k-1}+B\pmb u_{k-1}\red{+\pmb w_{k-1}}&p(\pmb w)\sim N(0,Q)\\
 \pmb z_k&=H\pmb x_k\red{+\pmb v_k}&p(\pmb v)\sim N(0,R)
 \end{align}\right.\tag{1-13c}\f]
 
-- \f$w_{k-1}\f$ 称为过程噪声，来自于算不准的部分，其中 \f$Q\f$ 满足以下形式（以 2 阶系统为例）
-  \f[\begin{align}Q&=E(\pmb w\pmb w^T)=E\begin{bmatrix}w_1^2&w_1w_2\\w_2w_1&w_2^2\end{bmatrix}=
-  \begin{bmatrix}Ew_1^2&E(w_1w_2)\\E(w_2w_1)&Ew_2^2\end{bmatrix}\\
-  由\left\{\begin{array}{l}\Var X=EX^2-(EX)^2\\E\pmb w=0\\\Cov(X,Y)=E(XY)-EXEY\end{array}\right.
-  &=\begin{bmatrix}\sigma_{w_1}^2&\sigma_{w_1}\sigma_{w_2}\\
-  \sigma_{w_2}\sigma_{w_1}&\sigma_{w_2}^2\end{bmatrix}\end{align}\f]
+- \f$w_{k-1}\f$ 称为过程噪声，来自于算不准的部分，其中 \f$Q\f$ 满足以下形式
+  \f[Q=E(\pmb w\pmb w^T)=\begin{bmatrix}\sigma_{w_1}^2&\sigma_{w_1}\sigma_{w_2}&\cdots&\sigma_{w_1}\sigma_{w_n}\\
+  \sigma_{w_2}\sigma_{w_1}&\sigma_{w_2}^2&\cdots&\sigma_{w_2}\sigma_{w_n}\\
+  \vdots&\vdots&\ddots&\vdots\\\sigma_{w_n}\sigma_{w_1}&\sigma_{w_n}\sigma_{w_2}&\cdots&\sigma_{w_n}^2\end{bmatrix}\f]
   称为过程噪声协方差矩阵
-- \f$v_{k-1}\f$ 称为测量噪声，来自于测不准的部分，其中 \f$R\f$ 满足以下形式（以 2 阶系统为例）
-  \f[\begin{align}R&=E(\pmb v\pmb v^T)=E\begin{bmatrix}v_1^2&v_1v_2\\v_2v_1&v_2^2\end{bmatrix}=
-  由\begin{bmatrix}Ev_1^2&E(v_1v_2)\\E(v_2v_1)&Ev_2^2\end{bmatrix}\\
-  \left\{\begin{array}{l}\Var X=EX^2-(EX)^2\\E\pmb v=0\\\Cov(X,Y)=E(XY)-EXEY\end{array}\right.
-  &=\begin{bmatrix}\sigma_{v_1}^2&\sigma_{v_1}\sigma_{v_2}\\
-  \sigma_{v_2}\sigma_{v_1}&\sigma_{v_2}^2\end{bmatrix}\end{align}\f]
+- \f$v_{k-1}\f$ 称为测量噪声，来自于测不准的部分，其中 \f$R\f$ 满足以下形式
+  \f[R=E(\pmb v\pmb v^T)=\begin{bmatrix}\sigma_{v_1}^2&\sigma_{v_1}\sigma_{v_2}&\cdots&\sigma_{v_1}\sigma_{v_n}\\
+  \sigma_{v_2}\sigma_{v_1}&\sigma_{v_2}^2&\cdots&\sigma_{v_2}\sigma_{v_n}\\
+  \vdots&\vdots&\ddots&\vdots\\\sigma_{v_n}\sigma_{v_1}&\sigma_{v_n}\sigma_{v_2}&\cdots&\sigma_{v_n}^2\end{bmatrix}\f]
   称为测量噪声协方差矩阵
 
-但是，这两个误差我们无从得知，我们只能使用公式 \f$\text{(1-13b)}\f$ 的形式进行近似估计，通过 \f$\pmb x_k=A\pmb x_{k-1}+B\pmb u_{k-1}\f$ 算出来的 \f$\pmb x_k\f$ 称为<span style="color: red">先验状态估计</span>，一般写为
+但是，这两个误差我们无从得知，我们只能使用公式 \f$\formular{1-13b}\f$ 的形式进行近似估计，通过 \f$\pmb x_k=A\pmb x_{k-1}+B\pmb u_{k-1}\f$ 算出来的 \f$\pmb x_k\f$ 称为<span style="color: red">先验状态估计</span>，一般写为
 
 \f[\red{\hat{\pmb x}_k^-=A\pmb x_{k-1}+B\pmb u_{k-1}\tag{1-14}}\f]
 
@@ -213,9 +250,9 @@ K_k&=\frac{2^2}{2^2+4^2}=0.2\\
 
 因为 \f$H^{-1}\f$ 可能不存在，这里先使用 M-P 广义逆 \f$H^+\f$ 来表示。
 
-@note 对于一个线性方程组 \f[A\pmb x=\pmb b\f]必定存在最小二乘解 \f[\pmb x=(A^TA)^{-1}A^T\pmb b\f]可以令 \f$A^+=(A^TA)^{-1}A^T\f$ 来表示 Moore-Penrose 广义逆。
+@note 对于一个线性方程组 \f[A\pmb x=\pmb b\f]必定存在最小二乘解 \f[\pmb x=(A^TA)^{-1}A^T\pmb b\f]可以令 \f$A^+=(A^TA)^{-1}A^T\f$ 来表示 Moore-Penrose 广义逆，即\f[\pmb x=A^+\pmb b\f]当 \f$A\f$ 可逆时，\f$A^+=A^{-1}\f$.
 
-目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\text{(1-4)}\f$ 中使用了算出来的 \f$\blue{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
+目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\formular{1-4}\f$ 中使用了算出来的 \f$\blue{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
 
 \f[\begin{align}
 \hat{\pmb x}_k&=\hat{\pmb x}_k^-+\green{G_k}(\hat{\pmb x}_{k_{MEA}}-\hat{\pmb x}_k^-)\\
@@ -293,7 +330,7 @@ P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_k
 \f[\begin{align}\frac{\mathrm d\tr(ABA^T)}{A}&=AB+AB^T\\
 当B对称时\quad&=2AB\end{align}\tag{1-23b}\f]
 
-那么，公式\f$\text{(1-22)}\f$可以写为
+那么，公式\f$\formular{1-22}\f$可以写为
 
 \f[\begin{align}2\frac{\mathrm d\tr(K_kHP_k^-)}{\mathrm dK_k}
 &=\frac{\mathrm d\tr(K_kHP_k^-H^TK_k^T)}{\mathrm dK_k}+\frac{\mathrm d\tr(K_kRK_k^T)}{\mathrm dK_k}\\
@@ -337,12 +374,12 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
 
 在求解 \f$P_k^-\f$ 的时候用到了 \f$P_{k-1}\f$，因此需要进一步求解 \f$P_k\f$，从而为下一次 \f$P_{k+1}^-\f$ 所使用。
 
-由 @ref kalman_gain_derivate 的公式 \f$\text{(1-20)}\f$ 可以得到
+由 @ref kalman_gain_derivate 的公式 \f$\formular{1-20}\f$ 可以得到
 
 \f[\begin{align}P_k
 &=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
 &=P_k^--K_kHP_k^--P_k^-H^TK_k^T+K_k(HP_k^-H^T+R)K_k^T\\
-代入\text{(1-25)}\quad&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+P_k^-H^TK_k^T\\
+代入\formular{1-25}\quad&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+P_k^-H^TK_k^T\\
 &=P_k^--K_kHP_k^-
 \end{align}\tag{1-29}\f]
 
@@ -352,7 +389,7 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
 
 #### 1.7 汇总 {#kalman_filter_fomulars}
 
-至此，Kalman Filter 的 5 大公式已经全部求出，分别是公式 \f$\text{(1-14)}\f$、公式 \f$\text{(1-17)}\f$、公式 \f$\text{(1-25)}\f$、公式 \f$\text{(1-28)}\f$ 和公式 \f$\text{(1-30)}\f$
+至此，Kalman Filter 的 5 大公式已经全部求出，分别是公式 \f$\formular{1-14}\f$、公式 \f$\formular{1-17}\f$、公式 \f$\formular{1-25}\f$、公式 \f$\formular{1-28}\f$ 和公式 \f$\formular{1-30}\f$
 
 按照处理顺序，卡尔曼滤波器划分为两个部分
 

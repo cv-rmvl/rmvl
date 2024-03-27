@@ -33,7 +33,7 @@
 @add_checkbox_y
 数据链路层
 @end_checkbox
-@add_checkbox_n
+@add_checkbox_y
 运输层/应用层
 @end_checkbox
 
@@ -140,8 +140,7 @@ int main()
 
 @add_toggle{运输层/应用层}
 
-@todo
-本小节暂无
+目前基于运输层的设备属于 Ethernet 设备，目前有支持 OPC UA 通信协议的 @ref opcua ，可以查阅对应的说明文档 @ref tutorial_modules_opcua 。
 
 @end_toggle
 

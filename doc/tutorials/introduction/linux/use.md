@@ -12,7 +12,8 @@
 
 **注意**
 
-<span style="color: red">必须确保您已经成功安装了 RMVL</span>。如果你不熟悉 CMake，请移步到 CMake [教程](https://cmake.org/cmake/help/latest) 
+- <span style="color: red">必须确保您已经成功安装了 RMVL</span>。如果你不熟悉 CMake，请移步到 CMake [教程](https://cmake.org/cmake/help/latest) 
+- 本示例使用到了 rm::ArmorDetector 模块，需要提前安装 onnxruntime 的 C++ 开发包，可参考 @ref install_onnxruntime 的内容，若未安装，请安装后再重新编译 RMVL。
 
 ### 详细步骤
 
