@@ -28,7 +28,6 @@ class PlanarTracker final : public tracker
 private:
     KF21f _distance_filter;             //!< 距离滤波器
     KF42f _motion_filter;               //!< 运动滤波器
-    float _last_distance = 0;           //!< 目标上一帧的距离
     std::deque<float> _relative_speeds; //!< 图像速度的容器
     std::deque<RMStatus> _type_deque;   //!< 状态队列
 
