@@ -13,7 +13,7 @@
 
 #include "rmvl/core/util.hpp"
 
-//! @defgroup types 类型系统
+//! @defgroup types 视觉功能相关的类型系统
 
 namespace rm
 {

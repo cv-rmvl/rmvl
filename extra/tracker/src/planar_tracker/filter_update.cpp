@@ -38,16 +38,12 @@ void PlanarTracker::updateDistanceFilter()
     // 设置状态转移矩阵
     _distance_filter.setA({1, 1,
                            0, 1});
-    // 距离差分
     float current_distance = _combo_deque.front()->getExtrinsics().distance();
-    float delta_distance = current_distance - _last_distance;
     // 预测
     _distance_filter.predict();
     // 更新
-    cv::Matx21f correct_vec = _distance_filter.correct({current_distance,
-                                                        delta_distance});
+    cv::Matx21f correct_vec = _distance_filter.correct({current_distance});
     _extrinsic.distance(correct_vec(0));
-    _last_distance = correct_vec(0);
 }
 
 void PlanarTracker::updateMotionFilter()
