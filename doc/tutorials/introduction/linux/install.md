@@ -91,7 +91,7 @@ make -j8 && sudo make install
 sudo apt install libeigen3-dev
 ```
 
-#### 1.3 硬件设备 SDK
+#### 1.3 硬件设备 SDK{#install_hardware_sdk}
 
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -128,7 +128,7 @@ sudo apt install libeigen3-dev
 </table>
 @note 以上与相机相关的 SDK 在进行二次封装得到的库都需要链接到 OpenCV。
 
-#### 1.4 onnxruntime
+#### 1.4 onnxruntime{#install_onnxruntime}
 
 onnxruntime 库是目前数字识别所依赖的第三方库，如果有需要开启此功能，则需要安装 onnxruntime
 
@@ -150,6 +150,8 @@ onnxruntime 库是目前数字识别所依赖的第三方库，如果有需要�
   ```shell
   rm -r onnxruntime-linux-x64-1.12.0 && rm onnxruntime-linux-x64-1.12.0.tgz
   ```
+
+至此 onnxruntime 安装完成。
 
 ### 2. 配置 RMVL 项目
 
