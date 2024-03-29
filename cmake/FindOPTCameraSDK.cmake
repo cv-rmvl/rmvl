@@ -3,7 +3,7 @@ set(OPTCameraSDK_root_path "/opt/OPT/OPTCameraDemo")
 # add the include directories path
 find_path(
   OPTCameraSDK_INCLUDE_DIRS
-  NAMES "OPTApi.h"
+  NAMES OPTApi.h OPTDefines.h
   PATHS "${OPTCameraSDK_root_path}/include"
   NO_DEFAULT_PATH
 )
