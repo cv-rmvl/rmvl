@@ -2,7 +2,7 @@
  * @file method.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 方法节点
- * @version 1.0
+ * @version 1.1
  * @date 2023-10-23
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -55,6 +55,9 @@ struct Argument final
 //! OPC UA 方法
 struct Method final
 {
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+    
     /**
      * @brief 浏览名称 BrowseName
      * @brief
@@ -93,7 +96,7 @@ struct Method final
      * @endcode
      *
      */
-    UA_MethodCallback func;
+    UA_MethodCallback func{nullptr};
 
     Method() = default;
 

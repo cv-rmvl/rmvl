@@ -2,8 +2,8 @@
  * @file subscriber.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 订阅者
- * @version 2.1
- * @date 2024-03-07
+ * @version 2.2
+ * @date 2024-03-29
  *
  * @copyright Copyright 2024 (c), zhaoxi
  *
@@ -24,6 +24,9 @@ namespace rm
 //! 数据集字段元数据
 struct FieldMetaData final
 {
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     //! 字段名称
     std::string name;
 
@@ -34,7 +37,7 @@ struct FieldMetaData final
     UA_TypeFlag type;
 
     //! 字段 ValueRank
-    int value_rank;
+    int value_rank{};
 
     FieldMetaData() = default;
 
@@ -44,8 +47,9 @@ struct FieldMetaData final
      * @param[in] name_ 字段名称
      * @param[in] type_ 字段类型，可参考 @ref UA_TypeFlag
      * @param[in] value_rank_ 字段 ValueRank
+     * @param[in] ns_ 命名空间索引，默认为 `1`
      */
-    FieldMetaData(const std::string &name_, UA_TypeFlag type_, int value_rank_) : name(name_), type(type_), value_rank(value_rank_) {}
+    FieldMetaData(const std::string &name_, UA_TypeFlag type_, int value_rank_, uint16_t ns_ = 1U) : ns(ns_), name(name_), type(type_), value_rank(value_rank_) {}
 
     /**
      * @brief 从变量创建字段元数据
@@ -64,9 +68,9 @@ struct FieldMetaData final
 
 /**
  * @brief OPC UA 订阅者
- * 
+ *
  * @tparam Tpid 传输协议 ID，可参考 `rm::TransportID`
- * 
+ *
  * @details **特化**
  * - @ref Subscriber<TransportID::UDP_UADP>
  */

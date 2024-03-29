@@ -1,9 +1,9 @@
 /**
  * @file data.cpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 对象（类型）
- * @version 1.0
- * @date 2023-10-23
+ * @brief OPC UA 数据，包括变量、方法、对象、事件、视图
+ * @version 1.1
+ * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -43,11 +43,11 @@ Variable &Variable::operator=(const Variable &val)
     browse_name = val.browse_name;
     display_name = val.display_name;
     description = val.description;
+    access_level = val.access_level;
     _type = val._type;
     _value = val._value;
     _data_type = val._data_type;
     _size = val._size;
-    _access_level = val._access_level;
     return *this;
 }
 
@@ -56,11 +56,11 @@ Variable &Variable::operator=(Variable &&val)
     browse_name = std::move(val.browse_name);
     display_name = std::move(val.display_name);
     description = std::move(val.description);
+    access_level = std::exchange(val.access_level, 0);
     _type = std::exchange(val._type, nullptr);
     _value = std::move(val._value);
     _data_type = std::exchange(val._data_type, 0);
     _size = std::exchange(val._size, 0);
-    _access_level = std::exchange(val._access_level, 0);
     return *this;
 }
 

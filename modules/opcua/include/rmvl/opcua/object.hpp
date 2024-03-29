@@ -2,8 +2,8 @@
  * @file object.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 对象（类型）
- * @version 1.0
- * @date 2023-10-21
+ * @version 1.1
+ * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -30,6 +30,9 @@ namespace rm
 class ObjectType final
 {
 public:
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief
@@ -158,6 +161,9 @@ class Object final
     std::unordered_map<std::string, Variable> _variables;
 
 public:
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief

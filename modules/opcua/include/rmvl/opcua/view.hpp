@@ -2,8 +2,8 @@
  * @file view.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 视图
- * @version 1.0
- * @date 2023-11-27
+ * @version 1.1
+ * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -23,6 +23,9 @@ namespace rm
 class View final
 {
 public:
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief
