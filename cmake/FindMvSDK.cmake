@@ -1,7 +1,7 @@
 # add the include directories path
 find_path(
   MvSDK_INCLUDE_DIRS
-  NAMES "CameraApi.h"
+  NAMES CameraApi.h CameraDefine.h CameraStatus.h
   PATHS "/usr/include"
   NO_DEFAULT_PATH
 )

@@ -3,7 +3,7 @@ set(OPTLightCtrl_root_path "/opt/OPT/OPTController")
 # add the include directories path
 find_path(
   OPTLightCtrl_INCLUDE_DIRS
-  NAMES "OPTController.h"
+  NAMES OPTController.h OPTErrorCode.h
   PATHS "${OPTLightCtrl_root_path}/include"
   NO_DEFAULT_PATH
 )

@@ -7,7 +7,7 @@ endif()
 # add the include directories path
 find_path(
   HikSDK_INCLUDE_DIRS
-  NAMES "MvCameraControl.h"
+  NAMES CameraParams.h MvCameraControl.h MvErrorDefine.h MvISPErrorDefine.h PixelType.h
   PATHS "${mvcam_sdk_path}/include"
   NO_DEFAULT_PATH
 )

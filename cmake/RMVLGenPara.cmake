@@ -135,6 +135,10 @@ function(_para_parser file_name header_details source_details status)
         math(EXPR cmt_idx "${cmt_idx} + 1")
         string(SUBSTRING "${default_cmt}" ${cmt_idx} -1 comment_sym)
       endif()
+      # add default value to comment
+      if(NOT default_sym STREQUAL "")
+        set(comment_sym "${comment_sym} @note 默认值：`${default_sym}`")
+      endif()
       # correct default_sym
       if(NOT type_sym STREQUAL "std::string")
         _type_correct("${default_sym}" default_sym)

@@ -1,6 +1,6 @@
 ### Pull Request 合并请求准备清单
 
-详情参见[此处](https://github.com/cv-rmvl/rmvl/wiki/How_to_contribute#3-%E6%8F%90%E4%BA%A4%E8%89%AF%E5%A5%BD%E7%9A%84-pr)
+详情参见[此处](https://github.com/cv-rmvl/rmvl/wiki/How_to_contribute#3-making-a-good-pull-request)
 
 - [ ] 我同意在 Apache 2 开源许可下为本项目做贡献
 - [ ] 此 pull request 是在正确的分支上提出的

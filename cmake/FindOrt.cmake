@@ -6,7 +6,10 @@ endif()
 find_path(
   Ort_INCLUDE_DIRS
   PATHS "${ort_root_path}/include/onnxruntime"
-  NAMES "onnxruntime_cxx_api.h"
+  NAMES cpu_provider_factory.h  onnxruntime_run_options_config_keys.h
+        onnxruntime_c_api.h     onnxruntime_session_options_config_keys.h
+        onnxruntime_cxx_api.h   provider_options.h
+        onnxruntime_cxx_inline.h
   NO_DEFAULT_PATH
 )
 
