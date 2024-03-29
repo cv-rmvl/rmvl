@@ -2,8 +2,8 @@
  * @file subscriber.cpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 订阅者
- * @version 1.0
- * @date 2023-12-01
+ * @version 1.1
+ * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -125,7 +125,7 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
         UA_NodeId node_id;
         status = UA_Server_addVariableNode(
             _server, UA_NODEID_NULL, obj_id, nodeHasComponent,
-            UA_QUALIFIEDNAME(1, helper::to_char(fields[i].name)),
+            UA_QUALIFIEDNAME(fields[i].ns, helper::to_char(fields[i].name)),
             nodeBaseDataVariableType, attr, nullptr, &node_id);
         if (status != UA_STATUSCODE_GOOD)
         {

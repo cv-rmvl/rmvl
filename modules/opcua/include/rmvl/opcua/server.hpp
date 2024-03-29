@@ -2,8 +2,8 @@
  * @file server.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 服务器
- * @version 2.1
- * @date 2024-03-07
+ * @version 2.2
+ * @date 2024-03-29
  *
  * @copyright Copyright 2024 (c), zhaoxi
  *
@@ -150,7 +150,7 @@ public:
      * - 数据源变量节点会把每次 IO 都绑定到各自的回调函数中，即可以重定向到一个实际的物理过程中，从而跟服务器本身的数据读写脱离关系
      *
      * @param[in] val `rm::Variable` 表示的变量，仅取 `browse_name`、`description`、`display_name`、`access_level`
-     *                字段，以及对应的变量类型节点
+     *                以及 `ns` 字段，以及对应的变量类型节点
      * @param[in] on_read 重定向的读取回调函数
      * @param[in] on_write 重定向的写入回调函数
      * @param[in] parent_id 指定父节点的 `UA_NodeId`，默认为 `rm::nodeObjectsFolder`

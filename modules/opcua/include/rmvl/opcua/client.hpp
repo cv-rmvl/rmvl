@@ -151,10 +151,10 @@ public:
      *
      * @param[in] node 待监视节点的 `UA_NodeId`
      * @param[in] on_change 数据变更回调函数
-     * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知
+     * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知，默认为 `10`
      * @return 变量节点监视创建成功？
      */
-    bool monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size);
+    bool monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
