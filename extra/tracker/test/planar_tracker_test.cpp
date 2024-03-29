@@ -94,7 +94,11 @@ TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
     rm::Armor::ptr armor2 = buildArmor(cv::Point(505, 300), 8);
     p_tracker->update(armor2);
     EXPECT_EQ(p_tracker->size(), 2);
-    EXPECT_NE(p_tracker->getRelativeAngle(), armor2->getRelativeAngle());
+    // Kalman Filter 初始化时，观测值为 armor2，初速度为 0，因此先验估计值为 armor
+    // 最优估计应该更倾向于 armor2
+    float da1 = rm::getDistance(p_tracker->getRelativeAngle(), armor->getRelativeAngle());
+    float da2 = rm::getDistance(p_tracker->getRelativeAngle(), armor2->getRelativeAngle());
+    EXPECT_GE(da1, da2);
 }
 
 // 追踪器掉帧处理功能验证

@@ -25,19 +25,19 @@ void GyroTracker::initFilter()
     _motion_filter.setQ(para::gyro_tracker_param.MOTION_Q);
     const auto &relative_angle = first_combo->getRelativeAngle();
     cv::Matx41f init_move_vec = {relative_angle.x, relative_angle.y, 0, 0};
-    _motion_filter.init(init_move_vec, 1e-2);
+    _motion_filter.init(init_move_vec, 1e5f);
     // 初始化位置滤波器
     _center3d_filter.setR(para::gyro_tracker_param.POSITION_R);
     _center3d_filter.setQ(para::gyro_tracker_param.POSITION_Q);
     const auto &tvec = first_combo->getExtrinsics().tvec();
     cv::Matx61f init_position_vec = {tvec(0), tvec(1), tvec(2), 0, 0, 0};
-    _center3d_filter.init(init_position_vec, 1e-2);
+    _center3d_filter.init(init_position_vec, 1e5f);
     // 初始化姿态滤波器
     _pose_filter.setR(para::gyro_tracker_param.POSE_R);
     _pose_filter.setQ(para::gyro_tracker_param.POSE_Q);
     const auto &pose = Armor::cast(first_combo)->getPose();
     cv::Vec4f init_pose_vec = {pose(0), pose(1), 0, 0};
-    _pose_filter.init(init_pose_vec, 1e-2);
+    _pose_filter.init(init_pose_vec, 1e5f);
 }
 
 void GyroTracker::updateMotionFilter()

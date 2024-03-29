@@ -75,7 +75,7 @@ void GyroGroup::initFilter()
     // 初始化旋转中心点位置滤波器
     _center3d_filter.setQ(para::gyro_group_param.CENTER3D_Q);
     _center3d_filter.setR(para::gyro_group_param.CENTER3D_R);
-    _center3d_filter.init(cv::Matx61f(_center3d(0), _center3d(1), _center3d(2), 0, 0, 0), 1e-2);
+    _center3d_filter.init({_center3d(0), _center3d(1), _center3d(2), 0, 0, 0}, 1e5f);
 }
 
 } // namespace rm

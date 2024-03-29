@@ -23,14 +23,14 @@ void PlanarTracker::initFilter()
     _distance_filter.setR({para::planar_tracker_param.DIS_R});
     _distance_filter.setQ(para::planar_tracker_param.DIS_Q);
     cv::Matx21f init_dis_vec = {first_combo->getExtrinsics().distance(), 0};
-    _distance_filter.init(init_dis_vec, 1e-2);
+    _distance_filter.init(init_dis_vec, 1e5f);
     // 初始化运动滤波器
     _motion_filter.setR(para::planar_tracker_param.MOTION_R);
     _motion_filter.setQ(para::planar_tracker_param.MOTION_Q);
     cv::Matx41f init_move_vec = {first_combo->getRelativeAngle().x,
                                  first_combo->getRelativeAngle().y,
                                  0, 0};
-    _motion_filter.init(init_move_vec, 1e-2);
+    _motion_filter.init(init_move_vec, 1e5f);
 }
 
 void PlanarTracker::updateDistanceFilter()

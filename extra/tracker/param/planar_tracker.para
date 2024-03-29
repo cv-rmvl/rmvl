@@ -1,8 +1,8 @@
 uint32_t TRACK_FRAMES = 4   # 追踪帧数
 double SAMPLE_INTERVAL = 15 # 采样时间
 
-Matx22f DIS_Q = Matx22f::diag({0.1, 0.5}) # 距离状态空间方程，过程噪声协方差
-float DIS_R = 0.1                         # 距离状态空间方程，测量噪声协方差
+Matx22f DIS_Q = Matx22f::eye() # 距离状态空间方程，过程噪声协方差
+float DIS_R = 0.1              # 距离状态空间方程，测量噪声协方差
 
-Matx44f MOTION_Q = Matx44f::eye()            # 运动状态空间方程，过程噪声协方差矩阵
-Matx22f MOTION_R = Matx22f::diag({0.1, 0.1}) # 运动状态空间方程，测量噪声协方差矩阵
+Matx44f MOTION_Q = Matx44f::eye()              # 运动状态空间方程，过程噪声协方差矩阵
+Matx22f MOTION_R = Matx22f::diag({0.01, 0.01}) # 运动状态空间方程，测量噪声协方差矩阵

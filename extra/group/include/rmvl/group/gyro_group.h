@@ -28,9 +28,9 @@ namespace rm
 //! 整车状态序列组
 class GyroGroup final : public group
 {
-    double _tick;             //!< 时间点
-    GyroData _gyro_data;      //!< 当前陀螺仪数据
-    bool _is_tracked = false; //!< 是否为目标序列组
+    double _tick;        //!< 时间点
+    GyroData _gyro_data; //!< 当前陀螺仪数据
+    bool _is_tracked{};  //!< 是否为目标序列组
 
     //! 追踪器状态哈希表 [追踪器 : 追踪器状态]
     std::unordered_map<tracker::ptr, TrackerState> _tracker_state;
