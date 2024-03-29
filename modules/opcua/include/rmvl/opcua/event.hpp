@@ -2,7 +2,7 @@
  * @file event.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 事件
- * @version 1.0
+ * @version 1.1
  * @date 2023-11-13
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -26,6 +26,9 @@ namespace rm
 class EventType
 {
 public:
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief
@@ -68,7 +71,7 @@ public:
      * @param[in] browse_name 非默认属性的浏览名 BrowseName
      * @param[in] prop `int` 整型属性值
      */
-    inline void add(const std::string &browse_name, int prop) { _properties[browse_name] = prop; }
+    inline void add(const std::string &browse_name, int prop) { _properties.insert({browse_name, prop}); }
 
     /**
      * @brief 访问指定的非默认属性
@@ -91,6 +94,7 @@ public:
 class Event
 {
 public:
+    uint16_t ns{1U};         //!< 命名空间索引，默认为 `1`
     std::string source_name; //!< 默认属性：事件源名称
     std::string message;     //!< 默认属性：事件消息，包含关于事件的描述
     uint16_t severity{};     //!< 默认属性：事件严重程度

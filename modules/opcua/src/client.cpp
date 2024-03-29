@@ -2,8 +2,8 @@
  * @file client.cpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 客户端
- * @version 1.0
- * @date 2023-10-29
+ * @version 1.1
+ * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -147,7 +147,7 @@ UA_NodeId Client::addViewNode(const View &view)
     // 创建并添加 View 节点
     auto status = UA_Client_addViewNode(
         _client, UA_NODEID_NULL, nodeViewsFolder, nodeOrganizes,
-        UA_QUALIFIEDNAME(1, helper::to_char(view.browse_name)), attr, &retval);
+        UA_QUALIFIEDNAME(view.ns, helper::to_char(view.browse_name)), attr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add view node, error: %s", UA_StatusCode_name(status));

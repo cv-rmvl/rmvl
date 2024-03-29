@@ -2,8 +2,8 @@
  * @file variable.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 变量（类型）
- * @version 2.1
- * @date 2024-03-07
+ * @version 2.2
+ * @date 2024-03-29
  *
  * @copyright Copyright 2024 (c), zhaoxi
  *
@@ -30,6 +30,9 @@ namespace rm
 class VariableType final
 {
 public:
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief
@@ -120,6 +123,9 @@ public:
 class Variable final
 {
 public:
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief
@@ -139,6 +145,8 @@ public:
     std::string display_name{};
     //! 变量的描述
     std::string description{};
+    //! 访问性
+    uint8_t access_level{};
 
 private:
     /**
@@ -155,8 +163,6 @@ private:
     UA_TypeFlag _data_type{};
     //! 数据大小
     UA_UInt32 _size{};
-    //! 访问性
-    uint8_t _access_level{};
 
 public:
     Variable() = default;
@@ -167,7 +173,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <unsigned int N>
-    Variable(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _size(1), _access_level(3U) {}
+    Variable(const char (&str)[N]) : access_level(3U), _value(str), _data_type(typeflag.at(typeid(const char *))), _size(1) {}
 
     /**
      * @brief 单值构造
@@ -176,7 +182,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    Variable(const Tp &val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _size(1), _access_level(3U) {}
+    Variable(const Tp &val) : access_level(3U), _value(val), _data_type(typeflag.at(typeid(Tp))), _size(1) {}
 
     /**
      * @brief 列表构造
@@ -185,22 +191,21 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _size(arr.size()), _access_level(3U) {}
+    Variable(const std::vector<Tp> &arr) : access_level(3U), _value(arr), _data_type(typeflag.at(typeid(Tp))), _size(arr.size()) {}
 
     /**
      * @brief 从变量类型构造新的变量节点
      *
      * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
      */
-    explicit Variable(VariableType &vtype) : _type(&vtype), _value(vtype.data()), _data_type(vtype.getDataType()),
-                                             _size(vtype.size()), _access_level(3U) {}
+    explicit Variable(VariableType &vtype) : access_level(3U), _type(&vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
 
-    Variable(const Variable &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description), _type(val._type),
-                                    _value(val._value), _data_type(val._data_type), _size(val._size), _access_level(val._access_level) {}
+    Variable(const Variable &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description),
+                                    access_level(val.access_level), _type(val._type), _value(val._value), _data_type(val._data_type), _size(val._size) {}
 
     Variable(Variable &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
-                               _type(std::exchange(val._type, nullptr)), _value(std::move(val._value)), _data_type(std::exchange(val._data_type, 0)),
-                               _size(std::exchange(val._size, 0)), _access_level(std::exchange(val._access_level, 0)) {}
+                               access_level(std::exchange(val.access_level, 0)), _type(std::exchange(val._type, nullptr)), _value(std::move(val._value)),
+                               _data_type(std::exchange(val._data_type, 0)), _size(std::exchange(val._size, 0)) {}
 
     Variable &operator=(const Variable &val);
 
@@ -262,16 +267,6 @@ public:
 
     //! 获取大小 @note 未初始化则返回 `0`
     inline UA_UInt32 size() const { return _size; }
-
-    /**
-     * @brief 设置访问性
-     *
-     * @param[in] access_level 访问性
-     */
-    inline void setAccessLevel(uint8_t access_level) { _access_level = access_level; }
-
-    //! 获取访问性
-    inline uint8_t getAccessLevel() const { return _access_level; }
 };
 
 /**
