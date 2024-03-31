@@ -1,6 +1,0 @@
-{
-    // See https://go.microsoft.com/fwlink/?LinkId=827846 for extensions.json format
-    "recommendations": [
-        "EditorConfig.EditorConfig" // 编辑器格式控制
-    ]
-}

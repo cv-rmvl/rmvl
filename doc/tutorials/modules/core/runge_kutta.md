@@ -14,6 +14,10 @@
 
 ------
 
+\f[
+\def\transparent#1{\color{transparent}{#1}}
+\f]
+
 ### 1. 常微分方程（组）
 
 一个质量-弹簧-阻尼系统的运动微分方程可以表示为
@@ -149,8 +153,8 @@ k_1&=f(t_n,x_n)\\k_2&=f(t_n+h,x_n+hk_1)
 \f[\begin{align}\frac{\mathrm df}{\mathrm dx}&=\frac{\partial f}{\partial x}+\frac{\partial f}{\partial y}·\frac{\mathrm dy}{\mathrm dx}\\
 f'&=f_x+f_yy'\end{align}\tag{i}\f]
 以及多元函数\f$f(x,y)\f$的 Taylor 展开，令\f$\pmb x=(x-x_0,\ y-y_0)^T\f$，则多元函数 Taylor 展开如下
-\f[f(x,y)=f(x_0,y_0)+\begin{bmatrix}f_x(x_0,y_0)&f_y(x_0,y_0)\end{bmatrix}\pmb x+
-\frac1{2!}\pmb x^T\begin{bmatrix}f_{xx}(x_0,y_0)&f_{xy}(x_0,y_0)\\f_{yx}(x_0,y_0)&f_{yy}(x_0,y_0)\end{bmatrix}\pmb x+o^n\tag{ii}\f]
+\f[\begin{align}f(x,y)&=f(x_0,y_0)+\begin{bmatrix}f_x(x_0,y_0)&f_y(x_0,y_0)\end{bmatrix}\pmb x+\\
+&\transparent=\frac1{2!}\pmb x^T\begin{bmatrix}f_{xx}(x_0,y_0)&f_{xy}(x_0,y_0)\\f_{yx}(x_0,y_0)&f_{yy}(x_0,y_0)\end{bmatrix}\pmb x+o^n\end{align}\tag{ii}\f]
 <span style="color: red">若仅想了解最终结果，请跳过此小节</span>
 
 \f[\left\{\begin{align}
@@ -165,17 +169,20 @@ k_1&=f(t_n,x_n)\\k_2&=f(t_n+ph,x_n+phk_1)
 \f[\begin{align}
 x(t_{n+1})&=x(t_n)+hx'(t_n)+\frac{h^2}2x''(t_n)+o(h^3)\\
 &=x(t_n)+hf(t_n,x(t_n))+\frac{h^2}2\frac{\mathrm d}{\mathrm dt}f(t_n,x(t_n))+o(h^3)\\
-&=x(t_n)+hf(t_n,x(t_n))+\frac{h^2}2\left[\frac{\partial f(t_n,x(t_n))}{\partial t}+\frac{\partial f(t_n,x(t_n))}{\partial x}·\frac{\mathrm dx}{\mathrm dt}\right]+o(h^3)\\
-令f(t_n,x(t_n))=(f)_{(n)},有\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}\frac{\mathrm dx}{\mathrm dt}\right]+o(h^3)\\
-由f(t_n,x(t_n))=\frac{\mathrm dx}{\mathrm dt},有\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}(f)_{(n)}\right]+o(h^3)\\
-&=x(t_n)+h(f)_{(n)}+\frac{h^2}2(f_t+f_xf)_{(n)}+o(h^3)
-\end{align}\tag{3-3}\f]
+&=x(t_n)+hf(t_n,x(t_n))+\\
+&\transparent=\frac{h^2}2\left[\frac{\partial f(t_n,x(t_n))}{\partial t}+\frac{\partial f(t_n,x(t_n))}{\partial x}·\frac{\mathrm dx}{\mathrm dt}\right]+o(h^3)\\
+令f(t_n,x(t_n))=(f)_{(n)}\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}\frac{\mathrm dx}{\mathrm dt}\right]+o(h^3)\\
+由f(t_n,x(t_n))=\frac{\mathrm dx}{\mathrm dt}\quad&=x(t_n)+h(f)_{(n)}+\frac{h^2}2\left[\frac{\partial (f)_{(n)}}{\partial t}+\frac{\partial (f)_{(n)}}{\partial x}(f)_{(n)}\right]+o(h^3)\\
+&=x(t_n)+h(f)_{(n)}+\frac{h^2}2(f_t+f_xf)_{(n)}+o(h^3)\tag{3-3}
+\end{align}\f]
 
 对\f$x_{n+1}\f$，有
 
 \f[\begin{align}x_{n+1}&=x_n+h\left[\lambda_1f(t_n,x_n)+\lambda_2f(t_n+ph,x_n+phf(t_n,x_n))\right]\\
-&=x_n+h\lambda_1f(t_n,x_n)+h\lambda_2\left[f(t_n,x_n)+ph\frac{\partial f(t_n,x_n)}{\partial t}+phf(t_n,x_n)\frac{\partial f(t_n,x_n)}{\partial x}+o(h^2)\right]\\
-令f(t_n,x_n)=(f)_n,有\quad&=x_n+h\lambda_1(f)_n+h\lambda_2\left[(f)_n+ph\frac{\partial(f)_n}{\partial t}+ph(f)_n\frac{\partial(f)_n}{\partial x}+o(h^2)\right]\\
+&=x_n+h\lambda_1f(t_n,x_n)+h\lambda_2\left[f(t_n,x_n)+ph\frac{\partial f(t_n,x_n)}{\partial t}+\right.\\
+&\transparent=\left.phf(t_n,x_n)\frac{\partial f(t_n,x_n)}{\partial x}+o(h^2)\right]\\
+令f(t_n,x_n)=(f)_n\quad&=x_n+h\lambda_1(f)_n+\\
+&\transparent=h\lambda_2\left[(f)_n+ph\frac{\partial(f)_n}{\partial t}+ph(f)_n\frac{\partial(f)_n}{\partial x}+o(h^2)\right]\\
 &=x_n+h\lambda_1(f)_n+h\lambda_2\left[(f)_n+ph(f_t)_n+ph(f)_n(f_x)_n+o(h^2)\right]\\
 &=x_n+h(\lambda_1+\lambda_2)(f)_n+ph^2\lambda_2(f_t+f_xf)_n+o(h^3)
 \end{align}\tag{3-4}\f]

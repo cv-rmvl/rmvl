@@ -14,8 +14,8 @@
 /**
  * @defgroup combo 特征组合体（数据组件）
  * @{
- *     @defgroup combo_armor 机器人装甲板
- *     @defgroup combo_rune 能量机关神符
+ *     @defgroup combo_armor 装甲模块特征组合
+ *     @defgroup combo_rune 能量机关特征组合
  * @}
  */
 
