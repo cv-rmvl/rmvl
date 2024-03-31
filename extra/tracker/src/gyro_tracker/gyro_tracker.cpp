@@ -53,15 +53,12 @@ void GyroTracker::update(combo::ptr p_armor)
     // 帧差时间计算
     if (_combo_deque.empty())
         RMVL_Error(RMVL_StsBadSize, "\"_combo_deque\" is empty");
-    _duration = 0.f;
-    if (_combo_deque.size() >= 2)
-        _duration = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
-    else
-        _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
+    _duration = (_combo_deque.size() >= 2)
+                    ? (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1)
+                    : para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
     if (std::isnan(_duration))
         RMVL_Error(RMVL_StsDivByZero, "\"t\" is nan");
     // 更新滤波器
-    updateMotionFilter();
     updatePositionFilter();
     updatePoseFilter();
     // 计算旋转角速度

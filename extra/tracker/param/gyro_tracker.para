@@ -2,8 +2,6 @@ double SAMPLE_INTERVAL = 15 # 采样时间（单位: ms）
 float MAX_ROTSPEED = 20     # 模型旋转速度上限（单位: rad/s）
 float MIN_ROTSPEED = 0      # 模型旋转速度下限（单位: rad/s）
 
-Matx44f MOTION_Q = Matx44f::eye()                   # 目标转角过程噪声协方差矩阵
-Matx22f MOTION_R = Matx22f::diag({0.01, 0.01})      # 目标转角测量噪声协方差矩阵
 Matx66f POSITION_Q = Matx66f::eye()                 # 位置过程噪声协方差矩阵
 Matx33f POSITION_R = Matx33f::diag({0.1, 0.1, 0.5}) # 位置测量噪声协方差矩阵
 Matx44f POSE_Q = Matx44f::eye()                     # 姿态过程噪声协方差矩阵

@@ -20,12 +20,6 @@ namespace rm
 void GyroTracker::initFilter()
 {
     auto first_combo = _combo_deque.front();
-    // 初始化运动滤波器 相对角度和角速度
-    _motion_filter.setR(para::gyro_tracker_param.MOTION_R);
-    _motion_filter.setQ(para::gyro_tracker_param.MOTION_Q);
-    const auto &relative_angle = first_combo->getRelativeAngle();
-    cv::Matx41f init_move_vec = {relative_angle.x, relative_angle.y, 0, 0};
-    _motion_filter.init(init_move_vec, 1e5f);
     // 初始化位置滤波器
     _center3d_filter.setR(para::gyro_tracker_param.POSITION_R);
     _center3d_filter.setQ(para::gyro_tracker_param.POSITION_Q);
@@ -40,25 +34,9 @@ void GyroTracker::initFilter()
     _pose_filter.init(init_pose_vec, 1e5f);
 }
 
-void GyroTracker::updateMotionFilter()
-{
-    float t = _duration;
-    // 设置状态转移矩阵
-    _motion_filter.setA({1, 0, t, 0,
-                         0, 1, 0, t,
-                         0, 0, 1, 0,
-                         0, 0, 0, 1});
-    // 预测
-    _motion_filter.predict();
-    // 更新
-    auto result = _motion_filter.correct(front()->getRelativeAngle());
-    _relative_angle = {result(0), result(1)}; // 相对角度滤波数值
-    _speed = {result(2), result(3)};          // 相对速度滤波数值
-}
-
 void GyroTracker::updatePositionFilter()
 {
-    float t = _duration;
+    float t{_duration};
     // 设置状态转移矩阵
     _center3d_filter.setA({1, 0, 0, t, 0, 0,
                            0, 1, 0, 0, t, 0,
@@ -76,7 +54,7 @@ void GyroTracker::updatePositionFilter()
 
 void GyroTracker::updatePoseFilter()
 {
-    float t = _duration;
+    float t{_duration};
     // 设置状态转移矩阵
     _pose_filter.setA({1, 0, t, 0,
                        0, 1, 0, t,
