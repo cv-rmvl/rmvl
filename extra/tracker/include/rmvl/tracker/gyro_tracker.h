@@ -34,11 +34,10 @@ public:
     };
 
 private:
-    double _duration{}; //!< 采样帧差时间
-    cv::Vec2f _pose;    //!< 修正后的装甲板姿态法向量
-    float _rotspeed{};  //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
+    float _duration{}; //!< 采样帧差时间
+    cv::Vec2f _pose;   //!< 修正后的装甲板姿态法向量
+    float _rotspeed{}; //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
 
-    KF42f _motion_filter;   //!< 目标转角滤波器
     KF63f _center3d_filter; //!< 位置滤波器
     KF42f _pose_filter;     //!< 姿态滤波器
 
@@ -76,7 +75,7 @@ public:
      */
     static inline GyroTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const GyroTracker>(p_tracker); }
 
-    [[deprecated]] void update(double, const GyroData &) override{};
+    [[deprecated]] void update(double, const GyroData &) override {};
 
     /**
      * @brief 使用捕获的 `combo` 更新平面目标追踪器
@@ -93,7 +92,7 @@ public:
     inline void updateVanishState(VanishState state) { state == VANISH ? _vanish_num++ : _vanish_num = 0; }
 
     //! 获取帧差时间
-    inline double getDuration() const { return _duration; }
+    inline float getDuration() const { return _duration; }
     //! 获取修正后的装甲板姿态法向量
     inline const cv::Vec2f &getPose() const { return _pose; }
     //! 获取绕 y 轴的自转角速度（俯视顺时针为正，滤波数据，弧度）
@@ -116,13 +115,6 @@ private:
      * @param[in] stat 类型
      */
     void updateType(RMStatus stat);
-
-    /**
-     * @brief 更新运动滤波器
-     * @note 将图像相对速度和陀螺仪速度融合后再做滤波的好处是，
-     *       可以一定程度上减少时序不精准的问题
-     */
-    void updateMotionFilter();
 
     //! 更新位置滤波器
     void updatePositionFilter();

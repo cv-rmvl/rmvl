@@ -68,8 +68,8 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             _center3d(1) -= _tracker_state[visible_trackers.front()].delta_y();
     }
     // 获取旋转角速度与平均采样时间
-    float rotation_speed = 0.f;
-    float sample_time = 0.f;
+    float rotation_speed{};
+    float sample_time{};
     for (const auto &p_tracker : _trackers)
     {
         auto p_gyro_tracker = GyroTracker::cast(p_tracker);

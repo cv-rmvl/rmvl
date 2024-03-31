@@ -70,7 +70,7 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_combo combo::ptr 抽象指针
+     * @param[in] p_combo `combo::ptr` 指针
      * @return 派生对象指针
      */
     static inline Armor::ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Armor>(p_combo); }
@@ -78,7 +78,7 @@ public:
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_combo combo::const_ptr 抽象指针
+     * @param[in] p_combo `combo::const_ptr` 指针
      * @return 派生对象指针
      */
     static inline Armor::const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Armor>(p_combo); }

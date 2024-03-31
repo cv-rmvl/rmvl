@@ -80,8 +80,7 @@ float RuneTracker::calculateTotalAngle()
         current_angle += (current_angle > 0.f) ? -360.f : 360.f;
     // 更新角度
     auto p_rune = Rune::cast(_combo_deque.front());
-    if (p_rune == nullptr)
-        RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the combo::ptr is not equal to Rune::ptr ");
+    RMVL_DbgAssert(p_rune != nullptr);
     return current_angle + 360.f * _round;
 }
 
