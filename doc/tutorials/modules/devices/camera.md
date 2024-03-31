@@ -22,7 +22,7 @@
 
 ### 1.1 初始化
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 
 创建 MvCamera 对象即可初始化相机，例如：
 
@@ -33,7 +33,7 @@ rm::MvCamera capture2(rm::CameraConfig::create(rm::GrabMode::Software, rm::Retri
 
 @end_toggle
 
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 
 创建 HikCamera 对象即可初始化相机，例如：
 
@@ -44,7 +44,7 @@ rm::HikCamera capture2(rm::CameraConfig::create(rm::GrabMode::Software, rm::Retr
 
 @end_toggle
 
-@add_toggle{Opt}
+@add_toggle{OPT 奥普特工业相机}
 
 创建 OptCamera 对象即可初始化相机，例如：
 
@@ -237,12 +237,12 @@ cd build
 
 单相机例程，在 build 文件夹下执行以下命令
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 ```bash
 bin/sample_mv_mono
 ```
 @end_toggle
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 ```bash
 bin/sample_hik_mono
 ```
@@ -256,12 +256,12 @@ bin/sample_hik_mono
 
 多相机例程，在 `build` 文件夹下执行以下命令
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 ```bash
 bin/sample_mv_multi
 ```
 @end_toggle
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 ```bash
 bin/sample_hik_multi
 ```
@@ -277,12 +277,12 @@ bin/sample_hik_multi
 
 相机录屏例程，在 build 文件夹下执行以下命令
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 ```bash
 bin/sample_mv_writer
 ```
 @end_toggle
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 ```bash
 bin/sample_hik_writer
 ```
@@ -290,12 +290,12 @@ bin/sample_hik_writer
 
 相机按照连续采样、`cvtColor` 处理方式运行，`-o` 可指定输出文件名，否则默认输出到 `ts.avi`，例如
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 ```bash
 bin/sample_mv_writer -o=aaa.avi
 ```
 @end_toggle
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 ```bash
 bin/sample_hik_writer -o=aaa.avi
 ```
@@ -307,12 +307,12 @@ bin/sample_hik_writer -o=aaa.avi
 
 相机标定程序，在 `build` 文件夹下执行以下命令
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 ```bash
 bin/sample_mv_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 ```
 @end_toggle
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 ```bash
 bin/sample_hik_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 ```
@@ -320,12 +320,12 @@ bin/sample_hik_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 
 `<?>` 表示可调节，具体帮助可直接执行以下命令
 
-@add_toggle{Mv}
+@add_toggle{MindVision 工业相机}
 ```bash
 bin/sample_mv_calibration -help
 ```
 @end_toggle
-@add_toggle{Hik}
+@add_toggle{HikRobot 工业相机}
 ```bash
 bin/sample_hik_calibration -help
 ```

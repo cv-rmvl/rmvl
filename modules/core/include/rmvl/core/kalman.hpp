@@ -74,24 +74,24 @@ public:
     /**
      * @brief 初始化状态以及对应的误差协方差矩阵（常数对角矩阵）
      *
-     * @param[in] state 初始化的状态向量
+     * @param[in] x0 初始化的状态向量
      * @param[in] error 状态误差系数
      */
-    void init(const cv::Matx<Tp, StateDim, 1> &state, Tp error)
+    void init(const cv::Matx<Tp, StateDim, 1> &x0, Tp error)
     {
-        x_ = x = state;
+        x_ = x = x0;
         P_ = P = P.eye() * error;
     }
 
     /**
      * @brief 初始化状态以及对应的误差协方差矩阵（对角矩阵）
      *
-     * @param[in] state 初始化的状态向量
+     * @param[in] x0 初始化的状态向量
      * @param[in] error 状态误差矩阵的对角线元素
      */
-    void init(const cv::Matx<Tp, StateDim, 1> &state, const cv::Matx<Tp, StateDim, 1> &error)
+    void init(const cv::Matx<Tp, StateDim, 1> &x0, const cv::Matx<Tp, StateDim, 1> &error)
     {
-        x_ = x = state;
+        x_ = x = x0;
         P_ = P = P.diag(error);
     }
 
@@ -163,12 +163,12 @@ public:
      * @brief 含系统输入的卡尔曼滤波的预测部分，包括状态向量的先验估计和误差协方差的先验估计
      * @details 预测部分公式如下 \f[\begin{align}\hat{\pmb x}^-&=A\hat{\pmb x}+B\pmb u\\P^-&=APA^T+Q\end{align}\f]
      *
-     * @param[in] control_vec 系统输入向量，即公式中的 \f$\pmb u\f$
+     * @param[in] uk 系统输入向量，即公式中的 \f$\pmb u\f$
      * @return 先验状态估计
      */
-    inline auto predict(const cv::Matx<Tp, ControlDim, 1> &control_vec)
+    inline auto predict(const cv::Matx<Tp, ControlDim, 1> &uk)
     {
-        u = control_vec;
+        u = uk;
         // 估计先验状态，考虑系统输入
         x_ = A * x + B * u;
         // 估计先验误差协方差

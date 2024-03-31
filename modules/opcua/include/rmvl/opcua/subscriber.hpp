@@ -61,7 +61,6 @@ struct FieldMetaData final
      * - 变量的 `Variable::size()` 用于辅助设置字段 ValueRank
      *
      * @param[in] val 变量，可参考 @ref rm::Variable
-     * @return FieldMetaData 字段元数据
      */
     FieldMetaData(const Variable &val) : name(val.browse_name), type(val.getDataType()), value_rank(val.size() == 1 ? UA_VALUERANK_SCALAR : 1) {}
 };

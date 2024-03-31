@@ -19,9 +19,9 @@
 
 \f[
 \def\red#1{\color{red}{#1}}
-\def\blue#1{\color{blue}{#1}}
+\def\teal#1{\color{teal}{#1}}
 \def\green#1{\color{green}{#1}}
-\def\white#1{\color{white}{#1}}
+\def\transparent#1{\color{transparent}{#1}}
 \def\orange#1{\color{orange}{#1}}
 \def\Var{\mathrm{Var}}
 \def\Cov{\mathrm{Cov}}
@@ -78,7 +78,7 @@
 
 现在我们可以使用公式 \f$\formular{1-2b}\f$ 的思想来研究数据融合。如果有一辆车以恒定速度行驶，现在得到了两个数据：
 
-- 根据匀速公式计算得到的汽车当前位置（算出来的，记作 \f$\blue{x_1}\f$）
+- 根据匀速公式计算得到的汽车当前位置（算出来的，记作 \f$\teal{x_1}\f$）
 - 汽车的当前距离传感器数据（测出来的，记作 \f$\red{x_2}\f$）
 
 <img src="https://s1.ax1x.com/2022/10/11/xNlnw6.png" width=680 height=380 />
@@ -87,11 +87,11 @@
 
 我们使用公式 \f$\formular{1-2b}\f$ 的思想，得到估计值
 
-\f[\hat x=\blue{x_1}+\green{K_k}(\red{x_2}-\blue{x_1})\tag{1-4}\f]
+\f[\hat x=\teal{x_1}+\green{K_k}(\red{x_2}-\teal{x_1})\tag{1-4}\f]
 
 我们的目标很明确，希望求出这个 \f$\green{K_k}\f$，使得估计值 \f$\hat x\f$ 是最优的，即 \f$\hat x\f$ 的方差 \f$\Var(\hat x)\f$ 最小，即 \f$\hat x\to x_{实际值}\f$。
 
-不妨令 \f$\left\{\begin{align}\blue{x_1=30\mathrm m\qquad\sigma_1=2\mathrm m}\\\red{x_2=32\mathrm m\qquad\sigma_2=4\mathrm m}\end{align}\right.\f$，则有
+不妨令 \f$\left\{\begin{align}\teal{x_1=30\mathrm m\qquad\sigma_1=2\mathrm m}\\\red{x_2=32\mathrm m\qquad\sigma_2=4\mathrm m}\end{align}\right.\f$，则有
 
 \f[\begin{align}
 \Var(\hat x)&=\Var[x_1+K_k(x_2-x_1)]\\
@@ -252,7 +252,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 
 @note 对于一个线性方程组 \f[A\pmb x=\pmb b\f]必定存在最小二乘解 \f[\pmb x=(A^TA)^{-1}A^T\pmb b\f]可以令 \f$A^+=(A^TA)^{-1}A^T\f$ 来表示 Moore-Penrose 广义逆，即\f[\pmb x=A^+\pmb b\f]当 \f$A\f$ 可逆时，\f$A^+=A^{-1}\f$.
 
-目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\formular{1-4}\f$ 中使用了算出来的 \f$\blue{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
+目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\formular{1-4}\f$ 中使用了算出来的 \f$\teal{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
 
 \f[\begin{align}
 \hat{\pmb x}_k&=\hat{\pmb x}_k^-+\green{G_k}(\hat{\pmb x}_{k_{MEA}}-\hat{\pmb x}_k^-)\\
@@ -277,31 +277,31 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 &=\pmb x_k-\hat{\pmb x}_k^--K_k(H\pmb x_k+\pmb v_k)+K_kH\hat{\pmb x}_k^-\\
 &=\pmb x_k-\hat{\pmb x}_k^--K_kH\pmb x_k-K_k\pmb v_k+K_kH\hat{\pmb x}_k^-\\
 &=(\pmb x_k-\hat{\pmb x}_k^-)-K_kH(\pmb x_k-\hat{\pmb x}_k^-)-K_k\pmb v_k\\
-&=(I-K_kH)\blue{(\pmb x_k-\hat{\pmb x}_k^-)}-K_k\pmb v_k\\
-&=(I-K_kH)\blue{\pmb e_k^-}-K_k\pmb v_k
+&=(I-K_kH)\teal{(\pmb x_k-\hat{\pmb x}_k^-)}-K_k\pmb v_k\\
+&=(I-K_kH)\teal{\pmb e_k^-}-K_k\pmb v_k
 \end{align}\tag{1-19}\f]
 
 则误差协方差矩阵可以表示为
 
 \f[\begin{align}P_k
 &=E\left(\pmb e_k\pmb e_k^T\right)=E\left[(\pmb x_k-\hat{\pmb x}_k)(\pmb x_k-\hat{\pmb x}_k)^T\right]\\
-&=E\left[\left((I-K_kH)\blue{\pmb e_k^-}-K_k\pmb v_k\right)\left((I-K_kH)\blue{\pmb e_k^-}-K_k\pmb v_k\right)^T\right]\\
-&=E\left[\left(\green{(I-K_kH)\pmb e_k^-}-\red{K_k\pmb v_k}\right)\left(\blue{{\pmb e_k^-}^T(I-K_kH)^T}-\orange{\pmb v_k^TK_k^T}\right)\right]\\
-&=E\left[\green{(I-K_kH)\pmb e_k^-}\blue{{\pmb e_k^-}^T(I-K_kH)^T}-\green{(I-K_kH)\pmb e_k^-}\orange{\pmb v_k^TK_k^T}-\right.\\
-&\white=\left.\red{K_k\pmb v_k}\blue{{\pmb e_k^-}^T(I-K_kH)^T}+\red{K_k\pmb v_k}\orange{\pmb v_k^TK_k^T}\right]\\
+&=E\left[\left((I-K_kH)\teal{\pmb e_k^-}-K_k\pmb v_k\right)\left((I-K_kH)\teal{\pmb e_k^-}-K_k\pmb v_k\right)^T\right]\\
+&=E\left[\left(\green{(I-K_kH)\pmb e_k^-}-\red{K_k\pmb v_k}\right)\left(\teal{{\pmb e_k^-}^T(I-K_kH)^T}-\orange{\pmb v_k^TK_k^T}\right)\right]\\
+&=E\left[\green{(I-K_kH)\pmb e_k^-}\teal{{\pmb e_k^-}^T(I-K_kH)^T}-\green{(I-K_kH)\pmb e_k^-}\orange{\pmb v_k^TK_k^T}-\right.\\
+&\transparent=\left.\red{K_k\pmb v_k}\teal{{\pmb e_k^-}^T(I-K_kH)^T}+\red{K_k\pmb v_k}\orange{\pmb v_k^TK_k^T}\right]\\
 &=\red{E(}(I-K_kH)\pmb e_k^-{\pmb e_k^-}^T(I-K_kH)^T\red{)}-\\
-&\white=\red{E(}(I-K_kH)\pmb e_k^-\pmb v_k^TK_k^T\red{)}-\\
-&\white=\red{E(}K_k\pmb v_k{\pmb e_k^-}^T(I-K_kH)^T\red{)}+\\
-&\white=\red{E(}K_k\pmb v_k\pmb v_k^TK_k^T\red{)}\\
+&\transparent=\red{E(}(I-K_kH)\pmb e_k^-\pmb v_k^TK_k^T\red{)}-\\
+&\transparent=\red{E(}K_k\pmb v_k{\pmb e_k^-}^T(I-K_kH)^T\red{)}+\\
+&\transparent=\red{E(}K_k\pmb v_k\pmb v_k^TK_k^T\red{)}\\
 常数的期望可以提出来\quad&=(I-K_kH)\red{E(}\pmb e_k^-{\pmb e_k^-}^T\red{)}(I-K_kH)^T-\\
-&\white=(I-K_kH)\red{E(}\pmb e_k^-\pmb v_k^T\red{)}K_k^T-\\
-&\white=K_k\red{E(}\pmb v_k{\pmb e_k^-}^T\red{)}(I-K_kH)^T+\\
-&\white=K_k\red{E(}\pmb v_k\pmb v_k^T\red{)}K_k^T\\
+&\transparent=(I-K_kH)\red{E(}\pmb e_k^-\pmb v_k^T\red{)}K_k^T-\\
+&\transparent=K_k\red{E(}\pmb v_k{\pmb e_k^-}^T\red{)}(I-K_kH)^T+\\
+&\transparent=K_k\red{E(}\pmb v_k\pmb v_k^T\red{)}K_k^T\\
 &=(I-K_kH)\red{P_k^-}(I-K_kH)^T+\\
-\pmb e_k^-和{\pmb v_k}^T相互独立\quad&\white=0+\\
-且期望为0\quad&\white=0+\\
-&\white=K_k\red{R}K_k^T\\
-&=\left(\green{P_k^-}-\red{K_kHP_k^-}\right)\left(\blue I-\orange{H^TK_k^T}\right)+K_kRK_k^T\\
+\pmb e_k^-和{\pmb v_k}^T相互独立\quad&\transparent=0+\\
+且期望为0\quad&\transparent=0+\\
+&\transparent=K_k\red{R}K_k^T\\
+&=\left(\green{P_k^-}-\red{K_kHP_k^-}\right)\left(\teal I-\orange{H^TK_k^T}\right)+K_kRK_k^T\\
 &=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
 P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_kRK_k^T
 \end{align}\tag{1-20}\f]
@@ -429,13 +429,13 @@ target_link_libraries(
 
 #### 2.2 如何使用
 
-###### 2.2.1 包含头文件
+##### 2.2.1 包含头文件
 
 ```cpp
 #include <rmvl/core/kalman.hpp>
 ```
 
-###### 2.2.2 创建并初始化卡尔曼滤波器对象
+##### 2.2.2 创建并初始化卡尔曼滤波器对象
 
 取
 - 数据类型 `Tp` = `double`
@@ -454,7 +454,7 @@ cv::Vec4f init_vec = {/* ... */};
 filter.init(init_vec, pred_err);
 ```
 
-###### 2.2.3 运行
+##### 2.2.3 运行
 
 ```cpp
 filter.setA(/* ... */);

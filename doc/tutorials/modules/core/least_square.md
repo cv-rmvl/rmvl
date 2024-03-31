@@ -355,7 +355,7 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 
 因此对法方程系数矩阵 \f$G\f$ 的第 \f$k\ (k=0,1,\cdots,n-1)\f$ 行，有
 
-\f[[(\phi_k,\phi_0),(\phi_k,\phi_1),\cdots,(\phi_k,\phi_{n-1})]=[\phi_k(t_0),\phi_k(t_1),\cdots,\phi_k(t_{s-1})]
+\f[[(\phi_k,\phi_0),(\phi_k,\phi_1),\cdots,(\phi_k,\phi_{n-1})]\\=[\phi_k(t_0),\phi_k(t_1),\cdots,\phi_k(t_{s-1})]
 \begin{bmatrix}\phi_0(t_0)&\phi_1(t_0)&\cdots&\phi_{n-1}(t_0)\\\phi_0(t_1)&\phi_1(t_1)&\cdots&\phi_{n-1}(t_1)\\\vdots&\vdots
 &&\vdots\\\phi_0(t_{s-1})&\phi_1(t_{s-1})&\cdots&\phi_{n-1}(t_{s-1})\end{bmatrix}\tag{4-8}\f]
 
@@ -397,7 +397,7 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 (\phi_1,\phi_0)=(\phi_0,\phi_1)&=\sum_{i=0}^3\phi_0(t_i)\phi_1(t_i)=\sum_{i=0}^31\times t_i=1+2+3+4=10\\
 (\phi_1,\phi_1)&=\sum_{i=0}^3\phi_1(t_i)\phi_1(t_i)=\sum_{i=0}^3t_i\times t_i=1+4+9+16=30\\
 d_0=(\phi_0,f)&=\sum_{i=0}^3\phi_0(t_i)f(t_i)=\sum_{i=0}^31\times f(t_i)=0+2+1+3=6\\
-d_1=(\phi_1,f)&=\sum_{i=0}^3\phi_1(t_i)f(t_i)=\sum_{i=0}^3t_i\times f(t_i)=0+2\times2+3\times1+4\times3=19\\
+d_1=(\phi_1,f)&=\sum_{i=0}^3\phi_1(t_i)f(t_i)=\sum_{i=0}^3t_i\times f(t_i)\\&=0+2\times2+3\times1+4\times3=19\\
 \end{align}\tag{4-12}\f]
 
 得到

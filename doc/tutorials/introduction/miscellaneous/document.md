@@ -107,10 +107,10 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
 
 - __note__ - 注解，可包含对类、函数的详细介绍或者使用注意事项，也可包含一些公式信息，具体的公式写法在后续的 __f__ 会进行介绍，note 的使用如下
   @verbatim
-  @note 公式推导参考函数 @ref calculateRelativeCenter()
+  @note 公式推导参考函数 @ref rm::calculateRelativeCenter
   @endverbatim
   - 结果如下
-    @note 公式推导参考函数 @ref calculateRelativeCenter()
+    @note 公式推导参考函数 @ref rm::calculateRelativeCenter
 
 - __return__ - 表示返回值
   @verbatim
