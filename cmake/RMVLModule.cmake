@@ -278,6 +278,8 @@ function(rmvl_add_test test_name test_kind)
     ${the_target}
     PRIVATE ${TS_DEPEND_TESTS}
   )
+
+  # Add test
   if("${test_kind_lower}" STREQUAL "unit")
     gtest_discover_tests(
       ${the_target}

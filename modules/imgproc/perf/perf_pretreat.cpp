@@ -10,8 +10,6 @@
  */
 
 #include <benchmark/benchmark.h>
-#include <iostream>
-#include <tuple>
 
 #include <opencv2/imgproc.hpp>
 
