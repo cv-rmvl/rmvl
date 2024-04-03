@@ -14,8 +14,6 @@ find_library(
   NO_DEFAULT_PATH
 )
 
-mark_as_advanced(MvSDK_INCLUDE_DIRS MvSDK_LIBS)
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(

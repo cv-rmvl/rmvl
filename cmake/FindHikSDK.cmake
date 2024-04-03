@@ -34,8 +34,6 @@ find_library(
   NO_DEFAULT_PATH
 )
 
-mark_as_advanced(ARCH_HIKLIB HikSDK_INCLUDE_DIRS HikSDK_LIBS)
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(

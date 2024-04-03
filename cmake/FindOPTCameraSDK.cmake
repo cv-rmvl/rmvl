@@ -16,8 +16,6 @@ find_library(
   NO_DEFAULT_PATH
 )
 
-mark_as_advanced(OPTCameraSDK_INCLUDE_DIRS OPTCameraSDK_LIBS)
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(

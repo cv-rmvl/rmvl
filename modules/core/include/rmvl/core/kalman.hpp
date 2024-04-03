@@ -130,7 +130,7 @@ public:
      * @brief 设置观测转换矩阵 `H`
      * @details
      * 若状态向量包含以下内容：\f$[p, v, a]^T\f$ ，然而观测向量仅包含 \f$[p, v]^T\f$，
-     * 在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中克表示为
+     * 在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
      * \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
      * \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
      * @note `H` 若不加以设置，则默认是单位矩阵 \f$I\f$
