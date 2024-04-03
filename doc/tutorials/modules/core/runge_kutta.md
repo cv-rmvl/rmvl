@@ -216,7 +216,7 @@ k_1+a_{12}k_2))\\k_2&=f(t_n+p_2h,x_n+h(a_{21}k_1+a_{22}k_2))\end{align}\right.\t
 令\f$\pmb p=\mat{p_1}{p_2},\quad\pmb\lambda=(\lambda_1,\lambda_2),\quad
 R=\begin{bmatrix}a_{11}&a_{12}\\a_{21}&a_{22}\end{bmatrix}\f$，则
 
-\f[\begin{array}{c|c}\pmb p&R\\\hline&\pmb\lambda\end{array}=\begin{array}{c|cc}p_1&
+\f[\begin{array}{c|c}\pmb p&R\\\hline&\pmb\lambda\end{array}\Rightarrow\begin{array}{c|cc}p_1&
 a_{11}&a_{12}\\p_2&a_{21}&a_{22}\\\hline&\lambda_1&\lambda_2\end{array}\tag{3-9}\f]
 
 被称为 Butcher 表，例如，上文的中点公式可以表示为
@@ -461,7 +461,7 @@ rm::Odes fs = {dot_x1, dot_x2};
 double real_x1 = 0.75 * std::exp(-2) + 2 * std::exp(-1) - 0.25;
 double real_x2 = -0.75 * std::exp(-2) - std::exp(-1) + 0.25;
 // 2 阶 2 级中点公式
-rm::RungeKutta<rm::RkType::RK2> rk2(fs);
+rm::RungeKutta2 rk2(fs);
 // 计算数值解
 auto res2 = rk2.solve(0, {1, -1}, 0.01, 100);
 

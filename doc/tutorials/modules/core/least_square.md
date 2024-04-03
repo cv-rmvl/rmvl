@@ -266,7 +266,7 @@ y&=x_1
 - 从定义上证明线性无关，需要证明 \f[a_0+a_1t+a_2t^2+\cdots+a_{n-1}t^{n-1}=\sum_{i=0}^{n-1}a_it^i=0\f] **只有零解** ，即 \f$a_0=a_1=a_2=\cdots=a_{n-1}=0\f$，这是显然的。
 - 没有定义内积运算，因此这组基 **没有正交的概念** 。
 
-<span style="color: blue">上面都是一些概念性的介绍，跟后文求解最小二乘解无关</span>。回到<span style="color: green">示例 3</span>的这一问题本身，我们可以根据表 3-1 的信息，得到
+<span style="color: teal">上面都是一些概念性的介绍，跟后文求解最小二乘解无关</span>。回到<span style="color: green">示例 3</span>的这一问题本身，我们可以根据表 3-1 的信息，得到
 
 \f[\left\{\begin{align}
 \phi_0(t_0)a_0+\phi_1(t_0)a_1&=f(t_0)\\

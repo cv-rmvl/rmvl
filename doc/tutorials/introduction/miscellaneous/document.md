@@ -131,14 +131,14 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
   示例
   @verbatim
   若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
-  在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中克表示为
+  在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
   \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
   \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
   @endverbatim
   - 结果如下
     
     若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
-    在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中克表示为
+    在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
     \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
     \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
 

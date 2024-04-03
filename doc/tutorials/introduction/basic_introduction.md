@@ -1,4 +1,4 @@
-环境配置教程 {#tutorial_table_of_content_config}
+基本介绍 {#tutorial_table_of_content_config}
 ============
 
 @next_tutorial{tutorial_table_of_content_modules}

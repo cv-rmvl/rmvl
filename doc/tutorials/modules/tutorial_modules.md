@@ -3,7 +3,7 @@
 
 @prev_tutorial{tutorial_table_of_content_config}
 
-@next_tutorial{tutorial_table_of_content_extra}
+@next_tutorial{tutorial_table_of_content_rmvlpara}
 
 @tableofcontents
 

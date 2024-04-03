@@ -54,10 +54,8 @@
 \f[\begin{align}\hat x_k&=\frac1k(z_1+z_2+\cdots+z_k)\\
 &=\frac1k(z_1+z_2+\cdots+z_{k-1})+\frac1kz_k\\
 &=\frac{k-1}k·\frac1{\red{k-1}}\red{(z_1+z_2+\cdots+z_{k-1})}+\frac1kz_k\\
-&=\frac{k-1}k\red{\hat x_{k-1}}-\frac1kz_k\\
-&=\hat x_{k-1}-\frac1k\hat x_{k-1}+\frac1kz_k\\
-&=\hat x_{k-1}+\frac1k(z_k-\hat x_{k-1})
-\end{align}\tag{1-2a}\f]
+&=\frac{k-1}k\red{\hat x_{k-1}}-\frac1kz_k\\&=\hat x_{k-1}-\frac1k\hat x_{k-1}+\frac1kz_k\\
+&=\hat x_{k-1}+\frac1k(z_k-\hat x_{k-1})\tag{1-2a}\end{align}\f]
 
 这样我们就把硬币长度的估计值，改写成由上一次估计值和当前观测值共同作用的形式。并且我们发现，随着测量次数 \f$k\f$ 增大，\f$\frac1k\f$ 趋向于 \f$0\f$，\f$\hat x_k\f$ 趋向于 \f$\hat x_{k-1}\f$，这也就是说，随着 \f$k\f$ 增长，测量结果将不再重要。
 
@@ -93,14 +91,10 @@
 
 不妨令 \f$\left\{\begin{align}\teal{x_1=30\mathrm m\qquad\sigma_1=2\mathrm m}\\\red{x_2=32\mathrm m\qquad\sigma_2=4\mathrm m}\end{align}\right.\f$，则有
 
-\f[\begin{align}
-\Var(\hat x)&=\Var[x_1+K_k(x_2-x_1)]\\
-&=\Var(x_1-K_kx_1+K_kx_2)\\
-&=\Var[(1-K_k)x_1+K_kx_2]\\
-由x_1和x_2相互独立\quad&=\Var[(1-k)x_1]+\Var(K_kx_2)\\
+\f[\begin{align}\Var(\hat x)&=\Var[x_1+K_k(x_2-x_1)]\\&=\Var(x_1-K_kx_1+K_kx_2)\\
+&=\Var[(1-K_k)x_1+K_kx_2]\\由x_1和x_2相互独立\quad&=\Var[(1-k)x_1]+\Var(K_kx_2)\\
 &=(1-K_k)^2\Var(x_1)+K_k^2\Var(x_2)\\
-&=(1-K_k)^2\sigma_1^2+K_k^2\sigma_2^2
-\end{align}\tag{1-5}\f]
+&=(1-K_k)^2\sigma_1^2+K_k^2\sigma_2^2\tag{1-5}\end{align}\f]
 
 要求 \f$\Var(\hat x)\f$ 的最小值，只需令 \f$\mathrm \Var(\hat x)'|_{K_k}=0\f$ 即可，即：
 
@@ -120,12 +114,16 @@ K_k&=\frac{2^2}{2^2+4^2}=0.2\\
 
 #### 1.4 协方差矩阵 {#kalman_covariance_matrix}
 
-| 数据 |   \f$x\f$    |   \f$y\f$    |   \f$z\f$    |
-| :--: | :----------: | :----------: | :----------: |
-|  1   |  \f$x_1\f$   |  \f$y_1\f$   |  \f$z_1\f$   |
-|  2   |  \f$x_2\f$   |  \f$y_2\f$   |  \f$z_2\f$   |
-|  3   |  \f$x_3\f$   |  \f$y_3\f$   |  \f$z_3\f$   |
-| 平均 | \f$\bar x\f$ | \f$\bar y\f$ | \f$\bar z\f$ |
+<center>
+
+|  数据   |   \f$x\f$    |   \f$y\f$    |   \f$z\f$    |
+| :-----: | :----------: | :----------: | :----------: |
+| \f$1\f$ |  \f$x_1\f$   |  \f$y_1\f$   |  \f$z_1\f$   |
+| \f$2\f$ |  \f$x_2\f$   |  \f$y_2\f$   |  \f$z_2\f$   |
+| \f$3\f$ |  \f$x_3\f$   |  \f$y_3\f$   |  \f$z_3\f$   |
+| 平均值  | \f$\bar x\f$ | \f$\bar y\f$ | \f$\bar z\f$ |
+
+</center>
 
 **方差**
 
@@ -212,8 +210,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 &=e^{FT}\pmb x(t_{k-1})+\left[-F^{-1}e^{F(t_k-\tau)}\right]_{t_{k-1}}^{t_k}·G\pmb u(t_{k-1})\\
 &=e^{FT}\pmb x(t_{k-1})+F^{-1}(e^{FT}-I)G\pmb u(t_{k-1})\\
 \pmb x_k&=\red{e^{FT}}\pmb x_{k-1}+\green{F^{-1}(e^{FT}-I)G}\pmb u_{k-1}\\
-简记为\quad\pmb x_k&=\red A\pmb x_{k-1}+\green B\pmb u_{k-1}
-\end{align}\tag{1-13a}\f]
+简记为\quad\pmb x_k&=\red A\pmb x_{k-1}+\green B\pmb u_{k-1}\tag{1-13a}\end{align}\f]
 
 因此我们可以得到离散系统的状态空间方程
 
@@ -254,10 +251,8 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 
 目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\formular{1-4}\f$ 中使用了算出来的 \f$\teal{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
 
-\f[\begin{align}
-\hat{\pmb x}_k&=\hat{\pmb x}_k^-+\green{G_k}(\hat{\pmb x}_{k_{MEA}}-\hat{\pmb x}_k^-)\\
-&=\hat{\pmb x}_k^-+\green{G_k}(H^+\pmb z_k-\hat{\pmb x}_k^-)
-\end{align}\tag{1-16}\f]
+\f[\begin{align}\hat{\pmb x}_k&=\hat{\pmb x}_k^-+\green{G_k}(\hat{\pmb x}_{k_{MEA}}-\hat{\pmb x}_k^-)\\
+&=\hat{\pmb x}_k^-+\green{G_k}(H^+\pmb z_k-\hat{\pmb x}_k^-)\tag{1-16}\end{align}\f]
 
 令 \f$G_k=K_kH\f$，可以得到
 
@@ -278,8 +273,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 &=\pmb x_k-\hat{\pmb x}_k^--K_kH\pmb x_k-K_k\pmb v_k+K_kH\hat{\pmb x}_k^-\\
 &=(\pmb x_k-\hat{\pmb x}_k^-)-K_kH(\pmb x_k-\hat{\pmb x}_k^-)-K_k\pmb v_k\\
 &=(I-K_kH)\teal{(\pmb x_k-\hat{\pmb x}_k^-)}-K_k\pmb v_k\\
-&=(I-K_kH)\teal{\pmb e_k^-}-K_k\pmb v_k
-\end{align}\tag{1-19}\f]
+&=(I-K_kH)\teal{\pmb e_k^-}-K_k\pmb v_k\tag{1-19}\end{align}\f]
 
 则误差协方差矩阵可以表示为
 
@@ -293,7 +287,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 &\transparent=\red{E(}(I-K_kH)\pmb e_k^-\pmb v_k^TK_k^T\red{)}-\\
 &\transparent=\red{E(}K_k\pmb v_k{\pmb e_k^-}^T(I-K_kH)^T\red{)}+\\
 &\transparent=\red{E(}K_k\pmb v_k\pmb v_k^TK_k^T\red{)}\\
-常数的期望可以提出来\quad&=(I-K_kH)\red{E(}\pmb e_k^-{\pmb e_k^-}^T\red{)}(I-K_kH)^T-\\
+提出常数的期望\quad&=(I-K_kH)\red{E(}\pmb e_k^-{\pmb e_k^-}^T\red{)}(I-K_kH)^T-\\
 &\transparent=(I-K_kH)\red{E(}\pmb e_k^-\pmb v_k^T\red{)}K_k^T-\\
 &\transparent=K_k\red{E(}\pmb v_k{\pmb e_k^-}^T\red{)}(I-K_kH)^T+\\
 &\transparent=K_k\red{E(}\pmb v_k\pmb v_k^T\red{)}K_k^T\\
@@ -304,7 +298,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 &=\left(\green{P_k^-}-\red{K_kHP_k^-}\right)\left(\teal I-\orange{H^TK_k^T}\right)+K_kRK_k^T\\
 &=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
 P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_kRK_k^T
-\end{align}\tag{1-20}\f]
+\tag{1-20}\end{align}\f]
 
 因此，\f$P_k\f$ 的迹可以表示为
 
@@ -335,8 +329,8 @@ P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_k
 \f[\begin{align}2\frac{\mathrm d\tr(K_kHP_k^-)}{\mathrm dK_k}
 &=\frac{\mathrm d\tr(K_kHP_k^-H^TK_k^T)}{\mathrm dK_k}+\frac{\mathrm d\tr(K_kRK_k^T)}{\mathrm dK_k}\\
 2{P_k^-}^TH^T&=2K_kHP_k^-H^T+2K_kR\\
-P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
-\end{align}\tag{1-24}\f]
+P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)
+\tag{1-24}\end{align}\f]
 
 最终可以得到误差协方差矩阵的迹最小时的<span style="color: red">卡尔曼增益</span> \f$K_k\f$ 的表达式
 
@@ -356,7 +350,7 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
 \f[\begin{align}\pmb e_k^-&=\pmb x_k-\hat{\pmb x}_k^-\\
 &=A\pmb x_{k-1}+B\pmb u_{k-1}+\pmb w_{k-1}-A\hat{\pmb x}_{k-1}-B\pmb u_{k-1}\\
 &=A(\pmb x_{k-1}-\hat{\pmb x}_{k-1})+\pmb w_{k-1}\\
-&=A\pmb e_{k-1}+\pmb w_{k-1}\end{align}\tag{1-26}\f]
+&=A\pmb e_{k-1}+\pmb w_{k-1}\tag{1-26}\end{align}\f]
 
 因此先验误差协方差矩阵 \f$P_k^-\f$ 可以表示为
 
@@ -366,7 +360,7 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
 &=E\left[A\pmb e_{k-1}\pmb e_{k-1}^TA^T+A\pmb e_{k-1}\pmb w_{k-1}^T+\pmb w_{k-1}\pmb e_{k-1}^TA^T+\pmb w_{k-1}\pmb w_{k-1}^T\right]\\
 &=AE(\pmb e_{k-1}\pmb e_{k-1}^T)A^T+AE\pmb e_{k-1}E\pmb w_{k-1}^T+E\pmb w_{k-1}E\pmb e_{k-1}^TA^T+E(\pmb w_{k-1}\pmb w_{k-1}^T)\\
 &=AP_{k-1}A^T+0+0+Q
-\end{align}\tag{1-27}\f]
+\tag{1-27}\end{align}\f]
 
 最终可以得到<span style="color: red">先验误差协方差矩阵</span>的表达式
 
@@ -380,8 +374,7 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
 &=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
 &=P_k^--K_kHP_k^--P_k^-H^TK_k^T+K_k(HP_k^-H^T+R)K_k^T\\
 代入\formular{1-25}\quad&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+P_k^-H^TK_k^T\\
-&=P_k^--K_kHP_k^-
-\end{align}\tag{1-29}\f]
+&=P_k^--K_kHP_k^-\tag{1-29}\end{align}\f]
 
 即所谓后验误差协方差矩阵 \f$P_k\f$
 
@@ -395,21 +388,21 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)\\
 
 **① 预测**
 
-1. <span style="color: blue">先验状态估计</span>
+1. <span style="color: teal">先验状态估计</span>
    \f[\hat{\pmb x}_k^-=A\pmb x_{k-1}+B\pmb u_{k-1}\f]
 
-2. <span style="color: blue">计算先验误差协方差</span>
+2. <span style="color: teal">计算先验误差协方差</span>
    \f[P_k^-=AP_{k-1}A^T+Q\f]
 
 **② 校正（更新）**
 
-1. <span style="color: blue">计算卡尔曼增益</span>
+1. <span style="color: teal">计算卡尔曼增益</span>
    \f[K_k=P_k^-H^T\left(HP_k^-H^T+R\right)^{-1}\f]
 
-2. <span style="color: blue">后验状态估计</span>
+2. <span style="color: teal">后验状态估计</span>
    \f[\hat{\pmb x}_k=\hat{\pmb x}_k^-+K_k(\pmb z_k-H\hat{\pmb x}_k^-)\f]
 
-3. <span style="color: blue">更新后验误差协方差</span>
+3. <span style="color: teal">更新后验误差协方差</span>
    \f[P_k=(I-K_kH)P_k^-\f]
 
 ---

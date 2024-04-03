@@ -21,8 +21,6 @@ find_library(
   NO_DEFAULT_PATH
 )
 
-mark_as_advanced(Ort_INCLUDE_DIRS Ort_LIBS)
-
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
