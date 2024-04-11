@@ -28,13 +28,14 @@ macro(rmvl_check_cxx result src standard)
   unset(build_args)
 endmacro()
 
+set(CMAKE_DOXYGEN_PREDEFINED "" CACHE INTERNAL "Doxygen Predefined" FORCE)
+
 # ----------------------------------------------------------------------------
 #   更新文档预定义
 #   用法示例:
-#   _rmvl_update_doxygen_predefined(xxx)
+#   rmvl_update_doxygen_predefined(xxx)
 # ----------------------------------------------------------------------------
-set(CMAKE_DOXYGEN_PREDEFINED "" CACHE INTERNAL "Doxygen Predefined" FORCE)
-macro(_rmvl_update_doxygen_predefined _name)
+macro(rmvl_update_doxygen_predefined _name)
   set(
     CMAKE_DOXYGEN_PREDEFINED "${CMAKE_DOXYGEN_PREDEFINED} ${_name}"
     CACHE INTERNAL "Doxygen Predefined" FORCE
@@ -71,14 +72,24 @@ macro(rmvl_check_include_file)
     if(CIF_DETAILS)
       if(HAVE_${fupper})
         list(APPEND ${CIF_DETAILS} "HAVE_${fupper}")
-        _rmvl_update_doxygen_predefined("HAVE_${fupper}")
+        rmvl_update_doxygen_predefined("HAVE_${fupper}")
       endif()
     else()
       if(HAVE_${fupper})
-        _rmvl_update_doxygen_predefined("HAVE_${fupper}")
+        rmvl_update_doxygen_predefined("HAVE_${fupper}")
       endif()
     endif()
   endforeach()
+endmacro()
+
+# ----------------------------------------------------------------------------
+#   字符串配置，将文件内容配置到变量中，类似于 configure_file
+#   用法示例:
+#   rmvl_cmake_configure("xxx.txt" VARS @ONLY)
+# ----------------------------------------------------------------------------
+macro(rmvl_cmake_configure file_name var_name)
+  file(READ "${file_name}" __config)
+  string(CONFIGURE "${__config}" ${var_name} ${ARGN})
 endmacro()
 
 set(RMVL_BUILD_INFO_STR "" CACHE INTERNAL "")

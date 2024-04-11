@@ -46,7 +46,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # ----------------------------------------------------------------------------
-#  Build
+#  Include necessary CMake modules
 # ----------------------------------------------------------------------------
 # RMVL Install layout 
 include(cmake/RMVLInstall.cmake)

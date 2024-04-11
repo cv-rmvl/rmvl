@@ -1,13 +1,85 @@
 # --------------------------------------------------------------------------------------------
 #  Installation for CMake Module:  RMVLConfig.cmake
-#  Part 1/2: Generate RMVLConfig.cmake
-#  Part 2/2: Make install
+#  Part 1/3: Prepare module list
+#  Part 2/3: Generate RMVLConfig.cmake
+#  Part 3/3: Make install
 # --------------------------------------------------------------------------------------------
 
+set(cmake_dir "${CMAKE_SOURCE_DIR}/cmake")
+set(config_dir "${CMAKE_BINARY_DIR}/config-install")
+set(template_dir "${cmake_dir}/templates")
+
+# --------------------------------------------------------------------------------------------
+#  Part 1/3: Prepare module list
+# --------------------------------------------------------------------------------------------
 set(RMVL_MODULES_CONFIGCMAKE ${RMVL_MODULES_BUILD})
 
+set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "")
+# --------------------------------------------------------------------
+#  Usage:
+#   find the imported modules for RMVLConfig.cmake.
+#
+#  Note:
+#   These targets are typically found using the file 'FindXxx.cmake'
+#
+#  Example:
+#   __find_imported_modules(
+#     mvsdk   # target name
+#     MvSDK   # package name
+#   )
+# --------------------------------------------------------------------
+function(__find_imported_modules target pkg_name)
+  set(PKG_MODULE_CONFIGCMAKE ${target})
+  set(PKG_LOCATION_CONFIGCMAKE ${${pkg_name}_LIB})
+  set(PKG_INCLUDE_DIRS_CONFIGCMAKE ${${pkg_name}_INCLUDE_DIR})
+  if(NOT PKG_LOCATION_CONFIGCMAKE OR NOT PKG_INCLUDE_DIRS_CONFIGCMAKE)
+    return()
+  endif()
+  rmvl_cmake_configure("${template_dir}/RMVLConfig-IMPORTED.cmake.in" MODULE_CONFIGCMAKE @ONLY)
+  set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "${RMVL_MODULES_IMPORTED_CONFIGCMAKE}${MODULE_CONFIGCMAKE}\n" PARENT_SCOPE)
+endfunction()
+
+__find_imported_modules(mvsdk MvSDK)
+__find_imported_modules(hiksdk HikSDK)
+__find_imported_modules(optcamsdk OPTCameraSDK)
+__find_imported_modules(optlc OPTLightCtrl)
+
+set(RMVL_3RD_PKGS_CONFIGCMAKE "")
+# --------------------------------------------------------------------
+#  Usage:
+#   Check whether the target or package required by the RMVL module
+#   exists. otherwise 'find_package' will be added to RMVL_3RD_PKGS_CONFIGCMAKE
+#   
+#  Example:
+#   __find_3rd_package(
+#     tag_detector    # RMVL module name
+#     TARGET apriltag # the target to be checked, 'FOUND' means
+#                       whether the package has been found
+#     apriltag        # the package name to be found in TARGET mode
+#   )
+# --------------------------------------------------------------------
+function(__find_3rd_package target)
+  if(NOT TARGET rmvl_${target})
+    return()
+  endif()
+  if("${ARGV1}" STREQUAL "TARGET")
+    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}if(NOT TARGET ${ARGV2})\n")
+    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}  find_package(${ARGV3} REQUIRED)\n")
+  elseif("${ARGV1}" STREQUAL "FOUND")
+    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}if(NOT ${ARGV2}_FOUND)\n")
+    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}  find_package(${ARGV2} REQUIRED)\n")
+  else()
+    message(FATAL_ERROR "Unknown type of 3rd party package: ${ARGV1}")
+  endif()
+  set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}endif()\n\n" PARENT_SCOPE)
+endfunction()
+
+__find_3rd_package(core FOUND OpenCV)
+__find_3rd_package(tag_detector TARGET apriltag apriltag)
+__find_3rd_package(opcua TARGET open62541::open62541 open62541)
+
 # --------------------------------------------------------------------------------------------
-#  Part 1/2: Generate RMVLConfig.cmake
+#  Part 2/3: Generate RMVLConfig.cmake
 # --------------------------------------------------------------------------------------------
 set(RMVL_INCLUDE_DIRS "")
 foreach(m ${RMVL_MODULES_BUILD})
@@ -25,7 +97,7 @@ foreach(m ${RMVL_INCLUDE_DIRS})
 endforeach(m ${RMVL_INCLUDE_DIRS})
 
 # --------------------------------------------------------------------------------------------
-#  Part 2/2: Make install
+#  Part 3/3: Make install
 # --------------------------------------------------------------------------------------------
 file(RELATIVE_PATH RMVL_INSTALL_PATH_RELATIVE_CONFIGCMAKE 
   "${CMAKE_INSTALL_PREFIX}/${RMVL_CONFIG_INSTALL_PATH}/" ${CMAKE_INSTALL_PREFIX})
@@ -34,44 +106,6 @@ if (IS_ABSOLUTE ${RMVL_INCLUDE_INSTALL_PATH})
 else()
   set(RMVL_INCLUDE_DIRS_CONFIGCMAKE "\"\${RMVL_INSTALL_PATH}/${RMVL_INCLUDE_INSTALL_PATH}\"")
 endif()
-
-set(cmake_dir "${CMAKE_SOURCE_DIR}/cmake")
-set(config_dir "${CMAKE_BINARY_DIR}/config-install")
-set(template_dir "${cmake_dir}/templates")
-
-set(3RD_PKGS_CMAKEDEF)
-
-# ----------------------------------------------------------------------------
-#   说明:
-#   检查 RMVL 模块需要的目标或者包是否存在，不存在则 find_package，并添加至
-#   3RD_PKGS_CMAKEDEF 中
-#
-#   示例:
-#   _find_3rd_package(
-#       tag_detector    # RMVL 模块名
-#       TARGET apriltag # 需要检查的目标（若指定 FOUND 则表示是否已经找到该包）
-#       apriltag        # TARGET 模式下，需要 find_package 的包名
-#   )
-# ----------------------------------------------------------------------------
-macro(_find_3rd_package)
-  set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}# Find ${ARGV2} for \"rmvl_${ARGV0}\"\n")
-  set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}if(TARGET rmvl_${ARGV0})\n")
-  if("${ARGV1}" STREQUAL "TARGET")
-    set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}  if(NOT TARGET ${ARGV2})\n")
-    set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}    find_package(${ARGV3} REQUIRED)\n")
-  elseif("${ARGV1}" STREQUAL "FOUND")
-    set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}  if(NOT ${ARGV2}_FOUND)\n")
-    set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}    find_package(${ARGV2} REQUIRED)\n")
-  else()
-    message(FATAL_ERROR "Unknown type of 3rd party package: ${ARGV1}")
-  endif()
-  set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}  endif()\n")
-  set(3RD_PKGS_CMAKEDEF "${3RD_PKGS_CMAKEDEF}endif()\n\n")
-endmacro()
-
-_find_3rd_package(core FOUND OpenCV)
-_find_3rd_package(tag_detector TARGET apriltag apriltag)
-_find_3rd_package(opcua TARGET open62541::open62541 open62541)
 
 configure_file("${template_dir}/RMVLConfig.cmake.in" "${config_dir}/RMVLConfig.cmake" @ONLY)
 configure_file("${template_dir}/RMVLConfig-version.cmake.in" "${config_dir}/RMVLConfig-version.cmake" @ONLY)

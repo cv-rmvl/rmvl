@@ -118,8 +118,6 @@ rmvl_generate_para(mytarget)
 
 这样就会生成一个名为 `mytarget` 的参数模块了，最终生成的文件是
 
-最终生成的文件是
-
 - `include/rmvlpara/mytarget.hpp`
 - `src/para/mytarget.cpp`
 

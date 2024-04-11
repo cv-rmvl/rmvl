@@ -44,9 +44,9 @@ set(
 )
 
 # pre-defined variables (cpp)
-_rmvl_update_doxygen_predefined("__cplusplus=202300L")
-_rmvl_update_doxygen_predefined("__cpp_lib_generator=202207L")
-_rmvl_update_doxygen_predefined("__cpp_lib_math_constants=201907L")
+rmvl_update_doxygen_predefined("__cplusplus=202300L")
+rmvl_update_doxygen_predefined("__cpp_lib_generator=202207L")
+rmvl_update_doxygen_predefined("__cpp_lib_math_constants=201907L")
 
 # List all the modules
 set(refs_extra)

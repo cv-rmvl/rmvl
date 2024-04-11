@@ -9,6 +9,7 @@ if(NOT TARGET uninstall)
   )
   add_custom_target(
     uninstall
+    COMMENT "Uninstall all files created by the build process."
     COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   )
 endif()
