@@ -34,8 +34,8 @@ TEST(GravityCompensator, bulletModel)
     // 无阻力情况下
     double t = 10 / (16 * cos(rm::PI_4));
     double y = 16 * sin(rm::PI_4) * t - 0.5 * rm::para::gravity_compensator_param.g * t * t;
-    EXPECT_LE(std::abs(y - y_fric), 5e-2);
-    EXPECT_LE(std::abs(t - t_fric), 5e-2);
+    EXPECT_NEAR(y, y_fric, 5e-2);
+    EXPECT_NEAR(t, t_fric, 5e-2);
 }
 
 } // namespace rm_test

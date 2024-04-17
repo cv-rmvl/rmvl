@@ -147,7 +147,7 @@ A^TA\hat{\pmb x}&=A^T\pmb b
 
 这就是最小二乘解所满足的代数方程。
 
-### 3. 示例
+#### 示例
 
 下面给出 3 个示例，不直接使用公式 \f$\text{(2-7)}\f$，通过几何或者其他手段来表示最小二乘解。
 
@@ -293,7 +293,7 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 
 后文将给出另外一种描述最小二乘法的做法，这种做法有别于上面构造向量与子空间垂直的方式，通过对误差平方和直接求其最小值来得到最小二乘解（两种方式结果均能推导出公式 \f$\text{(2-7)}\f$，但出发点不同）。此外，要介绍的这个解法也同样适用于整个线性空间（包括欧式空间、多项式空间等线性空间）。
 
-### 4. 法方程求解最小二乘法
+### 3. 法方程求解最小二乘法
 
 相关类 rm::CurveFitter
 
@@ -351,7 +351,7 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 对于 \f$(\phi_p,\phi_q)\f$，依照公式\f$\text{(4-4)}\f$，可以写成矩阵的表示方式，即
 
 \f[\begin{align}(\phi_p,\phi_q)&=\sum_{i=0}^{s-1}\phi_p(t_i)\phi_q(t_i)\\&=[\phi_p(t_0),\phi_p(t_1),\cdots,\phi_p(t_{s-1})]
-\begin{bmatrix}\phi_i(t_0)\\\phi_i(t_1)\\\vdots\\\phi_q(t_{s-1})\end{bmatrix}\end{align}\tag{4-7}\f]
+\begin{bmatrix}\phi_q(t_0)\\\phi_q(t_1)\\\vdots\\\phi_q(t_{s-1})\end{bmatrix}\end{align}\tag{4-7}\f]
 
 因此对法方程系数矩阵 \f$G\f$ 的第 \f$k\ (k=0,1,\cdots,n-1)\f$ 行，有
 

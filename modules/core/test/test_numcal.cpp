@@ -37,8 +37,8 @@ TEST(NumberCalculation, function_interpolator)
 TEST(NumberCalculation, curve_fitter_ax_b)
 {
     rm::CurveFitter foo({1, 2, 3, 4}, {0, 2, 1, 3}, 0b11);
-    EXPECT_LE(abs(foo(0.625)), 1e-5);
-    EXPECT_LE(foo(0) + 0.5, 1e-5);
+    EXPECT_NEAR(foo(0.625), 0, 1e-5);
+    EXPECT_NEAR(foo(0), -0.5, 1e-5);
 }
 
 TEST(NumberCalculation, curve_fitter_ax2_bx_c)
@@ -46,7 +46,7 @@ TEST(NumberCalculation, curve_fitter_ax2_bx_c)
     // 2x^2 + 3x - 1
     rm::CurveFitter foo({0, 1, 2}, {-1, 4, 13}, 0b111);
     // 2*3^2 + 3*3 - 1 = 26
-    EXPECT_LE(foo(3) - 26, 1e-5);
+    EXPECT_NEAR(foo(3), 26, 1e-5);
 }
 
 TEST(NumberCalculation, curve_fitter_ax3_cx_d)
@@ -54,17 +54,18 @@ TEST(NumberCalculation, curve_fitter_ax3_cx_d)
     // x^3 - 4x + 1
     rm::CurveFitter foo({0, 1, 2}, {1, -2, 1}, 0b1011);
     // 3^3 - 4*3 + 1 = 16
-    EXPECT_LE(foo(3) - 16, 1e-5);
+    EXPECT_NEAR(foo(3), 16, 1e-5);
 }
 
 TEST(NumberCalculation, nonlinear_solver)
 {
-    rm::NonlinearSolver foo;
-    foo = [](double x) { return x * x - 4; }; // f(x)
-    EXPECT_LE(foo(2.5) - 2, 1e-5);            // fo(2) = 0
-    EXPECT_LE(foo(1.5) - 2, 1e-5);            // fo(2) = 0
-    EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
-    EXPECT_LE(foo(-1.5) + 2, 1e-5);           // fo(-2) = 0
+    rm::NonlinearSolver foo([](double x) { // f(x)
+        return x * x - 4;
+    });
+    EXPECT_NEAR(foo(2.5), 2, 1e-5);   // fo(2) = 0
+    EXPECT_NEAR(foo(1.5), 2, 1e-5);   // fo(2) = 0
+    EXPECT_NEAR(foo(-1.5), -2, 1e-5); // fo(-2) = 0
+    EXPECT_NEAR(foo(-1.5), -2, 1e-5); // fo(-2) = 0
 }
 
 TEST(NumberCalculation, runge_kutta_ode)
@@ -75,22 +76,22 @@ TEST(NumberCalculation, runge_kutta_ode)
     rm::RungeKutta rkb(fs, {0.0, 2.0 / 3.0}, {0.25, 0.75}, {{0.0, 0.0}, {2.0 / 3.0, 0.0}});
     rkb.init(0, {0});
     auto resb = rkb.solve(0.01, 100).back();
-    EXPECT_LE(std::abs(resb.front() - std::expm1(-2)), 1e-4);
+    EXPECT_NEAR(resb.front(), std::expm1(-2), 1e-4);
 
     rm::RungeKutta2 rk2(fs);
     rk2.init(0, {0});
     auto res2 = rk2.solve(0.01, 100).back();
-    EXPECT_LE(std::abs(res2.front() - std::expm1(-2)), 1e-4);
+    EXPECT_NEAR(res2.front(), std::expm1(-2), 1e-4);
 
     rm::RungeKutta3 rk3(fs);
     rk3.init(0, {0});
     auto res3 = rk3.solve(0.01, 100).back();
-    EXPECT_LE(std::abs(res3.front() - std::expm1(-2)), 1e-5);
+    EXPECT_NEAR(res3.front(), std::expm1(-2), 1e-5);
 
     rm::RungeKutta4 rk4(fs);
     rk4.init(0, {0});
     auto res4 = rk4.solve(0.01, 100).back();
-    EXPECT_LE(std::abs(res4.front() - std::expm1(-2)), 1e-6);
+    EXPECT_NEAR(res4.front(), std::expm1(-2), 1e-6);
 }
 
 TEST(NumberCalculation, runge_kutta_odes)
@@ -108,14 +109,14 @@ TEST(NumberCalculation, runge_kutta_odes)
     rk2.init(0, {1, -1});
     auto res2 = rk2.solve(0.01, 100).back();
     EXPECT_EQ(res2.size(), 2);
-    EXPECT_LE(std::abs(res2[0] - real_x1), 1e-4);
-    EXPECT_LE(std::abs(res2[1] - real_x2), 1e-4);
+    EXPECT_NEAR(res2[0], real_x1, 1e-4);
+    EXPECT_NEAR(res2[1], real_x2, 1e-4);
 
     rm::RungeKutta4 rk4(fs);
     rk4.init(0, {1, -1});
     auto res4 = rk4.solve(0.01, 100).back();
-    EXPECT_LE(std::abs(res4[0] - real_x1), 1e-6);
-    EXPECT_LE(std::abs(res4[1] - real_x2), 1e-6);
+    EXPECT_NEAR(res4[0], real_x1, 1e-6);
+    EXPECT_NEAR(res4[1], real_x2, 1e-6);
 }
 
 #if __cpp_lib_generator >= 202207L

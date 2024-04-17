@@ -30,3 +30,11 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+if(BUILD_PERF_TESTS)
+  rmvl_add_test(
+    core Performance
+    DEPENDS core
+    DEPEND_TESTS benchmark::benchmark_main
+  )
+endif(BUILD_PERF_TESTS)

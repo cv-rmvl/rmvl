@@ -65,9 +65,7 @@ void binary_brightness(benchmark::State &state)
     Mat src;
     hconcat(channel, 3, src);
     for (auto _ : state)
-    {
         Mat bin = binary(src, 80);
-    }
 }
 
 // threshold 方法单通道亮度二值化
@@ -87,9 +85,9 @@ void threshold_brightness(benchmark::State &state)
     }
 }
 
-BENCHMARK(binary_BGR2Binary)->Iterations(100);
-BENCHMARK(threshold_BGR2Binary)->Iterations(100);
-BENCHMARK(binary_brightness)->Iterations(100);
-BENCHMARK(threshold_brightness)->Iterations(100);
+BENCHMARK(binary_BGR2Binary)->Name("Chns Minus -   RMVL")->Iterations(20);
+BENCHMARK(threshold_BGR2Binary)->Name("Chns Minus - OpenCV")->Iterations(20);
+BENCHMARK(binary_brightness)->Name("Brightness -   RMVL")->Iterations(20);
+BENCHMARK(threshold_brightness)->Name("Brightness - OpenCV")->Iterations(20);
 
 } // namespace rm_test

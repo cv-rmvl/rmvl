@@ -9,7 +9,7 @@
 
 @prev_tutorial{tutorial_modules_runge_kutta}
 
-@next_tutorial{tutorial_modules_union_find}
+@next_tutorial{tutorial_modules_ekf}
 
 @tableofcontents
 
@@ -26,7 +26,7 @@
 \def\Var{\mathrm{Var}}
 \def\Cov{\mathrm{Cov}}
 \def\tr{\mathrm{tr}}
-\def\formular#1{\text{(#1)}}
+\def\fml#1{\text{(#1)}}
 \f]
 
 ### 1. 卡尔曼滤波
@@ -47,9 +47,9 @@
 
 \f[\hat x_k=\frac{z_1+z_2+\cdots+z_k}k\tag{1-1}\f]
 
-这是一条非常简单的取算数平均的公式，但是我们为了估计硬币的长度，需要用到所有的观测值，例如我们已经测了 5 次硬币的长度，并且使用公式 \f$\formular{1-1}\f$ 得到了第 5 次的平均值（长度的估计值），在测完第 6 次长度准备计算第 6 次估计值的时候，使用公式 \f$\formular{1-1}\f$ 还需要重新使用前 5 次的观测值。当观测次数非常高的时候，计算的压力就逐渐高起来了。
+这是一条非常简单的取算数平均的公式，但是我们为了估计硬币的长度，需要用到所有的观测值，例如我们已经测了 5 次硬币的长度，并且使用公式 \f$\fml{1-1}\f$ 得到了第 5 次的平均值（长度的估计值），在测完第 6 次长度准备计算第 6 次估计值的时候，使用公式 \f$\fml{1-1}\f$ 还需要重新使用前 5 次的观测值。当观测次数非常高的时候，计算的压力就逐渐高起来了。
 
-针对这一问题，我们可以改写公式 \f$\formular{1-1}\f$
+针对这一问题，我们可以改写公式 \f$\fml{1-1}\f$
 
 \f[\begin{align}\hat x_k&=\frac1k(z_1+z_2+\cdots+z_k)\\
 &=\frac1k(z_1+z_2+\cdots+z_{k-1})+\frac1kz_k\\
@@ -59,7 +59,7 @@
 
 这样我们就把硬币长度的估计值，改写成由上一次估计值和当前观测值共同作用的形式。并且我们发现，随着测量次数 \f$k\f$ 增大，\f$\frac1k\f$ 趋向于 \f$0\f$，\f$\hat x_k\f$ 趋向于 \f$\hat x_{k-1}\f$，这也就是说，随着 \f$k\f$ 增长，测量结果将不再重要。
 
-为了不失一般性，我们把公式 \f$\formular{1-2a}\f$ 的结果改写成以下形式。
+为了不失一般性，我们把公式 \f$\fml{1-2a}\f$ 的结果改写成以下形式。
 
 \f[\boxed{\hat x_k=\hat x_{k-1}+\red{K_k}(z_k-\hat x_{k-1})}\tag{1-2b}\f]
 
@@ -74,7 +74,7 @@
 
 #### 1.3 数据融合 {#kalman_data_fusion}
 
-现在我们可以使用公式 \f$\formular{1-2b}\f$ 的思想来研究数据融合。如果有一辆车以恒定速度行驶，现在得到了两个数据：
+现在我们可以使用公式 \f$\fml{1-2b}\f$ 的思想来研究数据融合。如果有一辆车以恒定速度行驶，现在得到了两个数据：
 
 - 根据匀速公式计算得到的汽车当前位置（算出来的，记作 \f$\teal{x_1}\f$）
 - 汽车的当前距离传感器数据（测出来的，记作 \f$\red{x_2}\f$）
@@ -83,7 +83,7 @@
 
 由于自身的原因，它的位置并不是由匀速运动公式得到的精确位置，它的距离传感器数据也不完全准确。两者都有一定的误差。那么我们现在如何估计汽车的实际位置呢？
 
-我们使用公式 \f$\formular{1-2b}\f$ 的思想，得到估计值
+我们使用公式 \f$\fml{1-2b}\f$ 的思想，得到估计值
 
 \f[\hat x=\teal{x_1}+\green{K_k}(\red{x_2}-\teal{x_1})\tag{1-4}\f]
 
@@ -219,7 +219,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 \pmb z_k&=H\pmb x_k
 \end{align}\right.\tag{1-13b}\f]
 
-这其实是个不准确的结果，因为如果我们考虑上噪声，公式 \f$\formular{1-13b}\f$ 应该改写为
+这其实是个不准确的结果，因为如果我们考虑上噪声，公式 \f$\fml{1-13b}\f$ 应该改写为
 
 \f[\left\{\begin{align}
 \pmb x_k&=A\pmb x_{k-1}+B\pmb u_{k-1}\red{+\pmb w_{k-1}}&p(\pmb w)\sim N(0,Q)\\
@@ -237,7 +237,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
   \vdots&\vdots&\ddots&\vdots\\\sigma_{v_n}\sigma_{v_1}&\sigma_{v_n}\sigma_{v_2}&\cdots&\sigma_{v_n}^2\end{bmatrix}\f]
   称为测量噪声协方差矩阵
 
-但是，这两个误差我们无从得知，我们只能使用公式 \f$\formular{1-13b}\f$ 的形式进行近似估计，通过 \f$\pmb x_k=A\pmb x_{k-1}+B\pmb u_{k-1}\f$ 算出来的 \f$\pmb x_k\f$ 称为<span style="color: red">先验状态估计</span>，一般写为
+但是，这两个误差我们无从得知，我们只能使用公式 \f$\fml{1-13b}\f$ 的形式进行近似估计，通过 \f$\pmb x_k=A\pmb x_{k-1}+B\pmb u_{k-1}\f$ 算出来的 \f$\pmb x_k\f$ 称为<span style="color: red">先验状态估计</span>，一般写为
 
 \f[\red{\hat{\pmb x}_k^-=A\pmb x_{k-1}+B\pmb u_{k-1}\tag{1-14}}\f]
 
@@ -249,7 +249,7 @@ e_ne_1&e_ne_2&\cdots&e_n^2\end{bmatrix}=\green{E\left(\pmb e\pmb e^T\right)}\tag
 
 @note 对于一个线性方程组 \f[A\pmb x=\pmb b\f]必定存在最小二乘解 \f[\pmb x=(A^TA)^{-1}A^T\pmb b\f]可以令 \f$A^+=(A^TA)^{-1}A^T\f$ 来表示 Moore-Penrose 广义逆，即\f[\pmb x=A^+\pmb b\f]当 \f$A\f$ 可逆时，\f$A^+=A^{-1}\f$.
 
-目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\formular{1-4}\f$ 中使用了算出来的 \f$\teal{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
+目前的两个结果 \f$\hat{\pmb x}_k^-\f$ 和 \f$\hat{\pmb x}_{k_{MEA}}\f$ 都不准确，因此可以回顾 @ref kalman_data_fusion 的部分，在公式 \f$\fml{1-4}\f$ 中使用了算出来的 \f$\teal{x_1}\f$ 和测出来的 \f$\red{x_2}\f$ 得到了最优估计值 \f$\hat x\f$，为此我们可以仿照这一步骤来求出离散系统状态的最优估计值 \f$\hat{\pmb x}_k\f$，称为<span style="color: red">后验状态估计</span>。
 
 \f[\begin{align}\hat{\pmb x}_k&=\hat{\pmb x}_k^-+\green{G_k}(\hat{\pmb x}_{k_{MEA}}-\hat{\pmb x}_k^-)\\
 &=\hat{\pmb x}_k^-+\green{G_k}(H^+\pmb z_k-\hat{\pmb x}_k^-)\tag{1-16}\end{align}\f]
@@ -324,7 +324,7 @@ P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_k
 \f[\begin{align}\frac{\mathrm d\tr(ABA^T)}{A}&=AB+AB^T\\
 当B对称时\quad&=2AB\end{align}\tag{1-23b}\f]
 
-那么，公式\f$\formular{1-22}\f$可以写为
+那么，公式\f$\fml{1-22}\f$可以写为
 
 \f[\begin{align}2\frac{\mathrm d\tr(K_kHP_k^-)}{\mathrm dK_k}
 &=\frac{\mathrm d\tr(K_kHP_k^-H^TK_k^T)}{\mathrm dK_k}+\frac{\mathrm d\tr(K_kRK_k^T)}{\mathrm dK_k}\\
@@ -368,21 +368,21 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)
 
 在求解 \f$P_k^-\f$ 的时候用到了 \f$P_{k-1}\f$，因此需要进一步求解 \f$P_k\f$，从而为下一次 \f$P_{k+1}^-\f$ 所使用。
 
-由 @ref kalman_gain_derivate 的公式 \f$\formular{1-20}\f$ 可以得到
+由 @ref kalman_gain_derivate 的公式 \f$\fml{1-20}\f$ 可以得到
 
 \f[\begin{align}P_k
 &=\green{P_k^-}-\red{K_kHP_k^-}-\green{P_k^-}\orange{H^TK_k^T}+\red{K_kHP_k^-}\orange{H^TK_k^T}+K_kRK_k^T\\
 &=P_k^--K_kHP_k^--P_k^-H^TK_k^T+K_k(HP_k^-H^T+R)K_k^T\\
-代入\formular{1-25}\quad&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+P_k^-H^TK_k^T\\
+代入\fml{1-25}\quad&=P_k^--K_kHP_k^--P_k^-H^TK_k^T+P_k^-H^TK_k^T\\
 &=P_k^--K_kHP_k^-\tag{1-29}\end{align}\f]
 
 即所谓后验误差协方差矩阵 \f$P_k\f$
 
 \f[\red{P_k=(I-K_kH)P_k^-\tag{1-30}}\f]
 
-#### 1.7 汇总 {#kalman_filter_fomulars}
+#### 1.7 汇总 {#kalman_filter_formulas}
 
-至此，Kalman Filter 的 5 大公式已经全部求出，分别是公式 \f$\formular{1-14}\f$、公式 \f$\formular{1-17}\f$、公式 \f$\formular{1-25}\f$、公式 \f$\formular{1-28}\f$ 和公式 \f$\formular{1-30}\f$
+至此，Kalman Filter 的 5 大公式已经全部求出，分别是公式 \f$\fml{1-14}\f$、公式 \f$\fml{1-17}\f$、公式 \f$\fml{1-25}\f$、公式 \f$\fml{1-28}\f$ 和公式 \f$\fml{1-30}\f$
 
 按照处理顺序，卡尔曼滤波器划分为两个部分
 
@@ -411,7 +411,7 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)
 
 #### 2.1 如何配置
 
-首先必须要寻找 RMVL 包，即 `find_package(RMVL [OPTIONS])`，之后可直接在中使用在 CMakeLists.txt 中链接库
+首先必须要寻找 RMVL 包，即 `find_package(RMVL REQUIRED)`，之后可直接在 CMakeLists.txt 中链接库
 
 ```cmake
 target_link_libraries(
@@ -419,6 +419,8 @@ target_link_libraries(
   PUBLIC rmvl_core
 )
 ```
+
+这里的 `xxx` 为需要链接到 core 模块的目标
 
 #### 2.2 如何使用
 
