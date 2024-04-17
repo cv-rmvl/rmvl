@@ -183,7 +183,7 @@ function(status text)
 endfunction()
 
 # ----------------------------------------------------------------------------
-#   下载并参与 RMVL 的构建
+#   下载并参与 RMVL 的构建，支持 URL 和 GIT
 #   用法:
 #     rmvl_download(
 #       <dl_name> <dl_kind>
@@ -191,30 +191,19 @@ endfunction()
 #     )
 #   示例 1:
 #     rmvl_download(
-#       googletest URL
-#       xxx
+#       googletest URL "xxx"
 #     )
 #   示例 2:
 #     rmvl_download(
-#       benchmark GIT
-#       xxx : master
+#       benchmark GIT "xxx : master"
 #     )
 # ----------------------------------------------------------------------------
-function(rmvl_download dl_name dl_kind)
-  if(NOT "${dl_kind}" MATCHES "^(GIT|URL)$")
-    message(FATAL_ERROR "Unknown download kind : ${dl_kind}")
-  endif()
+function(rmvl_download dl_name dl_kind dl_info)
   include(FetchContent)
   string(TOLOWER "${dl_kind}" dl_kind_lower)
-  # get url-string
-  list(LENGTH ARGN argn_length)
-  if(NOT argn_length EQUAL 1)
-    message(FATAL_ERROR "Argument \"\$\{ARGN\}\" count must be 1 in the function \"rmvl_download\"")
-  endif()
-  list(GET ARGN 0 web_url)
   # use git
   if("${dl_kind_lower}" STREQUAL "git")
-    string(REGEX MATCH "(.*) : (.*)" RESULT "${web_url}")
+    string(REGEX MATCH "(.*) : (.*)" RESULT "${dl_info}")
     set(git_url "${CMAKE_MATCH_1}")
     set(git_tag "${CMAKE_MATCH_2}")
     message(STATUS "Download ${dl_name} from \"${git_url}\" (tag: ${git_tag})")
@@ -224,12 +213,14 @@ function(rmvl_download dl_name dl_kind)
       GIT_TAG ${git_tag}
     )
   # use url
-  else()
-    message(STATUS "Download ${dl_name} from \"${web_url}\"")
+  elseif("${dl_kind_lower}" STREQUAL "url")
+    message(STATUS "Download ${dl_name} from \"${dl_info}\"")
     FetchContent_Declare(
       ${dl_name}
-      URL ${web_url}
+      URL ${dl_info}
     )
+  else()
+    message(FATAL_ERROR "Unknown download kind : ${dl_kind}")
   endif()
   # make available
   FetchContent_MakeAvailable(${dl_name})
