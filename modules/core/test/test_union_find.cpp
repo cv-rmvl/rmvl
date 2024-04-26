@@ -16,7 +16,7 @@
 
 #define private public
 
-#include "rmvl/rmath/union_find.hpp"
+#include "rmvl/core/datastruct.hpp"
 
 #undef private
 

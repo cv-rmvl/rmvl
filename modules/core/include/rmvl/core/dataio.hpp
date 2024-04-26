@@ -97,7 +97,6 @@ void writeCorners(std::ostream &out, const std::vector<std::vector<std::array<fl
 /**
  * @brief 导入角点数据
  * @brief
- * - 访问指定下标的数据结构体 `corners_<?>`，`<?>` 表示对应的标号，即参数 `idx`
  * - 读取的文件形如以下内容
  * @code{.txt}
  * 1.9, 2.11,

@@ -12,7 +12,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/feature/pilot.h"
-#include "rmvl/rmath.hpp"
+#include "rmvl/core.hpp"
 
 #include "rmvlpara/feature/pilot.h"
 

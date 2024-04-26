@@ -11,7 +11,7 @@
 
 #include "rmvl/compensator/gyro_compensator.h"
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/rmath/transform.h"
+#include "rmvl/core/transform.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/compensator/gyro_compensator.h"

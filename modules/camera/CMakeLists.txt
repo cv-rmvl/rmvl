@@ -5,7 +5,7 @@ rmvl_generate_para(
 
 rmvl_add_module(
   camera
-  DEPENDS rmath
+  DEPENDS core
 )
 
 # --------------------------------------------------------------------------

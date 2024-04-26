@@ -10,7 +10,7 @@
  */
 
 #include "rmvl/combo/armor.h"
-#include "rmvl/rmath/transform.h"
+#include "rmvl/core/transform.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"

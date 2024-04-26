@@ -16,7 +16,7 @@ rmvl_generate_para(
 # gravity_compensator
 rmvl_add_module(
   gravity_compensator
-  DEPENDS compensator rmath
+  DEPENDS compensator
 )
 
 # gyro_compensator

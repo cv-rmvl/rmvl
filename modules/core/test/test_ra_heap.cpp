@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/rmath/ra_heap.hpp"
+#include "rmvl/core/datastruct.hpp"
 
 using namespace rm;
 using namespace std;

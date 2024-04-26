@@ -1,5 +1,6 @@
 find_package(Threads REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV COMPONENTS core REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # 生成预定义宏
 rmvl_check_include_file(
@@ -13,7 +14,8 @@ rmvl_generate_para(core)
 # 添加 core 模块
 rmvl_add_module(
   core
-  EXTERNAL ${OpenCV_LIBS} ${CMAKE_THREAD_LIBS_INIT}
+  EXTRA_HEADER ${EIGEN3_INCLUDE_DIR}
+  EXTERNAL ${CMAKE_THREAD_LIBS_INIT} opencv_core
 )
 
 # 添加预定义宏到 core 模块

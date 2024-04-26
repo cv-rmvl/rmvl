@@ -2,6 +2,8 @@ if(NOT BUILD_rmvl_hik_camera)
   return()
 endif()
 
+find_package(OpenCV COMPONENTS highgui calib3d REQUIRED)
+
 rmvl_add_exe(
   rmvl_hik_mono
   SOURCES sample_hik_mono.cpp
@@ -27,4 +29,5 @@ rmvl_add_exe(
   rmvl_hik_manual_calib
   SOURCES sample_hik_manual_calib.cpp
   DEPENDS hik_camera
+  EXTERNAL ${OpenCV_LIBS}
 )

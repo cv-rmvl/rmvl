@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_kalman}
 
-@next_tutorial{tutorial_modules_union_find}
+@next_tutorial{tutorial_modules_dft}
 
 @tableofcontents
 

@@ -19,11 +19,11 @@
 namespace rm
 {
 
-//! @addtogroup rmath
+//! @addtogroup core
 //! @{
 
 /**
- * @brief 熵权法
+ * @brief 熵权 TOPSIS 算法
  *
  * @tparam Tp 元素类型
  */
@@ -32,7 +32,6 @@ class EwTopsis
 {
 public:
     typedef Tp value_type;
-    typedef Tp *pointer;
     typedef Tp &reference;
     typedef const Tp &const_reference;
     typedef std::size_t size_type;
@@ -53,16 +52,13 @@ public:
     EwTopsis(EwTopsis &&) = delete;
 
     /**
-     * @brief 构造熵权法包装器
+     * @brief 构造熵权 TOPSIS 算法类
      *
-     * @param samples 样本指标
+     * @param[in] samples 样本指标
      */
-    EwTopsis(const mat_type &samples)
-        : R_(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
+    EwTopsis(const mat_type &samples) : R_(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
 
-    /**
-     * @brief 权熵法推理出最终的指标
-     */
+    //! 基于权熵 TOPSIS 推理出最终的指标
     void inference()
     {
         mat_type R;

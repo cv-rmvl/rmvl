@@ -11,7 +11,7 @@
 #pragma once
 
 #include "rmvl/camera/camutils.hpp"
-#include "rmvl/rmath/uty_math.hpp"
+#include "rmvl/core/math.hpp"
 #include "rmvl/types.hpp"
 
 #include "rmvl/core/dataio.hpp"

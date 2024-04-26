@@ -6,7 +6,7 @@
 @version 1.0
 @brief 从 **Lagrange 插值** 与 **Newton 插值** 两种基函数选取方式介绍函数插值
 
-@prev_tutorial{tutorial_modules_opcua}
+@prev_tutorial{tutorial_modules_light}
 
 @next_tutorial{tutorial_modules_least_square}
 

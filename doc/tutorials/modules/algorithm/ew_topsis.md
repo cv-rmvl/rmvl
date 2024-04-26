@@ -4,9 +4,9 @@
 @author RoboMaster Vision Community
 @date 2023/01/11
 
-@prev_tutorial{tutorial_modules_ra_heap}
+@prev_tutorial{tutorial_modules_runge_kutta}
 
-@next_tutorial{tutorial_modules_ort}
+@next_tutorial{tutorial_modules_kalman}
 
 @tableofcontents
 

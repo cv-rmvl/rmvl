@@ -4,7 +4,9 @@
 @author 赵曦
 @date 2023/10/05
 
-@prev_tutorial{tutorial_modules_ort}
+@prev_tutorial{tutorial_modules_camera}
+
+@next_tutorial{tutorial_modules_interpolation}
 
 @tableofcontents
 

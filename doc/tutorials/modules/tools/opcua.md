@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_serial}
 
-@next_tutorial{tutorial_modules_interpolation}
+@next_tutorial{tutorial_modules_camera}
 
 @tableofcontents
 
@@ -511,7 +511,7 @@ int main()
 
 #### 有代理 Pub/Sub
 
-RMVL 目前暂不支持有代理的发布订阅机制。
+@warning RMVL 目前暂不支持有代理的发布订阅机制。
 
 ### 参数加载 {#opcua_parameters}
 

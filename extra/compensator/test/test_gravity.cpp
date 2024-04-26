@@ -19,7 +19,7 @@
 #undef private
 #undef protected
 
-#include "rmvl/rmath/uty_math.hpp"
+#include "rmvl/core/math.hpp"
 #include "rmvlpara/compensator/gravity_compensator.h"
 
 using namespace rm::numeric_literals;

@@ -10,7 +10,7 @@
  */
 
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/rmath/transform.h"
+#include "rmvl/core/transform.hpp"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera/camera.h"
