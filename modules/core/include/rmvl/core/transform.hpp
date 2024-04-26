@@ -1,7 +1,7 @@
 /**
- * @file transform.h
+ * @file transform.hpp
  * @author RoboMaster Vision Community
- * @brief
+ * @brief 坐标变换
  * @version 1.0
  * @date 2023-01-12
  *
@@ -13,13 +13,13 @@
 
 #include <opencv2/core/types.hpp>
 
-#include "rmvl/core/util.hpp"
-#include "uty_math.hpp"
+#include "util.hpp"
+#include "math.hpp"
 
 namespace rm
 {
 
-//! @addtogroup rmath
+//! @addtogroup core
 //! @{
 
 //! 欧拉角转轴枚举
@@ -106,6 +106,6 @@ inline cv::Matx<Tp, 3, 3> euler2Mat(Tp val, EulerAxis axis)
     }
 }
 
-//! @} rmath
+//! @} core
 
 } // namespace rm

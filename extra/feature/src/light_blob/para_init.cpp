@@ -11,7 +11,7 @@
 
 #include "rmvl/feature/light_blob.h"
 #include "rmvl/core/util.hpp"
-#include "rmvl/rmath.hpp"
+#include "rmvl/core.hpp"
 
 using namespace rm;
 using namespace std;

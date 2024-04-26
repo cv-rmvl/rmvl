@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_func_iteration}
 
-@next_tutorial{tutorial_modules_kalman}
+@next_tutorial{tutorial_modules_ew_topsis}
 
 @tableofcontents
 

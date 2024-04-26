@@ -1,7 +1,7 @@
 /**
- * @file uty_math.hpp
+ * @file math.hpp
  * @author RoboMaster Vision Community
- * @brief
+ * @brief 基础数学库
  * @version 1.0
  * @date 2023-01-12
  *
@@ -20,12 +20,12 @@
 
 #include <opencv2/core/matx.hpp>
 
-#include "rmvl/core/util.hpp"
+#include "util.hpp"
 
 namespace rm
 {
 
-//! @addtogroup rmath
+//! @addtogroup core
 //! @{
 
 // --------------------【结构、类型、常量定义】--------------------
@@ -421,6 +421,6 @@ typename ForwardIterator::value_type calculateModeNum(ForwardIterator first, For
         ->first;
 }
 
-//! @} rmath
+//! @} core
 
 } // namespace rm

@@ -10,7 +10,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   armor_predictor
-  DEPENDS predictor rmath camera
+  DEPENDS predictor camera
 )
 
 # rune_predictor
@@ -20,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   rune_predictor
-  DEPENDS predictor rmath camera rune_group
+  DEPENDS predictor camera rune_group
 )
 
 # spi_rune_predictor
@@ -30,7 +30,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   spi_rune_predictor
-  DEPENDS predictor rmath rune_group
+  DEPENDS predictor rune_group
 )
 
 # gyro_predictor
@@ -40,7 +40,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_predictor
-  DEPENDS predictor rmath camera
+  DEPENDS predictor camera
 )
 
 rmvl_generate_module_para(predictor)

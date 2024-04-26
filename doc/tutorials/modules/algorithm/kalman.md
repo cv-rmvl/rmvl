@@ -7,7 +7,7 @@
 @version 2.0
 @brief 卡尔曼滤波详细公式推导
 
-@prev_tutorial{tutorial_modules_runge_kutta}
+@prev_tutorial{tutorial_modules_ew_topsis}
 
 @next_tutorial{tutorial_modules_ekf}
 

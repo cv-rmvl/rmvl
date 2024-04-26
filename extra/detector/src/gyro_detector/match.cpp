@@ -11,7 +11,7 @@
 
 #include "rmvl/detector/gyro_detector.h"
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/rmath/union_find.hpp"
+#include "rmvl/core/datastruct.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/gyro_detector.h"

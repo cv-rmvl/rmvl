@@ -42,7 +42,7 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
   
   点击[此处](@ref tutorial_install)可以安装以上相机的 SDK
   
-- @ref ml (**ml**)，@ref rmath (**rmath**)
+- @ref ml (**ml**)， @ref opcua (**opcua**)
 
 - ... 以及其他包含在 `modules` 文件夹中的模块。
 

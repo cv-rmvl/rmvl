@@ -6,7 +6,7 @@
 
 @prev_tutorial{tutorial_modules_union_find}
 
-@next_tutorial{tutorial_modules_ew_topsis}
+@next_tutorial{tutorial_modules_ort}
 
 @tableofcontents
 

@@ -10,7 +10,7 @@
  */
 
 #include "rmvl/decider/translation_decider.h"
-#include "rmvl/rmath.hpp"
+#include "rmvl/core.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/translation_decider.h"

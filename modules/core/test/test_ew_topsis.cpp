@@ -15,8 +15,8 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/rmath/ew_topsis.hpp"
-#include "rmvl/rmath/uty_math.hpp"
+#include "rmvl/core/ew_topsis.hpp"
+#include "rmvl/core/math.hpp"
 
 using namespace rm;
 using namespace std;

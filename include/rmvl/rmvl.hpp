@@ -34,10 +34,6 @@
 #include "rmvl/imgproc.hpp"
 #endif // HAVE_RMVL_IMGPROC
 
-#ifdef HAVE_RMVL_RMATH
-#include "rmvl/rmath.hpp"
-#endif // HAVE_RMVL_RMATH
-
 #ifdef HAVE_RMVL_OPCUA
 #include "rmvl/opcua.hpp"
 #endif // HAVE_RMVL_OPCUA

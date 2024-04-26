@@ -5,7 +5,9 @@
 @date 2023/03/15
 @brief 相机模块的基本使用，包括初始化、参数设置以及运行示例
 
-@prev_tutorial{tutorial_modules_ort}
+@prev_tutorial{tutorial_modules_opcua}
+
+@next_tutorial{tutorial_modules_light}
 
 @tableofcontents
 

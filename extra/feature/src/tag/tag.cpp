@@ -12,7 +12,7 @@
 #include "rmvl/feature/tag.h"
 
 #include "rmvl/core/util.hpp"
-#include "rmvl/rmath/uty_math.hpp"
+#include "rmvl/core/math.hpp"
 
 using namespace std;
 using namespace cv;
