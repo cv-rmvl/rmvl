@@ -14,7 +14,9 @@
 #ifdef UA_ENABLE_PUBSUB
 
 #include <open62541/plugin/log_stdout.h>
+#if OPCUA_VERSION < 10400
 #include <open62541/plugin/pubsub_udp.h>
+#endif
 #include <open62541/server_config_default.h>
 
 #ifdef UA_ENABLE_PUBSUB_MQTT
@@ -33,7 +35,9 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
                                               const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
+#if OPCUA_VERSION < 10400
     UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
+#endif
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
@@ -41,7 +45,11 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     connect_config.enabled = UA_TRUE;
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(address))};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
+#if OPCUA_VERSION >= 10400
+    connect_config.publisherId.uint32 = UA_UInt32_random();
+#else
     connect_config.publisherId.numeric = UA_UInt32_random();
+#endif
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -74,10 +82,10 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
     UA_DataSetReaderConfig dsr_config{};
     std::string dsr_name = pub_name + "DataSetReader";
     dsr_config.name = UA_STRING(helper::to_char(dsr_name));
-    UA_UInt32 publisher_id = _strhash(pub_name + "Connection") % 0x8000000u;
+    UA_UInt16 publisher_id = _strhash(pub_name + "Connection") % 0x4000u;
     UA_Variant_setScalar(&dsr_config.publisherId, &publisher_id, &UA_TYPES[UA_TYPES_UINT16]);
-    dsr_config.writerGroupId = _strhash(pub_name + "WriterGroup") % 0x8000u;
-    dsr_config.dataSetWriterId = _strhash(pub_name + "DataSetWriter") % 0x8000u;
+    dsr_config.writerGroupId = 0x4000u + _strhash(pub_name + "WriterGroup") % 0x4000u;
+    dsr_config.dataSetWriterId = 0x8000u + _strhash(pub_name + "DataSetWriter") % 0x4000u;
 
     // 设置数 DSR 中的元数据配置
     std::string dataset_name = _name + "DataSetMetaData";
