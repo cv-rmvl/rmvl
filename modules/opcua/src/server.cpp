@@ -58,7 +58,9 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
         }
         // 配置
         config->accessControl.clear(&config->accessControl);
-#if OPCUA_VERSION >= 10300
+#if OPCUA_VERSION >= 10400
+        UA_AccessControl_default(config, false, nullptr, usr_passwd.size(), usr_passwd.data());
+#elif OPCUA_VERSION >= 10300 && OPCUA_VERSION < 10400
         UA_AccessControl_default(config, false, nullptr,
                                  &config->securityPolicies[config->securityPoliciesSize - 1].policyUri,
                                  usr_passwd.size(), usr_passwd.data());

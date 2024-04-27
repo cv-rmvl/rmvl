@@ -14,7 +14,9 @@
 #ifdef UA_ENABLE_PUBSUB
 
 #include <open62541/plugin/log_stdout.h>
+#if OPCUA_VERSION < 10400
 #include <open62541/plugin/pubsub_udp.h>
+#endif
 #include <open62541/server_config_default.h>
 
 #ifdef UA_ENABLE_PUBSUB_MQTT
@@ -36,7 +38,9 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
                                             const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
+#if OPCUA_VERSION < 10400
     UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
+#endif
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
@@ -46,7 +50,13 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(url_str))};
     UA_Variant_setScalar(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     // 用哈希值作为发布者 ID
-    connect_config.publisherId.numeric = _strhash(_name + "Connection") % 0x8000000u;
+#if OPCUA_VERSION >= 10400
+    connect_config.publisherIdType = UA_PUBLISHERIDTYPE_UINT16;
+    connect_config.publisherId.uint16 = _strhash(_name + "Connection") % 0x4000u;
+#else
+    connect_config.publisherIdType = UA_PUBSUB_PUBLISHERID_NUMERIC;
+    connect_config.publisherId.numeric = _strhash(_name + "Connection") % 0x4000u;
+#endif
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -106,7 +116,7 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     wg_config.name = UA_STRING(helper::to_char(wg_name_str));
     wg_config.publishingInterval = duration;
     wg_config.enabled = UA_FALSE;
-    wg_config.writerGroupId = _strhash(_name + "WriterGroup") % 0x8000u;
+    wg_config.writerGroupId = 0x4000u + _strhash(_name + "WriterGroup") % 0x4000u;
     wg_config.encodingMimeType = UA_PUBSUB_ENCODING_UADP;
     wg_config.messageSettings.encoding = UA_EXTENSIONOBJECT_DECODED;
     wg_config.messageSettings.content.decoded.type = &UA_TYPES[UA_TYPES_UADPWRITERGROUPMESSAGEDATATYPE];
@@ -134,7 +144,7 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     UA_DataSetWriterConfig dsw_config{};
     std::string dsw_name_str = _name + "DataSetWriter";
     dsw_config.name = UA_STRING(helper::to_char(dsw_name_str));
-    dsw_config.dataSetWriterId = _strhash(_name + "DataSetWriter") % 0x8000u;
+    dsw_config.dataSetWriterId = 0x8000u + _strhash(_name + "DataSetWriter") % 0x4000u;
     dsw_config.keyFrameCount = para::opcua_param.KEY_FRAME_COUNT;
     status = UA_Server_addDataSetWriter(_server, _wg_id, _pds_id, &dsw_config, &_dsw_id);
     if (status != UA_STATUSCODE_GOOD)
