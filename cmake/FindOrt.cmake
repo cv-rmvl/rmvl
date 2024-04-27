@@ -1,8 +1,13 @@
+# ------------------------------------------------------------------------------
+#  find onnxruntime root path
+# ------------------------------------------------------------------------------
 if(NOT ort_root_path)
   set(ort_root_path "/usr/local")
 endif()
 
-# add the include directories path
+# ------------------------------------------------------------------------------
+#  find onnxruntime include directory
+# ------------------------------------------------------------------------------
 find_path(
   Ort_INCLUDE_DIR
   PATHS "${ort_root_path}/include/onnxruntime"
@@ -13,7 +18,9 @@ find_path(
   NO_DEFAULT_PATH
 )
 
-# add libraries
+# ------------------------------------------------------------------------------
+#  find onnxruntime library file
+# ------------------------------------------------------------------------------
 find_library(
   Ort_LIB
   NAMES "libonnxruntime.so"
@@ -21,6 +28,9 @@ find_library(
   NO_DEFAULT_PATH
 )
 
+# ------------------------------------------------------------------------------
+#  create imported target: onnxruntime
+# ------------------------------------------------------------------------------
 if(NOT TARGET onnxruntime)
   add_library(onnxruntime SHARED IMPORTED)
   set_target_properties(onnxruntime PROPERTIES
@@ -31,12 +41,24 @@ endif()
 
 mark_as_advanced(Ort_INCLUDE_DIR Ort_LIB)
 
+# ------------------------------------------------------------------------------
+#  set onnxruntime cmake variables and version variables
+# ------------------------------------------------------------------------------
 set(Ort_LIBS "onnxruntime")
 set(Ort_INCLUDE_DIRS "${Ort_INCLUDE_DIR}")
 
+file(STRINGS "${Ort_INCLUDE_DIR}/onnxruntime_c_api.h" Ort_VERSION
+  REGEX "#define ORT_API_VERSION [0-9]+"
+)
+string(REGEX REPLACE "#define ORT_API_VERSION ([0-9]+)" "1.\\1" Ort_VERSION "${Ort_VERSION}")
+
+# ------------------------------------------------------------------------------
+#  handle the package
+# ------------------------------------------------------------------------------
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
   Ort
+  VERSION_VAR Ort_VERSION
   REQUIRED_VARS Ort_LIB Ort_INCLUDE_DIR
 )

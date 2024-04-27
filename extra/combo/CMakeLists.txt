@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each combo
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   combo
   DEPENDS feature camera
@@ -25,7 +28,9 @@ rmvl_add_module(
 
 rmvl_generate_module_para(combo)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
     combo Unit
@@ -33,3 +38,8 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the combo modules
+# ----------------------------------------------------------------------------
+set(RMVL_COMBO_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")

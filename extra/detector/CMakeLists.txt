@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each detector
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   detector INTERFACE
   DEPENDS imgproc group
@@ -50,7 +53,9 @@ endif()
 
 rmvl_generate_module_para(detector)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  Build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
     detector Unit
@@ -58,3 +63,9 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the detector modules
+# ----------------------------------------------------------------------------
+set(RMVL_DETECTOR_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")
+

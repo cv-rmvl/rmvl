@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each group
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   group INTERFACE
   DEPENDS tracker
@@ -25,7 +28,9 @@ rmvl_add_module(
 
 rmvl_generate_module_para(group)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  Build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
     group Unit
@@ -33,3 +38,8 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the group modules
+# ----------------------------------------------------------------------------
+set(RMVL_GROUP_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")

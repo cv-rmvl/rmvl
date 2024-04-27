@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each tracker
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   tracker
   DEPENDS combo
@@ -35,7 +38,9 @@ rmvl_add_module(
 
 rmvl_generate_module_para(tracker)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
     tracker Unit
@@ -43,3 +48,8 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the tracker modules
+# ----------------------------------------------------------------------------
+set(RMVL_TRACKER_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")

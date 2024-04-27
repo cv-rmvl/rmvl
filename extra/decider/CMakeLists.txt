@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each decider
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   decider INTERFACE
   DEPENDS detector compensator predictor
@@ -35,8 +38,15 @@ rmvl_add_module(
 
 rmvl_generate_module_para(decider)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  Build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
 
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the decider modules
+# ----------------------------------------------------------------------------
+set(RMVL_DECIDER_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")
 

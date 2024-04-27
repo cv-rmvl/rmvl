@@ -6,15 +6,11 @@
 # 全局变量
 #
 # RMVL_MODULES_BUILD
-# RMVL_MODULES_PUBLIC
-# RMVL_MODULES_INTERFACE
 #
 # RMVL_MODULE_${the_module}_LOCATION
 # RMVL_MODULE_${the_module}_BINARY_DIR
 
-set(RMVL_MODULES_BUILD   "" CACHE INTERNAL "List of RMVL modules included into the build")
-set(RMVL_MODULES_PUBLIC  "" CACHE INTERNAL "List of RMVL public modules marked for export")
-set(RMVL_MODULES_INTERFACE "" CACHE INTERNAL "List of RMVL interface modules marked for export")
+set(RMVL_MODULES_BUILD "" CACHE INTERNAL "List of RMVL modules included into the build")
 
 # ----------------------------------------------------------------------------
 #   将预处理定义添加至指定目标
@@ -70,7 +66,11 @@ function(rmvl_install_directories _dir)
 endfunction(rmvl_install_directories)
 
 # ----------------------------------------------------------------------------
-#   在当前目录中添加新的 RMVL 模块
+#   在当前目录中添加新的 RMVL 模块，并会依次添加至
+#   - 局部变量 modules_build
+#   - 缓存变量 RMVL_MODULES_BUILD
+#   中
+#
 #   用法:
 #     rmvl_add_module(<name> [INTERFACE] [EXTRA_HEADER <list of other include directories>]
 #       [EXTRA_SOURCE <list of other source directories>] [DEPENDS <list of rmvl dependencies>]
@@ -190,12 +190,7 @@ macro(rmvl_add_module _name)
       ARCHIVE DESTINATION ${RMVL_LIB_INSTALL_PATH}
       LIBRARY DESTINATION ${RMVL_LIB_INSTALL_PATH}
     )
-
-    if(NOT MD_INTERFACE) # public library
-      set(RMVL_MODULES_PUBLIC ${RMVL_MODULES_PUBLIC} "${the_module}" CACHE INTERNAL "List of RMVL public modules marked for export" FORCE)
-    else() # interface library
-      set(RMVL_MODULES_INTERFACE ${RMVL_MODULES_INTERFACE} "${the_module}" CACHE INTERNAL "List of RMVL interface modules marked for export" FORCE)
-    endif(NOT MD_INTERFACE)
+    list(APPEND modules_build ${the_module})
     set(RMVL_MODULES_BUILD ${RMVL_MODULES_BUILD} "${the_module}" CACHE INTERNAL "List of RMVL modules included into the build" FORCE)
   endif()
   unset(the_module)

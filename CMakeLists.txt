@@ -72,6 +72,12 @@ set(para_template_path "${CMAKE_SOURCE_DIR}/cmake/templates" CACHE INTERNAL "Gen
 include(cmake/RMVLGenPara.cmake)
 
 # ----------------------------------------------------------------------------
+#  RMVL 3rdparty libraries
+# ----------------------------------------------------------------------------
+find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+# ----------------------------------------------------------------------------
 #  Process subdirectories
 # ----------------------------------------------------------------------------
 # rmvl.hpp and legacy headers
@@ -94,7 +100,7 @@ endif(BUILD_EXAMPLES)
 #  Documents generation
 # ----------------------------------------------------------------------------
 if(BUILD_DOCS)
-  find_package(Doxygen)
+  find_package(Doxygen REQUIRED)
     if(DOXYGEN_FOUND)
     add_custom_target(
       doxygen
@@ -163,15 +169,13 @@ endif()
 status("     ccache:"              ENABLE_CCACHE AND CCACHE_FOUND THEN YES ELSE NO)
 
 # =================== Other third-party libraries ===================
-find_package(OpenCV QUIET)
-find_package(Eigen3 QUIET)
 status("")
 status("  Other third-party libraries:")
 status("     OpenCV: (*)"           OpenCV_FOUND THEN "YES (ver ${OpenCV_VERSION})" ELSE NO)
 status("     Eigen library: (*)"    Eigen3_FOUND THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
-status("     onnxruntime:"          WITH_ONNXRUNTIME THEN YES ELSE NO)
+status("     onnxruntime:"          WITH_ONNXRUNTIME THEN "YES (ver ${Ort_VERSION})" ELSE NO)
 status("     apriltag:"             WITH_APRILTAG THEN YES ELSE NO)
-status("     open62541:"            WITH_OPEN62541 THEN YES ELSE NO)
+status("     open62541:"            WITH_OPEN62541 THEN "YES (ver ${open62541_VERSION})" ELSE NO)
 
 # =============================== SDK ===============================
 status("")
@@ -183,18 +187,35 @@ status("        OPT:"               BUILD_rmvl_opt_camera THEN YES ELSE NO)
 status("     Light controller:")
 status("        OPT:"               BUILD_rmvl_opt_light_control THEN YES ELSE NO)
 
-# ===================== Inference engine in RMVL ====================
-status("")
-status("  Inference engine in RMVL:")
-status("     Ort:"                  BUILD_rmvl_ort THEN YES ELSE NO)
-
 # ========================== RMVL modules ===========================
-string(REGEX REPLACE "rmvl_" " " modules_public_dir ${RMVL_MODULES_PUBLIC})
-string(REGEX REPLACE "rmvl_" " " modules_interface_dir ${RMVL_MODULES_INTERFACE})
+set(RMVL_MAIN_MODULES_BUILD ${RMVL_MODULES_BUILD})
+foreach(m ${RMVL_EXTRA_MODULE})
+  string(TOUPPER "${m}" mUP)
+  list(REMOVE_ITEM RMVL_MAIN_MODULES_BUILD ${RMVL_${mUP}_MODULES_BUILD} rmvl_types)
+  if("${m}" STREQUAL "types")
+    continue()
+  endif()
+  string(REGEX REPLACE "rmvl_" " " ${m}_modules ${RMVL_${mUP}_MODULES_BUILD})
+endforeach()
+string(REGEX REPLACE "rmvl_" " " main_modules ${RMVL_MAIN_MODULES_BUILD})
+
 status("")
-status("  RMVL modules:")
-status("     public modules:"       ${modules_public_dir})
-status("     interface modules:"    ${modules_interface_dir})
+status("  RMVL main modules:")
+status("     To be built:"          ${main_modules})
+status("")
+status("  RMVL extra modules:"      BUILD_EXTRA THEN YES ELSE NO)
+if(BUILD_EXTRA)
+  status("     To be built:")
+  foreach(m ${RMVL_EXTRA_MODULE})
+    if("${m}" STREQUAL "types")
+      continue()
+    endif()
+    status("        ${m}:"          ${${m}_modules})
+  endforeach()
+endif()
+status("")
+status("  Documents (Doxygen):"     BUILD_DOCS THEN "YES (ver ${DOXYGEN_VERSION})" ELSE NO)
+
 
 # ======================== Test and examples ========================
 status("")
