@@ -1,9 +1,7 @@
-find_package(OpenCV REQUIRED)
-
 rmvl_add_module(
   imgproc
   DEPENDS core
-  EXTERNAL ${OpenCV_LIBS}
+  EXTERNAL opencv_imgproc
 )
 
 # Build the test program

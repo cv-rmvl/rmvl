@@ -1,9 +1,6 @@
-find_package(OpenCV REQUIRED)
-
 rmvl_add_module(
   ml INTERFACE
   DEPENDS core
-  EXTERNAL ${OpenCV_LIBS}
 )
 
 # add module: ort

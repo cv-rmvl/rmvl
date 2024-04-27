@@ -1,9 +1,10 @@
-find_package(OpenCV COMPONENTS imgproc calib3d REQUIRED)
-
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each feature
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   feature INTERFACE
   DEPENDS types
-  EXTERNAL ${OpenCV_LIBS}
+  EXTERNAL opencv_imgproc opencv_calib3d
 )
 
 # light_blob
@@ -54,7 +55,9 @@ rmvl_add_module(
 
 rmvl_generate_module_para(feature)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
     feature Unit
@@ -62,3 +65,8 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the feature modules
+# ----------------------------------------------------------------------------
+set(RMVL_FEATURE_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")

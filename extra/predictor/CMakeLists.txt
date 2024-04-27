@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for each predictor
+# ----------------------------------------------------------------------------
 rmvl_add_module(
   predictor INTERFACE
   DEPENDS group
@@ -45,7 +48,9 @@ rmvl_add_module(
 
 rmvl_generate_module_para(predictor)
 
-# build the test program
+# ----------------------------------------------------------------------------
+#  Build the test program
+# ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
     predictor Unit
@@ -53,3 +58,8 @@ if(BUILD_TESTS)
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Export the predictor modules
+# ----------------------------------------------------------------------------
+set(RMVL_PREDICTOR_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")
