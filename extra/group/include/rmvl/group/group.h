@@ -34,9 +34,12 @@ public:
     using ptr = std::shared_ptr<group>;
     using const_ptr = std::shared_ptr<const group>;
 
-    group() = default;
-
-    virtual ~group() = default;
+    /**
+     * @brief 从另一个序列组进行构造
+     *
+     * @return 指向新序列组的共享指针
+     */
+    virtual ptr clone() = 0;
 
     /**
      * @brief 序列组同步操作
@@ -117,10 +120,31 @@ public:
     using ptr = std::shared_ptr<DefaultGroup>;
     using const_ptr = std::shared_ptr<const DefaultGroup>;
 
-    DefaultGroup() = default;
-
     //! 构建 DefaultGroup
-    static inline DefaultGroup::ptr make_group() { return std::make_shared<DefaultGroup>(); }
+    static inline ptr make_group() { return std::make_shared<DefaultGroup>(); }
+
+    /**
+     * @brief 从另一个序列组进行构造
+     *
+     * @return 指向新序列组的共享指针
+     */
+    group::ptr clone() override { return std::make_shared<DefaultGroup>(*this); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_group group::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<DefaultGroup>(p_group); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_group group::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const DefaultGroup>(p_group); }
 
     //! DefaultGroup 同步操作
     void sync(const GyroData &, double) override {}

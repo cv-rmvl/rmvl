@@ -35,8 +35,8 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
 
     _extrinsic = p_armor->getExtrinsics();
     _type = p_armor->getType();
-    _combo_deque.emplace_front(p_armor);
-    _type_deque.emplace_front(_type.RobotTypeID);
+    _combo_deque.push_back(p_armor);
+    _type_deque.push_back(_type.RobotTypeID);
     _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
     initFilter();
 }
@@ -71,7 +71,7 @@ void GyroTracker::update(combo::ptr p_armor)
 void GyroTracker::updateType(RMStatus stat)
 {
     if (_type.RobotTypeID == RobotType::UNKNOWN || stat.RobotTypeID != RobotType::UNKNOWN)
-        _type_deque.emplace_front(stat.RobotTypeID);
+        _type_deque.push_back(stat.RobotTypeID);
     if (_type_deque.size() > 32)
         _type_deque.pop_back();
     if (_type_deque.size() < 32)

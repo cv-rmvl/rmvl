@@ -38,12 +38,8 @@ RuneCenter::RuneCenter(const std::vector<cv::Point> &contour, cv::RotatedRect &r
     _height = std::min(_rotated_rect.size.width, _rotated_rect.size.height);
     _ratio = _width / _height;
     // 更新角点信息
-    cv::Point2f sortedPoints[4];
-    _rotated_rect.points(sortedPoints);
-    // 预留4个角点的空间
-    _corners.reserve(4);
-    for (auto point : sortedPoints)
-        _corners.push_back(point);
+    _corners.resize(4);
+    _rotated_rect.points(_corners.data());
 }
 
 std::shared_ptr<RuneCenter> RuneCenter::make_feature(const std::vector<cv::Point> &contour)

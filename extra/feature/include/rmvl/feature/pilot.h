@@ -34,11 +34,8 @@ public:
     using ptr = std::shared_ptr<Pilot>;
     using const_ptr = std::shared_ptr<const Pilot>;
 
-    Pilot(const Pilot &) = delete;
-    Pilot(Pilot &&) = delete;
-
     //! @warning 构造函数不直接使用
-    Pilot(std::vector<cv::Point> &, cv::RotatedRect &, float, float);
+    Pilot(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
     //! @warning 构造函数不直接使用
     Pilot(const float &, const float &, const cv::Point2f &, const float &, const std::vector<cv::Point2f> &);
 
@@ -49,7 +46,7 @@ public:
      * @param tri 包含引导灯颜色信息的灰度图像（三值图: 0, 125, 255）
      * @return 如果能够被成功构造，将返回引导灯的共享指针，否则返回空
      */
-    static std::shared_ptr<Pilot> make_feature(std::vector<cv::Point> &contour, cv::Mat &tri);
+    static ptr make_feature(const std::vector<cv::Point> &contour, cv::Mat &tri);
 
     /**
      * @brief 构造 Pilot
@@ -59,12 +56,19 @@ public:
      * @param[in] ref_center 参考中心点
      * @param[in] ref_angle 参考角度
      * @param[in] ref_corners 参考角点
-     * @return std::shared_ptr<Pilot>
+     * @return 返回 Pilot 的共享指针
      */
-    static inline std::shared_ptr<Pilot> make_feature(float ref_width, float ref_height, const cv::Point2f &ref_center, float ref_angle, const std::vector<cv::Point2f> &ref_corners)
+    static inline ptr make_feature(float ref_width, float ref_height, const cv::Point2f &ref_center, float ref_angle, const std::vector<cv::Point2f> &ref_corners)
     {
         return std::make_shared<Pilot>(ref_width, ref_height, ref_center, ref_angle, ref_corners);
     }
+
+    /**
+     * @brief 从另一个特征进行构造
+     * 
+     * @return 指向新特征的共享指针
+     */
+    feature::ptr clone() override { return std::make_shared<Pilot>(*this); }
 
     /**
      * @brief 动态类型转换
@@ -72,7 +76,7 @@ public:
      * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline Pilot::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<Pilot>(p_feature); }
+    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<Pilot>(p_feature); }
 
     /**
      * @brief 动态类型转换
@@ -80,20 +84,12 @@ public:
      * @param[in] p_feature feature::const_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline Pilot::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const Pilot>(p_feature); }
+    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const Pilot>(p_feature); }
 
     //! 获取灯条左端点
     inline cv::Point2f getLeftPoint() { return _left; }
     //! 获取灯条右端点
     inline cv::Point2f getRightPoint() { return _right; }
-
-private:
-    /**
-     * @brief 提取准确的左右顶点
-     *
-     * @param contour 轮廓信息
-     */
-    void getTruePoint(std::vector<cv::Point> &);
 };
 
 //! @} pilot

@@ -57,7 +57,14 @@ public:
      *
      * @param[in] p_armor 第一帧装甲（不允许为空）
      */
-    static inline GyroTracker::ptr make_tracker(combo::ptr p_armor) { return std::make_shared<GyroTracker>(p_armor); }
+    static inline ptr make_tracker(combo::ptr p_armor) { return std::make_shared<GyroTracker>(p_armor); }
+
+    /**
+     * @brief 从另一个追踪器进行构造
+     *
+     * @return 指向新追踪器的共享指针
+     */
+    tracker::ptr clone() override { return std::make_shared<GyroTracker>(*this); }
 
     /**
      * @brief 动态类型转换
@@ -65,7 +72,7 @@ public:
      * @param[in] p_tracker tracker::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline GyroTracker::ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<GyroTracker>(p_tracker); }
+    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<GyroTracker>(p_tracker); }
 
     /**
      * @brief 动态类型转换
@@ -73,7 +80,7 @@ public:
      * @param[in] p_tracker tracker::const_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline GyroTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const GyroTracker>(p_tracker); }
+    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const GyroTracker>(p_tracker); }
 
     [[deprecated]] void update(double, const GyroData &) override {};
 

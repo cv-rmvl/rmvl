@@ -39,7 +39,13 @@ public:
     using ptr = std::shared_ptr<feature>;
     using const_ptr = std::shared_ptr<const feature>;
 
-    virtual ~feature() = 0;
+    /**
+     * @brief 从另一个特征进行构造
+     *
+     * @return 指向新特征的共享指针
+     */
+    virtual ptr clone() = 0;
+
     //! 获取特征面积
     inline float getArea() const { return _height * _width; }
     //! 获取特征中心点
@@ -56,8 +62,6 @@ public:
     inline const RMStatus &getType() const { return _type; }
 };
 
-inline feature::~feature() = default;
-
 //! 默认图像特征，仅表示一个孤立的点 `cv::Point2f`
 class DefaultFeature final : public feature
 {
@@ -65,6 +69,7 @@ public:
     using ptr = std::shared_ptr<DefaultFeature>;
     using const_ptr = std::shared_ptr<const DefaultFeature>;
 
+    DefaultFeature() = default;
     DefaultFeature(const cv::Point2f &p) : feature() { _center = p, _corners = {p}; }
 
     /**
@@ -73,7 +78,14 @@ public:
      * @param[in] p 孤立的二维点
      * @return DefaultFeature 共享指针
      */
-    inline static std::shared_ptr<DefaultFeature> make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
+    static inline ptr make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
+
+    /**
+     * @brief 从另一个特征进行构造
+     *
+     * @return 指向新特征的共享指针
+     */
+    feature::ptr clone() override { return std::make_shared<DefaultFeature>(*this); }
 
     /**
      * @brief 动态类型转换
@@ -81,7 +93,7 @@ public:
      * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline DefaultFeature::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<DefaultFeature>(p_feature); }
+    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<DefaultFeature>(p_feature); }
 
     /**
      * @brief 动态类型转换
@@ -89,7 +101,7 @@ public:
      * @param[in] p_feature feature::const_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline DefaultFeature::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const DefaultFeature>(p_feature); }
+    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const DefaultFeature>(p_feature); }
 };
 
 //! @} feature

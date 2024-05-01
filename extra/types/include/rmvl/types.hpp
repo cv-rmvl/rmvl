@@ -93,22 +93,6 @@ enum class RobotType : uint8_t
     SENTRY      //!< 哨兵机器人
 };
 
-//! 目标切换类型
-enum class TargetChangeType : uint8_t
-{
-    UNKNOWN, //!< 未知
-    CHANGE,  //!< 强制切换目标
-    AUTO,    //!< 自动切换目标
-};
-
-//! 运动类型
-enum class MoveType : uint8_t
-{
-    UNKNOWN, //!< 未知
-    STATIC,  //!< 静止
-    MOVE,    //!< 移动
-};
-
 //! 强制补偿类型
 enum class CompensateType : uint8_t
 {
@@ -122,13 +106,19 @@ enum class CompensateType : uint8_t
 //! 状态类型
 struct RMStatus
 {
-    ArmorSizeType ArmorSizeTypeID{};       //!< 装甲板大小类型
-    RuneType RuneTypeID{};                 //!< 能量机关激活类型
-    TagType TagTypeID{};                   //!< AprilTag 视觉标签类型
-    MoveType MoveTypeID{};                 //!< 运动类型
-    TargetChangeType TargetChangeTypeID{}; //!< 目标切换类型
-    CompensateType CompensateTypeID{};     //!< 强制补偿类型
-    RobotType RobotTypeID{};               //!< 机器人类型
+#if __cplusplus < 202002L
+    ArmorSizeType ArmorSizeTypeID{};   //!< 装甲板大小类型
+    RuneType RuneTypeID{};             //!< 能量机关激活类型
+    CompensateType CompensateTypeID{}; //!< 强制补偿类型
+    RobotType RobotTypeID{};           //!< 机器人类型
+    TagType TagTypeID{};               //!< AprilTag 视觉标签类型
+#else
+    ArmorSizeType ArmorSizeTypeID : 2 {};   //!< 装甲板大小类型
+    RuneType RuneTypeID : 2 {};             //!< 能量机关激活类型
+    CompensateType CompensateTypeID : 4 {}; //!< 强制补偿类型
+    RobotType RobotTypeID : 4 {};           //!< 机器人类型
+    TagType TagTypeID{};                    //!< AprilTag 视觉标签类型
+#endif
 
     /**
      * @brief 将类型转化为 `std::string` 类型
@@ -147,12 +137,11 @@ struct RMStatus
      * @return 字符串类型
      */
     static std::string to_string(RobotType type);
-
 };
 
 /**
  * @brief 判断两个 RMStatus 是否相等
- * 
+ *
  * @param[in] lhs 左操作数
  * @param[in] rhs 右操作数
  * @return 是否相等

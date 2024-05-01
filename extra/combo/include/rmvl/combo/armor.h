@@ -33,11 +33,11 @@ namespace rm
  */
 class Armor : public combo
 {
-    float _combo_ratio = 0.f;  //!< 组合特征宽高比
-    float _width_ratio = 0.f;  //!< 左右灯条宽度比
-    float _length_ratio = 0.f; //!< 左右灯条长度比
-    float _corner_angle = 0.f; //!< 左右灯条错位角
-    float _match_error = 0.f;  //!< 匹配误差
+    float _combo_ratio{};  //!< 组合特征宽高比
+    float _width_ratio{};  //!< 左右灯条宽度比
+    float _length_ratio{}; //!< 左右灯条长度比
+    float _corner_angle{}; //!< 左右灯条错位角
+    float _match_error{};  //!< 匹配误差
 
     cv::Vec2f _pose; //!< 装甲板姿态法向量
 
@@ -47,16 +47,13 @@ public:
     using ptr = std::shared_ptr<Armor>;
     using const_ptr = std::shared_ptr<const Armor>;
 
-    Armor() = delete;
-    Armor(const Armor &) = delete;
-    Armor(Armor &&) = delete;
-
+    Armor() = default;
     //! @warning 禁止直接使用构造函数
     Armor(LightBlob::ptr, LightBlob::ptr, const GyroData &, double, float, float, float, float, float, float, float, ArmorSizeType);
 
     /**
      * @brief Armor 构造接口
-     * @note 若提供参数 `armor_size_type`，则会强制构造 Armor
+     * @note 若提供具体的 `armor_size_type` 参数，则不进行可行性验证，直接强制构造
      *
      * @param[in] p_left 左灯条共享指针
      * @param[in] p_right 右灯条共享指针
@@ -65,8 +62,21 @@ public:
      * @param[in] armor_size_type 需要指定的大小装甲板类型，默认为 `ArmorSizeType::UNKNOWN`
      * @return 若成功，返回 Armor 的共享指针，否则返回空
      */
-    static Armor::ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
-                                 double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
+    static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
+                          double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
+
+    /**
+     * @brief 从另一个组合体进行构造
+     *
+     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
+     * @return 指向新组合体的共享指针
+     */
+    combo::ptr clone(double tick) override
+    {
+        auto retval = std::make_shared<Armor>(*this);
+        retval->_tick = tick;
+        return retval;
+    }
 
     /**
      * @brief 动态类型转换
@@ -74,7 +84,7 @@ public:
      * @param[in] p_combo `combo::ptr` 指针
      * @return 派生对象指针
      */
-    static inline Armor::ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Armor>(p_combo); }
+    static inline ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Armor>(p_combo); }
 
     /**
      * @brief 动态类型转换
@@ -82,7 +92,7 @@ public:
      * @param[in] p_combo `combo::const_ptr` 指针
      * @return 派生对象指针
      */
-    static inline Armor::const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Armor>(p_combo); }
+    static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Armor>(p_combo); }
 
     /**
      * @brief 加载 SVM 装甲板大小分类的 *.xml 文件
@@ -128,10 +138,10 @@ public:
      * @brief 根据图像中指定装甲板的信息，截取仅包含数字的 ROI
      *
      * @param[in] src 输入图像
-     * @param[in] p_combo 指定的参考装甲板
+     * @param[in] p_armor 指定的参考装甲板
      * @return ROI
      */
-    static cv::Mat getNumberROI(cv::Mat src, combo::ptr p_combo);
+    static cv::Mat getNumberROI(cv::Mat src, const_ptr p_armor);
 
     //! 获取组合特征宽高比
     inline float getComboRatio() { return _combo_ratio; }
@@ -153,16 +163,6 @@ public:
     inline const cv::Vec2f &getPose() const { return _pose; }
 
 private:
-    /**
-     * @brief 获取装甲板的位姿
-     *
-     * @param[in] cam_matrix 相机内参，用于解算相机外参
-     * @param[in] distCoeffs 相机畸变参数，用于解算相机外参
-     * @param[in] gyro_data 陀螺仪数据
-     * @return CameraExtrinsics - 相机外参
-     */
-    CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cam_matrix, const cv::Matx<float, 5, 1> &distCoeffs, const GyroData &gyro_data);
-
     /**
      * @brief 用来确定装甲板的种类 (大装甲或者小装甲)
      *

@@ -9,7 +9,6 @@
  *
  */
 
-#include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/combo/armor.h"
@@ -45,26 +44,6 @@ ArmorSizeType Armor::matchArmorType()
         return ArmorSizeType::SMALL; // 装甲板长宽比例较小
     else
         return ArmorSizeType::BIG;
-}
-
-CameraExtrinsics Armor::calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const GyroData &gyro_data)
-{
-    cv::Vec3f rvec;             // 旋转向量
-    cv::Vec3f tvec;             // 平移向量
-    CameraExtrinsics extrinsic; // 存储相机外参
-    _type.ArmorSizeTypeID == ArmorSizeType::SMALL
-        ? solvePnP(para::armor_param.SMALL_ARMOR, _corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE)
-        : solvePnP(para::armor_param.BIG_ARMOR, _corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE);
-    // 变换为陀螺仪坐标系下
-    cv::Matx33f rmat;
-    Rodrigues(rvec, rmat);
-    cv::Matx33f gyro_rmat;
-    cv::Vec3f gyro_tvec;
-    Armor::cameraConvertToGyro(rmat, tvec, gyro_data, gyro_rmat, gyro_tvec);
-    extrinsic.R(gyro_rmat);
-    extrinsic.tvec(gyro_tvec);
-
-    return extrinsic;
 }
 
 void Armor::gyroConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec,
@@ -118,14 +97,16 @@ bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
         return false;
 }
 
-cv::Mat Armor::getNumberROI(cv::Mat src, combo::ptr p_combo)
+cv::Mat Armor::getNumberROI(cv::Mat src, const_ptr p_armor)
 {
     // 计算装甲板之间距离,该距离为获得的roi的边长
-    double h_dis = p_combo->getHeight() * para::armor_param.ROI_HEIGHT_RATIO;
-    double w_dis = p_combo->getWidth() * para::armor_param.ROI_WIDTH_RATIO;
+    double h_dis = p_armor->getHeight() * para::armor_param.ROI_HEIGHT_RATIO;
+    double w_dis = p_armor->getWidth() * para::armor_param.ROI_WIDTH_RATIO;
 
     // 图像中的 4 个角点
-    std::vector<cv::Point2f> corners = p_combo->getCorners();
+    std::vector<cv::Point2f> corners = p_armor->getCorners();
+    if (corners.size() != 4)
+        return cv::Mat();
 
     // 从左灯条上顶点指向下顶点的单位向量
     cv::Point2f e_ver_left = (corners[0] - corners[1]) / getDistance(corners[0], corners[1]);
@@ -137,10 +118,10 @@ cv::Mat Armor::getNumberROI(cv::Mat src, combo::ptr p_combo)
     cv::Point2f e_hor_bottom = (corners[0] - corners[3]) / getDistance(corners[1], corners[2]);
 
     cv::Point2f src_corners[4];
-    src_corners[0] = cv::Point2f(p_combo->getCenter() - e_ver_left * h_dis / 2 + e_hor_top * w_dis / 2);     // 左上
-    src_corners[1] = cv::Point2f(p_combo->getCenter() + e_ver_left * h_dis / 2 + e_hor_bottom * w_dis / 2);  // 左下
-    src_corners[2] = cv::Point2f(p_combo->getCenter() - e_ver_right * h_dis / 2 - e_hor_top * w_dis / 2);    // 右上
-    src_corners[3] = cv::Point2f(p_combo->getCenter() + e_ver_right * h_dis / 2 - e_hor_bottom * w_dis / 2); // 右下
+    src_corners[0] = cv::Point2f(p_armor->getCenter() - e_ver_left * h_dis / 2 + e_hor_top * w_dis / 2);     // 左上
+    src_corners[1] = cv::Point2f(p_armor->getCenter() + e_ver_left * h_dis / 2 + e_hor_bottom * w_dis / 2);  // 左下
+    src_corners[2] = cv::Point2f(p_armor->getCenter() - e_ver_right * h_dis / 2 - e_hor_top * w_dis / 2);    // 右上
+    src_corners[3] = cv::Point2f(p_armor->getCenter() + e_ver_right * h_dis / 2 - e_hor_bottom * w_dis / 2); // 右下
 
     // 边界修正
     src_corners[0].y = src_corners[0].y < 0 ? 0 : src_corners[0].y;
