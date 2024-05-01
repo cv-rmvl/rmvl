@@ -42,9 +42,12 @@ public:
     using ptr = std::shared_ptr<tracker>;
     using const_ptr = std::shared_ptr<const tracker>;
 
-    tracker() = default;
-
-    virtual ~tracker() = default;
+    /**
+     * @brief 从另一个追踪器进行构造
+     *
+     * @return 指向新追踪器的共享指针
+     */
+    virtual ptr clone() = 0;
 
     /**
      * @brief 使用已捕获的 `combo` 更新追踪器
@@ -103,6 +106,7 @@ public:
     using ptr = std::shared_ptr<DefaultTracker>;
     using const_ptr = std::shared_ptr<const DefaultTracker>;
 
+    DefaultTracker() = default;
     explicit DefaultTracker(combo::ptr);
 
     /**
@@ -111,7 +115,14 @@ public:
      * @param[in] p_combo 第一帧组合体（不允许为空）
      * @return DefaultTracker 共享指针
      */
-    static inline DefaultTracker::ptr make_tracker(combo::ptr p_combo) { return std::make_shared<DefaultTracker>(p_combo); }
+    static inline ptr make_tracker(combo::ptr p_combo) { return std::make_shared<DefaultTracker>(p_combo); }
+
+    /**
+     * @brief 从另一个追踪器进行构造
+     *
+     * @return 指向新追踪器的共享指针
+     */
+    tracker::ptr clone() override { return std::make_shared<DefaultTracker>(*this); }
 
     /**
      * @brief 使用已捕获的 `combo` 更新追踪器

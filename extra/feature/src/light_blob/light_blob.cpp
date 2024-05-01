@@ -11,8 +11,8 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/feature/light_blob.h"
 #include "rmvl/core.hpp"
+#include "rmvl/feature/light_blob.h"
 
 #include "rmvlpara/feature/light_blob.h"
 
@@ -119,10 +119,9 @@ LightBlob::LightBlob(const std::vector<cv::Point> &contour, cv::RotatedRect &rot
     _corners.resize(4);
     _rotated_rect.points(_corners.data());
     // 点从上到下排序
-    sort(_corners.begin(), _corners.end(),
-         [](const cv::Point2f &lhs, const cv::Point2f &rhs) {
-             return lhs.y < rhs.y;
-         });
+    sort(_corners.begin(), _corners.end(), [](const cv::Point2f &lhs, const cv::Point2f &rhs) {
+        return lhs.y < rhs.y;
+    });
 
     // 获得粗略的上下顶点和长宽
     _top = (_corners[0] + _corners[1]) / 2;
@@ -132,6 +131,37 @@ LightBlob::LightBlob(const std::vector<cv::Point> &contour, cv::RotatedRect &rot
     _center = _rotated_rect.center;
     // 修正灯条匹配误差，获得精准的上下顶点和长宽度
     calcAccurateInfo(lw_ratio, contour);
+}
+
+LightBlob::LightBlob(const cv::Point2f &top, const cv::Point2f &bottom, float width)
+{
+    // 顶点构建不设置筛选，仅设置异常
+    if (std::isnan(top.x) || std::isnan(top.y) || top.x < -10000.f || top.x > 10000.f || top.y < -10000.f || top.y > 10000.f)
+        RMVL_Error_(RMVL_StsBadArg, "Argument \"top\" is invalid, x = %.5f, y = %.5f", top.x, top.y);
+    if (std::isnan(bottom.x) || std::isnan(bottom.y) || bottom.x < -10000.f || bottom.x > 10000.f || bottom.y < -10000.f || bottom.y > 10000.f)
+        RMVL_Error_(RMVL_StsBadArg, "Argument \"bottom\" is invalid, x = %.5f, y = %.5f", bottom.x, bottom.y);
+    if (std::isnan(width) || width < 0 || width > 10000.f)
+        RMVL_Error_(RMVL_StsBadArg, "Argument \"width\" is invalid, value is: %.5f", width);
+
+    // 设置灯条参数
+    _top = top;
+    _bottom = bottom;
+    _center = (top + bottom) / 2.f;
+    _angle = getVAngle(_bottom, _top, DEG);
+    _height = getDistance(_top, _bottom);
+    _width = width;
+    _corners.reserve(4);
+    // 设置灯条角点
+    cv::Vec2f vertical_vec = {top.x - bottom.x,
+                              top.y - bottom.y};
+    vertical_vec /= sqrt(vertical_vec(0) * vertical_vec(0) +
+                         vertical_vec(1) * vertical_vec(1));
+    cv::Point2f vertical_point(-vertical_vec(1) * width / 2.f,
+                               vertical_vec(0) * width / 2.f);
+    _corners = {_top + vertical_point,
+                _top - vertical_point,
+                _bottom + vertical_point,
+                _bottom - vertical_point};
 }
 
 } // namespace rm

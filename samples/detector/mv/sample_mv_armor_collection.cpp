@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
  * @param[in] src 原图像
  * @param[in] p_combo 指定装甲板
  */
-void draw(Mat src, combo::ptr p_combo)
+static inline void draw(Mat src, combo::ptr p_combo)
 {
     // 角点
     const auto &corners = p_combo->getCorners();
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         Mat roi_img;
         if (!combos.empty())
         {
-            roi_img = Armor::getNumberROI(src, combos.front());
+            roi_img = Armor::getNumberROI(src, rm::Armor::cast(combos.front()));
             // 显示效果
             draw(src, combos.front());
         }

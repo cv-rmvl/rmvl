@@ -14,18 +14,17 @@
 #include "rmvl/core/util.hpp"
 #include "rmvl/core/math.hpp"
 
-using namespace std;
-using namespace cv;
-using namespace rm;
+namespace rm
+{
 
-Tag::Tag(const vector<Point2f> &corners, TagType type)
+Tag::Tag(const std::array<cv::Point2f, 4> &corners, TagType type)
 {
     size_t corners_size = corners.size();
     if (corners_size != 4)
         RMVL_Error_(RMVL_StsBadArg, "the size of the argument \"corners\" should be 4, but now it is %zu.", corners_size);
-    _corners = corners;
+    _corners = std::vector<cv::Point2f>(corners.begin(), corners.end());
     _type.TagTypeID = type;
-    Point2f center;
+    cv::Point2f center;
     for (const auto &corner : corners)
         center += corner;
     center /= static_cast<float>(corners_size);
@@ -36,3 +35,5 @@ Tag::Tag(const vector<Point2f> &corners, TagType type)
     _width = length1 > length2 ? length1 : length2;
     _height = _width == length1 ? length2 : length1;
 }
+
+} // namespace rm

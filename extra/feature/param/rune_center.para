@@ -1,4 +1,4 @@
-float MAX_AREA = 1000.f  # 最大面积
-float MIN_AREA = 10.f    # 最小面积
-float MAX_RATIO = 1.44f  # 最大比率
-float MIN_RATIO = 0.7f   # 最小比率
+float MAX_AREA = 1000.f # 最大面积
+float MIN_AREA = 10.f   # 最小面积
+float MAX_RATIO = 1.44f # 最大比率
+float MIN_RATIO = 0.7f  # 最小比率

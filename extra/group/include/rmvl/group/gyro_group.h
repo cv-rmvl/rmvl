@@ -51,9 +51,6 @@ public:
     using ptr = std::shared_ptr<GyroGroup>;
     using const_ptr = std::shared_ptr<const GyroGroup>;
 
-    GyroGroup() = delete;
-    GyroGroup(const GyroGroup &) = delete;
-    GyroGroup(GyroGroup &&) = delete;
     GyroGroup(const std::vector<combo::ptr> &combos, int armor_num);
 
     /**
@@ -63,7 +60,7 @@ public:
      * @param[in] first_combos 组合体列表
      * @param[in] armor_num 强制指定装甲板个数（小于 1 表示自动判断）
      */
-    static inline std::shared_ptr<GyroGroup> make_group(const std::vector<combo::ptr> &first_combos, int armor_num)
+    static inline ptr make_group(const std::vector<combo::ptr> &first_combos, int armor_num)
     {
         if (first_combos.size() != 1 && first_combos.size() != 2)
             return nullptr;
@@ -71,12 +68,11 @@ public:
     }
 
     /**
-     * @brief 动态类型转换
+     * @brief 从另一个序列组进行构造
      *
-     * @param[in] p_group group::ptr 抽象指针
-     * @return 派生对象指针
+     * @return 指向新序列组的共享指针
      */
-    static inline GyroGroup::ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<GyroGroup>(p_group); }
+    group::ptr clone() override { return std::make_shared<GyroGroup>(*this); }
 
     /**
      * @brief 动态类型转换
@@ -84,7 +80,15 @@ public:
      * @param[in] p_group group::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline GyroGroup::const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const GyroGroup>(p_group); }
+    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<GyroGroup>(p_group); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_group group::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const GyroGroup>(p_group); }
 
     /**
      * @brief 根据陀螺仪坐标系下装甲板外参信息和默认初始半径集合，得到修正的半径集合、序列组中心坐标、装甲板法向量集合

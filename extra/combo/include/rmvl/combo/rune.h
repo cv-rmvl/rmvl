@@ -37,17 +37,16 @@ namespace rm
  */
 class Rune final : public combo
 {
-    float _feature_dis = 0.f; //!< 特征间距
-    bool _is_active = false;  //!< 是否激活
+    float _feature_dis{}; //!< 特征间距
+    bool _is_active{};    //!< 是否激活
 
 public:
     using ptr = std::shared_ptr<Rune>;
     using const_ptr = std::shared_ptr<const Rune>;
 
+    Rune() = default;
     //! @warning 禁止直接使用构造函数
     Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, double tick);
-    Rune(const Rune &) = delete;
-    Rune(Rune &&) = delete;
 
     /**
      * @brief Rune 构造接口
@@ -57,10 +56,23 @@ public:
      * @param[in] gyro_data 陀螺仪数据
      * @param[in] tick 捕获特征的时间点
      * @param[in] force 是否为强制构造
-     * @return std::shared_ptr<Rune>
+     * @return 神符共享指针
      */
-    static std::shared_ptr<Rune> make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
-                                            const GyroData &gyro_data, double tick, bool force = false);
+    static ptr make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
+                          const GyroData &gyro_data, double tick, bool force = false);
+
+    /**
+     * @brief 从另一个组合体进行构造
+     *
+     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
+     * @return 指向新组合体的共享指针
+     */
+    combo::ptr clone(double tick) override
+    {
+        auto retval = std::make_shared<Rune>(*this);
+        retval->_tick = tick;
+        return retval;
+    }
 
     /**
      * @brief 动态类型转换

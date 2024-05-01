@@ -51,7 +51,7 @@ DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, Pi
         groups.emplace_back(DefaultGroup::make_group());
 
     cvtColor(src, info.gray, cv::COLOR_BGR2GRAY);
-    std::vector<std::vector<cv::Point2f>> corners;
+    std::vector<std::array<cv::Point2f, 4>> corners;
     std::vector<TagType> types;
 
     // 格式转换
@@ -69,7 +69,6 @@ DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, Pi
     {
         apriltag_detection_t *det = nullptr;
         zarray_get(detections, i, &det);
-        corners[i].resize(4);
         for (int j = 0; j < 4; j++)
             corners[i][j] = cv::Point2f(static_cast<float>(det->p[j][0]),
                                         static_cast<float>(det->p[j][1]));

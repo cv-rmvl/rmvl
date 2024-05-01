@@ -53,7 +53,14 @@ public:
      *
      * @param[in] p_rune 第一帧神符模块组合特征（不允许为空）
      */
-    static inline RuneTracker::ptr make_tracker(combo::ptr p_rune) { return std::make_shared<RuneTracker>(p_rune); }
+    static inline ptr make_tracker(combo::ptr p_rune) { return std::make_shared<RuneTracker>(p_rune); }
+
+    /**
+     * @brief 从另一个追踪器进行构造
+     *
+     * @return 指向新追踪器的共享指针
+     */
+    tracker::ptr clone() override { return std::make_shared<RuneTracker>(*this); }
 
     /**
      * @brief 动态类型转换
@@ -61,7 +68,7 @@ public:
      * @param[in] p_tracker tracker::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline RuneTracker::ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<RuneTracker>(p_tracker); }
+    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<RuneTracker>(p_tracker); }
 
     /**
      * @brief 动态类型转换
@@ -69,7 +76,7 @@ public:
      * @param[in] p_tracker tracker::const_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline RuneTracker::const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const RuneTracker>(p_tracker); }
+    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const RuneTracker>(p_tracker); }
 
     /**
      * @brief 使用捕获的 `rm::Rune` 组合体更新追踪器

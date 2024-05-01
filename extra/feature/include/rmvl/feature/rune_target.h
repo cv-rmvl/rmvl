@@ -41,8 +41,6 @@ public:
     using const_ptr = std::shared_ptr<const RuneTarget>;
 
     RuneTarget() = default;
-    RuneTarget(const RuneTarget &) = delete;
-    RuneTarget(RuneTarget &&) = delete;
     RuneTarget(const std::vector<cv::Point> &, const cv::RotatedRect &, bool is_active);
     RuneTarget(const cv::Point &center, bool is_active);
 
@@ -65,12 +63,19 @@ public:
     static std::shared_ptr<RuneTarget> make_feature(const cv::Point &center, bool is_active);
 
     /**
+     * @brief 从另一个特征进行构造
+     * 
+     * @return 指向新特征的共享指针
+     */
+    feature::ptr clone() override { return std::make_shared<RuneTarget>(*this); }
+
+    /**
      * @brief 动态类型转换
      *
      * @param[in] p_feature feature::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline RuneTarget::ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<RuneTarget>(p_feature); }
+    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<RuneTarget>(p_feature); }
 
     /**
      * @brief 动态类型转换
@@ -78,7 +83,7 @@ public:
      * @param[in] p_feature feature::const_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline RuneTarget::const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const RuneTarget>(p_feature); }
+    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const RuneTarget>(p_feature); }
 
     //! 获取长宽比
     inline float getRatio() const { return _ratio; }

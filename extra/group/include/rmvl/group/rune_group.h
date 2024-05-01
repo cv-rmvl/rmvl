@@ -28,10 +28,15 @@ public:
     using ptr = std::shared_ptr<RuneGroup>;
     using const_ptr = std::shared_ptr<const RuneGroup>;
 
-    RuneGroup() = default;
-
     //! 构建 RuneGroup
-    static inline std::shared_ptr<RuneGroup> make_group() { return std::make_shared<RuneGroup>(); }
+    static inline ptr make_group() { return std::make_shared<RuneGroup>(); }
+
+    /**
+     * @brief 从另一个序列组进行构造
+     *
+     * @return 指向新序列组的共享指针
+     */
+    group::ptr clone() override { return std::make_shared<RuneGroup>(*this); }
 
     /**
      * @brief 动态类型转换
@@ -39,7 +44,7 @@ public:
      * @param[in] p_group group::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline RuneGroup::ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<RuneGroup>(p_group); }
+    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<RuneGroup>(p_group); }
 
     /**
      * @brief 动态类型转换
@@ -47,7 +52,7 @@ public:
      * @param[in] p_group group::ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline RuneGroup::const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const RuneGroup>(p_group); }
+    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const RuneGroup>(p_group); }
 
     /**
      * @brief 神符序列组同步操作

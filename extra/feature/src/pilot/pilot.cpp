@@ -11,50 +11,55 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/feature/pilot.h"
 #include "rmvl/core.hpp"
+#include "rmvl/feature/pilot.h"
 
 #include "rmvlpara/feature/pilot.h"
 
 namespace rm
 {
 
-void Pilot::getTruePoint(std::vector<cv::Point> &contour)
+/**
+ * @brief 获取准确的特征信息
+ *
+ * @param[in] contour 轮廓点集
+ * @param[in] center 中心点
+ * @param[in out] width 宽度
+ * @param[in out] height 高度
+ * @param[out] left 左顶点
+ * @param[out] right 右顶点
+ * @param[out] angle 角度
+ */
+static void correct(const std::vector<cv::Point> &contour, const cv::Point2f &center, float &width,
+                    float &height, cv::Point2f &left, cv::Point2f &right, float &angle)
 {
-    cv::Point left = _center;
-    cv::Point right = _center;
+    cv::Point pl = center;
+    cv::Point pr = center;
     // 遍历每一个轮廓点
     for (const auto &point : contour)
     {
-        if (abs(point.y - _center.y) > _height / para::pilot_param.VERTEX_K)
+        if (abs(point.y - center.y) > height / para::pilot_param.VERTEX_K)
             continue;
         // 小于或大于一定值时才对其进行计算比较，节省运算
-        if (point.x < _center.x) // 找出轮廓中最左边的点作为左极点
-        {
-            if (point.x < left.x)
-                left = point;
-        }
+        if (point.x < center.x) // 找出轮廓中最左边的点作为左极点
+            pl = (point.x < pl.x) ? point : pl;
         else // 找出轮廓中最右边的点作为右极点
-        {
-            if (point.x > right.x)
-                right = point;
-        }
+            pr = (point.x > pr.x) ? point : pr;
     }
     // 提取轮廓点集中离拟合椭圆左右顶点最近的点作修正后的数据
-    if (left.x != _center.x &&
-        right.x != _center.x)
+    if (pl.x != center.x && pr.x != center.x)
     {
         // 更新左右顶点
-        _left = left;
-        _right = right;
-        float temp_width = getDistance(_left, _right);
-        _height = _height * temp_width / _width;
-        _width = temp_width;
-        _angle = getHAngle(_left, _right);
+        left = pl;
+        right = pr;
+        float tmpw = getDistance(left, right);
+        height = height * tmpw / width;
+        width = tmpw;
+        angle = getHAngle(left, right);
     }
 }
 
-std::shared_ptr<Pilot> Pilot::make_feature(std::vector<cv::Point> &contour, cv::Mat &bin)
+Pilot::ptr Pilot::make_feature(const std::vector<cv::Point> &contour, cv::Mat &bin)
 {
     cv::RotatedRect rotated_rect = cv::fitEllipse(contour);
     cv::Point2f center = rotated_rect.center;
@@ -83,7 +88,7 @@ std::shared_ptr<Pilot> Pilot::make_feature(std::vector<cv::Point> &contour, cv::
     return std::make_shared<Pilot>(contour, rotated_rect, width, height);
 }
 
-Pilot::Pilot(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float width, float height)
+Pilot::Pilot(const std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float width, float height)
     : _rotated_rect(rotated_rect)
 {
     if (std::isnan(width) || width < 0 || width > 100000.f)
@@ -94,7 +99,8 @@ Pilot::Pilot(std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, flo
     _height = height;
     _center = _rotated_rect.center;
     _angle = _rotated_rect.angle;
-    getTruePoint(contour);
+    // 获取准确的特征信息
+    correct(contour, _center, _width, _height, _left, _right, _angle);
     _corners = {_left, _right};
 }
 

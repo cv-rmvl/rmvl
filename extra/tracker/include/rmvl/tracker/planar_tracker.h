@@ -47,7 +47,30 @@ public:
      *
      * @param[in] p_combo 第一帧平面目标组合特征（不允许为空）
      */
-    static inline PlanarTracker::ptr make_tracker(combo::ptr p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
+    static inline ptr make_tracker(combo::ptr p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
+
+    /**
+     * @brief 从另一个追踪器进行构造
+     *
+     * @return 指向新追踪器的共享指针
+     */
+    tracker::ptr clone() override { return std::make_shared<PlanarTracker>(*this); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_tracker tracker::ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<PlanarTracker>(p_tracker); }
+
+    /**
+     * @brief 动态类型转换
+     *
+     * @param[in] p_tracker tracker::const_ptr 抽象指针
+     * @return 派生对象指针
+     */
+    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const PlanarTracker>(p_tracker); }
 
     /**
      * @brief 丢失目标时，使用时间点和陀螺仪数据更新平面目标追踪器

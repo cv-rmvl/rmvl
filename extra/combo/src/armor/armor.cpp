@@ -9,6 +9,8 @@
  *
  */
 
+#include <opencv2/calib3d.hpp>
+
 #include "rmvl/combo/armor.h"
 #include "rmvl/core/transform.hpp"
 
@@ -73,8 +75,39 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
     }
 
     return std::make_shared<Armor>(p_left, p_right, gyro_data, tick,
-                                  width_ratio, length_ratio, corner_angle, match_error,
-                                  combo_height, combo_width, combo_ratio, armor_size_type);
+                                   width_ratio, length_ratio, corner_angle, match_error,
+                                   combo_height, combo_width, combo_ratio, armor_size_type);
+}
+
+/**
+ * @brief 获取装甲板的位姿
+ *
+ * @param[in] cam_matrix 相机内参，用于解算相机外参
+ * @param[in] distCoeffs 相机畸变参数，用于解算相机外参
+ * @param[in] gyro_data 陀螺仪数据
+ * @param[in] type 装甲板类型
+ * @param[in] corners 装甲板角点
+ * @return CameraExtrinsics - 相机外参
+ */
+static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const GyroData &gyro_data,
+                                           ArmorSizeType type, const std::vector<cv::Point2f> &corners)
+{
+    cv::Vec3f rvec;             // 旋转向量
+    cv::Vec3f tvec;             // 平移向量
+    CameraExtrinsics extrinsic; // 存储相机外参
+    type == ArmorSizeType::SMALL
+        ? cv::solvePnP(para::armor_param.SMALL_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE)
+        : cv::solvePnP(para::armor_param.BIG_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE);
+    // 变换为陀螺仪坐标系下
+    cv::Matx33f rmat;
+    cv::Rodrigues(rvec, rmat);
+    cv::Matx33f gyro_rmat;
+    cv::Vec3f gyro_tvec;
+    Armor::cameraConvertToGyro(rmat, tvec, gyro_data, gyro_rmat, gyro_tvec);
+    extrinsic.R(gyro_rmat);
+    extrinsic.tvec(gyro_tvec);
+
+    return extrinsic;
 }
 
 Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data, double tick,
@@ -104,7 +137,8 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
                 p_right->getTopPoint(),     // 右上
                 p_right->getBottomPoint()}; // 右下
     // 计算相机外参
-    _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, gyro_data);
+    _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs,
+                                    gyro_data, _type.ArmorSizeTypeID, _corners);
     const auto &rmat = _extrinsic.R();
     _pose = cv::normalize(cv::Vec2f(rmat(0, 2), rmat(2, 2)));
     // 设置组合体的特征容器
