@@ -39,6 +39,6 @@ if(BUILD_PERF_TESTS)
   rmvl_add_test(
     core Performance
     DEPENDS core
-    DEPEND_TESTS benchmark::benchmark_main
+    DEPEND_TESTS benchmark::benchmark_main opencv_video
   )
 endif(BUILD_PERF_TESTS)

@@ -10,11 +10,10 @@
  */
 
 #include <fstream>
-
+#include <benchmark/benchmark.h>
 #include <opencv2/video/tracking.hpp>
 
 #include "rmvl/core/kalman.hpp"
-#include <benchmark/benchmark.h>
 
 namespace rm_test
 {
@@ -76,7 +75,7 @@ void kalman42_opencv(benchmark::State &state)
     }
 }
 
-BENCHMARK(kalman42_rmvl)->Name("KalmanFilter42 -   RMVL")->Iterations(10);
-BENCHMARK(kalman42_opencv)->Name("KalmanFilter42 - OpenCV")->Iterations(10);
+BENCHMARK(kalman42_rmvl)->Name("kf (x_dim: 4, z_dim: 2) - by rmvl  ")->Iterations(10);
+BENCHMARK(kalman42_opencv)->Name("kf (x_dim: 4, z_dim: 2) - by opencv")->Iterations(10);
 
 } // namespace rm_test

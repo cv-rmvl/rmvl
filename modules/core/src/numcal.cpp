@@ -9,10 +9,9 @@
  *
  */
 
-#include <numeric>
-
 #include <opencv2/core.hpp>
 
+#include "rmvl/core/math.hpp"
 #include "rmvl/core/numcal.hpp"
 #include "rmvl/core/util.hpp"
 
@@ -20,6 +19,13 @@
 
 namespace rm
 {
+
+double Polynomial::operator()(double x) const noexcept
+{
+    double y = _coeffs.back();
+    std::for_each(_coeffs.rbegin() + 1, _coeffs.rend(), [&](double val) { y = y * x + val; });
+    return y;
+}
 
 ///////////////////// 函数插值 /////////////////////
 
@@ -138,36 +144,6 @@ RungeKutta::RungeKutta(
         if (_r[i].size() < _r.size())
             RMVL_Error(RMVL_StsBadArg, "\"r[i].size()\" must be greater than or equal to the \"i\".");
 }
-
-// 加法
-template <typename T>
-inline static std::vector<T> operator+(const std::vector<T> &vec1, const std::vector<T> &vec2)
-{
-    std::vector<T> retval(vec1.size());
-    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), retval.begin(), std::plus<T>());
-    return retval;
-}
-
-// 自加
-template <typename T>
-inline static std::vector<T> &operator+=(std::vector<T> &vec1, const std::vector<T> &vec2)
-{
-    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), vec1.begin(), std::plus<T>());
-    return vec1;
-}
-
-// 数乘
-template <typename T>
-inline static std::vector<T> operator*(const std::vector<T> &vec, T val)
-{
-    std::vector<T> retval(vec.size());
-    std::transform(vec.cbegin(), vec.cend(), retval.begin(), [val](T x) { return x * val; });
-    return retval;
-}
-
-// 数乘
-template <typename T>
-inline static std::vector<T> operator*(T val, const std::vector<T> &vec) { return vec * val; }
 
 /**
  * @brief 计算数值解

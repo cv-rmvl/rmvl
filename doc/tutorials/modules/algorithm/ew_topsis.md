@@ -4,7 +4,7 @@
 @author RoboMaster Vision Community
 @date 2023/01/11
 
-@prev_tutorial{tutorial_modules_runge_kutta}
+@prev_tutorial{tutorial_modules_fminunc}
 
 @next_tutorial{tutorial_modules_kalman}
 

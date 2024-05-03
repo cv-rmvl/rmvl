@@ -19,9 +19,9 @@
 最小二乘法诞生于统计学，其最初的目标是使用一条直线拟合一系列离散的点，那么我们该如何寻找这一直线？最小二乘法的原理是使得拟合直线的误差的平方和最小。这里的误差定义成每一个离散的点\f$x_i\f$与拟合直线的 **距离** 。在这一最初的用法中，点到直线的距离能够很直观的描述成点到直线的 **垂线** 的长度。
 
 <center>
-![ls-line-vertical](ls-line-vertical.png)
 
-图 1-1
+![图 1-1](ls-line-vertical.png)
+
 </center>
 
 如图 1-1 所示，令直线外一点为\f$P\f$，直线为\f$l\f$，垂线为\f$l_0\f$，垂足为点\f$O\f$。最小二乘法就是构建一条直线，使得这些点\f$P_i\f$到这条直线的距离平方和最小，此时\f$O_i\f$点被称为 **最小二乘解** 。
@@ -57,9 +57,9 @@
 我们先用一个最简单的例子。
 
 <center>
-![ls-vector-vertical](ls-vector-vertical.png)
 
-图 1-2
+![图 1-2](ls-vector-vertical.png)
+
 </center>
 
 对于图 1-2 中使用向量表示的方式，最小二乘解可以表示为向量\f$OP\f$的坐标，在这种情况下，\f$BP\f$与\f$OA\f$垂直，即：
@@ -86,16 +86,14 @@
 这里 \f$A=\begin{bmatrix}2&1\\1&-1\\1&1\end{bmatrix}\f$，\f$\pmb b=(1,0,2)^T\f$，在图 1-3 中表示如下。
 
 <center>
-![ls-equations](ls-equations.png)
 
-图 1-3
+![图 1-3](ls-equations.png)
+
 </center>
 
 一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出误差平方和的表达式。
 
-\f[
-\delta^2=\sum_{i=0}^{s-1}(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}
-\f]
+\f[\delta^2=\sum_{i=0}^{s-1}(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}\f]
 
 上式也可以写成
 
@@ -174,9 +172,9 @@ y&=x_1
 这是一个参数方程，消去 \f$x_1\f$ 可以得到 \f$y=x\f$，这就是系数矩阵 \f$A=(1,\ 1)^T\f$ 所生成的列空间。
 
 <center>
-![ls-eg1](ls-eg1.png)
 
-图 2-1
+![图 2-1](ls-eg1.png)
+
 </center>
 
 相当于现在需要在 \f$y=x\f$ 上找到一个点，使得其到 \f$\pmb b\f$ 的距离最短，这是初等几何的内容，做垂线即可，最终得到交点的坐标 
@@ -196,9 +194,9 @@ y&=x_1
 列空间外向量（右端项）：\f$\pmb b=(1,0,2)^T\f$
 
 <center>
-![ls-eg2](ls-eg2.png)
 
-图 2-2
+![图 2-2](ls-eg2.png)
+
 </center>
 
 需要满足 \f$(\pmb y-\pmb b)\perp\alpha\f$，则需要分别满足 \f$(\pmb y-\pmb b)\perp\pmb\alpha_1\f$ 和 \f$(\pmb y-\pmb b)\perp\pmb\alpha_2\f$，下面使用几何法对最小二乘法的原理进行验证。
@@ -408,9 +406,9 @@ d_1=(\phi_1,f)&=\sum_{i=0}^3\phi_1(t_i)f(t_i)=\sum_{i=0}^3t_i\times f(t_i)\\&=0+
 解得：\f$\left\{\begin{align}a_0&=-0.5\\a_1&=0.8\end{align}\right.\f$，即拟合曲线为 \f$y=-0.5+0.8t\f$，使用数学绘图软件验证，结果正确。
 
 <center>
-![ls-eg3](ls-eg3.png)
 
-图 4-1
+![图 4-1](ls-eg3.png)
+
 </center>
 
 ### 5. 部署使用
