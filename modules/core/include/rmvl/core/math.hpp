@@ -121,31 +121,31 @@ template <typename Tp>
 constexpr Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<Tp>(PI); }
 
 /**
- * @brief Point类型转换为Matx类型
+ * @brief Point 类型转换为 Matx 类型
  *
  * @tparam Tp 数据类型
- * @param[in] point Point类型变量
- * @return Matx类型变量
+ * @param[in] point Point 类型变量
+ * @return Matx 类型变量
  */
 template <typename Tp>
 constexpr cv::Matx<Tp, 3, 1> point2matx(cv::Point3_<Tp> point) { return cv::Matx<Tp, 3, 1>(point.x, point.y, point.z); }
 
 /**
- * @brief Matx类型转换为Point类型
+ * @brief Matx 类型转换为 Point 类型
  *
  * @tparam Tp 数据类型
- * @param[in] matx Matx类型变量
- * @return Point类型变量
+ * @param[in] matx Matx 类型变量
+ * @return Point 类型变量
  */
 template <typename Tp>
 constexpr cv::Point3_<Tp> matx2point(cv::Matx<Tp, 3, 1> matx) { return cv::Point3_<Tp>(matx(0), matx(1), matx(2)); }
 
 /**
- * @brief Matx类型转换为Vec类型
+ * @brief Matx 类型转换为 Vec 类型
  *
  * @tparam Tp 数据类型
- * @param[in] matx Matx类型变量
- * @return Vec类型变量
+ * @param[in] matx Matx 类型变量
+ * @return Vec 类型变量
  */
 template <typename Tp>
 constexpr cv::Vec<Tp, 3> matx2vec(cv::Matx<Tp, 3, 1> matx) { return cv::Vec<Tp, 3>(matx(0), matx(1), matx(2)); }
@@ -419,6 +419,156 @@ typename ForwardIterator::value_type calculateModeNum(ForwardIterator first, For
                return lhs.second < rhs.second;
            })
         ->first;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量加法
+ *
+ * @tparam T 数据类型
+ * @param[in] vec1 向量 1
+ * @param[in] vec2 向量 2
+ * @return 和向量
+ */
+template <typename T>
+inline std::vector<T> operator+(const std::vector<T> &vec1, const std::vector<T> &vec2)
+{
+    std::vector<T> retval(vec1.size());
+    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), retval.begin(), std::plus<T>());
+    return retval;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量减法
+ *
+ * @tparam T 数据类型
+ * @param[in] vec1 向量 1
+ * @param[in] vec2 向量 2
+ * @return 差向量
+ */
+template <typename T>
+inline std::vector<T> operator-(const std::vector<T> &vec1, const std::vector<T> &vec2)
+{
+    std::vector<T> retval(vec1.size());
+    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), retval.begin(), std::minus<T>());
+    return retval;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量自加
+ *
+ * @tparam T 数据类型
+ * @param[in] vec1 向量 1
+ * @param[in] vec2 向量 2
+ * @return 和向量
+ */
+template <typename T>
+inline std::vector<T> &operator+=(std::vector<T> &vec1, const std::vector<T> &vec2)
+{
+    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), vec1.begin(), std::plus<T>());
+    return vec1;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量自减
+ *
+ * @tparam T 数据类型
+ * @param[in] vec1 向量 1
+ * @param[in] vec2 向量 2
+ * @return 差向量
+ */
+template <typename T>
+inline std::vector<T> &operator-=(std::vector<T> &vec1, const std::vector<T> &vec2)
+{
+    std::transform(vec1.cbegin(), vec1.cend(), vec2.cbegin(), vec1.begin(), std::minus<T>());
+    return vec1;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量取反
+ *
+ * @tparam T 数据类型
+ * @param[in] vec 向量
+ * @return 向量取反后的结果
+ */
+template <typename T>
+inline std::vector<T> operator-(const std::vector<T> &vec)
+{
+    std::vector<T> retval(vec.size());
+    std::transform(vec.cbegin(), vec.cend(), retval.begin(), std::negate<T>());
+    return retval;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量乘法（数乘）
+ *
+ * @tparam T 数据类型
+ * @param[in] vec 向量
+ * @param[in] val 数乘因子
+ * @return 向量乘法（数乘）
+ */
+template <typename T>
+inline std::vector<T> operator*(const std::vector<T> &vec, T val)
+{
+    std::vector<T> retval(vec.size());
+    std::transform(vec.cbegin(), vec.cend(), retval.begin(), [val](const T &x) { return x * val; });
+    return retval;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量乘法（数乘）
+ *
+ * @tparam T 数据类型
+ * @param[in] val 数乘因子
+ * @param[in] vec 向量
+ * @return 向量乘法（数乘）
+ */
+template <typename T>
+inline std::vector<T> operator*(T val, const std::vector<T> &vec) { return vec * val; }
+
+/**
+ * @brief 使用 `std::vector` 表示的向量乘法（数乘）
+ *
+ * @tparam T 数据类型
+ * @param[in] vec 向量
+ * @param[in] val 数乘因子
+ * @return 向量乘法（数乘）
+ */
+template <typename T>
+inline std::vector<T> &operator*=(std::vector<T> &vec, T val)
+{
+    std::transform(vec.cbegin(), vec.cend(), vec.begin(), [val](const T &x) { return x * val; });
+    return vec;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量除法（数乘）
+ *
+ * @tparam T 数据类型
+ * @param[in] vec 向量
+ * @param[in] val 除数
+ * @return 向量除法（数乘）
+ */
+template <typename T>
+inline std::vector<T> operator/(const std::vector<T> &vec, T val)
+{
+    std::vector<T> retval(vec.size());
+    std::transform(vec.cbegin(), vec.cend(), retval.begin(), [val](const T &x) { return x / val; });
+    return retval;
+}
+
+/**
+ * @brief 使用 `std::vector` 表示的向量除法（数乘）
+ *
+ * @tparam T 数据类型
+ * @param[in] val 除数
+ * @param[in] vec 向量
+ * @return 向量除法（数乘）
+ */
+template <typename T>
+inline std::vector<T> &operator/=(std::vector<T> &vec, T val)
+{
+    std::transform(vec.cbegin(), vec.cend(), vec.begin(), [val](const T &x) { return x / val; });
+    return vec;
 }
 
 //! @} core
