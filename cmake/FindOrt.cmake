@@ -47,10 +47,12 @@ mark_as_advanced(Ort_INCLUDE_DIR Ort_LIB)
 set(Ort_LIBS "onnxruntime")
 set(Ort_INCLUDE_DIRS "${Ort_INCLUDE_DIR}")
 
-file(STRINGS "${Ort_INCLUDE_DIR}/onnxruntime_c_api.h" Ort_VERSION
-  REGEX "#define ORT_API_VERSION [0-9]+"
-)
-string(REGEX REPLACE "#define ORT_API_VERSION ([0-9]+)" "1.\\1" Ort_VERSION "${Ort_VERSION}")
+if(Ort_INCLUDE_DIR)
+  file(STRINGS "${Ort_INCLUDE_DIR}/onnxruntime_c_api.h" Ort_VERSION
+    REGEX "#define ORT_API_VERSION [0-9]+"
+  )
+  string(REGEX REPLACE "#define ORT_API_VERSION ([0-9]+)" "1.\\1" Ort_VERSION "${Ort_VERSION}")
+endif()
 
 # ------------------------------------------------------------------------------
 #  handle the package

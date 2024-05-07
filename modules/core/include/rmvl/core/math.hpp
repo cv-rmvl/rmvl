@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cmath>
+#include <vector>
 #include <unordered_map>
 
 #if __cpp_lib_math_constants >= 201907L
