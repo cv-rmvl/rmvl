@@ -2,7 +2,7 @@
  * @file method.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 方法节点
- * @version 1.1
+ * @version 2.2
  * @date 2023-10-23
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -44,12 +44,6 @@ struct Argument final
      * @param[in] dm 参数维数（默认为 `1`）
      */
     Argument(std::string_view n, UA_TypeFlag dt, uint32_t dm = 1) : name(n), data_type(dt), dims(dm) {}
-
-    Argument(const Argument &val) : name(val.name), data_type(val.data_type), dims(val.dims) {}
-    Argument(Argument &&val) : name(std::move(val.name)), data_type(std::exchange(val.data_type, 0)), dims(std::exchange(val.dims, 0)) {}
-
-    Argument &operator=(const Argument &val);
-    Argument &operator=(Argument &&val);
 };
 
 //! OPC UA 方法
@@ -107,15 +101,6 @@ struct Method final
      * @param[in] f 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
      */
     Method(UA_MethodCallback f) : func(f) {}
-
-    Method(const Method &val) : browse_name(val.browse_name), display_name(val.display_name),
-                                description(val.description), iargs(val.iargs), oargs(val.oargs), func(val.func) {}
-
-    Method(Method &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
-                           iargs(std::move(val.iargs)), oargs(std::move(val.oargs)), func(std::exchange(val.func, nullptr)) {}
-
-    Method &operator=(const Method &val);
-    Method &operator=(Method &&val);
 };
 
 //! @} opcua

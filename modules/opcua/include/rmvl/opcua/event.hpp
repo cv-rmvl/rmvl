@@ -2,7 +2,7 @@
  * @file event.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 事件
- * @version 1.1
+ * @version 2.2
  * @date 2023-11-13
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -56,15 +56,6 @@ public:
     //! 构造 `rm::EventType` 对象类型
     EventType() = default;
 
-    EventType(const EventType &val) : browse_name(val.browse_name), display_name(val.display_name),
-                                      description(val.description), _properties(val._properties) {}
-
-    EventType(EventType &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)),
-                                 description(std::move(val.description)), _properties(std::move(val._properties)) {}
-
-    EventType &operator=(const EventType &val);
-    EventType &operator=(EventType &&val);
-
     /**
      * @brief 添加非默认属性至事件类型中
      *
@@ -113,12 +104,6 @@ public:
      * @param[in] etype 既存的待作为事件类型信息的使用 `rm::EventType` 表示的变量类型
      */
     Event(EventType &etype) : _type(&etype), _properties(etype.data()) {}
-
-    Event(const Event &val) : _type(val._type), _properties(val._properties) {}
-    Event(Event &&val) : _type(std::exchange(val._type, nullptr)), _properties(std::move(val._properties)) {}
-
-    Event &operator=(const Event &val);
-    Event &operator=(Event &&val);
 
     /**
      * @brief 添加非默认属性至事件类型中

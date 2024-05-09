@@ -38,7 +38,7 @@ TEST(OPC_UA_Server, value_config)
 // 服务器添加变量节点
 TEST(OPC_UA_Server, add_node)
 {
-    rm::Server svr(4840, "TestServer");
+    rm::Server svr(4820, "TestServer");
     rm::Variable variable = 3.1415;
     variable.browse_name = "test_double";
     variable.description = "this is test double";
@@ -53,7 +53,7 @@ TEST(OPC_UA_Server, add_node)
 // 服务器添加变量类型节点
 TEST(OPC_UA_Server, add_type_node)
 {
-    rm::Server svr(4842);
+    rm::Server svr(4825);
     rm::VariableType variable_type = "string_test";
     variable_type.browse_name = "test_string";
     variable_type.description = "this is test string";
@@ -68,7 +68,7 @@ TEST(OPC_UA_Server, add_type_node)
 // 服务器添加方法节点
 TEST(OPC_UA_Server, call_method)
 {
-    rm::Server svr(4845);
+    rm::Server svr(4830);
     rm::Method method;
     method.browse_name = "test_method";
     method.description = "this is test method";
@@ -86,7 +86,7 @@ TEST(OPC_UA_Server, call_method)
 // 服务器添加对象节点
 TEST(OPC_UA_Server, add_object_node)
 {
-    rm::Server svr(4846);
+    rm::Server svr(4835);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -103,10 +103,39 @@ TEST(OPC_UA_Server, add_object_node)
     svr.join();
 }
 
+// 服务器添加包含方法节点的对象节点
+TEST(OPC_UA_Server, add_object_node_with_method)
+{
+    rm::Server svr(4840);
+    rm::Object object;
+    object.browse_name = "test_object";
+    object.description = "this is test object";
+    object.display_name = "测试对象";
+    rm::Variable val1 = 3.14;
+    val1.browse_name = "test_val1";
+    val1.description = "this is test val1";
+    val1.display_name = "测试变量 1";
+    object.add(val1);
+    rm::Method method;
+    method.browse_name = "test_method";
+    method.description = "this is test method";
+    method.display_name = "测试方法";
+    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
+                     void *, size_t, const UA_Variant *, size_t, UA_Variant *) -> UA_StatusCode {
+        return UA_STATUSCODE_GOOD;
+    };
+    object.add(method);
+    auto id = svr.addObjectNode(object);
+    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    svr.start();
+    svr.stop();
+    svr.join();
+}
+
 // 服务器添加对象类型节点
 TEST(OPC_UA_Server, add_object_type_node)
 {
-    rm::Server svr(4847);
+    rm::Server svr(4845);
     rm::ObjectType object_type;
     object_type.browse_name = "test_object_type";
     object_type.description = "this is test object type";
@@ -126,7 +155,7 @@ TEST(OPC_UA_Server, add_object_type_node)
 // 从对象类型节点派生对象节点，并添加到服务器
 TEST(OPC_UA_Server, create_object_by_object_type)
 {
-    rm::Server svr(4848);
+    rm::Server svr(4846);
     rm::ObjectType object_type;
     object_type.browse_name = "test_object_type";
     object_type.description = "this is test object type";

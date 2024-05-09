@@ -2,7 +2,7 @@
  * @file client.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 客户端
- * @version 2.1
+ * @version 2.2
  * @date 2024-03-07
  *
  * @copyright Copyright 2024 (c), zhaoxi
@@ -43,7 +43,7 @@ public:
     ~Client();
 
     Client(const Client &) = delete;
-    Client(Client &&) = delete;
+    Client(Client &&) = default;
 
     /****************************** 路径搜索 ******************************/
 

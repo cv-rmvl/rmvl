@@ -2,7 +2,7 @@
  * @file server.cpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 服务器
- * @version 1.1
+ * @version 2.2
  * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -377,7 +377,7 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add object node to server, error code: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
-    // 添加变量
+    // 添加额外变量节点
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
         auto sub_node_id = retval | find(browse_name);
@@ -385,6 +385,15 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
             write(sub_node_id, variable);
         else
             addVariableNode(variable, retval);
+    }
+    // 添加额外方法节点
+    for (const auto &[browse_name, method] : obj.getMethods())
+    {
+        auto sub_node_id = retval | find(browse_name);
+        if (!UA_NodeId_isNull(&sub_node_id))
+            setMethodNodeCallBack(sub_node_id, method.func);
+        else
+            addMethodNode(method, retval);
     }
     return retval;
 }
