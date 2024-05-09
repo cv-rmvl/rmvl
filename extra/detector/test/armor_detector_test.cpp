@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_ARMOR_DETECTOR
+
 #include "armor_detector_test.h"
 
 using namespace rm_test;
@@ -143,3 +147,5 @@ TEST_F(ArmorDetectorTest, more_armor_disturb)
 
     EXPECT_EQ(info.combos.size(), 2);
 }
+
+#endif 

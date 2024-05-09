@@ -93,14 +93,14 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     ////////////////////// 前置条件 //////////////////////
     if (_server == nullptr)
         RMVL_Error(RMVL_StsNullPtr, "Server is nullptr.");
-    if (UA_NodeId_isNull(&_connection_id))
+    if (_connection_id.empty())
         return false;
 
     ////////////// 添加 DataSetField (DSF) ///////////////
     for (const auto &pds : datas)
     {
         auto dsf_config = getPDS(pds);
-        UA_NodeId dsf_node_id;
+        NodeId dsf_node_id;
         auto result = UA_Server_addDataSetField(_server, _pds_id, &dsf_config, &dsf_node_id);
         if (result.result != UA_STATUSCODE_GOOD)
         {

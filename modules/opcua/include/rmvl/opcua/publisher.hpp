@@ -28,15 +28,15 @@ namespace rm
  */
 struct PublishedDataSet
 {
-    std::string name;  //!< 变量节点发布的字段名称
-    UA_NodeId node_id; //!< 变量节点 ID
+    std::string name; //!< 变量节点发布的字段名称
+    NodeId node_id;   //!< 变量节点 ID
 };
 
 /**
  * @brief OPC UA 发布者
- * 
+ *
  * @tparam Tpid 传输协议 ID，可参考 `rm::TransportID`
- * 
+ *
  * @details **特化**
  * - @ref Publisher<TransportID::UDP_UADP>
  */
@@ -53,10 +53,10 @@ class Publisher final
 template <>
 class Publisher<TransportID::UDP_UADP> : public Server
 {
-    UA_NodeId _connection_id{UA_NODEID_NULL}; //!< 连接 ID
-    UA_NodeId _pds_id{UA_NODEID_NULL};        //!< PublishedDataSet 已发布数据集 ID
-    UA_NodeId _wg_id{UA_NODEID_NULL};         //!< WriterGroup 写入组 ID
-    UA_NodeId _dsw_id{UA_NODEID_NULL};        //!< DataSetWriter 数据集写入器 ID
+    NodeId _connection_id{}; //!< 连接 ID
+    NodeId _pds_id{};        //!< PublishedDataSet 已发布数据集 ID
+    NodeId _wg_id{};         //!< WriterGroup 写入组 ID
+    NodeId _dsw_id{};        //!< DataSetWriter 数据集写入器 ID
 
     std::string _name;               //!< 发布者名称
     std::hash<std::string> _strhash; //!< 字符串哈希函数

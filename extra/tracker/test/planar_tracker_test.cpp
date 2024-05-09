@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_PLANAR_TRACKER
+
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
@@ -114,3 +118,5 @@ TEST_F(PlanarTrackerTest, tracker_update_with_none)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_PLANAR_TRACKER

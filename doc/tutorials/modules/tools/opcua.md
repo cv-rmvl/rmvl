@@ -34,6 +34,8 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 #### 地址空间
 
+在 OPC UA 中，所有的数据都被组织成一个地址空间，地址空间中的每一个元素都被称为一个节点。每个节点都有一个唯一的节点号，在 @ref opcua 中表示为 rm::NodeId 。
+
 <center>
 
 ![图 1-1 OPC UA 地址空间模型](opcua.svg)
@@ -326,7 +328,7 @@ int main()
 
     // 创建视图
     rm::View num_view;
-    // 添加节点至视图（这里使用的是变量节点的 UA_NodeId，实际上其他节点也是允许的）
+    // 添加节点至视图（这里使用的是变量节点的 NodeId，实际上其他节点也是允许的）
     num_view.add(node_num1, node_num2);
     // 添加至服务器
     svr.addViewNode(num_view);
@@ -498,7 +500,7 @@ int main()
     // 订阅数据，第 2 个参数传入的是 std::vector 类型的数据，单个数据请使用初始化列表
     auto nodes = sub.subscribe("DemoNumberPub", {meta_data});
     // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
-    // 订阅返回值是一个 UA_NodeId 列表，存放订阅接收的数据的 NodeId
+    // 订阅返回值是一个 NodeId 列表，存放订阅接收的数据的 NodeId
 
     // 读取订阅的已更新的数据
     auto sub_val = sub.read(nodes.front());

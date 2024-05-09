@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_LIGHT_BLOB
+
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
@@ -94,3 +98,5 @@ TEST(BuildLightBlobTest, fitEllipse_width_contourSize_judgeTable)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_LIGHT_BLOB

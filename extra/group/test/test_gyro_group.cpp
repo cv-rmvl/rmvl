@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_GYRO_GROUP
+
 #include <gtest/gtest.h>
 
 #include <opencv2/calib3d.hpp>
@@ -72,3 +76,5 @@ TEST_F(GyroGroupTest, build_4_from_1_armor)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_GYRO_GROUP

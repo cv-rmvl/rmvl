@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_RUNE
+
 #include <gtest/gtest.h>
 
 #include <opencv2/imgproc.hpp>
@@ -84,3 +88,5 @@ TEST(BuildRuneTest, calculate_rune_angle_minus_90)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_RUNE

@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_SPI_RUNE_PREDICTOR
+
 #include <gtest/gtest.h>
 
 #define private public
@@ -94,3 +98,5 @@ TEST(PredictModel, sin_data_from_0_600)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_SPI_RUNE_PREDICTOR

@@ -19,7 +19,7 @@ namespace rm_test
 {
 
 // 变量（类型）配置
-TEST(OPC_UA_Server, value_config)
+TEST(OPC_UA_Server, variable_config)
 {
     // 变量类型节点、字符串
     rm::VariableType variable_type = "string_test";
@@ -36,10 +36,10 @@ TEST(OPC_UA_Server, value_config)
 }
 
 // 服务器添加变量节点
-TEST(OPC_UA_Server, add_node)
+TEST(OPC_UA_Server, add_variable_node)
 {
     rm::Server svr(4820, "TestServer");
-    rm::Variable variable = 3.1415;
+    rm::Variable variable{3.1415};
     variable.browse_name = "test_double";
     variable.description = "this is test double";
     variable.display_name = "测试双精度浮点数";
@@ -50,8 +50,36 @@ TEST(OPC_UA_Server, add_node)
     svr.join();
 }
 
+static int data_source;
+
+static UA_StatusCode onRead(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
+                            UA_Boolean, const UA_NumericRange *, UA_DataValue *dataValue)
+{
+    UA_Variant_setScalarCopy(&dataValue->value, &data_source, &UA_TYPES[UA_TYPES_INT32]);
+    return UA_STATUSCODE_GOOD;
+}
+
+static UA_StatusCode onWrite(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
+                             const UA_NumericRange *, const UA_DataValue *data)
+{
+    data_source = *reinterpret_cast<int *>(data->value.data);
+    return UA_STATUSCODE_GOOD;
+}
+
+// 服务器添加数据源变量节点
+TEST(OPC_UA_Server, add_data_source_variable_node)
+{
+    rm::Server svr(4821, "TestServer");
+    uaCreateVariable(variable);
+    auto node = svr.addDataSourceVariableNode(variable, onRead, onWrite);
+    EXPECT_FALSE(UA_NodeId_isNull(&node));
+    svr.start();
+    svr.stop();
+    svr.join();
+}
+
 // 服务器添加变量类型节点
-TEST(OPC_UA_Server, add_type_node)
+TEST(OPC_UA_Server, add_variable_type_node)
 {
     rm::Server svr(4825);
     rm::VariableType variable_type = "string_test";
@@ -66,7 +94,7 @@ TEST(OPC_UA_Server, add_type_node)
 }
 
 // 服务器添加方法节点
-TEST(OPC_UA_Server, call_method)
+TEST(OPC_UA_Server, add_method_node)
 {
     rm::Server svr(4830);
     rm::Method method;
@@ -191,7 +219,7 @@ TEST(OPC_UA_Server, find_node)
     val1.display_name = "测试变量 1";
     object.add(val1);
     auto id = svr.addObjectNode(object);
-    auto target = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | svr.find("test_object");
+    auto target = rm::nodeObjectsFolder | svr.find("test_object");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
     svr.start();
     svr.stop();
