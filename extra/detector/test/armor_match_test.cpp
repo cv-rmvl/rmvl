@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_ARMOR_DETECTOR
+
 #include "armor_detector_test.h"
 
 using namespace rm_test;
@@ -81,3 +85,5 @@ TEST_F(ArmorDetectorTest, less_tracker_match_more_armor)
     EXPECT_EQ(trackers[0]->getVanishNumber(), 0);
     EXPECT_EQ(trackers[1]->getVanishNumber(), 0);
 }
+
+#endif // HAVE_RMVL_ARMOR_DETECTOR

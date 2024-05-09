@@ -17,6 +17,10 @@
 #include <functional>
 #include <vector>
 
+#if __cplusplus >= 202302L
+#include <generator>
+#endif
+
 //! @addtogroup core
 //! @{
 //! @defgroup core_numcal 数值计算模块

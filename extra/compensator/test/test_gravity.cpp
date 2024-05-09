@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_GRAVITY_COMPENSATOR
+
 #include <gtest/gtest.h>
 
 #define private public
@@ -39,3 +43,5 @@ TEST(GravityCompensator, bulletModel)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_GRAVITY_COMPENSATOR

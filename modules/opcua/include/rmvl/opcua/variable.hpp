@@ -26,6 +26,12 @@ namespace rm
 //! @addtogroup opcua
 //! @{
 
+enum AccessLevel : uint8_t
+{
+    VARIABLE_READ = 1U,  //!< 读权限
+    VARIABLE_WRITE = 2U, //!< 写权限
+};
+
 //! OPC UA 变量类型
 class VariableType final
 {
@@ -254,7 +260,7 @@ public:
  * @param[in] ... 构造列表
  */
 #define uaCreateVariableType(val, ...) \
-    rm::VariableType val(__VA_ARGS__); \
+    rm::VariableType val{__VA_ARGS__}; \
     val.browse_name = val.display_name = val.description = #val
 
 /**
@@ -264,7 +270,7 @@ public:
  * @param[in] ... 构造列表
  */
 #define uaCreateVariable(val, ...) \
-    rm::Variable val(__VA_ARGS__); \
+    rm::Variable val{__VA_ARGS__}; \
     val.browse_name = val.display_name = val.description = #val
 
 //! @} opcua

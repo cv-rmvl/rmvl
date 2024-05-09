@@ -8,6 +8,11 @@
  * @copyright Copyright 2022 (c), RoboMaster Vision Community
  *
  */
+
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_PILOT
+
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
@@ -71,3 +76,5 @@ TEST_F(BuildPilotTest, wrong_area)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_PILOT

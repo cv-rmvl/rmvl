@@ -60,7 +60,7 @@ TEST(OPC_UA_ClientTest, read_variable)
     setSvr(svr);
     rm::Client client("opc.tcp://localhost:5000");
     // 读取测试服务器上的变量值
-    auto id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("array");
+    auto id = rm::nodeObjectsFolder | client.find("array");
     rm::Variable variable = client.read(id);
     EXPECT_FALSE(variable.empty());
     auto vec = rm::Variable::cast<std::vector<int>>(variable);
@@ -77,7 +77,7 @@ TEST(OPC_UA_ClientTest, variable_IO)
     setSvr(svr);
     rm::Client client("opc.tcp://localhost:5001");
     // 读取测试服务器上的变量值
-    auto id = UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER) | client.find("single");
+    auto id = rm::nodeObjectsFolder | client.find("single");
     EXPECT_TRUE(client.write(id, 99));
     rm::Variable variable = client.read(id);
     EXPECT_FALSE(variable.empty());

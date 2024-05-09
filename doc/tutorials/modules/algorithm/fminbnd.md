@@ -40,7 +40,7 @@
 
 ![图 1-1 向前一步](fminbnd_forward.png)
 
-![图 1-2 向前两步](fminbnd_forward.png)
+![图 1-2 向前两步](fminbnd_forward_2.png)
 
 </center>
 

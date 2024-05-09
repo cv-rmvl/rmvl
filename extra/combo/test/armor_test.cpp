@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_ARMOR
+
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
@@ -112,3 +116,5 @@ TEST_F(BuildArmorTest, different_blob_angle)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_ARMOR

@@ -9,6 +9,10 @@
  *
  */
 
+#include "rmvl/rmvl_modules.hpp"
+
+#ifdef HAVE_RMVL_RUNE_CENTER
+
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
@@ -61,3 +65,5 @@ TEST_F(BuildRuneCenterTest, few_contourSize)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_RMVL_RUNE_CENTER

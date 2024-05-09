@@ -49,7 +49,7 @@ public:
     std::string description{};
 
 private:
-    std::vector<UA_NodeId> _nodes; //!< 视图下的节点 ID 列表
+    std::vector<NodeId> _nodes; //!< 视图下的节点 ID 列表
 
 public:
     View() = default;
@@ -63,11 +63,11 @@ public:
      * view.add(node_1, node_2, node_3);
      * @endcode
      *
-     * @tparam UA_NodeId_ 节点 ID 类型，指代 `UA_NodeId`
+     * @tparam NodeId_ 节点 ID 类型，指代 `NodeId`
      * @param[in] node_id 既存的待添加的节点 ID
      */
-    template <typename... UA_NodeId_>
-    inline void add(UA_NodeId_ &&...node_id) { [[maybe_unused]] int _[]{(_nodes.emplace_back(node_id), 0)...}; }
+    template <typename... NodeId_>
+    inline void add(NodeId_ &&...node_id) { [[maybe_unused]] int _[]{(_nodes.emplace_back(node_id), 0)...}; }
 
     //! 获取节点 ID 列表
     inline const auto &data() const { return _nodes; }

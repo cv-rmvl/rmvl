@@ -18,22 +18,25 @@
 
 #include "cvt.hpp"
 
-UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInServer &&fnis)
+namespace rm
 {
-    if (UA_NodeId_isNull(&origin))
+
+NodeId operator|(NodeId origin, FindNodeInServer &&fnis)
+{
+    if (origin.empty())
         return origin;
-    auto &&[p_server, browse_name, ns] = fnis;
-    auto qualified_name = UA_QUALIFIEDNAME(ns, rm::helper::to_char(browse_name));
+    const auto &[p_server, browse_name, ns] = fnis;
+    auto qualified_name = UA_QUALIFIEDNAME(ns, helper::to_char(browse_name));
     auto bpr = UA_Server_browseSimplifiedBrowsePath(p_server, origin, 1, &qualified_name);
-    UA_NodeId retval = UA_NODEID_NULL;
+    NodeId retval;
     if (bpr.statusCode == UA_STATUSCODE_GOOD && bpr.targetsSize >= 1)
-        UA_NodeId_copy(&bpr.targets[0].targetId.nodeId, &retval);
+        retval = bpr.targets[0].targetId.nodeId;
     return retval;
 }
 
-UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInClient &&fnic)
+NodeId operator|(NodeId origin, FindNodeInClient &&fnic)
 {
-    if (UA_NodeId_isNull(&origin))
+    if (origin.empty())
         return origin;
     UA_BrowsePath browse_path;
     UA_BrowsePath_init(&browse_path);
@@ -43,7 +46,7 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInClient &&fnic)
     browse_path.relativePath.elementsSize = 1;
 
     auto &&[p_client, browse_name, ns] = fnic;
-    elem->targetName = UA_QUALIFIEDNAME(ns, rm::helper::to_char(browse_name));
+    elem->targetName = UA_QUALIFIEDNAME(ns, helper::to_char(browse_name));
 
     UA_TranslateBrowsePathsToNodeIdsRequest request;
     UA_TranslateBrowsePathsToNodeIdsRequest_init(&request);
@@ -57,11 +60,8 @@ UA_NodeId operator|(UA_NodeId origin, rm::FindNodeInClient &&fnic)
 
     UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find node, name: %s, error code: %s",
                  browse_name.c_str(), UA_StatusCode_name(response.responseHeader.serviceResult));
-    return UA_NODEID_NULL;
+    return {};
 }
-
-namespace rm
-{
 
 bool Variable::operator==(const Variable &val) const
 {
@@ -146,65 +146,64 @@ UA_Variant cvtVariable(const Variable &val)
         case UA_TYPES_STRING: {
             UA_String str = UA_STRING(const_cast<char *>(std::any_cast<const char *>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
+            break;
         }
-        break;
         case UA_TYPES_BOOLEAN: {
             auto rawval = std::any_cast<UA_Boolean>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BOOLEAN]);
+            break;
         }
-        break;
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<UA_SByte>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_SBYTE]);
+            break;
         }
-        break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<UA_Byte>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BYTE]);
+            break;
         }
-        break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<UA_Int16>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT16]);
+            break;
         }
-        break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<UA_UInt16>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT16]);
+            break;
         }
-        break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<UA_Int32>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT32]);
+            break;
         }
-        break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<UA_UInt32>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT32]);
+            break;
         }
-        break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<UA_Int64>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT64]);
+            break;
         }
-        break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<UA_UInt64>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT64]);
+            break;
         }
-        break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<UA_Float>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_FLOAT]);
+            break;
         }
-        break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<UA_Double>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_DOUBLE]);
+            break;
         }
-        break;
         default:
-            RMVL_Error(RMVL_StsBadArg, "Unknown UA_TypeFlag");
             break;
         }
         p_val.arrayLength = 0;
@@ -218,55 +217,54 @@ UA_Variant cvtVariable(const Variable &val)
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<std::vector<UA_SByte>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
+            break;
         }
-        break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<std::vector<UA_Byte>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_BYTE]);
+            break;
         }
-        break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<std::vector<UA_Int16>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT16]);
+            break;
         }
-        break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<std::vector<UA_UInt16>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT16]);
+            break;
         }
-        break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<std::vector<UA_Int32>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT32]);
+            break;
         }
-        break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<std::vector<UA_UInt32>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT32]);
+            break;
         }
-        break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<std::vector<UA_Int64>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT64]);
+            break;
         }
-        break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<std::vector<UA_UInt64>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT64]);
+            break;
         }
-        break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<std::vector<UA_Float>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_FLOAT]);
+            break;
         }
-        break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<std::vector<UA_Double>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_DOUBLE]);
+            break;
         }
-        break;
         default:
-            RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", val.getDataType());
             break;
         }
         p_val.arrayLength = val.size();
@@ -311,7 +309,7 @@ Variable cvtVariable(const UA_Variant &p_val)
         case UA_TYPES_DOUBLE:
             return *reinterpret_cast<UA_Double *>(data);
         default:
-            RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", type_flag);
+            return {};
         }
     }
     else
@@ -339,10 +337,9 @@ Variable cvtVariable(const UA_Variant &p_val)
         case UA_TYPES_DOUBLE:
             return std::vector<UA_Double>(reinterpret_cast<UA_Double *>(data), reinterpret_cast<UA_Double *>(data) + dims);
         default:
-            RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", type_flag);
+            return {};
         }
     }
-    return {};
 }
 
 UA_Variant cvtVariable(const VariableType &vtype)
@@ -358,65 +355,65 @@ UA_Variant cvtVariable(const VariableType &vtype)
         case UA_TYPES_STRING: {
             UA_String str = UA_STRING(to_char(std::any_cast<const char *>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
+            break;
         }
-        break;
         case UA_TYPES_BOOLEAN: {
             auto rawval = std::any_cast<UA_Boolean>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BOOLEAN]);
+            break;
         }
-        break;
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<UA_SByte>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_SBYTE]);
+            break;
         }
-        break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<UA_Byte>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_BYTE]);
+            break;
         }
-        break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<UA_Int16>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT16]);
+            break;
         }
-        break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<UA_UInt16>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT16]);
+            break;
         }
-        break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<UA_Int32>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT32]);
+            break;
         }
-        break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<UA_UInt32>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT32]);
+            break;
         }
-        break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<UA_Int64>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_INT64]);
+            break;
         }
-        break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<UA_UInt64>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_UINT64]);
+            break;
         }
-        break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<UA_Float>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_FLOAT]);
+            break;
         }
-        break;
+
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<UA_Double>(data);
             UA_Variant_setScalarCopy(&p_val, &rawval, &UA_TYPES[UA_TYPES_DOUBLE]);
+            break;
         }
-        break;
         default:
-            RMVL_Error(RMVL_StsBadArg, "Unknown UA_TypeFlag");
             break;
         }
         p_val.arrayLength = 0;
@@ -430,55 +427,54 @@ UA_Variant cvtVariable(const VariableType &vtype)
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<std::vector<UA_SByte>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
+            break;
         }
-        break;
         case UA_TYPES_BYTE: {
             auto rawval = std::any_cast<std::vector<UA_Byte>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_BYTE]);
+            break;
         }
-        break;
         case UA_TYPES_INT16: {
             auto rawval = std::any_cast<std::vector<UA_Int16>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT16]);
+            break;
         }
-        break;
         case UA_TYPES_UINT16: {
             auto rawval = std::any_cast<std::vector<UA_UInt16>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT16]);
+            break;
         }
-        break;
         case UA_TYPES_INT32: {
             auto rawval = std::any_cast<std::vector<UA_Int32>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT32]);
+            break;
         }
-        break;
         case UA_TYPES_UINT32: {
             auto rawval = std::any_cast<std::vector<UA_UInt32>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT32]);
+            break;
         }
-        break;
         case UA_TYPES_INT64: {
             auto rawval = std::any_cast<std::vector<UA_Int64>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_INT64]);
+            break;
         }
-        break;
         case UA_TYPES_UINT64: {
             auto rawval = std::any_cast<std::vector<UA_UInt64>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_UINT64]);
+            break;
         }
-        break;
         case UA_TYPES_FLOAT: {
             auto rawval = std::any_cast<std::vector<UA_Float>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_FLOAT]);
+            break;
         }
-        break;
         case UA_TYPES_DOUBLE: {
             auto rawval = std::any_cast<std::vector<UA_Double>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_DOUBLE]);
+            break;
         }
-        break;
         default:
-            RMVL_Error_(RMVL_StsBadArg, "Unknown UA_TypeFlag: %zu", vtype.getDataType());
             break;
         }
         p_val.arrayLength = vtype.size();

@@ -58,7 +58,7 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     }
 }
 
-std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
+std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
 {
     //////////////// 添加 ReaderGroup (RG) ///////////////
     UA_ReaderGroupConfig rg_config{};
@@ -120,7 +120,7 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
     }
     // 根据数据集元数据 DataSetMetaData 的字段创建 FieldTargetVariable
     std::vector<UA_FieldTargetVariable> target_vars(fields.size());
-    std::vector<UA_NodeId> retval;
+    std::vector<NodeId> retval;
     retval.reserve(fields.size());
     for (size_t i = 0; i < fields.size(); i++)
     {
@@ -130,7 +130,7 @@ std::vector<UA_NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::s
         attr.dataType = raw_fields[i].dataType;
         attr.valueRank = raw_fields[i].valueRank;
         attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
-        UA_NodeId node_id;
+        NodeId node_id;
         status = UA_Server_addVariableNode(
             _server, UA_NODEID_NULL, obj_id, nodeHasComponent,
             UA_QUALIFIEDNAME(fields[i].ns, helper::to_char(fields[i].name)),

@@ -94,7 +94,7 @@ void Server::deleteServer()
 
 // ============================= 节点配置 =============================
 
-UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
+NodeId Server::addVariableTypeNode(const VariableType &vtype)
 {
     UA_VariableTypeAttributes attr = UA_VariableTypeAttributes_default;
     UA_Variant variant = helper::cvtVariable(vtype);
@@ -109,7 +109,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
     }
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(vtype.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(vtype.display_name));
-    UA_NodeId retval{UA_NODEID_NULL};
+    NodeId retval;
     auto status = UA_Server_addVariableTypeNode(
         _server, UA_NODEID_NULL, nodeBaseDataVariableType, nodeHasSubtype,
         UA_QUALIFIEDNAME(vtype.ns, helper::to_char(vtype.browse_name)),
@@ -123,7 +123,7 @@ UA_NodeId Server::addVariableTypeNode(const VariableType &vtype)
     return retval;
 }
 
-UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_id)
+NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
@@ -141,21 +141,21 @@ UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_i
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     // 获取变量节点的变量类型节点
-    UA_NodeId type_id = nodeBaseDataVariableType;
+    NodeId type_id{nodeBaseDataVariableType};
     const auto p_type = val.type();
     if (p_type != nullptr)
     {
         type_id = type_id | find(p_type->browse_name);
-        if (UA_NodeId_isNull(&type_id))
+        if (type_id.empty())
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
     }
-    UA_NodeId retval{UA_NODEID_NULL};
+    NodeId retval;
     // 添加节点至服务器
-    UA_NodeId object_folder_id{nodeObjectsFolder};
-    UA_NodeId ref_id = UA_NodeId_equal(&parent_id, &object_folder_id) ? nodeOrganizes : nodeHasComponent;
+    NodeId object_folder_id{nodeObjectsFolder};
+    NodeId ref_id = (parent_id == object_folder_id) ? nodeOrganizes : nodeHasComponent;
     auto status = UA_Server_addVariableNode(
         _server, UA_NODEID_NULL, parent_id, ref_id, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
         type_id, attr, nullptr, &retval);
@@ -168,7 +168,7 @@ UA_NodeId Server::addVariableNode(const Variable &val, const UA_NodeId &parent_i
     return retval;
 }
 
-Variable Server::read(const UA_NodeId &node)
+Variable Server::read(const NodeId &node)
 {
     UA_Variant p_val;
     UA_Variant_init(&p_val);
@@ -180,7 +180,7 @@ Variable Server::read(const UA_NodeId &node)
     return retval;
 }
 
-bool Server::write(const UA_NodeId &node, const Variable &val)
+bool Server::write(const NodeId &node, const Variable &val)
 {
     auto variant = helper::cvtVariable(val);
     auto status = UA_Server_writeValue(_server, node, variant);
@@ -190,7 +190,7 @@ bool Server::write(const UA_NodeId &node, const Variable &val)
     return status == UA_STATUSCODE_GOOD;
 }
 
-bool Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
+bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
 {
     UA_ValueCallback callback{before_read, after_write};
     auto status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
@@ -200,28 +200,27 @@ bool Server::addVariableNodeValueCallBack(UA_NodeId id, ValueCallBackBeforeRead 
     return status == UA_STATUSCODE_GOOD;
 }
 
-UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, UA_NodeId parent_id)
+NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id)
 {
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
-    UA_Variant variant = helper::cvtVariable(val);
     // 设置属性
     attr.accessLevel = val.access_level;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     // 获取变量节点的变量类型节点
-    UA_NodeId type_id = nodeBaseDataVariableType;
+    NodeId type_id{nodeBaseDataVariableType};
     const auto p_type = val.type();
     if (p_type != nullptr)
     {
         type_id = type_id | find(p_type->browse_name);
-        if (UA_NodeId_isNull(&type_id))
+        if (type_id.empty())
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
     }
-    UA_NodeId retval{UA_NODEID_NULL};
+    NodeId retval;
     // 获取数据源重定向信息
     UA_DataSource data_source;
     data_source.read = on_read;
@@ -230,7 +229,6 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     auto status = UA_Server_addDataSourceVariableNode(
         _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
         type_id, attr, data_source, nullptr, &retval);
-    UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data source variable node: %s", UA_StatusCode_name(status));
@@ -239,7 +237,7 @@ UA_NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead 
     return retval;
 }
 
-UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id)
+NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
 {
     UA_MethodAttributes attr = UA_MethodAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(method.display_name));
@@ -256,7 +254,7 @@ UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id
     for (const auto &arg : method.oargs)
         outputs.push_back(helper::cvtArgument(arg));
     // 添加节点
-    UA_NodeId retval{UA_NODEID_NULL};
+    NodeId retval;
     auto status = UA_Server_addMethodNode(
         _server, UA_NODEID_NULL, parent_id, nodeHasComponent, UA_QUALIFIEDNAME(method.ns, helper::to_char(method.browse_name)),
         attr, method.func, inputs.size(), inputs.data(), outputs.size(), outputs.data(), nullptr, &retval);
@@ -278,20 +276,20 @@ UA_NodeId Server::addMethodNode(const Method &method, const UA_NodeId &parent_id
     return retval;
 }
 
-void Server::setMethodNodeCallBack(const UA_NodeId &id, UA_MethodCallback on_method)
+void Server::setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method)
 {
     UA_Server_setMethodNodeCallback(_server, id, on_method);
 }
 
-UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
+NodeId Server::addObjectTypeNode(const ObjectType &otype)
 {
     // 定义对象类型节点
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(otype.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(otype.description));
-    UA_NodeId retval{UA_NODEID_NULL};
+    NodeId retval;
     // 获取父节点的 NodeID
-    UA_NodeId parent_id{nodeBaseObjectType};
+    NodeId parent_id{nodeBaseObjectType};
     const ObjectType *current = otype.getBase();
     std::stack<std::string> base_stack;
     while (current != nullptr)
@@ -304,7 +302,7 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
         parent_id = parent_id | find(base_stack.top());
         base_stack.pop();
     }
-    if (UA_NodeId_isNull(&parent_id))
+    if (parent_id.empty())
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the base object type ID during adding object type node");
         parent_id = nodeBaseObjectType;
@@ -323,7 +321,7 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
     for (const auto &[browse_name, val] : otype.getVariables())
     {
         // 添加至服务器
-        UA_NodeId sub_retval = addVariableNode(val, retval);
+        NodeId sub_retval = addVariableNode(val, retval);
         // 设置子变量节点为强制生成
         status = UA_Server_addReference(
             _server, sub_retval, nodeHasModellingRule,
@@ -342,14 +340,14 @@ UA_NodeId Server::addObjectTypeNode(const ObjectType &otype)
     return retval;
 }
 
-UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
+NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
 {
     UA_ObjectAttributes attr{UA_ObjectAttributes_default};
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(obj.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
     // 获取对象类型节点
     const ObjectType *current = obj.type();
-    UA_NodeId type_id{nodeBaseObjectType};
+    NodeId type_id{nodeBaseObjectType};
     std::stack<std::string> base_stack;
     while (current != nullptr)
     {
@@ -361,14 +359,14 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
         type_id = type_id | find(base_stack.top());
         base_stack.pop();
     }
-    if (UA_NodeId_isNull(&type_id))
+    if (type_id.empty())
     {
         UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
                        "The object node \"%s\" does not belong to any object type node", obj.browse_name.c_str());
         type_id = nodeBaseObjectType;
     }
     // 添加至服务器
-    UA_NodeId retval = UA_NODEID_NULL;
+    NodeId retval;
     auto status = UA_Server_addObjectNode(
         _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(obj.ns, helper::to_char(obj.browse_name)),
         type_id, attr, nullptr, &retval);
@@ -381,7 +379,7 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
         auto sub_node_id = retval | find(browse_name);
-        if (!UA_NodeId_isNull(&sub_node_id))
+        if (!sub_node_id.empty())
             write(sub_node_id, variable);
         else
             addVariableNode(variable, retval);
@@ -390,7 +388,7 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     for (const auto &[browse_name, method] : obj.getMethods())
     {
         auto sub_node_id = retval | find(browse_name);
-        if (!UA_NodeId_isNull(&sub_node_id))
+        if (!sub_node_id.empty())
             setMethodNodeCallBack(sub_node_id, method.func);
         else
             addMethodNode(method, retval);
@@ -398,10 +396,10 @@ UA_NodeId Server::addObjectNode(const Object &obj, UA_NodeId parent_id)
     return retval;
 }
 
-UA_NodeId Server::addViewNode(const View &view)
+NodeId Server::addViewNode(const View &view)
 {
     // 准备数据
-    UA_NodeId retval;
+    NodeId retval;
     UA_ViewAttributes attr = UA_ViewAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.description));
@@ -430,9 +428,9 @@ UA_NodeId Server::addViewNode(const View &view)
     return retval;
 }
 
-UA_NodeId Server::addEventTypeNode(const EventType &etype)
+NodeId Server::addEventTypeNode(const EventType &etype)
 {
-    UA_NodeId retval;
+    NodeId retval;
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(etype.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(etype.description));
@@ -454,7 +452,7 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
         val_attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(browse_name));
         val_attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
         UA_Variant_setScalarCopy(&val_attr.value, &val, &UA_TYPES[UA_TYPES_INT32]);
-        UA_NodeId sub_id;
+        NodeId sub_id;
         status = UA_Server_addVariableNode(
             _server, UA_NODEID_NULL, retval, nodeHasProperty,
             UA_QUALIFIEDNAME(etype.ns, helper::to_char(browse_name)), nodePropertyType,
@@ -480,16 +478,16 @@ UA_NodeId Server::addEventTypeNode(const EventType &etype)
     return retval;
 }
 
-bool Server::triggerEvent(const UA_NodeId &node_id, const Event &event)
+bool Server::triggerEvent(const NodeId &node_id, const Event &event)
 {
-    UA_NodeId type_id = nodeBaseEventType | find(event.type()->browse_name);
-    if (UA_NodeId_isNull(&type_id))
+    NodeId type_id = nodeBaseEventType | find(event.type()->browse_name);
+    if (type_id.empty())
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the event type ID during triggering event");
         return false;
     }
     // 创建事件
-    UA_NodeId event_id{UA_NODEID_NULL};
+    NodeId event_id;
     auto status = UA_Server_createEvent(_server, type_id, &event_id);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -508,8 +506,8 @@ bool Server::triggerEvent(const UA_NodeId &node_id, const Event &event)
     // 设置事件自定义属性
     for (const auto &[browse_name, prop] : event.data())
     {
-        UA_NodeId sub_node_id = event_id | find(browse_name);
-        if (!UA_NodeId_isNull(&sub_node_id))
+        NodeId sub_node_id = event_id | find(browse_name);
+        if (!sub_node_id.empty())
             UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
                                                  &prop, &UA_TYPES[UA_TYPES_INT32]);
     }

@@ -201,7 +201,7 @@ std::vector<std::vector<double>> RungeKutta::solve(double h, std::size_t n)
 }
 
 #if __cpp_lib_generator >= 202207L
-std::generator<std::vector<double>> RungeKutta<RkType::Butcher>::generate(double h, std::size_t n)
+std::generator<std::vector<double>> RungeKutta::generate(double h, std::size_t n)
 {
     if (_x0.empty())
         RMVL_Error(RMVL_StsBadArg, "The initial value must be set.");

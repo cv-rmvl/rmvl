@@ -83,19 +83,19 @@ public:
     /**
      * @brief 从指定的变量节点读数据
      *
-     * @param[in] node 既存的变量节点的 `UA_NodeId`
+     * @param[in] node 既存的变量节点的 `NodeId`
      * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      */
-    Variable read(const UA_NodeId &node);
+    Variable read(const NodeId &node);
 
     /**
      * @brief 给指定的变量节点写数据
      *
-     * @param[in] node 既存的变量节点的 `UA_NodeId`
+     * @param[in] node 既存的变量节点的 `NodeId`
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    bool write(const UA_NodeId &node, const Variable &val);
+    bool write(const NodeId &node, const Variable &val);
 
     /**
      * @brief 在客户端调用指定对象节点中的方法
@@ -106,7 +106,7 @@ public:
      * @param[out] outputs 输出参数列表
      * @return 是否成功完成当前操作
      */
-    bool call(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
+    bool call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
 
     /**
      * @brief 在客户端调用 ObjectsFolder 中的方法
@@ -118,16 +118,16 @@ public:
      */
     inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
     {
-        return call(rm::nodeObjectsFolder, name, inputs, outputs);
+        return call(nodeObjectsFolder, name, inputs, outputs);
     }
 
     /**
      * @brief 添加视图节点 ViewNode 至 `ViewsFolder` 中
      * 
      * @param[in] view `rm::View` 表示的视图
-     * @return 添加至服务器后，对应视图节点的唯一标识 `UA_NodeId`
+     * @return 添加至服务器后，对应视图节点的唯一标识 `NodeId`
      */
-    UA_NodeId addViewNode(const View &view);
+    NodeId addViewNode(const View &view);
 
     /**
      * @brief 创建变量节点监视项，以实现订阅节点的功能
@@ -149,22 +149,22 @@ public:
      * }
      * @endcode
      *
-     * @param[in] node 待监视节点的 `UA_NodeId`
+     * @param[in] node 待监视节点的 `NodeId`
      * @param[in] on_change 数据变更回调函数
      * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知，默认为 `10`
      * @return 变量节点监视创建成功？
      */
-    bool monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
+    bool monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
      *
-     * @param[in] node 待监视节点的 `UA_NodeId`
+     * @param[in] node 待监视节点的 `NodeId`
      * @param[in] names 关注的事件属性名列表，参考 Event::data()
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
-    bool monitor(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
+    bool monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
 
 private:
     /**

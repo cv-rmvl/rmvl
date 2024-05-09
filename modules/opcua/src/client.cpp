@@ -77,7 +77,7 @@ void Client::spin()
 
 void Client::spinOnce() { UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT); }
 
-Variable Client::read(const UA_NodeId &node)
+Variable Client::read(const NodeId &node)
 {
     UA_Variant p_val;
     UA_Variant_init(&p_val);
@@ -89,7 +89,7 @@ Variable Client::read(const UA_NodeId &node)
     return retval;
 }
 
-bool Client::write(const UA_NodeId &node, const Variable &val)
+bool Client::write(const NodeId &node, const Variable &val)
 {
     UA_Variant new_variant = helper::cvtVariable(val);
     auto status = UA_Client_writeValueAttribute(_client, node, &new_variant);
@@ -102,7 +102,7 @@ bool Client::write(const UA_NodeId &node, const Variable &val)
     return true;
 }
 
-bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
+bool Client::call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
 {
     // 初始化输入、输出参数
     std::vector<UA_Variant> input_variants;
@@ -112,8 +112,8 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     size_t output_size;
     UA_Variant *output_variants;
     // 获取方法节点
-    UA_NodeId method_node = obj_node | find(name);
-    if (UA_NodeId_isNull(&method_node))
+    NodeId method_node = obj_node | find(name);
+    if (method_node.empty())
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find the method node: %s", name.c_str());
         return false;
@@ -126,7 +126,7 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method, node id: %d, error code: %s",
-                     method_node.identifier.numeric, UA_StatusCode_name(status));
+                     method_node.nid.identifier.numeric, UA_StatusCode_name(status));
         return false;
     }
     outputs.reserve(output_size);
@@ -137,10 +137,10 @@ bool Client::call(const UA_NodeId &obj_node, const std::string &name, const std:
     return true;
 }
 
-UA_NodeId Client::addViewNode(const View &view)
+NodeId Client::addViewNode(const View &view)
 {
     // 准备数据
-    UA_NodeId retval;
+    NodeId retval;
     UA_ViewAttributes attr = UA_ViewAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.description));
@@ -151,7 +151,7 @@ UA_NodeId Client::addViewNode(const View &view)
     if (status != UA_STATUSCODE_GOOD)
     {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add view node, error: %s", UA_StatusCode_name(status));
-        return UA_NODEID_NULL;
+        return {};
     }
     // 添加引用
     for (const auto &node : view.data())
@@ -162,14 +162,14 @@ UA_NodeId Client::addViewNode(const View &view)
         if (status != UA_STATUSCODE_GOOD)
         {
             UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add reference, error: %s", UA_StatusCode_name(status));
-            return UA_NODEID_NULL;
+            return {};
         }
     }
 
     return retval;
 }
 
-bool Client::monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
+bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
 {
     // 创建订阅
     UA_CreateSubscriptionResponse resp;
@@ -192,7 +192,7 @@ bool Client::monitor(UA_NodeId node, UA_Client_DataChangeNotificationCallback on
     return true;
 }
 
-bool Client::monitor(UA_NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
 {
     // 创建订阅
     UA_CreateSubscriptionResponse sub_resp;

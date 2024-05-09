@@ -86,9 +86,9 @@ class Subscriber final
 template <>
 class Subscriber<TransportID::UDP_UADP> : public Server
 {
-    UA_NodeId _connection_id{UA_NODEID_NULL}; //!< 连接 ID
-    UA_NodeId _rg_id{UA_NODEID_NULL};         //!< ReaderGroup 读取组 ID
-    UA_NodeId _dsr_id{UA_NODEID_NULL};        //!< DataSetReader 数据集读取器 ID
+    NodeId _connection_id{}; //!< 连接 ID
+    NodeId _rg_id{};         //!< ReaderGroup 读取组 ID
+    NodeId _dsr_id{};        //!< DataSetReader 数据集读取器 ID
 
     std::string _name;               //!< 订阅者名称
     std::hash<std::string> _strhash; //!< 字符串哈希函数
@@ -110,9 +110,9 @@ public:
      *
      * @param[in] pub_name 发布者名称
      * @param[in] fields 数据集字段元数据列表
-     * @return 订阅的变量对应的 `UA_NodeId` 列表，每个 `UA_NodeId` 均存在于订阅者自身的服务器中
+     * @return 订阅的变量对应的 `NodeId` 列表，每个 `NodeId` 均存在于订阅者自身的服务器中
      */
-    std::vector<UA_NodeId> subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
+    std::vector<NodeId> subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
 };
 
 //! @} opcua

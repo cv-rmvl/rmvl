@@ -262,10 +262,12 @@ function(rmvl_add_test test_name test_kind)
 
   # Add depends
   foreach(_dep ${TS_DEPENDS})
-    target_link_libraries(
-      ${the_target}
-      PRIVATE rmvl_${_dep}
-    )
+    if(TARGET rmvl_${_dep})
+      target_link_libraries(
+        ${the_target}
+        PRIVATE rmvl_${_dep}
+      )
+    endif()
   endforeach(_dep ${TS_DEPENDS})
 
   # Test depends
