@@ -77,7 +77,7 @@ public:
     Server(ServerUserConfig on_config, uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     Server(const Server &) = delete;
-    Server(Server &&) = delete;
+    Server(Server &&svr) = default;
 
     //! 运行服务器，调用方线程不阻塞
     void start();

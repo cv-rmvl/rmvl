@@ -2,7 +2,7 @@
  * @file object.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 对象（类型）
- * @version 1.1
+ * @version 2.2
  * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -81,15 +81,6 @@ public:
     //! 构造 `rm::ObjectType` 对象类型
     ObjectType() = default;
 
-    ObjectType(const ObjectType &val) : browse_name(val.browse_name), display_name(val.display_name), description(val.description),
-                                        _base(val._base), _variables(val._variables), _methods(val._methods) {}
-
-    ObjectType(ObjectType &&val) : browse_name(std::move(val.browse_name)), display_name(std::move(val.display_name)), description(std::move(val.description)),
-                                   _base(std::exchange(val._base, nullptr)), _variables(std::move(val._variables)), _methods(std::move(val._methods)) {}
-
-    ObjectType &operator=(const ObjectType &val);
-    ObjectType &operator=(ObjectType &&val);
-
     /**
      * @brief 添加变量节点至 `rm::ObjectType` 对象类型中
      *
@@ -126,11 +117,7 @@ public:
      */
     inline const ObjectType *getBase() const { return _base; }
 
-    /**
-     * @brief 获取 `rm::Variable` 表示的变量节点的列表
-     *
-     * @return 变量节点列表
-     */
+    
     inline const auto &getVariables() const { return _variables; }
 
     /**
@@ -141,11 +128,7 @@ public:
     inline const auto &getMethods() const { return _methods; }
 };
 
-/**
- * @brief OPC UA 对象
- * @brief
- * - 数据仅包含变量节点列表，不包含方法节点，方法节点由对象类型 `rm::ObjectType` 记录
- */
+//! OPC UA 对象
 class Object final
 {
     //! 对应的用 `rm::ObjectType` 表示的对象类型
@@ -159,6 +142,15 @@ class Object final
      * - `Value`: 用 `rm::Variable` 表示的变量
      */
     std::unordered_map<std::string, Variable> _variables;
+
+    /**
+     * @brief 方法节点
+     * @brief
+     * - `Key`: 浏览名 BrowseName
+     * @brief
+     * - `Value`: 用 `rm::Method` 表示的方法
+     */
+    std::unordered_map<std::string, Method> _methods;
 
 public:
     //! 命名空间索引，默认为 `1`
@@ -191,23 +183,24 @@ public:
      *
      * @param[in] otype 既存的待作为对象节点类型信息的使用 `rm::ObjectType` 表示的变量类型
      */
-    explicit Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()) {}
-
-    Object(const Object &val) : _type(val._type), _variables(val._variables), browse_name(val.browse_name),
-                                display_name(val.display_name), description(val.description) {}
-
-    Object(Object &&val) : _type(std::exchange(val._type, nullptr)), _variables(std::move(val._variables)), browse_name(std::move(val.browse_name)),
-                           display_name(std::move(val.display_name)), description(std::move(val.description)) {}
+    explicit Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()), _methods(otype.getMethods()) {}
 
     //! 获取对象类型 `rm::ObjectType`
     inline const ObjectType *type() const { return _type; }
 
     /**
-     * @brief 添加变量节点至 `rm::Object` 对象中
+     * @brief 添加（额外的）变量节点至 `rm::Object` 对象中
      *
      * @param[in] variable 变量节点
      */
     inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
+
+    /**
+     * @brief 添加（额外的）方法节点至 `rm::Object` 对象中
+     *
+     * @param[in] method 方法节点
+     */
+    inline void add(const Method &method) { _methods[method.browse_name] = method; }
 
     /**
      * @brief 访问指定的变量节点
@@ -217,8 +210,19 @@ public:
      */
     inline Variable &operator[](const std::string &browse_name) { return _variables[browse_name]; }
 
-    //! 获取对象的变量节点列表
+    /**
+     * @brief 获取 `rm::Variable` 表示的变量节点的列表
+     *
+     * @return 变量节点列表
+     */
     inline const auto &getVariables() const { return _variables; }
+
+    /**
+     * @brief 获取 `rm::Method` 表示的方法节点的列表
+     *
+     * @return 方法节点列表
+     */
+    inline const auto &getMethods() const { return _methods; }
 };
 
 //! @} opcua

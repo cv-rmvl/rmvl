@@ -13,9 +13,9 @@
 
 #include <array>
 #include <bitset>
-#include <vector>
 #include <cstdint>
 #include <functional>
+#include <vector>
 
 //! @addtogroup core
 //! @{
@@ -111,7 +111,7 @@ public:
     double operator()(double x) const;
 };
 
-///////////////////// 曲线拟合 /////////////////////
+////////////////// 多项式曲线拟合 //////////////////
 
 /**
  * @brief 曲线拟合器
@@ -120,12 +120,12 @@ public:
  */
 class CurveFitter
 {
-    std::vector<std::size_t> _idx; //!< 拟合曲线的阶数（从低到高）
-    std::vector<double> _coeffs;   //!< 拟合曲线的系数
+    std::vector<std::size_t> _idx; //!< 多项式拟合曲线的阶数（从低到高）
+    std::vector<double> _coeffs;   //!< 多项式拟合曲线的系数
 
 public:
     /**
-     * @brief 创建曲线拟合器对象
+     * @brief 创建多项式曲线拟合器对象
      *
      * @param[in] xs 已知节点的 x 坐标列表 \f$\text{xs}=\{x_0,x_1,\cdots,x_n\}\f$
      * @param[in] ys 已知节点的 y 坐标列表 \f$\text{ys}=\{f(x_0),f(x_1),\cdots,f(x_n)\}\f$
@@ -136,10 +136,10 @@ public:
     CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order);
 
     /**
-     * @brief 计算拟合曲线在指定点的函数值
+     * @brief 计算拟合的多项式曲线在指定点的函数值
      *
      * @param[in] x 指定点的 x 坐标
-     * @return 拟合曲线在指定点的函数值
+     * @return 拟合的多项式曲线在指定点的函数值
      */
     double operator()(double x) const;
 };
@@ -372,20 +372,20 @@ std::pair<double, double> region(Func1d func, double x0, double delta = 1);
 /**
  * @brief 一维函数最小值搜索
  *
- * @param[in] func 一维函数
+ * @param[in] func 一维约束函数
  * @param[in] x1 搜索区间左端点
  * @param[in] x2 搜索区间右端点
- * @param[in] options 优化选项，默认为 `1e-4` 的误差容限和 `100` 的最大迭代次数
+ * @param[in] options 优化选项，默认为 `1e-6` 的误差容限和 `1000` 的最大迭代次数
  * @return `[x, fval]` 最小值点和最小值
  */
 std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const OptimalOptions &options = {});
 
 /**
- * @brief 无约束多维函数最小值搜索 \cite ConjGrad \cite NelderMead
+ * @brief 无约束的多维函数最小值搜索 \cite ConjGrad \cite NelderMead
  *
- * @param[in] func 多维函数
+ * @param[in] func 多维约束函数
  * @param[in] x0 初始点
- * @param[in] options 优化选项，默认为 `1e-4` 的误差容限和 `100` 的最大迭代次数
+ * @param[in] options 优化选项，默认为 `1e-6` 的误差容限和 `1000` 的最大迭代次数
  * @return `[x, fval]` 最小值点和最小值
  */
 std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options = {});

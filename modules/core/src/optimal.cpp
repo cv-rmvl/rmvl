@@ -278,6 +278,8 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
         fval = fminunc_splx(func, xk, options);
         break;
     default:
+        RMVL_Error_(RMVL_StsBadArg, "Unknown optimal mode: %d, the \"optm_mode\" must be \"Optm_ConjGrad\" or \"Optm_Simplex\".",
+                    options.optm_mode);
         break;
     }
     return {xk, fval};

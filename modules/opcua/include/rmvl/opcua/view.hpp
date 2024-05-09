@@ -2,7 +2,7 @@
  * @file view.hpp
  * @author zhaoxi (535394140@qq.com)
  * @brief 视图
- * @version 1.1
+ * @version 2.2
  * @date 2024-03-29
  *
  * @copyright Copyright 2023 (c), zhaoxi
@@ -53,15 +53,6 @@ private:
 
 public:
     View() = default;
-
-    View(const View &view) : browse_name(view.browse_name), display_name(view.display_name),
-                             description(view.description), _nodes(view._nodes) {}
-
-    View(View &&view) : browse_name(std::move(view.browse_name)), display_name(std::move(view.display_name)),
-                        description(std::move(view.description)), _nodes(std::move(view._nodes)) {}
-
-    View &operator=(const View &view);
-    View &operator=(View &&view);
 
     /**
      * @brief 添加节点 ID
