@@ -60,7 +60,7 @@ int grab_mode = 1
 string serial_number
 ```
 
-如果要给某一天参数设置注释信息，请<span style="color: red">尾置</span> `#` 并输入相应注释信息，例如
+如果要给某一参数设置注释信息，请<span style="color: red">尾置</span> `#` 并输入相应注释信息，例如
 
 ```
 float exposure = 1500 # 相机曝光

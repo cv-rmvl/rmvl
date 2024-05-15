@@ -32,7 +32,7 @@ struct Argument final
 {
     std::string name;        //!< 方法名
     UA_TypeFlag data_type{}; //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
-    uint32_t dims{};         //!< 参数维数 @warning 不能为 `0`
+    uint32_t dims{1U};       //!< 参数维数 @warning 不能为 `0`
 
     Argument() = default;
 

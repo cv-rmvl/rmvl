@@ -127,7 +127,11 @@ FeatureHandler: Handling the feature request.
 
 因此，常规用法中的<span style="color: red">请求</span>在 RMVL 功能模块中表示为<span style="color: red">数据组件</span>，各功能模块的返回值 `XxxInfo` 则可以作为下一个功能模块的入参。可以继续参考此流程图
 
-![upper-base](upper_base.png)
+<center>
+
+![图 1 顶层模块流程图](upper_base.png)
+
+</center>
 
 程序处理III（预测）的入参包含了补偿模块的返回值信息 `rm::CompensateInfo`，程序处理IV（决策）的入参包含了前 3 个模块的返回值 `rm::DetectInfo`、`rm::CompensateInfo`、`rm::PredictInfo`。
 

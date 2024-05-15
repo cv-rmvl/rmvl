@@ -9,10 +9,7 @@ struct S
 {
     int a{};
 
-    void f(this S self, int i)
-    {
-        self.a = i;
-    }
+    void f(this S self, int i) { self.a = i; }
 };
 
 // 打印库
