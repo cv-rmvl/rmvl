@@ -38,15 +38,13 @@
 
 <center>
 
-![图 1-1 向前一步](fminbnd_forward.png)
-
-![图 1-2 向前两步](fminbnd_forward_2.png)
+![图 1 进退法](fminbnd/forward.png)
 
 </center>
 
 1. 选择一个初始点\f$\alpha_1\f$和一个初始步长\f$h\f$。
-2. 如图 1-1 所示，计算点\f$\alpha_1\f$和点\f$\alpha_1+h\f$对应的函数值\f$f(\alpha_1)\f$和\f$f(\alpha_1+h)\f$，令\f[f_1=f(\alpha_1),\quad f_2=f(\alpha_1+h)\f]
-3. 比较\f$f_1\f$和\f$f_2\f$，若\f$f_1>f_2\f$，则执行前进运算，将步长加大\f$k\f$倍（如加大 2 倍），取新点\f$\alpha_1+3h\f$，如图 1-2 所示，计算其函数值，并令\f[f_1=f(\alpha_1+h),\quad f_2=f(\alpha_1+3h)\f]若\f$f_1< f_2\f$，则初始搜索区间端点为\f[a=\alpha_1,\quad b=\alpha_1+3h\f]若\f$f_1=f_2\f$，则初始搜索区间端点为\f[a=\alpha_1+h,\quad b=\alpha_1+3h\f]若\f$f_1>f_2\f$，则要继续做前进运算，且步长再加大两倍，取第 4 个点\f$\alpha_1+7h\f$，再比较第 3 和第 4 个点处的函数值……如此反复循环，直到在连续的 3 个点的函数值出现“两头大、中间小”的情况为止。
+2. 如图 1(a) 所示，计算点\f$\alpha_1\f$和点\f$\alpha_1+h\f$对应的函数值\f$f(\alpha_1)\f$和\f$f(\alpha_1+h)\f$，令\f[f_1=f(\alpha_1),\quad f_2=f(\alpha_1+h)\f]
+3. 比较\f$f_1\f$和\f$f_2\f$，若\f$f_1>f_2\f$，则执行前进运算，将步长加大\f$k\f$倍（如加大 2 倍），取新点\f$\alpha_1+3h\f$，如图 1(b) 所示，计算其函数值，并令\f[f_1=f(\alpha_1+h),\quad f_2=f(\alpha_1+3h)\f]若\f$f_1< f_2\f$，则初始搜索区间端点为\f[a=\alpha_1,\quad b=\alpha_1+3h\f]若\f$f_1=f_2\f$，则初始搜索区间端点为\f[a=\alpha_1+h,\quad b=\alpha_1+3h\f]若\f$f_1>f_2\f$，则要继续做前进运算，且步长再加大两倍，取第 4 个点\f$\alpha_1+7h\f$，再比较第 3 和第 4 个点处的函数值……如此反复循环，直到在连续的 3 个点的函数值出现“两头大、中间小”的情况为止。
 4. 如果在 **步骤 3** 中出现\f$f_1< f_2\f$的情况，则执行后退运算，将步长变为负值，取新点\f$\alpha_1-h\f$，计算函数值，令\f[f_1=f(\alpha_1-h),\quad f_2=f(\alpha_1)\f]若\f$f_1>f_2\f$，则初始搜索区间端点为\f[a=\alpha_1-h,\quad b=\alpha_1+h\f]若\f$f_1=f_2\f$，则初始搜索区间端点为\f[a=\alpha_1-h,\quad b=\alpha_1\f]若\f$f_1< f_2\f$，则要继续做后退运算，且步长再加大两倍，取第 4 个点\f$\alpha_1-3h\f$，再比较第 3 和第 4 个点处的函数值……如此反复循环，直到在连续的 3 个点的函数值出现“两头大、中间小”的情况为止。
 
 <span style="color: green">**示例**</span>
@@ -61,7 +59,7 @@
 
 黄金分割法是利用区间消去法的原理，通过不断缩小单峰区间长度，即每次迭代都消去一部分不含极小值点的区间，使搜索区间不断缩小，从而逐渐逼近目标函数极小值点的一种优化方法。黄金分割法是直接寻优法，通过直接比较区间上点的函数值的大小来判断区间的取舍。这种方法具有计算简单、收敛速度快等优点。
 
-如图1-2所示，在已确定的单峰区间[a,b]内任取\f$\alpha_1\f$，\f$\alpha_2\f$两点，计算并比较两点处的函数值\f$f(\alpha_1)\f$和\f$f(\alpha_2)\f$,可能出现3种情况：
+如图 1(b) 所示，在已确定的单峰区间[a,b]内任取\f$\alpha_1\f$，\f$\alpha_2\f$两点，计算并比较两点处的函数值\f$f(\alpha_1)\f$和\f$f(\alpha_2)\f$,可能出现3种情况：
 
 1. \f$f(\alpha_1)< f(\alpha_2)\f$，因为函数是单峰的，所以极小值点必定位于点\f$\alpha_2\f$的左侧，即\f$\alpha^*\in[a,\alpha_2]\f$，搜索区间可以缩小为\f$[a,\alpha_2]\f$，如图 2-1(a) 所示；
 2. \f$f(\alpha_1)>f(\alpha_2)\f$，极小值点必定位于点\f$\alpha_1\f$的右侧，即\f$\alpha^*\in[\alpha_1,b]\f$，搜索区间可以缩小为\f$[\alpha_1,b]\f$，如图 2-1(b) 所示；
@@ -69,7 +67,7 @@
 
 <center>
 
-![图 2-1 搜索区间缩小示意图](region_reduce.png)
+![图 2-1 搜索区间缩小示意图](fminbnd/region_reduce.png)
 
 </center>
 
@@ -92,7 +90,7 @@
 
 <center>
 
-![图 2-2 黄金分割法原理](fminbnd_principle.png)
+![图 2-2 黄金分割法原理](fminbnd/principle.png)
 
 </center>
 

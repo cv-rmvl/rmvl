@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include <array>
 #include <bitset>
 #include <cstdint>
 #include <functional>
@@ -311,46 +310,51 @@ public:
 //! @addtogroup core_optimal
 //! @{
 
-//! 一维函数
+//! 一元函数
 using Func1d = std::function<double(double)>;
-
-//! 多维函数
+//! 一元函数组
+using Func1ds = std::vector<Func1d>;
+//! 多元函数
 using FuncNd = std::function<double(const std::vector<double> &)>;
+//! 多元函数组
+using FuncNds = std::vector<FuncNd>;
 
 //! 梯度/导数计算模式
-enum DiffMode : uint8_t
+enum class DiffMode : uint8_t
 {
-    Diff_Central, //!< 中心差商
-    Diff_Ridders, //!< Richardson 外推
+    Central, //!< 中心差商
+    Ridders, //!< Richardson 外推
 };
 
 //! 多维函数最优化模式
-enum OptimizeMode : uint8_t
+enum class FminMode : uint8_t
 {
-    Optm_ConjGrad, //!< 共轭梯度法
-    Optm_Simplex,  //!< 单纯形法
+    ConjGrad, //!< 共轭梯度法
+    Simplex   //!< 单纯形法
 };
 
-//! 优化选项
+//! 无约束多维函数优化选项
 struct OptimalOptions
 {
-    DiffMode diff_mode{};     //!< 梯度计算模式，默认为中心差商 `Central`
-    OptimizeMode optm_mode{}; //!< 优化模式，默认为共轭梯度法 `ConjGrad`
-    int max_iter{1000};       //!< 最大迭代次数
-    double dx{1e-2};          //!< 求解步长
-    double tol{1e-6};         //!< 误差容限
+    DiffMode diff_mode{}; //!< 梯度计算模式，默认为中心差商 `DiffMode::Central`
+    FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
+    int max_iter{1000};   //!< 最大迭代次数
+    double exterior{1e3}; //!< 外罚函数系数
+    double tau{1};        //!< 初始信赖域半径
+    double dx{1e-2};      //!< 求解步长
+    double tol{1e-6};     //!< 误差容限
 };
 
 /**
  * @brief 计算一元函数的导数
  *
- * @param[in] func 多元函数
+ * @param[in] func 一元函数
  * @param[in] x 指定位置的自变量
  * @param[in] mode 导数计算模式，默认为中心差商 `Diff_Central`
  * @param[in] dx 坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的导数
  */
-double derivative(Func1d func, double x, DiffMode mode = Diff_Central, double dx = 1e-3);
+double derivative(Func1d func, double x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
 
 /**
  * @brief 计算多元函数的梯度
@@ -361,7 +365,7 @@ double derivative(Func1d func, double x, DiffMode mode = Diff_Central, double dx
  * @param[in] dx 计算偏导数时，坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的梯度向量
  */
-std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mode = Diff_Central, double dx = 1e-3);
+std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
 
 /**
  * @brief 采用进退法确定搜索区间
@@ -379,20 +383,41 @@ std::pair<double, double> region(Func1d func, double x0, double delta = 1);
  * @param[in] func 一维约束函数
  * @param[in] x1 搜索区间左端点
  * @param[in] x2 搜索区间右端点
- * @param[in] options 优化选项，默认为 `1e-6` 的误差容限和 `1000` 的最大迭代次数
+ * @param[in] options 优化选项
  * @return `[x, fval]` 最小值点和最小值
  */
 std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const OptimalOptions &options = {});
 
 /**
- * @brief 无约束的多维函数最小值搜索 \cite ConjGrad \cite NelderMead
- *
+ * @brief 无约束多维函数的最小值搜索 \cite ConjGrad \cite NelderMead ，可参考 @ref tutorial_modules_fminunc
  * @param[in] func 多维约束函数
  * @param[in] x0 初始点
- * @param[in] options 优化选项，默认为 `1e-6` 的误差容限和 `1000` 的最大迭代次数
+ * @param[in] options 优化选项
  * @return `[x, fval]` 最小值点和最小值
  */
 std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options = {});
+
+/**
+ * @brief 有约束多维函数的最小值搜索
+ *
+ * @param[in] func 多维函数
+ * @param[in] x0 初始点
+ * @param[in] c 不等式约束 \f$f_c(x)\le0\f$
+ * @param[in] ceq 等式约束 \f$f_{ceq}(x)=0\f$
+ * @param[in] options options 优化选项
+ * @return `[x, fval]` 最小值点和最小值
+ */
+std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, const FuncNds &c, const FuncNds &ceq, const OptimalOptions &options = {});
+
+/**
+ * @brief 无约束非线性最小二乘求解
+ *
+ * @param[in] funcs 多维最小二乘约束函数，满足 \f$F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2\f$
+ * @param[in] x0 初始点
+ * @param[in] options 优化选项
+ * @return 最小二乘解
+ */
+std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
 
 //! @} core_optimal
 

@@ -16,6 +16,8 @@
 #include "rmvl/core/math.hpp"
 #include "rmvl/core/numcal.hpp"
 
+#include <iostream>
+
 namespace rm
 {
 
@@ -44,7 +46,7 @@ static inline double partial(FuncNd func, std::vector<double> &x_dx, std::size_t
 double derivative(Func1d func, double x, DiffMode mode, double dx)
 {
     double x_dx{x};
-    if (mode == Diff_Ridders)
+    if (mode == DiffMode::Ridders)
     {
         double T00{partial(func, x_dx, 2 * dx)};
         double T10{partial(func, x_dx, dx)};
@@ -69,8 +71,8 @@ double derivative(Func1d func, double x, DiffMode mode, double dx)
  */
 static void calcGrad(FuncNd func, const std::vector<double> &x, std::vector<double> &xgrad, DiffMode mode, double dx)
 {
-    std::vector<double> x_dx{x};
-    if (mode == Diff_Ridders)
+    auto x_dx{x};
+    if (mode == DiffMode::Ridders)
         for (std::size_t i = 0; i < x_dx.size(); ++i)
         {
             double T00{partial(func, x_dx, i, 2 * dx)};
@@ -98,7 +100,7 @@ std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mod
  * @param[in] x 向量
  * @return 二范数
  */
-static inline double norm(const std::vector<double> &x)
+static inline double normL2(const std::vector<double> &x)
 {
     double retval{};
     for (auto &&v : x)
@@ -156,24 +158,27 @@ static double fminunc_cg(FuncNd func, std::vector<double> &xk, const OptimalOpti
     std::vector<double> s = -xk;
     std::vector<double> xk_grad = grad(func, xk, options.diff_mode, options.dx), xk2_grad(xk_grad.size());
     // 判断是否收敛
-    double nbl_xk = norm(xk_grad);
+    double nbl_xk = normL2(xk_grad);
     if (nbl_xk < options.tol)
         return func(xk);
     // 一维搜索函数
-    auto func_alpha = [&](double alpha) { return func(xk + alpha * s); };
+    auto func_alpha = [&](double alpha) {
+        auto xk2 = xk + alpha * s;
+        return func(xk2);
+    };
     double retfval{};
     for (int i = 0; i < options.max_iter; ++i)
     {
         // 一维搜索 alpha
         auto [a, b] = region(func_alpha, 1);
-        RMVL_Assert(b > 0);
-        auto [alpha, fval] = fminbnd(func_alpha, a < 0. ? 0. : a, b, options);
+        auto [alpha, fval] = fminbnd(func_alpha, a, b, options);
         // 更新 xk，并计算对应的梯度
         for (std::size_t j = 0; j < xk.size(); ++j)
             xk[j] += alpha * s[j];
         retfval = fval;
         calcGrad(func, xk, xk2_grad, options.diff_mode, options.dx);
-        auto nbl_xk2 = norm(xk2_grad);
+        xk2_grad = grad(func, xk, options.diff_mode, options.dx);
+        auto nbl_xk2 = normL2(xk2_grad);
         if (nbl_xk2 < options.tol)
             break;
         // 计算 beta
@@ -269,20 +274,102 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
     std::vector<double> xk{x0};
     double fval{};
-    switch (options.optm_mode)
+    switch (options.fmin_mode)
     {
-    case Optm_ConjGrad:
-        fval = fminunc_cg(func, xk, options);
-        break;
-    case Optm_Simplex:
+    case FminMode::Simplex:
         fval = fminunc_splx(func, xk, options);
         break;
     default:
-        RMVL_Error_(RMVL_StsBadArg, "Unknown optimal mode: %d, the \"optm_mode\" must be \"Optm_ConjGrad\" or \"Optm_Simplex\".",
-                    options.optm_mode);
+        fval = fminunc_cg(func, xk, options);
         break;
     }
     return {xk, fval};
+}
+
+std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, const FuncNds &c, const FuncNds &ceq, const OptimalOptions &options)
+{
+    if (x0.empty())
+        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
+    if (c.empty() && ceq.empty())
+        return fminunc(func, x0, options);
+    // 外罚函数
+    const double M{options.exterior};
+    FuncNd farg = [&](const std::vector<double> &xk) -> double {
+        double fval = func(xk), ceqval{}, cval{};
+        for (const auto &v : ceq)
+            ceqval += v(xk) * v(xk);
+        for (const auto &v : c)
+            cval += std::pow(std::max(v(xk), 0.0), 2);
+        return fval + M * (ceqval + cval);
+    };
+
+    return fminunc(farg, x0, options);
+}
+
+/**
+ * @brief 计算某点处的雅可比矩阵
+ *
+ * @param[in] funcs 多元函数集合
+ * @param[in] xk 指定位置的自变量
+ * @param[in] options 优化选项
+ * @param[out] jac 雅可比矩阵
+ */
+static inline void calcJacobi(const FuncNds &funcs, const std::vector<double> &xk, const OptimalOptions &options, cv::Mat &jac)
+{
+    for (std::size_t i = 0; i < funcs.size(); ++i)
+    {
+        auto xgrad = grad(funcs[i], xk, options.diff_mode, options.dx);
+        for (std::size_t j = 0; j < xgrad.size(); ++j)
+            jac.at<double>(i, j) = xgrad[j];
+    }
+}
+
+/**
+ * @brief 计算函数值
+ *
+ * @param[in] funcs 多元函数集合
+ * @param[in] xk 指定位置的自变量
+ * @param[out] phi 函数值
+ */
+static inline void calcFs(const FuncNds &funcs, const std::vector<double> &xk, std::vector<double> &phi)
+{
+    for (std::size_t i = 0; i < funcs.size(); ++i)
+        phi[i] = funcs[i](xk);
+}
+
+std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+{
+    if (x0.empty())
+        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
+    std::vector<double> xk(x0);
+    cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // Jacobian 矩阵 (M×N)
+    std::vector<double> phi(funcs.size());        // 函数值 (M×1)
+    for (int idx = 0; idx < options.max_iter; ++idx)
+    {
+        // 计算函数值
+        calcFs(funcs, xk, phi);
+        // 计算搜索方向
+        calcJacobi(funcs, xk, options, J);
+        auto Jt = J.t();
+        cv::Mat fvals(phi, false);
+        std::vector<double> s = cv::Mat{-(Jt * J).inv() * Jt * fvals};
+        if (normL2(s) < options.tol)
+            break;
+        // 一维搜索 alpha
+        auto func_alpha = [&](double alpha) {
+            auto xk2 = xk + alpha * s;
+            std::vector<double> fvals2(funcs.size());
+            for (std::size_t i = 0; i < funcs.size(); ++i)
+                fvals2[i] = funcs[i](xk2);
+            return normL2(fvals2);
+        };
+        auto [a, b] = region(func_alpha, 1);
+        double alpha = fminbnd(func_alpha, a, b, options).first;
+        // 更新 xk
+        for (std::size_t i = 0; i < xk.size(); ++i)
+            xk[i] += alpha * s[i];
+    }
+    return xk;
 }
 
 } // namespace rm

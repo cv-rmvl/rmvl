@@ -34,12 +34,18 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 - @ref core (**core**) —— 包含主要的工具库、数据读写、宏定义、版本管理等内容，以及 rm::Exception 异常管理模块就在此处定义。
 
 - @ref camera (**camera**) —— 目前包含 3 种相机厂商 SDK 的二次开发工具库，具体可参考下表。
+
+  <center>
+
+  表 1: 相机厂商 SDK 二次开发工具库<br>
   |         厂商          | 简称 |
   | :-------------------: | :--: |
   |    奥普特机器视觉     | OPT  |
   | 海康机器人 *HIKROBOT* | Hik  |
   | 迈德威视 *Mindvision* |  Mv  |
   
+  </center>
+
   点击[此处](@ref tutorial_install)可以安装以上相机的 SDK
   
 - @ref ml (**ml**)， @ref opcua (**opcua**)
@@ -61,9 +67,9 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 #### 功能模块 {#function_modules}
 
 - @ref detector (**detector**) —— 识别、检测器是功能模块中最重要的部分，也是视觉图像处理的第一步。它负责对输入图像进行识别并加以处理，提取出目标轮廓、特征点等信息，并结合已知的部分数据组件，按顺序依次构建各种新的数据组件。
-  <center>
-    <img src="https://s1.ax1x.com/2022/11/05/xOgdat.md.png" alt="xOgdat.png" border="0" />
-  </center>
+
+  <img src="https://s1.ax1x.com/2022/11/05/xOgdat.md.png" alt="xOgdat.png" border="0" />
+  
   识别得到的各种图像以及提取到的特征和组合体均保存至识别模块信息 `rm::DetectInfo` 中。
 
 - @ref compensator (**compensator**) —— 补偿器通常是功能模块中的第一个用于修正数据组件的算法模块，<span style="color: green">主要在 RoboMaster 赛事中使用</span>。补偿器主要负责修正弹道下坠的影响。计算得到的子弹飞行时间 `tof` 以及补偿增量 `compensation` 均保存至补偿模块信息 `rm::CompensateInfo` 中。

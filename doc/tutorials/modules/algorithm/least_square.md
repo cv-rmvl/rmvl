@@ -1,4 +1,4 @@
-最小二乘法——超定方程组与函数拟合 {#tutorial_modules_least_square}
+最小二乘法 {#tutorial_modules_least_square}
 ============
 
 @author 赵曦
@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_interpolation}
 
-@next_tutorial{tutorial_modules_func_iteration}
+@next_tutorial{tutorial_modules_lsqnonlin}
 
 @tableofcontents
 
@@ -20,7 +20,7 @@
 
 <center>
 
-![图 1-1](ls-line-vertical.png)
+![图 1-1 直线的垂线的长度](lsq/line-vertical.png)
 
 </center>
 
@@ -58,7 +58,7 @@
 
 <center>
 
-![图 1-2](ls-vector-vertical.png)
+![图 1-2 最小二乘解表示为向量 OP](lsq/vector-vertical.png)
 
 </center>
 
@@ -87,11 +87,11 @@
 
 <center>
 
-![图 1-3](ls-equations.png)
+![图 1-3 超定线性方程组](lsq/equations.png)
 
 </center>
 
-一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用最小二乘法的点到直线的最短距离作为出发点？答案是肯定的，这里先给出误差平方和的表达式。
+一般的，对于一个系数矩阵 \f$A=(a_{ij})_{s\times{n}}\f$，\f$\pmb b=(b_1,b_2,\cdots,b_s)^T\f$，\f$\pmb x=(x_1,x_2,\cdots,x_s)^T\f$，若满足 \f$\text{rank}(A)\leq s\f$ 时，线性方程组没有数值解，但我们希望找到一组 **最优解** ，衡量此最优解的方法仍然可以采用最小二乘法。设法找出一组解 \f$\hat{\pmb x}=(x_1^0,\ x_2^0,\ x_3^0,\ \cdots,\ x_n^0)\f$ 使得每一项的误差 \f$\delta_i\f$ 平方和最小，如何定量这个误差？能否继续采用上文最小二乘法的点到直线的最短距离的思想作为出发点？答案是肯定的，这里先给出误差平方和的表达式。
 
 \f[\delta^2=\sum_{i=0}^{s-1}(a_{i1}x_1+a_{i2}x_2+\cdots+a_{in}x_n-b_i)^2\tag{2-2}\f]
 
@@ -111,9 +111,9 @@
 
 **基本概念介绍**
 
-1. 对于一般的线性方程组（方程数\f$\leq\f$未知数个数\f$n\f$），\f$A\pmb x=\pmb0\f$ 的解（也叫通解）生成的空间 \f$\pmb x\f$ 称为<span style="color: red">解空间</span>，其极大线性无关组被称为 **基础解系** ，即解空间的任意一个向量都可由基础解系所线性表出，即 \f$\pmb x=k_1\pmb\xi_1+k_2\pmb\xi_2+\cdots+k_t\pmb\xi_t\f$，其中满足 \f[\text{rank}(A)+t=n\tag{2-4}\f]
-2. 对于任意的线性方程组（可以是超定的）\f$A\f$ 是\f$s\times n\f$系数矩阵，\f$A\f$ 的列向量组合生成的空间，即 \f$x_1\pmb\alpha_1+x_2\pmb\alpha_2+\cdots+x_n\pmb\alpha_n\f$ 的空间，即代表 \f$A\pmb x\f$ 所生成的空间。同样的，可以写为 \f$L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)\f$，对于 \f$A\pmb x\f$ 生成的空间，后文简称为<span style="color: red">列空间</span>
-3. \f$\pmb b\f$ 是方程组右端项，表示列空间之外的一个向量，即在超定线性方程组中，\f$\pmb b\notin L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)\f$，因此才具备向量 \f$\pmb b\f$ 到 \f$A\pmb x\f$ 的距离的概念
+1. 对于任意的线性方程组（可以是超定的）\f$A\f$ 是\f$s\times n\f$系数矩阵，\f$A\f$ 的列向量组合生成的空间，即 \f$x_1\pmb\alpha_1+x_2\pmb\alpha_2+\cdots+x_n\pmb\alpha_n\f$ 的空间，即代表 \f$A\pmb x\f$ 所生成的空间。同样的，可以写为 \f$L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_n)\f$，对于 \f$A\pmb x\f$ 生成的空间，后文简称为<span style="color: red">列空间</span>。使用线性变换的角度进行分析，设 \f$T\f$ 是线性空间 \f$V\f$ 的线性变换，则\f[T(V)=\{T\pmb\alpha|\pmb\alpha\in V\}\f]是 \f$V\f$ 的子空间，因此方程组的系数矩阵 \f$A\f$ 就可以当做是某个线性变换 \f$T(V)\f$ 对应的矩阵，表示为\f[(T\pmb\alpha_1,T\pmb\alpha_2,\cdots,T\pmb\alpha_n)=(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_n)A\f]\f$T(V)\f$ 的维数叫线性变换 \f$T\f$ 的秩，也可以记为 \f$\text{rank}(A)\f$。因此列空间也可以被称为<span style="color: red">象子空间</span>；
+2. 对于一般的线性方程组（方程数\f$\leq\f$未知数个数\f$n\f$），\f$A\pmb x=\pmb0\f$ 的解（也叫通解）生成的空间 \f$\pmb x\f$ 称为<span style="color: red">解空间</span>。使用线性变换的角度进行分析，设 \f$T\f$ 是线性空间 \f$V\f$ 的线性变换，则集合\f[K=\{\pmb\alpha\in V|T\pmb\alpha=\pmb0\}\f]是 \f$V\f$ 的子空间，称为线性变换 \f$T\f$ 的核，记作 \f$T^{-1}(\pmb0)\f$，因此解空间也被称为<span style="color: red">核空间</span>。另外，在方程组中，解空间的极大线性无关组被称为 **基础解系** ，即解空间的任意一个向量都可由基础解系所线性表出，即 \f$\pmb x=k_1\pmb\xi_1+k_2\pmb\xi_2+\cdots+k_t\pmb\xi_t\f$，不难得出结论，\f$T^{-1}(\pmb0)\f$ 的维度就是 \f$t\f$。并且可以证明出如下的 **子空间维数定理** ：设 \f$T\f$ 是 \f$n\f$ 维线性空间 \f$V\f$ 的线性变换，则一定满足维数关系\f[\text{dim}T(V)+\text{dim}T^{-1}(\pmb0)=n\f]也可以记为\f[\text{rank}(A)+t=n\tag{2-4}\f]
+3. \f$\pmb b\f$ 是方程组右端项，表示列空间之外的一个向量，即在超定线性方程组中，\f$\pmb b\notin L(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_n)\f$，因此才具备向量 \f$\pmb b\f$ 到 \f$A\pmb x\f$ 的距离的概念
 
 让我们继续回到最小二乘解的求解过程中，根据 \f$\text{(1-2b)}\f$ 和 \f$\text{(1-4)}\f$，类似的，我们可以构建出
 
@@ -121,14 +121,14 @@
 (\pmb\alpha_1,\pmb y-\pmb b)&=&\pmb\alpha_1^T(\pmb y-\pmb b)&=&0\\
 (\pmb\alpha_2,\pmb y-\pmb b)&=&\pmb\alpha_2^T(\pmb y-\pmb b)&=&0\\
 \vdots&=&\vdots&=&\vdots\\
-(\pmb\alpha_s,\pmb y-\pmb b)&=&\pmb\alpha_s^T(\pmb y-\pmb b)&=&0\\
+(\pmb\alpha_n,\pmb y-\pmb b)&=&\pmb\alpha_n^T(\pmb y-\pmb b)&=&0\\
 \end{matrix}\tag{2-5}\f]
 
-这表示当 \f$\pmb y-\pmb b\f$ 与列空间正交时，\f$\pmb y\f$ 与 \f$\pmb b\f$ 距离最短，与列空间正交就必须要与生成列空间的每一个向量即 \f$\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s\f$ 正交。整合后可以得到
+这表示当 \f$\pmb y-\pmb b\f$ 与列空间正交时，\f$\pmb y\f$ 与 \f$\pmb b\f$ 距离最短，与列空间正交就必须要与生成列空间的每一个向量即 \f$\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_n\f$ 正交。整合后可以得到
 
-\f[(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s)^T(\pmb y-\pmb b)=\pmb0\tag{2-6}\f]
+\f[(\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_n)^T(\pmb y-\pmb b)=\pmb0\tag{2-6}\f]
 
-\f$\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_s\f$ 刚好是系数矩阵按列分块的形式，又有 \f$\pmb y=A\hat{\pmb x}\f$ 我们可以得到如下公式。
+\f$\pmb\alpha_1,\pmb\alpha_2,\cdots,\pmb\alpha_n\f$ 刚好是系数矩阵按列分块的形式，又有 \f$\pmb y=A\hat{\pmb x}\f$ 我们可以得到如下公式。
 
 \f[
 \begin{align}
@@ -145,7 +145,7 @@ A^TA\hat{\pmb x}&=A^T\pmb b
 
 这就是最小二乘解所满足的代数方程。
 
-#### 示例
+### 3. 示例
 
 下面给出 3 个示例，不直接使用公式 \f$\text{(2-7)}\f$，通过几何或者其他手段来表示最小二乘解。
 
@@ -173,13 +173,13 @@ y&=x_1
 
 <center>
 
-![图 2-1](ls-eg1.png)
+![图 2-1 二维列空间的最小二乘解几何解释](lsq/eg1.png)
 
 </center>
 
-相当于现在需要在 \f$y=x\f$ 上找到一个点，使得其到 \f$\pmb b\f$ 的距离最短，这是初等几何的内容，做垂线即可，最终得到交点的坐标 
+相当于现在需要在 \f$y=x\f$ 上找到一个点，使得其到 \f$\pmb b\f$ 点的距离最短，这是初等几何的内容，做垂线即可，最终得到交点的坐标 
 
-\f[(x,y)=(\frac32,\frac32)\tag{3-3}\f]
+\f[\hat y=(\frac32,\frac32)\tag{3-3}\f]
 
 代入参数方程 \f$\text{(3-2)}\f$，可以得到
 
@@ -195,7 +195,7 @@ y&=x_1
 
 <center>
 
-![图 2-2](ls-eg2.png)
+![图 2-2 三维列空间的最小二乘解几何解释](lsq/eg2.png)
 
 </center>
 
@@ -241,11 +241,9 @@ y&=x_1
 
 <center>
 表 3-1 已知点集
-| 下标 \f$i\f$ |    0    |    1    |    2    |    3    |
-| :----------: | :-----: | :-----: | :-----: | :-----: |
-|  \f$t_i\f$   | \f$1\f$ | \f$2\f$ | \f$3\f$ | \f$4\f$ |
-| \f$f(t_i)\f$ | \f$0\f$ | \f$2\f$ | \f$1\f$ | \f$3\f$ |
 </center>
+
+\f[\begin{array}{c|cccc}\text{下标}i&0&1&2&3\\\hline t_i&1&2&3&4\\f(t_i)&0&2&1&3\end{array}\f]
 
 上文研究的 **线性空间** 都是定义在数域 \f$\mathbb P^n\f$ 上的欧式空间，实际上，对于系数属于 \f$\mathbb P\f$，而未定元为 \f$t\f$ 的所有次数小于 \f$n\f$ 的多项式集合也构成一个 **线性空间** ，记作
 
@@ -291,7 +289,7 @@ f(t_0)\\f(t_1)\\\vdots\\f(t_{s-1})\end{bmatrix}\tag{3-11}\f]
 
 后文将给出另外一种描述最小二乘法的做法，这种做法有别于上面构造向量与子空间垂直的方式，通过对误差平方和直接求其最小值来得到最小二乘解（两种方式结果均能推导出公式 \f$\text{(2-7)}\f$，但出发点不同）。此外，要介绍的这个解法也同样适用于整个线性空间（包括欧式空间、多项式空间等线性空间）。
 
-### 3. 法方程求解最小二乘法
+### 4. 法方程求解最小二乘法
 
 相关类 rm::CurveFitter
 
@@ -403,11 +401,11 @@ d_1=(\phi_1,f)&=\sum_{i=0}^3\phi_1(t_i)f(t_i)=\sum_{i=0}^3t_i\times f(t_i)\\&=0+
 \f[\begin{bmatrix}4&10\\10&30\end{bmatrix}\hat{\pmb a}=
 \begin{bmatrix}6\\19\end{bmatrix}\tag{4-13}\f]
 
-解得：\f$\left\{\begin{align}a_0&=-0.5\\a_1&=0.8\end{align}\right.\f$，即拟合曲线为 \f$y=-0.5+0.8t\f$，使用数学绘图软件验证，结果正确。
+解得：\f$\left\{\begin{align}a_0&=-0.5\\a_1&=0.8\end{align}\right.\f$，即拟合曲线为 \f$y=-0.5+0.8t\f$，在图像中展示，如下。
 
 <center>
 
-![图 4-1](ls-eg3.png)
+![图 4-1 拟合曲线](lsq/eg3.png)
 
 </center>
 

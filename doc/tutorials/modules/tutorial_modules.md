@@ -30,7 +30,7 @@
 #### 数值计算
 
 - @subpage tutorial_modules_interpolation
-- @subpage tutorial_modules_least_square
+- @subpage tutorial_modules_least_square 和 @subpage tutorial_modules_lsqnonlin
 - @subpage tutorial_modules_func_iteration
 - @subpage tutorial_modules_runge_kutta
 - @subpage tutorial_modules_auto_differential
