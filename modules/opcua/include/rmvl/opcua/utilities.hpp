@@ -11,8 +11,9 @@
 
 #pragma once
 
-#include <string_view>
+#include <string>
 #include <typeindex>
+#include <string_view>
 #include <unordered_map>
 
 #include <open62541/types_generated_handling.h>
@@ -30,9 +31,10 @@ namespace rm
 //! @addtogroup opcua
 //! @{
 
+//! OPC UA 节点 ID
 struct NodeId final
 {
-    UA_NodeId nid{}; //!< 节点 ID
+    UA_NodeId nid{}; //!< open62541 的节点 ID 结构体
 
     //! 默认构造节点 ID
     NodeId() = default;
@@ -88,8 +90,8 @@ struct NodeId final
  */
 struct UserConfig final
 {
-    ::std::string id;     //!< 用户名
-    ::std::string passwd; //!< 密码
+    std::string id;     //!< 用户名
+    std::string passwd; //!< 密码
 };
 
 //! 类型标志位，可通过 `typeflag.at(xxx)` 进行获取
@@ -97,18 +99,18 @@ using UA_TypeFlag = UA_UInt32;
 
 //! 获取形如 `UA_TYPES_<xxx>` 的类型标志位
 inline const std::unordered_map<std::type_index, UA_TypeFlag> typeflag =
-    {{::std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
-     {::std::type_index(typeid(int8_t)), UA_TYPES_SBYTE},
-     {::std::type_index(typeid(uint8_t)), UA_TYPES_BYTE},
-     {::std::type_index(typeid(UA_Int16)), UA_TYPES_INT16},
-     {::std::type_index(typeid(UA_UInt16)), UA_TYPES_UINT16},
-     {::std::type_index(typeid(UA_Int32)), UA_TYPES_INT32},
-     {::std::type_index(typeid(UA_UInt32)), UA_TYPES_UINT32},
-     {::std::type_index(typeid(UA_Int64)), UA_TYPES_INT64},
-     {::std::type_index(typeid(UA_UInt64)), UA_TYPES_UINT64},
-     {::std::type_index(typeid(UA_Float)), UA_TYPES_FLOAT},
-     {::std::type_index(typeid(UA_Double)), UA_TYPES_DOUBLE},
-     {::std::type_index(typeid(const char *)), UA_TYPES_STRING}};
+    {{std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
+     {std::type_index(typeid(int8_t)), UA_TYPES_SBYTE},
+     {std::type_index(typeid(uint8_t)), UA_TYPES_BYTE},
+     {std::type_index(typeid(UA_Int16)), UA_TYPES_INT16},
+     {std::type_index(typeid(UA_UInt16)), UA_TYPES_UINT16},
+     {std::type_index(typeid(UA_Int32)), UA_TYPES_INT32},
+     {std::type_index(typeid(UA_UInt32)), UA_TYPES_UINT32},
+     {std::type_index(typeid(UA_Int64)), UA_TYPES_INT64},
+     {std::type_index(typeid(UA_UInt64)), UA_TYPES_UINT64},
+     {std::type_index(typeid(UA_Float)), UA_TYPES_FLOAT},
+     {std::type_index(typeid(UA_Double)), UA_TYPES_DOUBLE},
+     {std::type_index(typeid(const char *)), UA_TYPES_STRING}};
 
 //! 传输协议
 enum class TransportID : uint8_t

@@ -12,6 +12,7 @@
 #pragma once
 
 #include "rmvl/opcua/variable.hpp"
+#include "rmvl/opcua/method.hpp"
 
 namespace rm::helper
 {
@@ -42,5 +43,14 @@ Variable cvtVariable(const UA_Variant &p_val);
  * @return 用 `UA_Variant` 表示的变量类型节点的内置数据
  */
 UA_Variant cvtVariable(const VariableType &vtype);
+
+/**
+ * @brief `rm::Argument` 转化为 `UA_Argument`
+ *
+ * @warning 此方法一般不直接使用
+ * @param[in] arg `rm::Argument` 表示的方法
+ * @return `UA_Argument` 表示的方法
+ */
+UA_Argument cvtArgument(const Argument &arg);
 
 } // namespace rm::helper

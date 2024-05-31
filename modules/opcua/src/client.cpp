@@ -30,6 +30,13 @@ Client::Client(std::string_view address, UserConfig usr)
 {
     _client = UA_Client_new();
     UA_ClientConfig *config = UA_Client_getConfig(_client);
+    // 修改日志
+#if OPCUA_VERSION < 10400
+    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
+#else
+    config->logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
+#endif
+    // 设置默认配置
     auto status = UA_ClientConfig_setDefault(config);
     if (status == UA_STATUSCODE_GOOD)
     {
@@ -40,7 +47,7 @@ Client::Client(std::string_view address, UserConfig usr)
     }
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create client");
+        ERROR_("Failed to create client");
         UA_Client_delete(_client);
         _client = nullptr;
     }
@@ -96,7 +103,7 @@ bool Client::write(const NodeId &node, const Variable &val)
     UA_Variant_clear(&new_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to write value to the specific node, error: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to write value to the specific node, error: %s", UA_StatusCode_name(status));
         return false;
     }
     return true;
@@ -115,7 +122,7 @@ bool Client::call(const NodeId &obj_node, const std::string &name, const std::ve
     NodeId method_node = obj_node | find(name);
     if (method_node.empty())
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find the method node: %s", name.c_str());
+        ERROR_("Failed to find the method node: %s", name.c_str());
         return false;
     }
     // 调用方法
@@ -125,7 +132,7 @@ bool Client::call(const NodeId &obj_node, const std::string &name, const std::ve
         UA_Variant_clear(&input_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to call the method, node id: %d, error code: %s",
+        ERROR_("Failed to call the method, node id: %d, error code: %s",
                      method_node.nid.identifier.numeric, UA_StatusCode_name(status));
         return false;
     }
@@ -150,7 +157,7 @@ NodeId Client::addViewNode(const View &view)
         UA_QUALIFIEDNAME(view.ns, helper::to_char(view.browse_name)), attr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add view node, error: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add view node, error: %s", UA_StatusCode_name(status));
         return {};
     }
     // 添加引用
@@ -161,7 +168,7 @@ NodeId Client::addViewNode(const View &view)
         status = UA_Client_addReference(_client, retval, nodeOrganizes, true, UA_STRING_NULL, exp, UA_NODECLASS_VARIABLE);
         if (status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add reference, error: %s", UA_StatusCode_name(status));
+            ERROR_("Failed to add reference, error: %s", UA_StatusCode_name(status));
             return {};
         }
     }
@@ -186,7 +193,7 @@ bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_ch
         _client, resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request, &node, on_change, nullptr);
     if (result.statusCode != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
+        ERROR_("Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
         return false;
     }
     return true;
@@ -234,7 +241,7 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Clie
         _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request_item, &monitor_id, on_event, nullptr);
     if (result.statusCode != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create event monitor, error: %s", UA_StatusCode_name(result.statusCode));
+        ERROR_("Failed to create event monitor, error: %s", UA_StatusCode_name(result.statusCode));
         return false;
     }
     else
@@ -259,7 +266,7 @@ bool Client::createSubscription(UA_CreateSubscriptionResponse &response)
     response = UA_Client_Subscriptions_create(_client, request, nullptr, nullptr, nullptr);
     if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to create subscription, error: %s",
+        ERROR_("Failed to create subscription, error: %s",
                      UA_StatusCode_name(response.responseHeader.serviceResult));
         return false;
     }

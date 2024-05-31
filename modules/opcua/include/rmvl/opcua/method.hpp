@@ -105,18 +105,4 @@ struct Method final
 
 //! @} opcua
 
-namespace helper
-{
-
-/**
- * @brief `rm::Argument` 转化为 `UA_Argument`
- *
- * @warning 此方法一般不直接使用
- * @param[in] arg `rm::Argument` 表示的方法
- * @return `UA_Argument` 表示的方法
- */
-UA_Argument cvtArgument(const Argument &arg);
-
-} // namespace helper
-
 } // namespace rm
