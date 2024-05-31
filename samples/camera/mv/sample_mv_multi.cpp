@@ -1,20 +1,15 @@
 #include <iostream>
 
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/mv_camera.h"
 
 #include <CameraApi.h>
 
-using namespace rm;
-using namespace std;
-using namespace cv;
-
 int main()
 {
     INT camera_counts = 8;
-    vector<tSdkCameraDevInfo> camera_list(camera_counts);
+    std::vector<tSdkCameraDevInfo> camera_list(camera_counts);
     auto status = CameraEnumerateDevice(camera_list.data(), &camera_counts);
     if (status != CAMERA_STATUS_SUCCESS)
     {
@@ -30,12 +25,12 @@ int main()
                i, camera_list[i].acSn, camera_list[i].acProductName,
                camera_list[i].acSensorType, camera_list[i].acPortType);
     printf("└──────┴──────────────┴────────────────┴─────────────────────┴────────────────┘\n");
-    cout << "\033[33m输入相机序列号, 退出输入 \"q\": \033[0m";
-    string sn;
-    cin >> sn;
+    std::cout << "\033[33m输入相机序列号, 退出输入 \"q\": \033[0m";
+    std::string sn;
+    std::cin >> sn;
     if (sn == "q")
         return 0;
-    MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV), sn.c_str());
+    rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV), sn.c_str());
 
     int exposure = 1000;
     int gain = 64;
@@ -44,7 +39,7 @@ int main()
     int b_gain = 100;
 
     // Load the last parameters
-    FileStorage fs("out_para.yml", FileStorage::READ);
+    cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
     if (fs.isOpened())
     {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
@@ -54,26 +49,26 @@ int main()
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
-    capture.set(CAMERA_MANUAL_EXPOSURE);
-    capture.set(CAMERA_EXPOSURE, exposure);
-    capture.set(CAMERA_GAIN, gain);
-    capture.set(CAMERA_MANUAL_WB);
-    capture.set(CAMERA_WB_RGAIN, r_gain);
-    capture.set(CAMERA_WB_GGAIN, g_gain);
-    capture.set(CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
+    capture.set(rm::CAMERA_EXPOSURE, exposure);
+    capture.set(rm::CAMERA_GAIN, gain);
+    capture.set(rm::CAMERA_MANUAL_WB);
+    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
+    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
+    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
 
-    namedWindow("frame", WINDOW_NORMAL);
+    namedWindow("frame", cv::WINDOW_NORMAL);
 
-    Mat frame;
+    cv::Mat frame;
     if (!capture.read(frame))
         return -1;
-    resizeWindow("frame", Size(frame.cols * 0.8, frame.rows * 0.8));
+    resizeWindow("frame", cv::Size(frame.cols * 0.8, frame.rows * 0.8));
 
     while (capture.read(frame))
     {
-        imshow("frame", frame);
-        if (waitKey(1) == 27)
-            if (waitKey(0) == 27)
+        cv::imshow("frame", frame);
+        if (cv::waitKey(1) == 27)
+            if (cv::waitKey(0) == 27)
                 break;
     }
 

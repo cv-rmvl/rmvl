@@ -14,16 +14,16 @@
 #include "rmvl/core/util.hpp"
 #include "rmvl/imgproc/pretreat.h"
 
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
-Mat rm::binary(Mat src, rm::PixChannel ch1, rm::PixChannel ch2, uint8_t thresh)
+cv::Mat binary(cv::Mat src, PixChannel ch1, PixChannel ch2, uint8_t thresh)
 {
     if (src.type() != CV_8UC3)
         RMVL_Error(RMVL_StsBadArg, "The image type of \"src\" is incorrect");
-    Mat bin = Mat::zeros(Size(src.cols, src.rows), CV_8UC1);
+    cv::Mat bin = cv::Mat::zeros(cv::Size(src.cols, src.rows), CV_8UC1);
     // Image process
-    parallel_for_(Range(0, src.rows), [&](const Range &range) {
+    parallel_for_(cv::Range(0, src.rows), [&](const cv::Range &range) {
         uchar *data_src = nullptr;
         uchar *data_bin = nullptr;
         for (int row = range.start; row < range.end; ++row)
@@ -38,15 +38,17 @@ Mat rm::binary(Mat src, rm::PixChannel ch1, rm::PixChannel ch2, uint8_t thresh)
     return bin;
 }
 
-Mat rm::binary(Mat src, uint8_t thresh)
+cv::Mat binary(cv::Mat src, uint8_t thresh)
 {
     if (src.type() != CV_8UC3 && src.type() != CV_8UC1)
         RMVL_Error(RMVL_StsBadArg, "The image type of \"src\" is incorrect");
-    Mat bin;
+    cv::Mat bin;
     if (src.type() == CV_8UC3)
-        cvtColor(src, bin, COLOR_BGR2GRAY);
+        cvtColor(src, bin, cv::COLOR_BGR2GRAY);
     else
         bin = src;
-    threshold(bin, bin, thresh, 255, THRESH_BINARY);
+    threshold(bin, bin, thresh, 255, cv::THRESH_BINARY);
     return bin;
 }
+
+} // namespace rm

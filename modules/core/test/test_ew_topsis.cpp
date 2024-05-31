@@ -9,8 +9,6 @@
  *
  */
 
-#include <vector>
-
 #include <opencv2/core.hpp>
 
 #include <gtest/gtest.h>
@@ -19,20 +17,15 @@
 #include "rmvl/core/math.hpp"
 
 using namespace rm;
-using namespace std;
-using namespace cv;
 
 namespace rm_test
 {
 
 TEST(EwTopsisTest, BasicFunction)
 {
-    vector<vector<float>> samples = {{1.f, 1.f},
-                                     {3.f, 3.f},
-                                     {2.f, 4.f},
-                                     {1.f, 5.f}};
+    std::vector<std::vector<float>> samples = {{1.f, 1.f}, {3.f, 3.f}, {2.f, 4.f}, {1.f, 5.f}};
 
-    EwTopsis<float> ew(samples);
+    EwTopsis ew(samples);
     ew.inference();
     auto ret = ew.finalIndex();
     auto it = min_element(ret.begin(), ret.end());
@@ -40,20 +33,20 @@ TEST(EwTopsisTest, BasicFunction)
 }
 
 class EwA;
-using Ew_ptr = shared_ptr<EwA>;
+using Ew_ptr = std::shared_ptr<EwA>;
 
 class EwA
 {
-    Point2f center;
+    cv::Point2f center;
     float angle;
 
 public:
-    EwA(Point2f c, float a) : center(c), angle(a) {}
+    EwA(cv::Point2f c, float a) : center(c), angle(a) {}
 
-    inline Point2f getCenter() { return center; }
+    inline cv::Point2f getCenter() { return center; }
     inline float getAngle() { return angle; }
 
-    static Ew_ptr make(float x, float y, float a) { return make_shared<EwA>(Point2f(x, y), a); }
+    static Ew_ptr make(float x, float y, float a) { return std::make_shared<EwA>(cv::Point2f(x, y), a); }
 };
 
 TEST(EwTopsisTest, CustomData)
@@ -63,20 +56,20 @@ TEST(EwTopsisTest, CustomData)
     auto standard1 = EwA::make(10, 5, -6);
     auto standard2 = EwA::make(10, -4, 4);
     auto standard3 = EwA::make(-10, -4, -4);
-    vector<Ew_ptr> standards = {standard0,
-                                standard1,
-                                standard2,
-                                standard3};
+    std::vector<Ew_ptr> standards = {standard0,
+                                     standard1,
+                                     standard2,
+                                     standard3};
 
     // 第二帧有 2 个新的 EwA
     auto current0 = EwA::make(9, 4.5f, -5);
     auto current1 = EwA::make(-8, -4.2f, -3.5f);
-    vector<Ew_ptr> currents = {current0,
-                               current1};
+    std::vector<Ew_ptr> currents = {current0,
+                                    current1};
 
     // 问: current 各自属于哪一个 standard 序列?
     // (a) 生成样本指标矩阵，（指标：距离，角度差）
-    vector<vector<float>> samples(standards.size() * currents.size());
+    std::vector<std::vector<float>> samples(standards.size() * currents.size());
     for (size_t c = 0; c < currents.size(); ++c)
     {
         for (size_t s = 0; s < standards.size(); ++s)
@@ -92,7 +85,7 @@ TEST(EwTopsisTest, CustomData)
     ew.inference();
     auto arr = ew.finalIndex();
     // (c) 数据导出并提取出指定的下标
-    unordered_map<size_t, size_t> target;
+    std::unordered_map<size_t, size_t> target;
     for (size_t i = 0; i < currents.size(); ++i)
         // 每个 current 都在 standards 找到熵权最小的一个作为目标
         target[i] = (max_element(arr.begin() + standards.size() * i, arr.begin() + standards.size() * (i + 1)) -

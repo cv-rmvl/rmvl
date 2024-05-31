@@ -4,14 +4,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/core/timer.hpp"
 #include "rmvl/camera/mv_camera.h"
+#include "rmvl/core/timer.hpp"
 #include "rmvl/detector/armor_detector.h"
-
-
-using namespace cv;
-using namespace std;
-using namespace rm;
 
 namespace fs = std::filesystem;
 
@@ -21,12 +16,12 @@ namespace fs = std::filesystem;
  * @param[in] src 原图像
  * @param[in] p_combo 指定装甲板
  */
-static inline void draw(Mat src, combo::ptr p_combo)
+static inline void draw(cv::Mat src, rm::combo::ptr p_combo)
 {
     // 角点
     const auto &corners = p_combo->getCorners();
     for (int i = 0; i < 4; ++i)
-        line(src, corners[i], corners[(i + 1) % 4], Scalar(0, 255, 0));
+        line(src, corners[i], corners[(i + 1) % 4], cv::Scalar(0, 255, 0));
 }
 
 const char *keys = "{ ? h help  |          | 帮助信息 }"
@@ -36,7 +31,7 @@ const char *keys = "{ ? h help  |          | 帮助信息 }"
                    "{ n num     |1000      | 图片数量 }"
                    "{ c color   |0         | 识别装甲板颜色 '\033[33m0\033[0m': 识别蓝色，"
                    "'\033[33m1\033[0m': 识别红色 }"
-                   "{ w waitkey |20        | cv::waitKey(?) }";
+                   "{ w waitkey |20        | cv::cv::waitKey(?) }";
 
 const char *help = "                      \033[34;1m使用说明\033[0m\n"
                    "本程序为装甲板 ROI 收集例程，用于收集装甲板数字部分的 ROI，\n"
@@ -47,7 +42,7 @@ const char *help = "                      \033[34;1m使用说明\033[0m\n"
 int main(int argc, char *argv[])
 {
     // 命令行参数初始化
-    CommandLineParser parser(argc, argv, keys);
+    cv::CommandLineParser parser(argc, argv, keys);
     if (parser.has("help"))
     {
         parser.printMessage();
@@ -56,10 +51,10 @@ int main(int argc, char *argv[])
     }
 
     // 获取命令行参数
-    auto path = parser.get<string>("prefix");
+    auto path = parser.get<std::string>("prefix");
     auto first_idx = parser.get<int>("index");
     auto num = parser.get<int>("num");
-    auto color = parser.get<int>("color") == 0 ? PixChannel::BLUE : PixChannel::RED;
+    auto color = parser.get<int>("color") == 0 ? rm::PixChannel::BLUE : rm::PixChannel::RED;
     auto waitkey = parser.get<int>("waitkey");
 
     if (!fs::exists(path))
@@ -76,13 +71,13 @@ int main(int argc, char *argv[])
         printf("已发现 \033[33m\"%s\"\033[0m 文件夹\n", path.c_str());
 
     // 相机初始化
-    MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV));
+    rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
     if (!capture.isOpened())
     {
         printf("相机打开失败\n");
         return -1;
     }
-    FileStorage camera_param("out_para.yml", FileStorage::READ);
+    cv::FileStorage camera_param("out_para.yml", cv::FileStorage::READ);
 
     int exposure = 1000;
     int gain = 64;
@@ -91,7 +86,7 @@ int main(int argc, char *argv[])
     int b_gain = 100;
 
     // 设置相机参数
-    FileStorage fs_mv_set("out_para.yml", FileStorage::READ);
+    cv::FileStorage fs_mv_set("out_para.yml", cv::FileStorage::READ);
     if (fs_mv_set.isOpened())
     {
         fs_mv_set["exposure"].isNone() ? void(0) : (fs_mv_set["exposure"] >> exposure);
@@ -101,45 +96,45 @@ int main(int argc, char *argv[])
         fs_mv_set["b_gain"].isNone() ? void(0) : (fs_mv_set["b_gain"] >> b_gain);
     }
 
-    capture.set(CAMERA_MANUAL_EXPOSURE);
-    capture.set(CAMERA_EXPOSURE, exposure);
-    capture.set(CAMERA_GAIN, gain);
-    capture.set(CAMERA_MANUAL_WB);
-    capture.set(CAMERA_WB_RGAIN, r_gain);
-    capture.set(CAMERA_WB_GGAIN, g_gain);
-    capture.set(CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
+    capture.set(rm::CAMERA_EXPOSURE, exposure);
+    capture.set(rm::CAMERA_GAIN, gain);
+    capture.set(rm::CAMERA_MANUAL_WB);
+    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
+    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
+    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
 
-    auto p_detector = ArmorDetector::make_detector();
-    vector<group::ptr> groups;
+    auto p_detector = rm::ArmorDetector::make_detector();
+    std::vector<rm::group::ptr> groups;
 
-    namedWindow("装甲板收集", WINDOW_NORMAL);
-    resizeWindow("装甲板收集", Size(1000, 800));
-    namedWindow("ROI 图像", WINDOW_NORMAL);
-    resizeWindow("ROI 图像", Size(800, 400));
+    namedWindow("装甲板收集", cv::WINDOW_NORMAL);
+    resizeWindow("装甲板收集", cv::Size(1000, 800));
+    namedWindow("ROI 图像", cv::WINDOW_NORMAL);
+    resizeWindow("ROI 图像", cv::Size(800, 400));
 
-    Mat src;
+    cv::Mat src;
     int index = 0;
     while (index < num)
     {
         if (!capture.read(src))
             RMVL_Error(RMVL_StsError, "Fail to read the image.");
         // 识别
-        auto info = p_detector->detect(groups, src, color, GyroData(), Timer::now());
+        auto info = p_detector->detect(groups, src, color, rm::GyroData(), rm::Timer::now());
         const auto &combos = info.combos;
         if (combos.size() > 1)
             WARNING_("当前识别到多于 1 个装甲板：识别到 %zu 个", combos.size());
         // ROI截取图像
-        Mat roi_img;
+        cv::Mat roi_img;
         if (!combos.empty())
         {
-            roi_img = Armor::getNumberROI(src, rm::Armor::cast(combos.front()));
+            roi_img = rm::Armor::getNumberROI(src, rm::Armor::cast(combos.front()));
             // 显示效果
             draw(src, combos.front());
         }
         // 保存图像
         if (!roi_img.empty())
         {
-            string file_name = path + "/" + to_string(index + first_idx) + ".png";
+            std::string file_name = path + "/" + std::to_string(index + first_idx) + ".png";
             INFO_("保存图像至 %s", file_name.c_str());
             if (!imwrite(file_name, roi_img))
                 ERROR_("保存图像失败");
@@ -147,13 +142,13 @@ int main(int argc, char *argv[])
             index++;
         }
         imshow("装甲板收集", src);
-        if (waitKey(waitkey) == 27)
-            if (waitKey(0) == 27)
+        if (cv::waitKey(waitkey) == 27)
+            if (cv::waitKey(0) == 27)
                 exit(0);
     }
-    putText(src, "Collection Over!", Point(100, 200), FONT_HERSHEY_COMPLEX, 2, Scalar(0, 255, 0), 2);
+    putText(src, "Collection Over!", cv::Point(100, 200), cv::FONT_HERSHEY_COMPLEX, 2, cv::Scalar(0, 255, 0), 2);
     imshow("装甲板收集", src);
     PASS_("收集完毕，按任意键以退出程序");
-    waitKey(0);
+    cv::waitKey(0);
     return 0;
 }

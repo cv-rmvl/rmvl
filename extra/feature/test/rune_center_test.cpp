@@ -19,8 +19,6 @@
 #include "rmvl/feature/rune_center.h"
 
 using namespace rm;
-using namespace std;
-using namespace cv;
 
 namespace rm_test
 {
@@ -28,20 +26,19 @@ namespace rm_test
 class BuildRuneCenterTest : public testing::Test
 {
 public:
-    vector<Point> contour;
-    vector<Point> contour_6;
-    Vec4i hierarchy;
+    std::vector<cv::Point> contour;
+    std::vector<cv::Point> contour_6;
+    cv::Vec4i hierarchy;
 
     void SetUp() override
     {
         // 6 点轮廓
-        contour_6 = {Point(15, 0), Point(27.9, 7.5), Point(27.9, 22.5),
-                     Point(15, 30), Point(2.1, 22.5), Point(2.1, 7.5)};
+        contour_6 = {{15, 0}, {28, 8}, {28, 23}, {15, 30}, {2, 23}, {2, 8}};
         // 一般轮廓
-        Mat src = Mat::zeros(Size(100, 100), CV_8UC1);
-        circle(src, Point(50, 50), 45, Scalar(255), -1);
-        vector<vector<Point>> contours;
-        findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+        cv::Mat src = cv::Mat::zeros(cv::Size(100, 100), CV_8UC1);
+        circle(src, cv::Point(50, 50), 45, cv::Scalar(255), -1);
+        std::vector<std::vector<cv::Point>> contours;
+        findContours(src, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
         contour = contours.front();
     }
 
@@ -58,8 +55,7 @@ TEST_F(BuildRuneCenterTest, normal_contourSize)
 TEST_F(BuildRuneCenterTest, few_contourSize)
 {
     // 非正常轮廓点数构建神符中心
-    vector<Point> contour_5 = {Point(27.9, 7.5), Point(27.9, 22.5),
-                               Point(15, 30), Point(2.1, 22.5), Point(2.1, 7.5)};
+    std::vector<cv::Point> contour_5 = {{28, 8}, {28, 23}, {15, 30}, {2, 23}, {2, 8}};
     RuneCenter::ptr rc = RuneCenter::make_feature(contour_5);
     EXPECT_FALSE(rc);
 }

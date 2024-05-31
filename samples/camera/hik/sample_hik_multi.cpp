@@ -6,10 +6,6 @@
 
 #include "rmvl/camera/hik_camera.h"
 
-using namespace rm;
-using namespace std;
-using namespace cv;
-
 int main()
 {
     int ret = MV_OK;
@@ -24,7 +20,7 @@ int main()
     printf("┌──────┬──────────────┬────────────────┬─────────────────────┬────────────────┐\n");
     printf("│ 索引 │  相机序列号  │    型号名字    │     设备版本号      │    通信协议    │\n");
     printf("├──────┼──────────────┼────────────────┼─────────────────────┼────────────────┤\n");
-    unordered_map<unsigned int, string> layer_type_t;
+    std::unordered_map<unsigned int, std::string> layer_type_t;
     layer_type_t[MV_UNKNOW_DEVICE] = "Unknown device";
     layer_type_t[MV_GIGE_DEVICE] = "GigE device";
     layer_type_t[MV_1394_DEVICE] = "1394 device";
@@ -39,12 +35,12 @@ int main()
     }
     printf("└──────┴──────────────┴────────────────┴─────────────────────┴────────────────┘\n");
     printf("\033[33m输入相机序列号, 退出输入 \"q\": \033[0m");
-    string sn;
-    cin >> sn;
+    std::string sn;
+    std::cin >> sn;
     if (sn == "q")
         return 0;
 
-    HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV), sn.c_str());
+    rm::HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV), sn.c_str());
 
     int exposure = 1000;
     int gain = 0;
@@ -53,7 +49,7 @@ int main()
     int b_gain = 1200;
 
     // Load the last parameters
-    FileStorage fs("out_para.yml", FileStorage::READ);
+    cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
     if (fs.isOpened())
     {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
@@ -63,23 +59,23 @@ int main()
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
-    capture.set(CAMERA_MANUAL_EXPOSURE);
-    capture.set(CAMERA_EXPOSURE, exposure);
-    capture.set(CAMERA_GAIN, gain);
-    capture.set(CAMERA_MANUAL_WB);
-    capture.set(CAMERA_WB_RGAIN, r_gain);
-    capture.set(CAMERA_WB_GGAIN, g_gain);
-    capture.set(CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
+    capture.set(rm::CAMERA_EXPOSURE, exposure);
+    capture.set(rm::CAMERA_GAIN, gain);
+    capture.set(rm::CAMERA_MANUAL_WB);
+    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
+    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
+    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
 
-    namedWindow("图像画面", WINDOW_NORMAL);
-    resizeWindow("图像画面", Size(640, 480));
+    namedWindow("图像画面", cv::WINDOW_NORMAL);
+    resizeWindow("图像画面", cv::Size(640, 480));
 
-    Mat frame;
+    cv::Mat frame;
     while (capture.read(frame))
     {
         imshow("图像画面", frame);
-        if (waitKey(1) == 27)
-            if (waitKey(0) == 27)
+        if (cv::waitKey(1) == 27)
+            if (cv::waitKey(0) == 27)
                 break;
     }
 

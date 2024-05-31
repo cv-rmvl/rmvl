@@ -18,7 +18,6 @@
 #include "rmvl/core/datastruct.hpp"
 
 using namespace rm;
-using namespace std;
 
 namespace rm_test
 {
@@ -42,7 +41,7 @@ TEST(RaHeapTest, BasicMethod_int)
 TEST(RaHeapTest, UpdateEraseExport_int)
 {
     // 小根堆
-    RaHeap<int, deque<int>, greater<int>> heap;
+    RaHeap<int, std::deque<int>, std::greater<int>> heap;
     heap.push(3);
     heap.push(2);
     heap.push(4);
@@ -57,7 +56,7 @@ TEST(RaHeapTest, UpdateEraseExport_int)
 }
 
 class RHA;
-using RHA_ptr = shared_ptr<RHA>;
+using RHA_ptr = std::shared_ptr<RHA>;
 
 class RHA
 {
@@ -67,7 +66,7 @@ class RHA
 public:
     RHA(int x, int y) : _x(x), _y(y) {}
 
-    static RHA_ptr make(int x, int y) { return make_shared<RHA>(x, y); }
+    static RHA_ptr make(int x, int y) { return std::make_shared<RHA>(x, y); }
 
     inline int x() { return _x; }
     inline int y() { return _y; }
@@ -84,14 +83,14 @@ struct Comp
 
 TEST(RaHeapTest, CustomData)
 {
-    vector<RHA_ptr> arr;
+    std::vector<RHA_ptr> arr;
     arr.emplace_back(RHA::make(1, 2));  // arr[0] = 5
     arr.emplace_back(RHA::make(3, 4));  // arr[1] = 25
     arr.emplace_back(RHA::make(-2, 3)); // arr[2] = 13
     arr.emplace_back(RHA::make(5, 4));  // arr[3] = 41
     arr.emplace_back(RHA::make(6, 1));  // arr[4] = 37
 
-    RaHeap<RHA_ptr, vector<RHA_ptr>, Comp> heap;
+    RaHeap<RHA_ptr, std::vector<RHA_ptr>, Comp> heap;
     for (auto ele : arr)
         heap.push(ele);
     EXPECT_EQ(heap.top(), arr[3]);

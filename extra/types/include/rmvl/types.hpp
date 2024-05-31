@@ -33,8 +33,8 @@ enum class ArmorSizeType : uint8_t
 enum class RuneType : uint8_t
 {
     UNKNOWN,  //!< 未知
-    INACTIVE, //!< 未激活能量机关
-    ACTIVE,   //!< 已激活能量机关
+    INACTIVE, //!< 未激活的能量机关
+    ACTIVE,   //!< 已激活的能量机关
 };
 
 //! AprilTag 视觉标签类型
@@ -51,32 +51,32 @@ enum class TagType : uint8_t
     NUM_7,   //!< 数字 `7`
     NUM_8,   //!< 数字 `8`
     NUM_9,   //!< 数字 `9`
-    A,       //!< 字母 `A`
-    B,       //!< 字母 `B`
-    C,       //!< 字母 `C`
-    D,       //!< 字母 `D`
-    E,       //!< 字母 `E`
-    F,       //!< 字母 `F`
-    G,       //!< 字母 `G`
-    H,       //!< 字母 `H`
-    I,       //!< 字母 `I`
-    J,       //!< 字母 `J`
-    K,       //!< 字母 `K`
-    L,       //!< 字母 `L`
-    M,       //!< 字母 `M`
-    N,       //!< 字母 `N`
-    O,       //!< 字母 `O`
-    P,       //!< 字母 `P`
-    Q,       //!< 字母 `Q`
-    R,       //!< 字母 `R`
-    S,       //!< 字母 `S`
-    T,       //!< 字母 `T`
-    U,       //!< 字母 `U`
-    V,       //!< 字母 `V`
-    W,       //!< 字母 `W`
-    X,       //!< 字母 `X`
-    Y,       //!< 字母 `Y`
-    Z        //!< 字母 `Z`
+    CHAR_A,  //!< 字母 `A`
+    CHAR_B,  //!< 字母 `B`
+    CHAR_C,  //!< 字母 `C`
+    CHAR_D,  //!< 字母 `D`
+    CHAR_E,  //!< 字母 `E`
+    CHAR_F,  //!< 字母 `F`
+    CHAR_G,  //!< 字母 `G`
+    CHAR_H,  //!< 字母 `H`
+    CHAR_I,  //!< 字母 `I`
+    CHAR_J,  //!< 字母 `J`
+    CHAR_K,  //!< 字母 `K`
+    CHAR_L,  //!< 字母 `L`
+    CHAR_M,  //!< 字母 `M`
+    CHAR_N,  //!< 字母 `N`
+    CHAR_O,  //!< 字母 `O`
+    CHAR_P,  //!< 字母 `P`
+    CHAR_Q,  //!< 字母 `Q`
+    CHAR_R,  //!< 字母 `R`
+    CHAR_S,  //!< 字母 `S`
+    CHAR_T,  //!< 字母 `T`
+    CHAR_U,  //!< 字母 `U`
+    CHAR_V,  //!< 字母 `V`
+    CHAR_W,  //!< 字母 `W`
+    CHAR_X,  //!< 字母 `X`
+    CHAR_Y,  //!< 字母 `Y`
+    CHAR_Z   //!< 字母 `Z`
 };
 
 //! 机器人类型
