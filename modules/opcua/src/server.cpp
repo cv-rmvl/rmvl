@@ -29,6 +29,13 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     _server = UA_Server_new();
 
     UA_ServerConfig *config = UA_Server_getConfig(_server);
+    // 修改日志
+#if OPCUA_VERSION < 10400
+    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
+#else
+    config->logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
+#endif
+    // 设置服务器配置
     UA_ServerConfig_setMinimal(config, port, nullptr);
     // 修改名字
     if (!name.empty())
@@ -83,7 +90,7 @@ void Server::start()
     _run = std::thread([this]() {
         UA_StatusCode retval = UA_Server_run(_server, &_running);
         if (retval != UA_STATUSCODE_GOOD)
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to initialize server: %s", UA_StatusCode_name(retval));
+            ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
     });
 }
 
@@ -117,7 +124,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype)
     UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add variable type node: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add variable type node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     return retval;
@@ -148,7 +155,7 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
         type_id = type_id | find(p_type->browse_name);
         if (type_id.empty())
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
+            ERROR_("Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
     }
@@ -161,7 +168,7 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add variable node: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add variable node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     UA_Variant_clear(&variant);
@@ -186,7 +193,7 @@ bool Server::write(const NodeId &node, const Variable &val)
     auto status = UA_Server_writeValue(_server, node, variant);
     UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to write variable, error code: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to write variable, error code: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
 }
 
@@ -195,8 +202,7 @@ bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead bef
     UA_ValueCallback callback{before_read, after_write};
     auto status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
     if (status != UA_STATUSCODE_GOOD)
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                     "Function addVariableNodeValueCallBack: %s", UA_StatusCode_name(status));
+        ERROR_("Function addVariableNodeValueCallBack: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
 }
 
@@ -216,7 +222,7 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
         type_id = type_id | find(p_type->browse_name);
         if (type_id.empty())
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the variable type ID during adding variable node");
+            ERROR_("Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
     }
@@ -231,7 +237,7 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
         type_id, attr, data_source, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data source variable node: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add data source variable node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     return retval;
@@ -260,8 +266,7 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
         attr, method.func, inputs.size(), inputs.data(), outputs.size(), outputs.data(), nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                     "Failed to add method node: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add method node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加 Mandatory 属性
@@ -269,8 +274,7 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
                                     UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                     "Failed to add the \"Mandatory\" reference node: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add the \"Mandatory\" reference node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     return retval;
@@ -304,7 +308,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
     }
     if (parent_id.empty())
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the base object type ID during adding object type node");
+        ERROR_("Failed to find the base object type ID during adding object type node");
         parent_id = nodeBaseObjectType;
     }
     auto status = UA_Server_addObjectTypeNode(
@@ -314,7 +318,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
         attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add object type: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add object type: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加变量节点作为对象类型节点的子节点
@@ -372,7 +376,7 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add object node to server, error code: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add object node to server, error code: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加额外变量节点
@@ -409,7 +413,7 @@ NodeId Server::addViewNode(const View &view)
         UA_QUALIFIEDNAME(view.ns, helper::to_char(view.browse_name)), attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add view node, error: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add view node, error: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加引用
@@ -420,7 +424,7 @@ NodeId Server::addViewNode(const View &view)
         status = UA_Server_addReference(_server, retval, nodeOrganizes, exp, true);
         if (status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to add reference, error: %s", UA_StatusCode_name(status));
+            ERROR_("Failed to add reference, error: %s", UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
     }
@@ -442,7 +446,7 @@ NodeId Server::addEventTypeNode(const EventType &etype)
         attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add event type: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to add event type: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加自定义数据（非默认属性）
@@ -459,8 +463,7 @@ NodeId Server::addEventTypeNode(const EventType &etype)
             val_attr, nullptr, &sub_id);
         if (status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                         "Failed to add event type property: %s", UA_StatusCode_name(status));
+            ERROR_("Failed to add event type property: %s", UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
         // 设置子变量节点为强制生成
@@ -469,9 +472,8 @@ NodeId Server::addEventTypeNode(const EventType &etype)
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
         if (status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                         "Failed to add reference during adding event type node, browse name: %s, error code: %s",
-                         browse_name.c_str(), UA_StatusCode_name(status));
+            ERROR_("Failed to add reference during adding event type node, browse name: %s, error code: %s",
+                   browse_name.c_str(), UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
     }
@@ -483,7 +485,7 @@ bool Server::triggerEvent(const NodeId &node_id, const Event &event)
     NodeId type_id = nodeBaseEventType | find(event.type()->browse_name);
     if (type_id.empty())
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to find the event type ID during triggering event");
+        ERROR_("Failed to find the event type ID during triggering event");
         return false;
     }
     // 创建事件
@@ -491,7 +493,7 @@ bool Server::triggerEvent(const NodeId &node_id, const Event &event)
     auto status = UA_Server_createEvent(_server, type_id, &event_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to create event: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
         return false;
     }
 
@@ -516,7 +518,7 @@ bool Server::triggerEvent(const NodeId &node_id, const Event &event)
     status = UA_Server_triggerEvent(_server, event_id, node_id, nullptr, true);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to trigger event: %s", UA_StatusCode_name(status));
+        ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
         return false;
     }
     return true;

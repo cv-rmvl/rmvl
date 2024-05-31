@@ -20,7 +20,7 @@ devel
 *.jpg
 *.jpeg
 !rmvl-logo*
-!doc/img/*
+!doc/img/**
 
 # 模型文件
 *.onnx

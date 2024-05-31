@@ -53,7 +53,7 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add connection, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add connection, \"%s\"", UA_StatusCode_name(status));
         return;
     }
 }
@@ -67,13 +67,13 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     auto status = UA_Server_addReaderGroup(_server, _connection_id, &rg_config, &_rg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add reader group, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add reader group, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
     status = UA_Server_setReaderGroupOperational(_server, _rg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to set reader group operational, \"%s\"",
+        ERROR_("Failed to set reader group operational, \"%s\"",
                      UA_StatusCode_name(status));
         return {};
     }
@@ -105,7 +105,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     status = UA_Server_addDataSetReader(_server, _rg_id, &dsr_config, &_dsr_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add data set reader, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add data set reader, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
 
@@ -115,7 +115,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     auto obj_id = addObjectNode(sub_obj);
     if (UA_NodeId_isNull(&obj_id))
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add object node, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add object node, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
     // 根据数据集元数据 DataSetMetaData 的字段创建 FieldTargetVariable
@@ -137,7 +137,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
             nodeBaseDataVariableType, attr, nullptr, &node_id);
         if (status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add variable node, \"%s\"", UA_StatusCode_name(status));
+            ERROR_("Failed to add variable node, \"%s\"", UA_StatusCode_name(status));
             continue;
         }
         UA_FieldTargetDataType_init(&target_vars[i].targetVariable);
@@ -148,7 +148,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     status = UA_Server_DataSetReader_createTargetVariables(_server, _dsr_id, target_vars.size(), target_vars.data());
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to create target variables, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to create target variables, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
     return retval;

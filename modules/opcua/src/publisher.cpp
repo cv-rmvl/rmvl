@@ -60,7 +60,7 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add connection, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add connection, \"%s\"", UA_StatusCode_name(status));
         return;
     }
     //////////// 添加 PublishedDataSet (PDS) /////////////
@@ -71,7 +71,7 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     auto pds_status = UA_Server_addPublishedDataSet(_server, &pds_config, &_pds_id);
     if (pds_status.addResult != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add published dataset, \"%s\"",
+        ERROR_("Failed to add published dataset, \"%s\"",
                      UA_StatusCode_name(pds_status.addResult));
         return;
     }
@@ -104,7 +104,7 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
         auto result = UA_Server_addDataSetField(_server, _pds_id, &dsf_config, &dsf_node_id);
         if (result.result != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add dataset field, name: \"%s\", status code: \"%s\"",
+            ERROR_("Failed to add dataset field, name: \"%s\", status code: \"%s\"",
                          pds.name.c_str(), UA_StatusCode_name(result.result));
             return false;
         }
@@ -130,13 +130,13 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     auto status = UA_Server_addWriterGroup(_server, _connection_id, &wg_config, &_wg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add writer group, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add writer group, \"%s\"", UA_StatusCode_name(status));
         return false;
     }
     status = UA_Server_setWriterGroupOperational(_server, _wg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to set writer group operational, \"%s\"",
+        ERROR_("Failed to set writer group operational, \"%s\"",
                      UA_StatusCode_name(status));
         return false;
     }
@@ -149,7 +149,7 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     status = UA_Server_addDataSetWriter(_server, _wg_id, _pds_id, &dsw_config, &_dsw_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add dataset writer, \"%s\"", UA_StatusCode_name(status));
+        ERROR_("Failed to add dataset writer, \"%s\"", UA_StatusCode_name(status));
         return false;
     }
     return true;

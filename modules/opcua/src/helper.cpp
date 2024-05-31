@@ -13,7 +13,6 @@
 #include <open62541/plugin/log_stdout.h>
 #include <open62541/server.h>
 
-#include "rmvl/opcua/method.hpp"
 #include "rmvl/opcua/utilities.hpp"
 
 #include "cvt.hpp"
@@ -58,8 +57,8 @@ NodeId operator|(NodeId origin, FindNodeInClient &&fnic)
         if (response.resultsSize == 1 && response.results[0].targetsSize == 1)
             return response.results[0].targets[0].targetId.nodeId;
 
-    UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to find node, name: %s, error code: %s",
-                 browse_name.c_str(), UA_StatusCode_name(response.responseHeader.serviceResult));
+    ERROR_("Failed to find node, name: %s, error code: %s",
+           browse_name.c_str(), UA_StatusCode_name(response.responseHeader.serviceResult));
     return {};
 }
 
