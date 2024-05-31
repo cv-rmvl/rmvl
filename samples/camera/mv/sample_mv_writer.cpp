@@ -3,18 +3,14 @@
 
 #include "rmvl/camera/mv_camera.h"
 
-using namespace rm;
-using namespace std;
-using namespace cv;
-
 int main()
 {
-    MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, RetrieveMode::OpenCV));
+    rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
-    Mat tmp;
+    cv::Mat tmp;
     while (!capture.read(tmp))
         ERROR_("fail to read the image.");
-    VideoWriter writer("ts.avi", VideoWriter::fourcc('F', 'L', 'V', '1'), 40, tmp.size());
+    cv::VideoWriter writer("ts.avi", cv::VideoWriter::fourcc('F', 'L', 'V', '1'), 40, tmp.size());
 
     int exposure = 1000;
     int gain = 64;
@@ -23,7 +19,7 @@ int main()
     int b_gain = 100;
 
     // Load the last parameters
-    FileStorage fs("out_para.yml", FileStorage::READ);
+    cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
     if (fs.isOpened())
     {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
@@ -33,21 +29,21 @@ int main()
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
-    capture.set(CAMERA_MANUAL_EXPOSURE);
-    capture.set(CAMERA_EXPOSURE, exposure);
-    capture.set(CAMERA_GAIN, gain);
-    capture.set(CAMERA_MANUAL_WB);
-    capture.set(CAMERA_WB_RGAIN, r_gain);
-    capture.set(CAMERA_WB_GGAIN, g_gain);
-    capture.set(CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
+    capture.set(rm::CAMERA_EXPOSURE, exposure);
+    capture.set(rm::CAMERA_GAIN, gain);
+    capture.set(rm::CAMERA_MANUAL_WB);
+    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
+    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
+    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
 
-    Mat frame;
+    cv::Mat frame;
     while (capture.read(frame))
     {
         imshow("frame", frame);
         writer.write(frame);
-        if (waitKey(1) == 27)
-            if (waitKey(0) == 27)
+        if (cv::waitKey(1) == 27)
+            if (cv::waitKey(0) == 27)
                 break;
     }
 }

@@ -11,9 +11,8 @@
 
 #include "hik_camera_impl.h"
 
-using namespace rm;
-using namespace std;
-using namespace cv;
+namespace rm
+{
 
 bool HikCamera::Impl::set(int propId, double value) noexcept
 {
@@ -97,3 +96,5 @@ double HikCamera::Impl::get(int propId) const noexcept
         return false;
     }
 }
+
+} // namespace rm

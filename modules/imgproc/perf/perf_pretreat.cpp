@@ -15,73 +15,67 @@
 
 #include "rmvl/imgproc/pretreat.h"
 
-using namespace rm;
-using namespace std;
-using namespace cv;
-
 namespace rm_test
 {
 
 // binary 方法通道相减
 void binary_BGR2Binary(benchmark::State &state)
 {
-    Mat channel[3];
-    channel[0] = Mat(Size(400, 1024), CV_8UC3, Scalar(255, 0, 0));
-    channel[1] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 255, 0));
-    channel[2] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 0, 255));
-    Mat src;
+    cv::Mat channel[3];
+    channel[0] = cv::Mat(cv::Size(400, 1024), CV_8UC3, cv::Scalar(255, 0, 0));
+    channel[1] = cv::Mat(cv::Size(400, 1024), CV_8UC3, cv::Scalar(0, 255, 0));
+    channel[2] = cv::Mat(cv::Size(400, 1024), CV_8UC3, cv::Scalar(0, 0, 255));
+    cv::Mat src;
     hconcat(channel, 3, src);
     for (auto _ : state)
-    {
-        Mat bin = binary(src, BLUE, RED, 80);
-    }
+        cv::Mat bin = binary(src, rm::BLUE, rm::RED, 80);
 }
 
 // threshold 方法通道相减
 void threshold_BGR2Binary(benchmark::State &state)
 {
-    Mat channel[3];
-    channel[0] = Mat(Size(400, 1024), CV_8UC3, Scalar(255, 0, 0));
-    channel[1] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 255, 0));
-    channel[2] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 0, 255));
-    Mat src;
+    cv::Mat channel[3];
+    channel[0] = cv::Mat(1024, 400, CV_8UC3, {255, 0, 0});
+    channel[1] = cv::Mat(1024, 400, CV_8UC3, {0, 255, 0});
+    channel[2] = cv::Mat(1024, 400, CV_8UC3, {0, 0, 255});
+    cv::Mat src;
     hconcat(channel, 3, src);
     for (auto _ : state)
     {
-        Mat chs[3];
+        cv::Mat chs[3];
         split(src, chs);
-        Mat bin = chs[0] - chs[2];
-        threshold(bin, bin, 80, 255, THRESH_BINARY);
+        cv::Mat bin = chs[0] - chs[2];
+        threshold(bin, bin, 80, 255, cv::THRESH_BINARY);
     }
 }
 
 // binary 方法三通道亮度二值化
 void binary_brightness(benchmark::State &state)
 {
-    Mat channel[3];
-    channel[0] = Mat(Size(400, 1024), CV_8UC3, Scalar(255, 0, 0));
-    channel[1] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 255, 0));
-    channel[2] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 0, 255));
-    Mat src;
+    cv::Mat channel[3];
+    channel[0] = cv::Mat(1024, 400, CV_8UC3, cv::Scalar(255, 0, 0));
+    channel[1] = cv::Mat(1024, 400, CV_8UC3, cv::Scalar(0, 255, 0));
+    channel[2] = cv::Mat(1024, 400, CV_8UC3, cv::Scalar(0, 0, 255));
+    cv::Mat src;
     hconcat(channel, 3, src);
     for (auto _ : state)
-        Mat bin = binary(src, 80);
+        cv::Mat bin = rm::binary(src, 80);
 }
 
 // threshold 方法单通道亮度二值化
 void threshold_brightness(benchmark::State &state)
 {
-    Mat channel[3];
-    channel[0] = Mat(Size(400, 1024), CV_8UC3, Scalar(255, 0, 0));
-    channel[1] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 255, 0));
-    channel[2] = Mat(Size(400, 1024), CV_8UC3, Scalar(0, 0, 255));
-    Mat src;
+    cv::Mat channel[3];
+    channel[0] = cv::Mat(cv::Size(400, 1024), CV_8UC3, cv::Scalar(255, 0, 0));
+    channel[1] = cv::Mat(cv::Size(400, 1024), CV_8UC3, cv::Scalar(0, 255, 0));
+    channel[2] = cv::Mat(cv::Size(400, 1024), CV_8UC3, cv::Scalar(0, 0, 255));
+    cv::Mat src;
     hconcat(channel, 3, src);
     for (auto _ : state)
     {
-        Mat bin;
-        cvtColor(src, bin, COLOR_BGR2GRAY);
-        threshold(bin, bin, 80, 255, THRESH_BINARY);
+        cv::Mat bin;
+        cvtColor(src, bin, cv::COLOR_BGR2GRAY);
+        threshold(bin, bin, 80, 255, cv::THRESH_BINARY);
     }
 }
 

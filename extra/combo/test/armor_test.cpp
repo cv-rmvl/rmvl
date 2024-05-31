@@ -20,8 +20,6 @@
 #include "rmvl/core/timer.hpp"
 
 using namespace rm;
-using namespace std;
-using namespace cv;
 
 namespace rm_test
 {
@@ -40,17 +38,17 @@ public:
      *
      * @param angle 倾斜角
      * @param bias 偏置
-     * @return LightBlob::ptr 
+     * @return LightBlob::ptr
      */
-    LightBlob::ptr buildBlob(float angle, Point bias = Point())
+    LightBlob::ptr buildBlob(float angle, cv::Point bias = cv::Point())
     {
-        Point base(500, 500);
-        Point base_bias(static_cast<int>(110 * sin(deg2rad(angle))),
-                        static_cast<int>(110 * -cos(deg2rad(angle))));
-        Mat src = Mat::zeros(Size(2000, 2000), CV_8UC1);
-        line(src, base + bias, base + base_bias + bias, Scalar(255), 25);
-        vector<vector<Point>> contours;
-        findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+        cv::Point base(500, 500);
+        cv::Point base_bias(static_cast<int>(110 * sin(deg2rad(angle))),
+                            static_cast<int>(110 * -cos(deg2rad(angle))));
+        cv::Mat src = cv::Mat::zeros(cv::Size(2000, 2000), CV_8UC1);
+        line(src, base + bias, base + base_bias + bias, cv::Scalar(255), 25);
+        std::vector<std::vector<cv::Point>> contours;
+        findContours(src, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
         return LightBlob::make_feature(contours.front());
     }
 };
@@ -62,7 +60,7 @@ TEST_F(BuildArmorTest, incorrect_blob)
     Armor::ptr armor = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_FALSE(armor != nullptr);
     // 一个灯条为假
-    vector<Point> null_contour;
+    std::vector<cv::Point> null_contour;
     right_blob = LightBlob::make_feature(null_contour);
     armor.reset();
     armor = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
@@ -73,15 +71,15 @@ TEST_F(BuildArmorTest, different_blob_distance)
 {
     LightBlob::ptr right_blob;
     // 小间距
-    right_blob = buildBlob(0, Point2f(30, 0));
+    right_blob = buildBlob(0, cv::Point2f(30, 0));
     Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor1, nullptr);
     // 正常间距
-    right_blob = buildBlob(0, Point2f(200, 0));
+    right_blob = buildBlob(0, cv::Point2f(200, 0));
     Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_NE(armor2, nullptr);
     // 大间距
-    right_blob = buildBlob(0, Point2f(1000, 0));
+    right_blob = buildBlob(0, cv::Point2f(1000, 0));
     Armor::ptr armor3 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor3, nullptr);
 }
@@ -92,12 +90,12 @@ TEST_F(BuildArmorTest, different_blob_tiltAngle)
     LightBlob::ptr right_blob;
     // 小倾角
     left_blob = buildBlob(5);
-    right_blob = buildBlob(5, Point(200, 10));
+    right_blob = buildBlob(5, cv::Point(200, 10));
     Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_NE(armor1, nullptr);
     // 大倾角
     left_blob = buildBlob(45);
-    right_blob = buildBlob(45, Point(180, 180));
+    right_blob = buildBlob(45, cv::Point(180, 180));
     Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor2, nullptr);
 }
@@ -106,11 +104,11 @@ TEST_F(BuildArmorTest, different_blob_angle)
 {
     LightBlob::ptr right_blob;
     // 小夹角
-    right_blob = buildBlob(5, Point(200, 0));
+    right_blob = buildBlob(5, cv::Point(200, 0));
     Armor::ptr armor1 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_NE(armor1, nullptr);
     // 大夹角
-    right_blob = buildBlob(15, Point(200, 0));
+    right_blob = buildBlob(15, cv::Point(200, 0));
     Armor::ptr armor2 = Armor::make_combo(left_blob, right_blob, GyroData(), Timer::now());
     EXPECT_EQ(armor2, nullptr);
 }

@@ -122,7 +122,7 @@ TEST(NumberCalculation, runge_kutta_odes)
 #if __cpp_lib_generator >= 202207L
 TEST(NumberCalculation, runge_kutta_ode_generator)
 {
-    auto f = [](double, const std::vector<double> &xs) { return 1; }; // x + 1
+    auto f = [](double, const std::vector<double> &) { return 1; }; // x + 1
     std::vector<rm::Ode> fs = {f};
 
     rm::RungeKutta2 rk2(fs);
