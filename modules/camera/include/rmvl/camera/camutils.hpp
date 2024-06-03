@@ -80,7 +80,7 @@ struct CameraConfig
      * @param[in] modes 配置模式参数包
      */
     template <typename... Args>
-    inline void set(Args... modes) { [[maybe_unused]] int _[] = {(conf(modes), 0)...}; }
+    inline void set(Args... modes) { (..., conf(modes)); }
 
 private:
     inline void conf(TriggerChannel chn) { trigger_channel = chn; }

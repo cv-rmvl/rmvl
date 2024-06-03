@@ -130,9 +130,7 @@ sudo apt install libeigen3-dev
 
 #### 1.4 onnxruntime{#install_onnxruntime}
 
-onnxruntime 库是目前数字识别所依赖的第三方库，如果有需要开启此功能，则需要安装 onnxruntime
-
-- 获取压缩包
+- 获取压缩包，可选择对应的发行版，也可以是 gpu、cuda12 或 cpu 版本，下面以 1.12.0 的 cpu 版本为例
   ```shell
   curl -SL https://github.com/microsoft/onnxruntime/releases/download/v1.12.0/onnxruntime-linux-x64-1.12.0.tgz -o onnxruntime-linux-x64-1.12.0.tgz
   ```
@@ -143,12 +141,9 @@ onnxruntime 库是目前数字识别所依赖的第三方库，如果有需要�
 - 安装（复制头文件与库文件）
   ```shell
   sudo mkdir /usr/local/include/onnxruntime
-  sudo cp onnxruntime-linux-x64-1.12.0/include/* /usr/local/include/onnxruntime
-  sudo cp -r onnxruntime-linux-x64-1.12.0/lib /usr/local
-  ```
-- 移除中间文件
-  ```shell
-  rm -r onnxruntime-linux-x64-1.12.0 && rm onnxruntime-linux-x64-1.12.0.tgz
+  cd onnxruntime-linux-x64-1.12.0
+  sudo cp -r include/* /usr/local/include/onnxruntime
+  sudo cp -r lib /usr/local
   ```
 
 至此 onnxruntime 安装完成。

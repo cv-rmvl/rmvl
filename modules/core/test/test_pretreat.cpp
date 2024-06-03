@@ -1,17 +1,17 @@
 /**
  * @file test_pretreat.cpp
- * @author RoboMaster Vision Community
- * @brief
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 
  * @version 1.0
- * @date 2022-11-23
- *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
- *
+ * @date 2024-06-05
+ * 
+ * @copyright Copyright 2024 (c), zhaoxi
+ * 
  */
 
 #include <gtest/gtest.h>
 
-#include "rmvl/imgproc/pretreat.h"
+#include "rmvl/core/pretreat.hpp"
 
 using namespace cv;
 using namespace rm;

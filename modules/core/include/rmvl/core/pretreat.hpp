@@ -1,11 +1,11 @@
 /**
- * @file pretreat.h
- * @author RoboMaster Vision Community
- * @brief Header of the image pretreating module
+ * @file pretreat.hpp
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 图像预处理模块
  * @version 1.0
- * @date 2022-11-23
+ * @date 2024-06-05
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2024 (c), zhaoxi
  *
  */
 
@@ -16,7 +16,15 @@
 namespace rm
 {
 
-//! @addtogroup imgproc
+//! @addtogroup core
+//! @{
+//! @defgroup core_pretreat 图像预处理模块
+//! @{
+//! @brief 提供了二值化等图像预处理功能
+//! @} core_pretreat
+//! @} core
+
+//! @addtogroup core_pretreat
 //! @{
 
 //! 像素通道枚举
@@ -52,6 +60,6 @@ cv::Mat binary(cv::Mat src, PixChannel ch1, PixChannel ch2, uint8_t threshold);
  */
 cv::Mat binary(cv::Mat src, uint8_t threshold);
 
-//! @} imgproc
+//! @} core_pretreat
 
 } // namespace rm

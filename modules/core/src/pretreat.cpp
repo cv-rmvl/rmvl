@@ -12,7 +12,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/core/util.hpp"
-#include "rmvl/imgproc/pretreat.h"
+#include "rmvl/core/pretreat.hpp"
 
 namespace rm
 {

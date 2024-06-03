@@ -114,7 +114,7 @@ static inline double real_f(double x)
 {
     constexpr double FPS = 100;
     return 0.8 * std::sin(1.9 / FPS * x - 0.2) + 1.29;
-};
+}
 
 TEST(Optimal, lsqnonlin_sine)
 {

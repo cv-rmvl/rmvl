@@ -1,11 +1,11 @@
 /**
  * @file ml.hpp
- * @author RoboMaster Vision Community
+ * @author RMVL Community
  * @brief 
- * @version 1.0
- * @date 2023-05-20
+ * @version 2.0
+ * @date 2024-06-02
  * 
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2024 (c), RMVL Community
  * 
  */
 
@@ -14,7 +14,7 @@
 /**
  * @defgroup ml 机器学习与深度学习支持库
  * @{
- *     @defgroup ml_ort ONNX-Runtime 分类网络部署库
+ *     @defgroup ml_ort onnxruntime 多态部署库
  * @}
  */
 

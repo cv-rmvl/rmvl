@@ -52,6 +52,7 @@ NodeId operator|(NodeId origin, FindNodeInClient &&fnic)
     request.browsePaths = &browse_path;
     request.browsePathsSize = 1;
 
+    RMVL_Assert(p_client != nullptr);
     auto response = UA_Client_Service_translateBrowsePathsToNodeIds(p_client, request);
     if (response.responseHeader.serviceResult == UA_STATUSCODE_GOOD)
         if (response.resultsSize == 1 && response.results[0].targetsSize == 1)

@@ -30,10 +30,6 @@
 #include "rmvl/light.hpp"
 #endif // HAVE_RMVL_LIGHT
 
-#ifdef HAVE_RMVL_IMGPROC
-#include "rmvl/imgproc.hpp"
-#endif // HAVE_RMVL_IMGPROC
-
 #ifdef HAVE_RMVL_OPCUA
 #include "rmvl/opcua.hpp"
 #endif // HAVE_RMVL_OPCUA

@@ -38,8 +38,11 @@ void ArmorDetector::find(cv::Mat &src, std::vector<feature::ptr> &features, std:
             for (const auto &armor : armors)
             {
                 cv::Mat roi = Armor::getNumberROI(src, armor);
-                auto type = _ort->inference({roi}, {para::armor_detector_param.MODEL_MEAN}, {para::armor_detector_param.MODEL_STD})[0];
-                armor->setType(_robot_t[type]);
+                PreprocessOptions preop;
+                preop.means = {para::armor_detector_param.MODEL_MEAN};
+                preop.stds = {para::armor_detector_param.MODEL_STD};
+                int idx = ClassificationNet::cast(_ort->inference({roi}, preop, {})).first;
+                armor->setType(_robot_t[idx]);
                 rois.emplace_back(roi);
             }
             // eraseFakeArmors(armors);

@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 rmvl_add_module(
   detector INTERFACE
-  DEPENDS imgproc group
+  DEPENDS group
 )
 
 # armor_detector

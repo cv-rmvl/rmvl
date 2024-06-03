@@ -140,8 +140,8 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
         {
             // 初始化代表装甲板集合
             std::unordered_set<combo::ptr> represent_set;
-            for (const auto &[represent, combo_set] : combo_maps)
-                represent_set.insert(represent);
+            for (const auto &p : combo_maps)
+                represent_set.insert(p.first); // represent
             // 距离最近的装甲板组匹配到相应的序列组中
             for (auto &p_group : groups)
             {
@@ -188,8 +188,8 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
         {
             // 初始化代表装甲板集合
             std::unordered_set<combo::ptr> represent_set;
-            for (const auto &[represent, combo_set] : combo_maps)
-                represent_set.insert(represent);
+            for (const auto &p : combo_maps)
+                represent_set.insert(p.first); // represent
             size_t before_size = groups.size();
             for (size_t i = 0; i < before_size; i++)
             {

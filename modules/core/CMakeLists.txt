@@ -16,7 +16,7 @@ rmvl_generate_para(core)
 rmvl_add_module(
   core
   EXTRA_HEADER ${EIGEN3_INCLUDE_DIR}
-  EXTERNAL ${CMAKE_THREAD_LIBS_INIT} opencv_core
+  EXTERNAL ${CMAKE_THREAD_LIBS_INIT} opencv_imgproc
 )
 
 rmvl_compile_definitions(

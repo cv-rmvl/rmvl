@@ -47,7 +47,7 @@ Client::Client(std::string_view address, UserConfig usr)
     }
     if (status != UA_STATUSCODE_GOOD)
     {
-        ERROR_("Failed to create client");
+        ERROR_("Failed to create client: %s", UA_StatusCode_name(status));
         UA_Client_delete(_client);
         _client = nullptr;
     }
@@ -86,6 +86,8 @@ void Client::spinOnce() { UA_Client_run_iterate(_client, para::opcua_param.SPIN_
 
 Variable Client::read(const NodeId &node)
 {
+    RMVL_DbgAssert(_client != nullptr);
+
     UA_Variant p_val;
     UA_Variant_init(&p_val);
     UA_StatusCode status = UA_Client_readValueAttribute(_client, node, &p_val);
@@ -98,6 +100,8 @@ Variable Client::read(const NodeId &node)
 
 bool Client::write(const NodeId &node, const Variable &val)
 {
+    RMVL_DbgAssert(_client != nullptr);
+
     UA_Variant new_variant = helper::cvtVariable(val);
     auto status = UA_Client_writeValueAttribute(_client, node, &new_variant);
     UA_Variant_clear(&new_variant);
@@ -111,6 +115,8 @@ bool Client::write(const NodeId &node, const Variable &val)
 
 bool Client::call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
 {
+    RMVL_DbgAssert(_client != nullptr);
+
     // 初始化输入、输出参数
     std::vector<UA_Variant> input_variants;
     input_variants.reserve(inputs.size());
@@ -133,7 +139,7 @@ bool Client::call(const NodeId &obj_node, const std::string &name, const std::ve
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to call the method, node id: %d, error code: %s",
-                     method_node.nid.identifier.numeric, UA_StatusCode_name(status));
+               method_node.nid.identifier.numeric, UA_StatusCode_name(status));
         return false;
     }
     outputs.reserve(output_size);
@@ -146,6 +152,8 @@ bool Client::call(const NodeId &obj_node, const std::string &name, const std::ve
 
 NodeId Client::addViewNode(const View &view)
 {
+    RMVL_DbgAssert(_client != nullptr);
+
     // 准备数据
     NodeId retval;
     UA_ViewAttributes attr = UA_ViewAttributes_default;
@@ -178,6 +186,8 @@ NodeId Client::addViewNode(const View &view)
 
 bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
 {
+    RMVL_DbgAssert(_client != nullptr);
+
     // 创建订阅
     UA_CreateSubscriptionResponse resp;
     auto status = createSubscription(resp);
@@ -201,6 +211,7 @@ bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_ch
 
 bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
 {
+    RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
     UA_CreateSubscriptionResponse sub_resp;
     if (!createSubscription(sub_resp))
@@ -266,8 +277,7 @@ bool Client::createSubscription(UA_CreateSubscriptionResponse &response)
     response = UA_Client_Subscriptions_create(_client, request, nullptr, nullptr, nullptr);
     if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
     {
-        ERROR_("Failed to create subscription, error: %s",
-                     UA_StatusCode_name(response.responseHeader.serviceResult));
+        ERROR_("Failed to create subscription, error: %s", UA_StatusCode_name(response.responseHeader.serviceResult));
         return false;
     }
     return true;
