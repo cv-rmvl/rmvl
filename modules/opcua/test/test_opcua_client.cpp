@@ -50,7 +50,7 @@ void setSvr(rm::Server &svr)
     svr.addMethodNode(method);
     // 添加对象节点，包含字符串变量和乘法方法
     svr.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 // 路径搜索
@@ -58,7 +58,7 @@ TEST(OPC_UA_ClientTest, read_variable)
 {
     rm::Server svr(5000);
     setSvr(svr);
-    rm::Client client("opc.tcp://localhost:5000");
+    rm::Client client("opc.tcp://127.0.0.1:5000");
     // 读取测试服务器上的变量值
     auto id = rm::nodeObjectsFolder | client.find("array");
     rm::Variable variable = client.read(id);
@@ -75,7 +75,7 @@ TEST(OPC_UA_ClientTest, variable_IO)
 {
     rm::Server svr(5001);
     setSvr(svr);
-    rm::Client client("opc.tcp://localhost:5001");
+    rm::Client client("opc.tcp://127.0.0.1:5001");
     // 读取测试服务器上的变量值
     auto id = rm::nodeObjectsFolder | client.find("single");
     EXPECT_TRUE(client.write(id, 99));
@@ -92,7 +92,7 @@ TEST(OPC_UA_ClientTest, call)
 {
     rm::Server svr(5002);
     setSvr(svr);
-    rm::Client client("opc.tcp://localhost:5002");
+    rm::Client client("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
     std::vector<rm::Variable> input = {1, 2};
     std::vector<rm::Variable> output;
@@ -116,7 +116,7 @@ TEST(OPC_UA_ClientTest, variable_monitor)
 {
     rm::Server svr(5003);
     setSvr(svr);
-    rm::Client client("opc.tcp://localhost:5003");
+    rm::Client client("opc.tcp://127.0.0.1:5003");
     // 订阅测试服务器上的变量
     auto node_id = rm::nodeObjectsFolder | client.find("single");
     EXPECT_TRUE(client.monitor(node_id, onChange, 5));
@@ -157,7 +157,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     etype.description = "测试事件类型";
     etype.add("aaa", 3);
     svr.addEventTypeNode(etype);
-    rm::Client client("opc.tcp://localhost:5004");
+    rm::Client client("opc.tcp://127.0.0.1:5004");
     client.monitor(rm::nodeServer, {"SourceName", "aaa"}, onEvent);
     // 触发事件
     rm::Event event(etype);

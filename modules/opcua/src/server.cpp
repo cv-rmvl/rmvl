@@ -31,7 +31,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     UA_ServerConfig *config = UA_Server_getConfig(_server);
     // 修改日志
 #if OPCUA_VERSION < 10400
-    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
+    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_INFO);
 #else
     config->logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
 #endif
@@ -103,6 +103,8 @@ void Server::deleteServer()
 
 NodeId Server::addVariableTypeNode(const VariableType &vtype)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     UA_VariableTypeAttributes attr = UA_VariableTypeAttributes_default;
     UA_Variant variant = helper::cvtVariable(vtype);
     // 设置属性
@@ -132,6 +134,8 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype)
 
 NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     UA_Variant variant = helper::cvtVariable(val);
@@ -177,6 +181,8 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
 
 Variable Server::read(const NodeId &node)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     UA_Variant p_val;
     UA_Variant_init(&p_val);
     auto status = UA_Server_readValue(_server, node, &p_val);
@@ -189,6 +195,8 @@ Variable Server::read(const NodeId &node)
 
 bool Server::write(const NodeId &node, const Variable &val)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     auto variant = helper::cvtVariable(val);
     auto status = UA_Server_writeValue(_server, node, variant);
     UA_Variant_clear(&variant);
@@ -199,6 +207,8 @@ bool Server::write(const NodeId &node, const Variable &val)
 
 bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     UA_ValueCallback callback{before_read, after_write};
     auto status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
     if (status != UA_STATUSCODE_GOOD)
@@ -208,6 +218,8 @@ bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead bef
 
 NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     // 变量节点属性 `UA_VariableAttributes`
     UA_VariableAttributes attr = UA_VariableAttributes_default;
     // 设置属性
@@ -245,6 +257,8 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
 
 NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     UA_MethodAttributes attr = UA_MethodAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(method.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(method.description));
@@ -282,11 +296,14 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
 
 void Server::setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method)
 {
+    RMVL_DbgAssert(_server != nullptr);
     UA_Server_setMethodNodeCallback(_server, id, on_method);
 }
 
 NodeId Server::addObjectTypeNode(const ObjectType &otype)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     // 定义对象类型节点
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(otype.display_name));
@@ -346,6 +363,8 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
 
 NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     UA_ObjectAttributes attr{UA_ObjectAttributes_default};
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(obj.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
@@ -402,6 +421,8 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
 
 NodeId Server::addViewNode(const View &view)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     // 准备数据
     NodeId retval;
     UA_ViewAttributes attr = UA_ViewAttributes_default;
@@ -434,6 +455,8 @@ NodeId Server::addViewNode(const View &view)
 
 NodeId Server::addEventTypeNode(const EventType &etype)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     NodeId retval;
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(etype.display_name));
@@ -482,6 +505,8 @@ NodeId Server::addEventTypeNode(const EventType &etype)
 
 bool Server::triggerEvent(const NodeId &node_id, const Event &event)
 {
+    RMVL_DbgAssert(_server != nullptr);
+
     NodeId type_id = nodeBaseEventType | find(event.type()->browse_name);
     if (type_id.empty())
     {

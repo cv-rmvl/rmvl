@@ -72,7 +72,7 @@
 1. 选择一初始点 \f$\pmb x_0=(x_{1,0},x_{2,0},\cdots,x_{n,0})^T\f$；
 2. 算出 \f[\Delta\pmb x_0=-\pmb H_0^{-1}\pmb J_0^T\pmb\varphi(\pmb x_k)\tag{1-6}\f]
 3. 令 \f$\pmb x_1\f$ 为函数 \f$f(\pmb x)\f$ 的极小点的第 1 次近似，则有 \f[\pmb x_1=\pmb x_0+\Delta\pmb x_0\tag{1-7}\f]
-4. 以 \f$\pmb x_1\f$ 代替前面的 \f$\pmb x_0\f$，\f$\Delta\pmb x_1\f$ 代替 \f$\Delta\pmb x_0\f$，重复上述计算过程，直到 \f[\|\pmb\varphi(\pmb x_k)\|<\epsilon'\tag{1-8a}\f] 或 \f[\|\nabla f(\pmb x_k)\|<\epsilon"\tag{1-8b}\f] 为止。\f$\epsilon'\f$ 和 \f$\epsilon"\f$ 是预先给定的精度。
+4. 以 \f$\pmb x_1\f$ 代替前面的 \f$\pmb x_0\f$，\f$\Delta\pmb x_1\f$ 代替 \f$\Delta\pmb x_0\f$，重复上述计算过程，直到 \f[\|\pmb\varphi(\pmb x_k)\|<\epsilon'\tag{1-8a}\f] 或 \f[\|\nabla f(\pmb x_k)\|<\epsilon''\tag{1-8b}\f] 为止。\f$\epsilon'\f$ 和 \f$\epsilon''\f$ 是预先给定的精度。
 
 #### 1.3 改进
 
@@ -85,7 +85,7 @@
 
 #### 1.4 如何使用
 
-可参考 `rm::lsqnonlin` 函数，例如，我们需要拟合一个正弦函数，下面的 `obtain` 函数就是观测每一帧的数据。
+RMVL 提供了改进的 Gauss-Newton 迭代算法，可参考 `rm::lsqnonlin` 函数。例如，我们需要拟合一个正弦函数\f[y=A\sin(\omega t+\varphi_0)+b\f]其中，\f$A,\omega,\varphi_0,b\f$ 是待拟合的参数，不妨统一写为 \f$\pmb x=(A,\omega,\varphi_0,b)\f$，也就是说我们需要拟合的函数是\f[\green y=x_1\sin(x_2\green t+x_3)+x_4\f]其中 \f$t\f$ 和 \f$y\f$ 是可以观测到的数据，我们需要通过观测的数据来拟合 \f$\pmb x\f$ 的值。比方说，下面的 `obtain` 函数就可以观测每一帧的数据。
 
 ```cpp
 double obtain();

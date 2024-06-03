@@ -97,8 +97,8 @@ int main()
 
 int main()
 {
-    // 创建 OPC UA 客户端，连接到 localhost:4840
-    rm::Client clt("opc.tcp://localhost:4840");
+    // 创建 OPC UA 客户端，连接到 127.0.0.1:4840
+    rm::Client clt("opc.tcp://127.0.0.1:4840");
 
     /* other code */
 }
@@ -141,7 +141,7 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://localhost:4840");
+    rm::Client clt("opc.tcp://127.0.0.1:4840");
 
     // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
     auto node = rm::nodeObjectsFolder | clt.find("number");
@@ -210,7 +210,7 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://localhost:4840");
+    rm::Client clt("opc.tcp://127.0.0.1:4840");
 
     // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
     std::vector<rm::Variable> input = {1, 2};
@@ -287,7 +287,7 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://localhost:4840");
+    rm::Client clt("opc.tcp://127.0.0.1:4840");
 
     // 路径搜索寻找 C2
     auto node_c2 = rm::nodeObjectsFolder | clt.find("A") | clt.find("B1") | clt.find("C2");
@@ -369,7 +369,7 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://localhost:4840");
+    rm::Client clt("opc.tcp://127.0.0.1:4840");
     auto node = rm::nodeObjectsFolder | clt.find("number");
     for (int i = 0; i < 100; ++i)
     {
@@ -396,7 +396,7 @@ void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *v
 
 int main()
 {
-    rm::Client clt("opc.tcp://localhost:4840");
+    rm::Client clt("opc.tcp://127.0.0.1:4840");
     auto node = rm::nodeObjectsFolder | clt.find("number");
     // 监视变量，这里的 onChange 同样可以写成无捕获列表的 lambda 表达式，因为存在隐式转换
     client.monitor(node_id, onChange, 5);

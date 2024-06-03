@@ -28,7 +28,7 @@ namespace rm
 //! 装甲板识别模块
 class ArmorDetector final : public detector
 {
-    std::unique_ptr<OnnxRT> _ort;
+    std::unique_ptr<OnnxNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
 
 public:
@@ -37,16 +37,9 @@ public:
 
     explicit ArmorDetector(const std::string &model)
     {
-        _ort = std::make_unique<OnnxRT>(model);
-        _robot_t[0] = RobotType::UNKNOWN;
-        _robot_t[1] = RobotType::HERO;
-        _robot_t[2] = RobotType::ENGINEER;
-        _robot_t[3] = RobotType::INFANTRY_3;
-        _robot_t[4] = RobotType::INFANTRY_4;
-        _robot_t[5] = RobotType::INFANTRY_5;
-        _robot_t[6] = RobotType::OUTPOST;
-        _robot_t[7] = RobotType::BASE;
-        _robot_t[8] = RobotType::SENTRY;
+        _ort = std::make_unique<ClassificationNet>(model);
+        for (int i = 0; i < 9; ++i)
+            _robot_t[i] = static_cast<RobotType>(i);
     }
 
     /**

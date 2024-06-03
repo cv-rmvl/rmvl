@@ -2,7 +2,7 @@
 
 int main()
 {
-    rm::Client client("opc.tcp://localhost:4840");
+    rm::Client client("opc.tcp://127.0.0.1:4840");
     if (!client.ok())
         return -1;
     auto position_id = rm::nodeObjectsFolder | client.find("position");

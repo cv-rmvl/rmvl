@@ -29,7 +29,7 @@ DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, 
     // 二值化处理图像
     PixChannel ch_minus = color == RED ? BLUE : RED;
     int thesh = color == RED ? para::armor_detector_param.GRAY_THRESHOLD_RED : para::armor_detector_param.GRAY_THRESHOLD_BLUE;
-    info.bin = rm::binary(src, color, ch_minus, thesh);
+    info.bin = binary(src, color, ch_minus, thesh);
 
     // 找到所有的灯条和装甲板
     find(info.bin, info.features, info.combos, info.rois);
