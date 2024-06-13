@@ -1,7 +1,3 @@
-if(NOT BUILD_OPEN62541 AND WITH_OPEN62541)
-  find_package(open62541 REQUIRED)
-endif()
-
 set(BUILD_rmvl_opcua_INIT ${WITH_OPEN62541})
 # generate parameters module
 rmvl_generate_para(opcua)

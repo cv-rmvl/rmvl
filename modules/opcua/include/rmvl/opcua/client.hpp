@@ -116,14 +116,11 @@ public:
      * @param[out] outputs 输出参数列表
      * @return 是否成功完成当前操作
      */
-    inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
-    {
-        return call(nodeObjectsFolder, name, inputs, outputs);
-    }
+    inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) { return call(nodeObjectsFolder, name, inputs, outputs); }
 
     /**
      * @brief 添加视图节点 ViewNode 至 `ViewsFolder` 中
-     * 
+     *
      * @param[in] view `rm::View` 表示的视图
      * @return 添加至服务器后，对应视图节点的唯一标识 `NodeId`
      */

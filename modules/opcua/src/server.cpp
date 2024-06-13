@@ -94,8 +94,11 @@ void Server::start()
     });
 }
 
-void Server::deleteServer()
+Server::~Server()
 {
+    _running = false;
+    if (_run.joinable())
+        _run.join();
     UA_Server_delete(_server);
 }
 
@@ -349,9 +352,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
         if (status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_ERROR(
-                UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Failed to add reference during adding object type node, browse name: %s, error code: %s",
-                browse_name.c_str(), UA_StatusCode_name(status));
+            ERROR_("Failed to add reference during adding object type node, browse name: %s, error code: %s", browse_name.c_str(), UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
     }
@@ -384,8 +385,7 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
     }
     if (type_id.empty())
     {
-        UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
-                       "The object node \"%s\" does not belong to any object type node", obj.browse_name.c_str());
+        WARNING_("The object node \"%s\" does not belong to any object type node", obj.browse_name.c_str());
         type_id = nodeBaseObjectType;
     }
     // 添加至服务器
