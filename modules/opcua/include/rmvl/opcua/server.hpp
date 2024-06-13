@@ -92,8 +92,7 @@ public:
      */
     inline void join() { _run.join(); }
 
-    //! 释放服务器资源
-    inline ~Server() { deleteServer(); }
+    ~Server();
 
     /****************************** 路径搜索 ******************************/
 
@@ -234,10 +233,6 @@ public:
      * @return 是否创建并触发成功？
      */
     bool triggerEvent(const NodeId &node_id, const Event &event);
-
-protected:
-    //! 释放服务器资源
-    void deleteServer();
 };
 
 //! @} opcua

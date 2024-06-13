@@ -59,7 +59,7 @@ Client::~Client()
         return;
     auto status = UA_Client_disconnect(_client);
     if (status != UA_STATUSCODE_GOOD)
-        UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Failed to disconnect the client");
+        WARNING_("Failed to disconnect the client");
     UA_Client_delete(_client);
     _client = nullptr;
 }
@@ -74,8 +74,7 @@ void Client::spin()
         auto status = UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT);
         if (!warning && status != UA_STATUSCODE_GOOD)
         {
-            UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT,
-                           "No events and message received, spinning indefinitely, error status: %s", UA_StatusCode_name(status));
+            WARNING_("No events and message received, spinning indefinitely, error status: %s", UA_StatusCode_name(status));
             warning = true;
         }
         warning = (status == UA_STATUSCODE_GOOD) ? false : warning;
@@ -256,10 +255,7 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Clie
         return false;
     }
     else
-    {
-        UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "Created event monitor, monitor id: %d", monitor_id);
         return true;
-    }
 }
 
 ////////////////////////// Private //////////////////////////
