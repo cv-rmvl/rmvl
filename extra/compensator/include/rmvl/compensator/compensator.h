@@ -45,10 +45,6 @@ struct CompensateInfo
 //! 弹道下坠补偿模块
 class compensator
 {
-protected:
-    float _yaw_static_com;   //!< yaw 轴静态补偿，方向与 yaw 一致
-    float _pitch_static_com; //!< pitch 轴静态补偿，方向与 pitch 一致
-
 public:
     using ptr = std::unique_ptr<compensator>;
 
