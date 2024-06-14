@@ -20,12 +20,14 @@ namespace rm
 
 class GravityCompensator::Impl
 {
+    float _yaw_static_com;   //!< yaw 轴静态补偿，方向与 yaw 一致
+    float _pitch_static_com; //!< pitch 轴静态补偿，方向与 pitch 一致
+    
 public:
     Impl();
 
     //! 补偿函数，考虑空气阻力，使用 2 阶龙格库塔方法（中点公式）计算弹道
-    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed,
-                              CompensateType com_flag, float &yaw_static_com, float &pitch_static_com);
+    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag);
 
 private:
     /**
@@ -61,7 +63,7 @@ private:
      */
     std::pair<double, double> calc(double x, double y, double velocity);
 
-    std::unique_ptr<RungeKutta2> _rk; //!< 2 阶龙格库塔方法
+    std::unique_ptr<RungeKutta2> _rk; //!< 2 阶龙格库塔求解器
 };
 
 } // namespace rm

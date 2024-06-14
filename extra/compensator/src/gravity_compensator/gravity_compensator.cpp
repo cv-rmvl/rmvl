@@ -16,20 +16,17 @@
 namespace rm
 {
 
-GravityCompensator::GravityCompensator() noexcept : _impl(new Impl)
-{
-    _pitch_static_com = para::gravity_compensator_param.PITCH_COMPENSATE;
-    _yaw_static_com = para::gravity_compensator_param.YAW_COMPENSATE;
-}
+GravityCompensator::GravityCompensator() noexcept : _impl(new Impl) {}
 
 GravityCompensator::~GravityCompensator() { delete _impl; }
 
 CompensateInfo GravityCompensator::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag)
 {
-    return _impl->compensate(groups, shoot_speed, com_flag, _yaw_static_com, _pitch_static_com);
+    return _impl->compensate(groups, shoot_speed, com_flag);
 }
 
-GravityCompensator::Impl::Impl()
+GravityCompensator::Impl::Impl() : _yaw_static_com(para::gravity_compensator_param.PITCH_COMPENSATE),
+                                   _pitch_static_com(para::gravity_compensator_param.YAW_COMPENSATE)
 {
     using para::gravity_compensator_param;
     double tmp = gravity_compensator_param.rho * gravity_compensator_param.A * gravity_compensator_param.V / (2 * gravity_compensator_param.m);
@@ -115,12 +112,11 @@ void GravityCompensator::Impl::updateStaticCom(CompensateType com_flag, float &x
     }
 }
 
-CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr> &groups, float shoot_speed,
-                                                    CompensateType com_flag, float &yaw_static_com, float &pitch_static_com)
+CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag)
 {
     CompensateInfo info{};
     // 补偿手动调节
-    updateStaticCom(com_flag, yaw_static_com, pitch_static_com);
+    updateStaticCom(com_flag, _yaw_static_com, _pitch_static_com);
     // 对每个序列组的每个追踪器按照一种方式进行补偿计算
     for (auto &p_group : groups)
     {
@@ -136,8 +132,8 @@ CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr
             // 计算补偿角度和对应的子弹飞行时间（模型中角度要求向上为正，这里需取反）
             auto [angle_com, t_com] = calc(dis * cos(deg2rad(-angle)), dis * sin(deg2rad(-angle)), shoot_speed);
             double gp = rad2deg(-angle_com);
-            double x_com = yaw_static_com;
-            double y_com = gp - angle + pitch_static_com;
+            double x_com = _yaw_static_com;
+            double y_com = gp - angle + _pitch_static_com;
             // 更新
             info.compensation.emplace(p_tracker, cv::Point2f(x_com, y_com));
             info.tof.emplace(p_tracker, t_com);

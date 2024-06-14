@@ -22,6 +22,9 @@ namespace rm
 //! 整车状态补偿模块
 class GyroCompensator final : public compensator
 {
+    float _yaw_static_com;   //!< yaw 轴静态补偿，方向与 yaw 一致
+    float _pitch_static_com; //!< pitch 轴静态补偿，方向与 pitch 一致
+
 public:
     //! 创建 GyroCompensator 对象
     GyroCompensator();

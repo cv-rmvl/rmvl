@@ -10,8 +10,8 @@
  */
 
 #include "rmvl/compensator/gyro_compensator.h"
-#include "rmvl/group/gyro_group.h"
 #include "rmvl/core/transform.hpp"
+#include "rmvl/group/gyro_group.h"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/compensator/gyro_compensator.h"
@@ -21,7 +21,7 @@ namespace rm
 
 /**
  * @brief 弹道模型
- * 
+ *
  * @param[in] x 目标离相机的水平距离，单位 `m`
  * @param[in] v 枪口射速，单位 `m/s`
  * @param[in] angle 当前枪口仰角、俯角，`+` 表示仰角，`-` 表示俯角，单位 `rad`
@@ -69,11 +69,11 @@ static void updateStaticCom(CompensateType com_flag, float &x_st, float &y_st)
  *
  * @param[in] x 目标离相机的水平宽度
  * @param[in] y 目标离相机的铅垂高度
- * @param[in] velocity 枪口射速
+ * @param[in] v 枪口射速
  *
  * @return 补偿角度
  */
-static double getPitch(double x, double y, double velocity)
+static double getPitch(double x, double y, double v)
 {
     double y_temp = y;
     double angle = 0.f;
@@ -81,7 +81,7 @@ static double getPitch(double x, double y, double velocity)
     for (int i = 0; i < 50; i++)
     {
         angle = atan2(y_temp, x);
-        double dy = y - bulletModel(x, velocity, angle);
+        double dy = y - bulletModel(x, v, angle);
         y_temp += dy;
         if (abs(dy) < 0.001)
             break;
@@ -112,14 +112,15 @@ CompensateInfo GyroCompensator::compensate(const std::vector<group::ptr> &groups
         auto relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, p_group->getCenter());
         // 提取当前陀螺仪角度
         auto gyro_angle = cv::Point2f(p_gyro_group->getGyroData().rotation.yaw,
-                                  p_gyro_group->getGyroData().rotation.pitch);
+                                      p_gyro_group->getGyroData().rotation.pitch);
         // 目标与云台转轴的连线与水平方向的夹角
         double angle = gyro_angle.y + relative_angle.y;
         double gp = rad2deg(-getPitch(dis * cos(deg2rad(-angle)), // 模型中角度要求向上为正，这里需取反
                                       dis * sin(deg2rad(-angle)), static_cast<double>(shoot_speed)));
         double x_com = _yaw_static_com;
         double y_com = gp - angle + _pitch_static_com;
-        double tf = dis / (static_cast<double>(shoot_speed) * cos(deg2rad(y_com + angle))); // 子弹飞行时间计算
+        // 子弹飞行时间计算
+        double tf = dis * cos(deg2rad(-angle)) / (static_cast<double>(shoot_speed) * cos(deg2rad(y_com + angle)));
         // 更新至每个 tracker
         for (auto p_tracker : p_group->data())
         {
