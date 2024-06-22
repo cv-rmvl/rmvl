@@ -24,6 +24,11 @@ namespace rm::para
 //! @addtogroup para_@module_name@
 //! @{
 
+////////////////////// 扩展部分 //////////////////////
+
+@para_header_extra@
+////////////////////// 参数部分 //////////////////////
+
 //! @class_name@ 参数模块
 struct @class_name@
 {
