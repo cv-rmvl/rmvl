@@ -14,10 +14,11 @@
 namespace rm::para
 {
 
+@para_source_extra@
 bool @class_name@::load(const std::string &path)
 {
     cv::FileStorage fs(path, cv::FileStorage::READ);
-    if(!fs.isOpened())
+    if (!fs.isOpened())
         return false;
     cv::FileNode node;
 
