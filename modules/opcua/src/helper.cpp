@@ -490,7 +490,7 @@ UA_Argument cvtArgument(const Argument &arg)
     UA_Argument argument;
     UA_Argument_init(&argument);
     argument.name = UA_STRING(to_char(arg.name));
-    argument.description = UA_LOCALIZEDTEXT(zh_CN(), to_char(arg.name));
+    argument.description = UA_LOCALIZEDTEXT(zh_CN(), to_char(arg.description));
     argument.dataType = UA_TYPES[arg.data_type].typeId;
     RMVL_Assert(arg.dims);
     if (arg.dims == 1)

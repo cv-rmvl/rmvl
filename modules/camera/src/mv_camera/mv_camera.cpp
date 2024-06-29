@@ -9,7 +9,7 @@
  *
  */
 
-#include <unistd.h>
+#include <thread>
 
 #include <opencv2/imgproc.hpp>
 
@@ -177,9 +177,11 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
 
 bool MvCamera::Impl::reconnect() noexcept
 {
+    using namespace std::chrono_literals;    
     INFO_("mv - camera device reconnect");
     release();
-    sleep(1);
+    std::this_thread::sleep_for(100ms);
+
     // 重置相机数量
     _camera_counts = 8;
     open();

@@ -9,6 +9,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/ml.hpp>
 
+using namespace std::chrono_literals;
+
 static int wait_time = 1;
 static int collect_num = 2000;
 
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
             return 0;
         collect(color, rm::ArmorSizeType::SMALL, 0);
         cv::destroyAllWindows();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
 
         // --------------------- 大装甲板收集 ---------------------
         printf("\033[32m大装甲板\033[0m信息收集即将开始...\n");
@@ -147,7 +149,7 @@ int main(int argc, char *argv[])
             return 0;
         collect(color, rm::ArmorSizeType::BIG, collect_num);
         cv::destroyAllWindows();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
 
         // 训练与分类
         p_svm = cv::ml::SVM::create();

@@ -356,6 +356,8 @@ int main()
 软触发：
 
 ```cpp
+using namespace std::chrono_literals;
+
 int main()
 {
     auto camera_config = rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV)
@@ -365,7 +367,7 @@ int main()
     std::thread th([&run]() {
         while (run)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(10ms);
             capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
         }
     });

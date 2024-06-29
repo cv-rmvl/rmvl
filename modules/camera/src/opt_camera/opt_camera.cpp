@@ -263,9 +263,10 @@ void OptCamera::Impl::release() noexcept
 
 bool OptCamera::Impl::reconnect() noexcept
 {
+    using namespace std::chrono_literals;
     WARNING_("opt - Reconnecting...");
     release();
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(200ms);
     return open();
 }
 

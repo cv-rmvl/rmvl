@@ -1,9 +1,11 @@
-#include <unistd.h>
+#include <thread>
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/hik_camera.h"
+
+using namespace std::chrono_literals;
 
 static int exposure = 1000;
 static int gain = 0;
@@ -56,7 +58,7 @@ int main()
     cv::createTrackbar("蓝通道", "控制面板", nullptr, 3000, bGainCallBack, nullptr);
     cv::setTrackbarPos("蓝通道", "控制面板", b_gain);
 
-    sleep(1);
+    std::this_thread::sleep_for(1s);
 
     [[maybe_unused]] int ch = system("clear");
 

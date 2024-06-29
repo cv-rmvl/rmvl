@@ -9,11 +9,6 @@
  *
  */
 
-#include <algorithm>
-#include <numeric>
-
-#include <opencv2/imgproc.hpp>
-
 #include "rmvl/core/util.hpp"
 #include "rmvl/ml/ort.h"
 

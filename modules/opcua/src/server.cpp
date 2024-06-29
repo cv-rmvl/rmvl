@@ -31,7 +31,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     UA_ServerConfig *config = UA_Server_getConfig(_server);
     // 修改日志
 #if OPCUA_VERSION < 10400
-    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_INFO);
+    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
 #else
     config->logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
 #endif
