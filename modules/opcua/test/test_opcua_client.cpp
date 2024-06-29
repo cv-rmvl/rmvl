@@ -19,6 +19,8 @@
 namespace rm_test
 {
 
+using namespace std::chrono_literals;
+
 void setSvr(rm::Server &svr)
 {
     // 添加单变量节点
@@ -50,7 +52,7 @@ void setSvr(rm::Server &svr)
     svr.addMethodNode(method);
     // 添加对象节点，包含字符串变量和乘法方法
     svr.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(10ms);
 }
 
 // 路径搜索
@@ -122,7 +124,7 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     EXPECT_TRUE(client.monitor(node_id, onChange, 5));
     // 数据更新
     client.write(node_id, 66);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(10ms);
     client.spinOnce();
     EXPECT_EQ(type_name, "Int32");
     EXPECT_EQ(receive_data, 66);
@@ -166,7 +168,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     event["aaa"] = 66;
     svr.triggerEvent(rm::nodeServer, event);
     client.spinOnce();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(10ms);
     EXPECT_EQ(source_name, "GtestServer");
     EXPECT_EQ(aaa, 66);
     svr.stop();

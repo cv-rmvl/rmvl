@@ -1,5 +1,5 @@
-#include <iostream>
-#include <unistd.h>
+#include <cstdio>
+#include <thread>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
@@ -7,6 +7,8 @@
 
 #include "rmvl/camera/mv_camera.h"
 #include "rmvl/core/math.hpp"
+
+using namespace std::chrono_literals;
 
 // 内参矩阵
 static cv::Matx33d cameraMatrix = {1250, 0, 640,
@@ -99,7 +101,7 @@ int main()
     cv::createTrackbar("畸变 4", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(4)));
     cv::setTrackbarPos("畸变 4", "控制面板", distCoeffs(4, 0) * 5000 + 500);
 
-    sleep(1);
+    std::this_thread::sleep_for(1s);
 
     printf("Press the 's' key to save the parameters to the yaml file: \033[33m%s\033[0m\n", file_name);
 

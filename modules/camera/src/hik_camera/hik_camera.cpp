@@ -9,7 +9,7 @@
  *
  */
 
-#include <unistd.h>
+#include <thread>
 #include <unordered_set>
 
 #include <opencv2/imgproc.hpp>
@@ -269,9 +269,10 @@ bool HikCamera::Impl::read(cv::OutputArray image) noexcept
 
 bool HikCamera::Impl::reconnect() noexcept
 {
+    using namespace std::chrono_literals;
     INFO_("hik - camera device reconnect");
     release();
-    sleep(1);
+    std::this_thread::sleep_for(100ms);
     open();
     return true;
 }

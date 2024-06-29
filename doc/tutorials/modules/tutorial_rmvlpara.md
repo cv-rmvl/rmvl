@@ -45,11 +45,12 @@ string serial_number  # 相机序列号
 
 <center>表1：参数类型表
 
-| 数据类型 |                             含义                             |
-| :------: | :----------------------------------------------------------: |
-| 基本类型 | 包括 `int`、`uint8_t`、`double`、`float`、`string` 等<br>对标 C++ 的基础类型和 `std::string` |
-| 矩阵类型 | 包括形如 `Matx??`、`Vec?` 的类型，例如 `Matx22f`<br>对标 OpenCV 的 `cv::Matx` 和 `cv::Vec`<br>可使用列表初始化和相关静态函数初始化，例如 `Matx22f::eye()` |
-| 复合类型 | 包括 `vector` 和形如 `Point?` 的类型<br>对标 C++ 的 `std::vector` 以及 OpenCV 的`cv::Point2?` 和 `cv::Point3?`<br>只能使用列表初始化，例如 `{1, 2, 3}` |
+| 数据类型 | 含义                                                         |
+| :------: | :----------------------------------------------------------- |
+| 基本类型 | 1. 包括 `int`、`uint8_t`、`double`、`float`、`string` 等<br />2. 对标 C++ 的基础类型和 `std::string` |
+| 矩阵类型 | 1. 包括形如 `Matx??`、`Vec?` 的类型，例如 `Matx22f`<br>2. 对标 OpenCV 的 `cv::Matx` 和 `cv::Vec`<br>3. 可使用列表初始化和相关静态函数初始化，例如 `Matx22f::eye()` |
+| 复合类型 | 1. 包括 `vector` 和形如 `Point?` 的类型<br>2. 对标 C++ 的 `std::vector` 以及 OpenCV 的`cv::Point2?` 和 `cv::Point3?`<br>3. 只能使用列表初始化，例如 `{1, 2, 3}` |
+| 枚举类型 | 1. 需要用户自定以 `enum` 开头和 `endenum` 结尾的数据类型声明<br />2. 对标 C++ 的有作用域枚举类型 `enum class`<br />3. 变量的定义上与有作用域枚举类型一致，例如 `Color COLOR_MODE = Color::RED` |
 
 </center>
 
@@ -69,6 +70,19 @@ float gain = 64       # 相机数字增益
 
 @note
 - `#` 和注释信息之间<u>**不必**</u>使用空格分隔，例如 `#相机曝光`
+
+枚举类型可在每个枚举项后加上具体的值，也能使用 `#` 为枚举项添加注释，例如
+
+```
+enum ColorMode # 颜色类型
+  RED          # 红色
+  GREEN        # 绿色
+  BLUE = 4     # 蓝色
+  GRAY = 5
+endenum
+
+ColorMode COLOR = ColorMode::RED # 颜色信息
+```
 
 ### 3. C++ 代码生成
 
@@ -159,6 +173,8 @@ rmvl_generate_module_para(m)
 
 ### 4. 运行时加载
 
+#### 4.1 加载方式
+
 例如，对于以下的 `test.para` 文件
 
 ```
@@ -197,3 +213,6 @@ inline TestParam test_param;
 rm::para::core_param.load(prefix_path + "core.yml");
 /* code */
 ```
+
+#### 4.2 YAML 文件格式
+

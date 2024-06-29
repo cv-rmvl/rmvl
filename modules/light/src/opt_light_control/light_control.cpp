@@ -16,14 +16,6 @@
 
 #include "rmvl/light/opt_light_control.h"
 
-rm::OPTLightController::OPTLightController(rm::OPTLightController &&obj)
-{
-    _handle = obj._handle;
-    obj._handle = {};
-    _init = obj._init;
-    obj._init = false;
-}
-
 bool rm::OPTLightController::connect(const LightIpConfig &ip_config)
 {
     if (_init)
@@ -34,12 +26,13 @@ bool rm::OPTLightController::connect(const LightIpConfig &ip_config)
 
 bool rm::OPTLightController::connect(std::string_view SN)
 {
+    using namespace std::chrono_literals;
     if (_init)
         disconnect();
     _init = true;
     if (OPTController_CreateEtheConnectionBySN(const_cast<char *>(SN.data()), &_handle) == OPT_SUCCEED)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
         return true;
     }
     else
@@ -80,7 +73,7 @@ bool rm::OPTLightController::closeAllChannels()
     return OPTController_TurnOffChannel(_handle, 0) == OPT_SUCCEED;
 }
 
-int rm::OPTLightController::getIntensity(int channel)
+int rm::OPTLightController::getIntensity(int channel) const
 {
     int intensity;
     return OPTController_ReadIntensity(_handle, channel, &intensity) == OPT_SUCCEED ? intensity : -1;
@@ -91,4 +84,4 @@ bool rm::OPTLightController::setIntensity(int channel, int intensity)
     return OPTController_SetIntensity(_handle, channel, intensity) == OPT_SUCCEED;
 }
 
-bool rm::OPTLightController::trigger(int channel, int time) { return OPTController_SoftwareTrigger(_handle, channel, time) == OPT_SUCCEED; }
+bool rm::OPTLightController::trigger(int channel, int time) const { return OPTController_SoftwareTrigger(_handle, channel, time) == OPT_SUCCEED; }

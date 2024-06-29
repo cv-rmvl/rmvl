@@ -30,20 +30,10 @@ namespace rm
 //! OPC UA 方法参数
 struct Argument final
 {
-    std::string name;        //!< 方法名
-    UA_TypeFlag data_type{}; //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
-    uint32_t dims{1U};       //!< 参数维数 @warning 不能为 `0`
-
-    Argument() = default;
-
-    /**
-     * @brief 构造 `rm::Argument` 方法参数
-     *
-     * @param[in] n 方法名
-     * @param[in] dt 参数数据类型
-     * @param[in] dm 参数维数（默认为 `1`）
-     */
-    Argument(std::string_view n, UA_TypeFlag dt, uint32_t dm = 1) : name(n), data_type(dt), dims(dm) {}
+    std::string name;          //!< 参数名称
+    UA_TypeFlag data_type{};   //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
+    uint32_t dims{1U};         //!< 参数维数，单数据则是 `1`，数组则是数组长度 @warning 不能为 `0`
+    std::string description{}; //!< 参数描述
 };
 
 //! OPC UA 方法
@@ -51,7 +41,7 @@ struct Method final
 {
     //! 命名空间索引，默认为 `1`
     uint16_t ns{1U};
-    
+
     /**
      * @brief 浏览名称 BrowseName
      * @brief

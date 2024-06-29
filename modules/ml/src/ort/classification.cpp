@@ -9,9 +9,6 @@
  *
  */
 
-#include <opencv2/dnn.hpp>
-#include <opencv2/imgproc.hpp>
-
 #include "rmvl/core/util.hpp"
 #include "rmvl/ml/ort.h"
 

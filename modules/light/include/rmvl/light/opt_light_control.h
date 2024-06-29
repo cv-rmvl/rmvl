@@ -42,7 +42,7 @@ public:
     //! 禁止从 OPTLightController 对象复制构造
     OPTLightController(const OPTLightController &) = delete;
     //! 移动 OPTLightController 对象
-    OPTLightController(OPTLightController &&obj);
+    OPTLightController(OPTLightController &&obj) = default;
 
     //! 析构 OPTLightController 对象
     ~OPTLightController() { disconnect(); }
@@ -104,7 +104,7 @@ public:
      * @param[in] channel 指定通道
      * @return 若读取成功，返回 \f$[0, 255]\f$ 的值，否则返回 \f$-1\f$
      */
-    int getIntensity(int channel);
+    int getIntensity(int channel) const;
 
     /**
      * @brief 设置指定通道的光源亮度
@@ -122,7 +122,7 @@ public:
      * @param[in] time 触发时间，单位: 10ms
      * @return 是否成功触发？
      */
-    bool trigger(int channel, int time);
+    bool trigger(int channel, int time) const;
 };
 
 //! @} opt_light_control

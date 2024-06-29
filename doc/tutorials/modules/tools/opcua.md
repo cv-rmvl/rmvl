@@ -367,13 +367,15 @@ int main()
 // client_1.cpp
 #include <rmvl/opcua/client.hpp>
 
+using namespace std::chrono_literals;
+
 int main()
 {
     rm::Client clt("opc.tcp://127.0.0.1:4840");
     auto node = rm::nodeObjectsFolder | clt.find("number");
     for (int i = 0; i < 100; ++i)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(1s);
         // 写入数据，i + 200 隐式构造成了 rm::Variable
         bool success = clt.write(node, i + 200);
         if (!success)

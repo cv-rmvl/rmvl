@@ -19,6 +19,8 @@
 namespace rm_test
 {
 
+using namespace std::chrono_literals;
+
 TEST(OPC_UA_PubSub, pubsub_config)
 {
     // 创建发布者
@@ -36,7 +38,7 @@ TEST(OPC_UA_PubSub, pubsub_config)
     EXPECT_EQ(nodes.size(), 1);
 
     pub.write(node_id, 3.4);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     auto sub_val = sub.read(nodes[0]);
     EXPECT_EQ(sub_val.cast<double>(), 3.4);
 

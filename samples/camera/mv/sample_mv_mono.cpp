@@ -1,8 +1,10 @@
-#include <unistd.h>
+#include <thread>
 
 #include <opencv2/highgui.hpp>
 
 #include "rmvl/camera/mv_camera.h"
+
+using namespace std::chrono_literals;
 
 static int exposure = 1000;
 static int gain = 64;
@@ -77,7 +79,7 @@ int main()
     cv::createTrackbar("蓝通道", "控制面板", nullptr, 200, bGainCallBack, nullptr);
     cv::setTrackbarPos("蓝通道", "控制面板", b_gain);
 
-    sleep(1);
+    std::this_thread::sleep_for(1s);
 
     [[maybe_unused]] int ch = system("clear");
 
