@@ -59,7 +59,7 @@ public:
      * @return 目标节点信息
      * @retval fnic `[_client, browse_name]` 元组
      */
-    inline FindNodeInClient find(const std::string &browse_name, uint16_t ns = 1U) { return {_client, browse_name, ns}; }
+    inline FindNodeInClient find(const std::string &browse_name, uint16_t ns = 1U) const { return {_client, browse_name, ns}; }
 
     /****************************** 功能配置 ******************************/
 
@@ -71,14 +71,14 @@ public:
      * @brief
      * - 执行事件循环，等效于 ROS/ROS2 工具包中的 `ros::spin()` 以及 `rclcpp::spin()`
      */
-    void spin();
+    void spin() const;
 
     /**
      * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
      * @brief
      * - 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
      */
-    void spinOnce();
+    void spinOnce() const;
 
     /**
      * @brief 从指定的变量节点读数据
@@ -86,7 +86,7 @@ public:
      * @param[in] node 既存的变量节点的 `NodeId`
      * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      */
-    Variable read(const NodeId &node);
+    Variable read(const NodeId &node) const;
 
     /**
      * @brief 给指定的变量节点写数据
@@ -95,7 +95,7 @@ public:
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    bool write(const NodeId &node, const Variable &val);
+    bool write(const NodeId &node, const Variable &val) const;
 
     /**
      * @brief 在客户端调用指定对象节点中的方法
@@ -106,25 +106,25 @@ public:
      * @param[out] outputs 输出参数列表
      * @return 是否成功完成当前操作
      */
-    bool call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs);
+    bool call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) const;
 
     /**
      * @brief 在客户端调用 ObjectsFolder 中的方法
      *
-     * @param[in] name 方法名
+     * @param[in] name 方法名 `browse_name`
      * @param[in] inputs 输入参数列表
      * @param[out] outputs 输出参数列表
      * @return 是否成功完成当前操作
      */
-    inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) { return call(nodeObjectsFolder, name, inputs, outputs); }
+    inline bool call(const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) const { return call(nodeObjectsFolder, name, inputs, outputs); }
 
     /**
-     * @brief 添加视图节点 ViewNode 至 `ViewsFolder` 中
+     * @brief 添加 OPC UA 视图节点 ViewNode 至 `ViewsFolder` 中
      *
      * @param[in] view `rm::View` 表示的视图
      * @return 添加至服务器后，对应视图节点的唯一标识 `NodeId`
      */
-    NodeId addViewNode(const View &view);
+    NodeId addViewNode(const View &view) const;
 
     /**
      * @brief 创建变量节点监视项，以实现订阅节点的功能
@@ -151,7 +151,7 @@ public:
      * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知，默认为 `10`
      * @return 变量节点监视创建成功？
      */
-    bool monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
+    bool monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10) const;
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
@@ -161,7 +161,7 @@ public:
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
-    bool monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
+    bool monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event) const;
 
 private:
     /**
@@ -170,7 +170,7 @@ private:
      * @param[out] response 订阅请求的响应
      * @return 是否成功完成当前操作
      */
-    bool createSubscription(UA_CreateSubscriptionResponse &responce);
+    bool createSubscription(UA_CreateSubscriptionResponse &responce) const;
 };
 
 //! @} opcua

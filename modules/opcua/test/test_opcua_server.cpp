@@ -38,7 +38,7 @@ TEST(OPC_UA_Server, variable_config)
 // 服务器添加变量节点
 TEST(OPC_UA_Server, add_variable_node)
 {
-    rm::Server svr(4820, "TestServer");
+    rm::Server svr(4810, "TestServer");
     rm::Variable variable{3.1415};
     variable.browse_name = "test_double";
     variable.description = "this is test double";
@@ -46,8 +46,17 @@ TEST(OPC_UA_Server, add_variable_node)
     auto node = svr.addVariableNode(variable);
     EXPECT_FALSE(UA_NodeId_isNull(&node));
     svr.start();
-    svr.stop();
-    svr.join();
+}
+
+TEST(OPC_UA_Server, variable_node_io)
+{
+    rm::Server svr(4820, "TestServer");
+    uaCreateVariable(variable, 1);
+    auto node = svr.addVariableNode(variable);
+    svr.start();
+    EXPECT_EQ(svr.read(node), 1);
+    EXPECT_TRUE(svr.write(node, 2));
+    EXPECT_EQ(svr.read(node), 2);
 }
 
 static int data_source;
@@ -69,19 +78,17 @@ static UA_StatusCode onWrite(UA_Server *, const UA_NodeId *, void *, const UA_No
 // 服务器添加数据源变量节点
 TEST(OPC_UA_Server, add_data_source_variable_node)
 {
-    rm::Server svr(4821, "TestServer");
+    rm::Server svr(4825, "TestServer");
     uaCreateVariable(variable);
     auto node = svr.addDataSourceVariableNode(variable, onRead, onWrite);
     EXPECT_FALSE(UA_NodeId_isNull(&node));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 服务器添加变量类型节点
 TEST(OPC_UA_Server, add_variable_type_node)
 {
-    rm::Server svr(4825);
+    rm::Server svr(4830);
     rm::VariableType variable_type = "string_test";
     variable_type.browse_name = "test_string";
     variable_type.description = "this is test string";
@@ -89,14 +96,12 @@ TEST(OPC_UA_Server, add_variable_type_node)
     auto node = svr.addVariableTypeNode(variable_type);
     EXPECT_FALSE(UA_NodeId_isNull(&node));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 服务器添加方法节点
 TEST(OPC_UA_Server, add_method_node)
 {
-    rm::Server svr(4830);
+    rm::Server svr(4832);
     rm::Method method;
     method.browse_name = "test_method";
     method.description = "this is test method";
@@ -107,8 +112,6 @@ TEST(OPC_UA_Server, add_method_node)
     };
     svr.addMethodNode(method);
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 服务器添加对象节点
@@ -127,8 +130,6 @@ TEST(OPC_UA_Server, add_object_node)
     auto id = svr.addObjectNode(object);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 服务器添加包含方法节点的对象节点
@@ -156,8 +157,6 @@ TEST(OPC_UA_Server, add_object_node_with_method)
     auto id = svr.addObjectNode(object);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 服务器添加对象类型节点
@@ -176,8 +175,6 @@ TEST(OPC_UA_Server, add_object_type_node)
     auto id = svr.addObjectTypeNode(object_type);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 从对象类型节点派生对象节点，并添加到服务器
@@ -201,8 +198,6 @@ TEST(OPC_UA_Server, create_object_by_object_type)
     auto id = svr.addObjectNode(object);
     EXPECT_FALSE(UA_NodeId_isNull(&id));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 服务器节点服务端路径搜索
@@ -222,8 +217,6 @@ TEST(OPC_UA_Server, find_node)
     auto target = rm::nodeObjectsFolder | svr.find("test_object");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 添加自定义事件类型节点
@@ -240,8 +233,6 @@ TEST(OPC_UA_Server, add_event_type_node)
     auto target = rm::nodeBaseEventType | svr.find("test_event_type");
     EXPECT_TRUE(UA_NodeId_equal(&id, &target));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 手动触发事件
@@ -265,8 +256,6 @@ TEST(OPC_UA_Server, trigger_event)
     // 触发事件
     EXPECT_TRUE(svr.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event));
     svr.start();
-    svr.stop();
-    svr.join();
 }
 
 // 从函数指针配置服务器
@@ -276,8 +265,6 @@ TEST(OPC_UA_Server, function_ptr)
     svr.start();
     auto id = rm::nodeObjectsFolder | svr.find("TestNumber");
     EXPECT_FALSE(UA_NodeId_isNull(&id));
-    svr.stop();
-    svr.join();
 }
 
 // 视图节点
@@ -300,9 +287,6 @@ TEST(OPC_UA_Server, view_node)
     auto view_id = svr.addViewNode(view);
     auto target_view_id = rm::nodeViewsFolder | svr.find("test_view");
     EXPECT_TRUE(UA_NodeId_equal(&view_id, &target_view_id));
-
-    svr.stop();
-    svr.join();
 }
 
 } // namespace rm_test
