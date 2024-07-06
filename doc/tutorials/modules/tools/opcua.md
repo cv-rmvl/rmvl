@@ -401,7 +401,7 @@ int main()
     rm::Client clt("opc.tcp://127.0.0.1:4840");
     auto node = rm::nodeObjectsFolder | clt.find("number");
     // 监视变量，这里的 onChange 同样可以写成无捕获列表的 lambda 表达式，因为存在隐式转换
-    client.monitor(node_id, onChange, 5);
+    client.monitor(node, onChange, 5);
     // 线程阻塞
     client.spin();
 }
