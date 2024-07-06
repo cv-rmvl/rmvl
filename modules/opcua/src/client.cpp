@@ -22,9 +22,7 @@
 namespace rm
 {
 
-////////////////////////// Public //////////////////////////
-
-// ****************** 通用配置 ******************
+////////////////////////// 通用配置 //////////////////////////
 
 Client::Client(std::string_view address, UserConfig usr)
 {
@@ -64,9 +62,7 @@ Client::~Client()
     _client = nullptr;
 }
 
-// ****************** 功能配置 ******************
-
-void Client::spin()
+void Client::spin() const
 {
     bool warning{};
     while (true)
@@ -81,9 +77,14 @@ void Client::spin()
     }
 }
 
-void Client::spinOnce() { UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT); }
+void Client::spinOnce() const
+{
+    UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT);
+}
 
-Variable Client::read(const NodeId &node)
+////////////////////////// 功能配置 //////////////////////////
+
+Variable Client::read(const NodeId &node) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -97,7 +98,7 @@ Variable Client::read(const NodeId &node)
     return retval;
 }
 
-bool Client::write(const NodeId &node, const Variable &val)
+bool Client::write(const NodeId &node, const Variable &val) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -112,7 +113,7 @@ bool Client::write(const NodeId &node, const Variable &val)
     return true;
 }
 
-bool Client::call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs)
+bool Client::call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -149,7 +150,7 @@ bool Client::call(const NodeId &obj_node, const std::string &name, const std::ve
     return true;
 }
 
-NodeId Client::addViewNode(const View &view)
+NodeId Client::addViewNode(const View &view) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -183,7 +184,7 @@ NodeId Client::addViewNode(const View &view)
     return retval;
 }
 
-bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
+bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -208,7 +209,7 @@ bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_ch
     return true;
 }
 
-bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event) const
 {
     RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
@@ -258,9 +259,7 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Clie
         return true;
 }
 
-////////////////////////// Private //////////////////////////
-
-bool Client::createSubscription(UA_CreateSubscriptionResponse &response)
+bool Client::createSubscription(UA_CreateSubscriptionResponse &response) const
 {
     UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
     request.requestedPublishingInterval = para::opcua_param.PUBLISHING_INTERVAL;
