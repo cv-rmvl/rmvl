@@ -332,7 +332,8 @@ function(rmvl_generate_para target_name)
   set(para_include_path)
   # has module
   if(PARA_MODULE)
-    set(para_include_path "rmvlpara/${module_name}/${target_name}.h")
+    set(header_ext "h")
+    set(para_include_path "rmvlpara/${module_name}/${target_name}.${header_ext}")
     configure_file(
       ${para_template_path}/para_generator_source.in
       ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/para/param.cpp
@@ -340,7 +341,8 @@ function(rmvl_generate_para target_name)
     )
   # dosen't have module
   else()
-    set(para_include_path "rmvlpara/${module_name}.hpp")
+    set(header_ext "hpp")
+    set(para_include_path "rmvlpara/${module_name}.${header_ext}")
     configure_file(
       ${para_template_path}/para_generator_source.in
       ${CMAKE_CURRENT_LIST_DIR}/src/para/param.cpp
