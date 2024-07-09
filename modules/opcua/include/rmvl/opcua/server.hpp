@@ -43,6 +43,59 @@ using DataSourceWrite = UA_StatusCode (*)(UA_Server *, const UA_NodeId *, void *
 //! 服务器配置函数指针，由 `nodeset_compiler` 生成
 using ServerUserConfig = UA_StatusCode (*)(UA_Server *);
 
+//! OPC UA 服务器视图
+class ServerView final
+{
+    UA_Server *_server{nullptr}; //!< OPC UA 服务器指针
+
+public:
+    ServerView() = default;
+
+    /**
+     * @brief 创建不占有生命周期的 OPC UA 服务器视图，在 OPC UA 方法节点中使用特别有效
+     *
+     * @param[in] server OPC UA 服务器指针
+     */
+    ServerView(UA_Server *server) : _server(server) {}
+
+    ServerView &operator=(UA_Server *const server)
+    {
+        _server = server;
+        return *this;
+    }
+
+    /**
+     * @brief 获取路径搜索必要信息
+     * @brief 需要配合管道运算符 `|` 完成路径搜索
+     * @code{.cpp}
+     * auto dst_mode = src_node | svr.find("person") | svr.find("name");
+     * @endcode
+     *
+     * @param[in] browse_name 浏览名
+     * @param[in] ns 命名空间索引，默认为 `1`
+     * @return 目标节点信息
+     * @retval fnis `[_client, browse_name]` 元组
+     */
+    inline FindNodeInServer find(const std::string &browse_name, uint16_t ns = 1U) const { return {_server, browse_name, ns}; }
+
+    /**
+     * @brief 从指定的变量节点读数据
+     *
+     * @param[in] node 既存的变量节点的 `NodeId`
+     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     */
+    Variable read(const NodeId &node) const;
+
+    /**
+     * @brief 给指定的变量节点写数据
+     *
+     * @param[in] node 既存的变量节点的 `NodeId`
+     * @param[in] val 待写入的数据
+     * @return 是否写入成功
+     */
+    bool write(const NodeId &node, const Variable &val) const;
+};
+
 //! OPC UA 服务器
 class Server
 {
@@ -77,7 +130,9 @@ public:
     Server(ServerUserConfig on_config, uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     Server(const Server &) = delete;
-    Server(Server &&svr) = default;
+    Server(Server &&svr) = delete;
+
+    operator ServerView() const { return _server; }
 
     //! 运行服务器，调用方线程不阻塞
     void start();
@@ -108,7 +163,7 @@ public:
      * @return 目标节点信息
      * @retval fnis `[_client, browse_name]` 元组
      */
-    inline FindNodeInServer find(const std::string &browse_name, uint16_t ns = 1U) { return {_server, browse_name, ns}; }
+    inline FindNodeInServer find(const std::string &browse_name, uint16_t ns = 1U) const { return {_server, browse_name, ns}; }
 
     /****************************** 功能配置 ******************************/
 
@@ -118,7 +173,7 @@ public:
      * @param[in] vtype `rm::VariableType` 表示的变量
      * @return 添加至服务器后，对应变量类型节点的唯一标识 `NodeId`
      */
-    NodeId addVariableTypeNode(const VariableType &vtype);
+    NodeId addVariableTypeNode(const VariableType &vtype) const;
 
     /**
      * @brief 添加变量节点 VariableNode 至指定父节点中，并指定引用类型
@@ -127,7 +182,7 @@ public:
      * @param[in] parent_id 指定父节点的 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应变量节点的唯一标识 `NodeId`
      */
-    NodeId addVariableNode(const Variable &val, const NodeId &parent_id = nodeObjectsFolder);
+    NodeId addVariableNode(const Variable &val, const NodeId &parent_id = nodeObjectsFolder) const;
 
     /**
      * @brief 为既有的变量节点 VariableNode 添加值回调
@@ -138,7 +193,7 @@ public:
      * @param[in] after_write 可隐式转换为 `ValueCallBackAfterWrite` 函数指针类型的可调用对象
      * @return 是否添加成功
      */
-    bool addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write);
+    bool addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write) const;
 
     /**
      * @brief 添加数据源变量节点 VariableNode 至指定父节点中
@@ -155,7 +210,7 @@ public:
      * @param[in] parent_id 指定父节点的 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应数据源变量节点的唯一标识 `NodeId`
      */
-    NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id = nodeObjectsFolder);
+    NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id = nodeObjectsFolder) const;
 
     /**
      * @brief 从指定的变量节点读数据
@@ -163,7 +218,7 @@ public:
      * @param[in] node 既存的变量节点的 `NodeId`
      * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
      */
-    Variable read(const NodeId &node);
+    Variable read(const NodeId &node) const;
 
     /**
      * @brief 给指定的变量节点写数据
@@ -172,7 +227,7 @@ public:
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    bool write(const NodeId &node, const Variable &val);
+    bool write(const NodeId &node, const Variable &val) const;
 
     /**
      * @brief 添加方法节点 MethodNode 至指定父节点中
@@ -181,7 +236,7 @@ public:
      * @param[in] parent_id 指定父节点的 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应方法节点的唯一标识 `NodeId`
      */
-    NodeId addMethodNode(const Method &method, const NodeId &parent_id = nodeObjectsFolder);
+    NodeId addMethodNode(const Method &method, const NodeId &parent_id = nodeObjectsFolder) const;
 
     /**
      * @brief 为既有的方法节点 MethodNode 设置方法的回调函数
@@ -189,7 +244,7 @@ public:
      * @param[in] id 既有的方法节点的 `NodeId`，因方法节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
      * @param[in] on_method 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
      */
-    void setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method);
+    void setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method) const;
 
     /**
      * @brief 添加对象类型节点 ObjectTypeNode 至 `rm::nodeBaseObjectType` 中
@@ -197,7 +252,7 @@ public:
      * @param[in] otype `rm::ObjectType` 表示的对象类型
      * @return 添加至服务器后，对应对象类型节点的唯一标识 `NodeId`
      */
-    NodeId addObjectTypeNode(const ObjectType &otype);
+    NodeId addObjectTypeNode(const ObjectType &otype) const;
 
     /**
      * @brief 添加对象节点 ObjectNode 至指定的父节点中
@@ -206,7 +261,7 @@ public:
      * @param[in] parent_id 指定的父节点 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应对象节点的唯一标识 `NodeId`
      */
-    NodeId addObjectNode(const Object &obj, NodeId parent_id = nodeObjectsFolder);
+    NodeId addObjectNode(const Object &obj, NodeId parent_id = nodeObjectsFolder) const;
 
     /**
      * @brief 添加视图节点 ViewNode 至 `rm::nodeViewsFolder` 中
@@ -214,7 +269,7 @@ public:
      * @param[in] view `rm::View` 表示的视图
      * @return 添加至服务器后，对应视图节点的唯一标识 `NodeId`
      */
-    NodeId addViewNode(const View &view);
+    NodeId addViewNode(const View &view) const;
 
     /**
      * @brief 添加事件类型至 `BaseEventType` 中
@@ -222,7 +277,7 @@ public:
      * @param[in] etype `rm::EventType` 表示的事件类型
      * @return 添加至服务器后，对应事件类型的唯一标识 `NodeId`
      */
-    NodeId addEventTypeNode(const EventType &etype);
+    NodeId addEventTypeNode(const EventType &etype) const;
 
     /**
      * @brief 创建并触发事件
@@ -232,7 +287,7 @@ public:
      * @note `Server` 的 `node_id` 是 `rm::nodeServer`
      * @return 是否创建并触发成功？
      */
-    bool triggerEvent(const NodeId &node_id, const Event &event);
+    bool triggerEvent(const NodeId &node_id, const Event &event) const;
 };
 
 //! @} opcua

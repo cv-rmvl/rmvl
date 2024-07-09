@@ -22,7 +22,7 @@
 namespace rm
 {
 
-// ============================= 基本配置 =============================
+///////////////////////// 基本配置 /////////////////////////
 
 Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users)
 {
@@ -102,9 +102,35 @@ Server::~Server()
     UA_Server_delete(_server);
 }
 
-// ============================= 节点配置 =============================
+static Variable serverRead(UA_Server *p_server, const NodeId &node)
+{
+    RMVL_DbgAssert(p_server != nullptr);
 
-NodeId Server::addVariableTypeNode(const VariableType &vtype)
+    UA_Variant p_val;
+    UA_Variant_init(&p_val);
+    auto status = UA_Server_readValue(p_server, node, &p_val);
+    if (status != UA_STATUSCODE_GOOD)
+        return {};
+    Variable retval = helper::cvtVariable(p_val);
+    UA_Variant_clear(&p_val);
+    return retval;
+}
+
+static bool serverWrite(UA_Server *p_server, const NodeId &node, const Variable &val)
+{
+    RMVL_DbgAssert(p_server != nullptr);
+
+    auto variant = helper::cvtVariable(val);
+    auto status = UA_Server_writeValue(p_server, node, variant);
+    UA_Variant_clear(&variant);
+    if (status != UA_STATUSCODE_GOOD)
+        ERROR_("Failed to write variable, error code: %s", UA_StatusCode_name(status));
+    return status == UA_STATUSCODE_GOOD;
+}
+
+///////////////////////// 节点配置 /////////////////////////
+
+NodeId Server::addVariableTypeNode(const VariableType &vtype) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -135,7 +161,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype)
     return retval;
 }
 
-NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
+NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -182,33 +208,10 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id)
     return retval;
 }
 
-Variable Server::read(const NodeId &node)
-{
-    RMVL_DbgAssert(_server != nullptr);
+Variable Server::read(const NodeId &node) const { return serverRead(_server, node); }
+bool Server::write(const NodeId &node, const Variable &val) const { return serverWrite(_server, node, val); }
 
-    UA_Variant p_val;
-    UA_Variant_init(&p_val);
-    auto status = UA_Server_readValue(_server, node, &p_val);
-    if (status != UA_STATUSCODE_GOOD)
-        return {};
-    Variable retval = helper::cvtVariable(p_val);
-    UA_Variant_clear(&p_val);
-    return retval;
-}
-
-bool Server::write(const NodeId &node, const Variable &val)
-{
-    RMVL_DbgAssert(_server != nullptr);
-
-    auto variant = helper::cvtVariable(val);
-    auto status = UA_Server_writeValue(_server, node, variant);
-    UA_Variant_clear(&variant);
-    if (status != UA_STATUSCODE_GOOD)
-        ERROR_("Failed to write variable, error code: %s", UA_StatusCode_name(status));
-    return status == UA_STATUSCODE_GOOD;
-}
-
-bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write)
+bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -219,7 +222,7 @@ bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead bef
     return status == UA_STATUSCODE_GOOD;
 }
 
-NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id)
+NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -258,7 +261,7 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
     return retval;
 }
 
-NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
+NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -297,13 +300,13 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id)
     return retval;
 }
 
-void Server::setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method)
+void Server::setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method) const
 {
     RMVL_DbgAssert(_server != nullptr);
     UA_Server_setMethodNodeCallback(_server, id, on_method);
 }
 
-NodeId Server::addObjectTypeNode(const ObjectType &otype)
+NodeId Server::addObjectTypeNode(const ObjectType &otype) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -362,7 +365,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
     return retval;
 }
 
-NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
+NodeId Server::addObjectNode(const Object &obj, NodeId parent_id) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -419,7 +422,7 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id)
     return retval;
 }
 
-NodeId Server::addViewNode(const View &view)
+NodeId Server::addViewNode(const View &view) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -453,7 +456,7 @@ NodeId Server::addViewNode(const View &view)
     return retval;
 }
 
-NodeId Server::addEventTypeNode(const EventType &etype)
+NodeId Server::addEventTypeNode(const EventType &etype) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -503,7 +506,7 @@ NodeId Server::addEventTypeNode(const EventType &etype)
     return retval;
 }
 
-bool Server::triggerEvent(const NodeId &node_id, const Event &event)
+bool Server::triggerEvent(const NodeId &node_id, const Event &event) const
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -548,5 +551,10 @@ bool Server::triggerEvent(const NodeId &node_id, const Event &event)
     }
     return true;
 }
+
+//////////////////////// 服务端视图 ////////////////////////
+
+Variable ServerView::read(const NodeId &node) const { return serverRead(_server, node); }
+bool ServerView::write(const NodeId &node, const Variable &val) const { return serverWrite(_server, node, val); }
 
 } // namespace rm

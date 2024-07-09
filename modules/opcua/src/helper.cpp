@@ -285,7 +285,7 @@ Variable cvtVariable(const UA_Variant &p_val)
         switch (type_flag)
         {
         case UA_TYPES_STRING:
-            return reinterpret_cast<const char *>(data);
+            return reinterpret_cast<const char *>(reinterpret_cast<UA_String *>(data)->data);
         case UA_TYPES_BOOLEAN:
             return *reinterpret_cast<UA_Boolean *>(data);
         case UA_TYPES_SBYTE:
