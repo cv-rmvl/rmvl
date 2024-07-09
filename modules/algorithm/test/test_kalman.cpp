@@ -11,7 +11,7 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/core/kalman.hpp"
+#include "rmvl/algorithm/kalman.hpp"
 
 #include <random>
 

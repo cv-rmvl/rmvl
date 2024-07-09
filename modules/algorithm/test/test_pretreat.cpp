@@ -11,7 +11,7 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/core/pretreat.hpp"
+#include "rmvl/algorithm/pretreat.hpp"
 
 using namespace cv;
 using namespace rm;

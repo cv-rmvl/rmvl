@@ -12,7 +12,7 @@
 #include <opencv2/calib3d.hpp>
 
 #include "rmvl/combo/armor.h"
-#include "rmvl/core/transform.hpp"
+#include "rmvl/algorithm/transform.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"

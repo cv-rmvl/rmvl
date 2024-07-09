@@ -1,3 +1,8 @@
+if(WITH_OPENCV AND WITH_EIGEN3)
+  set(BUILD_rmvl_camera_INIT ON)
+else()
+  set(BUILD_rmvl_camera_INIT OFF)
+endif()
 rmvl_generate_para(
   camera
   MODULE camera
@@ -5,7 +10,7 @@ rmvl_generate_para(
 
 rmvl_add_module(
   camera
-  DEPENDS core
+  DEPENDS algorithm
 )
 
 # --------------------------------------------------------------------------
@@ -13,13 +18,25 @@ rmvl_add_module(
 # --------------------------------------------------------------------------
 # mv
 find_package(MvSDK QUIET)
-set(BUILD_rmvl_mv_camera_INIT ${MvSDK_FOUND})
+if(MvSDK_FOUND AND BUILD_rmvl_camera_INIT)
+  set(BUILD_rmvl_mv_camera_INIT ON)
+else()
+  set(BUILD_rmvl_mv_camera_INIT OFF)
+endif()
 # hik
 find_package(HikSDK QUIET)
-set(BUILD_rmvl_hik_camera_INIT ${HikSDK_FOUND})
+if(HikSDK_FOUND AND BUILD_rmvl_camera_INIT)
+  set(BUILD_rmvl_hik_camera_INIT ON)
+else()
+  set(BUILD_rmvl_hik_camera_INIT OFF)
+endif()
 # opt
 find_package(OPTCameraSDK QUIET)
-set(BUILD_rmvl_opt_camera_INIT ${OPTCameraSDK_FOUND})
+if(OPTCameraSDK_FOUND AND BUILD_rmvl_camera_INIT)
+  set(BUILD_rmvl_opt_camera_INIT ON)
+else()
+  set(BUILD_rmvl_opt_camera_INIT OFF)
+endif()
 
 # --------------------------------------------------------------------------
 #   Build camera sub-library

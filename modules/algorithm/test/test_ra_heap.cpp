@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/core/datastruct.hpp"
+#include "rmvl/algorithm/datastruct.hpp"
 
 using namespace rm;
 

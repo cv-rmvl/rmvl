@@ -11,7 +11,7 @@
 
 #include <opencv2/calib3d.hpp>
 
-#include "rmvl/core/transform.hpp"
+#include "rmvl/algorithm/transform.hpp"
 
 cv::Point2f rm::calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f center)
 {

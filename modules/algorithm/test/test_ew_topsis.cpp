@@ -13,8 +13,8 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/core/ew_topsis.hpp"
-#include "rmvl/core/math.hpp"
+#include "rmvl/algorithm/ew_topsis.hpp"
+#include "rmvl/algorithm/math.hpp"
 
 using namespace rm;
 

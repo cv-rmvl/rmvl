@@ -23,7 +23,7 @@
 #undef private
 #undef protected
 
-#include "rmvl/core/math.hpp"
+#include "rmvl/algorithm/math.hpp"
 #include "rmvlpara/compensator/gravity_compensator.h"
 
 using namespace rm::numeric_literals;

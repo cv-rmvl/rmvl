@@ -1,21 +1,13 @@
 # ----------------------------------------------------------------------------
-#  3rdparty and predefined macros
+#  Generate para and add module for algorithm
 # ----------------------------------------------------------------------------
-find_package(Threads REQUIRED)
-
-rmvl_check_include_file(
-  FILES termios.h dirent.h fcntl.h unistd.h
-  DETAILS CORE_DEFINITIONS
-)
+set(BUILD_rmvl_algorithm_INIT ${WITH_OPENCV})
+rmvl_generate_para(algorithm)
 
 rmvl_add_module(
-  core
-  EXTERNAL ${CMAKE_THREAD_LIBS_INIT}
-)
-
-rmvl_compile_definitions(
-  core
-  PUBLIC ${CORE_DEFINITIONS}
+  algorithm
+  DEPENDS core
+  EXTERNAL opencv_imgproc
 )
 
 # ----------------------------------------------------------------------------
@@ -23,16 +15,16 @@ rmvl_compile_definitions(
 # ----------------------------------------------------------------------------
 if(BUILD_TESTS)
   rmvl_add_test(
-    core Unit
-    DEPENDS core
+    algorithm Unit
+    DEPENDS algorithm
     DEPEND_TESTS GTest::gtest_main
   )
 endif(BUILD_TESTS)
 
 if(BUILD_PERF_TESTS)
   rmvl_add_test(
-    core Performance
-    DEPENDS core
-    DEPEND_TESTS benchmark::benchmark_main
+    algorithm Performance
+    DEPENDS algorithm
+    DEPEND_TESTS benchmark::benchmark_main opencv_video
   )
 endif(BUILD_PERF_TESTS)

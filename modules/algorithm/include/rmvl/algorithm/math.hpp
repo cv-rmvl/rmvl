@@ -121,36 +121,6 @@ constexpr Tp deg2rad(Tp deg) { return deg * static_cast<Tp>(PI) / static_cast<Tp
 template <typename Tp>
 constexpr Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<Tp>(PI); }
 
-/**
- * @brief Point 类型转换为 Matx 类型
- *
- * @tparam Tp 数据类型
- * @param[in] point Point 类型变量
- * @return Matx 类型变量
- */
-template <typename Tp>
-constexpr cv::Matx<Tp, 3, 1> point2matx(cv::Point3_<Tp> point) { return cv::Matx<Tp, 3, 1>(point.x, point.y, point.z); }
-
-/**
- * @brief Matx 类型转换为 Point 类型
- *
- * @tparam Tp 数据类型
- * @param[in] matx Matx 类型变量
- * @return Point 类型变量
- */
-template <typename Tp>
-constexpr cv::Point3_<Tp> matx2point(cv::Matx<Tp, 3, 1> matx) { return cv::Point3_<Tp>(matx(0), matx(1), matx(2)); }
-
-/**
- * @brief Matx 类型转换为 Vec 类型
- *
- * @tparam Tp 数据类型
- * @param[in] matx Matx 类型变量
- * @return Vec 类型变量
- */
-template <typename Tp>
-constexpr cv::Vec<Tp, 3> matx2vec(cv::Matx<Tp, 3, 1> matx) { return cv::Vec<Tp, 3>(matx(0), matx(1), matx(2)); }
-
 // ------------------------【广义位移计算】------------------------
 
 /**

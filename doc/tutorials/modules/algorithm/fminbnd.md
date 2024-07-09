@@ -107,7 +107,7 @@ RMVL 中提供了一维寻优的函数 rm::fminbnd ，以下展示了一维寻�
 1. 添加源文件 `main.cpp`
    ```cpp
    #include <cstdio>
-   #include <rmvl/core/numcal.hpp>
+   #include <rmvl/algorithm/numcal.hpp>
    
    // 自定义函数 f(x)=x²+4x-3
    inline double quadratic(double x) { return x * x + 4 * x - 3; }

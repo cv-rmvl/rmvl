@@ -12,7 +12,7 @@
 #include "rmvl/feature/tag.h"
 
 #include "rmvl/core/util.hpp"
-#include "rmvl/core/math.hpp"
+#include "rmvl/algorithm/math.hpp"
 
 namespace rm
 {

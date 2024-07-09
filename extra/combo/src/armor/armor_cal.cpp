@@ -12,7 +12,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/combo/armor.h"
-#include "rmvl/core/transform.hpp"
+#include "rmvl/algorithm/transform.hpp"
 
 #include "rmvlpara/combo/armor.h"
 

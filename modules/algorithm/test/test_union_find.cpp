@@ -13,7 +13,7 @@
 
 #define private public
 
-#include "rmvl/core/datastruct.hpp"
+#include "rmvl/algorithm/datastruct.hpp"
 
 #undef private
 

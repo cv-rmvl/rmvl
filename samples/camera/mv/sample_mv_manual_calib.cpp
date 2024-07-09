@@ -6,7 +6,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/mv_camera.h"
-#include "rmvl/core/math.hpp"
+#include "rmvl/algorithm/math.hpp"
 
 using namespace std::chrono_literals;
 

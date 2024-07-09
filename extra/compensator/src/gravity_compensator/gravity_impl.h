@@ -13,7 +13,7 @@
 
 #include "rmvl/compensator/gravity_compensator.h"
 
-#include "rmvl/core/numcal.hpp"
+#include "rmvl/algorithm/numcal.hpp"
 
 namespace rm
 {

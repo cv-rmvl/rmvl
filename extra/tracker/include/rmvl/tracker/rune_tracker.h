@@ -14,7 +14,7 @@
 #include <deque>
 
 #include "rmvl/combo/rune.h"
-#include "rmvl/core/kalman.hpp"
+#include "rmvl/algorithm/kalman.hpp"
 #include "tracker.h"
 
 namespace rm

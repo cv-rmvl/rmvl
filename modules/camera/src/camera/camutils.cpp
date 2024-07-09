@@ -15,7 +15,7 @@
 #include <opencv2/core/eigen.hpp>
 
 #include "rmvl/camera/camutils.hpp"
-#include "rmvl/core/math.hpp"
+#include "rmvl/algorithm/math.hpp"
 #include "rmvlpara/camera/camera.h"
 
 void rm::CameraExtrinsics::tvec(const cv::Vec3f &tvec)

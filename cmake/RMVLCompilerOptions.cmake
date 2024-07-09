@@ -198,15 +198,35 @@ if(NOT MSVC)
 endif()
 
 # ----------------------------------------------------------------------------
-#   Module and other options
-# ----------------------------------------------------------------------------
-option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" ON)
-option(BUILD_EXAMPLES "Build RMVL all examples" ON)
-option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
-
-# ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
+# eigen3
+find_package(Eigen3 QUIET)
+if(Eigen3_FOUND)
+  option(WITH_EIGEN3 "Enable libeigen3 support" ON)
+else()
+  unset(WITH_EIGEN3 CACHE)
+  option(WITH_EIGEN3 "Enable libeigen3 support" OFF)
+endif()
+
+# opencv
+find_package(OpenCV QUIET)
+if(OpenCV_FOUND)
+  option(WITH_OPENCV "Enable opencv support" ON)
+else()
+  unset(WITH_OPENCV CACHE)
+  option(WITH_OPENCV "Enable opencv support" OFF)
+endif()
+
+# onnxruntime
+find_package(Ort QUIET)
+if(Ort_FOUND AND WITH_OPENCV)
+  option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" ON)
+else()
+  unset(WITH_ONNXRUNTIME CACHE)
+  option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" OFF)
+endif()
+
 # apriltag
 option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
 if(BUILD_APRILTAG)
@@ -235,14 +255,15 @@ else()
   endif()
 endif()
 
-# onnxruntime
-find_package(Ort QUIET)
-if(Ort_FOUND)
-  option(WITH_ONNXRUNTIME "Enable onnxruntime support" ON)
-else()
-  unset(WITH_ONNXRUNTIME CACHE)
-  option(WITH_ONNXRUNTIME "Enable onnxruntime support" OFF)
+# ----------------------------------------------------------------------------
+#   Module and other options
+# ----------------------------------------------------------------------------
+if(NOT WITH_OPENCV)
+  unset(BUILD_EXTRA CACHE)
+  option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" OFF)
 endif()
+option(BUILD_EXAMPLES "Build RMVL all examples" ON)
+option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
 
 # ----------------------------------------------------------------------------
 #   Build performance and unit tests

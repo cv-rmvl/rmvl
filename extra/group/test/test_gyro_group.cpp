@@ -18,7 +18,7 @@
 #include <opencv2/calib3d.hpp>
 
 #include "rmvl/core/timer.hpp"
-#include "rmvl/core/transform.hpp"
+#include "rmvl/algorithm/transform.hpp"
 #include "rmvl/group/gyro_group.h"
 #include "rmvl/tracker/gyro_tracker.h"
 

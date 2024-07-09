@@ -72,12 +72,6 @@ set(para_template_path "${CMAKE_SOURCE_DIR}/cmake/templates" CACHE INTERNAL "Gen
 include(cmake/RMVLGenPara.cmake)
 
 # ----------------------------------------------------------------------------
-#  RMVL 3rdparty libraries
-# ----------------------------------------------------------------------------
-find_package(OpenCV REQUIRED)
-find_package(Eigen3 REQUIRED)
-
-# ----------------------------------------------------------------------------
 #  Process subdirectories
 # ----------------------------------------------------------------------------
 # rmvl.hpp and legacy headers
@@ -171,8 +165,8 @@ status("     ccache:"              ENABLE_CCACHE AND CCACHE_FOUND THEN YES ELSE 
 # =================== Other third-party libraries ===================
 status("")
 status("  Other third-party libraries:")
-status("     OpenCV: (*)"           OpenCV_FOUND THEN "YES (ver ${OpenCV_VERSION})" ELSE NO)
-status("     Eigen library: (*)"    Eigen3_FOUND THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
+status("     OpenCV:"               WITH_OPENCV THEN "YES (ver ${OpenCV_VERSION})" ELSE NO)
+status("     Eigen library:"        WITH_EIGEN3 THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
 status("     onnxruntime:"          WITH_ONNXRUNTIME THEN "YES (ver ${Ort_VERSION})" ELSE NO)
 status("     apriltag:"             WITH_APRILTAG THEN YES ELSE NO)
 status("     open62541:"            WITH_OPEN62541 THEN "YES (ver ${open62541_VERSION})" ELSE NO)

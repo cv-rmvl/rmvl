@@ -12,8 +12,8 @@
 #include "rmvl/decider/rune_decider.h"
 #include "rmvl/combo/rune.h"
 #include "rmvl/core/timer.hpp"
-#include "rmvl/core/transform.hpp"
-#include "rmvl/core/math.hpp"
+#include "rmvl/algorithm/transform.hpp"
+#include "rmvl/algorithm/math.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/rune_decider.h"

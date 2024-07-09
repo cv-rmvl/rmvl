@@ -35,16 +35,3 @@
 #include "core/timer.hpp"
 #include "core/dataio.hpp"
 
-// 基础数学库
-#include "core/math.hpp"
-#include "core/transform.hpp"
-
-// 数值计算
-#include "core/numcal.hpp"
-
-// 数据、信号处理
-#include "core/ew_topsis.hpp"
-#include "core/kalman.hpp"
-
-// 数据结构
-#include "core/datastruct.hpp"

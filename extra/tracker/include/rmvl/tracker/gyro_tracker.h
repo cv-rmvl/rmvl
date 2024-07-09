@@ -12,7 +12,7 @@
 #pragma once
 
 #include "rmvl/combo/armor.h"
-#include "rmvl/core/kalman.hpp"
+#include "rmvl/algorithm/kalman.hpp"
 
 #include "tracker.h"
 

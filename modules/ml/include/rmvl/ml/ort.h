@@ -14,7 +14,7 @@
 #include <any>
 #include <onnxruntime/onnxruntime_cxx_api.h>
 
-#include "rmvl/core/pretreat.hpp"
+#include "rmvl/algorithm/pretreat.hpp"
 
 namespace rm
 {

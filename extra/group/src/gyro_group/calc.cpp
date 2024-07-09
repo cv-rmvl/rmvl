@@ -12,7 +12,7 @@
 #include <opencv2/calib3d.hpp>
 
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/core/transform.hpp"
+#include "rmvl/algorithm/transform.hpp"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera/camera.h"

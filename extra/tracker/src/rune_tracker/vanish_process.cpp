@@ -9,7 +9,7 @@
  *
  */
 
-#include "rmvl/core/transform.hpp"
+#include "rmvl/algorithm/transform.hpp"
 #include "rmvl/tracker/rune_tracker.h"
 
 #include "rmvlpara/camera/camera.h"

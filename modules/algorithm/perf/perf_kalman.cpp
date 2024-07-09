@@ -13,7 +13,7 @@
 #include <benchmark/benchmark.h>
 #include <opencv2/video/tracking.hpp>
 
-#include "rmvl/core/kalman.hpp"
+#include "rmvl/algorithm/kalman.hpp"
 
 namespace rm_test
 {

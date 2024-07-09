@@ -120,7 +120,7 @@ W&=\left.\ptl{f_A}{\pmb w}\right|_{(\hat{\pmb w}_{k-1},\pmb u_{k-1})}\end{align}
 ```cpp
 #include <cstdio>
 #include <random>
-#include <rmvl/core/kalman.hpp>
+#include <rmvl/algorithm/kalman.hpp>
 
 int main()
 {

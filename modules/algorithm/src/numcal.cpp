@@ -11,8 +11,8 @@
 
 #include <opencv2/core.hpp>
 
-#include "rmvl/core/math.hpp"
-#include "rmvl/core/numcal.hpp"
+#include "rmvl/algorithm/math.hpp"
+#include "rmvl/algorithm/numcal.hpp"
 #include "rmvl/core/util.hpp"
 
 #include "rmvlpara/core.hpp"

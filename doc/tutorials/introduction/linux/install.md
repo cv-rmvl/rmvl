@@ -10,13 +10,11 @@
 
 ------
 
-### 1. 安装依赖
+### 1. 安装依赖（非必需）
 
-@note 带有 `(*)` 的表示必须安装
+#### 1.1 OpenCV
 
-#### 1.1 OpenCV (*)
-
-OpenCV @cite opencv 是 RMVL 必需的依赖库，如果没有找到 OpenCV 库，RMVL 将无法构建，下面介绍 OpenCV 的 2 种安装方法。
+RMVL 2.x 起，@cite opencv 不再是 RMVL 必需的依赖库，但缺少 OpenCV 库，将有大量 RMVL 模块无法构建，下面介绍 OpenCV 的 2 种安装方法。
  
 @add_toggle{快速安装}
 
@@ -65,12 +63,7 @@ cmake \
   -DBUILD_EXAMPLES=OFF \
   -DBUILD_PERF_TESTS=OFF \
   -DBUILD_TESTS=OFF \
-  -DBUILD_opencv_python3=OFF \
   -DBUILD_JAVA=OFF \
-  -DBUILD_opencv_js=OFF \
-  -DBUILD_opencv_gapi=OFF \
-  -DOPENCV_ENABLE_NONFREE=ON \
-  -DENABLE_FAST_MATH=ON \
   -DWITH_GSTREAMER=ON \
   -DCMAKE_BUILD_TYPE=Release \
   ..
@@ -83,7 +76,7 @@ make -j8 && sudo make install
 @see
 - [OpenCV documents](https://docs.opencv.org/4.x/)
 
-#### 1.2 Eigen3 (*)
+#### 1.2 Eigen3
 
 使用 `apt` 包管理工具进行安装
 

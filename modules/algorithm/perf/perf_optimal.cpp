@@ -12,7 +12,7 @@
 #include <benchmark/benchmark.h>
 #include <opencv2/core.hpp>
 
-#include "rmvl/core/numcal.hpp"
+#include "rmvl/algorithm/numcal.hpp"
 
 namespace rm_test
 {

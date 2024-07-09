@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "rmvl/core/kalman.hpp"
+#include "rmvl/algorithm/kalman.hpp"
 #include "rmvl/combo/armor.h"
 
 #include "tracker.h"

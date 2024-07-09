@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/core/numcal.hpp"
+#include "rmvl/algorithm/numcal.hpp"
 
 namespace rm_test
 {

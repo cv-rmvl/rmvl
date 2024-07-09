@@ -427,7 +427,7 @@ target_link_libraries(
 ##### 2.2.1 包含头文件
 
 ```cpp
-#include <rmvl/core/kalman.hpp>
+#include <rmvl/algorithm/kalman.hpp>
 ```
 
 ##### 2.2.2 创建并初始化卡尔曼滤波器对象

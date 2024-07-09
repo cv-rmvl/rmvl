@@ -13,7 +13,7 @@
 
 #include <unordered_set>
 
-#include "rmvl/core/kalman.hpp"
+#include "rmvl/algorithm/kalman.hpp"
 #include "rmvl/group/group.h"
 #include "rmvl/group/gyro/utils.h"
 

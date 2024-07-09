@@ -13,7 +13,7 @@
 
 #include "rmvl/group/group.h"
 
-#include "rmvl/core/pretreat.hpp"
+#include "rmvl/algorithm/pretreat.hpp"
 
 namespace rm
 {
