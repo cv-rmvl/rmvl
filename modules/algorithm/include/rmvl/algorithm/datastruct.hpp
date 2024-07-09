@@ -20,15 +20,15 @@
 namespace rm
 {
 
-//! @addtogroup core
+//! @addtogroup algorithm
 //! @{
-//! @defgroup core_datastruct 数据结构
+//! @defgroup algorithm_datastruct 数据结构
 //! @{
 //! @brief 包含自定义的容器适配器以及其余数据结构
-//! @} core_datastruct
-//! @} core
+//! @} algorithm_datastruct
+//! @} algorithm
 
-//! @addtogroup core_datastruct
+//! @addtogroup algorithm_datastruct
 //! @{
 
 /**
@@ -316,6 +316,6 @@ private:
     }
 };
 
-//! @} core_datastruct
+//! @} algorithm_datastruct
 
 } // namespace rm

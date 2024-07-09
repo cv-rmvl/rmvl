@@ -15,9 +15,9 @@
 
 #include <opencv2/core.hpp>
 
-//! @addtogroup core
+//! @addtogroup algorithm
 //! @{
-//! @defgroup core_kalman 卡尔曼滤波模块
+//! @defgroup algorithm_kalman 卡尔曼滤波模块
 //! @{
 //! @brief 使用 `cv::Matx` 改写的轻量级卡尔曼滤波和扩展卡尔曼滤波模块
 //! @brief
@@ -26,13 +26,13 @@
 //!   来实现 KF 和 EKF 的功能，以达到轻量化的目的。
 //! @brief
 //! - 相关知识点可参考说明文档 @ref tutorial_modules_kalman 以及 @ref tutorial_modules_ekf
-//! @} core_kalman
-//! @} core
+//! @} algorithm_kalman
+//! @} algorithm
 
 namespace rm
 {
 
-//! @addtogroup core_kalman
+//! @addtogroup algorithm_kalman
 //! @{
 
 /**
@@ -353,6 +353,6 @@ using EKF84d = ExtendedKalmanFilter<double, 8U, 4U>; //!< 8 × 4 扩展卡尔曼
 using EKF94f = ExtendedKalmanFilter<float, 9U, 4U>;  //!< 9 × 4 扩展卡尔曼滤波器
 using EKF94d = ExtendedKalmanFilter<double, 9U, 4U>; //!< 9 × 4 扩展卡尔曼滤波器
 
-//! @} kalman
+//! @} algorithm_kalman
 
 } // namespace rm

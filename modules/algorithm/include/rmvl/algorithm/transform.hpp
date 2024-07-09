@@ -18,7 +18,7 @@
 namespace rm
 {
 
-//! @addtogroup core
+//! @addtogroup algorithm
 //! @{
 
 //! 欧拉角转轴枚举
@@ -105,6 +105,6 @@ inline cv::Matx<Tp, 3, 3> euler2Mat(Tp val, EulerAxis axis)
     }
 }
 
-//! @} core
+//! @} algorithm
 
 } // namespace rm

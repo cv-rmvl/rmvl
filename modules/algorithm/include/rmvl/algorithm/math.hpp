@@ -26,7 +26,7 @@
 namespace rm
 {
 
-//! @addtogroup core
+//! @addtogroup algorithm
 //! @{
 
 // --------------------【结构、类型、常量定义】--------------------
@@ -542,6 +542,6 @@ inline std::vector<T> &operator/=(std::vector<T> &vec, T val)
     return vec;
 }
 
-//! @} core
+//! @} algorithm
 
 } // namespace rm
