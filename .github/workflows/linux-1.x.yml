@@ -9,11 +9,9 @@ on:
       - master
 
 jobs:
-  ubuntu1804-x86_64:
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u18.yml@main
-  ubuntu2004-x86_64:
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u20.yml@main
-  ubuntu2204-x86_64:
+  minimal-support-x86_64:
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main
+  gcc12-support-x86_64:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u22.yml@main
-  ubuntu2404-x86_64:
+  gcc14-support-x86_64:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u24.yml@main
