@@ -11,7 +11,7 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/core.hpp"
+#include "rmvl/algorithm/math.hpp"
 #include "rmvl/feature/pilot.h"
 
 #include "rmvlpara/feature/pilot.h"

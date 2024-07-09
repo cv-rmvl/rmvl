@@ -15,7 +15,7 @@
 #include "rmvl/algorithm/numcal.hpp"
 #include "rmvl/core/util.hpp"
 
-#include "rmvlpara/core.hpp"
+#include "rmvlpara/algorithm.hpp"
 
 namespace rm
 {
@@ -123,7 +123,7 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
         double yk = _func(xk);
         if (std::abs(yk) < eps)
             break;
-        xk -= para::core_param.SECANT_STEP * yk / (_func(xk + para::core_param.SECANT_STEP) - yk);
+        xk -= para::algorithm_param.SECANT_STEP * yk / (_func(xk + para::algorithm_param.SECANT_STEP) - yk);
         if (std::isinf(xk) || std::isnan(xk))
             RMVL_Error(RMVL_StsDivByZero, "The iteration is divergent");
     }

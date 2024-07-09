@@ -210,7 +210,7 @@ inline TestParam test_param;
 
 ```cpp
 /* code */
-rm::para::core_param.load(prefix_path + "core.yml");
+rm::para::algorithm_param.load(prefix_path + "core.yml");
 /* code */
 ```
 

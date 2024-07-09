@@ -244,7 +244,7 @@ endif()
 
 # onnxruntime
 find_package(Ort QUIET)
-if(Ort_FOUND AND WITH_OPENCV)
+if(Ort_FOUND)
   option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" ON)
 else()
   unset(WITH_ONNXRUNTIME CACHE)
@@ -282,6 +282,7 @@ endif()
 # ----------------------------------------------------------------------------
 #   Module and other options
 # ----------------------------------------------------------------------------
+option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" OFF)
 if(NOT WITH_OPENCV)
   unset(BUILD_EXTRA CACHE)
   option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" OFF)

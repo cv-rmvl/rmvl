@@ -13,7 +13,6 @@
 
 #include <opencv2/core/types.hpp>
 
-#include "util.hpp"
 #include "math.hpp"
 
 namespace rm

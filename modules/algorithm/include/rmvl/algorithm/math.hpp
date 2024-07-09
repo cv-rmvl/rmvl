@@ -21,7 +21,7 @@
 
 #include <opencv2/core/matx.hpp>
 
-#include "util.hpp"
+#include "rmvl/core/util.hpp"
 
 namespace rm
 {

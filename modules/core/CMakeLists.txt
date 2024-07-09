@@ -8,9 +8,13 @@ rmvl_check_include_file(
   DETAILS CORE_DEFINITIONS
 )
 
+if(WITH_OPENCV)
+  set(cv_dep opencv_core)
+endif()
+
 rmvl_add_module(
   core
-  EXTERNAL ${CMAKE_THREAD_LIBS_INIT}
+  EXTERNAL ${CMAKE_THREAD_LIBS_INIT} ${cv_dep}
 )
 
 rmvl_compile_definitions(

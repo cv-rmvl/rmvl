@@ -1,14 +1,14 @@
+set(BUILD_rmvl_ml_INIT ${WITH_OPENCV})
 rmvl_add_module(
   ml INTERFACE
-  DEPENDS core
+  DEPENDS algorithm
 )
 
-# add module: ort
-if(WITH_ONNXRUNTIME)
-  find_package(Ort)
+if(WITH_ONNXRUNTIME AND BUILD_rmvl_ml_INIT)
+  set(BUILD_rmvl_ort_INIT ON)
+else()
+  set(BUILD_rmvl_ort_INIT OFF)
 endif()
-
-set(BUILD_rmvl_ort_INIT ${WITH_ONNXRUNTIME})
 
 rmvl_add_module(
   ort

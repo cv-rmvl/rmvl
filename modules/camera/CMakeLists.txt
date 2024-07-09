@@ -10,6 +10,7 @@ rmvl_generate_para(
 
 rmvl_add_module(
   camera
+  EXTRA_HEADER ${EIGEN3_INCLUDE_DIRS}
   DEPENDS algorithm
 )
 
