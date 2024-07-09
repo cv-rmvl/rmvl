@@ -20,22 +20,22 @@
 #include <generator>
 #endif
 
-//! @addtogroup core
+//! @addtogroup algorithm
 //! @{
-//! @defgroup core_numcal 数值计算模块
+//! @defgroup algorithm_numcal 数值计算模块
 //! @{
 //! @brief 包含函数插值、曲线拟合、非线性方程（组）数值解、常微分方程数值解等数值计算算法
-//! @} core_numcal
-//! @defgroup core_optimal 最优化算法库
+//! @} algorithm_numcal
+//! @defgroup algorithm_optimal 最优化算法库
 //! @{
 //! @brief 包含一维函数最小值搜索、无约束多维函数最小值搜索等最优化算法
-//! @} core_optimal
-//! @} core
+//! @} algorithm_optimal
+//! @} algorithm
 
 namespace rm
 {
 
-//! @addtogroup core_numcal
+//! @addtogroup algorithm_numcal
 //! @{
 
 //! N 次多项式
@@ -305,9 +305,9 @@ public:
     RungeKutta4(const Odes &fs);
 };
 
-//! @} core_numcal
+//! @} algorithm_numcal
 
-//! @addtogroup core_optimal
+//! @addtogroup algorithm_optimal
 //! @{
 
 //! 一元函数
@@ -419,6 +419,6 @@ std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<do
  */
 std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
 
-//! @} core_optimal
+//! @} algorithm_optimal
 
 } // namespace rm

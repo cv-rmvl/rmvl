@@ -10,8 +10,8 @@
 
 #pragma once
 
-#define RMVL_VERSION_MAJOR 1
-#define RMVL_VERSION_MINOR 4
+#define RMVL_VERSION_MAJOR 2
+#define RMVL_VERSION_MINOR 0
 #define RMVL_VERSION_PATCH 0
 #define RMVL_VERSION_STATUS "-dev"
 

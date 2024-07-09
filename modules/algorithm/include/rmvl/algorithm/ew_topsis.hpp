@@ -19,7 +19,7 @@
 namespace rm
 {
 
-//! @addtogroup core
+//! @addtogroup algorithm
 //! @{
 
 /**
@@ -177,6 +177,6 @@ private:
     }
 };
 
-//! @}
+//! @} algorithm
 
 } // namespace rm
