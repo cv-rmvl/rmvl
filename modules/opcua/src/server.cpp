@@ -26,17 +26,18 @@ namespace rm
 
 Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users)
 {
-    _server = UA_Server_new();
-
-    UA_ServerConfig *config = UA_Server_getConfig(_server);
+    UA_ServerConfig init_config{};
     // 修改日志
 #if OPCUA_VERSION < 10400
-    config->logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
+    init_config.logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
 #else
-    config->logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
+    init_config.logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
 #endif
     // 设置服务器配置
-    UA_ServerConfig_setMinimal(config, port, nullptr);
+    UA_ServerConfig_setMinimal(&init_config, port, nullptr);
+    // 初始化服务器
+    _server = UA_Server_newWithConfig(&init_config);
+    UA_ServerConfig *config = UA_Server_getConfig(_server);
     // 修改名字
     if (!name.empty())
     {
@@ -52,6 +53,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     // 修改采样间隔和发布间隔
     config->samplingIntervalLimits.min = 2.0;
     config->publishingIntervalLimits.min = 2.0;
+
     if (!users.empty())
     {
         std::vector<UA_UsernamePasswordLogin> usr_passwd;
@@ -63,7 +65,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
             each.password = UA_STRING(helper::to_char(passwd));
             usr_passwd.emplace_back(each);
         }
-        // 配置
+        // 修改访问控制
         config->accessControl.clear(&config->accessControl);
 #if OPCUA_VERSION >= 10400
         UA_AccessControl_default(config, false, nullptr, usr_passwd.size(), usr_passwd.data());
