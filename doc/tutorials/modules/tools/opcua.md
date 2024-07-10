@@ -78,14 +78,14 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 int main()
 {
     // 创建 OPC UA 服务器，端口为 4840
-    rm::Server svr(4840);
+    rm::Server srv(4840);
     // 服务器运行
-    svr.start();
+    srv.start();
 
     /* other code */
 
-    // 线程阻塞，直到调用了 svr.stop()，线程才会继续执行。
-    svr.join();
+    // 线程阻塞，直到调用了 srv.stop()，线程才会继续执行。
+    srv.join();
 }
 ```
 
@@ -114,8 +114,8 @@ int main()
 
 int main()
 {
-    rm::Server svr(4840);
-    svr.start();
+    rm::Server srv(4840);
+    srv.start();
 
     // 定义 double 型变量，如果要强制使用 3.14 定义 float 型变量，
     // 可以使用 rm::Variable num = float(3.14);
@@ -127,9 +127,9 @@ int main()
     // 描述
     num.description = "数字";
     // 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
-    svr.addVariableNode(num);
+    srv.addVariableNode(num);
 
-    svr.join();
+    srv.join();
 }
 ```
 
@@ -168,8 +168,8 @@ int main()
 
 int main()
 {
-    rm::Server svr(4840);
-    svr.start();
+    rm::Server srv(4840);
+    srv.start();
 
     // 定义方法
     rm::Method method;
@@ -198,7 +198,7 @@ int main()
     // 方法节点添加至服务器
     server.addMethodNode(method);
 
-    svr.join();
+    srv.join();
 }
 ```
 
@@ -244,13 +244,13 @@ int main()
 
 int main()
 {
-    rm::Server svr(4840);
-    svr.start();
+    rm::Server srv(4840);
+    srv.start();
     // 准备对象节点数据 A
     rm::Object a;
     a.browse_name = a.description = a.display_name = "A";
     // 添加对象节点 A 至服务器
-    auto node_a = svr.addObjectNode(a);
+    auto node_a = srv.addObjectNode(a);
     // 准备对象节点数据 B1
     rm::Object b1;
     b1.browse_name = b1.description = b1.display_name = "B1";
@@ -263,7 +263,7 @@ int main()
     c2.browse_name = c2.description = c2.display_name = "C2";
     b1.add(c2);
     // 添加对象节点 B1 至服务器
-    svr.addObjectNode(b1, node_a);
+    srv.addObjectNode(b1, node_a);
     // 准备对象节点数据 B2
     rm::Object b2;
     b2.browse_name = b2.description = b2.display_name = "B2";
@@ -272,9 +272,9 @@ int main()
     c3.browse_name = c3.description = c3.display_name = "C3";
     b2.add(c3);
     // 添加对象节点 B2 至服务器
-    svr.addObjectNode(b2, node_a);
+    srv.addObjectNode(b2, node_a);
 
-    svr.join();
+    srv.join();
 }
 ```
 
@@ -312,27 +312,27 @@ int main()
 
 int main()
 {
-    rm::Server svr(4840);
-    svr.start();
+    rm::Server srv(4840);
+    srv.start();
     // 准备对象节点数据 A
     rm::Object a;
     a.browse_name = a.description = a.display_name = "A";
     // 这里使用宏来创建 num1
     uaCreateVariable(num1, 1);
     a.add(num1);
-    auto node_a = svr.addObjectNode(a);
-    auto node_num1 = node_a | svr.find("num1");
+    auto node_a = srv.addObjectNode(a);
+    auto node_num1 = node_a | srv.find("num1");
     // 这里使用宏来创建 num2
     uaCreateVariable(num2, 2);
-    auto node_num2 = svr.addVariableNode(num2);
+    auto node_num2 = srv.addVariableNode(num2);
 
     // 创建视图
     rm::View num_view;
     // 添加节点至视图（这里使用的是变量节点的 NodeId，实际上其他节点也是允许的）
     num_view.add(node_num1, node_num2);
     // 添加至服务器
-    svr.addViewNode(num_view);
-    svr.join();
+    srv.addViewNode(num_view);
+    srv.join();
 }
 ```
 
@@ -346,8 +346,8 @@ int main()
 
 int main()
 {
-    rm::Server svr(4840);
-    svr.start();
+    rm::Server srv(4840);
+    srv.start();
 
     // 定义 int 型变量
     rm::Variable num = 100;
@@ -355,9 +355,9 @@ int main()
     num.display_name = "Number";
     num.description = "数字";
     // 添加到服务器的默认位置
-    svr.addVariableNode(num);
+    srv.addVariableNode(num);
 
-    svr.join();
+    srv.join();
 }
 ```
 
@@ -605,7 +605,7 @@ method.func = [](UA_Server *p_server, const UA_NodeId *, void *, const UA_NodeId
     return UA_STATUSCODE_GOOD;
 };
 method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
-svr.addMethodNode(method);
+srv.addMethodNode(method);
 ```
 
 ---
