@@ -68,7 +68,7 @@ public:
      * @brief 获取路径搜索必要信息
      * @brief 需要配合管道运算符 `|` 完成路径搜索
      * @code{.cpp}
-     * auto dst_mode = src_node | svr.find("person") | svr.find("name");
+     * auto dst_mode = src_node | srv.find("person") | srv.find("name");
      * @endcode
      *
      * @param[in] browse_name 浏览名
@@ -130,7 +130,7 @@ public:
     Server(ServerUserConfig on_config, uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     Server(const Server &) = delete;
-    Server(Server &&svr) = delete;
+    Server(Server &&srv) = delete;
 
     operator ServerView() const { return _server; }
 
@@ -155,7 +155,7 @@ public:
      * @brief 获取路径搜索必要信息
      * @brief 需要配合管道运算符 `|` 完成路径搜索
      * @code{.cpp}
-     * auto dst_mode = src_node | svr.find("person") | svr.find("name");
+     * auto dst_mode = src_node | srv.find("person") | srv.find("name");
      * @endcode
      *
      * @param[in] browse_name 浏览名

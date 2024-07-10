@@ -19,13 +19,13 @@ namespace rm::rm_test
 
 using namespace std::chrono_literals;
 
-void setup(Server &svr)
+void setup(Server &srv)
 {
     Variable num_var = 1;
     num_var.browse_name = "num";
     num_var.display_name = "Number";
     num_var.description = "数";
-    svr.addVariableNode(num_var);
+    srv.addVariableNode(num_var);
 
     Method method;
     method.browse_name = "plus";
@@ -41,16 +41,16 @@ void setup(Server &svr)
         return UA_STATUSCODE_GOOD;
     };
     method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
-    svr.addMethodNode(method);
+    srv.addMethodNode(method);
 
-    svr.start();
+    srv.start();
     std::this_thread::sleep_for(10ms);
 }
 
 TEST(OPC_UA_ServerView, read_variable_in_method)
 {
-    Server svr(6000);
-    setup(svr);
+    Server srv(6000);
+    setup(srv);
 
     Client clt("opc.tcp://127.0.0.1:6000");
     ASSERT_TRUE(clt.ok());

@@ -9,9 +9,11 @@ on:
       - master
 
 jobs:
+  cmake-support-x86_64:
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install.yml@main
   minimal-support-x86_64:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main
-  gcc12-support-x86_64:
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u22.yml@main
+  generic-support-x86_64:
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-generic.yml@main
   gcc14-support-x86_64:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u24.yml@main
