@@ -1,16 +1,14 @@
 #pragma once
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 
 #include "apriltag.h"
 #include "common/matd.h"
 
-typedef struct
-{
+typedef struct {
     apriltag_detection_t* det;
     double tagsize; // In meters.
     double fx; // In pixels.
@@ -19,10 +17,14 @@ typedef struct
     double cy; // In pixels.
 } apriltag_detection_info_t;
 
-typedef struct
-{
-    matd_t* R;
-    matd_t* t;
+/**
+ * This struct holds the transformation from the camera optical frame to
+ * the April tag frame. The pose refers to the position of the tag within
+ * the camera frame.
+ */
+typedef struct {
+    matd_t* R; // Rotation matrix 3x3 of doubles.
+    matd_t* t; // Translation matrix 3x1 of doubles.
 } apriltag_pose_t;
 
 /**
@@ -30,8 +32,8 @@ typedef struct
  * @outparam pose
  */
 void estimate_pose_for_tag_homography(
-    apriltag_detection_info_t *info,
-    apriltag_pose_t *pose);
+        apriltag_detection_info_t* info,
+        apriltag_pose_t* pose);
 
 /**
  * Estimate pose of the tag. This returns one or two possible poses for the
@@ -56,12 +58,12 @@ void estimate_pose_for_tag_homography(
  * @outparam err1, pose1, err2, pose2
  */
 void estimate_tag_pose_orthogonal_iteration(
-    apriltag_detection_info_t *info,
-    double *err1,
-    apriltag_pose_t *pose1,
-    double *err2,
-    apriltag_pose_t *pose2,
-    int nIters);
+        apriltag_detection_info_t* info,
+        double* err1,
+        apriltag_pose_t* pose1,
+        double* err2,
+        apriltag_pose_t* pose2,
+        int nIters);
 
 /**
  * Estimate tag pose.

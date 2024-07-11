@@ -35,7 +35,7 @@ either expressed or implied, of the Regents of The University of Michigan.
 #include "zhash.h"
 #include "zarray.h"
 #include "getopt.h"
-#include "math_util.h"
+#include "common/math_util.h"
 
 #define GOO_BOOL_TYPE 1
 #define GOO_STRING_TYPE 2
@@ -86,6 +86,11 @@ void getopt_option_destroy(getopt_option_t *goo)
     free(goo);
 }
 
+void getopt_option_destroy_void(void *goo)
+{
+    getopt_option_destroy((getopt_option_t *)goo);
+}
+
 void getopt_destroy(getopt_t *gopt)
 {
     // free the extra arguments and container
@@ -94,7 +99,7 @@ void getopt_destroy(getopt_t *gopt)
 
     // deep free of the getopt_option structs. Also frees key/values, so
     // after this loop, hash tables will no longer work
-    zarray_vmap(gopt->options, getopt_option_destroy);
+    zarray_vmap(gopt->options, getopt_option_destroy_void);
     zarray_destroy(gopt->options);
 
     // free tables
@@ -176,7 +181,7 @@ int getopt_parse(getopt_t *gopt, int argc, char *argv[], int showErrors)
     }
 
     // now loop over the elements and evaluate the arguments
-    unsigned int i = 0;
+    int i = 0;
 
     char *tok = NULL;
 
@@ -241,7 +246,7 @@ int getopt_parse(getopt_t *gopt, int argc, char *argv[], int showErrors)
 
         if (!strncmp(tok,"-",1) && strncmp(tok,"--",2)) {
             size_t len = strlen(tok);
-            int pos;
+            size_t pos;
             for (pos = 1; pos < len; pos++) {
                 char sopt[2];
                 sopt[0] = tok[pos];
@@ -499,20 +504,20 @@ char * getopt_get_usage(getopt_t *gopt)
     int longwidth=12;
     int valuewidth=10;
 
-    for (unsigned int i = 0; i < zarray_size(gopt->options); i++) {
+    for (int i = 0; i < zarray_size(gopt->options); i++) {
         getopt_option_t *goo = NULL;
         zarray_get(gopt->options, i, &goo);
 
         if (goo->spacer)
             continue;
 
-        longwidth = max(longwidth, (int) strlen(goo->lname));
+        longwidth = imax(longwidth, (int) strlen(goo->lname));
 
         if (goo->type == GOO_STRING_TYPE)
-            valuewidth = max(valuewidth, (int) strlen(goo->svalue));
+            valuewidth = imax(valuewidth, (int) strlen(goo->svalue));
     }
 
-    for (unsigned int i = 0; i < zarray_size(gopt->options); i++) {
+    for (int i = 0; i < zarray_size(gopt->options); i++) {
         getopt_option_t *goo = NULL;
         zarray_get(gopt->options, i, &goo);
 

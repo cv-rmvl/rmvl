@@ -45,7 +45,8 @@ extern "C" {
 typedef struct
 {
     unsigned int nrows, ncols;
-    double *data;
+    double data[];
+//    double *data;
 } matd_t;
 
 #define MATD_ALLOC(name, nrows, ncols) double name ## _storage [nrows*ncols]; matd_t name = { .nrows = nrows, .ncols = ncols, .data = &name ## _storage };
@@ -112,13 +113,13 @@ matd_t *matd_create_scalar(double v);
  * Retrieves the cell value for matrix 'm' at the given zero-based row and column index.
  * Performs more thorough validation checking than MATD_EL().
  */
-double matd_get(const matd_t *m, int row, int col);
+double matd_get(const matd_t *m, unsigned int row, unsigned int col);
 
 /**
  * Assigns the given value to the matrix cell at the given zero-based row and
  * column index. Performs more thorough validation checking than MATD_EL().
  */
-void matd_put(matd_t *m, int row, int col, double value);
+void matd_put(matd_t *m, unsigned int row, unsigned int col, double value);
 
 /**
  * Retrieves the scalar value of the given element ('m' must be a scalar).
@@ -146,7 +147,7 @@ matd_t *matd_copy(const matd_t *m);
  * beyond the number of rows/columns of 'a'. It is the caller's  responsibility to
  * call matd_destroy() on the returned matrix.
  */
-matd_t *matd_select(const matd_t *a, int r0, int r1, int c0, int c1);
+matd_t *matd_select(const matd_t *a, unsigned int r0, int r1, unsigned int c0, int c1);
 
 /**
  * Prints the supplied matrix 'm' to standard output by applying the supplied
