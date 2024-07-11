@@ -18,7 +18,11 @@ add_library(
   STATIC ${main_dir} ${common_dir}
 )
 
-target_compile_options(apriltag PRIVATE -w)
+if(RMVL_GNU OR RMVL_CLANG OR RMVL_APPLECLANG)
+  target_compile_options(apriltag PRIVATE -w)
+elseif(RMVL_MSVC)
+  target_compile_options(apriltag PRIVATE /W0)
+endif()
 
 target_include_directories(
   apriltag PUBLIC

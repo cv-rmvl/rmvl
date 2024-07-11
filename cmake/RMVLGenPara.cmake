@@ -30,7 +30,7 @@ function(system_date out_y out_m out_d)
     )
   elseif(WIN32)
     execute_process(
-      COMMAND cmd /c "wmic path win32_localtime get year^,month^,day ^| findstr /r [0-9]"
+      COMMAND cmd /c date /t
       OUTPUT_VARIABLE date
     )
   endif()

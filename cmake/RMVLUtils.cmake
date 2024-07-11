@@ -11,9 +11,10 @@ macro(rmvl_check_cxx result src standard)
     set(build_args " ${standard}")
   endif()
   message(STATUS "Performing Test ${result} (check file: ${src}${build_args})")
+  string(REGEX REPLACE ".*c\\+\\+([0-9]+)$" "\\1" standard_num "${standard}")
   try_compile(
     ${result}
-    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/cpp${standard}
+    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/cpp${standard_num}
     SOURCES ${PROJECT_SOURCE_DIR}/cmake/check/${src}
     COMPILE_DEFINITIONS "${standard}"
   )

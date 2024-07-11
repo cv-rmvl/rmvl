@@ -24,42 +24,18 @@ The views and conclusions contained in the software and documentation are those
 of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of the Regents of The University of Michigan.
 */
-
 #pragma once
 
-#include "zarray.h"
-#include "string_util.h"
+#if !defined(NDEBUG) || defined(_DEBUG)
 
-#ifdef __cplusplus
-extern "C" {
+#include <string.h>
+#include <stdio.h>
+#define DEBUG 1
+
+#else
+#define DEBUG 0
 #endif
 
-typedef struct getopt getopt_t;
-
-getopt_t *getopt_create();
-void getopt_destroy(getopt_t *gopt);
-void getopt_option_destroy_void(void *goo);
-
-// Parse args. Returns 1 on success
-int getopt_parse(getopt_t *gopt, int argc, char *argv[], int showErrors);
-void getopt_do_usage(getopt_t *gopt);
-
-// Returns a string containing the usage. Must be freed by caller
-char * getopt_get_usage(getopt_t *gopt);
-
-void getopt_add_spacer(getopt_t *gopt, const char *s);
-void getopt_add_bool(getopt_t *gopt, char sopt, const char *lname, int def, const char *help);
-void getopt_add_int(getopt_t *gopt, char sopt, const char *lname, const char *def, const char *help);
-void getopt_add_string(getopt_t *gopt, char sopt, const char *lname, const char *def, const char *help);
-void getopt_add_double(getopt_t *gopt, char sopt, const char *lname, const char *def, const char *help);
-
-const char *getopt_get_string(getopt_t *gopt, const char *lname);
-int getopt_get_int(getopt_t *getopt, const char *lname);
-int getopt_get_bool(getopt_t *getopt, const char *lname);
-double getopt_get_double(getopt_t *getopt, const char *lname);
-int getopt_was_specified(getopt_t *gopt, const char *lname);
-const zarray_t *getopt_get_extra_args(getopt_t *gopt);
-
-#ifdef __cplusplus
-}
-#endif
+#define debug_print(fmt, ...) \
+        do { if (DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, strrchr("/"__FILE__,'/')+1, \
+                                __LINE__, __func__, ##__VA_ARGS__); fflush(stderr);} while (0)
