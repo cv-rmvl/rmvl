@@ -27,6 +27,16 @@ endif()
 
 cmake_minimum_required(VERSION 3.16)
 
+# Build Type
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+  message(STATUS "'Release' build type is used by default. Use CMAKE_BUILD_TYPE to specify build type (Release or Debug)")
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build")
+endif()
+if(DEFINED CMAKE_BUILD_TYPE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${CMAKE_CONFIGURATION_TYPES}")
+endif()
+
 project(
   RMVL
   LANGUAGES CXX C
@@ -39,11 +49,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #  RMVL utilities macro and function
 # ----------------------------------------------------------------------------
 include(cmake/RMVLUtils.cmake)
-
-# Build Type
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release")
-endif()
 
 # ----------------------------------------------------------------------------
 #  Include necessary CMake modules
@@ -128,9 +133,10 @@ endif()
 if(CMAKE_GENERATOR MATCHES Xcode)
   status("     Xcode:"           ${XCODE_VERSION})
 endif()
-status("     Configuration:"     ${CMAKE_BUILD_TYPE})
 if(CMAKE_GENERATOR MATCHES "Xcode|Visual Studio|Multi-Config")
-  status("        Supported:"    ${CMAKE_CONFIGURATION_TYPES})
+  status("     Configuration:"   ${CMAKE_CONFIGURATION_TYPES})
+else()
+  status("     Configuration:"   ${CMAKE_BUILD_TYPE})
 endif()
 # ========================== C/C++ options ==========================
 if(CMAKE_CXX_COMPILER_VERSION)

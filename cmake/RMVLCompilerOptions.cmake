@@ -97,17 +97,9 @@ endif()
 # ----------------------------------------------------------------------------
 #   Compile generate path
 # ----------------------------------------------------------------------------
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  # Here is the compile-generate-path for Linux and MacOS
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-  set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-  set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/3rdparty/lib)
-else()
-  # Here is the compile-generate-path for Windows
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}\\bin)
-  set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}\\lib)
-  set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}\\3rdparty\\lib)
-endif()
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/3rdparty/lib)
 
 # ----------------------------------------------------------------------------
 #   Build options
@@ -166,11 +158,7 @@ endif()
 option(ENABLE_WARNING "Enable warning for all project " ON)
 if(ENABLE_WARNING)
   if(RMVL_MSVC)
-    list(APPEND MSVC_OPTIONS "/W3")
-    if(MSVC_VERSION GREATER 1900) # Allow non fatal security warnings for msvc 2015
-      list(APPEND MSVC_OPTIONS "/WX")
-    endif()
-    add_compile_options(MSVC_OPTIONS)
+    add_compile_options("/W3")
   else()
     add_compile_options(
       -Wall
