@@ -3,7 +3,10 @@
 .idea
 
 # 编译文件
-*build
+*build*
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
 devel
 *.o
 *.so
@@ -37,3 +40,4 @@ Camera
 
 # 其他文件
 *.zip
+*.tar.*
