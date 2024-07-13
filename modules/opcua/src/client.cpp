@@ -24,7 +24,7 @@ namespace rm
 
 ////////////////////////// 通用配置 //////////////////////////
 
-Client::Client(std::string_view address, UserConfig usr)
+Client::Client()
 {
     UA_ClientConfig init_config{};
     // 修改日志
@@ -43,11 +43,16 @@ Client::Client(std::string_view address, UserConfig usr)
         return;
     }
     _client = UA_Client_newWithConfig(&init_config);
+}
 
-    if (usr.id.empty() || usr.passwd.empty())
-        status = UA_Client_connect(_client, address.data());
-    else
-        status = UA_Client_connectUsername(_client, address.data(), usr.id.c_str(), usr.passwd.c_str());
+Client::Client(std::string_view address, const UserConfig &usr) : Client()
+{
+    if (!connect(address, usr))
+    {
+        ERROR_("Failed to connect to the server: %s", address.data());
+        UA_Client_delete(_client);
+        _client = nullptr;
+    }
 }
 
 Client::~Client()
@@ -59,6 +64,14 @@ Client::~Client()
         WARNING_("Failed to disconnect the client");
     UA_Client_delete(_client);
     _client = nullptr;
+}
+
+bool Client::connect(std::string_view address, const UserConfig &usr)
+{
+    if (usr.id.empty() || usr.passwd.empty())
+        return UA_Client_connect(_client, address.data()) == UA_STATUSCODE_GOOD;
+    else
+        return UA_Client_connectUsername(_client, address.data(), usr.id.c_str(), usr.passwd.c_str()) == UA_STATUSCODE_GOOD;
 }
 
 void Client::spin() const
