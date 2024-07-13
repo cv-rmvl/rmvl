@@ -32,18 +32,32 @@ class Client
 public:
     /****************************** 通用配置 ******************************/
 
+    //! 创建新的客户端对象
+    Client();
+
     /**
      * @brief 创建新的客户端对象，并建立连接
      *
      * @param[in] address 连接地址，形如 `opc.tcp://127.0.0.1:4840`
      * @param[in] usr 用户信息
      */
-    Client(std::string_view address, UserConfig usr = {});
-
+    Client(std::string_view address, const UserConfig &usr = {});
     ~Client();
 
     Client(const Client &) = delete;
     Client(Client &&) = default;
+
+    Client &operator=(const Client &) = delete;
+    Client &operator=(Client &&) = default;
+
+    /**
+     * @brief 连接到指定的服务器
+     * 
+     * @param[in] address 连接地址，形如 `opc.tcp://127.0.0.1:4840`
+     * @param[in] usr 用户信息
+     * @return 是否连接成功
+     */
+    bool connect(std::string_view address, const UserConfig &usr = {});
 
     /****************************** 路径搜索 ******************************/
 
