@@ -51,15 +51,15 @@ set(RMVL_3RD_PKGS_CONFIGCMAKE "")
 #   exists. otherwise 'find_package' will be added to RMVL_3RD_PKGS_CONFIGCMAKE
 #   
 #  Example:
-#   __find_3rd_package(
-#     tag_detector    # RMVL module name
+#   __find_3rd_package_if(
+#     flag            # whether the package is required, if not, return
 #     TARGET apriltag # the target to be checked, 'FOUND' means
 #                       whether the package has been found
 #     apriltag        # the package name to be found in TARGET mode
 #   )
 # --------------------------------------------------------------------
-function(__find_3rd_package target)
-  if(NOT TARGET rmvl_${target})
+function(__find_3rd_package_if flag)
+  if(NOT ${flag})
     return()
   endif()
   if("${ARGV1}" STREQUAL "TARGET")
@@ -74,9 +74,9 @@ function(__find_3rd_package target)
   set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}endif()\n\n" PARENT_SCOPE)
 endfunction()
 
-__find_3rd_package(core FOUND OpenCV)
-__find_3rd_package(tag_detector TARGET apriltag apriltag)
-__find_3rd_package(opcua TARGET open62541::open62541 open62541)
+__find_3rd_package_if(WITH_OPENCV FOUND OpenCV)
+__find_3rd_package_if(WITH_APRILTAG TARGET apriltag apriltag)
+__find_3rd_package_if(WITH_OPEN62541 TARGET open62541::open62541 open62541)
 
 # --------------------------------------------------------------------------------------------
 #  Part 2/3: Generate RMVLConfig.cmake
