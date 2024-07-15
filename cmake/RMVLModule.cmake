@@ -234,6 +234,10 @@ function(rmvl_add_test test_name test_kind)
   set(test_report_dir "${CMAKE_BINARY_DIR}/test-reports/${test_kind_lower}")
   file(MAKE_DIRECTORY "${test_report_dir}")
 
+  if(DEFINED BUILD_rmvl_${test_name} AND NOT BUILD_rmvl_${test_name})
+    return()
+  endif()
+
   # Add testing executable
   if("${test_kind_lower}" STREQUAL "performance")
     set(test_suffix "perf_test")
