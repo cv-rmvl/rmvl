@@ -52,12 +52,15 @@ public:
 
     /**
      * @brief 连接到指定的服务器
-     * 
+     *
      * @param[in] address 连接地址，形如 `opc.tcp://127.0.0.1:4840`
      * @param[in] usr 用户信息
      * @return 是否连接成功
      */
     bool connect(std::string_view address, const UserConfig &usr = {});
+
+    //! 与服务器断开连接
+    void disconnect();
 
     /****************************** 路径搜索 ******************************/
 
