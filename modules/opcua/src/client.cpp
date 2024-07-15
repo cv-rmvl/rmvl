@@ -116,13 +116,11 @@ void Client::spinOnce() const
 
 ////////////////////////// 功能配置 //////////////////////////
 
-Variable Client::read(const NodeId &node) const
+static Variable clientRead(UA_Client *p_client, const NodeId &node)
 {
-    RMVL_DbgAssert(_client != nullptr);
-
     UA_Variant p_val;
     UA_Variant_init(&p_val);
-    UA_StatusCode status = UA_Client_readValueAttribute(_client, node, &p_val);
+    UA_StatusCode status = UA_Client_readValueAttribute(p_client, node, &p_val);
     if (status != UA_STATUSCODE_GOOD)
         return {};
     Variable retval = helper::cvtVariable(p_val);
@@ -130,12 +128,10 @@ Variable Client::read(const NodeId &node) const
     return retval;
 }
 
-bool Client::write(const NodeId &node, const Variable &val) const
+static bool clientWrite(UA_Client *p_client, const NodeId &node, const Variable &val)
 {
-    RMVL_DbgAssert(_client != nullptr);
-
     UA_Variant new_variant = helper::cvtVariable(val);
-    auto status = UA_Client_writeValueAttribute(_client, node, &new_variant);
+    auto status = UA_Client_writeValueAttribute(p_client, node, &new_variant);
     UA_Variant_clear(&new_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -143,6 +139,18 @@ bool Client::write(const NodeId &node, const Variable &val) const
         return false;
     }
     return true;
+}
+
+Variable Client::read(const NodeId &node) const
+{
+    RMVL_DbgAssert(_client != nullptr);
+    return clientRead(_client, node);
+}
+
+bool Client::write(const NodeId &node, const Variable &val) const
+{
+    RMVL_DbgAssert(_client != nullptr);
+    return clientWrite(_client, node, val);
 }
 
 bool Client::call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) const
@@ -308,6 +316,18 @@ bool Client::createSubscription(UA_CreateSubscriptionResponse &response) const
         return false;
     }
     return true;
+}
+
+Variable ClientView::read(const NodeId &node) const
+{
+    RMVL_DbgAssert(_client != nullptr);
+    return clientRead(_client, node);
+}
+
+bool ClientView::write(const NodeId &node, const Variable &val) const
+{
+    RMVL_DbgAssert(_client != nullptr);
+    return clientWrite(_client, node, val);
 }
 
 } // namespace rm
