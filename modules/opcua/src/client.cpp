@@ -57,13 +57,11 @@ Client::Client(std::string_view address, const UserConfig &usr) : Client()
 
 Client::~Client()
 {
-    if (_client == nullptr)
-        return;
-    auto status = UA_Client_disconnect(_client);
-    if (status != UA_STATUSCODE_GOOD)
-        WARNING_("Failed to disconnect the client");
-    UA_Client_delete(_client);
-    _client = nullptr;
+    if (_client != nullptr)
+    {
+        disconnect();
+        UA_Client_delete(_client);
+    }
 }
 
 bool Client::connect(std::string_view address, const UserConfig &usr)
@@ -72,6 +70,15 @@ bool Client::connect(std::string_view address, const UserConfig &usr)
         return UA_Client_connect(_client, address.data()) == UA_STATUSCODE_GOOD;
     else
         return UA_Client_connectUsername(_client, address.data(), usr.id.c_str(), usr.passwd.c_str()) == UA_STATUSCODE_GOOD;
+}
+
+void Client::disconnect()
+{
+    if (_client == nullptr)
+        return;
+    auto status = UA_Client_disconnect(_client);
+    if (status != UA_STATUSCODE_GOOD)
+        WARNING_("Failed to disconnect the client");
 }
 
 void Client::spin() const
