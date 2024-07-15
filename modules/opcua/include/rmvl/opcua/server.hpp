@@ -76,7 +76,7 @@ public:
      * @return 目标节点信息
      * @retval fnis `[_client, browse_name]` 元组
      */
-    inline FindNodeInServer find(const std::string &browse_name, uint16_t ns = 1U) const { return {_server, browse_name, ns}; }
+    inline FindNodeInServer find(std::string_view browse_name, uint16_t ns = 1U) const { return {_server, browse_name, ns}; }
 
     /**
      * @brief 从指定的变量节点读数据
