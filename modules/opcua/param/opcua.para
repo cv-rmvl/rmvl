@@ -1,4 +1,16 @@
-uint32_t SPIN_TIMEOUT = 10 # 服务器超时响应的时间，单位 (ms)
+enum LogLevel # 服务器/客户端输出日志的最低级别
+  TRACE       # 跟踪级别，输出所有日志
+  DEBUG       # 调试级别，输出调试信息
+  INFO        # 信息级别，输出重要信息
+  WARNING     # 警告级别，输出警告信息
+  ERROR       # 错误级别，输出错误信息
+  FATAL       # 致命级别，输出致命错误信息
+endenum
+
+uint32_t CONNECT_TIMEOUT = 30000           # 请求连接时，判定为超时的时间，单位 (ms)
+LogLevel CLIENT_LOGLEVEL = LogLevel::ERROR # 客户端输出日志的最低级别
+LogLevel SERVER_LOGLEVEL = LogLevel::ERROR # 服务器输出日志的最低级别
+uint32_t SPIN_TIMEOUT = 10                 # 单次 run_iterate 服务器超时响应的时间，单位 (ms)
 
 double SAMPLING_INTERVAL = 2      # 服务器监视变量的采样速度，单位 (ms)，不得小于 2ms
 double PUBLISHING_INTERVAL = 2    # 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms)，不得小于 2ms

@@ -59,7 +59,7 @@ NodeId operator|(NodeId origin, FindNodeInClient &&fnic)
             return response.results[0].targets[0].targetId.nodeId;
 
     ERROR_("Failed to find node, name: %s, error code: %s",
-           browse_name.c_str(), UA_StatusCode_name(response.responseHeader.serviceResult));
+           browse_name.data(), UA_StatusCode_name(response.responseHeader.serviceResult));
     return {};
 }
 

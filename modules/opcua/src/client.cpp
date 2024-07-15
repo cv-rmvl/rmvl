@@ -22,6 +22,15 @@
 namespace rm
 {
 
+static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_cli{
+    {para::LogLevel::TRACE, UA_LOGLEVEL_TRACE},
+    {para::LogLevel::DEBUG, UA_LOGLEVEL_DEBUG},
+    {para::LogLevel::INFO, UA_LOGLEVEL_INFO},
+    {para::LogLevel::WARNING, UA_LOGLEVEL_WARNING},
+    {para::LogLevel::ERROR, UA_LOGLEVEL_ERROR},
+    {para::LogLevel::FATAL, UA_LOGLEVEL_FATAL},
+};
+
 ////////////////////////// 通用配置 //////////////////////////
 
 Client::Client()
@@ -29,9 +38,9 @@ Client::Client()
     UA_ClientConfig init_config{};
     // 修改日志
 #if OPCUA_VERSION < 10400
-    init_config.logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
+    init_config.logger = UA_Log_Stdout_withLevel(loglvl_cli.at(para::opcua_param.CLIENT_LOGLEVEL));
 #else
-    init_config.logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
+    init_config.logging = UA_Log_Stdout_new(loglvl_cli.at(para::opcua_param.CLIENT_LOGLEVEL));
 #endif
     // 设置默认配置
     auto status = UA_ClientConfig_setDefault(&init_config);
@@ -42,6 +51,10 @@ Client::Client()
         _client = nullptr;
         return;
     }
+
+    // 设置延迟时间
+    init_config.timeout = para::opcua_param.CONNECT_TIMEOUT;
+
     _client = UA_Client_newWithConfig(&init_config);
 }
 

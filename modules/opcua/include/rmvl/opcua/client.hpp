@@ -76,7 +76,7 @@ public:
      * @return 目标节点信息
      * @retval fnic `[_client, browse_name]` 元组
      */
-    inline FindNodeInClient find(const std::string &browse_name, uint16_t ns = 1U) const { return {_client, browse_name, ns}; }
+    inline FindNodeInClient find(std::string_view browse_name, uint16_t ns = 1U) const { return {_client, browse_name, ns}; }
 
     /****************************** 功能配置 ******************************/
 
