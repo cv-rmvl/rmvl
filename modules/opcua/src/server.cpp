@@ -16,11 +16,21 @@
 #include <open62541/server_config_default.h>
 
 #include "rmvl/opcua/server.hpp"
+#include "rmvlpara/opcua.hpp"
 
 #include "cvt.hpp"
 
 namespace rm
 {
+
+static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_srv{
+    {para::LogLevel::TRACE, UA_LOGLEVEL_TRACE},
+    {para::LogLevel::DEBUG, UA_LOGLEVEL_DEBUG},
+    {para::LogLevel::INFO, UA_LOGLEVEL_INFO},
+    {para::LogLevel::WARNING, UA_LOGLEVEL_WARNING},
+    {para::LogLevel::ERROR, UA_LOGLEVEL_ERROR},
+    {para::LogLevel::FATAL, UA_LOGLEVEL_FATAL},
+};
 
 ///////////////////////// 基本配置 /////////////////////////
 
@@ -29,9 +39,9 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     UA_ServerConfig init_config{};
     // 修改日志
 #if OPCUA_VERSION < 10400
-    init_config.logger = UA_Log_Stdout_withLevel(UA_LOGLEVEL_ERROR);
+    init_config.logger = UA_Log_Stdout_withLevel(loglvl_srv.at(para::opcua_param.SERVER_LOGLEVEL));
 #else
-    init_config.logging = UA_Log_Stdout_new(UA_LOGLEVEL_ERROR);
+    init_config.logging = UA_Log_Stdout_new(loglvl_srv.at(para::opcua_param.SERVER_LOGLEVEL));
 #endif
     // 设置服务器配置
     UA_ServerConfig_setMinimal(&init_config, port, nullptr);

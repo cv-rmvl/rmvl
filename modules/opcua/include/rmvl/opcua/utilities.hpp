@@ -163,9 +163,9 @@ constexpr NodeId nodeHasSubtype(0, UA_NS0ID_HASSUBTYPE);               //!< 引�
 constexpr NodeId nodeHasModellingRule(0, UA_NS0ID_HASMODELLINGRULE);   //!< 引用类型节点：`HasModellingRule` 节点 ID
 
 //! 目标节点信息（服务端指针、浏览名、命名空间索引）
-using FindNodeInServer = ::std::tuple<UA_Server *, ::std::string, uint16_t>;
+using FindNodeInServer = ::std::tuple<UA_Server *, ::std::string_view, uint16_t>;
 //! 目标节点信息（客户端指针、浏览名、命名空间索引）
-using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string, uint16_t>;
+using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string_view, uint16_t>;
 
 /**
  * @brief `UA_TypeFlag` 到对应 `NS0` 下的类型名的映射
