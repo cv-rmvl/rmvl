@@ -24,6 +24,59 @@ namespace rm
 
 //! @example samples/opcua/opcua_client.cpp OPC UA 客户端例程
 
+//! OPC UA 客户端视图
+class ClientView
+{
+    UA_Client *_client{nullptr}; //!< 客户端指针
+
+public:
+    ClientView() = default;
+
+    /**
+     * @brief 创建不占有生命周期的 OPC UA 客户端视图，在 OPC UA 方法节点中使用特别有效
+     *
+     * @param[in] client OPC UA 客户端指针
+     */
+    ClientView(UA_Client *client) : _client(client) {}
+
+    ClientView &operator=(UA_Client *const client)
+    {
+        _client = client;
+        return *this;
+    }
+
+    /**
+     * @brief 获取路径搜索必要信息
+     * @brief 需要配合管道运算符 `|` 完成路径搜索
+     * @code{.cpp}
+     * auto dst_mode = src_node | clt.find("person") | clt.find("name");
+     * @endcode
+     *
+     * @param[in] browse_name 浏览名
+     * @param[in] ns 命名空间索引，默认为 `1`
+     * @return 目标节点信息
+     * @retval fnic `[_client, browse_name]` 元组
+     */
+    inline FindNodeInClient find(std::string_view browse_name, uint16_t ns = 1U) const { return {_client, browse_name, ns}; }
+
+    /**
+     * @brief 从指定的变量节点读数据
+     *
+     * @param[in] node 既存的变量节点的 `NodeId`
+     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     */
+    Variable read(const NodeId &node) const;
+
+    /**
+     * @brief 给指定的变量节点写数据
+     *
+     * @param[in] node 既存的变量节点的 `NodeId`
+     * @param[in] val 待写入的数据
+     * @return 是否写入成功
+     */
+    bool write(const NodeId &node, const Variable &val) const;
+};
+
 //! OPC UA 客户端
 class Client
 {
@@ -49,6 +102,8 @@ public:
 
     Client &operator=(const Client &) = delete;
     Client &operator=(Client &&) = default;
+
+    operator ClientView() const { return _client; }
 
     /**
      * @brief 连接到指定的服务器

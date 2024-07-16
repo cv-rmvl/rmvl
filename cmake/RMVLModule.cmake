@@ -224,6 +224,9 @@ endmacro(rmvl_compile_options _target)
 #   )
 # ----------------------------------------------------------------------------
 function(rmvl_add_test test_name test_kind)
+  if(NOT BUILD_rmvl_${test_name})
+    return()
+  endif()
   # Add arguments variable
   set(multi_args DEPENDS DEPEND_TESTS)
   if(NOT "${test_kind}" MATCHES "^(Unit|Performance)$")
