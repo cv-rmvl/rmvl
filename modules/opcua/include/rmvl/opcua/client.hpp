@@ -80,7 +80,10 @@ public:
 //! OPC UA 客户端
 class Client
 {
-    UA_Client *_client{nullptr}; //!< 客户端指针
+    //! 客户端指针
+    UA_Client *_client{nullptr};
+    //! 节点号监视项映射表 `[NodeId : [SubId, MonitorId]]`
+    std::unordered_map<UA_UInt32, std::array<UA_UInt32, 2>> _monitor_map;
 
 public:
     /****************************** 通用配置 ******************************/
@@ -208,7 +211,7 @@ public:
      * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知，默认为 `10`
      * @return 变量节点监视创建成功？
      */
-    bool monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10) const;
+    bool monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
@@ -218,16 +221,15 @@ public:
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
-    bool monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event) const;
+    bool monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
 
-private:
     /**
-     * @brief 发起订阅请求，并得到订阅 ID
+     * @brief 移除监视项
      *
-     * @param[out] response 订阅请求的响应
-     * @return 是否成功完成当前操作
+     * @param[in] node 待移除监视项的节点号
+     * @return 是否成功移除监视项
      */
-    bool createSubscription(UA_CreateSubscriptionResponse &responce) const;
+    bool remove(NodeId node);
 };
 
 //! @} opcua

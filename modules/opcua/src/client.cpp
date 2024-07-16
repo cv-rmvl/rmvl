@@ -212,14 +212,32 @@ NodeId Client::addViewNode(const View &view) const
     return retval;
 }
 
-bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size) const
+static bool createSubscription(UA_Client *p_client, UA_CreateSubscriptionResponse &response)
+{
+    UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
+    request.requestedPublishingInterval = para::opcua_param.PUBLISHING_INTERVAL;
+    request.requestedLifetimeCount = para::opcua_param.LIFETIME_COUNT;
+    request.requestedMaxKeepAliveCount = para::opcua_param.MAX_KEEPALIVE_COUNT;
+    request.maxNotificationsPerPublish = para::opcua_param.MAX_NOTIFICATIONS;
+    request.publishingEnabled = true;
+    request.priority = para::opcua_param.PRIORITY;
+
+    response = UA_Client_Subscriptions_create(p_client, request, nullptr, nullptr, nullptr);
+    if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to create subscription, error: %s", UA_StatusCode_name(response.responseHeader.serviceResult));
+        return false;
+    }
+    return true;
+}
+
+bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
 {
     RMVL_DbgAssert(_client != nullptr);
 
     // 创建订阅
     UA_CreateSubscriptionResponse resp;
-    auto status = createSubscription(resp);
-    if (!status)
+    if (!createSubscription(_client, resp))
         return false;
     // 创建监视项请求
     UA_MonitoredItemCreateRequest request = UA_MonitoredItemCreateRequest_default(node);
@@ -234,15 +252,16 @@ bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_ch
         ERROR_("Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
         return false;
     }
+    _monitor_map[node.nid.identifier.numeric] = {resp.subscriptionId, result.monitoredItemId};
     return true;
 }
 
-bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event) const
+bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
 {
     RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
     UA_CreateSubscriptionResponse sub_resp;
-    if (!createSubscription(sub_resp))
+    if (!createSubscription(_client, sub_resp))
         return false;
 
     UA_MonitoredItemCreateRequest request_item;
@@ -287,22 +306,21 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Clie
         return true;
 }
 
-bool Client::createSubscription(UA_CreateSubscriptionResponse &response) const
+bool Client::remove(NodeId node)
 {
-    UA_CreateSubscriptionRequest request = UA_CreateSubscriptionRequest_default();
-    request.requestedPublishingInterval = para::opcua_param.PUBLISHING_INTERVAL;
-    request.requestedLifetimeCount = para::opcua_param.LIFETIME_COUNT;
-    request.requestedMaxKeepAliveCount = para::opcua_param.MAX_KEEPALIVE_COUNT;
-    request.maxNotificationsPerPublish = para::opcua_param.MAX_NOTIFICATIONS;
-    request.publishingEnabled = true;
-    request.priority = para::opcua_param.PRIORITY;
-
-    response = UA_Client_Subscriptions_create(_client, request, nullptr, nullptr, nullptr);
-    if (response.responseHeader.serviceResult != UA_STATUSCODE_GOOD)
+    if (_monitor_map.find(node.nid.identifier.numeric) == _monitor_map.end())
     {
-        ERROR_("Failed to create subscription, error: %s", UA_StatusCode_name(response.responseHeader.serviceResult));
+        ERROR_("Failed to find the monitor, node id: %d", node.nid.identifier.numeric);
         return false;
     }
+    auto [sub_id, mon_id] = _monitor_map.at(node.nid.identifier.numeric);
+    auto status = UA_Client_MonitoredItems_deleteSingle(_client, sub_id, mon_id);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to remove monitor, error: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    _monitor_map.erase(node.nid.identifier.numeric);
     return true;
 }
 
