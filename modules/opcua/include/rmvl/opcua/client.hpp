@@ -85,9 +85,6 @@ class Client
 public:
     /****************************** 通用配置 ******************************/
 
-    //! 创建新的客户端对象
-    Client();
-
     /**
      * @brief 创建新的客户端对象，并建立连接
      *
@@ -104,18 +101,6 @@ public:
     Client &operator=(Client &&) = default;
 
     operator ClientView() const { return _client; }
-
-    /**
-     * @brief 连接到指定的服务器
-     *
-     * @param[in] address 连接地址，形如 `opc.tcp://127.0.0.1:4840`
-     * @param[in] usr 用户信息
-     * @return 是否连接成功
-     */
-    bool connect(std::string_view address, const UserConfig &usr = {});
-
-    //! 与服务器断开连接
-    void disconnect();
 
     /****************************** 路径搜索 ******************************/
 
@@ -135,7 +120,7 @@ public:
 
     /****************************** 功能配置 ******************************/
 
-    //! 是否成功创建客户端
+    //! 是否成功创建客户端并成功连接到服务器
     inline bool ok() const { return _client != nullptr; }
 
     /**
