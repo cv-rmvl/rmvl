@@ -128,6 +128,12 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     client.spinOnce();
     EXPECT_EQ(type_name, "Int32");
     EXPECT_EQ(receive_data, 66);
+    // 移除监视后的数据按预期不会更新
+    client.remove(node_id);
+    client.write(node_id, 123);
+    std::this_thread::sleep_for(10ms);
+    client.spinOnce();
+    EXPECT_EQ(receive_data, 66);
     srv.stop();
     srv.join();
 }
