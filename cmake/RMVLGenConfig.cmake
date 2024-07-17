@@ -130,5 +130,6 @@ install(
   FILES "${cmake_dir}/templates/para_generator_header.in"
         "${cmake_dir}/templates/para_generator_module.in"
         "${cmake_dir}/templates/para_generator_source.in"
+        "${cmake_dir}/templates/para_generator_header_without_cv.in"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}/templates"
 )
