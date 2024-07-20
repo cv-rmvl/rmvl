@@ -100,6 +100,15 @@ foreach(__rmvlcomponent ${RMVL_FIND_COMPONENTS})
 endforeach()
 
 # =============================================================
+#  Other configurations
+# =============================================================
+# use rmvl functions and macros
+set(para_template_path "${CMAKE_CURRENT_LIST_DIR}/templates" CACHE INTERNAL "GenPara template path")
+include(${CMAKE_CURRENT_LIST_DIR}/RMVLUtils.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPara.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/RMVLModule.cmake)
+
+# =============================================================
 #  Get RMVL search results
 # =============================================================
 find_package_handle_standard_args(RMVL
