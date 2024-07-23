@@ -12,8 +12,8 @@
 #pragma once
 
 #include <string>
-#include <typeindex>
 #include <string_view>
+#include <typeindex>
 #include <unordered_map>
 
 #include <open62541/types_generated_handling.h>
@@ -66,19 +66,46 @@ struct NodeId final
     inline UA_NodeId *operator&() { return &nid; }
     inline const UA_NodeId *operator&() const { return &nid; }
 
-
     //! 到 `UA_NodeId` 的转换
     constexpr operator UA_NodeId() const { return nid; }
 
     /**
      * @brief 判断节点 ID 是否为空
-     * 
+     *
      * @return 是否为空
      */
     inline bool empty() const { return UA_NodeId_isNull(&nid); }
 
     //! 清空节点 ID
     inline void clear() { UA_NodeId_clear(&nid); }
+};
+
+//! OPC UA 数据类型
+class DataType
+{
+    //! 形如 `UA_TYPES_<xxx>` 的类型标志位
+    static const std::unordered_map<std::type_index, UA_UInt32> _map;
+    //! 数据类型 ID
+    UA_UInt32 id{};
+
+public:
+    DataType() = default;
+
+    /**
+     * @brief 从 `UA_TYPES_<xxx>` 枚举值构造数据类型
+     * 
+     * @param[in] id `UA_TYPES_<xxx>` 枚举值
+     */
+    constexpr DataType(UA_UInt32 id) : id(id) {}
+
+    /**
+     * @brief 从 `std::type_info` 构造数据类型
+     * 
+     * @param[in] tp `std::type_info` 类型，可用 `typeid()` 获取
+     */
+    DataType(const std::type_info &tp) : id(_map.at(std::type_index(tp))) {}
+
+    operator UA_UInt32() const { return id; }
 };
 
 /**
@@ -93,24 +120,6 @@ struct UserConfig final
     std::string id;     //!< 用户名
     std::string passwd; //!< 密码
 };
-
-//! 类型标志位，可通过 `typeflag.at(xxx)` 进行获取
-using UA_TypeFlag = UA_UInt32;
-
-//! 获取形如 `UA_TYPES_<xxx>` 的类型标志位
-inline const std::unordered_map<std::type_index, UA_TypeFlag> typeflag =
-    {{std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
-     {std::type_index(typeid(int8_t)), UA_TYPES_SBYTE},
-     {std::type_index(typeid(uint8_t)), UA_TYPES_BYTE},
-     {std::type_index(typeid(UA_Int16)), UA_TYPES_INT16},
-     {std::type_index(typeid(UA_UInt16)), UA_TYPES_UINT16},
-     {std::type_index(typeid(UA_Int32)), UA_TYPES_INT32},
-     {std::type_index(typeid(UA_UInt32)), UA_TYPES_UINT32},
-     {std::type_index(typeid(UA_Int64)), UA_TYPES_INT64},
-     {std::type_index(typeid(UA_UInt64)), UA_TYPES_UINT64},
-     {std::type_index(typeid(UA_Float)), UA_TYPES_FLOAT},
-     {std::type_index(typeid(UA_Double)), UA_TYPES_DOUBLE},
-     {std::type_index(typeid(const char *)), UA_TYPES_STRING}};
 
 //! 传输协议
 enum class TransportID : uint8_t
@@ -168,7 +177,7 @@ using FindNodeInServer = ::std::tuple<UA_Server *, ::std::string_view, uint16_t>
 using FindNodeInClient = ::std::tuple<UA_Client *, ::std::string_view, uint16_t>;
 
 /**
- * @brief `UA_TypeFlag` 到对应 `NS0` 下的类型名的映射
+ * @brief `DataType` 到对应 `NS0` 下的类型名的映射
  * @brief
  * - 例如：`typeflag_ns0[UA_TYPES_INT16]` 为 `UA_NS0ID_INT16`
  */

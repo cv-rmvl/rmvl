@@ -63,7 +63,7 @@ private:
     //! 默认数据
     std::any _value;
     //! 数据类型
-    UA_TypeFlag _data_type{};
+    DataType _data_type{};
     //! 数据大小
     UA_UInt32 _size{};
 
@@ -74,7 +74,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <size_t N>
-    VariableType(const char (&str)[N]) : _value(str), _data_type(typeflag.at(typeid(const char *))), _size(1) {}
+    VariableType(const char (&str)[N]) : _value(str), _data_type(DataType(typeid(const char *))), _size(1) {}
 
     /**
      * @brief 单值构造，设置默认值
@@ -83,7 +83,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    VariableType(Tp &&val) : _value(val), _data_type(typeflag.at(typeid(Tp))), _size(1) {}
+    VariableType(Tp &&val) : _value(val), _data_type(DataType(typeid(Tp))), _size(1) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -92,7 +92,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(typeflag.at(typeid(Tp))), _size(arr.size()) {}
+    VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(arr.size()) {}
 
     /**
      * @brief 将变量类型节点转化为指定类型的数据
@@ -108,7 +108,7 @@ public:
     inline const auto &data() const { return _value; }
 
     //! 获取数据类型
-    inline UA_TypeFlag getDataType() const { return _data_type; }
+    inline DataType getDataType() const { return _data_type; }
 
     //! 获取大小 @note 未初始化则返回 `0`
     inline UA_UInt32 size() const { return _size; }
@@ -155,7 +155,7 @@ private:
     //! 数据
     std::any _value;
     //! 数据类型
-    UA_TypeFlag _data_type{};
+    DataType _data_type{};
     //! 数据大小
     UA_UInt32 _size{};
 
@@ -168,7 +168,7 @@ public:
      * @param[in] str 字面量字符串
      */
     template <unsigned int N>
-    Variable(const char (&str)[N]) : access_level(3U), _value(str), _data_type(typeflag.at(typeid(const char *))), _size(1) {}
+    Variable(const char (&str)[N]) : access_level(3U), _value(str), _data_type(DataType(typeid(const char *))), _size(1) {}
 
     /**
      * @brief 单值构造
@@ -177,7 +177,7 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    Variable(const Tp &val) : access_level(3U), _value(val), _data_type(typeflag.at(typeid(Tp))), _size(1) {}
+    Variable(const Tp &val) : access_level(3U), _value(val), _data_type(DataType(typeid(Tp))), _size(1) {}
 
     /**
      * @brief 列表构造
@@ -186,7 +186,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    Variable(const std::vector<Tp> &arr) : access_level(3U), _value(arr), _data_type(typeflag.at(typeid(Tp))), _size(arr.size()) {}
+    Variable(const std::vector<Tp> &arr) : access_level(3U), _value(arr), _data_type(DataType(typeid(Tp))), _size(arr.size()) {}
 
     /**
      * @brief 从变量类型构造新的变量节点
@@ -247,7 +247,7 @@ public:
     inline const auto &data() const { return _value; }
 
     //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
-    inline UA_TypeFlag getDataType() const { return _data_type; }
+    inline DataType getDataType() const { return _data_type; }
 
     //! 获取大小 @note 未初始化则返回 `0`
     inline UA_UInt32 size() const { return _size; }

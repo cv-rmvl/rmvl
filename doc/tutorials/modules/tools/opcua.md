@@ -48,7 +48,7 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 3. 引用类型节点 **ReferenceType** ：引用类型描述了引用的语义，而引用用于定义引用两端的节点之间的关系。最常用的引用类型如 Organizes（在 RMVL 中表示为 `rm::nodeOrganizes`），表示节点之间的层级关系，如同文件夹与文件夹内的文件，数据层级复杂的设备，需要通过多种引用类型对设备信息节点之间的关系进行描述。
 
-4. 数据类型节点 **DataType** ：数据类型节点描述了变量节点中变量的数据类型。在 OPC UA 信息模型在命名空间 `0` 中定义了多种内置的数据类型，包括整型、浮点型、 字符串等多个类型，能对变量的数据进行准确的描述。也可以自定义数据类型，比如描述二维坐标的 `2DPoint` 等类型，获得更符合数据本身的描述。@note 注意：此类节点并不能提供具体的数据构成，只是提供了数据类型的一个描述，因此 RMVL 中的 @ref opcua 不提供该功能。若计划提供数据的构成，比如包含的数据长度等信息，请使用变量类型节点 rm::VariableType 。
+4. 数据类型节点 rm::DataType ：数据类型节点描述了变量节点中变量的数据类型。在 OPC UA 信息模型在命名空间 `0` 中定义了多种内置的数据类型，包括整型、浮点型、 字符串等多个类型，能对变量的数据进行准确的描述。也可以自定义数据类型，比如描述二维坐标的 `2DPoint` 等类型，获得更符合数据本身的描述。@note 注意：此类节点并不能提供具体的数据构成，只是提供了数据类型的一个描述，因此 RMVL 中的 @ref opcua 仅提供内置数据类型。若计划提供数据的构成，比如包含的数据长度等信息，请使用变量类型节点 rm::VariableType 。
 
 5. 变量类型节点 rm::VariableType ：该节点提供了对变量节点的定义，是设备中各种数据的抽象。常用引用中的 HasTypeDefinition 引用节点连接数据类型节点，对数据类型进行描述（在 RMVL 中表示为 `rm::nodeHasTypeDefinition`）。用 HasProperty 引用节点对数据的语义进行描述（在 RMVL 中表示为 `rm::nodeHasProperty`）。也可以使用自定义的数据类型节点对变量的数据进行描述，具有灵活性。
 
@@ -98,7 +98,7 @@ int main()
 int main()
 {
     // 创建 OPC UA 客户端，连接到 127.0.0.1:4840
-    rm::Client clt("opc.tcp://127.0.0.1:4840");
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     /* other code */
 }
@@ -141,12 +141,12 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://127.0.0.1:4840");
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
-    auto node = rm::nodeObjectsFolder | clt.find("number");
+    auto node = rm::nodeObjectsFolder | cli.find("number");
     // 读取变量
-    rm::Variable target = clt.read(node);
+    rm::Variable target = cli.read(node);
     // 判断是否为空
     if (target.empty())
     {
@@ -210,14 +210,14 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://127.0.0.1:4840");
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
     std::vector<rm::Variable> input = {1, 2};
     // 设置输出参数，用来存储结果
     std::vector<rm::Variable> output;
     // 调用方法，判断调用是否成功
-    if (!clt.call("add", input, output))
+    if (!cli.call("add", input, output))
     {
         ERROR_("Failed to call the method");
         return 0;
@@ -287,17 +287,17 @@ int main()
 
 int main()
 {
-    rm::Client clt("opc.tcp://127.0.0.1:4840");
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 路径搜索寻找 C2
-    auto node_c2 = rm::nodeObjectsFolder | clt.find("A") | clt.find("B1") | clt.find("C2");
+    auto node_c2 = rm::nodeObjectsFolder | cli.find("A") | cli.find("B1") | cli.find("C2");
     rm::Variable c2;
-    clt.read(node_c2, c2);
+    cli.read(node_c2, c2);
     std::cout << rm::Variable::cast<int>(c2) << std::endl;
     // 路径搜索寻找 C3
-    auto node_c3 = rm::nodeObjectsFolder | clt.find("A") | clt.find("B2") | clt.find("C3");
+    auto node_c3 = rm::nodeObjectsFolder | cli.find("A") | cli.find("B2") | cli.find("C3");
     rm::Variable c3;
-    clt.read(node_c3, c3);
+    cli.read(node_c3, c3);
     std::cout << rm::Variable::cast<const char *>(c3) << std::endl;
 }
 ```
@@ -371,13 +371,13 @@ using namespace std::chrono_literals;
 
 int main()
 {
-    rm::Client clt("opc.tcp://127.0.0.1:4840");
-    auto node = rm::nodeObjectsFolder | clt.find("number");
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
+    auto node = rm::nodeObjectsFolder | cli.find("number");
     for (int i = 0; i < 100; ++i)
     {
         std::this_thread::sleep_for(1s);
         // 写入数据，i + 200 隐式构造成了 rm::Variable
-        bool success = clt.write(node, i + 200);
+        bool success = cli.write(node, i + 200);
         if (!success)
             ERROR_("Failed to write data to the variable.");
     }
@@ -398,8 +398,8 @@ void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *v
 
 int main()
 {
-    rm::Client clt("opc.tcp://127.0.0.1:4840");
-    auto node = rm::nodeObjectsFolder | clt.find("number");
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
+    auto node = rm::nodeObjectsFolder | cli.find("number");
     // 监视变量，这里的 onChange 同样可以写成无捕获列表的 lambda 表达式，因为存在隐式转换
     client.monitor(node, onChange, 5);
     // 线程阻塞

@@ -31,7 +31,7 @@ namespace rm
 struct Argument final
 {
     std::string name;          //!< 参数名称
-    UA_TypeFlag data_type{};   //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
+    DataType data_type{};      //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
     uint32_t dims{1U};         //!< 参数维数，单数据则是 `1`，数组则是数组长度 @warning 不能为 `0`
     std::string description{}; //!< 参数描述
 };
