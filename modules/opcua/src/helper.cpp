@@ -20,6 +20,20 @@
 namespace rm
 {
 
+const std::unordered_map<std::type_index, UA_UInt32> DataType::_map =
+    {{std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
+     {std::type_index(typeid(int8_t)), UA_TYPES_SBYTE},
+     {std::type_index(typeid(uint8_t)), UA_TYPES_BYTE},
+     {std::type_index(typeid(UA_Int16)), UA_TYPES_INT16},
+     {std::type_index(typeid(UA_UInt16)), UA_TYPES_UINT16},
+     {std::type_index(typeid(UA_Int32)), UA_TYPES_INT32},
+     {std::type_index(typeid(UA_UInt32)), UA_TYPES_UINT32},
+     {std::type_index(typeid(UA_Int64)), UA_TYPES_INT64},
+     {std::type_index(typeid(UA_UInt64)), UA_TYPES_UINT64},
+     {std::type_index(typeid(UA_Float)), UA_TYPES_FLOAT},
+     {std::type_index(typeid(UA_Double)), UA_TYPES_DOUBLE},
+     {std::type_index(typeid(const char *)), UA_TYPES_STRING}};
+
 NodeId operator|(NodeId origin, FindNodeInServer &&fnis)
 {
     if (origin.empty())
@@ -278,7 +292,7 @@ UA_Variant cvtVariable(const Variable &val)
 Variable cvtVariable(const UA_Variant &p_val)
 {
     UA_UInt32 dims = (p_val.arrayLength == 0 ? 1 : p_val.arrayLength);
-    UA_TypeFlag type_flag = p_val.type->typeKind;
+    DataType type_flag = p_val.type->typeKind;
     void *data = p_val.data;
     if (dims == 1)
     {

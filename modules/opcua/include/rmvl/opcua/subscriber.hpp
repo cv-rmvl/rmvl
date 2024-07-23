@@ -32,9 +32,9 @@ struct FieldMetaData final
 
     /**
      * @brief 字段类型
-     * @see UA_TypeFlag
+     * @see DataType
      */
-    UA_TypeFlag type;
+    DataType type;
 
     //! 字段 ValueRank
     int value_rank{};
@@ -45,11 +45,11 @@ struct FieldMetaData final
      * @brief 创建字段元数据
      *
      * @param[in] name_ 字段名称
-     * @param[in] type_ 字段类型，可参考 @ref UA_TypeFlag
+     * @param[in] type_ 字段类型，可参考 @ref DataType
      * @param[in] value_rank_ 字段 ValueRank
      * @param[in] ns_ 命名空间索引，默认为 `1`
      */
-    FieldMetaData(const std::string &name_, UA_TypeFlag type_, int value_rank_, uint16_t ns_ = 1U) : ns(ns_), name(name_), type(type_), value_rank(value_rank_) {}
+    FieldMetaData(const std::string &name_, DataType type_, int value_rank_, uint16_t ns_ = 1U) : ns(ns_), name(name_), type(type_), value_rank(value_rank_) {}
 
     /**
      * @brief 从变量创建字段元数据

@@ -21,7 +21,20 @@ namespace rm_test
 
 using namespace std::chrono_literals;
 
-void setSvr(rm::Server &srv)
+TEST(OPC_UA_ClientTest, connect)
+{
+    rm::UserConfig config;
+    rm::Server srv(4999, "Test Server", {{"admin", "admin"}});
+    srv.start();
+    std::this_thread::sleep_for(10ms);
+
+    rm::Client cli1("opc.tcp://127.0.0.1:4999", {"admin", "admin"});
+    EXPECT_TRUE(cli1.ok());
+    rm::Client cli2("opc.tcp://127.0.0.1:4999", {"admin", "123456"});
+    EXPECT_FALSE(cli2.ok());
+};
+
+void configServer(rm::Server &srv)
 {
     // 添加单变量节点
     rm::Variable single_value = 42;
@@ -59,11 +72,11 @@ void setSvr(rm::Server &srv)
 TEST(OPC_UA_ClientTest, read_variable)
 {
     rm::Server srv(5000);
-    setSvr(srv);
-    rm::Client client("opc.tcp://127.0.0.1:5000");
+    configServer(srv);
+    rm::Client cli("opc.tcp://127.0.0.1:5000");
     // 读取测试服务器上的变量值
-    auto id = rm::nodeObjectsFolder | client.find("array");
-    rm::Variable variable = client.read(id);
+    auto id = rm::nodeObjectsFolder | cli.find("array");
+    rm::Variable variable = cli.read(id);
     EXPECT_FALSE(variable.empty());
     auto vec = rm::Variable::cast<std::vector<int>>(variable);
     for (size_t i = 0; i < vec.size(); ++i)
@@ -76,12 +89,12 @@ TEST(OPC_UA_ClientTest, read_variable)
 TEST(OPC_UA_ClientTest, variable_IO)
 {
     rm::Server srv(5001);
-    setSvr(srv);
-    rm::Client client("opc.tcp://127.0.0.1:5001");
+    configServer(srv);
+    rm::Client cli("opc.tcp://127.0.0.1:5001");
     // 读取测试服务器上的变量值
-    auto id = rm::nodeObjectsFolder | client.find("single");
-    EXPECT_TRUE(client.write(id, 99));
-    rm::Variable variable = client.read(id);
+    auto id = rm::nodeObjectsFolder | cli.find("single");
+    EXPECT_TRUE(cli.write(id, 99));
+    rm::Variable variable = cli.read(id);
     EXPECT_FALSE(variable.empty());
     int single_value = rm::Variable::cast<int>(variable);
     EXPECT_EQ(single_value, 99);
@@ -93,12 +106,12 @@ TEST(OPC_UA_ClientTest, variable_IO)
 TEST(OPC_UA_ClientTest, call)
 {
     rm::Server srv(5002);
-    setSvr(srv);
-    rm::Client client("opc.tcp://127.0.0.1:5002");
+    configServer(srv);
+    rm::Client cli("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
     std::vector<rm::Variable> input = {1, 2};
     std::vector<rm::Variable> output;
-    EXPECT_TRUE(client.call("add", input, output));
+    EXPECT_TRUE(cli.call("add", input, output));
     EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
     srv.stop();
     srv.join();
@@ -117,22 +130,22 @@ void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *v
 TEST(OPC_UA_ClientTest, variable_monitor)
 {
     rm::Server srv(5003);
-    setSvr(srv);
-    rm::Client client("opc.tcp://127.0.0.1:5003");
+    configServer(srv);
+    rm::Client cli("opc.tcp://127.0.0.1:5003");
     // 订阅测试服务器上的变量
-    auto node_id = rm::nodeObjectsFolder | client.find("single");
-    EXPECT_TRUE(client.monitor(node_id, onChange, 5));
+    auto node_id = rm::nodeObjectsFolder | cli.find("single");
+    EXPECT_TRUE(cli.monitor(node_id, onChange, 5));
     // 数据更新
-    client.write(node_id, 66);
+    cli.write(node_id, 66);
     std::this_thread::sleep_for(10ms);
-    client.spinOnce();
+    cli.spinOnce();
     EXPECT_EQ(type_name, "Int32");
     EXPECT_EQ(receive_data, 66);
     // 移除监视后的数据按预期不会更新
-    client.remove(node_id);
-    client.write(node_id, 123);
+    cli.remove(node_id);
+    cli.write(node_id, 123);
     std::this_thread::sleep_for(10ms);
-    client.spinOnce();
+    cli.spinOnce();
     EXPECT_EQ(receive_data, 66);
     srv.stop();
     srv.join();
@@ -158,22 +171,22 @@ void onEvent(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, size_t size, UA_
 TEST(OPC_UA_ClientTest, event_monitor)
 {
     rm::Server srv(5004);
-    setSvr(srv);
+    configServer(srv);
     rm::EventType etype;
     etype.browse_name = "TestEventType";
     etype.display_name = "测试事件类型";
     etype.description = "测试事件类型";
     etype.add("aaa", 3);
     srv.addEventTypeNode(etype);
-    rm::Client client("opc.tcp://127.0.0.1:5004");
-    client.monitor(rm::nodeServer, {"SourceName", "aaa"}, onEvent);
+    rm::Client cli("opc.tcp://127.0.0.1:5004");
+    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, onEvent);
     // 触发事件
     rm::Event event(etype);
     event.source_name = "GtestServer";
     event.message = "this is test event";
     event["aaa"] = 66;
     srv.triggerEvent(rm::nodeServer, event);
-    client.spinOnce();
+    cli.spinOnce();
     std::this_thread::sleep_for(10ms);
     EXPECT_EQ(source_name, "GtestServer");
     EXPECT_EQ(aaa, 66);
