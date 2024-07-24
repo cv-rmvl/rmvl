@@ -14,7 +14,6 @@
 //! @defgroup algorithm 数学、算法模块
 
 // 基础数学库
-#include "algorithm/ew_topsis.hpp"
 #include "algorithm/math.hpp"
 #include "algorithm/transform.hpp"
 

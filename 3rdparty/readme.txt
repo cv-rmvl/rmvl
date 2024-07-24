@@ -15,9 +15,9 @@ apriltag            Description     A visual fiducial system for the localizatio
                                     2. WITH_APRILTAG to enable apriltag support for the tag_detector
                                        module
 
-open62541           Description     An open-source C++ implementation of OPC UA
+open62541           Description     An open-source C implementation of OPC UA
                     License         open62541 is covered by the MPL-2.0 license, see open62541/LICENSE
-                    Homepage        open62541.org
+                    Homepage        https://www.open62541.org
                     CMake options   1. BUILD_OPEN62541 to download and build this module (disabled by
                                        default)
                                     2. WITH_OPEN62541 to enable open62541 support for the opcua module
