@@ -11,6 +11,8 @@
 
 #pragma once
 
+#ifdef HAVE_OPENCV
+
 #include <opencv2/core/types.hpp>
 
 #include "math.hpp"
@@ -108,3 +110,5 @@ inline cv::Matx<Tp, 3, 3> euler2Mat(Tp val, EulerAxis axis)
 //! @} algorithm
 
 } // namespace rm
+
+#endif // HAVE_OPENCV

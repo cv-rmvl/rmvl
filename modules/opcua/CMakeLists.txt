@@ -1,4 +1,4 @@
-set(BUILD_rmvl_opcua_INIT ${WITH_OPEN62541})
+rmvl_update_build(opcua WITH_OPEN62541)
 # generate parameters module
 rmvl_generate_para(opcua)
 # configure library module

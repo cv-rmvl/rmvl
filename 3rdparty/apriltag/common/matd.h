@@ -45,7 +45,7 @@ extern "C" {
 typedef struct
 {
     unsigned int nrows, ncols;
-    double data[];
+    double *data;
 //    double *data;
 } matd_t;
 

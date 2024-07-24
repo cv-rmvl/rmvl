@@ -9,7 +9,9 @@
  *
  */
 
+#ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
+#endif // HAVE_OPENCV
 
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/algorithm/numcal.hpp"
@@ -71,6 +73,8 @@ double Interpolator::operator()(double x) const
     return y;
 }
 
+#ifdef HAVE_OPENCV
+
 CurveFitter::CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order)
 {
     RMVL_Assert(xs.size() == ys.size());
@@ -114,6 +118,8 @@ double CurveFitter::operator()(double x) const
         retval += _coeffs[i] * std::pow(x, _idx[i]);
     return retval;
 }
+
+#endif // HAVE_OPENCV
 
 double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) const
 {

@@ -34,6 +34,8 @@ TEST(NumberCalculation, function_interpolator)
     EXPECT_EQ(foo(4), -7); // a0 = 1, a1=-10/3, a2=3, a3=-2/3
 }
 
+#ifdef HAVE_OPENCV
+
 TEST(NumberCalculation, curve_fitter_ax_b)
 {
     rm::CurveFitter foo({1, 2, 3, 4}, {0, 2, 1, 3}, 0b11);
@@ -56,6 +58,8 @@ TEST(NumberCalculation, curve_fitter_ax3_cx_d)
     // 3^3 - 4*3 + 1 = 16
     EXPECT_NEAR(foo(3), 16, 1e-5);
 }
+
+#endif // HAVE_OPENCV
 
 TEST(NumberCalculation, nonlinear_solver)
 {

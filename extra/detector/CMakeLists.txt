@@ -7,7 +7,7 @@ rmvl_add_module(
 )
 
 # armor_detector
-set(BUILD_rmvl_armor_detector_INIT ${WITH_ONNXRUNTIME})
+rmvl_update_build(armor_detector WITH_ONNXRUNTIME)
 rmvl_generate_para(
   armor_detector
   MODULE detector
@@ -18,7 +18,7 @@ rmvl_add_module(
 )
 
 # gyro_detector
-set(BUILD_rmvl_gyro_detector_INIT ${WITH_ONNXRUNTIME})
+rmvl_update_build(gyro_detector WITH_ONNXRUNTIME)
 rmvl_generate_para(
   gyro_detector
   MODULE detector

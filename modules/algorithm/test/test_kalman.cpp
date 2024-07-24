@@ -9,6 +9,8 @@
  *
  */
 
+#ifdef HAVE_OPENCV
+
 #include <gtest/gtest.h>
 
 #include "rmvl/algorithm/kalman.hpp"
@@ -148,3 +150,5 @@ TEST(KalmanTest, ekf)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_OPENCV
