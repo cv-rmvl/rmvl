@@ -13,7 +13,6 @@
 
 #include "rmvl/detector/gyro_detector.h"
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/core/ew_topsis.hpp"
 
 using namespace rm;
 
