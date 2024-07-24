@@ -11,7 +11,9 @@
 
 #include <numeric>
 
+#ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
+#endif // HAVE_OPENCV
 
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/algorithm/numcal.hpp"
@@ -306,6 +308,8 @@ std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<do
     return fminunc(farg, x0, options);
 }
 
+#ifdef HAVE_OPENCV
+
 /**
  * @brief 计算某点处的雅可比矩阵
  *
@@ -371,5 +375,7 @@ std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x
     }
     return xk;
 }
+
+#endif // HAVE_OPENCV
 
 } // namespace rm

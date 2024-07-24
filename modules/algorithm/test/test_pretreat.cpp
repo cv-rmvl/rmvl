@@ -9,6 +9,8 @@
  * 
  */
 
+#ifdef HAVE_OPENCV
+
 #include <gtest/gtest.h>
 
 #include "rmvl/algorithm/pretreat.hpp"
@@ -73,3 +75,5 @@ TEST_F(PretreatTest, 3_channel_minus)
 }
 
 } // namespace rm_test
+
+#endif // HAVE_OPENCV

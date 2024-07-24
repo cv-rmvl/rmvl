@@ -9,8 +9,6 @@
  *
  */
 
-#include <opencv2/core.hpp>
-
 #include <gtest/gtest.h>
 
 #include "rmvl/algorithm/ew_topsis.hpp"
@@ -35,19 +33,31 @@ TEST(EwTopsisTest, BasicFunction)
 class EwA;
 using Ew_ptr = std::shared_ptr<EwA>;
 
+struct MyPoint2f
+{
+    float x{};
+    float y{};
+    MyPoint2f(float x_, float y_) : x(x_), y(y_) {}
+};
+
 class EwA
 {
-    cv::Point2f center;
+    MyPoint2f center;
     float angle;
 
 public:
-    EwA(cv::Point2f c, float a) : center(c), angle(a) {}
+    EwA(MyPoint2f c, float a) : center(c), angle(a) {}
 
-    inline cv::Point2f getCenter() { return center; }
+    inline MyPoint2f getCenter() { return center; }
     inline float getAngle() { return angle; }
 
-    static Ew_ptr make(float x, float y, float a) { return std::make_shared<EwA>(cv::Point2f(x, y), a); }
+    static Ew_ptr make(float x, float y, float a) { return std::make_shared<EwA>(MyPoint2f(x, y), a); }
 };
+
+static inline float dis(const MyPoint2f &a, const MyPoint2f &b)
+{
+    return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
+}
 
 TEST(EwTopsisTest, CustomData)
 {
@@ -76,7 +86,7 @@ TEST(EwTopsisTest, CustomData)
         {
             // 2 表示两个指标
             samples[c * standards.size() + s].resize(2);
-            samples[c * standards.size() + s][0] = -getDistance(currents[c]->getCenter(), standards[s]->getCenter());
+            samples[c * standards.size() + s][0] = -dis(currents[c]->getCenter(), standards[s]->getCenter());
             samples[c * standards.size() + s][1] = -abs(currents[c]->getAngle() - standards[s]->getAngle());
         }
     }

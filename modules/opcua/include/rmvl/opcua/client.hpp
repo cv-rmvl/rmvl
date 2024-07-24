@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <array>
+
 #include <open62541/client_subscriptions.h>
 
 #include "object.hpp"

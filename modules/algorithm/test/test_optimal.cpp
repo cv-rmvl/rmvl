@@ -102,6 +102,8 @@ TEST(Optimal, fmincon_inequality_con)
 static inline double lsq_linear1(const std::vector<double> &x) { return x[0] + x[1] - 6; }
 static inline double lsq_linear2(const std::vector<double> &x) { return x[0] - x[1] - 4; }
 
+#ifdef HAVE_OPENCV
+
 TEST(Optimal, lsqnonlin_linear)
 {
     auto x = rm::lsqnonlin({lsq_linear1, lsq_linear2}, {0, 0});
@@ -128,5 +130,7 @@ TEST(Optimal, lsqnonlin_sine)
     EXPECT_NEAR(x[2], -0.2, 1e-3);
     EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-3);
 }
+
+#endif // HAVE_OPENCV
 
 } // namespace rm_test

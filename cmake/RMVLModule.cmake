@@ -66,6 +66,26 @@ function(rmvl_install_directories _dir)
 endfunction(rmvl_install_directories)
 
 # ----------------------------------------------------------------------------
+#   更新 RMVL 目标构建的标志位，用于控制是否构建指定模块，不影响用户的选择
+#   - 主要更新 `BUILD_rmvl_xxx_INIT` 变量
+#   - 在满足条件时，设置 `BUILD_rmvl_xxx_INIT` 为 `ON`，否则为 `OFF`
+#   用法:
+#     rmvl_update_build(<name> [CONDITION])
+#   示例:
+#     rmvl_update_build(
+#       hik_camera
+#       HikSDK_FOUND
+#     )
+# ----------------------------------------------------------------------------
+macro(rmvl_update_build _name)
+  if(${ARGN})
+    set(BUILD_rmvl_${_name}_INIT ON)
+  else()
+    set(BUILD_rmvl_${_name}_INIT OFF)
+  endif()
+endmacro()
+
+# ----------------------------------------------------------------------------
 #   在当前目录中添加新的 RMVL 模块，并会依次添加至
 #   - 局部变量 modules_build
 #   - 缓存变量 RMVL_MODULES_BUILD
@@ -215,12 +235,12 @@ endmacro(rmvl_compile_options _target)
 #   此命令用于为指定模块添加新的 RMVL 测试
 #   用法:
 #   rmvl_add_test(<name> <Unit|Performance> <DEPENDS> [rmvl_target...]
-#     <DEPEND_TESTS> [test_target...])
+#     <EXTERNAL> [test_target...])
 #   示例:
 #   rmvl_add_test(
-#     detector Unit                  # 测试名
-#     DEPENDS armor_detector         # 需要依赖的 RMVL 目标库
-#     DEPEND_TESTS GTest::gtest_main # 需要依赖的第三方测试工具目标库
+#     detector Unit              # 测试名
+#     DEPENDS armor_detector     # 需要依赖的 RMVL 目标库
+#     EXTERNAL GTest::gtest_main # 需要依赖的第三方目标库，一般是测试工具库
 #   )
 # ----------------------------------------------------------------------------
 function(rmvl_add_test test_name test_kind)

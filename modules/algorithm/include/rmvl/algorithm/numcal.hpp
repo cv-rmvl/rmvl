@@ -1,7 +1,7 @@
 /**
  * @file numcal.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief Numerical Calculation Module 数值计算模块
+ * @brief Numerical Calculation Module 数值计算与最优化模块
  * @version 1.0
  * @date 2024-01-06
  *
@@ -116,6 +116,8 @@ public:
 
 ////////////////// 多项式曲线拟合 //////////////////
 
+#ifdef HAVE_OPENCV
+
 /**
  * @brief 曲线拟合器
  * @brief
@@ -146,6 +148,8 @@ public:
      */
     double operator()(double x) const;
 };
+
+#endif
 
 ///////////////// 非线性方程数值解 /////////////////
 
@@ -409,6 +413,8 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
  */
 std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, const FuncNds &c, const FuncNds &ceq, const OptimalOptions &options = {});
 
+#ifdef HAVE_OPENCV
+
 /**
  * @brief 无约束非线性最小二乘求解
  *
@@ -418,6 +424,8 @@ std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<do
  * @return 最小二乘解
  */
 std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
+
+#endif // HAVE_OPENCV
 
 //! @} algorithm_optimal
 

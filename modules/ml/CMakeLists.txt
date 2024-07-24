@@ -1,14 +1,10 @@
-set(BUILD_rmvl_ml_INIT ${WITH_OPENCV})
+rmvl_update_build(ml WITH_OPENCV)
 rmvl_add_module(
   ml INTERFACE
   DEPENDS algorithm
 )
 
-if(WITH_ONNXRUNTIME AND BUILD_rmvl_ml_INIT)
-  set(BUILD_rmvl_ort_INIT ON)
-else()
-  set(BUILD_rmvl_ort_INIT OFF)
-endif()
+rmvl_update_build(ort WITH_ONNXRUNTIME AND BUILD_rmvl_ml_INIT)
 
 rmvl_add_module(
   ort

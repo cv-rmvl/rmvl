@@ -11,6 +11,8 @@
 
 #pragma once
 
+#ifdef HAVE_OPENCV
+
 #include <functional>
 
 #include <opencv2/core.hpp>
@@ -356,3 +358,5 @@ using EKF94d = ExtendedKalmanFilter<double, 9U, 4U>; //!< 9 × 4 扩展卡尔曼
 //! @} algorithm_kalman
 
 } // namespace rm
+
+#endif // HAVE_OPENCV

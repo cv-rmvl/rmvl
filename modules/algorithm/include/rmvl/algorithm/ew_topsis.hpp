@@ -116,8 +116,7 @@ private:
         idx_type sums(_index_size);
         for (size_type j = 0; j < _index_size; ++j)
             sums[j] = std::accumulate(R.begin(), R.end(), 0,
-                                      [&j](int a, const idx_type &b)
-                                      {
+                                      [&j](int a, const idx_type &b) {
                                           return a + b[j];
                                       });
         for (size_type i = 0; i < _sample_size; ++i)

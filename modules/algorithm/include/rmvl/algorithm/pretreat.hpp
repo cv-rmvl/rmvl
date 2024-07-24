@@ -11,6 +11,8 @@
 
 #pragma once
 
+#ifdef HAVE_OPENCV
+
 #include <opencv2/core/mat.hpp>
 
 namespace rm
@@ -63,3 +65,5 @@ cv::Mat binary(cv::Mat src, uint8_t threshold);
 //! @} algorithm_pretreat
 
 } // namespace rm
+
+#endif // HAVE_OPENCV

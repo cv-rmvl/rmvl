@@ -9,6 +9,8 @@
  *
  */
 
+#ifdef HAVE_OPENCV
+
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/core/util.hpp"
@@ -52,3 +54,5 @@ cv::Mat binary(cv::Mat src, uint8_t thresh)
 }
 
 } // namespace rm
+
+#endif // HAVE_OPENCV

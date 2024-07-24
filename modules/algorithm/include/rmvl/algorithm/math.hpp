@@ -15,11 +15,11 @@
 #include <vector>
 #include <unordered_map>
 
-#if __cpp_lib_math_constants >= 201907L
-#include <numbers>
-#endif
-
+#if defined HAVE_OPENCV
 #include <opencv2/core/matx.hpp>
+#else
+#include <algorithm>
+#endif // HAVE_OPENCV
 
 #include "rmvl/core/util.hpp"
 
@@ -36,15 +36,9 @@ constexpr double FLOAT_MAX{MAXFLOAT};
 constexpr double FLOAT_MAX{HUGE};
 #endif
 
-#if __cpp_lib_math_constants >= 201907L
-constexpr double PI = ::std::numbers::pi;        //!< 圆周率: \f$\pi\f$
-constexpr double e = ::std::numbers::e;          //!< 自然对数底数: \f$e\f$
-constexpr double SQRT_2 = ::std::numbers::sqrt2; //!< 根号 2: \f$\sqrt2\f$
-#else
 constexpr double PI = 3.14159265358979323; //!< 圆周率: \f$\pi\f$
 constexpr double e = 2.7182818459045;      //!< 自然对数底数: \f$e\f$
 constexpr double SQRT_2 = 1.4142135623731; //!< 根号 2: \f$\sqrt2\f$
-#endif
 
 constexpr double PI_2 = PI / 2.; //!< PI / 2: \f$\frac\pi2\f$
 constexpr double PI_4 = PI / 4.; //!< PI / 4: \f$\frac\pi4\f$
@@ -65,6 +59,8 @@ constexpr double operator""_to_deg(long long unsigned num) { return num * 180. /
 
 } // namespace rm
 
+#ifdef HAVE_OPENCV
+
 // 定义部分 Matx
 namespace cv
 {
@@ -80,8 +76,12 @@ using Matx55d = Matx<double, 5, 5>;
 
 } // namespace cv
 
+#endif // HAVE_OPENCV
+
 namespace rm
 {
+
+#ifdef HAVE_OPENCV
 
 template <typename Tp>
 constexpr Tp operator+(Tp val, const cv::Matx<Tp, 1, 1> &mat) { return val + mat(0, 0); }
@@ -91,6 +91,8 @@ template <typename Tp>
 constexpr Tp operator-(Tp val, const cv::Matx<Tp, 1, 1> &mat) { return val - mat(0, 0); }
 template <typename Tp>
 constexpr cv::Matx<Tp, 1, 1> operator-(const cv::Matx<Tp, 1, 1> &mat, Tp val) { return cv::Matx<Tp, 1, 1>(mat(0, 0) - val); }
+
+#endif // HAVE_OPENCV
 
 //! 角度制式
 enum AngleMode : bool
@@ -122,6 +124,8 @@ template <typename Tp>
 constexpr Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<Tp>(PI); }
 
 // ------------------------【广义位移计算】------------------------
+
+#ifdef HAVE_OPENCV
 
 /**
  * @brief 获取距离
@@ -266,6 +270,8 @@ constexpr auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &en
     return mode ? rad : rad2deg(rad);
 }
 
+#endif // HAVE_OPENCV
+
 /**
  * @brief 求两个角之间的夹角
  *
@@ -348,6 +354,8 @@ constexpr Tp sgn(Tp x) { return (x > 0) ? 1 : ((x < 0) ? -1 : 0); }
 template <typename Tp>
 constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + std::pow(static_cast<Tp>(e), -k * x + mu)); }
 
+#ifdef HAVE_OPENCV
+
 /**
  * @brief 平面向量外积
  *
@@ -369,6 +377,8 @@ constexpr Tp cross2D(const cv::Vec<Tp, 2> &a, const cv::Vec<Tp, 2> &b) { return 
  */
 template <typename Tp>
 constexpr Tp cross2D(const cv::Point_<Tp> &a, const cv::Point_<Tp> &b) { return a.x * b.y - a.y * b.x; }
+
+#endif // HAVE_OPENCV
 
 /**
  * @brief 在指定范围内寻找众数，时间复杂度 O(N)
