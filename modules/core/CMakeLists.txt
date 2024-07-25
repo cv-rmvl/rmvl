@@ -31,7 +31,7 @@ if(BUILD_TESTS)
   rmvl_add_test(
     core Unit
     DEPENDS core
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
 
@@ -39,6 +39,6 @@ if(BUILD_PERF_TESTS)
   rmvl_add_test(
     core Performance
     DEPENDS core
-    DEPEND_TESTS benchmark::benchmark_main opencv_video
+    EXTERNAL benchmark::benchmark_main opencv_video
   )
 endif(BUILD_PERF_TESTS)

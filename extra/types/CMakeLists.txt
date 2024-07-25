@@ -13,6 +13,6 @@ if(BUILD_TESTS)
   rmvl_add_test(
     types Unit
     DEPENDS types
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif()
