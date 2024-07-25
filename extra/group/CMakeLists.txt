@@ -35,7 +35,7 @@ if(BUILD_TESTS)
   rmvl_add_test(
     group Unit
     DEPENDS gyro_group gyro_tracker
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
 

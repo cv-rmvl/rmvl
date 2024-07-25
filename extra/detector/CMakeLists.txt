@@ -60,7 +60,7 @@ if(BUILD_TESTS)
   rmvl_add_test(
     detector Unit
     DEPENDS armor_detector rune_detector gyro_detector
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
 

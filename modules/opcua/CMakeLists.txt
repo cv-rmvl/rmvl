@@ -13,7 +13,7 @@ if(BUILD_TESTS AND WITH_OPEN62541)
   rmvl_add_test(
     opcua Unit
     DEPENDS opcua
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif()
 
