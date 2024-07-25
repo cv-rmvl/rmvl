@@ -248,7 +248,7 @@ function(rmvl_add_test test_name test_kind)
     return()
   endif()
   # Add arguments variable
-  set(multi_args DEPENDS DEPEND_TESTS)
+  set(multi_args DEPENDS EXTERNAL)
   if(NOT "${test_kind}" MATCHES "^(Unit|Performance)$")
     message(FATAL_ERROR "Unknown test kind : ${test_kind}")
   endif()
@@ -293,7 +293,7 @@ function(rmvl_add_test test_name test_kind)
   # Test depends
   target_link_libraries(
     ${the_target}
-    PRIVATE ${TS_DEPEND_TESTS}
+    PRIVATE ${TS_EXTERNAL}
   )
 
   # Add test

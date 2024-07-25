@@ -62,7 +62,7 @@ if(BUILD_TESTS)
   rmvl_add_test(
     feature Unit
     DEPENDS light_blob pilot rune_center rune_target
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
 
