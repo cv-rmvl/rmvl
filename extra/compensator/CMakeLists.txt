@@ -35,7 +35,7 @@ if(BUILD_TESTS)
   rmvl_add_test(
     compensator Unit
     DEPENDS gravity_compensator
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif()
 

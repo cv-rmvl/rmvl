@@ -55,7 +55,7 @@ if(BUILD_TESTS)
   rmvl_add_test(
     predictor Unit
     DEPENDS spi_rune_predictor
-    DEPEND_TESTS GTest::gtest_main
+    EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
 

@@ -215,12 +215,12 @@ endmacro(rmvl_compile_options _target)
 #   此命令用于为指定模块添加新的 RMVL 测试
 #   用法:
 #   rmvl_add_test(<name> <Unit|Performance> <DEPENDS> [rmvl_target...]
-#     <DEPEND_TESTS> [test_target...])
+#     <EXTERNAL> [test_target...])
 #   示例:
 #   rmvl_add_test(
-#     detector Unit                  # 测试名
-#     DEPENDS armor_detector         # 需要依赖的 RMVL 目标库
-#     DEPEND_TESTS GTest::gtest_main # 需要依赖的第三方测试工具目标库
+#     detector Unit              # 测试名
+#     DEPENDS armor_detector     # 需要依赖的 RMVL 目标库
+#     EXTERNAL GTest::gtest_main # 需要依赖的第三方目标库，一般是测试工具库
 #   )
 # ----------------------------------------------------------------------------
 function(rmvl_add_test test_name test_kind)
@@ -228,7 +228,7 @@ function(rmvl_add_test test_name test_kind)
     return()
   endif()
   # Add arguments variable
-  set(multi_args DEPENDS DEPEND_TESTS)
+  set(multi_args DEPENDS EXTERNAL)
   if(NOT "${test_kind}" MATCHES "^(Unit|Performance)$")
     message(FATAL_ERROR "Unknown test kind : ${test_kind}")
   endif()
@@ -273,7 +273,7 @@ function(rmvl_add_test test_name test_kind)
   # Test depends
   target_link_libraries(
     ${the_target}
-    PRIVATE ${TS_DEPEND_TESTS}
+    PRIVATE ${TS_EXTERNAL}
   )
 
   # Add test
