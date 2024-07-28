@@ -79,12 +79,13 @@ endfunction()
 #     )
 #   示例:
 #     _parse_assign(
-#       line_str   # 传入字符串: 一行的内容
-#       ret_header # 传出字符串: 头文件内容
-#       ret_source # 传出字符串: 源文件内容
+#       line_str         # 传入字符串: 一行的内容
+#       ret_header       # 传出字符串: 头文件内容
+#       ret_source_read  # read 函数传出字符串: 源文件内容
+#       ret_source_write # write 函数传出字符串: 源文件内容
 #     )
 # ----------------------------------------------------------------------------
-function(_parse_assign content_line header_line source_line)
+function(_parse_assign content_line header_line source_read_line source_write_line)
   list(LENGTH ${content_line} l)
   if(l GREATER 1)
     # 获取值类型符号
@@ -130,38 +131,46 @@ function(_parse_assign content_line header_line source_line)
     set(ret_header_line "${ret_header_line}    ${type_sym_correct} ${id_sym} = ${default_sym};\n")
   endif()
   # 获取 Source 部分的返回值
-  set(ret_source_line "${ret_source_line}    node = fs[\"${id_sym}\"];\n")
+  set(ret_source_read_line "${ret_source_read_line}    node = fs[\"${id_sym}\"];\n")
   if(type_sym MATCHES "^uint\\w*|size_t")
-    set(ret_source_line "${ret_source_line}    if (!node.isNone())\n    {\n")
-    set(ret_source_line "${ret_source_line}        int tmp{};\n        node >> tmp;\n")
-    set(ret_source_line "${ret_source_line}        ${id_sym} = static_cast<${type_sym_correct}>(tmp);\n    }\n")
+    set(ret_source_read_line "${ret_source_read_line}    if (!node.isNone())\n    {\n")
+    set(ret_source_read_line "${ret_source_read_line}        int tmp{};\n        node >> tmp;\n")
+    set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = static_cast<${type_sym_correct}>(tmp);\n    }\n")
+    set(ret_source_write_line "${ret_source_write_line}    int tmp_${id_sym} = static_cast<int>(${id_sym});\n")
+    set(ret_source_write_line "${ret_source_write_line}    fs << \"${id_sym}\" << tmp_${id_sym};\n")
   elseif(type_sym MATCHES "int|float|double|string|vector|Point\\w*|Mat\\w*|Vec\\w*")
-    set(ret_source_line "${ret_source_line}    node.isNone() ? void(0) : (node >> ${id_sym});\n")
-  else() # 枚举类型分支
-    set(ret_source_line "${ret_source_line}    if (!node.isNone())\n    {\n")
-    set(ret_source_line "${ret_source_line}        std::string tmp{};\n        node >> tmp;\n")
-    set(ret_source_line "${ret_source_line}        ${id_sym} = map_${type_sym}.at(tmp);\n    }\n")
+    set(ret_source_read_line "${ret_source_read_line}    node.isNone() ? void(0) : (node >> ${id_sym});\n")
+    set(ret_source_write_line "${ret_source_write_line}    fs << \"${id_sym}\" << ${id_sym};\n")
+  else()
+    set(ret_source_read_line "${ret_source_read_line}    if (!node.isNone())\n    {\n")
+    set(ret_source_read_line "${ret_source_read_line}        std::string tmp{};\n        node >> tmp;\n")
+    set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = s2t_${type_sym}.at(tmp);\n    }\n")
+    set(ret_source_write_line "${ret_source_write_line}    fs << \"${id_sym}\" << t2s_${type_sym}.at(${id_sym});\n")
   endif()
   # 作用域提升
   set(${header_line} "${ret_header_line}" PARENT_SCOPE)
-  set(${source_line} "${ret_source_line}" PARENT_SCOPE)
+  set(${source_read_line} "${ret_source_read_line}" PARENT_SCOPE)
+  set(${source_write_line} "${ret_source_write_line}" PARENT_SCOPE)
 endfunction()
 
 # ----------------------------------------------------------------------------
 #   按照枚举定义模式解析参数规范文件的某一行内容
 #   用法:
 #     _parse_enumdef(
-#       <line_str> <name of the enum> <header_extra_line> <source_extra_line>
+#       <line_str> <name of the enum>
+#       <header_enum_line>
+#       <source_enum_s2t_line> <source_enum_t2s_line>
 #     )
 #   示例:
 #     _parse_enumdef(
-#       line_str          # [in] 一行的内容
-#       enum_name         # [in] 枚举名称
-#       header_extra_line # [out] 头文件额外内容
-#       source_extra_line # [out] 源文件额外内容
+#       line_str             # [in]  一行的内容
+#       enum_name            # [in]  枚举名称
+#       header_enum_line     # [out] 头文件额外内容
+#       source_enum_s2t_line # [out] 源文件 string->tag 的额外内容
+#       source_enum_t2s_line # [out] 源文件 tag->string 的额外内容
 #     )
 # ----------------------------------------------------------------------------
-function(_parse_enumdef content_line enum_name header_extra_line source_extra_line)
+function(_parse_enumdef content_line enum_name header_enum_line source_enum_s2t_line source_enum_t2s_line)
   list(LENGTH ${content_line} l)
   # 获取标签符号
   list(GET ${content_line} 0 tag_sym)
@@ -183,17 +192,19 @@ function(_parse_enumdef content_line enum_name header_extra_line source_extra_li
     string(SUBSTRING "${ref_cmt}" ${cmt_idx} -1 comment_sym)
   endif()
   # 获取 Extra Header 部分的返回值
-  set(ret_header_extra_line "    //! ${comment_sym}\n")
+  set(ret_header_enum_line "    //! ${comment_sym}\n")
   if("${ref_sym}" STREQUAL "")
-    set(ret_header_extra_line "${ret_header_extra_line}    ${tag_sym},\n")
+    set(ret_header_enum_line "${ret_header_enum_line}    ${tag_sym},\n")
   else()
-    set(ret_header_extra_line "${ret_header_extra_line}    ${tag_sym} = ${ref_sym},\n")
+    set(ret_header_enum_line "${ret_header_enum_line}    ${tag_sym} = ${ref_sym},\n")
   endif()
   # 获取 Extra Source 部分的返回值
-  set(ret_source_extra_line "    {\"${tag_sym}\", ${enum_name}::${tag_sym}},\n")
+  set(ret_source_enum_s2t_line "    {\"${tag_sym}\", ${enum_name}::${tag_sym}},\n")
+  set(ret_source_enum_t2s_line "    {${enum_name}::${tag_sym}, \"${tag_sym}\"},\n")
   # 作用域提升
-  set(${header_extra_line} "${ret_header_extra_line}" PARENT_SCOPE)
-  set(${source_extra_line} "${ret_source_extra_line}" PARENT_SCOPE)
+  set(${header_enum_line} "${ret_header_enum_line}" PARENT_SCOPE)
+  set(${source_enum_s2t_line} "${ret_source_enum_s2t_line}" PARENT_SCOPE)
+  set(${source_enum_t2s_line} "${ret_source_enum_t2s_line}" PARENT_SCOPE)
 endfunction()
 
 # ----------------------------------------------------------------------------
@@ -201,19 +212,22 @@ endfunction()
 #   用法:
 #     _para_parser(
 #       <file_name>
-#       <header_details> <header_extra> <source_details>
+#       <header_details> <source_read> <source_write>
+#       <header_enum> <source_enum_s2t> <source_enum_t2s>
+#       <status>
 #     )
 #   示例:
-#     _para_parser(
-#       core.para           # 名为 core.para 的参数规范文件
-#       para_header_details # 对应 .h/.hpp 文件的细节
-#       para_header_extra   # 对应 .h/.hpp 文件的额外细节
-#       para_source_details # 对应 .cpp 文件的实现细节
-#       para_source_extra   # 对应 .cpp 文件的额外实现细节
-#       status              # 返回值: 解析是否成功，成功返回 TRUE，失败返回 FALSE
+#     _para_parser(core.para # 名为 core.para 的参数规范文件
+#       para_header_details  # 对应 .h/.hpp 文件的细节
+#       para_source_read     # 对应 .cpp 文件 read 函数的实现细节
+#       para_source_write    # 对应 .cpp 文件 write 函数的实现细节
+#       para_header_enum     # 对应 .h/.hpp 文件 enum 部分的细节
+#       para_source_enum_s2t # 对应 .cpp 文件 enum 部分 string->tag 的细节
+#       para_source_enum_t2s # 对应 .cpp 文件 enum 部分 tag->string 的细节
+#       status               # 返回值: 解析是否成功，成功返回 TRUE，失败返回 FALSE
 #     )
 # ----------------------------------------------------------------------------
-function(_para_parser file_name header_details header_extra source_details source_extra status)
+function(_para_parser file_name header_details source_read source_write header_enum source_enum_s2t source_enum_t2s status)
   # 初始化返回值
   file(READ ${file_name} out_val)
   if(NOT out_val)
@@ -243,36 +257,49 @@ function(_para_parser file_name header_details header_extra source_details sourc
         math(EXPR cmt_idx "${cmt_idx} + 1")
         string(SUBSTRING "${enum_cmt}" ${cmt_idx} -1 enum_cmt)
       endif()
-      set(ret_header_extra "${ret_header_extra}//! ${enum_cmt}\nenum class ${enum_name}\n{\n")
-      set(ret_source_extra "${ret_source_extra}static const std::unordered_map<std::string, ${enum_name}> map_${enum_name} = {\n")
+      set(ret_header_enum "${ret_header_enum}//! ${enum_cmt}\nenum class ${enum_name}\n{\n")
+      set(ret_source_enum_s2t "${ret_source_enum_s2t}static const std::unordered_map<std::string, ${enum_name}> s2t_${enum_name} = {\n")
+      set(ret_source_enum_t2s "${ret_source_enum_t2s}static const std::unordered_map<${enum_name}, std::string> t2s_${enum_name} = {\n")
       set(parse_mode "enum")
       continue()
     elseif(line_str MATCHES "^endenum")
-      set(ret_header_extra "${ret_header_extra}};\n")
-      set(ret_source_extra "${ret_source_extra}};\n")
+      set(ret_header_enum "${ret_header_enum}};\n")
+      set(ret_source_enum_s2t "${ret_source_enum_s2t}};\n")
+      set(ret_source_enum_t2s "${ret_source_enum_t2s}};\n")
       unset(parse_mode)
       continue()
     endif()
     # 按照不同的模式进行解析
-    unset(ret_header_extra_line)
+    unset(ret_header_enum_line)
+    unset(ret_source_enum_s2t_line)
+    unset(ret_source_enum_t2s_line)
     unset(ret_header_line)
-    unset(ret_source_line)
+    unset(ret_source_read_line)
+    unset(ret_source_write_line)
     if(line_str MATCHES "^#")
       continue()
     elseif("${parse_mode}" STREQUAL "enum")
-      _parse_enumdef(line_str "${enum_name}" ret_header_extra_line ret_source_extra_line)
-      set(ret_header_extra "${ret_header_extra}${ret_header_extra_line}")
-      set(ret_source_extra "${ret_source_extra}${ret_source_extra_line}")
+      _parse_enumdef(
+        line_str "${enum_name}"
+        ret_header_enum_line
+        ret_source_enum_s2t_line ret_source_enum_t2s_line
+      )
+      set(ret_header_enum "${ret_header_enum}${ret_header_enum_line}")
+      set(ret_source_enum_s2t "${ret_source_enum_s2t}${ret_source_enum_s2t_line}")
+      set(ret_source_enum_t2s "${ret_source_enum_t2s}${ret_source_enum_t2s_line}")
     else()
-      _parse_assign(line_str ret_header_line ret_source_line)
+      _parse_assign(line_str ret_header_line ret_source_read_line ret_source_write_line)
       set(ret_header "${ret_header}${ret_header_line}")
-      set(ret_source "${ret_source}${ret_source_line}")
+      set(ret_source_read "${ret_source_read}${ret_source_read_line}")
+      set(ret_source_write "${ret_source_write}${ret_source_write_line}")
     endif()
   endforeach(substr ${out_val})
+  set(${header_enum} "${ret_header_enum}" PARENT_SCOPE)
+  set(${source_enum_s2t} "${ret_source_enum_s2t}" PARENT_SCOPE)
+  set(${source_enum_t2s} "${ret_source_enum_t2s}" PARENT_SCOPE)
   set(${header_details} "${ret_header}" PARENT_SCOPE)
-  set(${header_extra} "${ret_header_extra}" PARENT_SCOPE)
-  set(${source_details} "${ret_source}" PARENT_SCOPE)
-  set(${source_extra} "${ret_source_extra}" PARENT_SCOPE)
+  set(${source_read} "${ret_source_read}" PARENT_SCOPE)
+  set(${source_write} "${ret_source_write}" PARENT_SCOPE)
   set(${status} TRUE PARENT_SCOPE)
 endfunction()
 
@@ -324,8 +351,8 @@ function(rmvl_generate_para target_name)
   # parse *.para file
   _para_parser(
     ${file_name}
-    para_header_details para_header_extra
-    para_source_details para_source_extra
+    para_header_details para_source_read para_source_write
+    para_header_enum para_source_enum_s2t para_source_enum_t2s
     para_status
   )
   if(NOT para_status)
