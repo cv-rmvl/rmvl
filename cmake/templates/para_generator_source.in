@@ -16,15 +16,26 @@
 namespace rm::para
 {
 
-@para_source_extra@
-bool @class_name@::load(const std::string &path)
+@para_source_enum_s2t@
+@para_source_enum_t2s@
+bool @class_name@::read(const std::string &path)
 {
     cv::FileStorage fs(path, cv::FileStorage::READ);
     if (!fs.isOpened())
         return false;
     cv::FileNode node;
 
-@para_source_details@
+@para_source_read@
+    return true;
+}
+
+bool @class_name@::write(const std::string &path) const
+{
+    cv::FileStorage fs(path, cv::FileStorage::WRITE);
+    if (!fs.isOpened())
+        return false;
+
+@para_source_write@
     return true;
 }
 
