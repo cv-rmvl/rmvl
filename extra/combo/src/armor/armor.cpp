@@ -146,4 +146,15 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
     _tick = tick;
 }
 
+combo::ptr Armor::clone(double tick)
+{
+    auto retval = std::make_shared<Armor>(*this);
+    // 更新内部所有特征
+    for (auto &p_feature : retval->_features)
+        p_feature = p_feature->clone();
+    // 更新时间戳
+    retval->_tick = tick;
+    return retval;
+}
+
 } // namespace rm

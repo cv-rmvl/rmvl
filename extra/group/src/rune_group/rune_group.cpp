@@ -52,4 +52,13 @@ void RuneGroup::sync(const GyroData &, double)
         _datas.pop_back();
 }
 
+group::ptr RuneGroup::clone()
+{
+    auto retval = std::make_shared<RuneGroup>(*this);
+    // 更新内部所有追踪器
+    for (auto &p_tracker : retval->_trackers)
+        p_tracker = p_tracker->clone();
+    return retval;
+}
+
 } // namespace rm

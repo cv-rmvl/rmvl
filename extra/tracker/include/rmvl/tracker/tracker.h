@@ -122,7 +122,7 @@ public:
      *
      * @return 指向新追踪器的共享指针
      */
-    tracker::ptr clone() override { return std::make_shared<DefaultTracker>(*this); }
+    tracker::ptr clone() override;
 
     /**
      * @brief 使用已捕获的 `combo` 更新追踪器

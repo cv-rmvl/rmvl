@@ -11,7 +11,8 @@
 
 #include "rmvl/combo/combo.h"
 
-using namespace rm;
+namespace rm
+{
 
 DefaultCombo::DefaultCombo(feature::ptr p_feature, double tick) : combo()
 {
@@ -24,3 +25,16 @@ DefaultCombo::DefaultCombo(feature::ptr p_feature, double tick) : combo()
     _type = p_feature->getType();
     _tick = tick;
 }
+
+combo::ptr DefaultCombo::clone(double tick)
+{
+    auto retval = std::make_shared<DefaultCombo>(*this);
+    // 更新内部所有特征
+    for (std::size_t i = 0; i < _features.size(); ++i)
+        retval->_features[i] = _features[i]->clone();
+    // 更新时间戳
+    retval->_tick = tick;
+    return retval;
+}
+
+} // namespace rm

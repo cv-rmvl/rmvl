@@ -37,6 +37,15 @@ RuneTracker::RuneTracker(combo::ptr p_rune)
     updateFromRune(p_rune);
 }
 
+tracker::ptr RuneTracker::clone()
+{
+    auto retval = std::make_shared<RuneTracker>(*this);
+    // 更新内部所有组合体
+    for (auto &p_combo : retval->_combo_deque)
+        p_combo = p_combo->clone(p_combo->getTick());
+    return retval;
+}
+
 void RuneTracker::update(combo::ptr p_rune)
 {
     if (p_rune == nullptr)
