@@ -64,7 +64,7 @@ public:
      *
      * @return 指向新追踪器的共享指针
      */
-    tracker::ptr clone() override { return std::make_shared<GyroTracker>(*this); }
+    tracker::ptr clone() override;
 
     /**
      * @brief 动态类型转换

@@ -128,7 +128,14 @@ public:
      *
      * @return 指向新序列组的共享指针
      */
-    group::ptr clone() override { return std::make_shared<DefaultGroup>(*this); }
+    group::ptr clone() override
+    {
+        auto retval = std::make_shared<DefaultGroup>(*this);
+        // 更新内部所有追踪器
+        for (auto &p_tracker : retval->_trackers)
+            p_tracker = p_tracker->clone();
+        return retval;
+    }
 
     /**
      * @brief 动态类型转换

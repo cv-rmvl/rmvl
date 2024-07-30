@@ -41,6 +41,15 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     initFilter();
 }
 
+tracker::ptr GyroTracker::clone()
+{
+    auto retval = std::make_shared<GyroTracker>(*this);
+    // 更新内部所有组合体
+    for (auto &p_combo : retval->_combo_deque)
+        p_combo = p_combo->clone(p_combo->getTick());
+    return retval;
+}
+
 void GyroTracker::update(combo::ptr p_armor)
 {
     if (p_armor == nullptr)

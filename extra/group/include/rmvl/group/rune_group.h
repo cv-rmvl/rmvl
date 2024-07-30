@@ -36,7 +36,7 @@ public:
      *
      * @return 指向新序列组的共享指针
      */
-    group::ptr clone() override { return std::make_shared<RuneGroup>(*this); }
+    group::ptr clone() override;
 
     /**
      * @brief 动态类型转换

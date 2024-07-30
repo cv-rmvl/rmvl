@@ -84,4 +84,15 @@ Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &g
     _tick = tick;
 }
 
+combo::ptr Rune::clone(double tick)
+{
+    auto retval = std::make_shared<Rune>(*this);
+    // 更新内部所有特征
+    for (std::size_t i = 0; i < _features.size(); ++i)
+        retval->_features[i] = _features[i]->clone();
+    // 更新时间戳
+    retval->_tick = tick;
+    return retval;
+}
+
 } // namespace rm

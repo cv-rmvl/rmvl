@@ -78,4 +78,17 @@ void GyroGroup::initFilter()
     _center3d_filter.init({_center3d(0), _center3d(1), _center3d(2), 0, 0, 0}, 1e5f);
 }
 
+group::ptr GyroGroup::clone()
+{
+    auto retval = std::make_shared<GyroGroup>(*this);
+    // 更新内部所有追踪器
+    for (auto &p_tracker : retval->_trackers)
+        p_tracker = p_tracker->clone();
+    // 更新追踪器状态哈希表
+    retval->_tracker_state.clear();
+    for (auto &p_tracker : retval->_trackers)
+        retval->_tracker_state[p_tracker] = _tracker_state[p_tracker];
+    return retval;
+}
+
 } // namespace rm

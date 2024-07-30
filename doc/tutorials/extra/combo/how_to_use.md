@@ -24,8 +24,10 @@
 构造一个装甲板的代码如下
 
 ```cpp
-auto p_combo = make_combo(p_left, p_right, gyro_data, tick);
+auto p_combo = rm::Armor::make_combo(p_left, p_right, gyro_data, tick);
 ```
+
+rm::combo 提供了 `clone` 纯虚拟函数，用于完全复制一份数据，适合于强制构造无视匹配要求的情况。
 
 ### 1.2 信息获取
 
@@ -41,7 +43,7 @@ auto p_combo = make_combo(p_left, p_right, gyro_data, tick);
 
 | 信息获取接口 |                     实现功能                      |
 | :----------: | :-----------------------------------------------: |
-|  `at(idx)`   |                获取指定的下表`idx`                |
+|  `at(idx)`   |                获取指定的下标`idx`                |
 |   `data()`   | 获取`std::vector<feature::ptr>`（特征列表）的数据 |
 |   `size()`   |                获取特征列表的大小                 |
 |  `empty()`   |               判断特征列表是否为空                |
@@ -54,3 +56,13 @@ auto p_combo = make_combo(p_left, p_right, gyro_data, tick);
 
 ## 2. 如何开发
 
+### 2.1 基本准则
+
+开发与使用是一脉相承的，设计一个新的 rm::combo 派生类对象也要满足使用上的条件，一个新的派生类对象（假设定义为`MyCombo`）需要满足以下准则。
+
+1. 必须定义在 `namespace rm` 中，下文不再赘述；
+2. 必须 public 继承于 `rm::feature` 基类；
+3. 必须定义 `MyCombo::ptr` 作为 `std::shared_ptr<MyCombo>` 的别名；
+4. 必须实现以 `MyCombo::ptr` 为返回值的 `MyCombo::make_feature` 静态工厂函数；
+5. 不得定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；
+6. 需要定义好 `ptr`、`const_ptr` 智能指针类型别名，并分别实现 `cast` 转换函数

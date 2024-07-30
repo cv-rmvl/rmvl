@@ -71,12 +71,7 @@ public:
      * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    combo::ptr clone(double tick) override
-    {
-        auto retval = std::make_shared<Armor>(*this);
-        retval->_tick = tick;
-        return retval;
-    }
+    combo::ptr clone(double tick) override;
 
     /**
      * @brief 动态类型转换
