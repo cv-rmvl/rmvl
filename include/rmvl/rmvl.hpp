@@ -18,6 +18,10 @@
 //! core module
 #include "rmvl/core.hpp"
 
+#ifdef HAVE_RMVL_ALGORITHM
+#include "rmvl/algorithm.hpp"
+#endif // HAVE_RMVL_ALGORITHM
+
 #ifdef HAVE_RMVL_ML
 #include "rmvl/ml.hpp"
 #endif // HAVE_RMVL_ML
