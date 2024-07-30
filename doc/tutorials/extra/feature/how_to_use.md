@@ -26,20 +26,7 @@
 rm::feature::ptr p_light_blob = rm::LightBlob::make_feature(contour);
 ```
 
-所有特征类 rm::feature 的派生对象都 **显式弃置** 了复制构造函数以及移动构造函数，这说明
-
-- 直接通过已有的 rm::feature 派生对象进行复制构造
-
-- 从一个 rm::feature 派生对象的亡值 xvalue 或者实质化后的纯右值 prvalue（[临时量实质化](https://zh.cppreference.com/w/cpp/language/implicit_conversion#.E4.B8.B4.E6.97.B6.E9.87.8F.E5.AE.9E.E8.B4.A8.E5.8C.96)后也是 xvalue）移动构造一个新的 rm::feature 派生对象
-
-是不被允许的。
-
-例如，在 rm::LightBlob 类中，定义了如下语句
-
-```cpp
-LightBlob(LightBlob &&) = delete;
-LightBlob(const LightBlob &) = delete;
-```
+rm::feature 提供了 `clone` 纯虚拟函数，用于完全复制一份数据，适合于强制构造无视匹配要求的情况。
 
 ### 1.2 信息获取
 

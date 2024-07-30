@@ -79,7 +79,7 @@ public:
      * @param[in] idx 下标
      * @return 指定特征
      */
-    inline feature::ptr at(size_t idx) { return _features.at(idx); }
+    inline feature::ptr at(std::size_t idx) { return _features.at(idx); }
 
     /**
      * @brief 获取指定特征
@@ -87,12 +87,12 @@ public:
      * @param[in] idx 下标
      * @return 指定特征
      */
-    inline const feature::const_ptr at(size_t idx) const { return _features.at(idx); }
+    inline const feature::const_ptr at(std::size_t idx) const { return _features.at(idx); }
 
     //! 获取特征列表数据
     inline const auto &data() const { return _features; }
     //! 获取特征列表大小
-    inline size_t size() const { return _features.size(); }
+    inline std::size_t size() const { return _features.size(); }
     //! 判断特征列表是否为空
     inline bool empty() const { return _features.empty(); }
 };
@@ -122,12 +122,7 @@ public:
      * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    combo::ptr clone(double tick) override
-    {
-        auto retval = std::make_shared<DefaultCombo>(*this);
-        retval->_tick = tick;
-        return retval;
-    }
+    combo::ptr clone(double tick) override;
 
     /**
      * @brief 动态类型转换

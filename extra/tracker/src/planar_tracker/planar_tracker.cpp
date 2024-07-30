@@ -38,6 +38,15 @@ PlanarTracker::PlanarTracker(combo::ptr p_combo)
     updateData(p_combo);
 }
 
+tracker::ptr PlanarTracker::clone()
+{
+    auto retval = std::make_shared<PlanarTracker>(*this);
+    // 更新内部所有组合体
+    for (auto &p_combo : retval->_combo_deque)
+        p_combo = p_combo->clone(p_combo->getTick());
+    return retval;
+}
+
 void PlanarTracker::update(combo::ptr p_combo)
 {
     if (p_combo == nullptr)
@@ -57,6 +66,14 @@ void PlanarTracker::update(combo::ptr p_combo)
 
     if (_combo_deque.size() >= 12U)
         _combo_deque.pop_back();
+}
+
+void PlanarTracker::update(double tick, [[maybe_unused]] const GyroData &gyro_data)
+{
+    if (_combo_deque.empty())
+        return;
+    _vanish_num++;
+    _combo_deque.push_back(_combo_deque.front()->clone(tick));
 }
 
 void PlanarTracker::updateType(RMStatus stat)

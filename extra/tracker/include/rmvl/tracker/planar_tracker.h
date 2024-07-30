@@ -54,7 +54,7 @@ public:
      *
      * @return 指向新追踪器的共享指针
      */
-    tracker::ptr clone() override { return std::make_shared<PlanarTracker>(*this); }
+    tracker::ptr clone() override;
 
     /**
      * @brief 动态类型转换
@@ -115,14 +115,6 @@ private:
      * @note 帧差时间 t: (若只有一帧则取默认采样时间，否则取平均数值)
      */
     void updateMotionFilter();
-
-    /**
-     * @brief 掉帧处理（使用滤波器的预测数值补帧）同时更新整个 tracker 提供给外部的接口信息
-     *
-     * @param[in] tick 最新时间点
-     * @param[in] gyro 最新陀螺仪数据
-     */
-    void vanishProcess(double tick, const GyroData &gyro);
 };
 
 //! @} planar_tracker
