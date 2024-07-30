@@ -32,3 +32,6 @@ if(BUILD_PERF_TESTS)
     EXTERNAL benchmark::benchmark_main $<$<BOOL:${WITH_OPENCV}>:opencv_videoio>
   )
 endif(BUILD_PERF_TESTS)
+
+# doxygen update
+rmvl_update_doxygen_predefined("HAVE_OPENCV")

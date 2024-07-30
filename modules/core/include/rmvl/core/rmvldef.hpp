@@ -11,9 +11,6 @@
 
 #pragma once
 
-//! @addtogroup core
-//! @{
-
 #ifndef __RMVL_CAT
 #define __RMVL_CAT__(x, y) x##y
 #define __RMVL_CAT_(x, y) __RMVL_CAT__(x, y)
@@ -59,5 +56,3 @@
 #endif
 #endif
 #endif
-
-//! @} core
