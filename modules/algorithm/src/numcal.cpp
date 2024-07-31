@@ -126,10 +126,10 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
     double xk{x0};
     for (std::size_t i = 0; i < max_iter; i++)
     {
-        double yk = _func(xk);
+        double yk = func(xk);
         if (std::abs(yk) < eps)
             break;
-        xk -= para::algorithm_param.SECANT_STEP * yk / (_func(xk + para::algorithm_param.SECANT_STEP) - yk);
+        xk -= para::algorithm_param.SECANT_STEP * yk / (func(xk + para::algorithm_param.SECANT_STEP) - yk);
         if (std::isinf(xk) || std::isnan(xk))
             RMVL_Error(RMVL_StsDivByZero, "The iteration is divergent");
     }

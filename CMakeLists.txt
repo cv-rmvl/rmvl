@@ -99,14 +99,6 @@ endif(BUILD_EXAMPLES)
 #  Documents generation
 # ----------------------------------------------------------------------------
 if(BUILD_DOCS)
-  find_package(Doxygen REQUIRED)
-    if(DOXYGEN_FOUND)
-    add_custom_target(
-      doxygen
-      COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
-      COMMENT "Generate Doxygen documentation"
-    )
-  endif()
   add_subdirectory(${PROJECT_SOURCE_DIR}/doc)# Doxygen documents and other file
 endif()
 

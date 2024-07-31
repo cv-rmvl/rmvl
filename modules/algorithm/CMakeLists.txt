@@ -3,16 +3,23 @@
 # ----------------------------------------------------------------------------
 rmvl_generate_para(algorithm)
 
-rmvl_add_module(
-  algorithm
-  DEPENDS core
-  EXTERNAL $<$<BOOL:${WITH_OPENCV}>:opencv_imgproc>
-)
+if(WITH_OPENCV)
+  rmvl_add_module(algorithm DEPENDS core EXTERNAL opencv_imgproc)
+  rmvl_compile_definitions(algorithm PUBLIC HAVE_OPENCV)
+else()
+  rmvl_add_module(algorithm DEPENDS core)
+endif()
 
-rmvl_compile_definitions(
-  algorithm
-  PUBLIC $<$<BOOL:${WITH_OPENCV}>:HAVE_OPENCV>
-)
+# ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  if(WITH_OPENCV)
+    rmvl_generate_python(algorithm HAVE_OPENCV)
+  else()
+    rmvl_generate_python(algorithm)
+  endif()
+endif()
 
 # ----------------------------------------------------------------------------
 #  Build the test program

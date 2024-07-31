@@ -288,7 +288,7 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
     return {xk, fval};
 }
 
-std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, const FuncNds &c, const FuncNds &ceq, const OptimalOptions &options)
+std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options)
 {
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
@@ -341,7 +341,7 @@ static inline void calcFs(const FuncNds &funcs, const std::vector<double> &xk, s
         phi[i] = funcs[i](xk);
 }
 
-std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, const OptimalOptions &options)
 {
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");

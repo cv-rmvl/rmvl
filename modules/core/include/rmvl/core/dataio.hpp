@@ -26,30 +26,33 @@ namespace rm
 //! @addtogroup core_dataio
 //! @{
 
+//! 移动位置信息
+struct Translation
+{
+    float x = 0.f;  //!< x 方向位置、距离（向右运动为正）\f$p_x\f$
+    float y = 0.f;  //!< y 方向位置、距离（向下运动为正）\f$p_y\f$
+    float z = 0.f;  //!< z 方向位置、距离（向前运动为正）\f$p_z\f$
+    float vx = 0.f; //!< x 方向速度（向右运动为正）\f$v_x\f$
+    float vy = 0.f; //!< y 方向速度（向下运动为正）\f$v_y\f$
+    float vz = 0.f; //!< z 方向速度（向前运动为正）\f$v_z\f$
+};
+
+//! 转动姿态信息
+struct Rotation
+{
+    float yaw = 0.f;         //!< 偏转角（向右运动为正）
+    float pitch = 0.f;       //!< 俯仰角（向下运动为正）
+    float roll = 0.f;        //!< 滚转角（顺时针运动为正）
+    float yaw_speed = 0.f;   //!< 偏转角速度（向右运动为正）
+    float pitch_speed = 0.f; //!< 俯仰角速度（向下运动为正）
+    float roll_speed = 0.f;  //!< 滚转角速度（顺时针运动为正）
+};
+
 //! 陀螺仪数据
 struct GyroData
 {
-    //! 移动姿态信息
-    struct Translation
-    {
-        float x = 0.f;  //!< x 方向位置、距离（向右运动为正）\f$p_x\f$
-        float y = 0.f;  //!< y 方向位置、距离（向下运动为正）\f$p_y\f$
-        float z = 0.f;  //!< z 方向位置、距离（向前运动为正）\f$p_z\f$
-        float vx = 0.f; //!< x 方向速度（向右运动为正）\f$v_x\f$
-        float vy = 0.f; //!< y 方向速度（向下运动为正）\f$v_y\f$
-        float vz = 0.f; //!< z 方向速度（向前运动为正）\f$v_z\f$
-    } translation;
-
-    //! 转动姿态信息
-    struct Rotation
-    {
-        float yaw = 0.f;         //!< 偏转角（向右运动为正）
-        float pitch = 0.f;       //!< 俯仰角（向下运动为正）
-        float roll = 0.f;        //!< 滚转角（顺时针运动为正）
-        float yaw_speed = 0.f;   //!< 偏转角速度（向右运动为正）
-        float pitch_speed = 0.f; //!< 俯仰角速度（向下运动为正）
-        float roll_speed = 0.f;  //!< 滚转角速度（顺时针运动为正）
-    } rotation;
+    Translation translation; //!< 移动位置数据
+    Rotation rotation;       //!< 转动姿态数据
 
     /**
      * @brief 导出陀螺仪数据，可以是输出到控制台，也可以是输出到文件

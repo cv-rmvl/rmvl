@@ -188,7 +188,7 @@ option(ENABLE_MEMORY_SANITIZER "Build Memory Sanitizers (Debug + GCC / Clang / A
 option(ENABLE_THREAD_SANITIZER "Build Thread Sanitizers (Debug + GCC / Clang / AppleClang) " OFF)
 if(NOT MSVC)
   if(ENABLE_ADDRESS_SANITIZER)
-    include(${CMAKE_MODULE_PATH}/check/check_asan.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/check/check_asan.cmake)
     check_asan(HAS_ASAN)
     if(NOT HAS_ASAN)
       message(FATAL_ERROR "sanitizer is no supported with current tool-chains")
@@ -295,6 +295,24 @@ if(NOT WITH_OPENCV)
 endif()
 option(BUILD_EXAMPLES "Build RMVL all examples" ON)
 option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
+
+option(BUILD_PYTHON "Build python bindings" OFF)
+if(BUILD_PYTHON)
+  find_package(SWIG QUIET)
+  find_package(Python3 COMPONENTS Interpreter Development QUIET)
+  if(NOT SWIG_FOUND OR NOT Python3_FOUND)
+    unset(BUILD_PYTHON CACHE)
+    option(BUILD_PYTHON "Build python bindings" OFF)
+    message(WARNING "SWIG or Python3 not found, python bindings will not be built")
+  else()
+    include(UseSWIG)
+    set(CMAKE_SWIG_OUTDIR ${PROJECT_BINARY_DIR}/python/rm)
+    set(SWIG_OUTFILE_DIR ${PROJECT_BINARY_DIR}/pygen-cpp)
+    include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPython.cmake)
+    # create __init__.py
+    file(WRITE ${CMAKE_SWIG_OUTDIR}/__init__.py "")
+  endif()
+endif()
 
 # ----------------------------------------------------------------------------
 #   Build performance and unit tests
