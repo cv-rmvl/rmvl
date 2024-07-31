@@ -51,14 +51,7 @@ public:
      *
      * @param[in] coeffs 多项式系数 \f$a_0,a_1,\cdots,a_{N-1}\f$
      */
-    Polynomial(const std::initializer_list<double> &coeffs) : _coeffs(coeffs) {}
-
-    /**
-     * @brief 指定多项式阶数创建多项式对象
-     *
-     * @param[in] order 多项式阶数，即多项式的最高次数
-     */
-    Polynomial(size_t order) : _coeffs(order + 1) {}
+    Polynomial(const std::vector<double> &coeffs) : _coeffs(coeffs) {}
 
     /**
      * @brief 计算多项式在指定点的函数值
@@ -158,11 +151,10 @@ public:
  * @brief
  * - 使用离散 Newton 迭代法求解非线性方程，详见 @ref tutorial_modules_func_iteration
  */
-class NonlinearSolver
+struct NonlinearSolver
 {
-    std::function<double(double)> _func; //!< 非线性方程函数对象
+    std::function<double(double)> func; //!< 非线性方程函数对象
 
-public:
     NonlinearSolver() = default;
 
     /**
@@ -172,16 +164,7 @@ public:
      * @note
      * - 可以是函数指针、函数对象、lambda 表达式等，可隐式转换为 `double (*)(double)`
      */
-    NonlinearSolver(const std::function<double(double)> &f) : _func(f) {}
-
-    /**
-     * @brief 修改非线性方程 \f$f(x)=0\f$ 的函数对象
-     *
-     * @param[in] f 非线性方程 \f$f(x)=0\f$ 的函数对象 \f$f(x)\f$
-     * @note
-     * - 可以是函数指针、函数对象、lambda 表达式等，可隐式转换为 `double (*)(double)`
-     */
-    void operator=(const std::function<double(double)> &f) { _func = f; }
+    NonlinearSolver(const std::function<double(double)> &f) : func(f) {}
 
     /**
      * @brief 使用离散 Newton 迭代法求解非线性方程 \f$f(x)=0\f$
@@ -411,7 +394,7 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
  * @param[in] options options 优化选项
  * @return `[x, fval]` 最小值点和最小值
  */
-std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, const FuncNds &c, const FuncNds &ceq, const OptimalOptions &options = {});
+std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
 
 #ifdef HAVE_OPENCV
 
@@ -423,7 +406,7 @@ std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<do
  * @param[in] options 优化选项
  * @return 最小二乘解
  */
-std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
+std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
 
 #endif // HAVE_OPENCV
 

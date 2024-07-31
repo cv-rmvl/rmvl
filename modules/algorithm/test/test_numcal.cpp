@@ -20,7 +20,7 @@ namespace rm_test
 
 TEST(NumberCalculation, polynomial)
 {
-    rm::Polynomial foo = {1, 2, 3};
+    rm::Polynomial foo({1, 2, 3});
     EXPECT_EQ(foo(0), 1);  // 1 + 2*0 + 3*0*0 = 1
     EXPECT_EQ(foo(1), 6);  // 1 + 2*1 + 3*1*1 = 6
     EXPECT_EQ(foo(2), 17); // 1 + 2*2 + 3*2*2 = 17

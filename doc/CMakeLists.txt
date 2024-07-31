@@ -73,6 +73,104 @@ endif()
 configure_file(${RMVL_DOXYFILE_IN} ${doxyfile} @ONLY)
 configure_file(root.markdown.in ${rootfile} @ONLY)
 
+find_package(Doxygen QUIET)
+if(DOXYGEN_FOUND)
+  add_custom_target(
+    doxygen
+    COMMENT "Generating Doxygen documentation"
+  )
+
+  set(DOXYGEN_VERSION "${DOXYGEN_VERSION}" CACHE INTERNAL "Doxygen version")
+  add_custom_target(
+    doxygen_cpp
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
+    COMMENT "Generate Doxygen documentation for C++"
+  )
+  
+  if(BUILD_PYTHON)
+    macro(add_fns ns fn arg ret)
+      if(NOT "${tmp_fns}" STREQUAL "")
+        set(tmp_fns "${tmp_fns}#")
+      endif()
+      set(tmp_fns "${tmp_fns}${ns}#${fn}#${arg}#${ret}")
+    endmacro()
+
+    macro(add_cst ns n val)
+      if(NOT "${tmp_consts}" STREQUAL "")
+        set(tmp_consts "${tmp_consts}#")
+      endif()
+      set(tmp_consts "${tmp_consts}${ns}#${n}#${val}")
+    endmacro()
+
+    unset(file_content)
+    # read from pyrmvl_fns.cfg
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/tools/pyrmvl_fns.cfg" file_content)
+    string(REPLACE "\n" ";" file_content "${file_content}")
+    foreach(line ${file_content})
+      if(line MATCHES "^#")
+        continue()
+      endif()
+      string(REGEX REPLACE " +" ";" line "${line}")
+      string(REPLACE "\"" "" line "${line}")
+      list(LENGTH line length)
+      if(NOT length EQUAL 4)
+        continue()
+      endif()
+      list(GET line 0 ns)
+      list(GET line 1 fn)
+      list(GET line 2 arg)
+      list(GET line 3 ret)
+      add_fns("${ns}" "${fn}" "${arg}" "${ret}")
+    endforeach()
+
+    # read from pyrmvl_cst.cfg
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/tools/pyrmvl_cst.cfg" file_content)
+    string(REPLACE "\n" ";" file_content "${file_content}")
+    foreach(line ${file_content})
+      if(line MATCHES "^#")
+        continue()
+      endif()
+      string(REGEX REPLACE " +" ";" line "${line}")
+      string(REPLACE "\"" "" line "${line}")
+      list(LENGTH line length)
+      if(NOT length EQUAL 3)
+        continue()
+      endif()
+      list(GET line 0 ns)
+      list(GET line 1 n)
+      list(GET line 2 val)
+      add_cst("${ns}" "${n}" "${val}")
+    endforeach()
+
+    set(RMVL_PYTHON_SIGNATURES_FILE "${CMAKE_CURRENT_BINARY_DIR}/pyrmvl_signatures.json")
+    add_custom_target(gen_pyrmvl_clear
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen.py" "${RMVL_PYTHON_SIGNATURES_FILE}" "--clear"
+      COMMENT "Clearing rmvl python bindings signatures"
+    )
+
+    add_custom_target(gen_pyrmvl_signatures
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen.py" "${RMVL_PYTHON_SIGNATURES_FILE}" "--fns=${tmp_fns}" "--consts=${tmp_consts}"
+      COMMENT "Generating rmvl python bindings signatures"
+      DEPENDS gen_pyrmvl_clear
+    )
+
+    add_custom_target(doxygen_python
+      COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/add_signatures.py" "${CMAKE_CURRENT_BINARY_DIR}/doxygen/html/" "${RMVL_PYTHON_SIGNATURES_FILE}" "python"
+      DEPENDS doxygen_cpp gen_pyrmvl_signatures
+      COMMENT "Inject Python signatures into documentation"
+    )
+  endif()
+
+  add_dependencies(doxygen doxygen_cpp)
+  if(BUILD_PYTHON)
+    add_dependencies(doxygen doxygen_python)
+  endif()
+
+else()
+  message(STATUS "Doxygen not found. Documentation will not be generated.")
+  unset(DOXYGEN_VERSION CACHE)
+endif()
+
 install(
   DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen/html
   DESTINATION "${RMVL_DOC_INSTALL_PATH}"
