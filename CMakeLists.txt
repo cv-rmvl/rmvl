@@ -53,22 +53,18 @@ include(cmake/RMVLUtils.cmake)
 # ----------------------------------------------------------------------------
 #  Include necessary CMake modules
 # ----------------------------------------------------------------------------
-# RMVL Install layout 
-include(cmake/RMVLInstall.cmake)
-include(cmake/RMVLModule.cmake)
-include(cmake/RMVLExtraTarget.cmake)
-
 include_directories(${CMAKE_BINARY_DIR})
 
-# ----------------------------------------------------------------------------
-#  RMVL compile configure and options
-# ----------------------------------------------------------------------------
+# RMVL compile configure and options
 include(cmake/RMVLCompilerOptions.cmake)
-
-# ----------------------------------------------------------------------------
-#  Get actual RMVL version number from sources
-# ----------------------------------------------------------------------------
+# RMVL version number from sources
 include(cmake/RMVLVersion.cmake)
+# RMVL Install layout 
+include(cmake/RMVLInstall.cmake)
+# RMVL build module
+include(cmake/RMVLModule.cmake)
+# RMVL extra target
+include(cmake/RMVLExtraTarget.cmake)
 
 # ----------------------------------------------------------------------------
 #  RMVL parameters and miscellaneous generation
@@ -211,6 +207,14 @@ endif()
 status("")
 status("  Documents (Doxygen):"     BUILD_DOCS THEN "YES (ver ${DOXYGEN_VERSION})" ELSE NO)
 
+# ============================= Python ==============================
+if(BUILD_PYTHON)
+  status("")
+  status("  Python 3:")
+  status("    Interpreter:"     "${RMVL_PYTHON_EXECUTABLE} (ver ${RMVL_PYTHON_VERSION})")
+  status("    Libraries:"       "${RMVL_PYTHON_LIBRARIES}")
+  status("    install path:"    "${RMVL_PYTHON_INSTALL_SUFFIX}")
+endif()
 
 # ======================== Test and examples ========================
 status("")

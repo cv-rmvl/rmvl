@@ -41,5 +41,12 @@ function(rmvl_generate_python _name)
   )
   # export to __init__.py
   file(APPEND ${CMAKE_SWIG_OUTDIR}/__init__.py "from .rm_${_name} import *\n")
+
+  # install python module
+  install(
+    FILES ${CMAKE_SWIG_OUTDIR}/rm_${_name}.py
+          ${CMAKE_SWIG_OUTDIR}/_${pymodule_name}.so
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/${RMVL_PYTHON_INSTALL_SUFFIX}
+  )
 endfunction()
 
