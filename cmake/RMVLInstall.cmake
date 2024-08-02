@@ -92,4 +92,21 @@ else() # UNIX
   set(RMVL_DOC_INSTALL_PATH     "${CMAKE_INSTALL_DATAROOTDIR}/doc/${PROJECT_NAME}")
 endif()
 
+if(BUILD_PYTHON)
+  if(CMAKE_HOST_UNIX)
+    execute_process(
+      COMMAND ${RMVL_PYTHON_EXECUTABLE} -c "from sysconfig import *; print(get_path('purelib'))"
+      RESULT_VARIABLE _rmvlpy_process
+      OUTPUT_VARIABLE _std_packages_path
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if("${_std_packages_path}" MATCHES "site-packages")
+      set(_packages_path "python${RMVL_PYTHON_VERSION_MAJOR}.${RMVL_PYTHON_VERSION_MINOR}/site-packages")
+    else() # debian based assumed, install to the dist-packages.
+      set(_packages_path "python${RMVL_PYTHON_VERSION_MAJOR}.${RMVL_PYTHON_VERSION_MINOR}/dist-packages")
+    endif()
+    set(RMVL_PYTHON_INSTALL_SUFFIX "lib/${_packages_path}/rm")
+  endif()
+endif()
+
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${RMVL_LIB_INSTALL_PATH}")

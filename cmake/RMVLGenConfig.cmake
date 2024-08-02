@@ -125,7 +125,7 @@ install(
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )
 
-# genpara
+# gen para
 install(
   FILES "${cmake_dir}/templates/para_generator_header.in"
         "${cmake_dir}/templates/para_generator_module.in"
@@ -133,3 +133,11 @@ install(
         "${cmake_dir}/templates/para_generator_header_without_cv.in"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}/templates"
 )
+
+# install file: __init__.py of 'rm' module
+if(BUILD_PYTHON)
+  install(
+    FILES "${CMAKE_SWIG_OUTDIR}/__init__.py"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/${RMVL_PYTHON_INSTALL_SUFFIX}"
+  )
+endif()
