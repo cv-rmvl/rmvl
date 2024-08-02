@@ -131,9 +131,9 @@ RMVL 中提供了一维寻优的函数 rm::fminbnd ，以下展示了一维寻�
    ```cmake
    cmake_minimum_required(VERSION 3.10)
    project(FminbndDemo)
-   find_package(RMVL COMPONENTS core REQUIRED)
+   find_package(RMVL COMPONENTS algorithm REQUIRED)
    add_executable(demo main.cpp)
-   target_link_libraries(demo PRIVATE rmvl_core)
+   target_link_libraries(demo PRIVATE ${RMVL_LIBS})
    ```
 
 #### 3.2 构建、运行

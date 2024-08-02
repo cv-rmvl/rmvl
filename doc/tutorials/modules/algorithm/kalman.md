@@ -416,11 +416,11 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)
 ```cmake
 target_link_libraries(
   xxx
-  PUBLIC rmvl_core
+  PUBLIC rmvl_algorithm
 )
 ```
 
-这里的 `xxx` 为需要链接到 core 模块的目标
+这里的 `xxx` 为需要链接到 algorithm 模块的目标
 
 #### 2.2 如何使用
 
