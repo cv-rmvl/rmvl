@@ -20,14 +20,15 @@ foreach(m ${RMVL_MODULES_BUILD})
 endforeach(m ${RMVL_MODULES_BUILD})
 
 # additional config
-set(tutorialdir "${CMAKE_CURRENT_LIST_DIR}/tutorials")
+set(tutorials_dir "${CMAKE_CURRENT_LIST_DIR}/tutorials")
+set(tutorials_py_dir "${CMAKE_CURRENT_LIST_DIR}/py_tutorials")
 set(doxyfile "${CMAKE_BINARY_DIR}/Doxyfile")
 set(bibfile "${CMAKE_CURRENT_LIST_DIR}/rmvl.bib")
 set(rootfile "${CMAKE_BINARY_DIR}/root.markdown")
 set(introfile "${CMAKE_CURRENT_LIST_DIR}/intro.markdown")
 
 # set export variables
-string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_INPUT_LIST "${paths_include}; ${rootfile}; ${introfile}; ${tutorialdir}")
+string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_INPUT_LIST "${paths_include}; ${rootfile}; ${introfile}; ${tutorials_dir}; ${tutorials_py_dir}")
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_INCLUDE_ROOTS "${paths_include}")
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_TEST_ROOTS "${paths_test}")
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_EXAMPLE_PATH "${example_path}")
