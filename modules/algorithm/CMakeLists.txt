@@ -14,11 +14,10 @@ endif()
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  if(WITH_OPENCV)
-    rmvl_generate_python(algorithm HAVE_OPENCV)
-  else()
-    rmvl_generate_python(algorithm)
-  endif()
+  rmvl_generate_python(
+    algorithm
+    DEPENDS algorithm
+  )
 endif()
 
 # ----------------------------------------------------------------------------

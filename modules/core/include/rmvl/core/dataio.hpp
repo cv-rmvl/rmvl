@@ -15,6 +15,8 @@
 #include <iosfwd>
 #include <vector>
 
+#include "rmvldef.hpp"
+
 namespace rm
 {
 
@@ -27,32 +29,32 @@ namespace rm
 //! @{
 
 //! 移动位置信息
-struct Translation
+struct RMVL_EXPORTS_W_AG Translation
 {
-    float x = 0.f;  //!< x 方向位置、距离（向右运动为正）\f$p_x\f$
-    float y = 0.f;  //!< y 方向位置、距离（向下运动为正）\f$p_y\f$
-    float z = 0.f;  //!< z 方向位置、距离（向前运动为正）\f$p_z\f$
-    float vx = 0.f; //!< x 方向速度（向右运动为正）\f$v_x\f$
-    float vy = 0.f; //!< y 方向速度（向下运动为正）\f$v_y\f$
-    float vz = 0.f; //!< z 方向速度（向前运动为正）\f$v_z\f$
+    RMVL_W_RW float x = 0.f;  //!< x 方向位置、距离（向右运动为正）\f$p_x\f$
+    RMVL_W_RW float y = 0.f;  //!< y 方向位置、距离（向下运动为正）\f$p_y\f$
+    RMVL_W_RW float z = 0.f;  //!< z 方向位置、距离（向前运动为正）\f$p_z\f$
+    RMVL_W_RW float vx = 0.f; //!< x 方向速度（向右运动为正）\f$v_x\f$
+    RMVL_W_RW float vy = 0.f; //!< y 方向速度（向下运动为正）\f$v_y\f$
+    RMVL_W_RW float vz = 0.f; //!< z 方向速度（向前运动为正）\f$v_z\f$
 };
 
 //! 转动姿态信息
-struct Rotation
+struct RMVL_EXPORTS_W_AG Rotation
 {
-    float yaw = 0.f;         //!< 偏转角（向右运动为正）
-    float pitch = 0.f;       //!< 俯仰角（向下运动为正）
-    float roll = 0.f;        //!< 滚转角（顺时针运动为正）
-    float yaw_speed = 0.f;   //!< 偏转角速度（向右运动为正）
-    float pitch_speed = 0.f; //!< 俯仰角速度（向下运动为正）
-    float roll_speed = 0.f;  //!< 滚转角速度（顺时针运动为正）
+    RMVL_W_RW float yaw = 0.f;         //!< 偏转角（向右运动为正）
+    RMVL_W_RW float pitch = 0.f;       //!< 俯仰角（向下运动为正）
+    RMVL_W_RW float roll = 0.f;        //!< 滚转角（顺时针运动为正）
+    RMVL_W_RW float yaw_speed = 0.f;   //!< 偏转角速度（向右运动为正）
+    RMVL_W_RW float pitch_speed = 0.f; //!< 俯仰角速度（向下运动为正）
+    RMVL_W_RW float roll_speed = 0.f;  //!< 滚转角速度（顺时针运动为正）
 };
 
 //! 陀螺仪数据
-struct GyroData
+struct RMVL_EXPORTS_W_AG GyroData
 {
-    Translation translation; //!< 移动位置数据
-    Rotation rotation;       //!< 转动姿态数据
+    RMVL_W_RW Translation translation; //!< 移动位置数据
+    RMVL_W_RW Rotation rotation;       //!< 转动姿态数据
 
     /**
      * @brief 导出陀螺仪数据，可以是输出到控制台，也可以是输出到文件
@@ -80,6 +82,22 @@ struct GyroData
      * @param[out] data 读取出的陀螺仪数据
      */
     static void read(std::istream &in, GyroData &data) noexcept;
+
+    /**
+     * @brief 导出所有陀螺仪数据到文件
+     *
+     * @param[in] output_file 输出文件路径
+     * @param[in] datas 待写入的所有陀螺仪数据
+     */
+    RMVL_W static void write(std::string_view output_file, const std::vector<GyroData> &datas) noexcept;
+
+    /**
+     * @brief 从文件导入所有陀螺仪数据
+     *
+     * @param[in] input_file 输入文件路径
+     * @return 读取出的所有陀螺仪数据
+     */
+    RMVL_W static std::vector<GyroData> read(std::string_view input_file) noexcept;
 };
 
 /// @example samples/tutorial_code/dataio/sample_read_corners.cpp 角点数据读取例程

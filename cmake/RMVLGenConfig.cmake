@@ -137,7 +137,7 @@ install(
 # install file: __init__.py of 'rm' module
 if(BUILD_PYTHON)
   install(
-    FILES "${CMAKE_SWIG_OUTDIR}/__init__.py"
+    FILES "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/${RMVL_PYTHON_INSTALL_SUFFIX}"
   )
 endif()

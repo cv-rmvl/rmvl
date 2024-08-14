@@ -20,6 +20,8 @@
 #include <generator>
 #endif
 
+#include "rmvl/core/rmvldef.hpp"
+
 //! @addtogroup algorithm
 //! @{
 //! @defgroup algorithm_numcal 数值计算模块
@@ -39,7 +41,7 @@ namespace rm
 //! @{
 
 //! N 次多项式
-class Polynomial
+class RMVL_EXPORTS_W Polynomial
 {
     std::vector<double> _coeffs; //!< 多项式系数
 
@@ -51,7 +53,7 @@ public:
      *
      * @param[in] coeffs 多项式系数 \f$a_0,a_1,\cdots,a_{N-1}\f$
      */
-    Polynomial(const std::vector<double> &coeffs) : _coeffs(coeffs) {}
+    RMVL_W Polynomial(const std::vector<double> &coeffs) : _coeffs(coeffs) {}
 
     /**
      * @brief 计算多项式在指定点的函数值
@@ -59,7 +61,7 @@ public:
      * @param[in] x 指定点的 x 坐标
      * @return 多项式在指定点的函数值
      */
-    double operator()(double x) const noexcept;
+    RMVL_W double operator()(double x) const noexcept;
 };
 
 ///////////////////// 函数插值 /////////////////////
@@ -69,13 +71,13 @@ public:
  * @brief
  * - 由于插值多项式具有唯一性，为了提高新增节点时算法的简易性，这里使用 Newton 插值多项式
  */
-class Interpolator
+class RMVL_EXPORTS_W Interpolator
 {
     std::vector<double> _xs;                    //!< 插值节点
     std::vector<std::vector<double>> _diffquot; //!< 差商表
 
 public:
-    Interpolator() = default;
+    RMVL_W Interpolator() = default;
 
     /**
      * @brief 创建插值器对象，初始化差商表
@@ -83,7 +85,7 @@ public:
      * @param[in] xs 已知节点的 x 坐标 \f$x_0,x_1,\cdots,x_n\f$
      * @param[in] ys 已知节点的 y 坐标 \f$f(x_0),f(x_1),\cdots,f(x_n)\f$
      */
-    Interpolator(const std::vector<double> &xs, const std::vector<double> &ys);
+    RMVL_W Interpolator(const std::vector<double> &xs, const std::vector<double> &ys);
 
     /**
      * @brief 添加新的插值节点
@@ -96,7 +98,7 @@ public:
      * interf.add(4, 16).add(5, 25).add(6, 36);
      * @endcode
      */
-    Interpolator &add(double x, double y);
+    RMVL_W Interpolator &add(double x, double y);
 
     /**
      * @brief 计算插值多项式在指定点的函数值
@@ -104,7 +106,7 @@ public:
      * @param[in] x 指定点的 x 坐标
      * @return 插值多项式在指定点的函数值
      */
-    double operator()(double x) const;
+    RMVL_W double operator()(double x) const;
 };
 
 ////////////////// 多项式曲线拟合 //////////////////
@@ -191,7 +193,7 @@ using Odes = std::vector<Ode>;
  * @brief
  * - 该 Runge-Kutta 数值求解器为通用求解器，提供了一般的 Runge-Kutta 法求解常微分方程（组）的接口
  */
-class RungeKutta
+class RMVL_EXPORTS_W RungeKutta
 {
     // 加权系数，`k[i][j]`: `i` 表示第 `i` 个加权系数组，`j` 表示来自第 `j` 条方程
     std::vector<std::vector<double>> _ks;
@@ -212,11 +214,10 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      * @param[in] p Butcher 表 \f$\pmb p\f$ 向量
-     * @param[in] lambda Butcher 表 \f$\pmb\lambda\f$ 向量
+     * @param[in] lam Butcher 表 \f$\pmb\lambda\f$ 向量
      * @param[in] r Butcher 表 \f$R\f$ 矩阵
      */
-    RungeKutta(const Odes &fs, const std::vector<double> &p,
-               const std::vector<double> &lambda, const std::vector<std::vector<double>> &r);
+    RMVL_W RungeKutta(const Odes &fs, const std::vector<double> &p, const std::vector<double> &lam, const std::vector<std::vector<double>> &r);
 
     /**
      * @brief 设置常微分方程（组）的初值
@@ -224,7 +225,7 @@ public:
      * @param[in] t0 初始位置的自变量 \f$t_0\f$
      * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
      */
-    inline void init(double t0, const std::vector<double> &x0) { _t0 = t0, _x0 = x0; }
+    RMVL_W inline void init(double t0, const std::vector<double> &x0) { _t0 = t0, _x0 = x0; }
 
     /**
      * @brief 设置常微分方程（组）的初值
@@ -242,7 +243,7 @@ public:
      *
      * @return 从初始位置开始迭代 \f$n\f$ 次后共 \f$n+1\f$ 个数值解，自变量可通过 \f$t_0+ih\f$ 计算得到
      */
-    std::vector<std::vector<double>> solve(double h, std::size_t n);
+    RMVL_W std::vector<std::vector<double>> solve(double h, std::size_t n);
 
 #if __cpp_lib_generator >= 202207L
     /**
@@ -257,7 +258,7 @@ public:
 };
 
 //! 2 阶 2 级 Runge-Kutta 求解器
-class RungeKutta2 : public RungeKutta
+class RMVL_EXPORTS_W RungeKutta2 : public RungeKutta
 {
 public:
     /**
@@ -265,11 +266,11 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
-    RungeKutta2(const Odes &fs);
+    RMVL_W RungeKutta2(const Odes &fs);
 };
 
 //! 3 阶 3 级 Runge-Kutta 求解器
-class RungeKutta3 : public RungeKutta
+class RMVL_EXPORTS_W RungeKutta3 : public RungeKutta
 {
 public:
     /**
@@ -277,11 +278,11 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
-    RungeKutta3(const Odes &fs);
+    RMVL_W RungeKutta3(const Odes &fs);
 };
 
 //! 4 阶 4 级 Runge-Kutta 求解器
-class RungeKutta4 : public RungeKutta
+class RMVL_EXPORTS_W RungeKutta4 : public RungeKutta
 {
 public:
     /**
@@ -289,7 +290,7 @@ public:
      *
      * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
      */
-    RungeKutta4(const Odes &fs);
+    RMVL_W RungeKutta4(const Odes &fs);
 };
 
 //! @} algorithm_numcal
@@ -317,19 +318,19 @@ enum class DiffMode : uint8_t
 enum class FminMode : uint8_t
 {
     ConjGrad, //!< 共轭梯度法
-    Simplex   //!< 单纯形法
+    Simplex,  //!< 单纯形法
 };
 
 //! 无约束多维函数优化选项
-struct OptimalOptions
+struct RMVL_EXPORTS_W_AG OptimalOptions
 {
-    DiffMode diff_mode{}; //!< 梯度计算模式，默认为中心差商 `DiffMode::Central`
-    FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
-    int max_iter{1000};   //!< 最大迭代次数
-    double exterior{1e3}; //!< 外罚函数系数
-    double tau{1};        //!< 初始信赖域半径
-    double dx{1e-2};      //!< 求解步长
-    double tol{1e-6};     //!< 误差容限
+    RMVL_W_RW DiffMode diff_mode{}; //!< 梯度计算模式，默认为中心差商 `DiffMode::Central`
+    RMVL_W_RW FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
+    RMVL_W_RW int max_iter{1000};   //!< 最大迭代次数
+    RMVL_W_RW double exterior{1e3}; //!< 外罚函数系数
+    RMVL_W_RW double tau{1};        //!< 初始信赖域半径
+    RMVL_W_RW double dx{1e-2};      //!< 求解步长
+    RMVL_W_RW double tol{1e-6};     //!< 误差容限
 };
 
 /**
@@ -341,7 +342,7 @@ struct OptimalOptions
  * @param[in] dx 坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的导数
  */
-double derivative(Func1d func, double x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
+RMVL_EXPORTS_W double derivative(Func1d func, double x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
 
 /**
  * @brief 计算多元函数的梯度
@@ -352,7 +353,7 @@ double derivative(Func1d func, double x, DiffMode mode = DiffMode::Central, doub
  * @param[in] dx 计算偏导数时，坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的梯度向量
  */
-std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
+RMVL_EXPORTS_W std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
 
 /**
  * @brief 采用进退法确定搜索区间
@@ -362,7 +363,7 @@ std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mod
  * @param[in] delta 搜索步长
  * @return 搜索区间
  */
-std::pair<double, double> region(Func1d func, double x0, double delta = 1);
+RMVL_EXPORTS_W std::pair<double, double> region(Func1d func, double x0, double delta = 1);
 
 /**
  * @brief 一维函数最小值搜索
@@ -373,7 +374,7 @@ std::pair<double, double> region(Func1d func, double x0, double delta = 1);
  * @param[in] options 优化选项
  * @return `[x, fval]` 最小值点和最小值
  */
-std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const OptimalOptions &options = {});
 
 /**
  * @brief 无约束多维函数的最小值搜索 \cite ConjGrad \cite NelderMead ，可参考 @ref tutorial_modules_fminunc
@@ -382,7 +383,7 @@ std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const Optim
  * @param[in] options 优化选项
  * @return `[x, fval]` 最小值点和最小值
  */
-std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options = {});
 
 /**
  * @brief 有约束多维函数的最小值搜索
@@ -394,7 +395,7 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
  * @param[in] options options 优化选项
  * @return `[x, fval]` 最小值点和最小值
  */
-std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
 
 #ifdef HAVE_OPENCV
 
@@ -406,7 +407,7 @@ std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<do
  * @param[in] options 优化选项
  * @return 最小二乘解
  */
-std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
 
 #endif // HAVE_OPENCV
 

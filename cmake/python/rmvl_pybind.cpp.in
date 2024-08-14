@@ -1,0 +1,14 @@
+#include <pybind11/functional.h>
+#include <pybind11/stl.h>
+
+#include "rmvl/@_name@.hpp"
+
+namespace py = pybind11;
+
+using namespace py::literals;
+using namespace rm;
+
+PYBIND11_MODULE(@RMVL_PYBIND_NAME@, m)
+{
+@RMVL_PYBIND_CONTENTS@
+}
