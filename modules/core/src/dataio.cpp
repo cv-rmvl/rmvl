@@ -9,13 +9,17 @@
  *
  */
 
-#include <sstream>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 #include "rmvl/core/dataio.hpp"
 #include "rmvl/core/util.hpp"
 
-void rm::GyroData::write(std::ostream &os, const GyroData &data) noexcept
+namespace rm
+{
+
+void GyroData::write(std::ostream &os, const GyroData &data) noexcept
 {
     os << data.translation.x << ", " << data.translation.y << ", " << data.translation.z << ", "
        << data.translation.vx << ", " << data.translation.vy << ", " << data.translation.vz << ", "
@@ -23,7 +27,7 @@ void rm::GyroData::write(std::ostream &os, const GyroData &data) noexcept
        << data.rotation.yaw_speed << ", " << data.rotation.pitch_speed << ", " << data.rotation.roll_speed << "," << std::endl;
 }
 
-void rm::GyroData::read(std::istream &is, GyroData &data) noexcept
+void GyroData::read(std::istream &is, GyroData &data) noexcept
 {
     std::string tstr[6];
     std::for_each(tstr, tstr + 6, [&is](std::string &s) { is >> s; });
@@ -36,7 +40,33 @@ void rm::GyroData::read(std::istream &is, GyroData &data) noexcept
     reflect::for_each(data.rotation, [&](auto &&val) { val = std::stof(rstr[r_idx++]); });
 }
 
-void rm::writeCorners(std::ostream &out, const std::vector<std::vector<std::array<float, 2>>> &corners)
+void GyroData::write(std::string_view output_file, const std::vector<GyroData> &datas) noexcept
+{
+    std::ofstream ofs(output_file.data(), std::ios::app);
+    if (!ofs.is_open())
+        return;
+    std::for_each(datas.begin(), datas.end(), [&ofs](const GyroData &d) { write(ofs, d); });
+    ofs.close();
+}
+
+std::vector<GyroData> GyroData::read(std::string_view input_file) noexcept
+{
+    std::ifstream ifs(input_file.data());
+    if (!ifs.is_open())
+        return {};
+    std::vector<GyroData> datas;
+    datas.reserve(1000);
+    while (!ifs.eof())
+    {
+        GyroData d;
+        read(ifs, d);
+        datas.push_back(d);
+    }
+    ifs.close();
+    return datas;
+}
+
+void writeCorners(std::ostream &out, const std::vector<std::vector<std::array<float, 2>>> &corners)
 {
     std::for_each(corners.begin(), corners.end(), [&out](const auto &corner) {
         std::for_each(corner.begin(), corner.end() - 1, [&out](const auto &p) {
@@ -47,7 +77,7 @@ void rm::writeCorners(std::ostream &out, const std::vector<std::vector<std::arra
     out << "---" << std::endl;
 }
 
-void rm::readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>> &corners)
+void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>> &corners)
 {
     std::string line;
     while (std::getline(in, line))
@@ -65,3 +95,5 @@ void rm::readCorners(std::istream &in, std::vector<std::vector<std::array<float,
         corners.emplace_back(std::move(corner));
     }
 }
+
+} // namespace rm

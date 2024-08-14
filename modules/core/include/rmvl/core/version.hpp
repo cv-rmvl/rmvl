@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "rmvldef.hpp"
+
 #define RMVL_VERSION_MAJOR 2
 #define RMVL_VERSION_MINOR 0
 #define RMVL_VERSION_PATCH 0
@@ -28,15 +30,17 @@ namespace rm
  * @note "For example: 3.6.0-dev"
  * @see getVersionMajor, getVersionMinor, getVersionPatch
  */
-inline const char *getVersionString() { return RMVL_VERSION; }
+constexpr const char *getVersionString() { return RMVL_VERSION; }
+
+RMVL_EXPORTS_W constexpr const char *version() { return getVersionString(); }
 
 //! 返回主要库版本
-inline int getVersionMajor() { return RMVL_VERSION_MAJOR; }
+constexpr int getVersionMajor() { return RMVL_VERSION_MAJOR; }
 
 //! 返回次要库版本
-inline int getVersionMinor() { return RMVL_VERSION_MINOR; }
+constexpr int getVersionMinor() { return RMVL_VERSION_MINOR; }
 
 //! 返回库版本的修订字段
-inline int getVersionPatch() { return RMVL_VERSION_PATCH; }
+constexpr int getVersionPatch() { return RMVL_VERSION_PATCH; }
 
 } // namespace rm

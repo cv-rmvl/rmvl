@@ -138,8 +138,8 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
 
 RungeKutta::RungeKutta(
     const Odes &fs, const std::vector<double> &p,
-    const std::vector<double> &lambda, const std::vector<std::vector<double>> &r)
-    : _ks(p.size()), _fs(fs), _p(p), _lambda(lambda), _r(r)
+    const std::vector<double> &lam, const std::vector<std::vector<double>> &r)
+    : _ks(p.size()), _fs(fs), _p(p), _lambda(lam), _r(r)
 {
     // Initialize "ks"
     std::for_each(_ks.begin(), _ks.end(), [this](auto &k) { k.resize(_fs.size()); });

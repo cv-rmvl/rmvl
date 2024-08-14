@@ -13,6 +13,8 @@
 
 #include <chrono>
 
+#include "rmvldef.hpp"
+
 //! @addtogroup core
 //! @{
 //! @defgroup core_timer 定时、计时模块
@@ -29,21 +31,21 @@ namespace rm
  * @brief
  * - 在程序开始时调用 `reset()` 函数，之后调用 `now()` 函数即可返回从构造初期到现在经过的时间
  */
-class Timer
+class RMVL_EXPORTS_W Timer
 {
     using steady_clock = std::chrono::steady_clock;
 
     static steady_clock::time_point _tick; //!< 起始时间
 
 public:
-    Timer() { reset(); }
+    RMVL_W Timer() { reset(); }
     Timer(const Timer &) = delete;
     void operator=(const Timer &) = delete;
 
     //! 重置定时器
-    static inline void reset() { _tick = steady_clock::now(); }
+    RMVL_W static void reset() { _tick = steady_clock::now(); }
     //! 返回从构造初期到现在经过的时间（单位：s）
-    static inline double now() { return std::chrono::duration_cast<std::chrono::duration<double>>(steady_clock::now() - _tick).count(); }
+    RMVL_W static double now() { return std::chrono::duration_cast<std::chrono::duration<double>>(steady_clock::now() - _tick).count(); }
 };
 
 inline std::chrono::steady_clock::time_point Timer::_tick = {};

@@ -8,7 +8,7 @@ import json
 py_signatures = {}
 
 
-def add_fn(ns, name, arg, ret):
+def add_fn(ns: str, name: str, arg: str, ret: str):
     """
     ### Add a function signature to the "py_signatures" dictionary
     #### Parameters
@@ -45,7 +45,7 @@ def add_fn(ns, name, arg, ret):
     )
 
 
-def add_const(ns, name, val):
+def add_const(ns: str, name: str, val: str):
     """
     ### Add a constant signature to the "py_signatures" dictionary
     #### Parameters
@@ -65,7 +65,7 @@ def add_const(ns, name, val):
     )
 
 
-def gen(file):
+def gen_doc(file):
     """
     ### Generate the JSON file
     #### Parameters
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     if args.clear:
         py_signatures.clear()
-        gen(args.output_file)
+        gen_doc(args.output_file)
         sys.exit(0)
 
     # load existing signatures
@@ -114,4 +114,4 @@ if __name__ == "__main__":
         for i in range(0, len(consts), 3):
             add_const(consts[i], consts[i + 1], consts[i + 2])
 
-    gen(args.output_file)
+    gen_doc(args.output_file)

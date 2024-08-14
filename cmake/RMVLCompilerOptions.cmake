@@ -298,12 +298,31 @@ option(BUILD_DOCS "Create build rules for RMVL Documentation" OFF)
 
 option(BUILD_PYTHON "Build python bindings" OFF)
 if(BUILD_PYTHON)
-  find_package(SWIG QUIET)
+  find_package(pybind11 QUIET)
   find_package(Python3 COMPONENTS Interpreter Development QUIET)
-  if(NOT SWIG_FOUND OR NOT Python3_FOUND)
+  if(NOT pybind11_FOUND OR NOT Python3_FOUND)
     unset(BUILD_PYTHON CACHE)
     option(BUILD_PYTHON "Build python bindings" OFF)
-    message(WARNING "SWIG or Python3 not found, python bindings will not be built")
+    if(NOT Python3_FOUND)
+      message(WARNING
+        "Python3 not found, python bindings will not be built.\n"
+        "If your OS is Ubuntu / Debian, please use the following command:\n"
+        "  sudo apt install python3-dev\n"
+        "If your OS is Windows, please install python3 in the official website:\n"
+        "  https://www.python.org/downloads/"
+      )
+    endif()
+    if(NOT pybind11_FOUND)
+      message(WARNING
+        "pybind11 not found, python bindings will not be built.\n"
+        "If your OS is Ubuntu / Debian, please install pybind11:\n"
+        "  sudo apt install pybind11-dev\n"
+        "or\n"
+        "  pip install pybind11\n"
+        "If your OS is Windows, please use the following command:\n"
+        "  pip install pybind11"
+      )
+    endif()
   else()
     set(RMVL_PYTHON_VERSION_MAJOR "${Python3_VERSION_MAJOR}")
     set(RMVL_PYTHON_VERSION_MINOR "${Python3_VERSION_MINOR}")
@@ -312,12 +331,12 @@ if(BUILD_PYTHON)
     set(RMVL_PYTHON_INTERPRETER_FOUND "${Python3_Interpreter_FOUND}")
     set(RMVL_PYTHON_LIBRARIES "${Python3_LIBRARIES}")
 
-    include(UseSWIG)
-    set(CMAKE_SWIG_OUTDIR ${PROJECT_BINARY_DIR}/python/rm)
-    set(SWIG_OUTFILE_DIR ${PROJECT_BINARY_DIR}/pygen-cpp)
+    set(RMVL_PYBIND_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/pybind-cpp)
+    set(RMVL_PYTHON_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/rm)
+    set(RMVL_PYDOC_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/docs)
     include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPython.cmake)
     # create __init__.py
-    file(WRITE ${CMAKE_SWIG_OUTDIR}/__init__.py "")
+    file(WRITE ${RMVL_PYTHON_OUTPUT_DIR}/__init__.py "\"\"\"\nDO NOT EDIT OR RUN THIS FILE!!!\n\"\"\"\n")
   endif()
 endif()
 
