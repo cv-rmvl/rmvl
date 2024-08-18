@@ -10,17 +10,19 @@ import json
 import html_functions
 import doxygen_scan
 
+from doxygen_scan import Symbol
+
 ROOT_DIR = sys.argv[1]
 PYTHON_SIGNATURES_FILE = sys.argv[2]
 
-python_signatures = dict()
+python_signatures = dict[str, list[dict[str, str]]]()
 with open(PYTHON_SIGNATURES_FILE, "rt") as f:
     python_signatures = json.load(f)
-    print("Loaded Python signatures: %d" % len(python_signatures))
+    print("     \033[32m\u2714\033[0m Loaded Python signatures: %d" % len(python_signatures))
 
 import xml.etree.ElementTree as ET
 root = ET.parse(ROOT_DIR + 'rmvl.tag')
-files_dict = {}
+files_dict = dict[str, list[Symbol]]()
 
 # constants and function from rmvl.tag
 namespaces = root.findall("./compound[@kind='namespace']")
@@ -36,7 +38,7 @@ for c in classes:
     file = c.find("./filename").text
     doxygen_scan.scan_class_methods(c, c_name, files_dict)
 
-print('Doxygen files to scan: %s' % len(files_dict))
+print('     \033[32m\u2714\033[0m Doxygen files to scan: %s' % len(files_dict))
 
 files_processed = 0
 files_skipped = 0
@@ -51,10 +53,10 @@ for file in files_dict:
 
     active_anchors_dict = {a.anchor: a for a in active_anchors}
     if len(active_anchors_dict) != len(active_anchors):
-        print('Duplicate entries detected: %s -> %s (%s)' % (len(active_anchors), len(active_anchors_dict), file))
+        print('     \033[31m\u2716\033[0m Duplicate entries detected: %s -> %s (%s)' % (len(active_anchors), len(active_anchors_dict), file))
 
     files_processed = files_processed + 1
     symbols_processed = symbols_processed + len(active_anchors_dict)
     html_functions.insert_python_signatures(python_signatures, active_anchors_dict, ROOT_DIR + file)
 
-print('Done (processed files %d, symbols %d, skipped %d files)' % (files_processed, symbols_processed, files_skipped))
+print('     \033[32m\u2714\033[0m Done (processed files %d, symbols %d, skipped %d files)' % (files_processed, symbols_processed, files_skipped))

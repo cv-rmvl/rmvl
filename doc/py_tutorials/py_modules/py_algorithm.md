@@ -23,6 +23,10 @@ interpolate = rm.Interpolator([-1, 0, 2], [1, 0, 4])
 val = interpolate(1)
 print("f(1) = {:.2f}".format(val))
 
+# 非线性方程求解
+nl = rm.NonlinearSolver(lambda x: x**2 - 3 * x + 2)
+print("x = ({:.3f}, {:.3f})".format(nl(-5), nl(5)))
+
 # 2 阶 2 级 Runge-Kutta
 dot_x1 = lambda t, x: 2 * x[1] + t
 dot_x2 = lambda t, x: -x[0] - 3 * x[1]
