@@ -1,14 +1,3 @@
-/**
- * @file rmvldef.hpp
- * @author RoboMaster Vision Community
- * @brief
- * @version 1.0
- * @date 2023-08-01
- *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
- *
- */
-
 #pragma once
 
 #ifndef __RMVL_CAT

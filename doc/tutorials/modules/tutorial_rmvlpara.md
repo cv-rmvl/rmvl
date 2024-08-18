@@ -204,15 +204,45 @@ struct TestParam
 inline TestParam test_param;
 ```
 
-其中包含了运行时加载的接口 `load`，以 @ref para_core 为例，`rm::para::CoreParam::load` 用于运行时读取 YAML 文件并配置 core 模块的参数。
+其中包含了运行时参数导入和导出的接口 `read` 和 `write`，以 @ref para_algorithm 为例，`rm::para::AlgorithmParam::read` 用于运行时读取 YAML 文件并配置 algorithm 模块的参数，`rm::para::AlgorithmParam::write` 用于将当前 algorithm 模块的参数写入到 YAML 文件中。
 
 用户可以通过使用类似以下的代码完成运行时加载
 
 ```cpp
 /* code */
-rm::para::algorithm_param.load(prefix_path + "core.yml");
+rm::para::algorithm_param.load(prefix_path + "algorithm.yml");
 /* code */
 ```
 
 #### 4.2 YAML 文件格式
 
+对于某个 `*.para` 文件中的参数，可以通过 YAML 文件进行运行时配置，例如
+
+```para
+int num = 10      # Test number
+float value = 4.2 # Test value
+string name       # Test name
+```
+
+对应的 YAML 文件可以写为
+
+```yaml
+# test.yml
+%YAML:1.0
+---
+
+num: 20
+name: "Hello, RMVL"
+```
+
+在程序调用
+
+```cpp
+rm::para::test_param.load(prefix_path + "test.yml");
+```
+
+时，会实时加载该 YAML 文件，此时
+
+- `num` 的值会被设置为 `20`
+- `name` 的值会被设置为 `Hello, RMVL`
+- `value` 在 YAML 文件中为设置该值，因此 `value` 的值会保持不变，即为默认的 `4.2`

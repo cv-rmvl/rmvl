@@ -248,6 +248,8 @@ namespace reflect
 namespace helper
 {
 
+//! @cond
+
 //! Constructor helper
 struct init
 {
@@ -291,6 +293,8 @@ template <typename Tp>
 constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 
 #endif
+
+//! @endcond
 
 } // namespace helper
 

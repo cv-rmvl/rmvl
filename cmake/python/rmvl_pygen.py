@@ -28,18 +28,16 @@ def re_match(mode: str, line: str) -> re.Match | None:
     `(re.Match | None)`: 匹配结果，如果没有匹配则返回 `None`
     """
     if mode == "normal_class":
-        return re.search(r"(class|struct)\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?$", line)
+        return re.search(r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?$", line)
     elif mode == "aggregate_class":
-        return re.search(
-            r"(class|struct)\s+RMVL_EXPORTS_W_AG\s+(\w+)\s*(?:final)?$", line
-        )
+        return re.search(r"struct\s+RMVL_EXPORTS_W_AG\s+(\w+)\s*(?:final)?$", line)
     elif mode == "normal_aggregate_class":
         return re.search(
             r"(class|struct)\s+RMVL_EXPORTS_(?:W|W_AG)\s+(\w+)\s*(?:final)?$", line
         )
     elif mode == "inherited_class":
         return re.search(
-            r"(class|struct)\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?:\s+(public)?\s+(\w+)\s*$",
+            r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?:\s+(public)?\s+(\w+)\s*$",
             line,
         )
     elif mode == "global_function":
@@ -270,14 +268,14 @@ def generate_python_binding(lines: list[str]) -> str:
                 # Normal class
                 mch = re_match("normal_class", line)
                 if mch:
-                    cur_class = mch.group(2)
+                    cur_class = mch.group(1)
                     class_content.append(
                         f'    py::class_<{cur_class}>(m, "{cur_class}")'
                     )
                 # Aggregate class
                 mch = re_match("aggregate_class", line)
                 if mch:
-                    cur_class = mch.group(2)
+                    cur_class = mch.group(1)
                     class_content.append(
                         f'    py::class_<{cur_class}>(m, "{cur_class}")'
                     )
@@ -285,9 +283,9 @@ def generate_python_binding(lines: list[str]) -> str:
                 # Inherited class
                 mch = re_match("inherited_class", line)
                 if mch:
-                    cur_class = mch.group(2)
+                    cur_class = mch.group(1)
                     class_content.append(
-                        f'    py::class_<{cur_class}, {mch.group(4)}>(m, "{cur_class}")'
+                        f'    py::class_<{cur_class}, {mch.group(3)}>(m, "{cur_class}")'
                     )
 
             # Global normal function
@@ -526,8 +524,8 @@ def generate_pyi(lines: list[str]) -> str:
                 # Inherited class
                 mch = re_match("inherited_class", line)
                 if mch:
-                    cur_class = mch.group(2)
-                    class_content.append(f"class {cur_class}({mch.group(4)}):")
+                    cur_class = mch.group(1)
+                    class_content.append(f"class {cur_class}({mch.group(3)}):")
             # Global function definition
             else:
                 mch = re_match("global_function", line)

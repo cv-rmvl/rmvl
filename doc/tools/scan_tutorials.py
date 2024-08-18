@@ -9,7 +9,7 @@ import re
 # 3. Check prev/next nodes
 
 class Tutorial(object):
-    def __init__(self, path):
+    def __init__(self, path: Path):
         self.path = path
         self.title = None # doxygen title
         self.children = [] # ordered titles
@@ -44,7 +44,7 @@ class Tutorial(object):
                 self.children.append(m.group(1))
                 continue
 
-    def verify_prev_next(self, storage):
+    def verify_prev_next(self, storage: dict[str, 'Tutorial']) -> bool:
         res = True
 
         if self.title is None:
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     p = Path('tutorials')
     print("Looking for tutorials in: '{}'".format(p))
 
-    all_tutorials = dict()
+    all_tutorials = dict[str, Tutorial]()
     for f in p.glob('**/*'):
         if f.suffix.lower() in ('.markdown', '.md'):
             t = Tutorial(f)

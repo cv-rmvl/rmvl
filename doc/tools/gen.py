@@ -5,7 +5,7 @@ sys.dont_write_bytecode = True  # Don't generate .pyc files / __pycache__ direct
 import argparse
 import json
 
-py_signatures = {}
+py_signatures = dict[str, list[dict[str, str]]]()
 
 
 def add_fn(ns: str, name: str, arg: str, ret: str):
@@ -13,7 +13,7 @@ def add_fn(ns: str, name: str, arg: str, ret: str):
     ### Add a function signature to the "py_signatures" dictionary
     #### Parameters
     - `ns` ─ namespace
-    - `name` ─ function name, used as the key in the dictionary
+    - `name` ─ function name, used as the key in the dictionary (or `[[call]]` for callable objects)
     - `arg` ─ function arguments
     - `ret` ─ function return type (or `[[con]]` for constructors, `[[this]]` for this object)
     #### Notes
@@ -25,12 +25,18 @@ def add_fn(ns: str, name: str, arg: str, ret: str):
     dst_name = f"{ns}::{name}"
     dst_arg = arg
     dst_ret = ret
-    # constructor signature
+    
+    # replace special function names
+    if name == "[[call]]":
+        full_name = f"{ns}::operator()"
+        dst_name = f"{ns}::__call__"
+
+    # replace special return values
     if ret == "[[con]]":
         dst_name = ns
         dst_ret = f"<{name} object>"
     elif ret == "[[this]]":
-        dst_ret = f"<{name} object>"
+        dst_ret = f"<{ns} object>"
 
     # add to the dictionary
     if full_name not in py_signatures:
@@ -38,7 +44,7 @@ def add_fn(ns: str, name: str, arg: str, ret: str):
     ns = ns.replace("::", ".")
     dst_name = dst_name.replace("::", ".")
     dst_arg = arg.replace(",", ", ")
-    dst_ret = dst_ret.replace(",", ", ").replace("[[", "<").replace("]]", ">").replace("_", " ")
+    dst_ret = dst_ret.replace("::", ".").replace(",", ", ").replace("[[", "<").replace("]]", ">").replace("_", " ")
     
     py_signatures[full_name].append(
         {"name": dst_name, "arg": dst_arg, "ret": dst_ret}

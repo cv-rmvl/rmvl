@@ -55,10 +55,10 @@ include(cmake/RMVLUtils.cmake)
 # ----------------------------------------------------------------------------
 include_directories(${CMAKE_BINARY_DIR})
 
-# RMVL compile configure and options
-include(cmake/RMVLCompilerOptions.cmake)
 # RMVL version number from sources
 include(cmake/RMVLVersion.cmake)
+# RMVL compile configure and options
+include(cmake/RMVLCompilerOptions.cmake)
 # RMVL Install layout 
 include(cmake/RMVLInstall.cmake)
 # RMVL build module

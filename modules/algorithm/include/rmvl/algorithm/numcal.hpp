@@ -118,7 +118,7 @@ public:
  * @brief
  * - 使用最小二乘法拟合曲线，详见 @ref tutorial_modules_least_square
  */
-class CurveFitter
+class RMVL_EXPORTS_W CurveFitter
 {
     std::vector<std::size_t> _idx; //!< 多项式拟合曲线的阶数（从低到高）
     std::vector<double> _coeffs;   //!< 多项式拟合曲线的系数
@@ -133,7 +133,7 @@ public:
      *                  \f[f(x)=a_0+a_1x+\cdots+a_7x^7\tag1\f]例如 `0b01000101` 表示拟合曲线为
      *                  \f[f(x)=a_0+a_2x^2+a_6x^6\tag2\f]
      */
-    CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order);
+    RMVL_W CurveFitter(const std::vector<double> &xs, const std::vector<double> &ys, std::bitset<8> order);
 
     /**
      * @brief 计算拟合的多项式曲线在指定点的函数值
@@ -141,7 +141,7 @@ public:
      * @param[in] x 指定点的 x 坐标
      * @return 拟合的多项式曲线在指定点的函数值
      */
-    double operator()(double x) const;
+    RMVL_W double operator()(double x) const;
 };
 
 #endif
@@ -153,11 +153,12 @@ public:
  * @brief
  * - 使用离散 Newton 迭代法求解非线性方程，详见 @ref tutorial_modules_func_iteration
  */
-struct NonlinearSolver
+class RMVL_EXPORTS_W NonlinearSolver
 {
-    std::function<double(double)> func; //!< 非线性方程函数对象
+public:
+    RMVL_W_RW std::function<double(double)> func; //!< 非线性方程函数对象
 
-    NonlinearSolver() = default;
+    RMVL_W NonlinearSolver() = default;
 
     /**
      * @brief 创建非线性方程求解器对象
@@ -166,7 +167,7 @@ struct NonlinearSolver
      * @note
      * - 可以是函数指针、函数对象、lambda 表达式等，可隐式转换为 `double (*)(double)`
      */
-    NonlinearSolver(const std::function<double(double)> &f) : func(f) {}
+    RMVL_W NonlinearSolver(const std::function<double(double)> &f) : func(f) {}
 
     /**
      * @brief 使用离散 Newton 迭代法求解非线性方程 \f$f(x)=0\f$
@@ -176,7 +177,7 @@ struct NonlinearSolver
      * @param[in] max_iter 最大迭代次数
      * @return 迭代结果
      */
-    double operator()(double x0, double eps = 1e-5, std::size_t max_iter = 50) const;
+    RMVL_W double operator()(double x0, double eps = 1e-5, std::size_t max_iter = 50) const;
 };
 
 ////////////// 常微分方程（组）数值解 //////////////

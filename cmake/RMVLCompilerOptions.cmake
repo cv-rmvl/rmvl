@@ -336,7 +336,11 @@ if(BUILD_PYTHON)
     set(RMVL_PYDOC_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/docs)
     include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPython.cmake)
     # create __init__.py
-    file(WRITE ${RMVL_PYTHON_OUTPUT_DIR}/__init__.py "\"\"\"\nDO NOT EDIT OR RUN THIS FILE!!!\n\"\"\"\n")
+    configure_file(
+      "${CMAKE_CURRENT_LIST_DIR}/python/rmvl_init.py"
+      "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
+      @ONLY
+    )
   endif()
 endif()
 
