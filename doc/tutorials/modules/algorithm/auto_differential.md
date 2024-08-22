@@ -123,46 +123,77 @@ RMVL 中提供了一元函数以及多元函数的微分工具，求解一元函
 
 以下展示了使用自动求导、数值微分的例子。
 
-#### 3.1 创建项目
+#### 3.1 一元函数导数示例代码
 
-1. 添加源文件 `main.cpp`
-   ```cpp
-   #include <cstdio>
-   #include <rmvl/algorithm/numcal.hpp>
-   
-   // 自定义函数 f(x)=x²+4x-3
-   inline double quadratic(double x) { return x * x + 4 * x - 3; }
+@add_toggle_cpp
 
-   int main()
-   {
-       double dydx = rm::derivative(quadratic, 1);
-       printf("f'(1) = %f\n", dydx);
-   }
-   ```
+```cpp
+#include <cstdio>
+#include <rmvl/algorithm/numcal.hpp>
 
-2. 添加 `CMakeLists.txt`
-   ```cmake
-   cmake_minimum_required(VERSION 3.10)
-   project(DerivativeDemo)
-   find_package(RMVL COMPONENTS algorithm REQUIRED)
-   add_executable(demo main.cpp)
-   target_link_libraries(demo PRIVATE ${RMVL_LIBS})
-   ```
+// 自定义函数 f(x) = x²+4x-3
+inline double quadratic(double x) { return x * x + 4 * x - 3; }
 
-#### 3.2 构建、运行
-
-在项目根目录打开终端，输入
-
-```bash
-mkdir build
-cd build
-cmake ..
-make -j2
-./demo
+int main()
+{
+    // 使用外推原理计算 f'(1)
+    double dydx = rm::derivative(quadratic, 1, rm::DiffMode::Ridders);
+    printf("f'(1) = %f\n", dydx);
+    //  f'(1) = 6
+}
 ```
 
-可以看到运行结果
+@end_toggle
 
+@add_toggle_python
+
+```python
+import rm
+
+# 自定义函数 f(x) = x²+4x-3
+def quadratic(x):
+    return x ** 2 + 4 * x - 3
+
+# 使用外推原理计算 f'(1)
+dydx = rm.derivative(quadratic, 1, mode=rm.DiffMode.Ridders)
+print("f'(1) = {:.2f}".format(dydx))
+# f'(1) = 6.00
 ```
-f'(1) = 6
+
+@end_toggle
+
+#### 3.2 多元函数梯度示例代码
+
+@add_toggle_cpp
+
+```cpp
+#include <cstdio>
+#include <rmvl/algorithm/numcal.hpp>
+
+int main()
+{
+    // 自定义函数 f(x,y) = x²+y²+4x-3y
+    rm::FuncNd func([](const std::vector<double> &x) { return x[0] * x[0] + x[1] * x[1] + 4 * x[0] - 3 * x[1]; });
+
+    // 计算 f'(1, 2)
+    auto dydx = rm::grad(func, {1, 2});
+    printf("f'(1, 2) = (%f, %f)\n", dydx[0], dydx[1]);
+    // f'(1, 2) = (6, 1)
+}
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+import rm
+
+# 自定义函数 f(x,y) = x²+y²+4x-3y
+func = lambda x: x[0] ** 2 + x[1] ** 2 + 4 * x[0] - 3 * x[1]
+dydx = rm.grad(func, [1, 2])
+print("f'(1, 2) = ({:.2f}, {:.2f})".format(dydx[0], dydx[1]))
+# f'(1, 2) = (6.00, 1.00)
+```
+
+@end_toggle

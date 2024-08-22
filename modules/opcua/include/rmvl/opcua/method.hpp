@@ -37,8 +37,9 @@ struct Argument final
 };
 
 //! OPC UA 方法
-struct Method final
+class Method final
 {
+public:
     //! 命名空间索引，默认为 `1`
     uint16_t ns{1U};
 

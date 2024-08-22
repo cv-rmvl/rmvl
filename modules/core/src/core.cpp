@@ -30,6 +30,8 @@ static constexpr const char *rmvlErrorStr(int status)
         return "Bad argument";
     case RMVL_StsBadSize:
         return "Incorrect size of the array";
+    case RMVL_StsBadFunc:
+        return "Incorrect function";
     case RMVL_StsNullPtr:
         return "Null pointer";
     case RMVL_StsNotaNumber:

@@ -11,12 +11,17 @@
 #   用法:
 #     _pygen(<headers> <mode> <outputs>)
 #   示例:
-#     _pygen("${pybind_headers}" "bind" RMVL_PYBIND_CONTENTS)
+#     _pygen("${pybind_headers}" "bind" RMVL_PYBIND_CONTENTS [DOC_PATH <file path>])
 # ----------------------------------------------------------------------------
 function(_pygen headers mode outputs)
+  cmake_parse_arguments("PYDOC" "" "DOC_PATH" "" ${ARGN})
+  set(pydoc_path "")
+  if(PYDOC_DOC_PATH)
+    set(pydoc_path "--doc_path=${PYDOC_DOC_PATH}")
+  endif()
   foreach(header ${headers})
     execute_process(
-      COMMAND ${RMVL_PYTHON_EXECUTABLE} ${pybind_ws}/rmvl_pygen.py ${header} ${mode}
+      COMMAND ${RMVL_PYTHON_EXECUTABLE} ${pybind_ws}/rmvl_pygen.py ${header} ${mode} ${pydoc_path}
       OUTPUT_VARIABLE py_output
     )
     set(ret_outputs "${ret_outputs}\n${py_output}")
@@ -27,25 +32,38 @@ endfunction()
 # ----------------------------------------------------------------------------
 #   根据给定目标生成 Python 绑定代码与接口文件
 #   用法:
-#     rmvl_generate_python(<name> [DEPENDS <dependencies>])
-#   示例:
 #     rmvl_generate_python(
-#       light                     # 目标名称，将生成 rmvl_light_py 模块
-#       DEPENDS opt_light_control # 依赖的模块
+#       <name>                   # 目标名称，将生成 rmvl_light_py 模块
+#       [FILES <files>]          # 参与绑定的 include/rmvl/ 文件夹下的头文件
+#       [PARA_FILES <files>]     # 参与绑定的 include/rmvlpara/ 文件夹下的头文件
+#       [DEPENDS <dependencies>] # 依赖的模块
+#     )
+#   示例:
+#     rmvl_generate_python(core
+#       FILES dataio.hpp timer.hpp
+#       PARA_FILES dataio.hpp
+#       DEPENDS core
 #     )
 # ----------------------------------------------------------------------------
 function(rmvl_generate_python _name)
-  cmake_parse_arguments("PY" "" "" "DEPENDS" ${ARGN})
+  cmake_parse_arguments("PY" "" "" "DEPENDS;FILES" ${ARGN})
 
   set(pybind_ws "${PROJECT_SOURCE_DIR}/cmake/python")
   set(pybind_inc "${CMAKE_CURRENT_SOURCE_DIR}/include/rmvl")
+  set(pybind_parainc "${CMAKE_CURRENT_SOURCE_DIR}/include/rmvl")
 
   # obtain all the header files
-  if(IS_DIRECTORY ${pybind_inc}/${_name})
-    file(GLOB pybind_headers ${pybind_inc}/${_name}/*.h*)
+  unset(pybind_headers)
+  if(NOT PY_FILES)
+    return()
   else()
-    set(pybind_headers ${pybind_inc}/${_name}.hpp)
+    foreach(file ${PY_FILES})
+      list(APPEND pybind_headers "${pybind_inc}/${file}")
+    endforeach()
   endif()
+  foreach(file ${PY_PARA_FILES})
+    list(APPEND pybind_headers "${pybind_parainc}/${file}")
+  endforeach()
   
   # generate wrapper code for python
   set(RMVL_PYBIND_NAME "rm_${_name}_py")
@@ -67,7 +85,9 @@ function(rmvl_generate_python _name)
   )
   
   # generate python interface file
-  _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS)
+  _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS
+    DOC_PATH ${RMVL_PYDOC_OUTPUT_DIR}
+  )
   configure_file(
     ${pybind_ws}/rmvl_pyi.pyi.in
     ${RMVL_PYTHON_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.pyi

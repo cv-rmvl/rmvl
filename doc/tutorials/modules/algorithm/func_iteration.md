@@ -72,3 +72,34 @@ x^*&=x_k-\frac{f(x_k)}{f'(x_k)}-\frac{f''(x_k)}{2f'(x_k)}(x^*-x_k)^2-\cdots\\
 此时的 Newton 迭代被称为离散 Newton 迭代，也称为弦截法，表示为如下形式，可参考 rm::NonlinearSolver
 
 \f[f(x_{k+1})=x_k-\frac{f(x_k)}{f(x_k-x_{k-1})}(x_k-x_{k-1})\tag{3-2}\f]
+
+### 4. 使用示例
+
+@add_toggle_cpp
+
+```cpp
+#include <rmvl/algorithm.hpp>
+
+#include <cstdio>
+
+int main()
+{
+    auto foo = rm::NonlinearSolver([](double x) { return x * x - 4; });
+    printf("x1 = %.2f, x2 = %.2f\n", foo(-5), foo(5));
+    // x1 = -2.00, x2 = 2.00
+}
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+import rm
+
+foo = rm.NonlinearSolver(lambda x: x * x - 4)
+print("x1 = {:.2f}, x2 = {:.2f}".format(foo(-5), foo(5)))
+# x1 = -2.00, x2 = 2.00
+```
+
+@end_toggle

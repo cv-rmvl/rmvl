@@ -1,5 +1,6 @@
 import typing
-from typing import Any, Callable
+import numpy as np
+from typing import overload, Any, Callable
 from enum import Enum
 
 @RMVL_PYI_CONTENTS@

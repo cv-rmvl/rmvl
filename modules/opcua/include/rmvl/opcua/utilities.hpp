@@ -32,8 +32,9 @@ namespace rm
 //! @{
 
 //! OPC UA 节点 ID
-struct NodeId final
+class NodeId final
 {
+public:
     UA_NodeId nid{}; //!< open62541 的节点 ID 结构体
 
     //! 默认构造节点 ID

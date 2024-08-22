@@ -8,12 +8,17 @@ RMVL 说明文档 {#mainpage}
 - @ref intro
 - @ref tutorials
 - @ref tutorials_python
-- @ref citelist
 @refs_modules@
 @refs_extra@
 - Parameter modules. @ref para
+- @ref citelist
 
 #### 快速开始
 
-- @ref tutorial_install —— 安装依赖、项目配置、编译安装
-- @ref tutorial_extra_upper_base —— 部署与构建顶层模块
+- @ref tutorial_install
+
+  安装依赖、项目配置、编译安装
+
+- @ref tutorial_extra_upper_base
+
+  部署与构建顶层模块

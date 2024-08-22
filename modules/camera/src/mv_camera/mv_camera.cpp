@@ -23,7 +23,7 @@ MvCamera::~MvCamera() { delete _impl; }
 bool MvCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double MvCamera::get(int propId) const { return _impl->get(propId); }
 bool MvCamera::isOpened() const { return _impl->isOpened(); }
-bool MvCamera::read(cv::OutputArray image) { return _impl->read(image); }
+bool MvCamera::read(cv::Mat image) { return _impl->read(image); }
 bool MvCamera::reconnect() { return _impl->reconnect(); }
 
 MvCamera::Impl::Impl(CameraConfig init_mode, std::string_view serial) noexcept

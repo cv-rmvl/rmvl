@@ -87,11 +87,25 @@
 
 RMVL 提供了改进的 Gauss-Newton 迭代算法，可参考 `rm::lsqnonlin` 函数。例如，我们需要拟合一个正弦函数\f[y=A\sin(\omega t+\varphi_0)+b\f]其中，\f$A,\omega,\varphi_0,b\f$ 是待拟合的参数，不妨统一写为 \f$\pmb x=(A,\omega,\varphi_0,b)\f$，也就是说我们需要拟合的函数是\f[\green y=x_1\sin(x_2\green t+x_3)+x_4\f]其中 \f$t\f$ 和 \f$y\f$ 是可以观测到的数据，我们需要通过观测的数据来拟合 \f$\pmb x\f$ 的值。比方说，下面的 `obtain` 函数就可以观测每一帧的数据。
 
+@add_toggle_cpp
+
 ```cpp
 double obtain();
 ```
 
+@end_toggle
+
+@add_toggle_python
+    
+```python
+def obtain(): ...
+```
+
+@end_toggle
+
 例如经过了 20 帧的数据采集，我们得到了一个长度为 `20` 的队列，即
+
+@add_toggle_cpp
 
 ```cpp
 std::deque<double> datas;
@@ -103,7 +117,25 @@ if (datas.size() == 20)
 /* code */
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+datas = []
+
+# code
+datas.insert(0, obtain())
+if len(datas) == 20:
+    datas.pop()
+# code
+```
+
+@end_toggle
+
 准备好数据后，可以使用下面的代码来拟合正弦函数。
+
+@add_toggle_cpp
 
 ```cpp
 rm::FuncNds lsq_sine(datas.size());
@@ -115,6 +147,24 @@ for (std::size_t i = 0; i < datas.size(); ++i)
 // 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
 auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09});
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+lsq_sine = []
+
+for i, data in enumerate(datas):
+    lsq_sine.append(
+        lambda x, i=i, data=data: x[0] * np.sin(x[1] * i + x[2]) + x[3] - data
+    )
+
+# 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09])
+```
+
+@end_toggle
 
 ### 2. Levenberg–Marquardt 算法
 

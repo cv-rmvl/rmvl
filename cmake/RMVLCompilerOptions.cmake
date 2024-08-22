@@ -110,7 +110,7 @@ if(ENABLE_PIC)
   set(CMAKE_POSITION_INDEPENDENT_CODE ${ENABLE_PIC})
 endif()
 
-option(ENABLE_LTO "Enable Link Time Optimization" OFF)
+option(ENABLE_LTO "Enable Link Time Optimization" ON)
 if(ENABLE_LTO)
   include(CheckCXXCompilerFlag)
   if(RMVL_GNU OR RMVL_CLANG OR RMVL_APPLECLANG)
@@ -335,12 +335,13 @@ if(BUILD_PYTHON)
     set(RMVL_PYTHON_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/rm)
     set(RMVL_PYDOC_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/docs)
     include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPython.cmake)
-    # create __init__.py
+    # create __init__.py and documetation config files for python
     configure_file(
       "${CMAKE_CURRENT_LIST_DIR}/python/rmvl_init.py"
       "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
       @ONLY
     )
+    file(WRITE ${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_cst.cfg "# constants configuration for pyrmvl\n")
   endif()
 endif()
 

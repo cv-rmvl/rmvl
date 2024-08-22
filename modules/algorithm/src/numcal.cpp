@@ -119,6 +119,21 @@ double CurveFitter::operator()(double x) const
     return retval;
 }
 
+#else
+
+CurveFitter::CurveFitter(const std::vector<double> &, const std::vector<double> &, std::bitset<8>)
+{
+    RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
+                                "RMVL by setting \"WITH_OPENCV=ON\" in CMake");
+}
+
+double CurveFitter::operator()(double) const
+{
+    RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
+                                "RMVL by setting \"WITH_OPENCV=ON\" in CMake");
+    return {};
+}
+
 #endif // HAVE_OPENCV
 
 double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) const

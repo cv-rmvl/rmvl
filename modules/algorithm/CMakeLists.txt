@@ -14,8 +14,8 @@ endif()
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  rmvl_generate_python(
-    algorithm
+  rmvl_generate_python(algorithm
+    FILES algorithm/numcal.hpp
     DEPENDS algorithm
   )
 endif()
@@ -39,5 +39,7 @@ if(BUILD_PERF_TESTS)
   )
 endif(BUILD_PERF_TESTS)
 
-# doxygen update
+# ----------------------------------------------------------------------------
+#  Doxygen update
+# ----------------------------------------------------------------------------
 rmvl_update_doxygen_predefined("HAVE_OPENCV")

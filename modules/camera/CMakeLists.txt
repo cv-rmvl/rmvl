@@ -1,3 +1,6 @@
+# --------------------------------------------------------------------------
+#  Camera base module
+# --------------------------------------------------------------------------
 rmvl_update_build(camera WITH_OPENCV AND WITH_EIGEN3)
 
 rmvl_generate_para(
@@ -12,7 +15,7 @@ rmvl_add_module(
 )
 
 # --------------------------------------------------------------------------
-#   Search the specific SDK
+#  Search the specific SDK
 # --------------------------------------------------------------------------
 # mv
 find_package(MvSDK QUIET)
@@ -76,3 +79,24 @@ rmvl_generate_module_para(camera)
 if(BUILD_TESTS)
 
 endif(BUILD_TESTS)
+
+# --------------------------------------------------------------------------
+#   Build Python bindings
+# --------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  if(BUILD_rmvl_camera)
+    list(APPEND cam_inc camera/camutils.hpp) 
+    list(APPEND cam_dep camera)
+  endif()
+  foreach(m mv hik opt)
+    if(BUILD_rmvl_${m}_camera)
+      list(APPEND cam_inc camera/${m}_camera.h) 
+      list(APPEND cam_dep ${m}_camera)
+    endif()
+  endforeach()
+  
+  rmvl_generate_python(camera
+    FILES ${cam_inc}
+    DEPENDS ${cam_dep}
+  )
+endif()
