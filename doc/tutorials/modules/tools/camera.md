@@ -281,12 +281,12 @@ bin/sample_hik_multi
 
 @add_toggle{MindVision 工业相机}
 ```bash
-bin/sample_mv_writer
+bin/rmvl_mv_writer
 ```
 @end_toggle
 @add_toggle{HikRobot 工业相机}
 ```bash
-bin/sample_hik_writer
+bin/rmvl_hik_writer
 ```
 @end_toggle
 
@@ -294,12 +294,12 @@ bin/sample_hik_writer
 
 @add_toggle{MindVision 工业相机}
 ```bash
-bin/sample_mv_writer -o=aaa.avi
+bin/rmvl_mv_writer -o=aaa.avi
 ```
 @end_toggle
 @add_toggle{HikRobot 工业相机}
 ```bash
-bin/sample_hik_writer -o=aaa.avi
+bin/rmvl_hik_writer -o=aaa.avi
 ```
 @end_toggle
 
@@ -307,31 +307,23 @@ bin/sample_hik_writer -o=aaa.avi
 
 ### 3.4 相机标定
 
-相机标定程序，在 `build` 文件夹下执行以下命令
+MvCamera 相机自动标定程序，在 `build` 文件夹下执行以下命令
 
-@add_toggle{MindVision 工业相机}
 ```bash
-bin/sample_mv_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
+bin/rmvl_mv_auto_calib -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 ```
-@end_toggle
-@add_toggle{HikRobot 工业相机}
-```bash
-bin/sample_hik_calibration -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
-```
-@end_toggle
 
 `<?>` 表示可调节，具体帮助可直接执行以下命令
 
-@add_toggle{MindVision 工业相机}
 ```bash
-bin/sample_mv_calibration -help
+bin/rmvl_mv_calibration -help
 ```
-@end_toggle
-@add_toggle{HikRobot 工业相机}
+
+另外还有相机手动标定程序，可执行以下命令
+
 ```bash
-bin/sample_hik_calibration -help
+bin/rmvl_mv_manual_calib
 ```
-@end_toggle
 
 ## 4. 使用 Demo
 
