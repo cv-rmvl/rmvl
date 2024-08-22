@@ -13,6 +13,8 @@
 
 #include <opencv2/core.hpp>
 
+#include "rmvl/core/rmvldef.hpp"
+
 namespace rm
 {
 
@@ -54,12 +56,12 @@ enum class RetrieveMode : uint8_t
 };
 
 //! 相机初始化配置模式
-struct CameraConfig
+struct RMVL_EXPORTS_W_AG CameraConfig
 {
-    TriggerChannel trigger_channel{TriggerChannel::Chn1}; //!< 触发通道
-    GrabMode grab_mode{GrabMode::Continuous};             //!< 采集模式
-    HandleMode handle_mode{HandleMode::Key};              //!< 句柄创建方式
-    RetrieveMode retrieve_mode{RetrieveMode::OpenCV};     //!< 数据处理模式
+    RMVL_W_RW TriggerChannel trigger_channel{TriggerChannel::Chn1}; //!< 触发通道
+    RMVL_W_RW GrabMode grab_mode{GrabMode::Continuous};             //!< 采集模式
+    RMVL_W_RW HandleMode handle_mode{HandleMode::Key};              //!< 句柄创建方式
+    RMVL_W_RW RetrieveMode retrieve_mode{RetrieveMode::OpenCV};     //!< 数据处理模式
 
     /**
      * @brief 创建相机初始化配置模式
@@ -98,7 +100,6 @@ enum CameraProperties : uint16_t
     CAMERA_ONCE_EXPOSURE = 0x3,   //!< 单次曝光
     CAMERA_AUTO_WB = 0x10,        //!< 自动白平衡
     CAMERA_MANUAL_WB = 0x11,      //!< 手动白平衡
-    CAMERA_ONCE_WB = 0x12,        //!< 单次白平衡
     CAMERA_EXPOSURE = 0x20,       //!< 曝光值
     CAMERA_GAIN = 0x21,           //!< 模拟增益
     CAMERA_GAMMA = 0x22,          //!< Gamma 值
@@ -111,11 +112,12 @@ enum CameraProperties : uint16_t
     CAMERA_FRAME_HEIGHT = 0x30,   //!< 图像帧高度
     CAMERA_FRAME_WIDTH = 0x31,    //!< 图像帧宽度
 
-    // ---------------- 处理属性 ----------------
+    // ---------------- 触发属性 ----------------
     CAMERA_TRIGGER_DELAY = 0x40,  //!< 硬触发采集延迟（微秒\f$μs\f$）
     CAMERA_TRIGGER_COUNT = 0x41,  //!< 单次触发时的触发帧数
     CAMERA_TRIGGER_PERIOD = 0x42, //!< 单次触发时多次采集的周期（微秒\f$μs\f$）
     CAMERA_TRIGGER_SOFT = 0x43,   //!< 执行软触发
+    CAMERA_ONCE_WB = 0x44,        //!< 执行单次白平衡
 };
 
 //! 相机外参

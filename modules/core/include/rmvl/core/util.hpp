@@ -84,13 +84,14 @@ enum RMVLErrorCode : int
     RMVL_StsNoMem = -3,       //!< 内存不足 Insufficient memory
     RMVL_StsBadArg = -4,      //!< 参数异常 Bad argument
     RMVL_StsBadSize = -5,     //!< 数组大小不正确 Incorrect size of the array
-    RMVL_StsNullPtr = -6,     //!< 空指针 Null pointer
-    RMVL_StsNotaNumber = -7,  //!< 非数 Not a Number (nan)
-    RMVL_StsDivByZero = -8,   //!< 发生了除以 `0` 的情况 Division by zero occurred
-    RMVL_StsOutOfRange = -9,  //!< 其中一个参数的值超出了范围 One of the arguments' values is out of range
-    RMVL_StsAssert = -10,     //!< 断言失败 Assertion failed
-    RMVL_StsInvFmt = -11,     //!< 无效格式 Invalid format
-    RMVL_BadDynamicType = -12 //!< 动态类型转换错误 Bad dynamic_cast type
+    RMVL_StsBadFunc = -6,     //!< 功能不支持 Unsupported function
+    RMVL_StsNullPtr = -7,     //!< 空指针 Null pointer
+    RMVL_StsNotaNumber = -8,  //!< 非数 Not a Number (nan)
+    RMVL_StsDivByZero = -9,   //!< 发生了除以 `0` 的情况 Division by zero occurred
+    RMVL_StsOutOfRange = -10, //!< 其中一个参数的值超出了范围 One of the arguments' values is out of range
+    RMVL_StsAssert = -11,     //!< 断言失败 Assertion failed
+    RMVL_StsInvFmt = -12,     //!< 无效格式 Invalid format
+    RMVL_BadDynamicType = -13 //!< 动态类型转换错误 Bad dynamic_cast type,
 };
 
 //! @} core

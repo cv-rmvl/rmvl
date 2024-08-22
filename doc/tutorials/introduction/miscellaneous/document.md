@@ -196,7 +196,7 @@ std::cout << "Hello World" << std::endl;
 
 ### 按钮示例
 
-@add_toggle{C++}
+@add_toggle_cpp
 
     This is C++.
 
@@ -206,7 +206,7 @@ std::cout << "Hello World" << std::endl;
 
 @end_toggle
 
-@add_toggle{Python}
+@add_toggle_python
 
     This is Python.
 

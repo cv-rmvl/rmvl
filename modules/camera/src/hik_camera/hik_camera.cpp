@@ -23,7 +23,7 @@ HikCamera::HikCamera(CameraConfig init_mode, std::string_view serial) : _impl(ne
 HikCamera::~HikCamera() { delete _impl; }
 bool HikCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double HikCamera::get(int propId) const { return _impl->get(propId); }
-bool HikCamera::read(cv::OutputArray image) { return _impl->read(image); }
+bool HikCamera::read(cv::Mat image) { return _impl->read(image); }
 bool HikCamera::isOpened() const { return _impl->isOpened(); }
 bool HikCamera::reconnect() { return _impl->reconnect(); }
 

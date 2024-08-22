@@ -326,7 +326,7 @@ function(rmvl_generate_para target_name)
     set(module_name "${PARA_MODULE}")
   endif()
   set(file_name "param/${target_name}.para")
-  set(para_msg "Performing Conversion ${target_name}.para")
+  set(para_msg "Generating IDL ${target_name}.para")
   message(STATUS "${para_msg}")
   if(DEFINED BUILD_${the_module}_INIT AND NOT BUILD_${the_module}_INIT)
     message(STATUS "${para_msg} - skipped")
@@ -417,7 +417,7 @@ endfunction()
 # ----------------------------------------------------------------------------
 function(rmvl_generate_module_para module_name)
   ########################### message begin ###########################
-  set(para_msg "Performing Conversion ${module_name} Module")
+  set(para_msg "Generating IDL ${module_name} Module")
   message(STATUS "${para_msg}")
   ######################## Generate C++ header ########################
   system_date(year month day)

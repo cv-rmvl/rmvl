@@ -1,7 +1,7 @@
 /**
  * @file opcua.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 基于 open62541 的 OPC UA 二次开发库汇总头文件
+ * @brief OPC UA 模块汇总头文件
  * @version 1.0
  * @date 2023-10-22
  *
@@ -12,7 +12,7 @@
 #pragma once
 
 /**
- * @defgroup opcua 基于 open62541 的 OPC UA 二次开发库
+ * @defgroup opcua OPC UA 模块
  * @{
  * @brief 本模块基于 `open62541` 开发
  * @details

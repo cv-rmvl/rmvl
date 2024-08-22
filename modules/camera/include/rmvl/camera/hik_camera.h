@@ -31,7 +31,7 @@ namespace rm
 //! @example samples/camera/hik/sample_hik_writer.cpp 海康机器人工业相机录屏例程
 
 //! 海康机器人相机库
-class HikCamera final
+class RMVL_EXPORTS_W HikCamera final
 {
     class Impl;
 
@@ -42,20 +42,22 @@ public:
     /**
      * @brief 创建 HikCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
      * @param[in] serial 相机唯一序列号
      */
-    HikCamera(CameraConfig init_mode, std::string_view serial = "");
+    RMVL_W HikCamera(CameraConfig init_mode, std::string_view serial = "");
 
+    //! @cond
     HikCamera(const HikCamera &) = delete;
-    HikCamera(HikCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
+    HikCamera(HikCamera &&) = default;
+    //! @endcond
     ~HikCamera();
 
     /**
      * @brief 构建 HikCamera 对象
      * @note 此相机库仅支持 USB 相机设备，暂时对 GigE 网口相机不兼容
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
      * @param[in] serial 相机唯一序列号
      * @return HikCamera 对象独享指针
      */
@@ -68,7 +70,7 @@ public:
      * @param[in] value 参数/事件值
      * @return 是否设置成功
      */
-    bool set(int propId, double value = 0.0);
+    RMVL_W bool set(int propId, double value = 0.0);
 
     /**
      * @brief 获取相机参数
@@ -76,10 +78,10 @@ public:
      * @param[in] propId 参数编号
      * @return 参数值
      */
-    double get(int propId) const;
+    RMVL_W double get(int propId) const;
 
     //! 相机是否打开
-    bool isOpened() const;
+    RMVL_W bool isOpened() const;
 
     /**
      * @brief 从相机设备中读取图像
@@ -87,7 +89,7 @@ public:
      * @param[out] image 待读入的图像
      * @return 是否读取成功
      */
-    bool read(cv::OutputArray image);
+    RMVL_W bool read(cv::Mat image);
 
     /**
      * @brief 从相机设备中读取图像
@@ -105,7 +107,7 @@ public:
      *
      * @return 是否成功重连
      */
-    bool reconnect();
+    RMVL_W bool reconnect();
 
 private:
     Impl *_impl;

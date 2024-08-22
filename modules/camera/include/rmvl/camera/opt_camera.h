@@ -27,7 +27,7 @@ namespace rm
 //! @{
 
 //! 奥普特机器视觉相机库
-class OptCamera final
+class RMVL_EXPORTS_W OptCamera final
 {
 public:
     using ptr = std::unique_ptr<OptCamera>;
@@ -39,14 +39,16 @@ public:
     /**
      * @brief 创建 OptCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 HandleMode、GrabMode 和 RetrieveMode，如果 GrabMode
-     *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1` 
+     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::HandleMode、 rm::GrabMode 和 rm::RetrieveMode，如果 rm::GrabMode
+     *                      配置为 `rm::GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `rm::TriggerChannel::Chn1` 
      * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
      */
-    OptCamera(CameraConfig init_mode, std::string_view handle_info = "");
+    RMVL_W OptCamera(CameraConfig init_mode, std::string_view handle_info = "");
     
+    //! @cond
     OptCamera(const OptCamera &) = delete;
     OptCamera(OptCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
+    //! @endcond
     ~OptCamera();
 
     /**
@@ -68,7 +70,7 @@ public:
      * @param[in] value 参数/事件值
      * @return 是否设置成功
      */
-    bool set(int prop_id, double value = 0.0);
+    RMVL_W bool set(int prop_id, double value = 0.0);
 
     /**
      * @brief 获取相机参数
@@ -76,10 +78,10 @@ public:
      * @param[in] prop_id 参数编号
      * @return 参数值
      */
-    double get(int prop_id) const;
+    RMVL_W double get(int prop_id) const;
 
     //! 相机是否已经打开
-    bool isOpened() const;
+    RMVL_W bool isOpened() const;
 
     /**
      * @brief 从相机设备中读取图像
@@ -87,14 +89,14 @@ public:
      * @param[out] image 待读入的图像
      * @return 是否读取成功
      */
-    bool read(cv::OutputArray image);
+    RMVL_W bool read(cv::Mat image);
 
     /**
      * @brief 相机重连
      *
      * @return 是否重连成功
      */
-    bool reconnect();
+    RMVL_W bool reconnect();
 
 private:
     Impl *_impl;

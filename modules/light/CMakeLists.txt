@@ -15,8 +15,14 @@ rmvl_link_libraries(
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  rmvl_generate_python(
-    light
-    DEPENDS opt_light_control
+  foreach(m opt)
+    if(BUILD_rmvl_${m}_light_control)
+      list(APPEND light_inc light/${m}_light_control.h)
+      list(APPEND light_dep ${m}_light_control)
+    endif()
+  endforeach()
+  rmvl_generate_python(light
+    FILES ${light_inc}
+    DEPENDS ${light_dep}
   )
 endif()

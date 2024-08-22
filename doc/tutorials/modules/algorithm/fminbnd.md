@@ -102,43 +102,42 @@
 
 RMVL 中提供了一维寻优的函数 rm::fminbnd ，以下展示了一维寻优的例子。
 
-#### 3.1 创建项目
+@add_toggle_cpp
 
-1. 添加源文件 `main.cpp`
-   ```cpp
-   #include <cstdio>
-   #include <rmvl/algorithm/numcal.hpp>
+添加源文件 `main.cpp`
+```cpp
+#include <cstdio>
+#include <rmvl/algorithm/numcal.hpp>
    
-   // 自定义函数 f(x)=x²+4x-3
-   inline double quadratic(double x) { return x * x + 4 * x - 3; }
+// 自定义函数 f(x)=x²+4x-3
+inline double quadratic(double x) { return x * x + 4 * x - 3; }
 
-   int main()
-   {
-       // 确定搜索区间
-       auto [x1, x2] = rm::region(quadratic, 0);
-       // 添加优化选项（容许误差和最大迭代次数）
-       rm::OptimalOptions options;
-       options.max_iter = 100; // 最大迭代次数是 100，不加以设置默认是 1000
-       options.tol = 1e-4;     // 容许误差是 1e-4，不加以设置默认是 1e-6
-       // 一维寻优
-       auto [x, fval] = rm::fminbnd(quadratic, x1, x2, options);
-       printf("x    = %f\n", x);
-       printf("fval = %f\n", fval);
-   }
-   ```
+int main()
+{
+    // 确定搜索区间
+    auto [x1, x2] = rm::region(quadratic, 0);
+    // 添加优化选项（容许误差和最大迭代次数）
+    rm::OptimalOptions options;
+    options.max_iter = 100; // 最大迭代次数是 100，不加以设置默认是 1000
+    options.tol = 1e-4;     // 容许误差是 1e-4，不加以设置默认是 1e-6
+    // 一维寻优
+    auto [x, fval] = rm::fminbnd(quadratic, x1, x2, options);
+    printf("x    = %f\n", x);
+    printf("fval = %f\n", fval);
+}
+```
 
-2. 添加 `CMakeLists.txt`
-   ```cmake
-   cmake_minimum_required(VERSION 3.10)
-   project(FminbndDemo)
-   find_package(RMVL COMPONENTS algorithm REQUIRED)
-   add_executable(demo main.cpp)
-   target_link_libraries(demo PRIVATE ${RMVL_LIBS})
-   ```
+添加 `CMakeLists.txt`
 
-#### 3.2 构建、运行
+```cmake
+cmake_minimum_required(VERSION 3.10)
+project(FminbndDemo)
+find_package(RMVL COMPONENTS algorithm REQUIRED)
+add_executable(demo main.cpp)
+target_link_libraries(demo PRIVATE ${RMVL_LIBS})
+```
 
-在项目根目录打开终端，输入
+在项目根目录打开终端，输入以下命令以构建、运行
 
 ```bash
 mkdir build
@@ -154,3 +153,40 @@ make -j2
 x    = -2.000000
 fval = -7.000000
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+添加 `main.py` 文件，在其中写入
+
+```python
+import rm
+
+# 确定搜索区间
+quadratic = lambda x: x * x + 4 * x - 3
+x1, x2 = rm.region(quadratic, 0)
+# 添加优化选项（容许误差和最大迭代次数）
+options = rm.OptimalOptions()
+options.max_iter = 100  # 最大迭代次数是 100，不加以设置默认是 1000
+options.tol = 1e-4      # 容许误差是 1e-4，不加以设置默认是 1e-6
+# 一维寻优
+x, fval = rm.fminbnd(quadratic, x1, x2, options)
+print("x    = {:.6f}".format(x))
+print("fval = {:.6f}".format(fval))
+```
+
+在项目根目录打开终端，输入以下命令以运行
+
+```bash
+python main.py
+```
+
+可以看到运行结果
+
+```
+x    = -2.000000
+fval = -7.000000
+```
+
+@end_toggle

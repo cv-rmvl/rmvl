@@ -125,7 +125,7 @@ if(DOXYGEN_FOUND)
     endforeach()
 
     # read from pyrmvl_cst.cfg
-    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/tools/pyrmvl_cst.cfg" file_content)
+    file(READ "${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_cst.cfg" file_content)
     string(REPLACE "\n" ";" file_content "${file_content}")
     foreach(line ${file_content})
       if(line MATCHES "^#")
@@ -145,12 +145,12 @@ if(DOXYGEN_FOUND)
 
     set(RMVL_PYTHON_SIGNATURES_FILE "${CMAKE_CURRENT_BINARY_DIR}/pyrmvl_signatures.json")
     add_custom_target(gen_pyrmvl_clear
-      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen.py" "${RMVL_PYTHON_SIGNATURES_FILE}" "--clear"
+      COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen.py" "${RMVL_PYTHON_SIGNATURES_FILE}" "--clear"
       COMMENT "Clearing rmvl python bindings signatures"
     )
 
     add_custom_target(gen_pyrmvl_signatures
-      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen.py" "${RMVL_PYTHON_SIGNATURES_FILE}" "--fns=${tmp_fns}" "--consts=${tmp_consts}"
+      COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen.py" "${RMVL_PYTHON_SIGNATURES_FILE}" "--fns=${tmp_fns}" "--consts=${tmp_consts}"
       COMMENT "Generating rmvl python bindings signatures"
       DEPENDS gen_pyrmvl_clear
     )

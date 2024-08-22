@@ -111,8 +111,6 @@ public:
 
 ////////////////// 多项式曲线拟合 //////////////////
 
-#ifdef HAVE_OPENCV
-
 /**
  * @brief 曲线拟合器
  * @brief
@@ -143,8 +141,6 @@ public:
      */
     RMVL_W double operator()(double x) const;
 };
-
-#endif
 
 ///////////////// 非线性方程数值解 /////////////////
 
@@ -185,7 +181,7 @@ public:
 //! 常微分方程
 using Ode = std::function<double(double, const std::vector<double> &)>;
 //! 常微分方程组
-using Odes = std::vector<Ode>;
+using Odes = std::vector<std::function<double(double, const std::vector<double> &)>>;
 
 /**
  * @brief Butcher 表形式的常微分方程（组）数值求解器
@@ -302,11 +298,11 @@ public:
 //! 一元函数
 using Func1d = std::function<double(double)>;
 //! 一元函数组
-using Func1ds = std::vector<Func1d>;
+using Func1ds = std::vector<std::function<double(double)>>;
 //! 多元函数
 using FuncNd = std::function<double(const std::vector<double> &)>;
 //! 多元函数组
-using FuncNds = std::vector<FuncNd>;
+using FuncNds = std::vector<std::function<double(const std::vector<double> &)>>;
 
 //! 梯度/导数计算模式
 enum class DiffMode : uint8_t
@@ -329,7 +325,6 @@ struct RMVL_EXPORTS_W_AG OptimalOptions
     RMVL_W_RW FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
     RMVL_W_RW int max_iter{1000};   //!< 最大迭代次数
     RMVL_W_RW double exterior{1e3}; //!< 外罚函数系数
-    RMVL_W_RW double tau{1};        //!< 初始信赖域半径
     RMVL_W_RW double dx{1e-2};      //!< 求解步长
     RMVL_W_RW double tol{1e-6};     //!< 误差容限
 };
@@ -398,19 +393,16 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const
  */
 RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
 
-#ifdef HAVE_OPENCV
-
 /**
  * @brief 无约束非线性最小二乘求解
  *
- * @param[in] funcs 多维最小二乘约束函数，满足 \f$F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2\f$
+ * @param[in] funcs 多维最小二乘约束函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
+ *                  \left(\texttt{funcs}[0]^2+\texttt{funcs}[1]^2+\cdots+\texttt{funcs}[n]^2\right)\f]
  * @param[in] x0 初始点
  * @param[in] options 优化选项
  * @return 最小二乘解
  */
-RMVL_EXPORTS_W std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
-
-#endif // HAVE_OPENCV
+RMVL_EXPORTS_W std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
 
 //! @} algorithm_optimal
 

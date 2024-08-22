@@ -1,4 +1,5 @@
 #include <pybind11/functional.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
 #include "rmvl/@_name@.hpp"
@@ -7,6 +8,57 @@ namespace py = pybind11;
 
 using namespace py::literals;
 using namespace rm;
+
+namespace pybind11::detail
+{
+
+#ifdef HAVE_OPENCV_CORE
+
+template <>
+struct type_caster<cv::Mat>
+{
+    PYBIND11_TYPE_CASTER(cv::Mat, _("numpy.ndarray"));
+
+public:
+    bool load(handle src, bool)
+    {
+        if (!isinstance<array>(src))
+            return false;
+        auto buf = array::ensure(src);
+        if (!buf)
+            return false;
+        auto dims = buf.ndim();
+        if (dims != 2 && dims != 3)
+            return false;
+        std::vector<int> shape(dims);
+        for (int i = 0; i < dims; i++)
+            shape[i] = buf.shape()[i];
+        value = cv::Mat(shape[0], shape[1], CV_8UC(dims == 3 ? 3 : 1), buf.mutable_data());
+        return true;
+    }
+
+    static handle cast(const cv::Mat &m, return_value_policy, handle)
+    {
+        if (m.empty())
+            return none().release();
+
+        std::string format = format_descriptor<unsigned char>::format();
+        size_t elemsize = sizeof(unsigned char);
+        int dim = m.channels();
+        std::vector<size_t> shape = {static_cast<size_t>(m.rows), static_cast<size_t>(m.cols)};
+        std::vector<size_t> strides = {static_cast<size_t>(m.step[0]), static_cast<size_t>(m.step[1])};
+        if (dim > 1)
+        {
+            shape.push_back(dim);
+            strides.push_back(elemsize);
+        }
+        return array(buffer_info(m.data, elemsize, format, m.dims + (dim > 1), shape, strides)).release();
+    }
+};
+
+#endif // HAVE_OPENCV_CORE
+
+} // namespace pybind11::detail
 
 PYBIND11_MODULE(@RMVL_PYBIND_NAME@, m)
 {

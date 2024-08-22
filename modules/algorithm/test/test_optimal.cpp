@@ -99,10 +99,10 @@ TEST(Optimal, fmincon_inequality_con)
     EXPECT_NEAR(fval, 8, 1e-3);
 }
 
+#ifdef HAVE_OPENCV
+
 static inline double lsq_linear1(const std::vector<double> &x) { return x[0] + x[1] - 6; }
 static inline double lsq_linear2(const std::vector<double> &x) { return x[0] - x[1] - 4; }
-
-#ifdef HAVE_OPENCV
 
 TEST(Optimal, lsqnonlin_linear)
 {

@@ -22,8 +22,8 @@ rmvl_compile_definitions(
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  rmvl_generate_python(
-    core
+  rmvl_generate_python(core
+    FILES core/dataio.hpp core/timer.hpp core/version.hpp
     DEPENDS core
   )
 endif()

@@ -341,7 +341,7 @@ static inline void calcFs(const FuncNds &funcs, const std::vector<double> &xk, s
         phi[i] = funcs[i](xk);
 }
 
-std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, const OptimalOptions &options)
+std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
 {
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
@@ -374,6 +374,15 @@ std::vector<double> lsqnonlin(FuncNds funcs, const std::vector<double> &x0, cons
             xk[i] += alpha * s[i];
     }
     return xk;
+}
+
+#else
+
+std::vector<double> lsqnonlin(const FuncNds &, const std::vector<double> &, const OptimalOptions &)
+{
+    RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
+                                "RMVL by setting \"WITH_OPENCV=ON\" in CMake");
+    return {};
 }
 
 #endif // HAVE_OPENCV

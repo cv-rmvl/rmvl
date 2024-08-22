@@ -32,7 +32,7 @@ namespace rm
 //! @example samples/camera/mv/sample_mv_writer.cpp 迈德威视相机录屏例程
 
 //! 迈德威视相机库
-class MvCamera final
+class RMVL_EXPORTS_W MvCamera final
 {
     class Impl;
 
@@ -43,20 +43,21 @@ public:
     /**
      * @brief 构造 MvCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
      * @param[in] serial 相机唯一序列号
      */
-    MvCamera(CameraConfig init_mode, std::string_view serial = "");
+    RMVL_W MvCamera(CameraConfig init_mode, std::string_view serial = "");
 
+    //! @cond
     MvCamera(const MvCamera &) = delete;
     MvCamera(MvCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
-
+    //! @endcond
     ~MvCamera();
 
     /**
      * @brief 构建 MvCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 GrabMode 和 RetrieveMode
+     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
      * @param[in] serial 相机唯一序列号
      */
     static inline std::unique_ptr<MvCamera> make_capture(CameraConfig init_mode, std::string_view serial = "")
@@ -71,7 +72,7 @@ public:
      * @param[in] value 参数/事件值
      * @return 是否设置成功
      */
-    bool set(int propId, double value = 0.0);
+    RMVL_W bool set(int propId, double value = 0.0);
 
     /**
      * @brief 获取相机参数
@@ -79,10 +80,10 @@ public:
      * @param[in] propId 参数编号
      * @return 参数值
      */
-    double get(int propId) const;
+    RMVL_W double get(int propId) const;
 
     //! 相机是否打开
-    bool isOpened() const;
+    RMVL_W bool isOpened() const;
 
     /**
      * @brief 从相机设备中读取图像
@@ -90,7 +91,7 @@ public:
      * @param[out] image 待读入的图像
      * @return 是否读取成功
      */
-    bool read(cv::OutputArray image);
+    RMVL_W bool read(cv::Mat image);
 
     /**
      * @brief 从相机设备中读取图像
@@ -108,7 +109,7 @@ public:
      *
      * @return 是否成功重连
      */
-    bool reconnect();
+    RMVL_W bool reconnect();
 
 private:
     Impl *_impl;
