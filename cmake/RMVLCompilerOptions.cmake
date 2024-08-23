@@ -335,13 +335,25 @@ if(BUILD_PYTHON)
     set(RMVL_PYTHON_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/rm)
     set(RMVL_PYDOC_OUTPUT_DIR ${PROJECT_BINARY_DIR}/python/docs)
     include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPython.cmake)
-    # create __init__.py and documetation config files for python
+    # generate files for python bindings
     configure_file(
-      "${CMAKE_CURRENT_LIST_DIR}/python/rmvl_init.py"
+      "${CMAKE_CURRENT_LIST_DIR}/templates/python/rmvl_init.py"
       "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
       @ONLY
     )
-    file(WRITE ${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_cst.cfg "# constants configuration for pyrmvl\n")
+    configure_file(
+      "${CMAKE_CURRENT_LIST_DIR}/templates/python/pre_bind.hpp"
+      "${RMVL_PYBIND_OUTPUT_DIR}/pre_bind.hpp"
+      COPYONLY
+    )
+    if(BUILD_DOCS)
+      file(WRITE ${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_cst.cfg "# constants configuration for pyrmvl\n")
+      configure_file(
+        "${PROJECT_SOURCE_DIR}/doc/tools/pyrmvl_fns.cfg"
+        "${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_fns.cfg"
+        COPYONLY
+      )
+    endif()
   endif()
 endif()
 

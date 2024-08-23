@@ -1,0 +1,17 @@
+#include <pybind11/functional.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
+@RMVL_PYBIND_INC@
+
+namespace py = pybind11;
+
+using namespace py::literals;
+@RMVL_PYBIND_NS@
+
+#include "pre_bind.hpp"
+
+PYBIND11_MODULE(@RMVL_PYBIND_NAME@, m)
+{
+@RMVL_PYBIND_CONTENTS@
+}

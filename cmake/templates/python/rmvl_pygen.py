@@ -150,6 +150,9 @@ types = {
     "string_view": "str",
     # cv types
     "Mat": "np.ndarray",
+    "Matx": "tuple",
+    "Point": "tuple",
+    "Vec": "tuple",
 }
 
 
@@ -227,6 +230,22 @@ def type_convert(cpp_type: str) -> str:
         """
         return types.get(match.group(0), match.group(0))
 
+    def convert_matx(match: re.Match) -> str:
+        """
+        Convert `Matx<...>` to `tuple`
+        """
+        tp, m, n = match.group(1), match.group(2), match.group(3)
+        inner = type_convert(tp)
+        return f"tuple[{', '.join([inner] * int(m) * int(n))}]"
+
+    def convert_vec(match: re.Match) -> str:
+        """
+        Convert `Vec<...>` to `tuple`
+        """
+        tp, n = match.group(1), match.group(2)
+        inner = type_convert(tp)
+        return f"tuple[{', '.join([inner] * int(n))}]"
+
     # bitset<...> -> int
     cpp_type = re.sub(r"^bitset<\d+>", "int", cpp_type)
     # vector<...> -> list[...]
@@ -237,6 +256,13 @@ def type_convert(cpp_type: str) -> str:
     cpp_type = re.sub(r"^(pair|tuple)<(.+)>$", convert_pair_tuple, cpp_type)
     # function<return_type(arg_types)> -> callable[[arg_types], return_type]
     cpp_type = re.sub(r"^function<([^(]+)\(([^)]*)\)>$", convert_function, cpp_type)
+    # convert cv types
+    cpp_type = re.sub(r"^Matx<([^,]+),\s*(\d+),\s*(\d+)>$", convert_matx, cpp_type)
+    cpp_type = re.sub(r"^Point$", "tuple[int, int]", cpp_type)
+    cpp_type = re.sub(r"^Point2[fd]$", "tuple[float, float]", cpp_type)
+    cpp_type = re.sub(r"^Point3i$", "tuple[int, int, int]", cpp_type)
+    cpp_type = re.sub(r"^Point3[fd]$", "tuple[float, float, float]", cpp_type)
+    cpp_type = re.sub(r"^Vec<([^,]+),\s*(\d+)>$", convert_vec, cpp_type)
     # convert identifier
     cpp_type = re.sub(r"^\b\w+\b$", convert_identifier, cpp_type)
 
@@ -328,8 +354,18 @@ def generate_python_binding(lines: list[str]) -> str:
                 name, params = mch.groups()
                 type_list, id_list, default_list = split_parameters(params)
                 class_content.append(
-                    f'        .def(py::init<{", ".join(type_list)}>())'
+                    f'        .def(py::init<{", ".join(type_list)}>(),'
                 )
+                for type, id, default in zip(type_list, id_list, default_list):
+                    if default == "{}":
+                        class_content.append(
+                            f'             "{id}"_a = {remove_t(type)}{{}},'
+                        )
+                    elif default:
+                        class_content.append(f'             "{id}"_a = {default},')
+                    else:
+                        class_content.append(f'             "{id}"_a,')
+                class_content[-1] = class_content[-1][:-1] + ")"
                 continue
             # Convert method
             mch = re_match("convert_method", line)
@@ -436,7 +472,9 @@ def generate_python_binding(lines: list[str]) -> str:
             mch = re_match("variable", line)
             if mch:
                 type_name, var_name = mch.groups()
-                binding_code.append(f'    m.attr("{var_name}") = {var_name};')
+                binding_code.append(
+                    f'    m.attr("{var_name}") = py::cast(&{var_name}, py::return_value_policy::automatic_reference);'
+                )
 
         # End of the class
         elif line == "};" and cur_class:
@@ -502,6 +540,7 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
     pyi_content = []
     # To store functions for overload detection
     class_content = []
+    para_class_fordoc = []
     cur_class = None
     functions = defaultdict(list)
     # To store enum class definitions
@@ -563,6 +602,8 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
                 if mch:
                     cur_class = mch.group(2)
                     class_content.append(f"class {cur_class}:")
+                    if cur_class.endswith("Param"):
+                        para_class_fordoc.append(cur_class)
                 # Inherited class
                 mch = re_match("inherited_class", line)
                 if mch:
@@ -657,7 +698,7 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
                 ).replace("::", ".")
                 pyi_content.append(f"@overload")
                 pyi_content.append(
-                    f"@overload\ndef {func_name}({param_str}) -> {type_convert(return_type)}: ..."
+                    f"def {func_name}({param_str}) -> {type_convert(return_type)}: ..."
                 )
         else:
             return_type, type_list, id_list, default_list = overloads[0]
@@ -668,7 +709,7 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
                 ]
             ).replace("::", ".")
             pyi_content.append(
-                f"@overload\ndef {func_name}({param_str}) -> {type_convert(return_type)}: ..."
+                f"def {func_name}({param_str}) -> {type_convert(return_type)}: ..."
             )
 
     # Process enum classes and enums
@@ -693,7 +734,10 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
                     file.write(f"rm::{enum_name} {value} {idx}\n")
             for idx, enum in enumerate(enums):
                 file.write(f"rm {enum} {idx}\n")
-
+        with open(f"{doc_path}/pyrmvl_fns.cfg", "a") as file:
+            for para_class in para_class_fordoc:
+                file.write(f"rm::para::{para_class} read path [[success_?]]\n")
+                file.write(f"rm::para::{para_class} write path [[success_?]]\n")
     return "\n".join(pyi_content)
 
 

@@ -105,7 +105,7 @@ if(DOXYGEN_FOUND)
 
     unset(file_content)
     # read from pyrmvl_fns.cfg
-    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/tools/pyrmvl_fns.cfg" file_content)
+    file(READ "${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_fns.cfg" file_content)
     string(REPLACE "\n" ";" file_content "${file_content}")
     foreach(line ${file_content})
       if(line MATCHES "^#")
