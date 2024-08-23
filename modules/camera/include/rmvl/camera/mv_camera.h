@@ -91,7 +91,19 @@ public:
      * @param[out] image 待读入的图像
      * @return 是否读取成功
      */
-    RMVL_W bool read(cv::Mat image);
+    bool read(cv::Mat image);
+
+    /**
+     * @brief 从相机设备中读取图像
+     * 
+     * @return 是否读取成功和读取到的图像
+     */
+    RMVL_W inline std::pair<bool, cv::Mat> read()
+    {
+        cv::Mat img;
+        bool res = read(img);
+        return {res, img};
+    }
 
     /**
      * @brief 从相机设备中读取图像

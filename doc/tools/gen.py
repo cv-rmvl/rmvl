@@ -42,7 +42,7 @@ def add_fn(ns: str, name: str, arg: str, ret: str):
     if full_name not in py_signatures:
         py_signatures[full_name] = []
     ns = ns.replace("::", ".")
-    dst_name = dst_name.replace("::", ".")
+    dst_name = dst_name.replace("::para::", ".").replace("::", ".")
     dst_arg = arg.replace(",", ", ")
     dst_ret = dst_ret.replace("::", ".").replace(",", ", ").replace("[[", "<").replace("]]", ">").replace("_", " ")
     

@@ -126,9 +126,9 @@ function(_parse_assign content_line header_line source_read_line source_write_li
   # 获取 Header 部分的返回值
   set(ret_header_line "${ret_header_line}    //! ${comment_sym}\n")
   if("${default_sym}" STREQUAL "")
-    set(ret_header_line "${ret_header_line}    ${type_sym_correct} ${id_sym}{};\n")
+    set(ret_header_line "${ret_header_line}    RMVL_W_RW ${type_sym_correct} ${id_sym}{};\n")
   else()
-    set(ret_header_line "${ret_header_line}    ${type_sym_correct} ${id_sym} = ${default_sym};\n")
+    set(ret_header_line "${ret_header_line}    RMVL_W_RW ${type_sym_correct} ${id_sym} = ${default_sym};\n")
   endif()
   # 获取 Source 部分的返回值
   set(ret_source_read_line "${ret_source_read_line}    node = fs[\"${id_sym}\"];\n")

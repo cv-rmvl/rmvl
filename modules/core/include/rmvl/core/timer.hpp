@@ -51,7 +51,7 @@ public:
 inline std::chrono::steady_clock::time_point Timer::_tick = {};
 
 //! 全局定时器对象
-inline Timer timer;
+RMVL_W_RW inline Timer timer;
 
 //! @} core_timer
 

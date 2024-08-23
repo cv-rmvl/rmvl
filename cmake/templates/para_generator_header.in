@@ -11,6 +11,8 @@
 
 #include <opencv2/core/types.hpp>
 
+#include "rmvl/core/rmvldef.hpp"
+
 @def_new_group@
 namespace rm::para
 {
@@ -30,9 +32,13 @@ namespace rm::para
 ////////////////////// 参数部分 //////////////////////
 
 //! @class_name@ 参数模块
-struct @class_name@
+class RMVL_EXPORTS_W @class_name@
 {
+public:
 @para_header_details@
+
+    RMVL_W @class_name@() = default;
+
     /**
      * @brief 从指定 `YAML` 文件中加载，并读取至 `@class_name@` 中
      *
@@ -40,7 +46,7 @@ struct @class_name@
      * @param[in] path 参数路径
      * @return 是否读取成功
      */
-    bool read(const std::string &path);
+    RMVL_W bool read(const std::string &path);
 
     /**
      * @brief 将 `@class_name@` 的数据写入指定的 `YAML` 文件中
@@ -49,7 +55,7 @@ struct @class_name@
      * @param[in] path 参数路径
      * @return 是否写入成功
      */
-    bool write(const std::string &path) const;
+    RMVL_W bool write(const std::string &path) const;
 
     /**
      * @brief 从指定 `YAML` 文件中加载 `@class_name@`
@@ -59,7 +65,7 @@ struct @class_name@
 };
 
 //! @class_name@ 参数模块
-inline @class_name@ @target_name@_param;
+RMVL_W_RW inline @class_name@ @target_name@_param;
 
 //! @} para_@module_name@
 
