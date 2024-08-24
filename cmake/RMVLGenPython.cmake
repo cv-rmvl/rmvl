@@ -34,20 +34,19 @@ endfunction()
 #   根据给定目标生成 Python 绑定代码与接口文件
 #   用法:
 #     rmvl_generate_python(
-#       <name>                   # 目标名称，将生成 rmvl_light_py 模块
-#       [FILES <files>]          # 参与绑定的 include/rmvl/ 文件夹下的头文件
-#       [PARA_FILES <files>]     # 参与绑定的 include/rmvlpara/ 文件夹下的头文件
-#       [DEPENDS <dependencies>] # 依赖的模块
+#       <name>                        # 目标名称，将生成 rmvl_light_py 模块
+#       [FILES <file1> [<file2> ...]] # 参与绑定的 include/rmvl/ 文件夹下的头文件
+#       [DEPENDS <dep1> [<dep2> ...]] # 依赖的模块
 #     )
 #   示例:
 #     rmvl_generate_python(core
-#       FILES dataio.hpp timer.hpp
-#       PARA_FILES dataio.hpp
+#       FILES core/dataio.hpp core/timer.hpp
 #       DEPENDS core
 #     )
 # ----------------------------------------------------------------------------
 function(rmvl_generate_python _name)
-  cmake_parse_arguments("PY" "" "" "DEPENDS;FILES" ${ARGN})
+  set(options "DEPENDS" "FILES")
+  cmake_parse_arguments("PY" "" "" "${options}" ${ARGN})
 
   set(pybind_ws "${PROJECT_SOURCE_DIR}/cmake/templates/python")
   set(pybind_inc "${CMAKE_CURRENT_SOURCE_DIR}/include/rmvl")
@@ -58,13 +57,10 @@ function(rmvl_generate_python _name)
   if(NOT PY_FILES)
     return()
   else()
-  foreach(file ${PY_FILES})
-    list(APPEND pybind_headers "${pybind_inc}/${file}")
-  endforeach()
+    foreach(file ${PY_FILES})
+      list(APPEND pybind_headers "${pybind_inc}/${file}")
+    endforeach()
   endif()
-  foreach(file ${PY_PARA_FILES})
-    list(APPEND pybind_headers "${pybind_parainc}/${file}")
-  endforeach()
   set(RMVL_PYBIND_NS "using namespace rm;")
   set(RMVL_PYBIND_INC "#include <rmvl/${_name}.hpp>")
 
@@ -102,9 +98,11 @@ function(rmvl_generate_python _name)
   )
   
   # generate python interface file
-  _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS
-    DOC_PATH ${RMVL_PYDOC_OUTPUT_DIR}
-  )
+  if(BUILD_DOCS)
+    _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS DOC_PATH ${RMVL_PYDOC_OUTPUT_DIR})
+  else()
+    _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS)
+  endif()
   configure_file(
     ${pybind_ws}/rmvl_pyi.pyi.in
     ${RMVL_PYTHON_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.pyi
