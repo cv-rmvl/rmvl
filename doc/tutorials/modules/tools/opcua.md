@@ -491,12 +491,12 @@ int main()
 
     // 准备需要订阅的数据
     // 这里只订阅 1 个，如果订阅多个请使用 std::vector
-    rm::FieldMetaData meta_data("Number 1", UA_TYPES_DOUBLE, UA_VALUERANK_SCALAR);
+    rm::FieldMetaData meta_data{"Number 1", UA_TYPES_DOUBLE, UA_VALUERANK_SCALAR};
 
     /* 也可以通过创建变量对 meta_data 进行初始化，例如以下代码
     rm::Variable num = 1.0; // 这个 1.0 只是代表是个 Double 类型的数据 
     num.browse_name = "Number 1";
-    rm::FieldMetaData meta_data = num;
+    auto meta_data = rm::FieldMetaData::create(num);
     */
     
     // 订阅数据，第 2 个参数传入的是 std::vector 类型的数据，单个数据请使用初始化列表

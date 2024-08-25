@@ -123,15 +123,6 @@ enum CameraProperties : uint16_t
 //! 相机外参
 class CameraExtrinsics
 {
-    float _yaw{};
-    float _pitch{};
-    float _roll{};
-    float _distance{};
-    cv::Vec3f _tvec;
-    cv::Vec3f _rvec;
-    cv::Matx33f _r = cv::Matx33f::eye();
-    cv::Matx44f _t = cv::Matx44f::eye();
-
 public:
     //! 获取平移向量
     inline const cv::Vec3f &tvec() const { return _tvec; }
@@ -177,6 +168,16 @@ public:
      * @param[in] distance 距离
      */
     inline void distance(float distance) { _distance = distance; }
+
+private:
+    float _yaw{};                        //!< 外参 Yaw 角
+    float _pitch{};                      //!< 外参 Pitch 角
+    float _roll{};                       //!< 外参 Roll 角
+    float _distance{};                   //!< 物距
+    cv::Vec3f _tvec;                     //!< 平移向量
+    cv::Vec3f _rvec;                     //!< 旋转向量
+    cv::Matx33f _r = cv::Matx33f::eye(); //!< 旋转矩阵
+    cv::Matx44f _t = cv::Matx44f::eye(); //!< 外参矩阵
 };
 
 //! @} camera

@@ -563,24 +563,16 @@ inline std::vector<T> &operator/=(std::vector<T> &vec, T val)
 template <typename Tp>
 class EwTopsis
 {
+    typedef std::vector<Tp> idx_type;
+    typedef std::vector<Tp> SampleType;
+    typedef std::vector<std::vector<Tp>> MatType;
+
 public:
     typedef Tp value_type;
     typedef Tp &reference;
     typedef const Tp &const_reference;
     typedef std::size_t size_type;
 
-private:
-    typedef std::vector<Tp> idx_type;
-    typedef std::vector<Tp> sample_type;
-    typedef std::vector<std::vector<Tp>> mat_type;
-
-    mat_type R_;   //!< 指标数据
-    sample_type S; //!< 最终的指标数据
-
-    const size_type _sample_size; //!< 行数，样本数
-    const size_type _index_size;  //!< 列数，指标数
-
-public:
     EwTopsis(const EwTopsis &) = delete;
     EwTopsis(EwTopsis &&) = delete;
 
@@ -589,14 +581,14 @@ public:
      *
      * @param[in] samples 样本指标
      */
-    EwTopsis(const mat_type &samples) : R_(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
+    EwTopsis(const MatType &samples) : R_(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
 
     //! 基于权熵 TOPSIS 推理出最终的指标
     void inference()
     {
-        mat_type R;
+        MatType R;
         calcR(R_, R);
-        mat_type P;
+        MatType P;
         calcP(R, P);
         idx_type H;
         calcH(P, H);
@@ -615,7 +607,7 @@ private:
      * @param[in] _R 原始指标矩阵
      * @param[out] R 标准化指标矩阵
      */
-    inline void calcR(const mat_type &_R, mat_type &R)
+    inline void calcR(const MatType &_R, MatType &R)
     {
         R = _R;
         idx_type min_indexs(_index_size);
@@ -643,7 +635,7 @@ private:
      * @param[in] R 标准化指标矩阵
      * @param[out] P 归一化指标矩阵
      */
-    inline void calcP(const mat_type &R, mat_type &P)
+    inline void calcP(const MatType &R, MatType &P)
     {
         P = R;
         idx_type sums(_index_size);
@@ -663,7 +655,7 @@ private:
      * @param[in] P 归一化指标矩阵
      * @param[out] H 指标熵值向量
      */
-    inline void calcH(const mat_type &P, idx_type &H)
+    inline void calcH(const MatType &P, idx_type &H)
     {
         H.resize(_index_size);
         for (size_type j = 0; j < _index_size; ++j)
@@ -697,7 +689,7 @@ private:
      * @param[in] R_ 原始指标矩阵
      * @param[out] S_ 综合指标
      */
-    inline void calcS(const idx_type &w, const mat_type &R_, sample_type &S_)
+    inline void calcS(const idx_type &w, const MatType &R_, SampleType &S_)
     {
         S_.resize(_sample_size);
         for (size_type i = 0; i < _sample_size; ++i)
@@ -707,6 +699,12 @@ private:
                 S_[i] += w[j] * R_[i][j];
         }
     }
+
+    MatType R_;   //!< 指标数据
+    SampleType S; //!< 最终的指标数据
+
+    const size_type _sample_size; //!< 行数，样本数
+    const size_type _index_size;  //!< 列数，指标数
 };
 
 //! @} algorithm

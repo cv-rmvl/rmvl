@@ -118,48 +118,6 @@ public:
 class Variable final
 {
 public:
-    //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
-
-    /**
-     * @brief 浏览名称 BrowseName
-     * @brief
-     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
-     * @brief
-     * - 同一个命名空间 `ns` 下该名称不能重复
-     */
-    std::string browse_name{};
-
-    /**
-     * @brief 展示名称 DisplayName
-     * @brief
-     * - 在服务器上对外展示的名字 - `en-US`
-     * @brief
-     * - 同一个命名空间 `ns` 下该名称可以相同
-     */
-    std::string display_name{};
-    //! 变量的描述
-    std::string description{};
-    //! 访问性
-    uint8_t access_level{};
-
-private:
-    /**
-     * @brief 对应的用 `rm::VariableType` 表示的变量类型
-     * @brief
-     * - 默认情况下为 `nullptr`，添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
-     * @brief
-     * - 作为变量类型节点、变量节点之间链接的依据
-     */
-    VariableType *_type{nullptr};
-    //! 数据
-    std::any _value;
-    //! 数据类型
-    DataType _data_type{};
-    //! 数据大小
-    UA_UInt32 _size{};
-
-public:
     Variable() = default;
 
     /**
@@ -251,6 +209,47 @@ public:
 
     //! 获取大小 @note 未初始化则返回 `0`
     inline UA_UInt32 size() const { return _size; }
+
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
+    /**
+     * @brief 浏览名称 BrowseName
+     * @brief
+     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称不能重复
+     */
+    std::string browse_name{};
+
+    /**
+     * @brief 展示名称 DisplayName
+     * @brief
+     * - 在服务器上对外展示的名字 - `en-US`
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称可以相同
+     */
+    std::string display_name{};
+    //! 变量的描述
+    std::string description{};
+    //! 访问性
+    uint8_t access_level{};
+
+private:
+    /**
+     * @brief 对应的用 `rm::VariableType` 表示的变量类型
+     * @brief
+     * - 默认情况下为 `nullptr`，添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
+     * @brief
+     * - 作为变量类型节点、变量节点之间链接的依据
+     */
+    VariableType *_type{nullptr};
+    //! 数据
+    std::any _value;
+    //! 数据类型
+    DataType _data_type{};
+    //! 数据大小
+    UA_UInt32 _size{};
 };
 
 /**

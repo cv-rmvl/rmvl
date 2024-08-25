@@ -35,8 +35,6 @@ class RMVL_EXPORTS_W Timer
 {
     using steady_clock = std::chrono::steady_clock;
 
-    static steady_clock::time_point _tick; //!< 起始时间
-
 public:
     RMVL_W Timer() { reset(); }
     Timer(const Timer &) = delete;
@@ -46,6 +44,9 @@ public:
     RMVL_W static void reset() { _tick = steady_clock::now(); }
     //! 返回从构造初期到现在经过的时间（单位：s）
     RMVL_W static double now() { return std::chrono::duration_cast<std::chrono::duration<double>>(steady_clock::now() - _tick).count(); }
+
+private:
+    static steady_clock::time_point _tick; //!< 起始时间
 };
 
 inline std::chrono::steady_clock::time_point Timer::_tick = {};

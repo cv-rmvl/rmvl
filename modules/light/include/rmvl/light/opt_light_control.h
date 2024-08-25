@@ -35,9 +35,6 @@ class RMVL_EXPORTS_W OPTLightController
 {
     using OPTController_StatusCode = long;
 
-    bool _init{};        //!< 初始化标志位
-    long long _handle{}; //!< 光源控制器句柄
-
 public:
     //! 构造新 OPTLightController 对象
     RMVL_W OPTLightController() = default;
@@ -124,6 +121,10 @@ public:
      * @return 是否成功触发？
      */
     RMVL_W bool trigger(int channel, int time) const;
+
+private:
+    bool _init{};        //!< 初始化标志位
+    long long _handle{}; //!< 光源控制器句柄
 };
 
 //! @} opt_light_control

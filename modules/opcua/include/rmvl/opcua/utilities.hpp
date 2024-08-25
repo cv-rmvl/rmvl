@@ -84,11 +84,6 @@ public:
 //! OPC UA 数据类型
 class DataType
 {
-    //! 形如 `UA_TYPES_<xxx>` 的类型标志位
-    static const std::unordered_map<std::type_index, UA_UInt32> _map;
-    //! 数据类型 ID
-    UA_UInt32 id{};
-
 public:
     DataType() = default;
 
@@ -107,6 +102,12 @@ public:
     DataType(const std::type_info &tp) : id(_map.at(std::type_index(tp))) {}
 
     operator UA_UInt32() const { return id; }
+
+private:
+    //! 形如 `UA_TYPES_<xxx>` 的类型标志位
+    static const std::unordered_map<std::type_index, UA_UInt32> _map;
+    //! 数据类型 ID
+    UA_UInt32 id{};
 };
 
 /**

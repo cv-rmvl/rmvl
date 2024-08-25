@@ -46,8 +46,6 @@ using ServerUserConfig = UA_StatusCode (*)(UA_Server *);
 //! OPC UA 服务器视图
 class ServerView final
 {
-    UA_Server *_server{nullptr}; //!< OPC UA 服务器指针
-
 public:
     ServerView() = default;
 
@@ -94,16 +92,14 @@ public:
      * @return 是否写入成功
      */
     bool write(const NodeId &node, const Variable &val) const;
+
+private:
+    UA_Server *_server{nullptr}; //!< OPC UA 服务器指针
 };
 
 //! OPC UA 服务器
 class Server
 {
-protected:
-    UA_Server *_server; //!< OPC UA 服务器指针
-    bool _running{};    //!< 服务器运行状态
-    std::thread _run;   //!< 服务器运行线程
-
 public:
     /****************************** 通用配置 ******************************/
 
@@ -288,6 +284,11 @@ public:
      * @return 是否创建并触发成功？
      */
     bool triggerEvent(const NodeId &node_id, const Event &event) const;
+
+protected:
+    UA_Server *_server; //!< OPC UA 服务器指针
+    bool _running{};    //!< 服务器运行状态
+    std::thread _run;   //!< 服务器运行线程
 };
 
 //! @} opcua

@@ -51,13 +51,6 @@ public:
     typedef Sequence container_type;
     typedef Compare value_compare;
 
-private:
-    Sequence _c;   //!< 元素数组
-    Compare _comp; //!< 可调用对象
-
-    std::unordered_map<Tp, std::size_t> _indexs; //!< 下标哈希表（存放数组的下标）
-
-public:
     RaHeap() = default;
 
     /**
@@ -185,6 +178,11 @@ private:
             left = (idx << 1) + 1;
         }
     }
+
+    Sequence _c;   //!< 元素数组
+    Compare _comp; //!< 可调用对象
+
+    std::unordered_map<Tp, std::size_t> _indexs; //!< 下标哈希表（存放数组的下标）
 };
 
 /**
@@ -201,13 +199,6 @@ public:
     typedef const Tp &const_reference;
     typedef std::size_t size_type;
 
-private:
-    std::unordered_set<Tp> _element_set;           //!< 元素集合
-    std::unordered_map<Tp, Tp> _parent_map;        //!< 父元素哈希表
-    std::unordered_map<Tp, std::size_t> _size_map; //!< 集合大小
-    int _connected_component{};                    //!< 连通分量
-
-public:
     /**
      * @brief 构造并查集
      *
@@ -313,6 +304,11 @@ private:
         }
         return element;
     }
+
+    std::unordered_set<Tp> _element_set;           //!< 元素集合
+    std::unordered_map<Tp, Tp> _parent_map;        //!< 父元素哈希表
+    std::unordered_map<Tp, std::size_t> _size_map; //!< 集合大小
+    int _connected_component{};                    //!< 连通分量
 };
 
 //! @} algorithm_datastruct

@@ -43,8 +43,6 @@ namespace rm
 //! N 次多项式
 class RMVL_EXPORTS_W Polynomial
 {
-    std::vector<double> _coeffs; //!< 多项式系数
-
 public:
     /**
      * @brief 创建多项式对象
@@ -62,6 +60,8 @@ public:
      * @return 多项式在指定点的函数值
      */
     RMVL_W double operator()(double x) const noexcept;
+    
+    std::vector<double> _coeffs; //!< 多项式系数
 };
 
 ///////////////////// 函数插值 /////////////////////
@@ -73,9 +73,6 @@ public:
  */
 class RMVL_EXPORTS_W Interpolator
 {
-    std::vector<double> _xs;                    //!< 插值节点
-    std::vector<std::vector<double>> _diffquot; //!< 差商表
-
 public:
     RMVL_W Interpolator() = default;
 
@@ -107,6 +104,9 @@ public:
      * @return 插值多项式在指定点的函数值
      */
     RMVL_W double operator()(double x) const;
+
+    std::vector<double> _xs;                    //!< 插值节点
+    std::vector<std::vector<double>> _diffquot; //!< 差商表
 };
 
 ////////////////// 多项式曲线拟合 //////////////////
@@ -118,9 +118,6 @@ public:
  */
 class RMVL_EXPORTS_W CurveFitter
 {
-    std::vector<std::size_t> _idx; //!< 多项式拟合曲线的阶数（从低到高）
-    std::vector<double> _coeffs;   //!< 多项式拟合曲线的系数
-
 public:
     /**
      * @brief 创建多项式曲线拟合器对象
@@ -140,6 +137,10 @@ public:
      * @return 拟合的多项式曲线在指定点的函数值
      */
     RMVL_W double operator()(double x) const;
+
+private:
+    std::vector<std::size_t> _idx; //!< 多项式拟合曲线的阶数（从低到高）
+    std::vector<double> _coeffs;   //!< 多项式拟合曲线的系数
 };
 
 ///////////////// 非线性方程数值解 /////////////////
@@ -152,8 +153,6 @@ public:
 class RMVL_EXPORTS_W NonlinearSolver
 {
 public:
-    RMVL_W_RW std::function<double(double)> func; //!< 非线性方程函数对象
-
     RMVL_W NonlinearSolver() = default;
 
     /**
@@ -174,6 +173,8 @@ public:
      * @return 迭代结果
      */
     RMVL_W double operator()(double x0, double eps = 1e-5, std::size_t max_iter = 50) const;
+
+    RMVL_W_RW std::function<double(double)> func; //!< 非线性方程函数对象
 };
 
 ////////////// 常微分方程（组）数值解 //////////////
@@ -192,19 +193,6 @@ using Odes = std::vector<std::function<double(double, const std::vector<double> 
  */
 class RMVL_EXPORTS_W RungeKutta
 {
-    // 加权系数，`k[i][j]`: `i` 表示第 `i` 个加权系数组，`j` 表示来自第 `j` 条方程
-    std::vector<std::vector<double>> _ks;
-
-protected:
-    //! 一阶常微分方程组的函数对象 \f$\dot{\pmb x}=\pmb F(t, \pmb x)\f$
-    Odes _fs;
-    double _t0;              //!< 初值的自变量 \f$t\f$
-    std::vector<double> _x0; //!< 初值的因变量 \f$\pmb x(t)\f$
-
-    std::vector<double> _p;              //!< Butcher 表 \f$\pmb p\f$ 向量
-    std::vector<double> _lambda;         //!< Butcher 表 \f$\pmb\lambda\f$ 向量
-    std::vector<std::vector<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
-
 public:
     /**
      * @brief 创建一阶常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
@@ -252,6 +240,20 @@ public:
      */
     std::generator<std::vector<double>> generate(double h, std::size_t n);
 #endif
+
+private:
+    // 加权系数，`k[i][j]`: `i` 表示第 `i` 个加权系数组，`j` 表示来自第 `j` 条方程
+    std::vector<std::vector<double>> _ks;
+
+protected:
+    //! 一阶常微分方程组的函数对象 \f$\dot{\pmb x}=\pmb F(t, \pmb x)\f$
+    Odes _fs;
+    double _t0;              //!< 初值的自变量 \f$t\f$
+    std::vector<double> _x0; //!< 初值的因变量 \f$\pmb x(t)\f$
+
+    std::vector<double> _p;              //!< Butcher 表 \f$\pmb p\f$ 向量
+    std::vector<double> _lambda;         //!< Butcher 表 \f$\pmb\lambda\f$ 向量
+    std::vector<std::vector<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
 };
 
 //! 2 阶 2 级 Runge-Kutta 求解器

@@ -40,6 +40,29 @@ struct Argument final
 class Method final
 {
 public:
+    /**
+     * @brief 方法回调函数
+     * @brief 函数原型为
+     * @code{.cpp}
+     * UA_StatusCode foo(
+     *     UA_Server *server, const UA_NodeId *sessionId, void *sessionContext, const UA_NodeId *methodId,
+     *     void *methodContext, const UA_NodeId *objectId, void *objectContext, size_t inputSize, const UA_Variant *input,
+     *     size_t outputSize, UA_Variant *output);
+     * @endcode
+     *
+     */
+    UA_MethodCallback func{nullptr};
+
+    Method() = default;
+
+    /**
+     * @brief 使用方法回调函数构造 Method
+     *
+     * @note 由于可发生隐式转换，因此可传入函数、函数指针以及无捕获列表的 `lambda` 表达式
+     * @param[in] f 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
+     */
+    Method(UA_MethodCallback f) : func(f) {}
+
     //! 命名空间索引，默认为 `1`
     uint16_t ns{1U};
 
@@ -69,29 +92,6 @@ public:
 
     //! 传出参数列表
     std::vector<Argument> oargs;
-
-    /**
-     * @brief 方法回调函数
-     * @brief 函数原型为
-     * @code{.cpp}
-     * UA_StatusCode foo(
-     *     UA_Server *server, const UA_NodeId *sessionId, void *sessionContext, const UA_NodeId *methodId,
-     *     void *methodContext, const UA_NodeId *objectId, void *objectContext, size_t inputSize, const UA_Variant *input,
-     *     size_t outputSize, UA_Variant *output);
-     * @endcode
-     *
-     */
-    UA_MethodCallback func{nullptr};
-
-    Method() = default;
-
-    /**
-     * @brief 使用方法回调函数构造 Method
-     *
-     * @note 由于可发生隐式转换，因此可传入函数、函数指针以及无捕获列表的 `lambda` 表达式
-     * @param[in] f 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
-     */
-    Method(UA_MethodCallback f) : func(f) {}
 };
 
 //! @} opcua

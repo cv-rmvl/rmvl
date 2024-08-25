@@ -33,7 +33,7 @@ TEST(OPC_UA_PubSub, pubsub_config)
     // 创建订阅者
     rm::Subscriber<rm::TransportID::UDP_UADP> sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
     sub.start();
-    rm::FieldMetaData meta_data("DoubleDemo", UA_TYPES_DOUBLE, -1);
+    rm::FieldMetaData meta_data{"DoubleDemo", UA_TYPES_DOUBLE, -1};
     auto nodes = sub.subscribe("NumberPub", {meta_data});
     EXPECT_EQ(nodes.size(), 1);
 
