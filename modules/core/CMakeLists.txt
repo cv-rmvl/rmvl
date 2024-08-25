@@ -22,8 +22,11 @@ rmvl_compile_definitions(
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
+  foreach(m dataio timer version)
+    list(APPEND core_inc rmvl/core/${m}.hpp)
+  endforeach()
   rmvl_generate_python(core
-    FILES core/dataio.hpp core/timer.hpp core/version.hpp
+    FILES ${core_inc}
     DEPENDS core
   )
 endif()

@@ -35,7 +35,7 @@ endfunction()
 #   用法:
 #     rmvl_generate_python(
 #       <name>                        # 目标名称，将生成 rmvl_light_py 模块
-#       [FILES <file1> [<file2> ...]] # 参与绑定的 include/rmvl/ 文件夹下的头文件
+#       [FILES <file1> [<file2> ...]] # 参与绑定的 include/ 文件夹下的头文件
 #       [DEPENDS <dep1> [<dep2> ...]] # 依赖的模块
 #     )
 #   示例:
@@ -49,10 +49,9 @@ function(rmvl_generate_python _name)
   cmake_parse_arguments("PY" "" "" "${options}" ${ARGN})
 
   set(pybind_ws "${PROJECT_SOURCE_DIR}/cmake/templates/python")
-  set(pybind_inc "${CMAKE_CURRENT_SOURCE_DIR}/include/rmvl")
-  set(pybind_parainc "${CMAKE_CURRENT_SOURCE_DIR}/include/rmvlpara")
+  set(pybind_inc "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-  # obtain the header files (rmvl)
+  # obtain the header files
   unset(pybind_headers)
   if(NOT PY_FILES)
     return()
@@ -62,21 +61,11 @@ function(rmvl_generate_python _name)
     endforeach()
   endif()
   set(RMVL_PYBIND_NS "using namespace rm;")
-  set(RMVL_PYBIND_INC "#include <rmvl/${_name}.hpp>")
-
-  # obtain the header files (rmvlpara)
-  if(IS_DIRECTORY ${pybind_parainc}/${_name})
-    file(GLOB pybind_para_headers ${pybind_parainc}/${_name}/*.h*)
-  else()
-    if(EXISTS ${pybind_parainc}/${_name}.hpp)
-      set(pybind_para_headers ${pybind_parainc}/${_name}.hpp)
-    endif()
-  endif()
-  if(pybind_para_headers)
+  set(RMVL_PYBIND_INC "#include \"rmvl/${_name}.hpp\"")
+  if(EXISTS "${pybind_inc}/rmvlpara/${_name}.hpp")
+    set(RMVL_PYBIND_INC "${RMVL_PYBIND_INC}\n#include \"rmvlpara/${_name}.hpp\"")
     set(RMVL_PYBIND_NS "${RMVL_PYBIND_NS}\nusing namespace rm::para;")
-    set(RMVL_PYBIND_INC "${RMVL_PYBIND_INC}\n#include <rmvlpara/${_name}.hpp>")
   endif()
-  list(APPEND pybind_headers ${pybind_para_headers})
   
   # generate wrapper code for python
   set(RMVL_PYBIND_NAME "rm_${_name}_py")

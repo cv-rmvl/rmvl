@@ -17,7 +17,7 @@ rmvl_link_libraries(
 if(BUILD_PYTHON)
   foreach(m opt)
     if(BUILD_rmvl_${m}_light_control)
-      list(APPEND light_inc light/${m}_light_control.h)
+      list(APPEND light_inc rmvl/light/${m}_light_control.h)
       list(APPEND light_dep ${m}_light_control)
     endif()
   endforeach()
