@@ -24,8 +24,6 @@ namespace rm
 //! 数据集字段元数据
 struct FieldMetaData final
 {
-    //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
 
     //! 字段名称
     std::string name;
@@ -39,30 +37,23 @@ struct FieldMetaData final
     //! 字段 ValueRank
     int value_rank{};
 
-    FieldMetaData() = default;
-
-    /**
-     * @brief 创建字段元数据
-     *
-     * @param[in] name_ 字段名称
-     * @param[in] type_ 字段类型，可参考 @ref DataType
-     * @param[in] value_rank_ 字段 ValueRank
-     * @param[in] ns_ 命名空间索引，默认为 `1`
-     */
-    FieldMetaData(const std::string &name_, DataType type_, int value_rank_, uint16_t ns_ = 1U) : ns(ns_), name(name_), type(type_), value_rank(value_rank_) {}
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
 
     /**
      * @brief 从变量创建字段元数据
      * @brief
-     * - 变量的 `Variable::browse_name` 用于设置字段名称
+     * - `Variable::browse_name` 用于设置字段名称
      * @brief
-     * - 变量的 `Variable::getDataType()` 用于设置字段类型
+     * - `Variable::getDataType()` 用于设置字段类型
      * @brief
-     * - 变量的 `Variable::size()` 用于辅助设置字段 ValueRank
+     * - `Variable::size()` 用于辅助设置字段 ValueRank
+     * @brief
+     * - `Variable::ns` 用于设置命名空间索引
      *
      * @param[in] val 变量，可参考 @ref rm::Variable
      */
-    FieldMetaData(const Variable &val) : name(val.browse_name), type(val.getDataType()), value_rank(val.size() == 1 ? UA_VALUERANK_SCALAR : 1) {}
+    static FieldMetaData create(const Variable &val) { return {val.browse_name, val.getDataType(), val.size() == 1 ? -1 : 1, val.ns}; }
 };
 
 /**
@@ -86,13 +77,6 @@ class Subscriber final
 template <>
 class Subscriber<TransportID::UDP_UADP> : public Server
 {
-    NodeId _connection_id{}; //!< 连接 ID
-    NodeId _rg_id{};         //!< ReaderGroup 读取组 ID
-    NodeId _dsr_id{};        //!< DataSetReader 数据集读取器 ID
-
-    std::string _name;               //!< 订阅者名称
-    std::hash<std::string> _strhash; //!< 字符串哈希函数
-
 public:
     /**
      * @brief 创建 OPC UA 订阅者
@@ -113,6 +97,14 @@ public:
      * @return 订阅的变量对应的 `NodeId` 列表，每个 `NodeId` 均存在于订阅者自身的服务器中
      */
     std::vector<NodeId> subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
+
+private:
+    NodeId _connection_id{}; //!< 连接 ID
+    NodeId _rg_id{};         //!< ReaderGroup 读取组 ID
+    NodeId _dsr_id{};        //!< DataSetReader 数据集读取器 ID
+
+    std::string _name;               //!< 订阅者名称
+    std::hash<std::string> _strhash; //!< 字符串哈希函数
 };
 
 //! @} opcua

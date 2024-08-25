@@ -26,33 +26,6 @@ namespace rm
 class EventType
 {
 public:
-    //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
-
-    /**
-     * @brief 浏览名称 BrowseName
-     * @brief
-     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
-     * @brief
-     * - 同一个命名空间 `ns` 下该名称不能重复
-     */
-    std::string browse_name{};
-
-    /**
-     * @brief 展示名称 DisplayName
-     * @brief
-     * - 在服务器上对外展示的名字 - `en-US`
-     * @brief
-     * - 同一个命名空间 `ns` 下该名称可以相同
-     */
-    std::string display_name{};
-    //! 对象类型的描述 - `zh-CN`
-    std::string description{};
-
-private:
-    std::unordered_map<std::string, int> _properties; //!< 非默认属性列表（仅支持 `int` 整型）
-
-public:
     //! 构造 `rm::EventType` 对象类型
     EventType() = default;
 
@@ -79,21 +52,37 @@ public:
      * @return 属性列表
      */
     inline const auto &data() const { return _properties; }
+
+    //! 命名空间索引，默认为 `1`
+    uint16_t ns{1U};
+
+    /**
+     * @brief 浏览名称 BrowseName
+     * @brief
+     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称不能重复
+     */
+    std::string browse_name{};
+
+    /**
+     * @brief 展示名称 DisplayName
+     * @brief
+     * - 在服务器上对外展示的名字 - `en-US`
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称可以相同
+     */
+    std::string display_name{};
+    //! 对象类型的描述 - `zh-CN`
+    std::string description{};
+
+private:
+    std::unordered_map<std::string, int> _properties; //!< 非默认属性列表（仅支持 `int` 整型）
 };
 
 //! OPC UA 事件
 class Event
 {
-public:
-    uint16_t ns{1U};         //!< 命名空间索引，默认为 `1`
-    std::string source_name; //!< 默认属性：事件源名称
-    std::string message;     //!< 默认属性：事件消息，包含关于事件的描述
-    uint16_t severity{};     //!< 默认属性：事件严重程度
-
-private:
-    EventType *_type{nullptr};                        //!< 事件类型的指针
-    std::unordered_map<std::string, int> _properties; //!< 非默认属性列表（仅支持 `int` 整型）
-
 public:
     //! 构造 `rm::Event` 对象类型
     Event() = default;
@@ -143,6 +132,15 @@ public:
 
     //! 获取事件类型
     inline const EventType *type() const { return _type; }
+
+    uint16_t ns{1U};         //!< 命名空间索引，默认为 `1`
+    std::string source_name; //!< 默认属性：事件源名称
+    std::string message;     //!< 默认属性：事件消息，包含关于事件的描述
+    uint16_t severity{};     //!< 默认属性：事件严重程度
+
+private:
+    EventType *_type{nullptr};                        //!< 事件类型的指针
+    std::unordered_map<std::string, int> _properties; //!< 非默认属性列表（仅支持 `int` 整型）
 };
 
 //! @} opcua

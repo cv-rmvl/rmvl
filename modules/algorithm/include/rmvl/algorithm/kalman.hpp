@@ -47,17 +47,6 @@ namespace rm
 template <typename Tp, unsigned StateDim, unsigned MeasureDim>
 class KalmanFilterStaticDatas
 {
-protected:
-    cv::Matx<Tp, StateDim, 1> x;            //!< 状态的后验估计 \f$\hat{\pmb x}\f$
-    cv::Matx<Tp, StateDim, 1> x_;           //!< 状态的先验估计 \f$\hat{\pmb x}^-\f$
-    cv::Matx<Tp, MeasureDim, 1> z;          //!< 观测向量 \f$\pmb z\f$
-    cv::Matx<Tp, StateDim, StateDim> Q;     //!< 过程噪声协方差矩阵 \f$Q\f$
-    cv::Matx<Tp, MeasureDim, MeasureDim> R; //!< 测量噪声协方差矩阵 \f$R\f$
-    cv::Matx<Tp, StateDim, StateDim> P;     //!< 后验误差协方差矩阵 \f$P\f$
-    cv::Matx<Tp, StateDim, StateDim> P_;    //!< 先验误差协方差矩阵 \f$P^-\f$
-    cv::Matx<Tp, StateDim, StateDim> I;     //!< 单位矩阵 \f$I\f$
-    cv::Matx<Tp, StateDim, MeasureDim> K;   //!< 卡尔曼增益 \f$K\f$
-
 public:
     //! 构造新的卡尔曼滤波静态数据
     KalmanFilterStaticDatas() : Q(Q.eye()), R(R.eye()), P(P.eye()), I(I.eye()) {}
@@ -106,6 +95,17 @@ public:
      * @param[in] state_err 误差协方差矩阵 \f$P\f$
      */
     inline void setP(const cv::Matx<Tp, StateDim, StateDim> &state_err) { P_ = P = state_err; }
+
+protected:
+    cv::Matx<Tp, StateDim, 1> x;            //!< 状态的后验估计 \f$\hat{\pmb x}\f$
+    cv::Matx<Tp, StateDim, 1> x_;           //!< 状态的先验估计 \f$\hat{\pmb x}^-\f$
+    cv::Matx<Tp, MeasureDim, 1> z;          //!< 观测向量 \f$\pmb z\f$
+    cv::Matx<Tp, StateDim, StateDim> Q;     //!< 过程噪声协方差矩阵 \f$Q\f$
+    cv::Matx<Tp, MeasureDim, MeasureDim> R; //!< 测量噪声协方差矩阵 \f$R\f$
+    cv::Matx<Tp, StateDim, StateDim> P;     //!< 后验误差协方差矩阵 \f$P\f$
+    cv::Matx<Tp, StateDim, StateDim> P_;    //!< 先验误差协方差矩阵 \f$P^-\f$
+    cv::Matx<Tp, StateDim, StateDim> I;     //!< 单位矩阵 \f$I\f$
+    cv::Matx<Tp, StateDim, MeasureDim> K;   //!< 卡尔曼增益 \f$K\f$
 };
 
 /**
@@ -121,12 +121,6 @@ class KalmanFilter : public KalmanFilterStaticDatas<Tp, StateDim, MeasureDim>
     static_assert(std::is_floating_point_v<Tp>, "\"Tp\" must be floating point value.");
     static_assert(StateDim > 0, "StateDim of \"rm::KalmanFilter\" must greater than 0.");
     static_assert(MeasureDim > 0, "MeasureDim of \"rm::KalmanFilter\" must greater than 0.");
-
-protected:
-    cv::Matx<Tp, StateDim, StateDim> A;    //!< 状态转移矩阵 \f$A\f$
-    cv::Matx<Tp, StateDim, StateDim> At;   //!< 状态转移矩阵的转置 \f$A^T\f$
-    cv::Matx<Tp, MeasureDim, StateDim> H;  //!< 观测矩阵 \f$H\f$
-    cv::Matx<Tp, StateDim, MeasureDim> Ht; //!< 观测矩阵的转置 \f$H^T\f$
 
 public:
     //! 构造新的 KalmanFilter 对象
@@ -200,6 +194,12 @@ public:
         this->P = (this->I - this->K * H) * this->P_;
         return this->x;
     }
+
+private:
+    cv::Matx<Tp, StateDim, StateDim> A;    //!< 状态转移矩阵 \f$A\f$
+    cv::Matx<Tp, StateDim, StateDim> At;   //!< 状态转移矩阵的转置 \f$A^T\f$
+    cv::Matx<Tp, MeasureDim, StateDim> H;  //!< 观测矩阵 \f$H\f$
+    cv::Matx<Tp, StateDim, MeasureDim> Ht; //!< 观测矩阵的转置 \f$H^T\f$
 };
 
 using KF21f = KalmanFilter<float, 2U, 1U>;  //!< 2 × 1 卡尔曼滤波器
@@ -228,20 +228,6 @@ template <typename Tp, unsigned StateDim, unsigned MeasureDim>
 class ExtendedKalmanFilter : public KalmanFilterStaticDatas<Tp, StateDim, MeasureDim>
 {
     static_assert(std::is_floating_point_v<Tp>, "\"Tp\" must be floating point value.");
-
-    cv::Matx<Tp, StateDim, StateDim> Ja;     //!< 状态方程雅可比矩阵 \f$J_A\f$
-    cv::Matx<Tp, StateDim, StateDim> Jat;    //!< 状态方程雅可比矩阵的转置 \f$J_A^T\f$
-    cv::Matx<Tp, MeasureDim, StateDim> Jh;   //!< 观测方程雅可比矩阵 \f$J_H\f$
-    cv::Matx<Tp, StateDim, MeasureDim> Jht;  //!< 观测方程雅可比矩阵的转置 \f$J_H^T\f$
-    cv::Matx<Tp, StateDim, StateDim> W;      //!< 过程噪声协方差雅可比矩阵 \f$W\f$
-    cv::Matx<Tp, StateDim, StateDim> Wt;     //!< 过程噪声协方差雅可比矩阵的转置 \f$W^T\f$
-    cv::Matx<Tp, MeasureDim, MeasureDim> V;  //!< 测量噪声协方差雅可比矩阵 \f$V\f$
-    cv::Matx<Tp, MeasureDim, MeasureDim> Vt; //!< 测量噪声协方差雅可比矩阵的转置 \f$V^T\f$
-
-    //! 非线性的离散状态方程
-    std::function<cv::Matx<Tp, StateDim, 1>(const cv::Matx<Tp, StateDim, 1> &)> Fa;
-    //! 非线性的离散观测方程
-    std::function<cv::Matx<Tp, MeasureDim, 1>(const cv::Matx<Tp, StateDim, 1> &)> Fh;
 
 public:
     //! 构造新的 ExtendedKalmanFilter 对象
@@ -328,6 +314,21 @@ public:
         this->P = (this->I - this->K * Jh) * this->P_;
         return this->x;
     }
+
+private:
+    cv::Matx<Tp, StateDim, StateDim> Ja;     //!< 状态方程雅可比矩阵 \f$J_A\f$
+    cv::Matx<Tp, StateDim, StateDim> Jat;    //!< 状态方程雅可比矩阵的转置 \f$J_A^T\f$
+    cv::Matx<Tp, MeasureDim, StateDim> Jh;   //!< 观测方程雅可比矩阵 \f$J_H\f$
+    cv::Matx<Tp, StateDim, MeasureDim> Jht;  //!< 观测方程雅可比矩阵的转置 \f$J_H^T\f$
+    cv::Matx<Tp, StateDim, StateDim> W;      //!< 过程噪声协方差雅可比矩阵 \f$W\f$
+    cv::Matx<Tp, StateDim, StateDim> Wt;     //!< 过程噪声协方差雅可比矩阵的转置 \f$W^T\f$
+    cv::Matx<Tp, MeasureDim, MeasureDim> V;  //!< 测量噪声协方差雅可比矩阵 \f$V\f$
+    cv::Matx<Tp, MeasureDim, MeasureDim> Vt; //!< 测量噪声协方差雅可比矩阵的转置 \f$V^T\f$
+
+    //! 非线性的离散状态方程
+    std::function<cv::Matx<Tp, StateDim, 1>(const cv::Matx<Tp, StateDim, 1> &)> Fa;
+    //! 非线性的离散观测方程
+    std::function<cv::Matx<Tp, MeasureDim, 1>(const cv::Matx<Tp, StateDim, 1> &)> Fh;
 };
 
 using EKF31f = ExtendedKalmanFilter<float, 3U, 1U>;  //!< 3 × 1 扩展卡尔曼滤波器

@@ -23,6 +23,26 @@ namespace rm
 class View final
 {
 public:
+    View() = default;
+
+    /**
+     * @brief 添加节点 ID
+     * @brief
+     * - 使用逗号分隔，可添加多个节点 ID，可参考以下示例
+     * @code{.cpp}
+     * View view;
+     * view.add(node_1, node_2, node_3);
+     * @endcode
+     *
+     * @tparam NodeId_ 节点 ID 类型，指代 `NodeId`
+     * @param[in] node_id 既存的待添加的节点 ID
+     */
+    template <typename... NodeId_>
+    inline void add(NodeId_ &&...node_id) { [[maybe_unused]] int _[]{(_nodes.emplace_back(node_id), 0)...}; }
+
+    //! 获取节点 ID 列表
+    inline const auto &data() const { return _nodes; }
+
     //! 命名空间索引，默认为 `1`
     uint16_t ns{1U};
 
@@ -50,27 +70,6 @@ public:
 
 private:
     std::vector<NodeId> _nodes; //!< 视图下的节点 ID 列表
-
-public:
-    View() = default;
-
-    /**
-     * @brief 添加节点 ID
-     * @brief
-     * - 使用逗号分隔，可添加多个节点 ID，可参考以下示例
-     * @code{.cpp}
-     * View view;
-     * view.add(node_1, node_2, node_3);
-     * @endcode
-     *
-     * @tparam NodeId_ 节点 ID 类型，指代 `NodeId`
-     * @param[in] node_id 既存的待添加的节点 ID
-     */
-    template <typename... NodeId_>
-    inline void add(NodeId_ &&...node_id) { [[maybe_unused]] int _[]{(_nodes.emplace_back(node_id), 0)...}; }
-
-    //! 获取节点 ID 列表
-    inline const auto &data() const { return _nodes; }
 };
 
 //! @} opcua

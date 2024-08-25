@@ -37,12 +37,6 @@ namespace rm
 //! 串行接口通信库
 class SerialPort
 {
-    int _fd{};           //!< 文件描述符
-    termios _option;     //!< 终端控制
-    bool _is_open{};     //!< 串口打开标志位
-    std::string _device; //!< 设备名
-    int _baud_rate;      //!< 波特率
-
 public:
     /**
      * @brief 构造新 SerialPort 对象，并自动打开
@@ -126,6 +120,12 @@ private:
      * @return 读取的数据长度
      */
     ssize_t fdread(void *data, size_t len);
+
+    int _fd{};           //!< 文件描述符
+    termios _option;     //!< 终端控制
+    bool _is_open{};     //!< 串口打开标志位
+    std::string _device; //!< 设备名
+    int _baud_rate;      //!< 波特率
 };
 
 //! @} serial

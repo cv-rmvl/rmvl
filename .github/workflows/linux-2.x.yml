@@ -13,6 +13,9 @@ jobs:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install.yml@main
   withoutdep-support-x86_64:
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-withoutdep.yml@main
+  python-support-x86_64:
+    needs: withoutdep-support-x86_64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-pybind.yml@main
   minimal-support-x86_64:
     needs: [cmake-support-x86_64, withoutdep-support-x86_64]
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main

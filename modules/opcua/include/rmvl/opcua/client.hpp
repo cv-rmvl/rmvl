@@ -29,8 +29,6 @@ namespace rm
 //! OPC UA 客户端视图
 class ClientView
 {
-    UA_Client *_client{nullptr}; //!< 客户端指针
-
 public:
     ClientView() = default;
 
@@ -77,16 +75,14 @@ public:
      * @return 是否写入成功
      */
     bool write(const NodeId &node, const Variable &val) const;
+
+private:
+    UA_Client *_client{nullptr}; //!< 客户端指针
 };
 
 //! OPC UA 客户端
 class Client
 {
-    //! 客户端指针
-    UA_Client *_client{nullptr};
-    //! 节点号监视项映射表 `[NodeId : [SubId, MonitorId]]`
-    std::unordered_map<UA_UInt32, std::array<UA_UInt32, 2>> _monitor_map;
-
 public:
     /****************************** 通用配置 ******************************/
 
@@ -232,6 +228,12 @@ public:
      * @return 是否成功移除监视项
      */
     bool remove(NodeId node);
+
+private:
+    //! 客户端指针
+    UA_Client *_client{nullptr};
+    //! 节点号监视项映射表 `[NodeId : [SubId, MonitorId]]`
+    std::unordered_map<UA_UInt32, std::array<UA_UInt32, 2>> _monitor_map;
 };
 
 //! @} opcua

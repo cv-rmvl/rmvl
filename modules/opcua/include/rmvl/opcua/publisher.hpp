@@ -53,14 +53,6 @@ class Publisher final
 template <>
 class Publisher<TransportID::UDP_UADP> : public Server
 {
-    NodeId _connection_id{}; //!< 连接 ID
-    NodeId _pds_id{};        //!< PublishedDataSet 已发布数据集 ID
-    NodeId _wg_id{};         //!< WriterGroup 写入组 ID
-    NodeId _dsw_id{};        //!< DataSetWriter 数据集写入器 ID
-
-    std::string _name;               //!< 发布者名称
-    std::hash<std::string> _strhash; //!< 字符串哈希函数
-
 public:
     /**
      * @brief 创建 OPC UA 发布者
@@ -81,6 +73,15 @@ public:
      * @return 是否发布成功
      */
     bool publish(const std::vector<PublishedDataSet> &datas, double duration);
+
+private:
+    NodeId _connection_id{}; //!< 连接 ID
+    NodeId _pds_id{};        //!< PublishedDataSet 已发布数据集 ID
+    NodeId _wg_id{};         //!< WriterGroup 写入组 ID
+    NodeId _dsw_id{};        //!< DataSetWriter 数据集写入器 ID
+
+    std::string _name;               //!< 发布者名称
+    std::hash<std::string> _strhash; //!< 字符串哈希函数
 };
 
 //! @} opcua
