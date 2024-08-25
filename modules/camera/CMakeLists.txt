@@ -65,10 +65,6 @@ rmvl_add_module(
   EXTRA_HEADER ${OPTCameraSDK_INCLUDE_DIRS}
   EXTERNAL ${OPTCameraSDK_LIBS}
 )
-rmvl_compile_options(
-  opt_camera
-  PUBLIC 
-)
 
 rmvl_generate_module_para(camera)
 
@@ -85,12 +81,12 @@ endif(BUILD_TESTS)
 # --------------------------------------------------------------------------
 if(BUILD_PYTHON)
   if(BUILD_rmvl_camera)
-    list(APPEND cam_inc camera/camutils.hpp) 
+    list(APPEND cam_inc rmvl/camera/camutils.hpp) 
     list(APPEND cam_dep camera)
   endif()
   foreach(m mv hik opt)
     if(BUILD_rmvl_${m}_camera)
-      list(APPEND cam_inc camera/${m}_camera.h) 
+      list(APPEND cam_inc rmvl/camera/${m}_camera.h rmvlpara/camera/${m}_camera.h) 
       list(APPEND cam_dep ${m}_camera)
     endif()
   endforeach()

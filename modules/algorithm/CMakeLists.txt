@@ -15,7 +15,7 @@ endif()
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
   rmvl_generate_python(algorithm
-    FILES algorithm/numcal.hpp
+    FILES rmvl/algorithm/numcal.hpp
     DEPENDS algorithm
   )
 endif()
