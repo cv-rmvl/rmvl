@@ -18,8 +18,12 @@
 #include "algorithm/transform.hpp"
 
 // 数值计算、信号处理
+#include "algorithm/dsp.hpp"
 #include "algorithm/kalman.hpp"
 #include "algorithm/numcal.hpp"
 
 // 数据结构
 #include "algorithm/datastruct.hpp"
+
+// 图像处理
+#include "algorithm/pretreat.hpp"
