@@ -69,7 +69,7 @@ public:
     bool retrieve(cv::OutputArray image) noexcept;
 
     //! 从相机设备中读取图像
-    inline bool read(cv::Mat image) noexcept
+    inline bool read(cv::OutputArray image) noexcept
     {
         if (grab())
             retrieve(image);

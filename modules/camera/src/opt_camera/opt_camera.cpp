@@ -22,7 +22,7 @@ OptCamera::~OptCamera() { delete _impl; }
 bool OptCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double OptCamera::get(int propId) const { return _impl->get(propId); }
 bool OptCamera::isOpened() const { return _impl->isOpened(); }
-bool OptCamera::read(cv::Mat image) { return _impl->read(image); }
+bool OptCamera::read(cv::OutputArray image) { return _impl->read(image); }
 bool OptCamera::reconnect() { return _impl->reconnect(); }
 
 /**
