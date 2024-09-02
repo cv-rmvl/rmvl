@@ -69,21 +69,14 @@ private:
 
 public:
     /**
-     * @brief 字面量字符串构造，设置默认值
-     *
-     * @param[in] str 字面量字符串
-     */
-    template <size_t N>
-    VariableType(const char (&str)[N]) : _value(str), _data_type(DataType(typeid(const char *))), _size(1) {}
-
-    /**
      * @brief 单值构造，设置默认值
      *
      * @tparam Tp 变量的存储数据类型，必须是基础类型或者 `const char *` 表示的字符串类型
      * @param[in] val 标量、数量值
      */
-    template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    VariableType(Tp &&val) : _value(val), _data_type(DataType(typeid(Tp))), _size(1) {}
+    template <typename Tp, typename DecayT = typename std::decay_t<Tp>,
+              typename = std::enable_if_t<std::is_fundamental_v<DecayT> || std::is_same_v<DecayT, const char *>>>
+    VariableType(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -163,21 +156,14 @@ public:
     Variable() = default;
 
     /**
-     * @brief 字面量字符串构造，设置默认值
-     *
-     * @param[in] str 字面量字符串
-     */
-    template <unsigned int N>
-    Variable(const char (&str)[N]) : access_level(3U), _value(str), _data_type(DataType(typeid(const char *))), _size(1) {}
-
-    /**
      * @brief 单值构造
      *
-     * @tparam Tp 变量的存储数据类型，必须是基础类型、`const char *` 或 `const char (&)[N]` 表示的字符串类型
+     * @tparam Tp 变量的存储数据类型，必须是可包含 `cv` 限定符的基础类型及其引用类型，和字符串字面量
      * @param[in] val 标量、数量值
      */
-    template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> || std::is_same_v<Tp, const char *>>>
-    Variable(const Tp &val) : access_level(3U), _value(val), _data_type(DataType(typeid(Tp))), _size(1) {}
+    template <typename Tp, typename DecayT = typename std::decay_t<Tp>,
+              typename = std::enable_if_t<std::is_fundamental_v<DecayT> || std::is_same_v<DecayT, const char *>>>
+    Variable(Tp val) : access_level(3U), _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
 
     /**
      * @brief 列表构造
