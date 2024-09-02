@@ -81,7 +81,7 @@ endif(BUILD_TESTS)
 # --------------------------------------------------------------------------
 if(BUILD_PYTHON)
   if(BUILD_rmvl_camera)
-    list(APPEND cam_inc rmvl/camera/camutils.hpp) 
+    list(APPEND cam_inc rmvl/camera/camutils.hpp rmvlpara/camera/camera.h) 
     list(APPEND cam_dep camera)
   endif()
   foreach(m mv hik opt)
