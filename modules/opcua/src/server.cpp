@@ -2,8 +2,8 @@
  * @file server.cpp
  * @author zhaoxi (535394140@qq.com)
  * @brief OPC UA 服务器
- * @version 2.2
- * @date 2024-03-29
+ * @version 3.0
+ * @date 2024-09-03
  *
  * @copyright Copyright 2023 (c), zhaoxi
  *
@@ -88,6 +88,11 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
                                  usr_passwd.size(), usr_passwd.data());
 #endif
     }
+
+    // 设置垃圾回收容量
+    _vcb_gc.reserve(16);
+    _dscb_gc.reserve(16);
+    _mcb_gc.reserve(16);
 }
 
 Server::Server(ServerUserConfig on_config, uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users)
@@ -173,7 +178,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype) const
     return retval;
 }
 
-NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) const
+NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) const noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -223,24 +228,67 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) con
 Variable Server::read(const NodeId &node) const { return serverRead(_server, node); }
 bool Server::write(const NodeId &node, const Variable &val) const { return serverWrite(_server, node, val); }
 
-bool Server::addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write) const
+static void value_cb_before_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid,
+                                 void *context, const UA_NumericRange *, const UA_DataValue *value)
+{
+    auto &on_read = static_cast<Server::ValueCallbackWrapper *>(context)->first;
+    on_read(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
+}
+
+static void value_cb_after_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeId,
+                                 void *context, const UA_NumericRange *, const UA_DataValue *data)
+{
+    auto &on_write = static_cast<Server::ValueCallbackWrapper *>(context)->second;
+    on_write(server, *nodeId, data->hasValue ? helper::cvtVariable(data->value) : Variable{});
+}
+
+bool Server::addVariableNodeValueCallback(NodeId id, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) const noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
-
-    UA_ValueCallback callback{before_read, after_write};
-    auto status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
+    // 设置节点上下文
+    auto context = std::make_unique<ValueCallbackWrapper>(std::forward<ValueCallbackBeforeRead>(before_read),
+                                                          std::forward<ValueCallbackAfterWrite>(after_write));
+    auto status = UA_Server_setNodeContext(_server, id, context.get());
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to set node context: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    _vcb_gc.push_back(std::move(context));
+    // 设置回调函数
+    UA_ValueCallback callback{value_cb_before_read, value_cb_after_write};
+    status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
     if (status != UA_STATUSCODE_GOOD)
         ERROR_("Function addVariableNodeValueCallBack: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
 }
 
-NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id) const
+static UA_StatusCode datasource_cb_on_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
+                                           UA_Boolean, const UA_NumericRange *, UA_DataValue *value)
+{
+    auto on_read = static_cast<Server::DataSourceCallbackWrapper *>(context)->first;
+    auto retval = on_read(server, *nodeid);
+    if (retval.empty())
+        return UA_STATUSCODE_BADNOTFOUND;
+    value->hasValue = true;
+    value->value = helper::cvtVariable(retval);
+    return UA_STATUSCODE_GOOD;
+}
+
+static UA_StatusCode datasource_cb_on_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
+                                            const UA_NumericRange *, const UA_DataValue *value)
+{
+    auto on_write = static_cast<Server::DataSourceCallbackWrapper *>(context)->second;
+    on_write(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
+    return value->hasValue ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADNOTFOUND;
+}
+
+NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id) const noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
 
-    // 变量节点属性 `UA_VariableAttributes`
+    // 设置变量节点属性
     UA_VariableAttributes attr = UA_VariableAttributes_default;
-    // 设置属性
     attr.accessLevel = val.access_level;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
@@ -258,19 +306,38 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
     }
     NodeId retval;
     // 获取数据源重定向信息
-    UA_DataSource data_source;
-    data_source.read = on_read;
-    data_source.write = on_write;
+    UA_DataSource data_source = {datasource_cb_on_read, datasource_cb_on_write};
     // 添加节点至服务器
+    auto context = std::make_unique<DataSourceCallbackWrapper>(std::forward<DataSourceRead>(on_read), std::forward<DataSourceWrite>(on_write));
     auto status = UA_Server_addDataSourceVariableNode(
         _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
-        type_id, attr, data_source, nullptr, &retval);
+        type_id, attr, data_source, context.get(), &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to add data source variable node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
+    // 设置节点上下文
+    _dscb_gc.push_back(std::move(context));
     return retval;
+}
+
+static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context,
+                               const UA_NodeId *object_id, void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
+{
+    auto &on_method = *static_cast<MethodCallback *>(context);
+    std::vector<Variable> iargs(input_size);
+    for (size_t i = 0; i < input_size; ++i)
+        iargs[i] = helper::cvtVariable(input[i]);
+    auto oargs = on_method(server, *object_id, iargs);
+    if (oargs.size() != output_size)
+    {
+        ERROR_("The number of output arguments does not match the number of input arguments");
+        return UA_STATUSCODE_BADINVALIDARGUMENT;
+    }
+    for (size_t i = 0; i < output_size; ++i)
+        output[i] = helper::cvtVariable(oargs[i]);
+    return UA_STATUSCODE_GOOD;
 }
 
 NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) const
@@ -292,15 +359,17 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) cons
     for (const auto &arg : method.oargs)
         outputs.push_back(helper::cvtArgument(arg));
     // 添加节点
+    auto context = std::make_unique<MethodCallback>(method.func);
     NodeId retval;
     auto status = UA_Server_addMethodNode(
         _server, UA_NODEID_NULL, parent_id, nodeHasComponent, UA_QUALIFIEDNAME(method.ns, helper::to_char(method.browse_name)),
-        attr, method.func, inputs.size(), inputs.data(), outputs.size(), outputs.data(), nullptr, &retval);
+        attr, method_cb, inputs.size(), inputs.data(), outputs.size(), outputs.data(), context.get(), &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to add method node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
+    _mcb_gc.push_back(std::move(context));
     // 添加 Mandatory 属性
     status = UA_Server_addReference(_server, retval, nodeHasModellingRule,
                                     UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
@@ -312,10 +381,17 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) cons
     return retval;
 }
 
-void Server::setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method) const
+void Server::setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const
 {
     RMVL_DbgAssert(_server != nullptr);
-    UA_Server_setMethodNodeCallback(_server, id, on_method);
+    auto context = std::make_unique<MethodCallback>(on_method);
+    if (UA_Server_setNodeContext(_server, id, context.get()))
+    {
+        ERROR_("Failed to set node context");
+        return;
+    }
+    _mcb_gc.push_back(std::move(context));
+    UA_Server_setMethodNodeCallback(_server, id, method_cb);
 }
 
 NodeId Server::addObjectTypeNode(const ObjectType &otype) const
@@ -327,7 +403,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype) const
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(otype.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(otype.description));
     NodeId retval;
-    // 获取父节点的 NodeID
+    // 获取父节点的 NodeId
     NodeId parent_id{nodeBaseObjectType};
     const ObjectType *current = otype.getBase();
     std::stack<std::string> base_stack;
