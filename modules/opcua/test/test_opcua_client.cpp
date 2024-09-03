@@ -49,19 +49,15 @@ void configServer(rm::Server &srv)
     variable.display_name = "数组";
     srv.addVariableNode(variable);
     // 添加加法方法节点
-    rm::Method method;
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, const std::vector<rm::Variable> &input) -> std::vector<rm::Variable> {
+        int a = input[0], b = input[1];
+        return {a + b};
+    };
     method.browse_name = "add";
     method.description = "this is add method";
     method.display_name = "加法";
     method.iargs = {{"a", UA_TYPES_INT32}, {"b", UA_TYPES_INT32}};
     method.oargs = {{"c", UA_TYPES_INT32}};
-    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
-                     void *, size_t, const UA_Variant *input, size_t, UA_Variant *output) -> UA_StatusCode {
-        int32_t a = *reinterpret_cast<int *>(input[0].data);
-        int32_t b = *reinterpret_cast<int *>(input[1].data);
-        int32_t c = a + b;
-        return UA_Variant_setScalarCopy(output, &c, &UA_TYPES[UA_TYPES_INT32]);
-    };
     srv.addMethodNode(method);
     // 添加对象节点，包含字符串变量和乘法方法
     srv.start();
@@ -78,7 +74,7 @@ TEST(OPC_UA_ClientTest, read_variable)
     auto id = rm::nodeObjectsFolder | cli.find("array");
     rm::Variable variable = cli.read(id);
     EXPECT_FALSE(variable.empty());
-    auto vec = rm::Variable::cast<std::vector<int>>(variable);
+    std::vector<int> vec = variable;
     for (size_t i = 0; i < vec.size(); ++i)
         EXPECT_EQ(vec[i], i + 1);
     srv.stop();
@@ -117,15 +113,6 @@ TEST(OPC_UA_ClientTest, call)
     srv.join();
 }
 
-std::string type_name{};
-int receive_data{};
-
-void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *value)
-{
-    type_name = value->value.type->typeName;
-    receive_data = *reinterpret_cast<int *>(value->value.data);
-}
-
 // 订阅
 TEST(OPC_UA_ClientTest, variable_monitor)
 {
@@ -133,13 +120,16 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     configServer(srv);
     rm::Client cli("opc.tcp://127.0.0.1:5003");
     // 订阅测试服务器上的变量
+    int receive_data{};
     auto node_id = rm::nodeObjectsFolder | cli.find("single");
-    EXPECT_TRUE(cli.monitor(node_id, onChange, 5));
+    auto on_change = [&](rm::ClientView, const rm::Variable &value) {
+        receive_data = value;
+    };
+    EXPECT_TRUE(cli.monitor(node_id, on_change, 5));
     // 数据更新
     cli.write(node_id, 66);
     std::this_thread::sleep_for(10ms);
     cli.spinOnce();
-    EXPECT_EQ(type_name, "Int32");
     EXPECT_EQ(receive_data, 66);
     // 移除监视后的数据按预期不会更新
     cli.remove(node_id);
@@ -149,23 +139,6 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     EXPECT_EQ(receive_data, 66);
     srv.stop();
     srv.join();
-}
-
-// 事件响应
-std::string source_name;
-int aaa{};
-void onEvent(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, size_t size, UA_Variant *event_fields)
-{
-    for (size_t i = 0; i < size; ++i)
-    {
-        if (UA_Variant_hasScalarType(&event_fields[i], &UA_TYPES[UA_TYPES_STRING]))
-        {
-            UA_String *tmp = reinterpret_cast<UA_String *>(event_fields[i].data);
-            source_name = reinterpret_cast<char *>(tmp->data);
-        }
-        else if (UA_Variant_hasScalarType(&event_fields[i], &UA_TYPES[UA_TYPES_INT32]))
-            aaa = *reinterpret_cast<UA_Int32 *>(event_fields[i].data);
-    }
 }
 
 TEST(OPC_UA_ClientTest, event_monitor)
@@ -179,7 +152,13 @@ TEST(OPC_UA_ClientTest, event_monitor)
     etype.add("aaa", 3);
     srv.addEventTypeNode(etype);
     rm::Client cli("opc.tcp://127.0.0.1:5004");
-    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, onEvent);
+
+    std::string source_name;
+    int aaa{};
+    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, [&](rm::ClientView, const std::vector<rm::Variable> &fields) {
+        source_name = fields[0].cast<const char *>();
+        aaa = fields[1];
+    });
     // 触发事件
     rm::Event event(etype);
     event.source_name = "GtestServer";

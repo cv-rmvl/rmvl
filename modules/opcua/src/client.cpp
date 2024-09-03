@@ -231,7 +231,13 @@ static bool createSubscription(UA_Client *p_client, UA_CreateSubscriptionRespons
     return true;
 }
 
-bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size)
+static void data_change_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, void *context, UA_DataValue *value)
+{
+    auto &on_change = *static_cast<DataChangeNotificationCallback *>(context);
+    on_change(client, helper::cvtVariable(value->value));
+}
+
+bool Client::monitor(NodeId node, DataChangeNotificationCallback on_change, uint32_t queue_size)
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -245,18 +251,29 @@ bool Client::monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_ch
     request.requestedParameters.discardOldest = true;
     request.requestedParameters.queueSize = queue_size;
     // 创建监视器
+    auto context = std::make_unique<DataChangeNotificationCallback>(on_change);
     UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createDataChange(
-        _client, resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request, &node, on_change, nullptr);
+        _client, resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request, context.get(), data_change_notify_cb, nullptr);
     if (result.statusCode != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to create variable monitor, error: %s", UA_StatusCode_name(result.statusCode));
         return false;
     }
+    _dccb_gc.push_back(std::move(context));
     _monitor_map[node.nid.identifier.numeric] = {resp.subscriptionId, result.monitoredItemId};
     return true;
 }
 
-bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event)
+static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, void *context, size_t events_num, UA_Variant *event_fields)
+{
+    auto &on_event = *static_cast<EventNotificationCallback *>(context);
+    std::vector<Variable> datas(events_num);
+    for (size_t i = 0; i < events_num; ++i)
+        datas[i] = helper::cvtVariable(event_fields[i]);
+    on_event(client, datas);
+}
+
+bool Client::monitor(NodeId node, const std::vector<std::string> &names, EventNotificationCallback on_event)
 {
     RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
@@ -294,16 +311,16 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, UA_Clie
     request_item.requestedParameters.filter.content.decoded.data = &filter;
     request_item.requestedParameters.filter.content.decoded.type = &UA_TYPES[UA_TYPES_EVENTFILTER];
     // 创建事件监视器
-    UA_UInt32 monitor_id{};
+    auto context = std::make_unique<EventNotificationCallback>(on_event);
     UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(
-        _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request_item, &monitor_id, on_event, nullptr);
+        _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request_item, context.get(), event_notify_cb, nullptr);
     if (result.statusCode != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to create event monitor, error: %s", UA_StatusCode_name(result.statusCode));
         return false;
     }
-    else
-        return true;
+    _encb_gc.push_back(std::move(context));
+    return true;
 }
 
 bool Client::remove(NodeId node)

@@ -15,8 +15,7 @@
 
 #include "testnum.h"
 
-namespace rm_test
-{
+namespace rm_test {
 
 // 变量（类型）配置
 TEST(OPC_UA_Server, variable_config)
@@ -59,28 +58,21 @@ TEST(OPC_UA_Server, variable_node_io)
     EXPECT_EQ(srv.read(node), 2);
 }
 
-static int data_source;
-
-static UA_StatusCode onRead(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
-                            UA_Boolean, const UA_NumericRange *, UA_DataValue *dataValue)
-{
-    UA_Variant_setScalarCopy(&dataValue->value, &data_source, &UA_TYPES[UA_TYPES_INT32]);
-    return UA_STATUSCODE_GOOD;
-}
-
-static UA_StatusCode onWrite(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
-                             const UA_NumericRange *, const UA_DataValue *data)
-{
-    data_source = *reinterpret_cast<int *>(data->value.data);
-    return UA_STATUSCODE_GOOD;
-}
-
 // 服务器添加数据源变量节点
 TEST(OPC_UA_Server, add_data_source_variable_node)
 {
+    int data_source{};
     rm::Server srv(4825, "TestServer");
     uaCreateVariable(variable);
-    auto node = srv.addDataSourceVariableNode(variable, onRead, onWrite);
+
+    // Callback
+    auto on_read = [&](rm::ServerView, const rm::NodeId &) -> rm::Variable {
+        return data_source;
+    };
+    auto on_write = [&](rm::ServerView, const rm::NodeId &, const rm::Variable &val) {
+        data_source = val.cast<int>();
+    };
+    auto node = srv.addDataSourceVariableNode(variable, on_read, on_write);
     EXPECT_FALSE(UA_NodeId_isNull(&node));
     srv.start();
 }
@@ -102,14 +94,12 @@ TEST(OPC_UA_Server, add_variable_type_node)
 TEST(OPC_UA_Server, add_method_node)
 {
     rm::Server srv(4832);
-    rm::Method method;
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, const std::vector<rm::Variable> &) -> std::vector<rm::Variable> {
+        return {};
+    };
     method.browse_name = "test_method";
     method.description = "this is test method";
     method.display_name = "测试方法";
-    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
-                     void *, size_t, const UA_Variant *, size_t, UA_Variant *) -> UA_StatusCode {
-        return UA_STATUSCODE_GOOD;
-    };
     srv.addMethodNode(method);
     srv.start();
 }
@@ -149,9 +139,8 @@ TEST(OPC_UA_Server, add_object_node_with_method)
     method.browse_name = "test_method";
     method.description = "this is test method";
     method.display_name = "测试方法";
-    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
-                     void *, size_t, const UA_Variant *, size_t, UA_Variant *) -> UA_StatusCode {
-        return UA_STATUSCODE_GOOD;
+    method.func = [](rm::ServerView, const rm::NodeId &, const std::vector<rm::Variable> &) -> std::vector<rm::Variable> {
+        return {};
     };
     object.add(method);
     auto id = srv.addObjectNode(object);

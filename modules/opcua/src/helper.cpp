@@ -148,7 +148,7 @@ bool Variable::operator==(const Variable &val) const
 namespace helper
 {
 
-UA_Variant cvtVariable(const Variable &val)
+UA_Variant cvtVariable(const Variable &val) noexcept
 {
     const std::any &data = val.data();
 
@@ -289,7 +289,7 @@ UA_Variant cvtVariable(const Variable &val)
     return p_val;
 }
 
-Variable cvtVariable(const UA_Variant &p_val)
+Variable cvtVariable(const UA_Variant &p_val) noexcept
 {
     UA_UInt32 dims = (p_val.arrayLength == 0 ? 1 : p_val.arrayLength);
     DataType type_flag = p_val.type->typeKind;
@@ -356,7 +356,7 @@ Variable cvtVariable(const UA_Variant &p_val)
     }
 }
 
-UA_Variant cvtVariable(const VariableType &vtype)
+UA_Variant cvtVariable(const VariableType &vtype) noexcept
 {
     const std::any &data = vtype.data();
 
@@ -499,7 +499,7 @@ UA_Variant cvtVariable(const VariableType &vtype)
     return p_val;
 }
 
-UA_Argument cvtArgument(const Argument &arg)
+UA_Argument cvtArgument(const Argument &arg) noexcept
 {
     UA_Argument argument;
     UA_Argument_init(&argument);
