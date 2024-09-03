@@ -77,14 +77,19 @@ public:
     bool write(const NodeId &node, const Variable &val) const;
 };
 
+/**
+ * @brief 数据变更通知回调函数
+ *
+ * @param[in] client_view 客户端视图，指代当前客户端
+ * @param[in] value 数据发生变更后的变量
+ */
+using DataChangeNotificationCallback = std::function<void(ClientView, const Variable &)>;
+
+using EventNotificationCallback = std::function<void(ClientView, const std::vector<Variable> &)>;
+
 //! OPC UA 客户端
 class Client
 {
-    //! 客户端指针
-    UA_Client *_client{nullptr};
-    //! 节点号监视项映射表 `[NodeId : [SubId, MonitorId]]`
-    std::unordered_map<UA_UInt32, std::array<UA_UInt32, 2>> _monitor_map;
-
 public:
     /****************************** 通用配置 ******************************/
 
@@ -189,29 +194,17 @@ public:
     /**
      * @brief 创建变量节点监视项，以实现订阅节点的功能
      * @brief
-     * - 服务器在设定的采样频率 `opcua_param.SAMPLING_INTERVAL`
-     *   下监视变量，若发生更改会尝试发出通知，通知的发送频率受到
-     *   `opcua_param.PUBLISHING_INTERVAL` 控制。当客户端收到通知时，执行
-     *   `on_change` 回调函数
+     * - 服务器在设定的采样频率 `opcua_param.SAMPLING_INTERVAL` 下监视变量，若发生更改会尝试发出通知，通知的发送频率受到
+     *   `opcua_param.PUBLISHING_INTERVAL` 控制。当客户端收到通知时，执行 `on_change` 回调函数
      * @brief
      * - 类似于 ROS 中的订阅话题，这里是订阅变量节点
-     * @code{.cpp}
-     * // on_change 回调函数的用法示例，假设订阅的变量节点为 Int32 类型
-     * void on_change(UA_Client *client, UA_UInt32 sub_id, void *sub_context,
-     *                UA_UInt32 mon_id, void *mon_context, UA_DataValue *value)
-     * {
-     *     UA_Int32 current_value = *reinterpret_cast<UA_Int32 *>(value->value.data);
-     *     // 显示当前值
-     *     UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_CLIENT, "current value: %d", current_value);
-     * }
-     * @endcode
      *
      * @param[in] node 待监视节点的 `NodeId`
-     * @param[in] on_change 数据变更回调函数
+     * @param[in] on_change 数据变更可调用对象
      * @param[in] queue_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知，默认为 `10`
      * @return 变量节点监视创建成功？
      */
-    bool monitor(NodeId node, UA_Client_DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
+    bool monitor(NodeId node, DataChangeNotificationCallback on_change, uint32_t queue_size = 10);
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
@@ -221,7 +214,7 @@ public:
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
-    bool monitor(NodeId node, const std::vector<std::string> &names, UA_Client_EventNotificationCallback on_event);
+    bool monitor(NodeId node, const std::vector<std::string> &names, EventNotificationCallback on_event);
 
     /**
      * @brief 移除监视项
@@ -230,6 +223,16 @@ public:
      * @return 是否成功移除监视项
      */
     bool remove(NodeId node);
+
+private:
+    //! 客户端指针
+    UA_Client *_client{nullptr};
+    //! 节点号监视项映射表 `[NodeId : [SubId, MonitorId]]`
+    std::unordered_map<UA_UInt32, std::array<UA_UInt32, 2>> _monitor_map;
+    //! 数据变更通知回调函数
+    std::vector<std::unique_ptr<DataChangeNotificationCallback>> _dccb_gc{};
+    //! 事件通知回调函数
+    std::vector<std::unique_ptr<EventNotificationCallback>> _encb_gc{};
 };
 
 //! @} opcua

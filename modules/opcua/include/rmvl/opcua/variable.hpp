@@ -20,8 +20,7 @@
 
 #include "utilities.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
@@ -158,7 +157,7 @@ public:
     /**
      * @brief 单值构造
      *
-     * @tparam Tp 变量的存储数据类型，必须是可包含 `cv` 限定符的基础类型及其引用类型，和字符串字面量
+     * @tparam Tp 变量的存储数据类型，必须是可包含 `cv` 限定符的基础类型及其引用类型，和 `const char *` 表示的字符串类型
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>,
@@ -219,7 +218,15 @@ public:
      * @return 该数据类型的数据
      */
     template <typename Tp>
-    inline Tp cast() { return std::any_cast<Tp>(this->data()); }
+    inline Tp cast() const { return std::any_cast<Tp>(this->data()); }
+
+    //! 基本数据类型转换函数
+    template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT> || std::is_same_v<DecayT, const char *>>>
+    operator Tp() const { return std::any_cast<Tp>(_value); }
+
+    //! 列表数据类型转换函数
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
+    operator std::vector<Tp>() const { return std::any_cast<std::vector<Tp>>(_value); }
 
     /**
      * @brief 获取用 `rm::VariableType` 表示的变量类型
