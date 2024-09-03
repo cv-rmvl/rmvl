@@ -28,21 +28,6 @@ namespace rm
 
 //! @example samples/opcua/opcua_server.cpp OPC UA 服务器例程
 
-//! 值回调函数，Read 函数指针定义
-using ValueCallBackBeforeRead = void (*)(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
-                                         const UA_NumericRange *, const UA_DataValue *);
-//! 值回调函数，Write 函数指针定义
-using ValueCallBackAfterWrite = void (*)(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
-                                         const UA_NumericRange *, const UA_DataValue *);
-//! 数据源回调函数，Read 函数指针定义
-using DataSourceRead = UA_StatusCode (*)(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
-                                         UA_Boolean, const UA_NumericRange *, UA_DataValue *);
-//! 数据源回调函数，Write 函数指针定义
-using DataSourceWrite = UA_StatusCode (*)(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *,
-                                          const UA_NumericRange *, const UA_DataValue *);
-//! 服务器配置函数指针，由 `nodeset_compiler` 生成
-using ServerUserConfig = UA_StatusCode (*)(UA_Server *);
-
 //! OPC UA 服务器视图
 class ServerView final
 {
@@ -96,15 +81,52 @@ public:
     bool write(const NodeId &node, const Variable &val) const;
 };
 
+/**
+ * @brief 值回调函数，Read 可调用对象定义
+ *
+ * @param[in] server_view OPC UA 服务器视图，指代当前服务器
+ * @param[in] node_id 待读取的变量节点的 `NodeId`
+ * @param[in] value 服务器读取到的变量
+ */
+using ValueCallbackBeforeRead = std::function<void(ServerView, const NodeId &, const Variable &)>;
+
+/**
+ * @brief 值回调函数，Write 可调用对象定义
+ *
+ * @param[in] server_view OPC UA 服务器视图，指代当前服务器
+ * @param[in] nodeid 待写入的变量节点的 `NodeId`
+ * @param[in] data 服务器写入的变量
+ */
+using ValueCallbackAfterWrite = std::function<void(ServerView, const NodeId &, const Variable &)>;
+
+/**
+ * @brief 数据源回调函数，Read 函数指针定义
+ *
+ * @param[in] server_view OPC UA 服务器视图，指代当前服务器
+ * @param[in] nodeid 待读取的变量节点的 `NodeId`
+ * @return 向服务器提供的待读取的变量
+ */
+using DataSourceRead = std::function<Variable(ServerView, const NodeId &)>;
+
+/**
+ * @brief 数据源回调函数，Write 函数指针定义
+ *
+ * @param[in] server_view OPC UA 服务器视图，指代当前服务器
+ * @param[in] nodeid 待写入的变量节点的 `NodeId`
+ * @param[in] value 从服务器接收到的变量，一般用于写入外部数据
+ */
+using DataSourceWrite = std::function<void(ServerView, const NodeId &, const Variable &)>;
+
+//! 服务器配置函数指针，由 `nodeset_compiler` 生成
+using ServerUserConfig = UA_StatusCode (*)(UA_Server *);
+
 //! OPC UA 服务器
 class Server
 {
-protected:
-    UA_Server *_server; //!< OPC UA 服务器指针
-    bool _running{};    //!< 服务器运行状态
-    std::thread _run;   //!< 服务器运行线程
-
 public:
+    using ValueCallbackWrapper = std::pair<ValueCallbackBeforeRead, ValueCallbackAfterWrite>;
+    using DataSourceCallbackWrapper = std::pair<DataSourceRead, DataSourceWrite>;
+
     /****************************** 通用配置 ******************************/
 
     /**
@@ -163,7 +185,7 @@ public:
      * @return 目标节点信息
      * @retval fnis `[_client, browse_name]` 元组
      */
-    inline FindNodeInServer find(const std::string &browse_name, uint16_t ns = 1U) const { return {_server, browse_name, ns}; }
+    inline FindNodeInServer find(std::string_view browse_name, uint16_t ns = 1U) const { return {_server, browse_name, ns}; }
 
     /****************************** 功能配置 ******************************/
 
@@ -182,7 +204,7 @@ public:
      * @param[in] parent_id 指定父节点的 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应变量节点的唯一标识 `NodeId`
      */
-    NodeId addVariableNode(const Variable &val, const NodeId &parent_id = nodeObjectsFolder) const;
+    NodeId addVariableNode(const Variable &val, const NodeId &parent_id = nodeObjectsFolder) const noexcept;
 
     /**
      * @brief 为既有的变量节点 VariableNode 添加值回调
@@ -193,7 +215,7 @@ public:
      * @param[in] after_write 可隐式转换为 `ValueCallBackAfterWrite` 函数指针类型的可调用对象
      * @return 是否添加成功
      */
-    bool addVariableNodeValueCallBack(NodeId id, ValueCallBackBeforeRead before_read, ValueCallBackAfterWrite after_write) const;
+    bool addVariableNodeValueCallback(NodeId id, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) const noexcept;
 
     /**
      * @brief 添加数据源变量节点 VariableNode 至指定父节点中
@@ -210,7 +232,7 @@ public:
      * @param[in] parent_id 指定父节点的 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应数据源变量节点的唯一标识 `NodeId`
      */
-    NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id = nodeObjectsFolder) const;
+    NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id = nodeObjectsFolder) const noexcept;
 
     /**
      * @brief 从指定的变量节点读数据
@@ -242,9 +264,9 @@ public:
      * @brief 为既有的方法节点 MethodNode 设置方法的回调函数
      *
      * @param[in] id 既有的方法节点的 `NodeId`，因方法节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
-     * @param[in] on_method 可隐式转换为 `UA_MethodCallback` 函数指针类型的可调用对象
+     * @param[in] on_method
      */
-    void setMethodNodeCallBack(const NodeId &id, UA_MethodCallback on_method) const;
+    void setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const;
 
     /**
      * @brief 添加对象类型节点 ObjectTypeNode 至 `rm::nodeBaseObjectType` 中
@@ -288,6 +310,16 @@ public:
      * @return 是否创建并触发成功？
      */
     bool triggerEvent(const NodeId &node_id, const Event &event) const;
+
+protected:
+    UA_Server *_server; //!< OPC UA 服务器指针
+    bool _running{};    //!< 服务器运行状态
+    std::thread _run;   //!< 服务器运行线程
+
+private:
+    mutable std::vector<std::unique_ptr<ValueCallbackWrapper>> _vcb_gc;       //!< 值回调函数
+    mutable std::vector<std::unique_ptr<DataSourceCallbackWrapper>> _dscb_gc; //!< 数据源回调函数
+    mutable std::vector<std::unique_ptr<MethodCallback>> _mcb_gc;             //!< 方法回调函数
 };
 
 //! @} opcua

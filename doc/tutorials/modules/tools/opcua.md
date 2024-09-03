@@ -171,8 +171,11 @@ int main()
     rm::Server srv(4840);
     srv.start();
 
-    // 定义方法
-    rm::Method method;
+    // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<vector<Variable>(ServerView, vector<Variable>)> 的可调用对象
+    rm::Method method = [](rm::ServerView, const std::vector<rm::Variable> &iargs) -> std::vector<rm::Variable> {
+        int num1 = iargs[0], num2 = iargs[1];
+        return {num1 + num2};
+    };
     method.browse_name = "add";
     method.display_name = "Add";
     method.description = "两数之和";
@@ -187,17 +190,8 @@ int main()
         3. 允许有多个返回值，即 oargs 的长度允许 > 1
     */
 
-    // 方法的函数指针，无捕获列表的 lambda 表达式可发生向函数指针的隐式转换，因此可以使用 "=" 完成赋值
-    method.func = [](UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
-                     void *, size_t, const UA_Variant *input, size_t, UA_Variant *output) -> UA_StatusCode {
-        int32_t num1 = *reinterpret_cast<int *>(input[0].data);
-        int32_t num2 = *reinterpret_cast<int *>(input[1].data);
-        int32_t retval = num1 + num2;
-        return UA_Variant_setScalarCopy(output, &retval, &UA_TYPES[UA_TYPES_INT32]);
-    };
     // 方法节点添加至服务器
     server.addMethodNode(method);
-
     srv.join();
 }
 ```
@@ -390,17 +384,15 @@ int main()
 // client_2.cpp
 #include <rmvl/opcua/client.hpp>
 
-void onChange(UA_Client *, UA_UInt32, void *, UA_UInt32, void *, UA_DataValue *value)
-{
-    int receive_data = *reinterpret_cast<int *>(value->value.data);
-    printf("Data (n=number) was changed to: %d\n", receive_data);
-}
-
 int main()
 {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
     auto node = rm::nodeObjectsFolder | cli.find("number");
-    // 监视变量，这里的 onChange 同样可以写成无捕获列表的 lambda 表达式，因为存在隐式转换
+    // 监视变量
+    auto on_change = [](ClientView, const rm::Variable &value) {
+        int receive_data = value;
+        printf("Data (n=number) was changed to: %d\n", receive_data);
+    };
     client.monitor(node, onChange, 5);
     // 线程阻塞
     client.spin();

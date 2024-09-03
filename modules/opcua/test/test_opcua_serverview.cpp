@@ -31,14 +31,12 @@ void setup(Server &srv)
     method.browse_name = "plus";
     method.display_name = "Input + Number";
     method.description = "输入值加数";
-    method.func = [](UA_Server *p_server, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
-                     void *, size_t, const UA_Variant *inputs, size_t, UA_Variant *) -> UA_StatusCode {
-        ServerView sv = p_server;
-        auto num_node = nodeObjectsFolder | sv.find("num");
-        int num = sv.read(num_node).cast<int>();
-        Variable dst = *reinterpret_cast<int *>(inputs->data) + num;
+    method.func = [](ServerView sv, const NodeId &obj_id, const std::vector<Variable> &inputs) -> std::vector<Variable> {
+        auto num_node = obj_id | sv.find("num");
+        int num = sv.read(num_node);
+        Variable dst = inputs.front().cast<int>() + num;
         sv.write(num_node, dst);
-        return UA_STATUSCODE_GOOD;
+        return {};
     };
     method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
     srv.addMethodNode(method);
