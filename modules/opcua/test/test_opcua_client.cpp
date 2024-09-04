@@ -49,7 +49,7 @@ void configServer(rm::Server &srv)
     variable.display_name = "数组";
     srv.addVariableNode(variable);
     // 添加加法方法节点
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, const std::vector<rm::Variable> &input) -> std::vector<rm::Variable> {
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables input) -> rm::OutputVariables {
         int a = input[0], b = input[1];
         return {a + b};
     };
@@ -155,7 +155,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
 
     std::string source_name;
     int aaa{};
-    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, [&](rm::ClientView, const std::vector<rm::Variable> &fields) {
+    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, [&](rm::ClientView, rm::InputVariables fields) {
         source_name = fields[0].cast<const char *>();
         aaa = fields[1];
     });
