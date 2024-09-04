@@ -69,7 +69,7 @@ cv::Mat draw(const RealSignal &datas, const cv::Scalar &color)
                  color, 2);
 
     return img;
-};
+}
 
 ComplexSignal dft(const ComplexSignal &xt)
 {

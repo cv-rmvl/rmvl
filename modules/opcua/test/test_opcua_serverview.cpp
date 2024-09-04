@@ -31,7 +31,7 @@ void setup(Server &srv)
     method.browse_name = "plus";
     method.display_name = "Input + Number";
     method.description = "输入值加数";
-    method.func = [](ServerView sv, const NodeId &obj_id, const std::vector<Variable> &inputs) -> std::vector<Variable> {
+    method.func = [](ServerView sv, const NodeId &obj_id, InputVariables inputs) -> OutputVariables {
         auto num_node = obj_id | sv.find("num");
         int num = sv.read(num_node);
         Variable dst = inputs.front().cast<int>() + num;

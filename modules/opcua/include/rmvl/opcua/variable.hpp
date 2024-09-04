@@ -265,6 +265,11 @@ private:
     rm::Variable val{__VA_ARGS__}; \
     val.browse_name = val.display_name = val.description = #val
 
+//! 输入变量列表
+using InputVariables = const std::vector<Variable> &;
+//! 输出变量列表
+using OutputVariables = std::vector<Variable>;
+
 //! @} opcua
 
 } // namespace rm

@@ -94,7 +94,7 @@ TEST(OPC_UA_Server, add_variable_type_node)
 TEST(OPC_UA_Server, add_method_node)
 {
     rm::Server srv(4832);
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, const std::vector<rm::Variable> &) -> std::vector<rm::Variable> {
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables) -> rm::OutputVariables {
         return {};
     };
     method.browse_name = "test_method";

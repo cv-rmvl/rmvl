@@ -88,7 +88,7 @@ private:
  */
 using DataChangeNotificationCallback = std::function<void(ClientView, const Variable &)>;
 
-using EventNotificationCallback = std::function<void(ClientView, const std::vector<Variable> &)>;
+using EventNotificationCallback = std::function<void(ClientView, InputVariables)>;
 
 //! OPC UA 客户端
 class Client

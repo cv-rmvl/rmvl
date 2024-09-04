@@ -17,7 +17,8 @@
 
 #include "variable.hpp"
 
-namespace rm {
+namespace rm
+{
 
 class ServerView;
 
@@ -28,7 +29,8 @@ class ServerView;
  * @brief OPC UA 方法参数信息
  * @note 不储备任何调用时数据，仅用于描述方法参数
  */
-struct Argument final {
+struct Argument final
+{
     std::string name;          //!< 参数名称
     DataType data_type{};      //!< 参数数据类型 @note 形如 `UA_TYPES_<xxx>` 的类型标志位
     uint32_t dims{1U};         //!< 参数维数，单数据则是 `1`，数组则是数组长度 @warning 不能为 `0`
@@ -43,7 +45,7 @@ struct Argument final {
  * @param[in] args 输入参数列表
  * @return 输出参数列表
  */
-using MethodCallback = std::function<std::vector<Variable>(ServerView, const NodeId &, const std::vector<Variable> &)>;
+using MethodCallback = std::function<OutputVariables(ServerView, const NodeId &, InputVariables)>;
 
 //! OPC UA 方法
 class Method final
