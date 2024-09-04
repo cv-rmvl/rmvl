@@ -180,17 +180,18 @@ int main()
     rm::Server srv(4840);
     srv.start();
 
-    // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<vector<Variable>(ServerView, vector<Variable>)> 的可调用对象
-    rm::Method method = [](rm::ServerView, const std::vector<rm::Variable> &iargs) -> std::vector<rm::Variable> {
+    // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<vector<bool>(ServerView, const NodeId &, InputVariables, OutputVariables)> 的可调用对象
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables iargs, rm::OutputVariables oargs) {
         int num1 = iargs[0], num2 = iargs[1];
-        return {num1 + num2};
+        oargs[0] = num1 + num2;
+        return true;
     };
     method.browse_name = "add";
     method.display_name = "Add";
     method.description = "两数之和";
-    // 定义函数传入参数 iargs 的类型
+    // 定义函数传入参数 iargs 的类型说明
     method.iargs = {{"Number 1", UA_TYPES_INT32}, {"Number 2", UA_TYPES_INT32}};
-    // 定义函数返回值 oargs 的类型
+    // 定义函数返回值 oargs 的类型说明
     method.oargs = {{"Sum", UA_TYPES_INT32}};
 
     /*

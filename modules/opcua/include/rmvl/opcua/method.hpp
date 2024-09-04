@@ -42,10 +42,11 @@ struct Argument final
  *
  * @param[in] server_view 服务器视图，指代当前服务器
  * @param[in] obj_id 方法节点所在对象的 `NodeId`
- * @param[in] args 输入参数列表
- * @return 输出参数列表
+ * @param[in] iargs 输入参数列表
+ * @param[out] oargs 输出参数列表（已根据方法节点输出参数的长度初始化）
+ * @return 是否成功完成当前操作
  */
-using MethodCallback = std::function<OutputVariables(ServerView, const NodeId &, InputVariables)>;
+using MethodCallback = std::function<bool(ServerView, const NodeId &, InputVariables, OutputVariables)>;
 
 //! OPC UA 方法
 class Method final

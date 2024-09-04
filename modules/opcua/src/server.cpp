@@ -322,14 +322,15 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
     return retval;
 }
 
-static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context,
-                               const UA_NodeId *object_id, void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
+static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *object_id,
+                               void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
 {
     auto &on_method = *static_cast<MethodCallback *>(context);
     std::vector<Variable> iargs(input_size);
     for (size_t i = 0; i < input_size; ++i)
         iargs[i] = helper::cvtVariable(input[i]);
-    auto oargs = on_method(server, *object_id, iargs);
+    std::vector<Variable> oargs(output_size);
+    bool res = on_method(server, *object_id, iargs, oargs);
     if (oargs.size() != output_size)
     {
         ERROR_("The number of output arguments does not match the number of input arguments");
@@ -337,7 +338,7 @@ static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, con
     }
     for (size_t i = 0; i < output_size; ++i)
         output[i] = helper::cvtVariable(oargs[i]);
-    return UA_STATUSCODE_GOOD;
+    return res ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADINTERNALERROR;
 }
 
 NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) const

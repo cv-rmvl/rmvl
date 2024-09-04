@@ -268,7 +268,7 @@ private:
 //! 输入变量列表
 using InputVariables = const std::vector<Variable> &;
 //! 输出变量列表
-using OutputVariables = std::vector<Variable>;
+using OutputVariables = std::vector<Variable> &;
 
 //! @} opcua
 

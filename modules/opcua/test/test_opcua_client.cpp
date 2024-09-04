@@ -49,9 +49,10 @@ void configServer(rm::Server &srv)
     variable.display_name = "数组";
     srv.addVariableNode(variable);
     // 添加加法方法节点
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables input) -> rm::OutputVariables {
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables input, rm::OutputVariables output) {
         int a = input[0], b = input[1];
-        return {a + b};
+        output = {a + b};
+        return true;
     };
     method.browse_name = "add";
     method.description = "this is add method";

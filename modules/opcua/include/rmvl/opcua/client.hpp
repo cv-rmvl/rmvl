@@ -88,6 +88,12 @@ private:
  */
 using DataChangeNotificationCallback = std::function<void(ClientView, const Variable &)>;
 
+/**
+ * @brief 事件通知回调函数
+ * 
+ * @param[in] client_view 客户端视图，指代当前客户端
+ * @param[in] event_fields 事件数据
+ */
 using EventNotificationCallback = std::function<void(ClientView, InputVariables)>;
 
 //! OPC UA 客户端
