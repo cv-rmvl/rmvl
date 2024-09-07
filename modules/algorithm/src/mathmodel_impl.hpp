@@ -9,6 +9,8 @@
  *
  */
 
+#pragma once
+
 #include "rmvl/algorithm/math.hpp"
 
 namespace rm
