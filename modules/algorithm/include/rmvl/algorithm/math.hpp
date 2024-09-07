@@ -555,156 +555,52 @@ inline std::vector<T> &operator/=(std::vector<T> &vec, T val)
 
 // ------------------------【数学模型算法】------------------------
 
-/**
- * @brief 熵权 TOPSIS 算法
- *
- * @tparam Tp 元素类型
- */
-template <typename Tp>
+//! 熵权 TOPSIS 算法
 class EwTopsis
 {
-    typedef std::vector<Tp> idx_type;
-    typedef std::vector<Tp> SampleType;
-    typedef std::vector<std::vector<Tp>> MatType;
-
 public:
-    typedef Tp value_type;
-    typedef Tp &reference;
-    typedef const Tp &const_reference;
-    typedef std::size_t size_type;
-
-    EwTopsis(const EwTopsis &) = delete;
-    EwTopsis(EwTopsis &&) = delete;
-
     /**
      * @brief 构造熵权 TOPSIS 算法类
      *
      * @param[in] samples 样本指标
      */
-    EwTopsis(const MatType &samples) : R_(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
+    EwTopsis(const std::vector<std::vector<double>> &samples);
+    ~EwTopsis() noexcept;
 
-    //! 基于权熵 TOPSIS 推理出最终的指标
-    void inference()
-    {
-        MatType R;
-        calcR(R_, R);
-        MatType P;
-        calcP(R, P);
-        idx_type H;
-        calcH(P, H);
-        idx_type w;
-        calcw(H, w);
-        calcS(w, R_, S);
-    }
-
-    //! 获取样本的综合指标
-    inline idx_type finalIndex() { return S; }
+    /**
+     * @brief 基于权熵 TOPSIS 推理出最终的指标
+     *
+     * @return 最终指标
+     */
+    std::vector<double> inference();
 
 private:
+    class Impl;
+    Impl *_impl;
+};
+
+//! KM 算法求解器
+class RMVL_EXPORTS_W Munkres
+{
+public:
     /**
-     * @brief 获取标准化指标
+     * @brief 创建 KM 算法求解器
      *
-     * @param[in] _R 原始指标矩阵
-     * @param[out] R 标准化指标矩阵
+     * @param[in] cost_matrix 代价矩阵
      */
-    inline void calcR(const MatType &_R, MatType &R)
-    {
-        R = _R;
-        idx_type min_indexs(_index_size);
-        idx_type max_indexs(_index_size);
-        for (size_type j = 0; j < _index_size; ++j)
-        {
-            min_indexs[j] = _R[0][j];
-            max_indexs[j] = _R[0][j];
-            for (size_type i = 1; i < _sample_size; ++i)
-            {
-                if (_R[i][j] < min_indexs[j])
-                    min_indexs[j] = _R[i][j];
-                if (_R[i][j] > max_indexs[j])
-                    max_indexs[j] = _R[i][j];
-            }
-        }
-        for (size_type i = 0; i < _sample_size; ++i)
-            for (size_type j = 0; j < _index_size; ++j)
-                R[i][j] = (R_[i][j] - min_indexs[j]) / (max_indexs[j] - min_indexs[j]);
-    }
+    RMVL_W Munkres(const std::vector<std::vector<double>> &cost_matrix);
+    ~Munkres() noexcept;
 
     /**
-     * @brief 获取归一化指标
+     * @brief 求解
      *
-     * @param[in] R 标准化指标矩阵
-     * @param[out] P 归一化指标矩阵
+     * @return 最优分配结果
      */
-    inline void calcP(const MatType &R, MatType &P)
-    {
-        P = R;
-        idx_type sums(_index_size);
-        for (size_type j = 0; j < _index_size; ++j)
-            sums[j] = std::accumulate(R.begin(), R.end(), 0,
-                                      [&j](int a, const idx_type &b) {
-                                          return a + b[j];
-                                      });
-        for (size_type i = 0; i < _sample_size; ++i)
-            for (size_type j = 0; j < _index_size; ++j)
-                P[i][j] = R[i][j] / sums[j];
-    }
+    RMVL_W std::vector<std::size_t> solve() noexcept;
 
-    /**
-     * @brief 获取指标熵值向量
-     *
-     * @param[in] P 归一化指标矩阵
-     * @param[out] H 指标熵值向量
-     */
-    inline void calcH(const MatType &P, idx_type &H)
-    {
-        H.resize(_index_size);
-        for (size_type j = 0; j < _index_size; ++j)
-        {
-            H[j] = 0;
-            for (size_type i = 0; i < _sample_size; ++i)
-                if (P[i][j] != 0)
-                    H[j] -= P[i][j] * std::log(P[i][j]);
-            H[j] /= std::log(_sample_size);
-        }
-    }
-
-    /**
-     * @brief 获取指标熵权向量
-     *
-     * @param[in] H 指标熵值向量
-     * @param[out] w 指标熵权向量
-     */
-    inline void calcw(const idx_type &H, idx_type &w)
-    {
-        w.resize(_index_size);
-        value_type tmp = _index_size - std::accumulate(H.begin(), H.end(), 0);
-        for (size_type j = 0; j < _index_size; ++j)
-            w[j] = (1 - H[j]) / tmp;
-    }
-
-    /**
-     * @brief 获取样本综合指标
-     * @todo Declaration shadows a fileld of EwTopsis<Tp> R_ and S
-     * @param[in] w  指标熵权向量
-     * @param[in] R_ 原始指标矩阵
-     * @param[out] S_ 综合指标
-     */
-    inline void calcS(const idx_type &w, const MatType &R_, SampleType &S_)
-    {
-        S_.resize(_sample_size);
-        for (size_type i = 0; i < _sample_size; ++i)
-        {
-            S_[i] = 0;
-            for (size_type j = 0; j < _index_size; ++j)
-                S_[i] += w[j] * R_[i][j];
-        }
-    }
-
-    MatType R_;   //!< 指标数据
-    SampleType S; //!< 最终的指标数据
-
-    const size_type _sample_size; //!< 行数，样本数
-    const size_type _index_size;  //!< 列数，指标数
+private:
+    class Impl;
+    Impl *_impl;
 };
 
 //! @} algorithm

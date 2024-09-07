@@ -20,11 +20,10 @@ namespace rm_test
 
 TEST(EwTopsisTest, BasicFunction)
 {
-    std::vector<std::vector<float>> samples = {{1.f, 1.f}, {3.f, 3.f}, {2.f, 4.f}, {1.f, 5.f}};
+    std::vector<std::vector<double>> samples = {{1.f, 1.f}, {3.f, 3.f}, {2.f, 4.f}, {1.f, 5.f}};
 
     EwTopsis ew(samples);
-    ew.inference();
-    auto ret = ew.finalIndex();
+    auto ret = ew.inference();
     auto it = min_element(ret.begin(), ret.end());
     EXPECT_EQ(it, ret.begin());
 }
@@ -78,7 +77,7 @@ TEST(EwTopsisTest, CustomData)
 
     // 问: current 各自属于哪一个 standard 序列?
     // (a) 生成样本指标矩阵，（指标：距离，角度差）
-    std::vector<std::vector<float>> samples(standards.size() * currents.size());
+    std::vector<std::vector<double>> samples(standards.size() * currents.size());
     for (size_t c = 0; c < currents.size(); ++c)
     {
         for (size_t s = 0; s < standards.size(); ++s)
@@ -90,9 +89,8 @@ TEST(EwTopsisTest, CustomData)
         }
     }
     // (b) 运用熵权法推理
-    EwTopsis<float> ew(samples);
-    ew.inference();
-    auto arr = ew.finalIndex();
+    EwTopsis ew(samples);
+    auto arr = ew.inference();
     // (c) 数据导出并提取出指定的下标
     std::unordered_map<size_t, size_t> target;
     for (size_t i = 0; i < currents.size(); ++i)

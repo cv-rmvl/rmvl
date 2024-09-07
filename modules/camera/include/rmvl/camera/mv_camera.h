@@ -34,8 +34,6 @@ namespace rm
 //! 迈德威视相机库
 class RMVL_EXPORTS_W MvCamera final
 {
-    class Impl;
-
 public:
     using ptr = std::unique_ptr<MvCamera>;
     using const_ptr = std::unique_ptr<const MvCamera>;
@@ -97,7 +95,7 @@ public:
 
     /**
      * @brief 从相机设备中读取图像
-     * 
+     *
      * @return 是否读取成功和读取到的图像
      */
     RMVL_W inline std::pair<bool, cv::Mat> read()
@@ -128,6 +126,7 @@ public:
     RMVL_W bool reconnect();
 
 private:
+    class Impl;
     Impl *_impl;
 };
 

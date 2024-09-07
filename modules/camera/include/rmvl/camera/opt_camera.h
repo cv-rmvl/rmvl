@@ -33,9 +33,6 @@ public:
     using ptr = std::unique_ptr<OptCamera>;
     using const_ptr = std::unique_ptr<const OptCamera>;
 
-    //! Pointer to the implementation class
-    class Impl;
-
     /**
      * @brief 创建 OptCamera 对象
      *
@@ -115,6 +112,7 @@ public:
     RMVL_W bool reconnect();
 
 private:
+    class Impl;
     Impl *_impl;
 };
 
