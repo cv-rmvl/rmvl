@@ -8,7 +8,7 @@
 
 constexpr const char *usage =
     " 示例命令行，用于从实时提要进行校准。\n"
-    " $ \033[33mcalibration -w=4 -h=5 -s=0.025 -o=camera.yml\033[0m\n";
+    " $ \033[33mrmvl_mv_auto_calib -w=4 -h=5 -s=0.025 -o=camera.yml\033[0m\n";
 
 constexpr const char *liveCaptureHelp =
     "当使用摄像头的实时视频作为输入时，可以使用以下热键:\n"
@@ -19,10 +19,11 @@ constexpr const char *liveCaptureHelp =
 static void help()
 {
     printf("相机标定例程 (Copy from OpenCV):\n"
-           "用法: calibration\n"
-           "     -help                    \033[32m# 显示帮助信息\033[0m\n"
+           "用法: rmvl_mv_auto_calib\n"
+           "     -help, -?                \033[32m# 显示帮助信息\033[0m\n"
            "     -w=<board_width>         \033[32m# 每一个板尺寸内角的数目 (格子数 - 1)\033[0m\n"
            "     -h=<board_height>        \033[32m# 每一个板尺寸内角的数目 (格子数 - 1)\033[0m\n"
+           "     [-c=<config_path>]       \033[32m# 相机光学参数配置文件路径\033[0m\n"
            "     [-pt=<pattern>]          \033[32m# 图案类型: 棋盘 (chessboard) 或圆形网格 (circles, acircles)\033[0m\n"
            "     [-n=<number_of_frames>]  \033[32m# 用于校准的帧数\033[0m\n"
            "                              \033[32m# (如果没有指定，它将被设置为实际可用的板视图数)\033[0m\n"
@@ -34,18 +35,10 @@ static void help()
            "     [-a=<aspectRatio>]       \033[32m# 固定长宽比(fx/fy)\033[0m\n"
            "     [-p]                     \033[32m# 把主点固定在中心\033[0m\n"
            "     [-v]                     \033[32m# 围绕水平轴翻转捕获的图像\033[0m\n"
-           "     [-V]                     \033[32m# 使用视频文件，而不是图像列表，使用 [input_data]\033[0m\n"
-           "                              \033[32m# 字符串作为视频文件名\033[0m\n"
-           "     [-su]                    \033[32m# 显示校正后未失真的图像\033[0m\n"
            "     [-ws=<number_of_pixel>]  \033[32m# cornerSubPix 搜索窗口的一半 (默认为 11)\033[0m\n"
            "     [-dt=<distance>]         \033[32m# 校准网格的左上角和右上角之间的实际距离。如果指定此参数，\033[0m\n"
            "                              \033[32m# 将使用更精确的校准方法，该方法可能更好地用于不准确的，粗\033[0m\n"
            "                              \033[32m# 略的平面目标。\033[0m\n"
-           "     [input_data]             \033[32m# 输入数据，为下列之一:\033[0m\n"
-           "                              \033[32m#  - 文本文件，包含板子的图像列表，文本文件可以用\033[0m\n"
-           "                              \033[32m#    imagelist_creator 生成\033[0m\n"
-           "                              \033[32m#  - 包含单板视频的视频文件名称\033[0m\n"
-           "                              \033[32m# 如果未指定 input_data, 则使用来自摄像机的实时视图\033[0m\n"
            "\n");
     printf("\n%s", usage);
     printf("\n%s", liveCaptureHelp);
@@ -177,36 +170,6 @@ static void saveCameraParams(const std::string &filename, const cv::Mat &cameraM
     fs << "avg_reprojection_error" << totalAvgErr;
 }
 
-static bool readStringList(const std::string &filename, std::vector<std::string> &l)
-{
-    l.resize(0);
-    cv::FileStorage fs(filename, cv::FileStorage::READ);
-    if (!fs.isOpened())
-        return false;
-    size_t dir_pos = filename.rfind('/');
-    if (dir_pos == std::string::npos)
-        dir_pos = filename.rfind('\\');
-    cv::FileNode n = fs.getFirstTopLevelNode();
-    if (n.type() != cv::FileNode::SEQ)
-        return false;
-    cv::FileNodeIterator it = n.begin(), it_end = n.end();
-    for (; it != it_end; ++it)
-    {
-        std::string fname = (std::string)*it;
-        if (dir_pos != std::string::npos)
-        {
-            std::string fpath = cv::samples::findFile(filename.substr(0, dir_pos + 1) + fname, false);
-            if (fpath.empty())
-                fpath = cv::samples::findFile(fname);
-            fname = fpath;
-        }
-        else
-            fname = cv::samples::findFile(fname);
-        l.push_back(fname);
-    }
-    return true;
-}
-
 static bool runAndSave(const std::string &outputFilename, const std::vector<std::vector<cv::Point2f>> &imagePoints,
                        cv::Size imageSize, cv::Size boardSize, Pattern patternType, float squareSize,
                        float grid_width, bool release_object, float aspectRatio, int flags,
@@ -229,25 +192,23 @@ static bool runAndSave(const std::string &outputFilename, const std::vector<std:
     return ok;
 }
 
-const char *keys = "{ help          |                       | }"
-                   "{ w             |                       | }"
-                   "{ h             |                       | }"
-                   "{ pt            | chessboard            | }"
-                   "{ n             | 40                    | }"
-                   "{ d             | 5000                  | }"
-                   "{ s             | 1                     | }"
-                   "{ o             | out_calibration.yml   | }"
-                   "{ zt            |                       | }"
-                   "{ a             |                       | }"
-                   "{ p             |                       | }"
-                   "{ v             |                       | }"
-                   "{ V             |                       | }"
-                   "{ su            |                       | }"
-                   "{ ws            |11                     | }"
-                   "{ dt            |                       | }"
-                   "{ @input_data   |0                      | }";
+const char *keys = "{ ? help    |                       | }"
+                   "{ w         |                       | }"
+                   "{ h         |                       | }"
+                   "{ c         |                       | }"
+                   "{ pt        | chessboard            | }"
+                   "{ n         | 40                    | }"
+                   "{ d         | 5000                  | }"
+                   "{ s         | 1                     | }"
+                   "{ o         | out_calibration.yml   | }"
+                   "{ zt        |                       | }"
+                   "{ a         |                       | }"
+                   "{ p         |                       | }"
+                   "{ v         |                       | }"
+                   "{ ws        |11                     | }"
+                   "{ dt        |                       | }";
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
     cv::CommandLineParser parser(argc, argv, keys);
     if (parser.has("help"))
@@ -260,25 +221,27 @@ int main(int argc, char **argv)
     float aspectRatio = 1;
     cv::Mat cameraMatrix, distCoeffs;
     std::string outputFilename;
-    std::string inputFilename = "";
 
     bool undistortImage = false;
     int flags = 0;
     rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
-    cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
+    int exposure{10000};
+    int gain{128};
+    int r_gain{100};
+    int g_gain{100};
+    int b_gain{100};
 
-    int exposure = 10000;
-    int gain = 128;
-    int r_gain = 100;
-    int g_gain = 100;
-    int b_gain = 100;
-
-    fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
-    fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
-    fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
-    fs["g_gain"].isNone() ? void(0) : (fs["g_gain"] >> g_gain);
-    fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
+    // 相机光学参数配置
+    if (parser.has("c"))
+    {
+        cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
+        fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
+        fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
+        fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
+        fs["g_gain"].isNone() ? void(0) : (fs["g_gain"] >> g_gain);
+        fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
+    }
 
     capture.set(rm::CAMERA_MANUAL_EXPOSURE);
     capture.set(rm::CAMERA_EXPOSURE, exposure);
@@ -289,13 +252,9 @@ int main(int argc, char **argv)
     capture.set(rm::CAMERA_WB_BGAIN, b_gain);
 
     bool flipVertical;
-    bool showUndistorted;
-    bool videofile;
     clock_t prevTimestamp = 0;
     int mode = DETECTION;
-    int cameraId = 0;
     std::vector<std::vector<cv::Point2f>> imagePoints;
-    std::vector<std::string> imageList;
     Pattern pattern = CHESSBOARD;
 
     cv::Size boardSize;
@@ -311,7 +270,7 @@ int main(int argc, char **argv)
         else if (val == "chessboard")
             pattern = CHESSBOARD;
         else
-            return fprintf(stderr, "无效的图案类型: 必须是棋盘或圆形\n"), -1;
+            return fprintf(stderr, "无效的图案类型: 必须是棋盘 chessboard 或圆形 circles, acircles\n"), -1;
     }
     float squareSize = parser.get<float>("s");
     int nframes = parser.get<int>("n");
@@ -326,14 +285,8 @@ int main(int argc, char **argv)
     if (parser.has("p"))
         flags |= cv::CALIB_FIX_PRINCIPAL_POINT;
     flipVertical = parser.has("v");
-    videofile = parser.has("V");
     if (parser.has("o"))
         outputFilename = parser.get<std::string>("o");
-    showUndistorted = parser.has("su");
-    if (isdigit(parser.get<std::string>("@input_data")[0]))
-        cameraId = parser.get<int>("@input_data");
-    else
-        inputFilename = parser.get<std::string>("@input_data");
     int winSize = parser.get<int>("ws");
     float grid_width = squareSize * (boardSize.width - 1);
     bool release_object = false;
@@ -361,36 +314,28 @@ int main(int argc, char **argv)
     if (boardSize.height <= 0)
         return fprintf(stderr, "无效的标定板高\n"), -1;
 
-    if (!inputFilename.empty())
-        if (!videofile && readStringList(cv::samples::findFile(inputFilename), imageList))
-            mode = CAPTURING;
-
-    if (!capture.isOpened() && imageList.empty())
-        return fprintf(stderr, "Could not initialize video (%d) capture\n", cameraId), -2;
-    if (!imageList.empty())
-        nframes = (int)imageList.size();
     if (capture.isOpened())
         printf("%s", liveCaptureHelp);
 
     namedWindow("图像画面", cv::WINDOW_NORMAL);
 
-    for (int i = 0;; i++)
+    while (true)
     {
-        cv::Mat view, viewGray;
+        cv::Mat view;
         bool blink = false;
 
         if (capture.isOpened())
         {
             cv::Mat view0;
             capture.read(view0);
-            view0.copyTo(view);
+            if (view0.type() == CV_8UC1)
+                cv::cvtColor(view0, view, cv::COLOR_GRAY2BGR);
+            else
+                view0.copyTo(view);
         }
-        else if (i < (int)imageList.size())
-            view = cv::imread(imageList[i], 1);
 
         if (view.empty())
         {
-            std::cout << "dshfaldf" << std::endl;
             if (imagePoints.size() > 0)
                 runAndSave(outputFilename, imagePoints, imageSize,
                            boardSize, pattern, squareSize, grid_width, release_object, aspectRatio,
@@ -404,20 +349,21 @@ int main(int argc, char **argv)
             flip(view, view, 0);
 
         std::vector<cv::Point2f> pointbuf;
+        cv::Mat viewGray;
         cvtColor(view, viewGray, cv::COLOR_BGR2GRAY);
 
         bool found;
         switch (pattern)
         {
         case CHESSBOARD:
-            found = findChessboardCorners(view, boardSize, pointbuf,
+            found = findChessboardCorners(viewGray, boardSize, pointbuf,
                                           cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FAST_CHECK | cv::CALIB_CB_NORMALIZE_IMAGE);
             break;
         case CIRCLES_GRID:
-            found = findCirclesGrid(view, boardSize, pointbuf);
+            found = findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_SYMMETRIC_GRID + cv::CALIB_CB_CLUSTERING);
             break;
         case ASYMMETRIC_CIRCLES_GRID:
-            found = findCirclesGrid(view, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
+            found = findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID + cv::CALIB_CB_CLUSTERING);
             break;
         default:
             return fprintf(stderr, "Unknown pattern type\n"), -1;
@@ -466,7 +412,7 @@ int main(int argc, char **argv)
         }
 
         imshow("图像画面", view);
-        char key = static_cast<char>(cv::waitKey(capture.isOpened() ? 1 : 30));
+        char key = static_cast<char>(cv::waitKey(1));
 
         if (key == 27)
             break;
@@ -488,27 +434,6 @@ int main(int argc, char **argv)
             else
                 mode = DETECTION;
             if (!capture.isOpened())
-                break;
-        }
-    }
-
-    if (!capture.isOpened() && showUndistorted)
-    {
-        cv::Mat view, rview, map1, map2;
-        initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
-                                getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, 1, imageSize, 0),
-                                imageSize, CV_16SC2, map1, map2);
-
-        for (size_t i = 0; i < imageList.size(); i++)
-        {
-            view = cv::imread(imageList[i], 1);
-            if (view.empty())
-                continue;
-            // undistort( view, rview, cameraMatrix, distCoeffs, cameraMatrix );
-            remap(view, rview, map1, map2, cv::INTER_LINEAR);
-            imshow("图像画面", rview);
-            char c = static_cast<char>(cv::waitKey());
-            if (c == 27 || c == 'q' || c == 'Q')
                 break;
         }
     }
