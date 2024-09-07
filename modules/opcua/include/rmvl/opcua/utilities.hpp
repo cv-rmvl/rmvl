@@ -89,14 +89,14 @@ public:
 
     /**
      * @brief 从 `UA_TYPES_<xxx>` 枚举值构造数据类型
-     * 
+     *
      * @param[in] id `UA_TYPES_<xxx>` 枚举值
      */
     constexpr DataType(UA_UInt32 id) : id(id) {}
 
     /**
      * @brief 从 `std::type_info` 构造数据类型
-     * 
+     *
      * @param[in] tp `std::type_info` 类型，可用 `typeid()` 获取
      */
     DataType(const std::type_info &tp) : id(_map.at(std::type_index(tp))) {}
@@ -130,6 +130,20 @@ enum class TransportID : uint8_t
     MQTT_UADP = 2U, //!< 使用 `MQTT` 传输协议映射和 `UADP` 消息映射的组合，此协议用于 **基于代理** 的消息传递
     MQTT_JSON = 3U, //!< 使用 `MQTT` 传输协议映射和 `JSON` 消息映射的组合，此协议用于 **基于代理** 的消息传递
 };
+
+/////////////////////////// 数据类型 ///////////////////////////
+constexpr DataType tpBoolean(UA_TYPES_BOOLEAN); //!< 数据类型：`Boolean`
+constexpr DataType tpSbyte(UA_TYPES_SBYTE);     //!< 数据类型：`Sbyte`
+constexpr DataType tpByte(UA_TYPES_BYTE);       //!< 数据类型：`Byte`
+constexpr DataType tpInt16(UA_TYPES_INT16);     //!< 数据类型：`Int16`
+constexpr DataType tpUInt16(UA_TYPES_UINT16);   //!< 数据类型：`Uint16`
+constexpr DataType tpInt32(UA_TYPES_INT32);     //!< 数据类型：`Int32`
+constexpr DataType tpUInt32(UA_TYPES_UINT32);   //!< 数据类型：`Uint32`
+constexpr DataType tpInt64(UA_TYPES_INT64);     //!< 数据类型：`Int64`
+constexpr DataType tpUInt64(UA_TYPES_UINT64);   //!< 数据类型：`Uint64`
+constexpr DataType tpFloat(UA_TYPES_FLOAT);     //!< 数据类型：`Float`
+constexpr DataType tpDouble(UA_TYPES_DOUBLE);   //!< 数据类型：`Double`
+constexpr DataType tpString(UA_TYPES_STRING);   //!< 数据类型：`String`
 
 ///////////////// 常用的 `0` 命名空间的节点 ID /////////////////
 
