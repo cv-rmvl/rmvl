@@ -23,7 +23,7 @@ std::unordered_map<size_t, size_t> GyroDetector::ewTopsisInference(group::ptr gr
     if (trackers.empty() || combos.empty())
         return {};
     // (a) 生成样本指标矩阵，（指标：距离，角度差）
-    std::vector<std::vector<float>> samples(trackers.size() * combos.size());
+    std::vector<std::vector<double>> samples(trackers.size() * combos.size());
     for (size_t c = 0; c < combos.size(); ++c)
     {
         for (size_t t = 0; t < trackers.size(); ++t)
@@ -35,9 +35,8 @@ std::unordered_map<size_t, size_t> GyroDetector::ewTopsisInference(group::ptr gr
         }
     }
     // (b) 运用熵权法推理
-    EwTopsis<float> ew(samples);
-    ew.inference();
-    auto arr = ew.finalIndex();
+    EwTopsis ew(samples);
+    auto arr = ew.inference();
     // (c) 数据导出并提取出指定的下标
     std::unordered_map<size_t, size_t> target;
     target.reserve(combos.size());
