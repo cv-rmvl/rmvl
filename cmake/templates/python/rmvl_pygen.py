@@ -2,6 +2,7 @@
 C++ to Python binding code generator
 """
 
+import os
 import re
 import argparse
 from collections import defaultdict
@@ -728,16 +729,20 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
 
     # Generate doc cfg
     if doc_path:
-        with open(f"{doc_path}/pyrmvl_cst.cfg", "a") as file:
-            for enum_name, enum_values in enum_classes:
-                for idx, value in enumerate(enum_values):
-                    file.write(f"rm::{enum_name} {value} {idx}\n")
-            for idx, enum in enumerate(enums):
-                file.write(f"rm {enum} {idx}\n")
-        with open(f"{doc_path}/pyrmvl_fns.cfg", "a") as file:
-            for para_class in para_class_fordoc:
-                file.write(f"rm::para::{para_class} read path [[success_?]]\n")
-                file.write(f"rm::para::{para_class} write path [[success_?]]\n")
+        pyrmvl_cst_path = f"{doc_path}/pyrmvl_cst.cfg"
+        pyrmvl_fns_path = f"{doc_path}/pyrmvl_fns.cfg"
+        if os.path.exists(pyrmvl_cst_path):
+            with open(pyrmvl_cst_path, "a") as file:
+                for enum_name, enum_values in enum_classes:
+                    for idx, value in enumerate(enum_values):
+                        file.write(f"rm::{enum_name} {value} {idx}\n")
+                for idx, enum in enumerate(enums):
+                    file.write(f"rm {enum} {idx}\n")
+        if os.path.exists(pyrmvl_fns_path):
+            with open(pyrmvl_fns_path, "a") as file:
+                for para_class in para_class_fordoc:
+                    file.write(f"rm::para::{para_class} read path [[success_?]]\n")
+                    file.write(f"rm::para::{para_class} write path [[success_?]]\n")
     return "\n".join(pyi_content)
 
 
