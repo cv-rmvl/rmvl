@@ -21,4 +21,9 @@ open62541           Description     An open-source C implementation of OPC UA
                     CMake options   1. BUILD_OPEN62541 to download and build this module (disabled by
                                        default)
                                     2. WITH_OPEN62541 to enable open62541 support for the opcua module
-                                    
+
+pybind11            Description     Seamless operability between C++11 and Python
+                    License         pybind11 is covered by the BSD 3-Clause License, see pybind11/LICENSE
+                    Homepage        https://pybind11.readthedocs.io
+                    CMake options   1. BUILD_PYBIND11 to download and build this module (enabled by default)
+                                    2. WITH_PYBIND11 to enable pybind11 support for the python module

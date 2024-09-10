@@ -208,12 +208,14 @@ status("")
 status("  Documents (Doxygen):"     BUILD_DOCS THEN "YES (ver ${DOXYGEN_VERSION})" ELSE NO)
 
 # ============================= Python ==============================
+status("")
+status("  Python 3:"                BUILD_PYTHON THEN YES ELSE NO)
 if(BUILD_PYTHON)
-  status("")
-  status("  Python 3:")
-  status("    Interpreter:"     "${RMVL_PYTHON_EXECUTABLE} (ver ${RMVL_PYTHON_VERSION})")
-  status("    Libraries:"       "${RMVL_PYTHON_LIBRARIES}")
-  status("    install path:"    "${RMVL_PYTHON_INSTALL_SUFFIX}")
+  status("     Python generate:")
+  status("        pybind11:"        "ver ${pybind11_VERSION}")
+  status("     Interpreter:"        "${RMVL_PYTHON_EXECUTABLE} (ver ${RMVL_PYTHON_VERSION})")
+  status("     Libraries:"          "${RMVL_PYTHON_LIBRARIES}")
+  status("     install path:"       "${RMVL_PYTHON_INSTALL_SUFFIX}")
 endif()
 
 # ======================== Test and examples ========================
