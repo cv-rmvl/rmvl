@@ -38,7 +38,7 @@ public:
      * @param[in] node_id 既存的待添加的节点 ID
      */
     template <typename... NodeId_>
-    inline void add(NodeId_ &&...node_id) { [[maybe_unused]] int _[]{(_nodes.emplace_back(node_id), 0)...}; }
+    inline void add(NodeId_ &&...node_id) { (..., _nodes.emplace_back(node_id)); }
 
     //! 获取节点 ID 列表
     inline const auto &data() const { return _nodes; }

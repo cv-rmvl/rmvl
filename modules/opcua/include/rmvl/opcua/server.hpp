@@ -212,8 +212,8 @@ public:
      * @brief 值回调表示在对 **服务器中的** 变量节点进行读写的时候，会在读之前执行 `beforeRead`，在写之后执行 `afterWrite`
      *
      * @param[in] id 既有的变量节点的 `NodeId`，因变量节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
-     * @param[in] before_read 可隐式转换为 `ValueCallBackBeforeRead` 函数指针类型的可调用对象
-     * @param[in] after_write 可隐式转换为 `ValueCallBackAfterWrite` 函数指针类型的可调用对象
+     * @param[in] before_read `ValueCallBackBeforeRead` 可调用对象
+     * @param[in] after_write `ValueCallBackAfterWrite` 可调用对象
      * @return 是否添加成功
      */
     bool addVariableNodeValueCallback(NodeId id, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) const noexcept;
@@ -265,9 +265,10 @@ public:
      * @brief 为既有的方法节点 MethodNode 设置方法的回调函数
      *
      * @param[in] id 既有的方法节点的 `NodeId`，因方法节点可能位于任意一个父节点下，因此可以使用 **路径搜索** 进行查找
-     * @param[in] on_method
+     * @param[in] on_method `MethodCallback` 可调用对象
+     * @return 是否设置成功
      */
-    void setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const;
+    bool setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const;
 
     /**
      * @brief 添加对象类型节点 ObjectTypeNode 至 `rm::nodeBaseObjectType` 中
