@@ -9,6 +9,7 @@
  *
  */
 
+#ifdef HAVE_OPENCV
 #include <fstream>
 #include <benchmark/benchmark.h>
 #include <opencv2/video/tracking.hpp>
@@ -79,3 +80,5 @@ BENCHMARK(kalman42_rmvl)->Name("kf (x_dim: 4, z_dim: 2) - by rmvl  ")->Iteration
 BENCHMARK(kalman42_opencv)->Name("kf (x_dim: 4, z_dim: 2) - by opencv")->Iterations(10);
 
 } // namespace rm_test
+
+#endif // HAVE_OPENCV

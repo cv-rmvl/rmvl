@@ -382,17 +382,23 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) cons
     return retval;
 }
 
-void Server::setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const
+bool Server::setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const
 {
     RMVL_DbgAssert(_server != nullptr);
     auto context = std::make_unique<MethodCallback>(on_method);
     if (UA_Server_setNodeContext(_server, id, context.get()))
     {
         ERROR_("Failed to set node context");
-        return;
+        return false;
+    }
+    auto ret = UA_Server_setMethodNodeCallback(_server, id, method_cb);
+    if (ret != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to set method node callback: %s", UA_StatusCode_name(ret));
+        return false;
     }
     _mcb_gc.push_back(std::move(context));
-    UA_Server_setMethodNodeCallback(_server, id, method_cb);
+    return true;
 }
 
 NodeId Server::addObjectTypeNode(const ObjectType &otype) const

@@ -9,6 +9,8 @@
  * 
  */
 
+#ifdef HAVE_OPENCV
+
 #include <benchmark/benchmark.h>
 
 #include <opencv2/imgproc.hpp>
@@ -85,3 +87,5 @@ BENCHMARK(binary_brightness)->Name("Brightness -   RMVL")->Iterations(20);
 BENCHMARK(threshold_brightness)->Name("Brightness - OpenCV")->Iterations(20);
 
 } // namespace rm_test
+
+#endif // HAVE_OPENCV

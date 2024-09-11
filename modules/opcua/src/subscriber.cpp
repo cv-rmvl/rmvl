@@ -74,7 +74,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to set reader group operational, \"%s\"",
-                     UA_StatusCode_name(status));
+               UA_StatusCode_name(status));
         return {};
     }
 
@@ -86,6 +86,12 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     UA_Variant_setScalar(&dsr_config.publisherId, &publisher_id, &UA_TYPES[UA_TYPES_UINT16]);
     dsr_config.writerGroupId = 0x4000u + _strhash(pub_name + "WriterGroup") % 0x4000u;
     dsr_config.dataSetWriterId = 0x8000u + _strhash(pub_name + "DataSetWriter") % 0x4000u;
+
+    // `DataType` 到对应 `NS0` 下的类型名的映射
+    constexpr UA_Byte typeflag_ns0[] = {UA_NS0ID_BOOLEAN, UA_NS0ID_SBYTE, UA_NS0ID_BYTE,
+                                        UA_NS0ID_INT16, UA_NS0ID_UINT16, UA_NS0ID_INT32,
+                                        UA_NS0ID_UINT32, UA_NS0ID_INT64, UA_NS0ID_UINT64,
+                                        UA_NS0ID_FLOAT, UA_NS0ID_DOUBLE, UA_NS0ID_STRING};
 
     // 设置数 DSR 中的元数据配置
     std::string dataset_name = _name + "DataSetMetaData";

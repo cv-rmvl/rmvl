@@ -41,11 +41,3 @@ if(BUILD_TESTS)
     EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
-
-if(BUILD_PERF_TESTS)
-  rmvl_add_test(
-    core Performance
-    DEPENDS core
-    EXTERNAL benchmark::benchmark_main opencv_video
-  )
-endif(BUILD_PERF_TESTS)

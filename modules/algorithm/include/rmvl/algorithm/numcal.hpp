@@ -160,7 +160,7 @@ public:
      *
      * @param[in] f 非线性方程 \f$f(x)=0\f$ 的函数对象 \f$f(x)\f$
      * @note
-     * - 可以是函数指针、函数对象、lambda 表达式等，可隐式转换为 `double (*)(double)`
+     * - 可以是 `double (*)(double)` 函数指针，和其他可隐式转换为该函数指针的可调用对象等
      */
     RMVL_W NonlinearSolver(const std::function<double(double)> &f) : func(f) {}
 

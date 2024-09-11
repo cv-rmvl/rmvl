@@ -35,7 +35,7 @@ if(BUILD_PERF_TESTS)
   rmvl_add_test(
     algorithm Performance
     DEPENDS algorithm
-    EXTERNAL benchmark::benchmark_main $<$<BOOL:${WITH_OPENCV}>:opencv_videoio>
+    EXTERNAL benchmark::benchmark_main $<$<BOOL:${WITH_OPENCV}>:opencv_video>
   )
 endif(BUILD_PERF_TESTS)
 
