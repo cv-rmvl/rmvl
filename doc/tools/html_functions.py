@@ -100,10 +100,11 @@ def process_const(
 ):
     try:
         # pprint(anchor.parent)
-        description = append(
-            soup.new_tag("div", **{"class": ["python_language"]}),
-            "Python: " + python_signature[0]["name"],
-        )
+        description = soup.new_tag("div", **{"class": ["python_language"]})
+        b_tag = soup.new_tag("b")
+        b_tag.string = "Python: "
+        description.append(b_tag)
+        description.append(python_signature[0]["name"])
         old = anchor.find_next_sibling("div", class_="python_language")
         if old is None:
             anchor.parent.append(description)

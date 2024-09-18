@@ -42,17 +42,16 @@
 #define RMVL_EXPORTS
 #endif
 
-/************* Special information macros for generating wrappers ************/
+/************************* 为生成包装器生成特殊信息宏 *************************/
 
-#define RMVL_EXPORTS_W RMVL_EXPORTS    //!< Export symbol and generate wrapper code
-#define RMVL_EXPORTS_W_AG RMVL_EXPORTS //!< Export symbol, specify as aggregate class, and generate wrapper code
-#define RMVL_W                         //!< Generate wrapper code for methods
-#define RMVL_W_RW                      //!< Generate wrapper code for read-write properties
+#define RMVL_EXPORTS_W RMVL_EXPORTS    //!< 导出符号并生成包装器代码
+#define RMVL_EXPORTS_W_AG RMVL_EXPORTS //!< 导出符号，指定为聚合类，并生成包装器代码
+#define RMVL_W                         //!< 为方法生成包装器代码
+#define RMVL_W_RW                      //!< 为读写属性生成包装器代码
 
-/****************************** static analysis ******************************/
+/******************************** 静态检查分析 ********************************/
 
-// In practice, some macro are not processed correctly (noreturn is not detected).
-// We need to use simplified definition for them.
+// 实际上，某些宏未正确处理（未检测到 noreturn），我们需要为它们使用简化的定义。
 #ifndef RMVL_STATIC_ANALYSIS
 #if defined(__KLOCWORK__) || defined(__clang_analyzer__) || defined(__COVERITY__)
 #define RMVL_STATIC_ANALYSIS 1
@@ -64,3 +63,18 @@
 #endif
 #endif
 #endif
+
+/*********************************** 代码块 ***********************************/
+
+// 在类中定义 PIMPL 模式的相关代码
+#define RMVL_IMPL                               \
+    class Impl;                                 \
+    struct ImplDeleter                          \
+    {                                           \
+        void operator()(Impl *) const noexcept; \
+    };                                          \
+    std::unique_ptr<Impl, ImplDeleter> _impl
+
+//! PIMPL 模式的删除器的完整定义
+#define RMVL_IMPL_DEF(class_name) \
+    void class_name::ImplDeleter::operator()(class_name::Impl *p) const noexcept { delete p; }

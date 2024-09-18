@@ -17,6 +17,8 @@
 namespace rm
 {
 
+RMVL_IMPL_DEF(OptCamera)
+
 OptCamera::OptCamera(CameraConfig init_mode, std::string_view handle_info) : _impl(new OptCamera::Impl(init_mode, handle_info)) {}
 OptCamera::~OptCamera() { delete _impl; }
 bool OptCamera::set(int propId, double value) { return _impl->set(propId, value); }

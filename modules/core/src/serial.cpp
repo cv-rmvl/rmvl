@@ -9,68 +9,99 @@
  *
  */
 
-#include "rmvl/core/serial.hpp"
-
-#include <cstring>
-
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif // HAVE_DIRENT_H
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif // HAVE_FCNTL_H
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif // HAVE_UNISTD_H
+#include "io_impl.hpp"
 
 #include "rmvl/core/util.hpp"
 
-#if defined(HAVE_DIRENT_H) && defined(HAVE_FCNTL_H) && \
-    defined(HAVE_UNISTD_H) && defined(HAVE_TERMIOS_H)
+#ifndef _WIN32
+#include <dirent.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
-void rm::SerialPort::open()
+namespace rm
+{
+
+RMVL_IMPL_DEF(SerialPort)
+
+SerialPort::SerialPort(const std::string &device, int baud_rate) : _impl(new Impl(device, baud_rate)) {}
+bool SerialPort::isOpened() const { return _impl->isOpened(); }
+long int SerialPort::fdwrite(void *data, size_t length) { return _impl->fdwrite(data, length); }
+long int SerialPort::fdread(void *data, size_t len) { return _impl->fdread(data, len); }
+
+#ifdef _WIN32
+void SerialPort::Impl::open()
 {
     _is_open = false;
+    INFO_("Opening the serial port: %s", _device.c_str());
+    _handle = CreateFileA(_device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
 
-    DIR *dir = nullptr;
-    std::string file_name = _device;
-    const char *dir_path = "/dev/";
-    if ((dir = opendir(dir_path)) != nullptr)
+    if (_handle == INVALID_HANDLE_VALUE)
     {
-        // 未指定设备名则搜寻 ttyUSB 或 ttyACM
-        if (_device.empty())
+        ERROR_("Failed to open the serial port.");
+        return;
+    }
+
+    DCB dcb;
+    GetCommState(_handle, &dcb);
+    dcb.BaudRate = _baud_rate;
+    dcb.ByteSize = 8;
+    dcb.Parity = NOPARITY;
+    dcb.StopBits = ONESTOPBIT;
+    SetCommState(_handle, &dcb);
+
+    _is_open = true;
+}
+
+void SerialPort::Impl::close()
+{
+    if (_is_open)
+        CloseHandle(_handle);
+    _is_open = false;
+}
+
+long int SerialPort::Impl::fdwrite(void *data, std::size_t len)
+{
+    DWORD len_result{};
+    if (_is_open)
+    {
+        if (!WriteFile(_handle, data, static_cast<DWORD>(len), &len_result, nullptr))
         {
-            dirent *dire = nullptr;
-            while ((dire = readdir(dir)) != nullptr)
-            {
-                if ((strstr(dire->d_name, "ttyUSB") != nullptr) ||
-                    (strstr(dire->d_name, "ttyACM") != nullptr))
-                {
-                    file_name = dire->d_name;
-                    break;
-                }
-            }
-            closedir(dir);
+            WARNING_("Unable to write to serial port, error code: %d", ::GetLastError());
+            open();
+        }
+        else
+            DEBUG_INFO_("Success to write the serial port.");
+    }
+
+    return len_result;
+}
+
+long int SerialPort::Impl::fdread(void *data, std::size_t len)
+{
+    DWORD len_result{};
+
+    if (_is_open)
+    {
+        if (!ReadFile(_handle, data, static_cast<DWORD>(len), &len_result, nullptr))
+        {
+            WARNING_("The serial port cannot be read, error code: %d, restart...", ::GetLastError());
+            open();
         }
     }
+    else if (len_result == 0)
+        DEBUG_WARNING_("Serial port read: null");
     else
-    {
-        ERROR_("Cannot find the directory: \"%s\"", dir_path);
-        return;
-    }
+        DEBUG_PASS_("Success to read the serial port.");
+    return len_result;
+}
 
-    if (file_name.empty())
-    {
-        ERROR_("Cannot find the serial port.");
-        return;
-    }
-    else
-        file_name = dir_path + file_name;
-
-    INFO_("Opening the serial port: %s", file_name.c_str());
-    _fd = ::open(file_name.c_str(), O_RDWR | O_NOCTTY | O_NDELAY); // 非堵塞情况
+#else
+void SerialPort::Impl::open()
+{
+    _is_open = false;
+    INFO_("Opening the serial port: %s", _device.c_str());
+    _fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY); // 非堵塞情况
 
     if (_fd == -1)
     {
@@ -99,14 +130,14 @@ void rm::SerialPort::open()
     _is_open = true;
 }
 
-void rm::SerialPort::close()
+void SerialPort::Impl::close()
 {
     if (_is_open)
         ::close(_fd);
     _is_open = false;
 }
 
-ssize_t rm::SerialPort::fdwrite(void *data, size_t length)
+long int SerialPort::Impl::fdwrite(void *data, std::size_t length)
 {
     ssize_t len_result = -1;
     if (_is_open)
@@ -127,14 +158,7 @@ ssize_t rm::SerialPort::fdwrite(void *data, size_t length)
     return len_result;
 }
 
-/**
- * @brief Read data
- *
- * @param data Start position of the data
- * @param len The length of the data to be read
- * @return Length
- */
-ssize_t rm::SerialPort::fdread(void *data, size_t len)
+long int SerialPort::Impl::fdread(void *data, std::size_t len)
 {
     ssize_t len_result = -1;
 
@@ -157,3 +181,5 @@ ssize_t rm::SerialPort::fdread(void *data, size_t len)
 }
 
 #endif
+
+} // namespace rm

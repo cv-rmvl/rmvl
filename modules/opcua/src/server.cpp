@@ -23,21 +23,21 @@
 namespace rm
 {
 
-static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_srv{
-    {para::LogLevel::LOG_TRACE, UA_LOGLEVEL_TRACE},
-    {para::LogLevel::LOG_DEBUG, UA_LOGLEVEL_DEBUG},
-    {para::LogLevel::LOG_INFO, UA_LOGLEVEL_INFO},
-    {para::LogLevel::LOG_WARNING, UA_LOGLEVEL_WARNING},
-    {para::LogLevel::LOG_ERROR, UA_LOGLEVEL_ERROR},
-    {para::LogLevel::LOG_FATAL, UA_LOGLEVEL_FATAL},
-};
-
 ///////////////////////// 基本配置 /////////////////////////
 
 Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users)
 {
     UA_ServerConfig init_config{};
     // 修改日志
+    static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_srv{
+        {para::LogLevel::LOG_TRACE, UA_LOGLEVEL_TRACE},
+        {para::LogLevel::LOG_DEBUG, UA_LOGLEVEL_DEBUG},
+        {para::LogLevel::LOG_INFO, UA_LOGLEVEL_INFO},
+        {para::LogLevel::LOG_WARNING, UA_LOGLEVEL_WARNING},
+        {para::LogLevel::LOG_ERROR, UA_LOGLEVEL_ERROR},
+        {para::LogLevel::LOG_FATAL, UA_LOGLEVEL_FATAL},
+    };
+
 #if OPCUA_VERSION < 10400
     init_config.logger = UA_Log_Stdout_withLevel(loglvl_srv.at(para::opcua_param.SERVER_LOGLEVEL));
 #else

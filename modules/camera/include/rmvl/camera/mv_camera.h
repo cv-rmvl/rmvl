@@ -34,6 +34,8 @@ namespace rm
 //! 迈德威视相机库
 class RMVL_EXPORTS_W MvCamera final
 {
+    RMVL_IMPL;
+
 public:
     using ptr = std::unique_ptr<MvCamera>;
     using const_ptr = std::unique_ptr<const MvCamera>;
@@ -50,7 +52,6 @@ public:
     MvCamera(const MvCamera &) = delete;
     MvCamera(MvCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
     //! @endcond
-    ~MvCamera();
 
     /**
      * @brief 构建 MvCamera 对象
@@ -124,10 +125,6 @@ public:
      * @return 是否成功重连
      */
     RMVL_W bool reconnect();
-
-private:
-    class Impl;
-    Impl *_impl;
 };
 
 //! @} mv_camera

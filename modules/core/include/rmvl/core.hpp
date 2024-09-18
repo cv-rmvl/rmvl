@@ -31,7 +31,6 @@
 // 通用
 #include "core/util.hpp"
 #include "core/version.hpp"
-#include "core/serial.hpp"
 #include "core/timer.hpp"
-#include "core/dataio.hpp"
+#include "core/io.hpp"
 

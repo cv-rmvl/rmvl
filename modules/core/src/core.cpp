@@ -56,7 +56,11 @@ std::string rm::format(const char *fmt, ...)
     char buf[1024];
     va_list args;
     va_start(args, fmt);
+#ifdef _WIN32
+    vsprintf_s(buf, fmt, args);
+#else
     vsprintf(buf, fmt, args);
+#endif
     va_end(args);
     std::string str(buf);
     return str;

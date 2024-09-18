@@ -291,7 +291,7 @@ UA_Variant cvtVariable(const Variable &val) noexcept
 
 Variable cvtVariable(const UA_Variant &p_val) noexcept
 {
-    UA_UInt32 dims = (p_val.arrayLength == 0 ? 1 : p_val.arrayLength);
+    UA_UInt32 dims = (p_val.arrayLength == 0 ? 1 : static_cast<UA_UInt32>(p_val.arrayLength));
     DataType type_flag = p_val.type->typeKind;
     void *data = p_val.data;
     if (dims == 1)

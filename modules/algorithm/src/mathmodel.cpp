@@ -20,8 +20,9 @@ namespace rm
 
 ////////////////////////////////// EwTopsis //////////////////////////////////
 
+RMVL_IMPL_DEF(EwTopsis)
+
 EwTopsis::EwTopsis(const std::vector<std::vector<double>> &samples) : _impl(new Impl(samples)) {}
-EwTopsis::~EwTopsis() noexcept { delete _impl; }
 std::vector<double> EwTopsis::inference() { return _impl->inference(); }
 
 auto EwTopsis::Impl::inference() -> IndexType
@@ -65,10 +66,9 @@ void EwTopsis::Impl::calcP(const MatType &R, MatType &P)
     P = R;
     IndexType sums(_index_size);
     for (std::size_t j = 0; j < _index_size; ++j)
-        sums[j] = std::accumulate(R.begin(), R.end(), 0,
-                                  [&j](int a, const IndexType &b) {
-                                      return a + b[j];
-                                  });
+        sums[j] = std::accumulate(R.begin(), R.end(), 0.0, [&j](double a, const IndexType &b) {
+            return a + b[j];
+        });
     for (std::size_t i = 0; i < _sample_size; ++i)
         for (std::size_t j = 0; j < _index_size; ++j)
             P[i][j] = R[i][j] / sums[j];
@@ -90,7 +90,7 @@ void EwTopsis::Impl::calcH(const MatType &P, IndexType &H)
 inline void EwTopsis::Impl::calcw(const IndexType &H, IndexType &w)
 {
     w.resize(_index_size);
-    double tmp = _index_size - std::accumulate(H.begin(), H.end(), 0);
+    double tmp = static_cast<double>(_index_size) - std::accumulate(H.begin(), H.end(), 0.0);
     for (std::size_t j = 0; j < _index_size; ++j)
         w[j] = (1 - H[j]) / tmp;
 }
@@ -108,8 +108,9 @@ inline void EwTopsis::Impl::calcS(const IndexType &w, const MatType &R_, SampleT
 
 ////////////////////////////////// Munkres //////////////////////////////////
 
+RMVL_IMPL_DEF(Munkres)
+
 Munkres::Munkres(const std::vector<std::vector<double>> &cost_matrix) : _impl(new Impl(cost_matrix)) {}
-Munkres::~Munkres() noexcept { delete _impl; }
 std::vector<std::size_t> Munkres::solve() noexcept { return _impl->solve(); }
 
 Munkres::Impl::Impl(const std::vector<std::vector<double>> &cost_matrix)
@@ -164,7 +165,8 @@ std::tuple<int, int> Munkres::Impl::findOneZero(const std::vector<bool> &row_cov
     for (std::size_t r = 0; r < _m; r++)
         for (std::size_t c = 0; c < _n; c++)
             if (_matrix[r][c] == 0 && !row_covered[r] && !col_covered[c])
-                return {r, c};
+                return {static_cast<int>(r),
+                        static_cast<int>(c)};
     return {-1, -1};
 }
 
@@ -182,7 +184,7 @@ int Munkres::Impl::findStarInRow(int row)
     const std::size_t n = _mask.front().size();
     for (std::size_t c = 0; c < n; c++)
         if (_mask[row][c] == 1)
-            return c;
+            return static_cast<int>(c);
     return -1;
 }
 
@@ -191,7 +193,7 @@ int Munkres::Impl::findStarInCol(int col)
     const std::size_t m = _mask.size();
     for (std::size_t r = 0; r < m; r++)
         if (_mask[r][col] == 1)
-            return r;
+            return static_cast<int>(r);
     return -1;
 }
 
@@ -200,7 +202,7 @@ int Munkres::Impl::findPrimeInRow(int row)
     const std::size_t n = _mask.front().size();
     for (std::size_t c = 0; c < n; c++)
         if (_mask[row][c] == 2)
-            return c;
+            return static_cast<int>(c);
     return -1;
 }
 
