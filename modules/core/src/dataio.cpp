@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "rmvl/core/dataio.hpp"
+#include "rmvl/core/io.hpp"
 #include "rmvl/core/util.hpp"
 
 namespace rm

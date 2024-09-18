@@ -26,12 +26,14 @@ function(system_date out_y out_m out_d)
   if(UNIX)
     execute_process(
       COMMAND date "+%Y-%m-%d"
-      OUTPUT_VARIABLE date OUTPUT_STRIP_TRAILING_WHITESPACE
+      OUTPUT_VARIABLE date
+      OUTPUT_STRIP_TRAILING_WHITESPACE
     )
   elseif(WIN32)
     execute_process(
-      COMMAND cmd /c date /t
+      COMMAND powershell -Command "Get-Date -Format 'yyyy-MM-dd'"
       OUTPUT_VARIABLE date
+      OUTPUT_STRIP_TRAILING_WHITESPACE
     )
   endif()
   # split
@@ -42,6 +44,11 @@ function(system_date out_y out_m out_d)
   set(${out_m} ${month} PARENT_SCOPE)
   set(${out_d} ${day} PARENT_SCOPE)
 endfunction()
+
+system_date(year month day)
+set(year ${year} CACHE INTERNAL "year")
+set(month ${month} CACHE INTERNAL "month")
+set(day ${day} CACHE INTERNAL "day")
 
 # ----------------------------------------------------------------------------
 #   修正类型符号: 增加 C++ 的作用域
@@ -319,7 +326,7 @@ endfunction()
 function(rmvl_generate_para target_name)
   set(one_value MODULE)
   cmake_parse_arguments(PARA "" "${one_value}" "" ${ARGN})
-  ########################### message begin ###########################
+  ############################## message ##############################
   if("${PARA_MODULE}" STREQUAL "")
     set(module_name "${target_name}")
   else()
@@ -343,7 +350,6 @@ function(rmvl_generate_para target_name)
     string(REGEX REPLACE ";" "" class_name "${class_name}")
   endforeach()
   ###################### Generate C++ class file ######################
-  system_date(year month day)
   string(FIND "${RMVLPARA_${module_name}}" "${target_name}" target_idx)
   if(target_idx EQUAL -1)
     set(RMVLPARA_${module_name} "${RMVLPARA_${module_name}}" "${target_name}" CACHE INTERNAL "${module_name} parameters")
@@ -402,8 +408,6 @@ function(rmvl_generate_para target_name)
     )
   endif()
   unset(para_include_path)
-  ############################ message end ############################
-  message(STATUS "${para_msg} - done")
 endfunction()
 
 # ----------------------------------------------------------------------------
@@ -416,11 +420,10 @@ endfunction()
 #     rmvl_generate_module_para(combo)
 # ----------------------------------------------------------------------------
 function(rmvl_generate_module_para module_name)
-  ########################### message begin ###########################
+  ############################## message ##############################
   set(para_msg "Generating IDL ${module_name} Module")
   message(STATUS "${para_msg}")
   ######################## Generate C++ header ########################
-  system_date(year month day)
   set(para_module_header_details "")
   foreach(_sub ${RMVLPARA_${module_name}})
     string(TOUPPER "${_sub}" _upper)
@@ -434,6 +437,4 @@ function(rmvl_generate_module_para module_name)
     ${CMAKE_CURRENT_LIST_DIR}/include/rmvlpara/${module_name}.hpp
     @ONLY
   )
-  ############################ message end ############################
-  message(STATUS "${para_msg} - done")
 endfunction()

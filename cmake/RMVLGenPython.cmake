@@ -40,7 +40,7 @@ endfunction()
 #     )
 #   示例:
 #     rmvl_generate_python(core
-#       FILES core/dataio.hpp core/timer.hpp
+#       FILES core/io.hpp core/timer.hpp
 #       DEPENDS core
 #     )
 # ----------------------------------------------------------------------------

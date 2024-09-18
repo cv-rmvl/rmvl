@@ -14,7 +14,7 @@
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/types.hpp"
 
-#include "rmvl/core/dataio.hpp"
+#include "rmvl/core/io.hpp"
 #include "rmvl/feature/feature.h"
 
 namespace rm

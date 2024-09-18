@@ -33,6 +33,8 @@ namespace rm
 //! 海康机器人相机库
 class RMVL_EXPORTS_W HikCamera final
 {
+    RMVL_IMPL;
+
 public:
     using ptr = std::unique_ptr<HikCamera>;
     using const_ptr = std::unique_ptr<const HikCamera>;
@@ -49,7 +51,6 @@ public:
     HikCamera(const HikCamera &) = delete;
     HikCamera(HikCamera &&) = default;
     //! @endcond
-    ~HikCamera();
 
     /**
      * @brief 构建 HikCamera 对象
@@ -122,10 +123,6 @@ public:
      * @return 是否成功重连
      */
     RMVL_W bool reconnect();
-
-private:
-    class Impl;
-    Impl *_impl;
 };
 
 //! @} hik_camera

@@ -16,7 +16,7 @@
 
 ### 2. 角点写入文件
 
-@ref core_dataio 提供了 rm::readCorners 和 rm::writeCorners 函数，可以从指定的 YAML 文件读取角点信息至 `std::vector<std::vector<cv::Point>>` 表示的角点集 `corners` 中，或将 `corners` 写入到指定的 YAML 文件中。
+@ref core_io 提供了 rm::readCorners 和 rm::writeCorners 函数，可以从指定的 YAML 文件读取角点信息至 `std::vector<std::vector<cv::Point>>` 表示的角点集 `corners` 中，或将 `corners` 写入到指定的 YAML 文件中。
 
 参考以下将角点写入文件的示例代码
 

@@ -29,6 +29,8 @@ namespace rm
 //! 奥普特机器视觉相机库
 class RMVL_EXPORTS_W OptCamera final
 {
+    RMVL_IMPL;
+
 public:
     using ptr = std::unique_ptr<OptCamera>;
     using const_ptr = std::unique_ptr<const OptCamera>;
@@ -37,22 +39,21 @@ public:
      * @brief 创建 OptCamera 对象
      *
      * @param[in] init_mode 相机初始化配置模式，需要配置 rm::HandleMode、 rm::GrabMode 和 rm::RetrieveMode，如果 rm::GrabMode
-     *                      配置为 `rm::GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `rm::TriggerChannel::Chn1` 
+     *                      配置为 `rm::GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `rm::TriggerChannel::Chn1`
      * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
      */
     RMVL_W OptCamera(CameraConfig init_mode, std::string_view handle_info = "");
-    
+
     //! @cond
     OptCamera(const OptCamera &) = delete;
     OptCamera(OptCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
     //! @endcond
-    ~OptCamera();
 
     /**
      * @brief 构建 OptCamera 对象
      *
      * @param[in] init_mode 相机初始化配置模式，需要配置 HandleMode、GrabMode 和 RetrieveMode，如果 GrabMode
-     *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1` 
+     *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1`
      * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
      */
     static std::unique_ptr<OptCamera> make_capture(CameraConfig init_mode, std::string_view handle_info = "")
@@ -92,7 +93,7 @@ public:
 
     /**
      * @brief 从相机设备中读取图像
-     * 
+     *
      * @return 是否读取成功和读取到的图像
      */
     RMVL_W inline std::pair<bool, cv::Mat> read()
@@ -110,10 +111,6 @@ public:
      * @return 是否重连成功
      */
     RMVL_W bool reconnect();
-
-private:
-    class Impl;
-    Impl *_impl;
 };
 
 //! @} opt_camera

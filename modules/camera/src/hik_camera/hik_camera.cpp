@@ -19,8 +19,9 @@
 namespace rm
 {
 
+RMVL_IMPL_DEF(HikCamera)
+
 HikCamera::HikCamera(CameraConfig init_mode, std::string_view serial) : _impl(new HikCamera::Impl(init_mode, serial)) {}
-HikCamera::~HikCamera() { delete _impl; }
 bool HikCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double HikCamera::get(int propId) const { return _impl->get(propId); }
 bool HikCamera::read(cv::OutputArray image) { return _impl->read(image); }
@@ -129,7 +130,7 @@ bool HikCamera::Impl::open() noexcept
         switch (trigger_chn)
         {
         case TriggerChannel::Chn0:
-            ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE0); 
+            ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE0);
             break;
         case TriggerChannel::Chn1:
             ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_LINE1);

@@ -20,6 +20,8 @@
 #include <opencv2/core/matx.hpp>
 #else
 #include <algorithm>
+#include <functional>
+#include <memory>
 #endif // HAVE_OPENCV
 
 #include "rmvl/core/util.hpp"
@@ -558,6 +560,8 @@ inline std::vector<T> &operator/=(std::vector<T> &vec, T val)
 //! 熵权 TOPSIS 算法
 class EwTopsis
 {
+    RMVL_IMPL;
+
 public:
     /**
      * @brief 构造熵权 TOPSIS 算法类
@@ -565,7 +569,6 @@ public:
      * @param[in] samples 样本指标
      */
     EwTopsis(const std::vector<std::vector<double>> &samples);
-    ~EwTopsis() noexcept;
 
     /**
      * @brief 基于权熵 TOPSIS 推理出最终的指标
@@ -573,15 +576,13 @@ public:
      * @return 最终指标
      */
     std::vector<double> inference();
-
-private:
-    class Impl;
-    Impl *_impl;
 };
 
 //! KM 算法求解器
 class RMVL_EXPORTS_W Munkres
 {
+    RMVL_IMPL;
+
 public:
     /**
      * @brief 创建 KM 算法求解器
@@ -589,7 +590,6 @@ public:
      * @param[in] cost_matrix 代价矩阵
      */
     RMVL_W Munkres(const std::vector<std::vector<double>> &cost_matrix);
-    ~Munkres() noexcept;
 
     /**
      * @brief 求解
@@ -597,10 +597,6 @@ public:
      * @return 最优分配结果
      */
     RMVL_W std::vector<std::size_t> solve() noexcept;
-
-private:
-    class Impl;
-    Impl *_impl;
 };
 
 //! @} algorithm
