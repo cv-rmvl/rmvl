@@ -320,11 +320,19 @@ enum class FminMode : uint8_t
     Simplex,  //!< 单纯形法
 };
 
+//! 最小二乘求解模式
+enum class LsqMode : uint8_t
+{
+    GN, //!< 改进的 Gauss-Newton 法
+    LM, //!< Levenberg-Marquardt 法
+};
+
 //! 无约束多维函数优化选项
 struct RMVL_EXPORTS_W_AG OptimalOptions
 {
     RMVL_W_RW DiffMode diff_mode{}; //!< 梯度计算模式，默认为中心差商 `DiffMode::Central`
     RMVL_W_RW FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
+    RMVL_W_RW LsqMode lsq_mode{};   //!< 最小二乘求解模式，默认为改进的 Gauss-Newton 法 `LsqMode::GN`
     RMVL_W_RW int max_iter{1000};   //!< 最大迭代次数
     RMVL_W_RW double exterior{1e3}; //!< 外罚函数系数
     RMVL_W_RW double dx{1e-2};      //!< 求解步长
@@ -369,7 +377,7 @@ RMVL_EXPORTS_W std::pair<double, double> region(Func1d func, double x0, double d
  * @param[in] func 一维约束函数
  * @param[in] x1 搜索区间左端点
  * @param[in] x2 搜索区间右端点
- * @param[in] options 优化选项
+ * @param[in] options 优化选项，可供设置的有 `max_iter` 和 `tol`
  * @return `[x, fval]` 最小值点和最小值
  */
 RMVL_EXPORTS_W std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const OptimalOptions &options = {});
@@ -378,7 +386,7 @@ RMVL_EXPORTS_W std::pair<double, double> fminbnd(Func1d func, double x1, double 
  * @brief 无约束多维函数的最小值搜索 \cite ConjGrad \cite NelderMead ，可参考 @ref tutorial_modules_fminunc
  * @param[in] func 多维约束函数
  * @param[in] x0 初始点
- * @param[in] options 优化选项
+ * @param[in] options 优化选项，可供设置的有 `fmin_mode`、`max_iter`、`tol` 和 `dx`
  * @return `[x, fval]` 最小值点和最小值
  */
 RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options = {});
@@ -390,7 +398,7 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const
  * @param[in] x0 初始点
  * @param[in] c 不等式约束 \f$f_c(x)\le0\f$
  * @param[in] ceq 等式约束 \f$f_{ceq}(x)=0\f$
- * @param[in] options options 优化选项
+ * @param[in] options options 优化选项，可供设置的有 `exterior`、`fmin_mode`、`max_iter`、`tol` 和 `dx`
  * @return `[x, fval]` 最小值点和最小值
  */
 RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
@@ -401,7 +409,7 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const
  * @param[in] funcs 多维最小二乘约束函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
  *                  \left(\texttt{funcs}[0]^2+\texttt{funcs}[1]^2+\cdots+\texttt{funcs}[n]^2\right)\f]
  * @param[in] x0 初始点
- * @param[in] options 优化选项
+ * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
  * @return 最小二乘解
  */
 RMVL_EXPORTS_W std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});

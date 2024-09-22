@@ -237,11 +237,11 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
             for (std::size_t j = 0; j < dim; ++j)
                 xe[j] = 3 * xc[j] - 2 * splx.back().first[j];
             double fxe = func(xe);
-            splx.back() = fxe < fxr ? std::make_pair(xe, fxe) : std::make_pair(xr, fxr);
+            splx.back() = fxe < fxr ? std::make_pair(std::move(xe), fxe) : std::make_pair(std::move(xr), fxr);
         }
         // f(x0) <= f(xr) < f(xn-2)，反射点函数值大于最优点，小于次差点
         else if (splx[0].second <= fxr && fxr < splx[N - 2].second)
-            splx.back() = {xr, fxr};
+            splx.back() = {std::move(xr), fxr};
         // f(xn-2) <= f(xr) < f(xn)，反射点函数值大于次差点，小于最差点
         else
         {
@@ -251,7 +251,7 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
                 xs[j] = 1.5 * xc[j] - 0.5 * splx.back().first[j];
             double fxs = func(xs);
             if (fxs < splx.back().second)
-                splx.back() = {xs, fxs};
+                splx.back() = {std::move(xs), fxs};
             else
             {
                 for (std::size_t i = 1; i < N; ++i)
@@ -341,12 +341,13 @@ static inline void calcFs(const FuncNds &funcs, const std::vector<double> &xk, s
         phi[i] = funcs[i](xk);
 }
 
-std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+// Gauss-Newton 法
+static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
 {
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
     std::vector<double> xk(x0);
-    cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // Jacobian 矩阵 (M×N)
+    cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // J 矩阵 (M×N)
     std::vector<double> phi(funcs.size());        // 函数值 (M×1)
     for (int idx = 0; idx < options.max_iter; ++idx)
     {
@@ -374,6 +375,90 @@ std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x
             xk[i] += alpha * s[i];
     }
     return xk;
+}
+
+// Levenberg-Marquardt 法
+static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+{
+    std::vector<double> xk = x0;
+    const int n = xk.size();
+    const int m = funcs.size();
+
+    cv::Mat J(m, n, CV_64F);
+    std::vector<double> f_x(m);
+    std::vector<double> f_x_new(m);
+
+    cv::Mat g(n, 1, CV_64F);
+    cv::Mat H(n, n, CV_64F);
+    const auto I = cv::Mat::eye(n, n, CV_64F);
+    cv::Mat delta(n, 1, CV_64F);
+
+    double lambda{0.01};
+
+    for (int idx = 0; idx < options.max_iter; ++idx)
+    {
+        // 计算函数值和雅可比矩阵
+        calcFs(funcs, xk, f_x);
+        calcJacobi(funcs, xk, options, J);
+
+        g = J.t() * cv::Mat(f_x, false); // g = Jᵀf
+        H = J.t() * J;                   // H = JᵀJ
+
+        while (idx < options.max_iter)
+        {
+            // 求解 (H + λI)δ = g
+            cv::solve(H + lambda * I, g, delta, cv::DECOMP_CHOLESKY);
+
+            // 更新参数
+            std::vector<double> new_xk = xk;
+            for (int i = 0; i < n; ++i)
+                new_xk[i] -= delta.at<double>(i, 0);
+
+            // 计算新的函数值
+            calcFs(funcs, new_xk, f_x_new);
+
+            // 计算误差变化
+            double current_error{}, new_error{};
+            for (int i = 0; i < m; ++i)
+            {
+                current_error += f_x[i] * f_x[i];
+                new_error += f_x_new[i] * f_x_new[i];
+            }
+            // 接受新参数，减小 lambda
+            if (new_error < current_error)
+            {
+                xk = std::move(new_xk);
+                lambda /= 2;
+                break;
+            }
+            // 拒绝新参数，增加 lambda
+            else
+            {
+                lambda *= 2;
+                idx++;
+            }
+        }
+
+        // 检查收敛条件
+        double delta_norm = cv::norm(delta);
+        if (delta_norm < options.tol)
+            break;
+    }
+
+    return xk;
+}
+
+std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+{
+    if (x0.empty())
+        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
+    switch (options.lsq_mode)
+    {
+    case LsqMode::LM:
+        return lsqnonlin_lm(funcs, x0, options);
+    default:
+        return lsqnonlin_gn(funcs, x0, options);
+    };
 }
 
 #else

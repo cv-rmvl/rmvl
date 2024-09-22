@@ -145,7 +145,7 @@ for (std::size_t i = 0; i < datas.size(); ++i)
     });
 
 // 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
-auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09});
+auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}); // 默认采用 Gauss-Newton 算法
 ```
 
 @end_toggle
@@ -161,7 +161,7 @@ for i, data in enumerate(datas):
     )
 
 # 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
-x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09])
+x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算法
 ```
 
 @end_toggle
@@ -192,3 +192,31 @@ x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09])
    - \f$0.25<\rho_k\le0.75\f$，保持 \f$\lambda_k\f$ 不变；
    - \f$\rho_k>0.75\f$，增大 \f$\lambda_k\f$，即\f[\lambda_{k+1}=2\lambda_k\f]
    - 如果 \f$\rho_k\le0\f$，这时不应该更新 \f$\pmb x_k\f$，即\f[\pmb x_{k+1}=\pmb x_k\f]并且和上面 \f$\rho_k\le0.25\f$ 的情况一样，减小 \f$\lambda_k\f$，反之，在 \f$\rho_k>0\f$ 的情况下，更新 \f$\pmb x_k\f$，即\f[\pmb x_{k+1}=\pmb x_k\f]
+
+#### 2.3 如何使用
+
+还是上面的例子，我们可以使用下面的代码来拟合正弦函数。
+
+@add_toggle_cpp
+
+```cpp
+// 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+
+rm::OptimalOptions options;
+options.lsq_mode = rm::LsqMode::LM; // 使用 LM 算法
+options.max_iter = 2000;            // 最大迭代次数可以设置高一点，以保证收敛
+auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}, options);
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+
+options = rm.OptimalOptions()
+options.lsq_mode = rm.LsqMode.LM # 使用 LM 算法
+options.max_iter = 2000          # 最大迭代次数可以设置高一点，以保证收敛
+x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09], options)
+```
