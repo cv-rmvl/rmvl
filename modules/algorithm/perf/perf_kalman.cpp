@@ -76,8 +76,8 @@ void kalman42_opencv(benchmark::State &state)
     }
 }
 
-BENCHMARK(kalman42_rmvl)->Name("kf (x_dim: 4, z_dim: 2) - by rmvl  ")->Iterations(10);
-BENCHMARK(kalman42_opencv)->Name("kf (x_dim: 4, z_dim: 2) - by opencv")->Iterations(10);
+BENCHMARK(kalman42_rmvl)->Name("kf (x_dim: 4, z_dim: 2, n: 1000) - by rmvl  ")->Iterations(10);
+BENCHMARK(kalman42_opencv)->Name("kf (x_dim: 4, z_dim: 2, n: 1000) - by opencv")->Iterations(10);
 
 } // namespace rm_test
 
