@@ -60,7 +60,7 @@ public:
      * @return 多项式在指定点的函数值
      */
     RMVL_W double operator()(double x) const noexcept;
-    
+
     std::vector<double> _coeffs; //!< 多项式系数
 };
 
@@ -310,21 +310,21 @@ using FuncNds = std::vector<std::function<double(const std::vector<double> &)>>;
 enum class DiffMode : uint8_t
 {
     Central, //!< 中心差商
-    Ridders, //!< Richardson 外推
+    Ridders, //!< Richardson 外推 \cite Ridders82
 };
 
 //! 多维函数最优化模式
 enum class FminMode : uint8_t
 {
-    ConjGrad, //!< 共轭梯度法
-    Simplex,  //!< 单纯形法
+    ConjGrad, //!< 共轭梯度法 \cite Hestenes52
+    Simplex,  //!< 单纯形法 \cite Nelder65
 };
 
 //! 最小二乘求解模式
 enum class LsqMode : uint8_t
 {
     GN, //!< 改进的 Gauss-Newton 法
-    LM, //!< Levenberg-Marquardt 法
+    LM, //!< Levenberg-Marquardt 法 \cite Eade13 \cite Madsen04
 };
 
 //! 无约束多维函数优化选项
@@ -383,7 +383,7 @@ RMVL_EXPORTS_W std::pair<double, double> region(Func1d func, double x0, double d
 RMVL_EXPORTS_W std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const OptimalOptions &options = {});
 
 /**
- * @brief 无约束多维函数的最小值搜索 \cite ConjGrad \cite NelderMead ，可参考 @ref tutorial_modules_fminunc
+ * @brief 无约束多维函数的最小值搜索，可参考 @ref tutorial_modules_fminunc
  * @param[in] func 多维约束函数
  * @param[in] x0 初始点
  * @param[in] options 优化选项，可供设置的有 `fmin_mode`、`max_iter`、`tol` 和 `dx`
@@ -404,7 +404,7 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const
 RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
 
 /**
- * @brief 无约束非线性最小二乘求解
+ * @brief 无约束非线性最小二乘求解，实现与 \cite Agarwal23 类似的算法
  *
  * @param[in] funcs 多维最小二乘约束函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
  *                  \left(\texttt{funcs}[0]^2+\texttt{funcs}[1]^2+\cdots+\texttt{funcs}[n]^2\right)\f]
@@ -413,6 +413,27 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const
  * @return 最小二乘解
  */
 RMVL_EXPORTS_W std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
+
+//! Robust 核函数
+enum class RobustMode : uint8_t
+{
+    L2,     //!< `L2` 核函数
+    Huber,  //!< `Huber` 核函数
+    Tukey,  //!< `Tukey` 核函数
+    Cauchy, //!< `Cauchy` 核函数
+    GM,     //!< `Geman-McClure` 核函数
+};
+
+/**
+ * @brief 带 Robust 核函数的无约束非线性最小二乘求解
+ *
+ * @param[in] funcs 多维最小二乘约束函数，参考 rm::lsqnonlin
+ * @param[in] x0 初始点
+ * @param[in] rb Robust 核函数模式，参考 rm::RobustMode ，选择 `rm::RobustMode::L2` 时退化为 `rm::lsqnonlin`
+ * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
+ * @return 最小二乘解
+ */
+RMVL_EXPORTS_W std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options = {});
 
 //! @} algorithm_optimal
 

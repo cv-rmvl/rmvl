@@ -465,4 +465,4 @@ auto corr = filter.correct(zk);
 
 #### 参考文献 {#ref_paper}
 
-- 卡尔曼滤波 @cite kalman
+- 卡尔曼滤波 @cite kalman60

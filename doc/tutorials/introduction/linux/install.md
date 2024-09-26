@@ -14,7 +14,7 @@
 
 #### 1.1 OpenCV
 
-RMVL 2.x 起，@cite opencv 不再是 RMVL 必需的依赖库，但缺少 OpenCV 库，将有大量 RMVL 模块无法构建，下面介绍 OpenCV 的 2 种安装方法。
+RMVL 2.x 起，@cite opencv01 不再是 RMVL 必需的依赖库，但缺少 OpenCV 库，将有大量 RMVL 模块无法构建，下面介绍 OpenCV 的 2 种安装方法。
  
 @add_toggle{快速安装}
 
