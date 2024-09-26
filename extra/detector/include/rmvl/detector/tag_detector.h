@@ -35,7 +35,7 @@ namespace rm
 /**
  * @brief AprilTag 识别器
  * @note 仅支持 Tag25h9 格式
- * @cite apriltag
+ * @cite AprilRobotics23
  */
 class TagDetector final : public detector
 {

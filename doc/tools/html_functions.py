@@ -11,7 +11,7 @@ from doxygen_scan import Symbol
 
 try:
     from bs4 import BeautifulSoup
-    from bs4.element import Tag, NavigableString
+    from bs4.element import Tag
 except ImportError:
     raise ImportError(
         "Error: "

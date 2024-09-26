@@ -1,4 +1,3 @@
-import traceback
 from xml.etree.ElementTree import Element
 
 class Symbol(object):

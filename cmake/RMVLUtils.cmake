@@ -212,7 +212,6 @@ function(rmvl_download dl_name dl_kind dl_info)
       ${dl_name}
       GIT_REPOSITORY ${git_url}
       GIT_TAG ${git_tag}
-      DOWNLOAD_EXTRACT_TIMESTAMP true
     )
   # use url
   elseif("${dl_kind_lower}" STREQUAL "url")
@@ -220,7 +219,6 @@ function(rmvl_download dl_name dl_kind dl_info)
     FetchContent_Declare(
       ${dl_name}
       URL ${dl_info}
-      DOWNLOAD_EXTRACT_TIMESTAMP true
     )
   else()
     message(FATAL_ERROR "Unknown download kind : ${dl_kind}")

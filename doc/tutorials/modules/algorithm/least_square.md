@@ -428,6 +428,6 @@ bool cv::solve(
 
 #### 参考书籍
 
-\cite tongji_linear_algebra
-\cite luo2013matrix
-\cite numerical_analysis
+\cite tongji14
+\cite luo13
+\cite zheng08

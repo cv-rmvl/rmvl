@@ -45,7 +45,7 @@ struct PostprocessOptions
     std::vector<float> thresh{}; //!< 阈值向量
 };
 
-//! ONNX-Runtime (Ort) 部署库基类 \cite onnx-rt
+//! ONNX-Runtime (Ort) 部署库基类 \cite microsoft23ort
 class OnnxNet
 {
 protected:

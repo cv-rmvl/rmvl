@@ -147,6 +147,29 @@ TEST(Optimal, lsqnonlin_sine)
     EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-4);
 }
 
+TEST(Optimal, lsqnonlinRKF_sine)
+{
+    rm::FuncNds lsq_sine(5);
+    for (std::size_t i = 0; i < lsq_sine.size(); ++i)
+        lsq_sine[i] = [=](const std::vector<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
+
+    rm::OptimalOptions options;
+    options.max_iter = 50;
+    options.lsq_mode = rm::LsqMode::GN;
+    auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber, options);
+    EXPECT_NEAR(x[0], 0.8, 1e-4);
+    EXPECT_NEAR(x[1], 0.019, 1e-4);
+    EXPECT_NEAR(x[2], -0.2, 1e-4);
+    EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-4);
+    options.max_iter = 2000;
+    options.lsq_mode = rm::LsqMode::LM;
+    x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Tukey, options);
+    EXPECT_NEAR(x[0], 0.8, 1e-4);
+    EXPECT_NEAR(x[1], 0.019, 1e-4);
+    EXPECT_NEAR(x[2], -0.2, 1e-4);
+    EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-4);
+}
+
 #endif // HAVE_OPENCV
 
 } // namespace rm_test

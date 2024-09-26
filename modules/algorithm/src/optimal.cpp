@@ -341,28 +341,84 @@ static inline void calcFs(const FuncNds &funcs, const std::vector<double> &xk, s
         phi[i] = funcs[i](xk);
 }
 
+// 获取鲁棒加权
+template <typename RobustCallable, typename Enable = std::enable_if_t<std::is_convertible_v<RobustCallable, std::function<double(double)>>>>
+static cv::Mat robustW(const cv::Mat &fvals, RobustCallable fn)
+{
+    // 使用中位绝对偏差（MAD）计算 sigma
+    std::vector<double> tmpfs = fvals;
+    const std::size_t N = tmpfs.size();
+    std::sort(tmpfs.begin(), tmpfs.end());
+    double median = (N % 2) ? tmpfs[N / 2] : (tmpfs[N / 2 - 1] + tmpfs[N / 2]) / 2;
+    std::for_each(tmpfs.begin(), tmpfs.end(), [&](double &v) { v = std::abs(v - median); });
+    std::sort(tmpfs.begin(), tmpfs.end());
+    double mad = (N % 2) ? tmpfs[N / 2] : (tmpfs[N / 2 - 1] + tmpfs[N / 2]) / 2;
+    double sigma{1.4826 * mad};
+    // 计算鲁棒加权
+    std::vector<double> w(fvals.rows);
+    for (int i = 0; i < fvals.rows; ++i)
+        w[i] = fn(fvals.at<double>(i) / sigma);
+    return cv::Mat::diag(cv::Mat(w));
+}
+
+// 获取包含 Robust 核函数的 `JtJ` 和 `Jtf` 计算可调用对象
+static std::function<cv::Mat(const cv::Mat &)> robustSelect(RobustMode rb)
+{
+    constexpr double HUBER_K{1.345};
+    constexpr double TUKEY_K{4.685};
+    constexpr double CAUCHY_K{2.3849};
+
+    switch (rb)
+    {
+    case RobustMode::Huber:
+        return [](const cv::Mat &fs) {
+            return robustW(fs, [](double val) { return val < HUBER_K ? 1 : HUBER_K / val; });
+        };
+    case RobustMode::Tukey:
+        return [](const cv::Mat &fs) {
+            return robustW(fs, [](double val) { return val < TUKEY_K ? std::pow(1 - val * val / (TUKEY_K * TUKEY_K), 2) : 0; });
+        };
+    case RobustMode::GM:
+        return [](const cv::Mat &fs) {
+            return robustW(fs, [](double val) { return 1 / std::pow(1 + val * val, 2); });
+        };
+    case RobustMode::Cauchy:
+        return [](const cv::Mat &fs) {
+            return robustW(fs, [](double val) { return 1 / (1 + val * val / (CAUCHY_K * CAUCHY_K)); });
+        };
+    default:
+        return [](const cv::Mat &fs) { return cv::Mat::eye(fs.rows, fs.rows, CV_64F); };
+    }
+}
+
 // Gauss-Newton 法
-static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
     std::vector<double> xk(x0);
     cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // J 矩阵 (M×N)
     std::vector<double> phi(funcs.size());        // 函数值 (M×1)
+
+    auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
     {
-        // 计算函数值
+        // 计算函数值和搜索方向
         calcFs(funcs, xk, phi);
-        // 计算搜索方向
+        if (normL2(phi) < options.tol)
+            break;
         calcJacobi(funcs, xk, options, J);
         auto Jt = J.t();
-        cv::Mat fvals(phi, false);
-        std::vector<double> s = cv::Mat{-(Jt * J).inv() * Jt * fvals};
-        if (normL2(s) < options.tol)
-            break;
+        cv::Mat fvals(phi);
+        cv::Mat s;
+        // JᵀWJs = JᵀWf
+        cv::Mat W = fnW(fvals);
+        cv::solve(Jt * W * J, Jt * W * fvals, s, cv::DECOMP_CHOLESKY);
         // 一维搜索 alpha
         auto func_alpha = [&](double alpha) {
-            auto xk2 = xk + alpha * s;
+            auto xk2 = xk;
+            for (std::size_t i = 0; i < xk.size(); ++i)
+                xk2[i] -= alpha * s.at<double>(i, 0);
             std::vector<double> fvals2(funcs.size());
             for (std::size_t i = 0; i < funcs.size(); ++i)
                 fvals2[i] = funcs[i](xk2);
@@ -372,17 +428,17 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
         double alpha = fminbnd(func_alpha, a, b, options).first;
         // 更新 xk
         for (std::size_t i = 0; i < xk.size(); ++i)
-            xk[i] += alpha * s[i];
+            xk[i] -= alpha * s.at<double>(i);
     }
     return xk;
 }
 
 // Levenberg-Marquardt 法
-static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
     std::vector<double> xk = x0;
-    const int n = xk.size();
-    const int m = funcs.size();
+    const int n = static_cast<int>(xk.size());
+    const int m = static_cast<int>(funcs.size());
 
     cv::Mat J(m, n, CV_64F);
     std::vector<double> f_x(m);
@@ -395,18 +451,20 @@ static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<
 
     double lambda{0.01};
 
+    auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
     {
         // 计算函数值和雅可比矩阵
         calcFs(funcs, xk, f_x);
+        cv::Mat fvals(f_x);
         calcJacobi(funcs, xk, options, J);
 
-        g = J.t() * cv::Mat(f_x, false); // g = Jᵀf
-        H = J.t() * J;                   // H = JᵀJ
+        auto W = fnW(fvals);
+        g = J.t() * W * fvals; // g = JᵀWf
+        H = J.t() * W * J;     // H = JᵀWJ
 
         while (idx < options.max_iter)
         {
-            // 求解 (H + λI)δ = g
             cv::solve(H + lambda * I, g, delta, cv::DECOMP_CHOLESKY);
 
             // 更新参数
@@ -448,22 +506,22 @@ static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<
     return xk;
 }
 
-std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
     switch (options.lsq_mode)
     {
     case LsqMode::LM:
-        return lsqnonlin_lm(funcs, x0, options);
+        return lsqnonlin_lm(funcs, x0, rb, options);
     default:
-        return lsqnonlin_gn(funcs, x0, options);
+        return lsqnonlin_gn(funcs, x0, rb, options);
     };
 }
 
 #else
 
-std::vector<double> lsqnonlin(const FuncNds &, const std::vector<double> &, const OptimalOptions &)
+std::vector<double> lsqnonlinRKF(const FuncNds &, const std::vector<double> &, const OptimalOptions &)
 {
     RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
                                 "RMVL by setting \"WITH_OPENCV=ON\" in CMake");
@@ -471,5 +529,10 @@ std::vector<double> lsqnonlin(const FuncNds &, const std::vector<double> &, cons
 }
 
 #endif // HAVE_OPENCV
+
+std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+{
+    return lsqnonlinRKF(funcs, x0, RobustMode::L2, options);
+}
 
 } // namespace rm

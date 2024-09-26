@@ -220,3 +220,105 @@ options.lsq_mode = rm.LsqMode.LM # 使用 LM 算法
 options.max_iter = 2000          # 最大迭代次数可以设置高一点，以保证收敛
 x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09], options)
 ```
+
+@end_toggle
+
+### 3. Robust 核函数
+
+#### 3.1 加权与核函数
+
+鲁棒核函数（Robust Kernel Function）是在优化问题中用来减少离群值（outliers）影响的一种技术。在 Bundle Adjustment (BA) 等计算机视觉问题中，鲁棒核函数特别有用，因为这些问题常常受到错误匹配、遮挡或其他因素导致的离群值影响
+
+标准的最小二乘优化问题可以表示为：\f[\min_{\pmb x}\sum_i\frac12\|e_i(\pmb x)\|^2\tag{3-1}\f]
+
+其中 \f$e_i(x)\f$ 是第 \f$i\f$ 个观测的误差。引入鲁棒核函数后，优化问题变为：\f[\min_{\pmb x}\sum_i\rho(e_i(\pmb x))\tag{3-2}\f]
+
+其中 \f$\rho(s)\f$ 是鲁棒核函数。鲁棒核函数主要有
+
+- 对小误差的敏感度与标准二次函数相似；
+- 对大误差（可能是离群值）的敏感度较低，减少了它们的影响。
+
+的特点，常用的鲁棒核函数是 Huber 损失函数：\f[\rho(s)=\begin{cases}\frac12s^2&\quad|s|\leq k\\k(|s|-\frac12k)&\quad|s|>k\end{cases}\tag{3-3}\f]当 \f$k=1\f$ 时，Huber 核函数的图像如下图所示。
+
+<center>
+
+![图 3-1 Huber 核函数](lsqnonlin/huber.png)
+
+</center>
+
+Huber 核函数是一个连续可导的函数，它的优点是它在 \f$s=0\f$ 附近是二次的，这使得它对小误差的敏感度与标准二次函数相似，而对大误差的敏感度较低，减少了它们的影响。对于 \f$\fml{3-2}\f$ 式这一新的最优化目标函数，按照一般想法，求解其导数的零点，便能得到最优解。
+
+\f[\begin{align}f(\pmb x)&=\sum_{i=1}^m\rho(e_i)\\\ptl{f(\pmb x)}{\pmb x}&=\sum_{i=1}^m\ptl{\rho(e_i)}{\pmb x}=\sum_{i=1}^m\rho'(e_i)\ptl{e_i(\pmb x)}{\pmb x}\\&=\begin{bmatrix}\sum\limits_{i=1}^m\rho'(e_i)\ptl{e_i}{x_1}\\\sum\limits_{i=1}^m\rho'(e_i)\ptl{e_i}{x_2}\\\vdots\\\sum\limits_{i=1}^m\rho'(e_i)\ptl{e_i}{x_n}\end{bmatrix}=\pmb J^T\begin{bmatrix}\rho'(e_1)\\\rho'(e_2)\\\vdots\\\rho'(e_m)\end{bmatrix}\stackrel{\triangle}{=}\pmb J^T\pmb\rho'=0\tag{3-4}\end{align}\f]
+
+对于加权最小二乘问题，目标函数形如\f[f(\pmb x)=\frac12\sum_{i=1}^mw_ie_i^2(\pmb x)\tag{3-5}\f]同样求解其导数的零点，能得到加权最小二乘问题的最优解。
+
+\f[\ptl{f(\pmb x)}{\pmb x}=\sum_{i=1}^mw_ie_i(\pmb x)\ptl{e_i(\pmb x)}{\pmb x}=\pmb J^T\begin{bmatrix}w_1e_1(\pmb x)\\w_2e_2(\pmb x)\\\vdots\\w_me_m(\pmb x)\end{bmatrix}\stackrel{\triangle}{=}\pmb J^T\pmb{We}\tag{3-6}\f]
+
+其中 \f$\pmb W\f$ 是以 \f$w_i\f$ 为对角元的对角矩阵。
+
+对比 \f$\fml{3-4}\f$ 式和 \f$\fml{3-6}\f$ 式，我们希望 Huber 核函数的最优化问题能够转换为加权最小二乘问题，即\f[\begin{align}\pmb{We}&=\pmb\rho'\\w_ie_i(\pmb x)&=\rho'(e_i)\quad i=1,2,\cdots,m\end{align}\tag{3-7}\f]因此\f$w_i\f$可以定义为\f[w_i=\frac{\rho'(e_i)}{e_i}\tag{3-8}\f]这样，我们就可以将 Huber 核函数的最优化问题转换为加权最小二乘问题。
+
+#### 3.2 权值的计算
+
+对于 Huber 损失函数，我们有\f[\rho'(e_i)=\begin{cases}e_i&|e_i|\leq k\\k\cdot\texttt{sgn}(e_i)&|e_i|>k\end{cases}\tag{3-9}\f]其中，\f$\texttt{sgn}\f$为符号函数，可参考 rm::sgn 。因此，权重\f$w_i\f$为\f[w_i=\frac{\rho'(e_i)}{e_i}=\begin{cases}1&|e_i|\leq k\\\frac{k}{|e_i|}&|e_i|>k\end{cases}\tag{3-10}\f]
+
+这有比较明确的物理意义
+
+1. 减小离群点的影响
+
+   - 离群点的残差\f$|e_i|\f$较大，通过\f$w_i=\frac{k}{|e_i|}\f$将权重减小，降低其对总损失的影响；
+   - 正常数据点的残差\f$|e_i|\f$较小，权重\f$w_i=1\f$，与普通最小二乘法一样。
+
+2. 逐步逼近真实参数
+
+   - 迭代加权最小二乘法（IRLS）：在每次迭代中，根据当前的残差更新权重，然后求解加权最小二乘问题；
+   - 随着迭代进行，权重\f$w_i\f$动态调整，使得模型对异常值的敏感性降低。
+
+此时 \f$\Delta\pmb x_k\f$搜索方向的计算可以改为\f[\Delta\pmb x_k=-\left(\pmb J^T\pmb W\pmb J\right)^{-1}\pmb J^T\pmb W\pmb e\tag{3-11a}\f]Levenberg–Marquardt 算法的迭代公式也可以改为\f[\pmb x_{k+1}=\pmb x_k-\left(\pmb J^T\pmb W\pmb J+\lambda\pmb I\right)^{-1}\pmb J^T\pmb W\pmb e\tag{3-11b}\f]
+
+#### 3.3 常用的 Robust 核函数
+
+在实际应用中，通常取 \f$\rho(s)=\rho\left(\frac{e_1}\sigma\right)\f$，而并不直接使用 \f$\rho(e_i)\f$，其中 \f$\sigma\f$ 一般使用中位绝对偏差（MAD）来估计，以保证不过分受异常值的影响。可使用一下公式来计算 \f$\sigma\f$：\f[\hat\sigma=1.4826\times\text{median}\left\{|e_i-\text{median}(e_i)|\right\}\tag{3-12}\f]
+
+常用的 Robust 核函数及其权重如下表所示。
+
+<div class="full_width_table">
+<center>
+表 3-1 常用的 Robust 核函数及其权重
+</center>
+
+|        |                        \f$\rho(s)\f$                         |                        \f$\rho'(s)\f$                        |                 \f$w_i=\frac{\rho'(s)}{s}\f$                 |
+| :----: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+|   L2   |                      \f$\frac12s^2\f$                        |                            \f$s\f$                           |                            \f$1\f$                           |
+| Huber  | \f[\begin{cases}\frac12s^2&\vert s\vert\leq k\\k(\vert s\vert-\frac12k)&\vert s\vert>k\end{cases}\f] | \f[\begin{cases}s&\vert s\vert\leq k\\k\cdot\texttt{sgn}(s)&\vert s\vert>k\end{cases}\f] | \f[\begin{cases}1&\vert s\vert\leq k\\\frac{k}{\vert s\vert}&\vert s\vert>k\end{cases}\f] |
+| Tukey  | \f[\begin{cases}\frac{k^2}{6}\left[1-\left(1-\frac{s^2}{k^2}\right)^3\right]&\vert s\vert\leq k\\\frac{k^2}{6}&\vert s\vert>k\end{cases}\f] | \f[\begin{cases}s\left(1-\frac{s^2}{k^2}\right)^2&\vert s\vert\leq k\\0&\vert s\vert>k\end{cases}\f] | \f[\begin{cases}\left(1-\frac{s^2}{k^2}\right)^2&\vert s\vert\leq k\\0&\vert s\vert>k\end{cases}\f] |
+|   GM   |            \f[\frac{s^2}{2\left(1+s^2\right)}\f]             |             \f[\frac{s}{\left(1+s^2\right)^2}\f]             |             \f[\frac{1}{\left(1+s^2\right)^2}\f]             |
+| Cauchy | \f[\frac{c^2}2\log\left[1+\left(\frac sk\right)^2\right]\f]  |         \f[\frac{s}{1+\left(\frac{s}{k}\right)^2}\f]         |         \f[\frac{1}{1+\left(\frac{s}{k}\right)^2}\f]         |
+
+</div>
+
+不难发现，L2 核函数就是原来的目标函数 \f$\fml{3-1}\f$。在正态分布的假设下
+
+- Huber 核的 \f$k\f$ 可以取为 1.345；
+- Tukey 核的 \f$k\f$ 可以取为 4.685；
+- Cauchy 核的 \f$k\f$ 可以取为 2.385。
+
+#### 3.4 如何使用
+
+RMVL 提供了带有 Robust 核函数的最小二乘法，可参考 rm::lsqnonlinRKF ，对于上面示例中的正弦函数拟合，可以使用下面的代码。
+
+@add_toggle_cpp
+
+```cpp
+auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, RobustMode::Huber);
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+x = rm.lsqnonlinRKF(lsq_sine, [1, 0.02, 0, 1.09], rm.RobustMode.Huber)
+```
+
+@end_toggle

@@ -180,7 +180,7 @@ int main()
     rm::Server srv(4840);
     srv.start();
 
-    // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<vector<bool>(ServerView, const NodeId &, InputVariables, OutputVariables)> 的可调用对象
+    // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<bool(ServerView, const NodeId &, InputVariables, OutputVariables)> 的可调用对象
     rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables iargs, rm::OutputVariables oargs) {
         int num1 = iargs[0], num2 = iargs[1];
         oargs[0] = num1 + num2;
@@ -403,7 +403,7 @@ int main()
         int receive_data = value;
         printf("Data (n=number) was changed to: %d\n", receive_data);
     };
-    client.monitor(node, onChange, 5);
+    client.monitor(node, on_change, 5);
     // 线程阻塞
     client.spin();
 }
@@ -593,19 +593,15 @@ python3 ./nodeset_compiler.py \
 `rm::Server` 使用 RAII 进行设计，一个对象占有了服务器的所有权和生命周期，当对象析构时，会自动停止并结束服务器。使用 `rm::ServerView` 来获取不占有所有权的服务器视图，并进行变量读写、路径搜索的操作，下面用服务器视图的单元测试作为示例。
 
 ```cpp
-rm::Method method;
+rm::Method method = [](rm::ServerView sv, const rm::NodeId &, rm::InputVariables iargs, rm::OutputVariables) {
+    auto num_node = rm::nodeObjectsFolder | sv.find("num");
+    int num = sv.read(num_node).cast<int>();
+    sv.write(num_node, iargs[0].cast<int>() + num);
+    return true;
+};
 method.browse_name = "plus";
 method.display_name = "Input + Number";
 method.description = "输入值加数";
-method.func = [](UA_Server *p_server, const UA_NodeId *, void *, const UA_NodeId *, void *, const UA_NodeId *,
-                 void *, size_t, const UA_Variant *inputs, size_t, UA_Variant *) -> UA_StatusCode {
-    rm::ServerView sv = p_server;
-    auto num_node = nodeObjectsFolder | sv.find("num");
-    int num = sv.read(num_node).cast<int>();
-    rm::Variable dst = *reinterpret_cast<int *>(inputs->data) + num;
-    sv.write(num_node, dst);
-    return UA_STATUSCODE_GOOD;
-};
 method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
 srv.addMethodNode(method);
 ```
@@ -614,4 +610,4 @@ srv.addMethodNode(method);
 
 ## 5. 引用
 
-@cite ua-modeler UaModeler · FreeOpcUa/opcua-modeler · Github
+@cite FreeOpcUa22 UaModeler · FreeOpcUa/opcua-modeler · Github
