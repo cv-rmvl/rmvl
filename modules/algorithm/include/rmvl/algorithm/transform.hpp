@@ -1,11 +1,11 @@
 /**
  * @file transform.hpp
- * @author RoboMaster Vision Community
+ * @author zhaoxi (535394140@qq.com)
  * @brief 坐标变换
  * @version 1.0
  * @date 2023-01-12
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 

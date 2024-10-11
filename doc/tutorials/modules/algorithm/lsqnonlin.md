@@ -310,7 +310,7 @@ RMVL 提供了带有 Robust 核函数的最小二乘法，可参考 rm::lsqnonli
 @add_toggle_cpp
 
 ```cpp
-auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, RobustMode::Huber);
+auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber);
 ```
 
 @end_toggle

@@ -73,7 +73,7 @@ sudo apt install doxygen doxygen-gui graphviz
 
 - **示例代码** 展示了如何在实际应用程序中使用该库，每个示例都是代表一个简单应用程序的自包含文件。这些文件的部分内容可以包含在文档和教程中，以演示函数调用和对象协作。
 
-- **参考书目** 用于创建一个公共的书目，所有作为 RMVL 功能基础的科学书籍、文章和论文集都应列入此参考书目。
+- @ref citelist 用于创建一个公共的书目，所有作为 RMVL 功能基础的科学书籍、文章和论文集都应列入此 @ref citelist 。
 
 详细内容 {#tutorial_documentation_content}
 -----
@@ -102,21 +102,23 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
   @verbatim
   @param[in] cameraMatrix 相机内参矩阵
   @endverbatim
-  - 结果如下
+  <span style="color: red">**结果如下**</span>
     @param[in] cameraMatrix 相机内参矩阵
 
 - __note__ - 注解，可包含对类、函数的详细介绍或者使用注意事项，也可包含一些公式信息，具体的公式写法在后续的 __f__ 会进行介绍，note 的使用如下
   @verbatim
   @note 公式推导参考函数 @ref rm::calculateRelativeCenter
   @endverbatim
-  - 结果如下
+  
+  <span style="color: red">**结果如下**</span>
     @note 公式推导参考函数 @ref rm::calculateRelativeCenter
 
 - __return__ - 表示返回值
   @verbatim
   @return 相对角度
   @endverbatim
-  - 结果如下
+  
+  <span style="color: red">**结果如下**</span>
     @return 相对角度
 
 - __f__ - 公式
@@ -135,12 +137,13 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
   \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
   \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
   @endverbatim
-  - 结果如下
+  
+  <span style="color: red">**结果如下**</span>
     
-    若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
-    在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
-    \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
-    \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
+  若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
+  在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
+  \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
+  \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
 
 - __defgroup__ 与 __addtogroup__ - 
 

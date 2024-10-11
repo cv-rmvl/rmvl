@@ -1,7 +1,7 @@
 并查集 {#tutorial_modules_union_find}
 ============
 
-@author RoboMaster Vision Community
+@author 赵曦
 @date 2023/01/11
 
 @prev_tutorial{tutorial_modules_fft}

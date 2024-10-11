@@ -457,7 +457,7 @@ l_2&=f_2(t_n+\frac h2,x_{1_n}+\frac h2k_1,x_{2_n}+\frac h2l_1)\end{align}\f]
 @add_toggle_cpp
 
 ```cpp
-#include <rmvl/algorithms.hpp>
+#include <rmvl/algorithm.hpp>
 
 #include <cstdio>
 

@@ -13,7 +13,7 @@ RMVL 起源于 SRVL（SCUT Robotlab Vision Library——华南理工大学机器
 - **2.x** —— *2022.01* 发布<span style="color: green">（未开源）</span>，使用抽象工厂设计模式后出现了维护困难的情况，包括但不限于多个 @ref function_modules 共同组合，导致产生非常多的派生工厂，此版本针对这一弊端移除了原先所有的设计模式，各功能模块仅单独存在，不再另外设置组合或其他强依赖关系。此外， **2.x** 相较于 **1.x** 添加了全新的内容： @ref group 。
 - **3.x** —— *2022.08* 发布<span style="color: green">（未开源）</span>，架构、功能进一步完善。在开发上，添加了 CI-CD 自动化构建测试工具，使用 GoogleTest 为已有的组件、模块添加了单元测试，使用 benchmark 为部分功能添加了性能基准测试；在功能上，移除原先所有的 `group` 组件，重定义并完善了 `group` 组件所应当具备的功能，后续在此系列代码基础上，完成了 **RM2023 版整车状态估计** ；在使用上，顶层模块与视觉库完全分离，涉及到各个功能开启或关闭的逻辑功能将设置在顶层模块，这一部分内容由用户自行实现。此外，该版本完善了 CMake 的项目构建方式，并且可通过 `make install/uninstall` 完成编译安装、卸载。
 - **4.x** —— *2023.09* 发布<span style="color: green">（已开源）</span>，并登陆 [Github](https://github.com) 平台，更名 RMVL 以追求更加广泛的使用场景。并发布了 **RMVL 1.x** 系列版本，该系列彻底形成了面向对象迭代器设计模式与责任链设计模式相互结合的代码架构。 **4.x** 版本在设计之初主要为了简化数据组件的开发，移除了不属于 @ref data_components 管理的，但在 @ref function_modules 中被设置的信息。此外还为各个 @ref function_modules 加入了 `XxxInfo` 的信息类。该版本首次加入命名空间 `rm`，避免了与其他库命名冲突的情况。此外，该版本极大程度简化并统一了参数模块的定义方式，将原先繁琐的参数定义、加载的功能使用自定义的参数文件 `*.para` 以及一组 CMake 函数 `rmvl_generate_para` 自动完成 C++ 代码生成与文档注解生成，为了更进一步简化参数模块的设计，RMVL 提供了 Visual Studio Code 的插件，为 `*.para` 文件提供语法高亮、代码提示、悬浮提示与代码块，并为 RMVL 中的部分函数与宏提供了代码提示、悬浮提示与代码块。
-- **RMVL 2.x**
+- **RMVL 2.x** —— *2024.09* 发布<span style="color: green">（已开源）</span>，在功能上，该系列首次加入了 Python 支持，可参考 @ref tutorials_python ，此外还为 Windows 用户提供了 MSVC 编译器的支持。在架构上，新增 @ref algorithm ，将原先 @ref core 中的各类算法迁移至该模块。
 
 #### 使用对象与基本情况
 
@@ -57,27 +57,33 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 #### 数据组件 {#data_components}
 
-- @ref feature (**feature**) —— RMVL 最基本的用于存储的数据结构，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** @cite opencv01 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 `feature` 有用的信息（一般是通过 `feature` 的构造函数完成）。此外 RMVL 提供了默认 `feature`，即 rm::DefaultFeature ，用于表示无轮廓的信息，一般是一个角点。
+@ref feature (**feature**) —— RMVL 最基本的用于存储的数据结构，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** @cite opencv01 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 `feature` 有用的信息（一般是通过 `feature` 的构造函数完成）。此外 RMVL 提供了默认 `feature`，即 rm::DefaultFeature ，用于表示无轮廓的信息，一般是一个角点。
 
-- @ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature::ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息用于构造 `combo` 的派生对象。此外 RMVL 提供了默认 `combo`，即 rm::DefaultCombo ，用于表示单独的无关联的 `feature`。
+@ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature::ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息用于构造 `combo` 的派生对象。此外 RMVL 提供了默认 `combo`，即 rm::DefaultCombo ，用于表示单独的无关联的 `feature`。
 
-- @ref tracker (**tracker**) —— `tracker` 是在时间上包含了许多相同物理特性的 `combo`，从而形成一个 `combo` 的时间序列，在 RMVL 中，则通过使用 `std::deque<combo::ptr>` 来表示这个时间序列。在功能上，`tracker` 不仅表示了不同时间下相同的 `combo` 的相关信息，还能处理在某个时间点上获取到不正确的 `combo` 的异常情况。此外 RMVL 提供了默认 `tracker`，即 rm::DefaultTracker ，用于表示无需时间序列信息的一组 `combo`。
+@ref tracker (**tracker**) —— `tracker` 是在时间上包含了许多相同物理特性的 `combo`，从而形成一个 `combo` 的时间序列，在 RMVL 中，则通过使用 `std::deque<combo::ptr>` 来表示这个时间序列。在功能上，`tracker` 不仅表示了不同时间下相同的 `combo` 的相关信息，还能处理在某个时间点上获取到不正确的 `combo` 的异常情况。此外 RMVL 提供了默认 `tracker`，即 rm::DefaultTracker ，用于表示无需时间序列信息的一组 `combo`。
 
-- @ref group (**group**) —— 如果多个追踪器在物理空间上具有一定的相关性，比如共享轴旋转、刚性连接等属性，它们可以一起形成一个序列组 `group`，从而能够表示更加高级的物理信息。序列组使用 `std::vector<tracker::ptr>` 来存储这些追踪器。此外 RMVL 提供了默认 `group`，即 rm::DefaultGroup ，用于表示若干无相关性的一组 `tracker`，即退化成了 `std::vector<tracker::ptr>`。
+@ref group (**group**) —— 如果多个追踪器在物理空间上具有一定的相关性，比如共享轴旋转、刚性连接等属性，它们可以一起形成一个序列组 `group`，从而能够表示更加高级的物理信息。序列组使用 `std::vector<tracker::ptr>` 来存储这些追踪器。此外 RMVL 提供了默认 `group`，即 rm::DefaultGroup ，用于表示若干无相关性的一组 `tracker`，即退化成了 `std::vector<tracker::ptr>`。
 
 #### 功能模块 {#function_modules}
 
-- @ref detector (**detector**) —— 识别、检测器是功能模块中最重要的部分，也是视觉图像处理的第一步。它负责对输入图像进行识别并加以处理，提取出目标轮廓、特征点等信息，并结合已知的部分数据组件，按顺序依次构建各种新的数据组件。
+@ref detector (**detector**) —— 识别、检测器是功能模块中最重要的部分，也是视觉图像处理的第一步。它负责对输入图像进行识别并加以处理，提取出目标轮廓、特征点等信息，并结合已知的部分数据组件，按顺序依次构建各种新的数据组件。识别得到的各种图像以及提取到的特征和组合体均保存至识别模块信息 `rm::DetectInfo` 中。
 
-  <img src="https://s1.ax1x.com/2022/11/05/xOgdat.md.png" alt="xOgdat.png" border="0" />
+![图 1 装甲识别模块](extra/detector.jpg)
+
+@ref compensator (**compensator**) —— 补偿器通常是功能模块中的第一个用于修正数据组件的算法模块，<span style="color: green">主要在 RoboMaster 赛事中使用</span>。补偿器主要负责修正弹道下坠的影响。计算得到的子弹飞行时间 `tof` 以及补偿增量 `compensation` 均保存至补偿模块信息 `rm::CompensateInfo` 中。
+
+@ref predictor (**predictor**) —— 对于需要考虑目标追踪或存在较长通讯延迟的机器人而言，必须要引入目标预测环节，使得伺服机构能够恒定追踪、捕获目标，<span style="color: green">在 RoboMaster 赛事中一般用于保证弹丸能够准确击中敌方目标</span>。一般而言，每一个预测模块会针对特定的数据组件（派生的 `group` 对象）进行 2~3 种预测量类型的计算，包括动态响应预测量 `Kt`、静态响应预测量 `B`、射击延迟预测量 `Bs`，每种预测量类型都包含 9 种预测对象，每个预测对象之间对于 3 种预测量类型来说都是线性关系，例如在 @ref gyro_predictor 中对于 `ANG_Y` 预测对象的 3 种预测量都是单独计算的，这也便于后续的 **决策模块** 能够自由组合这些预测量。同样，计算得到的各类预测量均被保存至预测模块信息 `rm::PredictInfo` 中。
   
-  识别得到的各种图像以及提取到的特征和组合体均保存至识别模块信息 `rm::DetectInfo` 中。
+<center>
 
-- @ref compensator (**compensator**) —— 补偿器通常是功能模块中的第一个用于修正数据组件的算法模块，<span style="color: green">主要在 RoboMaster 赛事中使用</span>。补偿器主要负责修正弹道下坠的影响。计算得到的子弹飞行时间 `tof` 以及补偿增量 `compensation` 均保存至补偿模块信息 `rm::CompensateInfo` 中。
+![图 2 能量机关预测模块](extra/predictor.png)
 
-- @ref predictor (**predictor**) —— 对于需要考虑目标追踪或存在较长通讯延迟的机器人而言，必须要引入目标预测环节，使得伺服机构能够恒定追踪、捕获目标，<span style="color: green">在 RoboMaster 赛事中一般用于保证弹丸能够准确击中敌方目标</span>。一般而言，每一个预测模块会针对特定的数据组件（派生的 `group` 对象）进行 2~3 种预测量类型的计算，包括动态响应预测量 `Kt`、静态响应预测量 `B`、射击延迟预测量 `Bs`，每种预测量类型都包含 9 种预测对象，每个预测对象之间对于 3 种预测量类型来说都是线性关系，例如在 @ref gyro_predictor 中对于 `ANG_Y` 预测对象的 3 种预测量都是单独计算的，这也便于后续的 **决策模块** 能够自由组合这些预测量。同样，计算得到的各类预测量均被保存至预测模块信息 `rm::PredictInfo` 中。
+</center>
 
-- @ref decider (**decider**) —— 在经过识别、补偿和预测 3 个步骤后，需要使用特定的策略来获得当前时刻的最优目标，结合前三个步骤的信息（包含识别模块信息 `DetectInfo` 、补偿模块信息 `CompensateInfo` 、预测模块信息 `PredictInfo` ）导出到决策模块信息 `rm::DecideInfo` 中。
+@ref decider (**decider**) —— 在经过识别、补偿和预测 3 个步骤后，需要使用特定的策略来获得当前时刻的最优目标，结合前三个步骤的信息（包含识别模块信息 `DetectInfo` 、补偿模块信息 `CompensateInfo` 、预测模块信息 `PredictInfo` ）导出到决策模块信息 `rm::DecideInfo` 中。
+
+![图 3 整车状态决策模块](extra/decider.jpg)
 
 该文档的后续章节描述了每个模块的功能。但首先，请确保了解 RMVL 的设计理念以及 API 概念。
 
@@ -168,7 +174,7 @@ rm::MvCamera mv(CameraConfig{});
 
 **加载**
 
-RMVL 的所有参数文件都是通过 **YAML** 文件的读取和写入完成运行时的参数加载的，每个参数类中均提供了一致的接口 `load()` 用于从 YAML 文件中加载参数，可参考以下代码：
+RMVL 的所有参数文件都是通过 **YAML** 文件的读取和写入完成运行时的参数加载的，每个参数类中均提供了一致的接口 `read()` 和 `write()` 用于从 YAML 文件中读取、写入参数，可参考以下代码：
 
 ```cpp
 #include <rmvlpara/combo/armor.h>
@@ -178,13 +184,13 @@ RMVL 的所有参数文件都是通过 **YAML** 文件的读取和写入完成�
 
 std::string prefix_str = "../etc/";
 
-if (!para::armor_param.load(prefix_str + "armor_param.yml"))
+if (!rm::para::armor_param.read(prefix_str + "armor_param.yml"))
     printf("Failed to load the param: \"armor_param\".");
-if (!para::camera_param.load(prefix_str + "camera_param.yml"))
+if (!rm::para::camera_param.read(prefix_str + "camera_param.yml"))
     printf("Failed to load the param: \"camera_param\".");
 ```
 
-这段代码中，`armor` 和 `camera` 参数类的头文件被包含，并使用成员方法 `load()` 来加载参数。
+这段代码中，`armor` 和 `camera` 参数类的头文件被包含，并使用成员方法 `read()` 来加载参数。
 
 #### 异常处理 {#intro_error_handle}
 
@@ -197,11 +203,11 @@ RMVL 中的异常通常是使用 `RMVL_Error(code, msg)` 宏或类似 `printf` �
 ```cpp
 try
 {
-  ... // 调用 RMVL 函数
+    ... // 调用 RMVL 函数
 }
 catch (const rm::Exception& e)
 {
-  const char* err_msg = e.what();
-  printf("exception caught: %s", err_msg);
+    const char* err_msg = e.what();
+    printf("exception caught: %s", err_msg);
 }
 ```

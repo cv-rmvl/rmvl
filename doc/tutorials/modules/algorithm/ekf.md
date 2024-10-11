@@ -124,16 +124,21 @@ W&=\left.\ptl{f_A}{\pmb w}\right|_{(\hat{\pmb w}_{k-1},\pmb u_{k-1})}\end{align}
 
 int main()
 {
-    // 状态量   x = [ cx, cy, θ, ω, r ]ᵀ
-    //              ┌ cx                  ┌ 1  0  0  0  0 ┐
-    //              │ cy                  │ 0  1  0  0  0 │
-    // 状态方程 F = │ θ + ωT         Ja = │ 0  0  1  T  0 │ = A
-    //              │ ω                   │ 0  0  0  1  0 │
-    //              └ r                   └ 0  0  0  0  1 ┘
-    // 观测量   z = [ px, py, θ ]ᵀ
-    //              ┌ cx + rcosθ          ┌ 1  0 -rsinθ  0  cosθ ┐
-    // 观测方程 H = │ cy + rsinθ     Jh = │ 0  1  rcosθ  0  sinθ │
-    //              └ θ                   └ 0  0    1    0    0  ┘
+    // 状态量 x = [ cx, cy, θ, ω, r ]ᵀ
+    //
+    // 状态方程
+    //           ┌ cx                  ┌ 1  0  0  0  0 ┐
+    //           │ cy                  │ 0  1  0  0  0 │
+    //       F = │ θ + ωT         Ja = │ 0  0  1  T  0 │ = A
+    //           │ ω                   │ 0  0  0  1  0 │
+    //           └ r                   └ 0  0  0  0  1 ┘
+    //
+    // 观测量 z = [ px, py, θ ]ᵀ
+    //
+    // 观测方程
+    //           ┌ cx + rcosθ          ┌ 1  0 -rsinθ  0  cosθ ┐
+    //       H = │ cy + rsinθ     Jh = │ 0  1  rcosθ  0  sinθ │
+    //           └ θ                   └ 0  0    1    0    0  ┘
 
     // 正态分布噪声
     std::default_random_engine ng;
