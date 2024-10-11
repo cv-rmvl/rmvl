@@ -1,12 +1,12 @@
 /**
  * @file core.hpp
- * @author RoboMaster Vision Community
- * @brief
- * @version 1.0
+ * @author zhaoxi (535394140@qq.com)
+ * @brief RMVL 核心模块汇总头文件
+ * @version 2.0
  * @date 2023-04-18
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
- *
+ * @copyright Copyright 2023 (c), zhaoxi
+ * 
  */
 
 #pragma once
@@ -29,8 +29,7 @@
 #include <rmvl/rmvl_modules.hpp>
 
 // 通用
+#include "core/io.hpp"
+#include "core/timer.hpp"
 #include "core/util.hpp"
 #include "core/version.hpp"
-#include "core/timer.hpp"
-#include "core/io.hpp"
-

@@ -1,11 +1,11 @@
 /**
  * @file util.hpp
- * @author RoboMaster Vision Community
+ * @author zhaoxi (535394140@qq.com)
  * @brief
  * @version 1.0
  * @date 2022-11-03
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 

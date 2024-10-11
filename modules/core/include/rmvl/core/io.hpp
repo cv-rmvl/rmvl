@@ -1,12 +1,12 @@
 /**
  * @file io.hpp
- * @author RoboMaster Vision Community
- * @brief 陀螺仪数据
- * @version 1.0
- * @date 2023-01-12
- *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
- *
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 数据 IO 与通信模块
+ * @version 2.0
+ * @date 2024-10-03
+ * 
+ * @copyright Copyright 2024 (c), zhaoxi
+ * 
  */
 
 #pragma once

@@ -210,7 +210,7 @@ inline TestParam test_param;
 
 ```cpp
 /* code */
-rm::para::algorithm_param.load(prefix_path + "algorithm.yml");
+rm::para::algorithm_param.read(prefix_path + "algorithm.yml");
 /* code */
 ```
 
@@ -238,7 +238,7 @@ name: "Hello, RMVL"
 在程序调用
 
 ```cpp
-rm::para::test_param.load(prefix_path + "test.yml");
+rm::para::test_param.read(prefix_path + "test.yml");
 ```
 
 时，会实时加载该 YAML 文件，此时

@@ -1,7 +1,7 @@
 基于 TOPSIS 模型的熵权法 {#tutorial_modules_ew_topsis}
 ============
 
-@author RoboMaster Vision Community
+@author 赵曦
 @date 2023/01/11
 
 @prev_tutorial{tutorial_modules_fminunc}

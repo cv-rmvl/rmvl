@@ -1,7 +1,7 @@
 支持随机访问的堆 {#tutorial_modules_ra_heap}
 ============
 
-@author RoboMaster Vision Community
+@author 赵曦
 @date 2023/01/11
 
 @prev_tutorial{tutorial_modules_union_find}

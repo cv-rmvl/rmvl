@@ -4,7 +4,7 @@
 @author 赵曦
 @date 2023/11/10
 @version 1.0
-@brief 从 **向量到子空间距离** ，和 **构建法方程** 两种方式推导了最小二乘法的矩阵表示
+@brief 从 **向量到子空间距离** 和 **构建法方程** 两种方式推导了最小二乘法的矩阵表示
 
 @prev_tutorial{tutorial_modules_interpolation}
 

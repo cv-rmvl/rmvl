@@ -1,7 +1,7 @@
 /**
  * @file numcal.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief Numerical Calculation Module 数值计算与最优化模块
+ * @brief 数值计算与最优化模块
  * @version 1.0
  * @date 2024-01-06
  *
@@ -404,9 +404,9 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const
 RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
 
 /**
- * @brief 无约束非线性最小二乘求解，实现与 \cite Agarwal23 类似的算法
+ * @brief 非线性最小二乘求解，实现与 \cite Agarwal23 类似的算法
  *
- * @param[in] funcs 多维最小二乘约束函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
+ * @param[in] funcs 最小二乘目标函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
  *                  \left(\texttt{funcs}[0]^2+\texttt{funcs}[1]^2+\cdots+\texttt{funcs}[n]^2\right)\f]
  * @param[in] x0 初始点
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
@@ -418,16 +418,16 @@ RMVL_EXPORTS_W std::vector<double> lsqnonlin(const FuncNds &funcs, const std::ve
 enum class RobustMode : uint8_t
 {
     L2,     //!< `L2` 核函数
-    Huber,  //!< `Huber` 核函数
-    Tukey,  //!< `Tukey` 核函数
+    Huber,  //!< `Huber` 核函数 \cite Huber64
+    Tukey,  //!< `Tukey` 核函数 \cite Tukey60
     Cauchy, //!< `Cauchy` 核函数
-    GM,     //!< `Geman-McClure` 核函数
+    GM,     //!< `Geman-McClure` 核函数 \cite Geman87
 };
 
 /**
- * @brief 带 Robust 核函数的无约束非线性最小二乘求解
+ * @brief 带 Robust 核函数的非线性最小二乘求解
  *
- * @param[in] funcs 多维最小二乘约束函数，参考 rm::lsqnonlin
+ * @param[in] funcs 最小二乘目标函数，参考 rm::lsqnonlin
  * @param[in] x0 初始点
  * @param[in] rb Robust 核函数模式，参考 rm::RobustMode ，选择 `rm::RobustMode::L2` 时退化为 `rm::lsqnonlin`
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
