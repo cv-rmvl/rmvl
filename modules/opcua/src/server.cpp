@@ -93,6 +93,11 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     _vcb_gc.reserve(16);
     _dscb_gc.reserve(16);
     _mcb_gc.reserve(16);
+
+    // 启动网络层
+    UA_StatusCode retval = UA_Server_run_startup(_server);
+    if (retval != UA_STATUSCODE_GOOD)
+        ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
 }
 
 Server::Server(ServerUserConfig on_config, uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users)
@@ -101,21 +106,19 @@ Server::Server(ServerUserConfig on_config, uint16_t port, std::string_view name,
         on_config(_server);
 }
 
-void Server::start()
+void Server::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
+
+void Server::spin()
 {
     _running = true;
-    _run = std::thread([this]() {
-        UA_StatusCode retval = UA_Server_run(_server, &_running);
-        if (retval != UA_STATUSCODE_GOOD)
-            ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
-    });
+    while (_running)
+        UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT);
 }
 
 Server::~Server()
 {
-    _running = false;
-    if (_run.joinable())
-        _run.join();
+    shutdown();
+    UA_Server_run_shutdown(_server);
     UA_Server_delete(_server);
 }
 
@@ -143,6 +146,53 @@ static bool serverWrite(UA_Server *p_server, const NodeId &node, const Variable 
     if (status != UA_STATUSCODE_GOOD)
         ERROR_("Failed to write variable, error code: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
+}
+
+static bool serverTriggerEvent(UA_Server *server, const NodeId &node_id, const Event &event)
+{
+    RMVL_DbgAssert(server != nullptr);
+
+    ServerView sv{server};
+    NodeId type_id = nodeBaseEventType | sv.find(event.type().browse_name);
+    if (type_id.empty())
+    {
+        ERROR_("Failed to find the event type ID during triggering event");
+        return false;
+    }
+    // 创建事件
+    NodeId event_id;
+    auto status = UA_Server_createEvent(server, type_id, &event_id);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+
+    // 设置事件默认属性
+    UA_DateTime time = UA_DateTime_now();
+    UA_String source_name = UA_STRING(helper::to_char(event.source_name));
+    UA_LocalizedText evt_msg = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(event.message));
+    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Time")), &time, &UA_TYPES[UA_TYPES_DATETIME]);
+    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("SourceName")), &source_name, &UA_TYPES[UA_TYPES_STRING]);
+    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
+    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+    // 设置事件自定义属性
+    for (const auto &[browse_name, prop] : event.data())
+    {
+        NodeId sub_node_id = event_id | sv.find(browse_name);
+        if (!sub_node_id.empty())
+            UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
+                                                 &prop, &UA_TYPES[UA_TYPES_INT32]);
+    }
+
+    // 触发事件
+    status = UA_Server_triggerEvent(server, event_id, node_id, nullptr, true);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    return true;
 }
 
 ///////////////////////// 节点配置 /////////////////////////
@@ -199,10 +249,10 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) con
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     // 获取变量节点的变量类型节点
     NodeId type_id{nodeBaseDataVariableType};
-    const auto p_type = val.type();
-    if (p_type != nullptr)
+    const auto variable_type = val.type();
+    if (!variable_type.empty())
     {
-        type_id = type_id | find(p_type->browse_name);
+        type_id = type_id | find(variable_type.browse_name);
         if (type_id.empty())
         {
             ERROR_("Failed to find the variable type ID during adding variable node");
@@ -294,10 +344,10 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
     // 获取变量节点的变量类型节点
     NodeId type_id{nodeBaseDataVariableType};
-    const auto p_type = val.type();
-    if (p_type != nullptr)
+    const auto variable_type = val.type();
+    if (!variable_type.empty())
     {
-        type_id = type_id | find(p_type->browse_name);
+        type_id = type_id | find(variable_type.browse_name);
         if (type_id.empty())
         {
             ERROR_("Failed to find the variable type ID during adding variable node");
@@ -412,12 +462,12 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype) const
     NodeId retval;
     // 获取父节点的 NodeId
     NodeId parent_id{nodeBaseObjectType};
-    const ObjectType *current = otype.getBase();
+    const ObjectType *current = otype.base();
     std::stack<std::string> base_stack;
     while (current != nullptr)
     {
         base_stack.push(current->browse_name);
-        current = current->getBase();
+        current = current->base();
     }
     while (!base_stack.empty())
     {
@@ -468,13 +518,14 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id) const
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(obj.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
     // 获取对象类型节点
-    const ObjectType *current = obj.type();
+    ObjectType obj_type = obj.type();
+    const rm::ObjectType *current = &obj_type;
     NodeId type_id{nodeBaseObjectType};
     std::stack<std::string> base_stack;
-    while (current != nullptr)
+    while (current != nullptr && !current->empty())
     {
         base_stack.push(current->browse_name);
-        current = current->getBase();
+        current = current->base();
     }
     while (!base_stack.empty())
     {
@@ -601,55 +652,39 @@ NodeId Server::addEventTypeNode(const EventType &etype) const
     return retval;
 }
 
-bool Server::triggerEvent(const NodeId &node_id, const Event &event) const
-{
-    RMVL_DbgAssert(_server != nullptr);
-
-    NodeId type_id = nodeBaseEventType | find(event.type()->browse_name);
-    if (type_id.empty())
-    {
-        ERROR_("Failed to find the event type ID during triggering event");
-        return false;
-    }
-    // 创建事件
-    NodeId event_id;
-    auto status = UA_Server_createEvent(_server, type_id, &event_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
-        ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
-        return false;
-    }
-
-    // 设置事件默认属性
-    UA_DateTime time = UA_DateTime_now();
-    UA_String source_name = UA_STRING(helper::to_char(event.source_name));
-    UA_LocalizedText evt_msg = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(event.message));
-    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Time")), &time, &UA_TYPES[UA_TYPES_DATETIME]);
-    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("SourceName")), &source_name, &UA_TYPES[UA_TYPES_STRING]);
-    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
-    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
-    // 设置事件自定义属性
-    for (const auto &[browse_name, prop] : event.data())
-    {
-        NodeId sub_node_id = event_id | find(browse_name);
-        if (!sub_node_id.empty())
-            UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
-                                                 &prop, &UA_TYPES[UA_TYPES_INT32]);
-    }
-
-    // 触发事件
-    status = UA_Server_triggerEvent(_server, event_id, node_id, nullptr, true);
-    if (status != UA_STATUSCODE_GOOD)
-    {
-        ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
-        return false;
-    }
-    return true;
-}
+bool Server::triggerEvent(const NodeId &node_id, const Event &event) const { return serverTriggerEvent(_server, node_id, event); }
 
 //////////////////////// 服务端视图 ////////////////////////
 
 Variable ServerView::read(const NodeId &node) const { return serverRead(_server, node); }
 bool ServerView::write(const NodeId &node, const Variable &val) const { return serverWrite(_server, node, val); }
+bool ServerView::triggerEvent(const NodeId &node_id, const Event &event) const { return serverTriggerEvent(_server, node_id, event); }
+
+/////////////////////// 服务器定时器 ///////////////////////
+
+static void timer_cb(UA_Server *p_server, void *data)
+{
+    auto &func = *reinterpret_cast<ServerTimer::Callback *>(data);
+    func(p_server);
+}
+
+ServerTimer::ServerTimer(ServerView sv, double period, Callback callback) : _sv(sv), _cb(callback)
+{
+    auto status = UA_Server_addRepeatedCallback(_sv.get(), timer_cb, &_cb, period, &_id);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to add repeated callback: %s", UA_StatusCode_name(status));
+        _id = 0;
+    }
+}
+
+void ServerTimer::cancel()
+{
+    if (_id != 0)
+    {
+        UA_Server_removeCallback(_sv.get(), _id);
+        _id = 0;
+    }
+}
 
 } // namespace rm

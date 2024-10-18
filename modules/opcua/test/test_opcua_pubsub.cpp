@@ -9,6 +9,8 @@
  *
  */
 
+#include <thread>
+
 #include "rmvl/opcua/publisher.hpp"
 #include "rmvl/opcua/subscriber.hpp"
 
@@ -27,12 +29,12 @@ TEST(OPC_UA_PubSub, pubsub_config)
     rm::Publisher<rm::TransportID::UDP_UADP> pub("NumberPub", "opc.udp://224.0.1.22", 8000);
     uaCreateVariable(test_double, 3.1);
     auto node_id = pub.addVariableNode(test_double);
-    pub.start();
+    std::thread t1(&rm::Publisher<rm::TransportID::UDP_UADP>::spin, &pub);
     EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 50));
 
     // 创建订阅者
     rm::Subscriber<rm::TransportID::UDP_UADP> sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
-    sub.start();
+    std::thread t2(&rm::Subscriber<rm::TransportID::UDP_UADP>::spin, &sub);
     rm::FieldMetaData meta_data{"DoubleDemo", UA_TYPES_DOUBLE, -1};
     auto nodes = sub.subscribe("NumberPub", {meta_data});
     EXPECT_EQ(nodes.size(), 1);
@@ -42,10 +44,10 @@ TEST(OPC_UA_PubSub, pubsub_config)
     auto sub_val = sub.read(nodes[0]);
     EXPECT_EQ(sub_val.cast<double>(), 3.4);
 
-    sub.stop();
-    pub.stop();
-    sub.join();
-    pub.join();
+    pub.shutdown();
+    sub.shutdown();
+    t1.join();
+    t2.join();
 }
 
 } // namespace rm_test

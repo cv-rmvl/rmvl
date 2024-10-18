@@ -7,10 +7,11 @@ enum LogLevel # 服务器/客户端输出日志的最低级别
   LOG_FATAL   # 致命级别，输出致命错误信息
 endenum
 
+bool SERVER_WAIT = false                       # 单次处理网络事件时，允许服务器等待最多 50ms
 uint32_t CONNECT_TIMEOUT = 30000               # 请求连接时，判定为超时的时间，单位 (ms)
 LogLevel CLIENT_LOGLEVEL = LogLevel::LOG_ERROR # 客户端输出日志的最低级别
 LogLevel SERVER_LOGLEVEL = LogLevel::LOG_ERROR # 服务器输出日志的最低级别
-uint32_t SPIN_TIMEOUT = 10                     # 单次 run_iterate 服务器超时响应的时间，单位 (ms)
+uint32_t CLIENT_WAIT_TIMEOUT = 10              # 单次处理网络事件时，允许客户端等待的时间，单位 (ms)
 
 double SAMPLING_INTERVAL = 2      # 服务器监视变量的采样速度，单位 (ms)，不得小于 2ms
 double PUBLISHING_INTERVAL = 2    # 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms)，不得小于 2ms

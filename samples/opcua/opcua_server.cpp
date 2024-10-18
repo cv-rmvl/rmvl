@@ -6,7 +6,7 @@ using namespace rm;
 
 Server server(4840);
 
-static inline void onHandle(int) { server.stop(); }
+static inline void onHandle(int) { server.shutdown(); }
 
 int main()
 {
@@ -30,7 +30,6 @@ int main()
     server.addVariableNode(value_1);
     server.addVariableNode(value_2);
     server.addMethodNode(add);
-    server.start();
     printf("节点信息:\n");
     printf("  ObjectFolders:\n");
     printf("  - value_1:\n");
@@ -45,6 +44,6 @@ int main()
     printf("      node: Method\n");
     printf("      input: num1(Int32), num2(Int32)\n");
     printf("      output: result(Int32)\n");
-    server.join();
+    server.spin();
     return 0;
 }

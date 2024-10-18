@@ -33,11 +33,8 @@ namespace rm
 //! @{
 
 // --------------------【结构、类型、常量定义】--------------------
-#ifdef MAXFLOAT
-constexpr double FLOAT_MAX{MAXFLOAT};
-#elif defined HUGE
-constexpr double FLOAT_MAX{HUGE};
-#endif
+constexpr float FLOAT_MAX = std::numeric_limits<float>::max(); //!< float 最大值
+constexpr float FLOAT_MIN = std::numeric_limits<float>::min(); //!< float 最小值
 
 constexpr double PI = 3.14159265358979323; //!< 圆周率: \f$\pi\f$
 constexpr double e = 2.7182818459045;      //!< 自然对数底数: \f$e\f$

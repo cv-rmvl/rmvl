@@ -45,6 +45,9 @@ public:
         return *this;
     }
 
+    //! 获取 OPC UA 客户端指针
+    UA_Client *get() const { return _client; }
+
     /**
      * @brief 获取路径搜索必要信息
      * @brief 需要配合管道运算符 `|` 完成路径搜索
@@ -90,7 +93,7 @@ using DataChangeNotificationCallback = std::function<void(ClientView, const Vari
 
 /**
  * @brief 事件通知回调函数
- * 
+ *
  * @param[in] client_view 客户端视图，指代当前客户端
  * @param[in] event_fields 事件数据
  */
@@ -119,6 +122,26 @@ public:
 
     operator ClientView() const { return _client; }
 
+    //! 是否成功创建客户端并成功连接到服务器
+    inline bool ok() const { return _client != nullptr; }
+
+    /**
+     * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
+     * @brief
+     * - 执行事件循环，等效于 ROS/ROS2 工具包中的 `ros::spin()` 以及 `rclcpp::spin()`
+     */
+    void spin() const;
+
+    /**
+     * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
+     * @brief
+     * - 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
+     */
+    void spinOnce() const;
+
+    //! 断开与服务器的连接
+    bool shutdown();
+
     /****************************** 路径搜索 ******************************/
 
     /**
@@ -136,23 +159,6 @@ public:
     inline FindNodeInClient find(std::string_view browse_name, uint16_t ns = 1U) const { return {_client, browse_name, ns}; }
 
     /****************************** 功能配置 ******************************/
-
-    //! 是否成功创建客户端并成功连接到服务器
-    inline bool ok() const { return _client != nullptr; }
-
-    /**
-     * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
-     * @brief
-     * - 执行事件循环，等效于 ROS/ROS2 工具包中的 `ros::spin()` 以及 `rclcpp::spin()`
-     */
-    void spin() const;
-
-    /**
-     * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
-     * @brief
-     * - 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
-     */
-    void spinOnce() const;
 
     /**
      * @brief 从指定的变量节点读数据
@@ -242,6 +248,38 @@ private:
     std::vector<std::unique_ptr<DataChangeNotificationCallback>> _dccb_gc{};
     //! 事件通知回调函数
     std::vector<std::unique_ptr<EventNotificationCallback>> _encb_gc{};
+};
+
+//! OPC UA 客户端定时器
+class ClientTimer final
+{
+public:
+    using Callback = std::function<void(ClientView)>; //!< 定时器回调函数
+
+    /**
+     * @brief 创建 OPC UA 客户端定时器
+     *
+     * @param[in] cv 客户端视图
+     * @param[in] period 定时器周期，单位：毫秒 `ms`
+     * @param[in] callback 定时器回调函数
+     */
+    ClientTimer(ClientView sv, double period, Callback callback);
+
+    ClientTimer(const ClientTimer &) = delete;
+    ClientTimer(ClientTimer &&) = default;
+
+    ClientTimer &operator=(const ClientTimer &) = delete;
+    ClientTimer &operator=(ClientTimer &&) = default;
+
+    ~ClientTimer() { cancel(); }
+
+    //! 取消定时器
+    void cancel();
+
+private:
+    ClientView _cv; //!< 客户端视图
+    Callback _cb;   //!< 定时器回调函数
+    uint64_t _id{}; //!< 定时器 ID
 };
 
 //! @} opcua

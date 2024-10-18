@@ -9,6 +9,8 @@
  *
  */
 
+#include <thread>
+
 #include <gtest/gtest.h>
 
 #include "rmvl/opcua/client.hpp"
@@ -40,24 +42,26 @@ void setup(Server &srv)
     };
     method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
     srv.addMethodNode(method);
-
-    srv.start();
-    std::this_thread::sleep_for(10ms);
 }
 
 TEST(OPC_UA_ServerView, read_variable_in_method)
 {
     Server srv(6000);
     setup(srv);
+    std::thread t(&Server::spin, &srv);
 
-    Client clt("opc.tcp://127.0.0.1:6000");
-    ASSERT_TRUE(clt.ok());
-    EXPECT_EQ(clt.read(nodeObjectsFolder | clt.find("num")), 1);
+    Client cli("opc.tcp://127.0.0.1:6000");
+    ASSERT_TRUE(cli.ok());
+    EXPECT_EQ(cli.read(nodeObjectsFolder | cli.find("num")), 1);
     std::vector<Variable> inputs = {2};
     std::vector<Variable> outputs;
 
-    EXPECT_TRUE(clt.call("plus", inputs, outputs));
-    EXPECT_EQ(clt.read(nodeObjectsFolder | clt.find("num")), 3);
+    EXPECT_TRUE(cli.call("plus", inputs, outputs));
+    EXPECT_EQ(cli.read(nodeObjectsFolder | cli.find("num")), 3);
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
 }
 
 } // namespace rm::rm_test
