@@ -56,6 +56,13 @@ public:
     inline void add(const Method &method) { _methods[method.browse_name] = method; }
 
     /**
+     * @brief 判断对象类型是否为空
+     * 
+     * @return 是否为空
+     */
+    inline bool empty() const { return _variables.empty() && _methods.empty() && _base == nullptr; }
+
+    /**
      * @brief 设置基类 `rm::ObjectType` 对象类型
      *
      * @param[in] otype 既存的待作为基类的 `rm::ObjectType` 对象类型
@@ -67,7 +74,7 @@ public:
      *
      * @return 基类 `rm::ObjectType`
      */
-    inline const ObjectType *getBase() const { return _base; }
+    inline const ObjectType *base() const { return _base; }
 
     inline const auto &getVariables() const { return _variables; }
 
@@ -130,17 +137,19 @@ private:
 class Object final
 {
 public:
-    Object() : _type(nullptr) {}
+    Object() = default;
 
     /**
-     * @brief 从对象类型构造新的对象节点
+     * @brief 从对象类型构创建的对象节点
      *
      * @param[in] otype 既存的待作为对象节点类型信息的使用 `rm::ObjectType` 表示的变量类型
+     * @return 新的 `rm::Object` 对象节点
      */
-    explicit Object(ObjectType &otype) : _type(&otype), _variables(otype.getVariables()), _methods(otype.getMethods()) {}
+    static inline Object from(const ObjectType &otype) { return Object(otype); }
+
 
     //! 获取对象类型 `rm::ObjectType`
-    inline const ObjectType *type() const { return _type; }
+    inline ObjectType type() const { return _type; }
 
     /**
      * @brief 添加（额外的）变量节点至 `rm::Object` 对象中
@@ -202,8 +211,10 @@ public:
     std::string description{};
 
 private:
+    explicit Object(const ObjectType &otype) : _type(otype), _variables(otype.getVariables()), _methods(otype.getMethods()) {}
+
     //! 对应的用 `rm::ObjectType` 表示的对象类型
-    ObjectType *_type;
+    ObjectType _type{};
 
     /**
      * @brief 变量节点

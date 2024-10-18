@@ -74,14 +74,49 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 ## 2. 服务器/客户端 {#opcua_server_client}
 
-基于服务器/客户端的方式是 OPC UA 最基本的一种通信方式，上文的地址空间在服务器/客户端通信的过程中完全展现出来。下面列举一些 opcua 模块中常用的服务器与客户端的成员方法。
+基于服务器/客户端的方式是 OPC UA 最基本的一种通信方式，上文的地址空间在服务器/客户端通信的过程中完全展现出来。下面列举一些 opcua 模块中常用的服务器与客户端通信的内容。
 
 ### 2.1 初始化
 
 **服务器**
 
+**方案一**
+
+使用 `spin` 作为事件循环，并提供全局变量 `p_server` 用于在信号处理函数中关闭服务器。
+
 ```cpp
 // server.cpp
+#include <csignal>
+#include <rmvl/opcua/server.hpp>
+
+rm::Server *p_server{nullptr};
+
+void onStop(int)
+{
+    if (p_server)
+        p_server->shutdown();
+}
+
+int main()
+{
+    // 注册信号处理函数
+    signal(SIGINT, onStop);
+
+    // 创建 OPC UA 服务器，端口为 4840
+    rm::Server srv(4840);
+    p_server = &srv;
+    // 服务器运行
+    srv.spin();
+}
+```
+
+**方案二**
+
+使用多线程，主线程负责关闭服务器。
+
+```cpp
+// server.cpp
+#include <thread>
 #include <rmvl/opcua/server.hpp>
 
 int main()
@@ -89,12 +124,40 @@ int main()
     // 创建 OPC UA 服务器，端口为 4840
     rm::Server srv(4840);
     // 服务器运行
-    srv.start();
+    std::thread t(&rm::Server::spin, &srv);
 
     /* other code */
 
-    // 线程阻塞，直到调用了 srv.stop()，线程才会继续执行。
-    srv.join();
+    srv.shutdown();
+    t.join();
+}
+```
+
+**方案三**
+
+使用 `spinOnce` 执行单次事件循环，需要自定义主循环，在某个条件下退出循环，并关闭服务器（此时可不必显式调用 `shutdown`）
+
+```cpp
+// server.cpp
+#include <csignal>
+#include <rmvl/opcua/server.hpp>
+
+bool stop = false;
+
+int main()
+{
+    signal(SIGINT, [](int) { stop = true; });
+
+    // 创建 OPC UA 服务器，端口为 4840
+    rm::Server srv(4840);
+    // 服务器运行
+    while (!stop)
+    {
+        /* other code */
+        srv.spinOnce();
+    }
+    srv.shutdown(); // 可省略，因为在 rm::Server::~Server 析构函数中将自动调用 shutdown
+                    // 但是上文的方案一和方案二中需要手动将循环标志 _running 设置为 false，这一步是在 shutdown 中完成的，因此需要显式调用 shutdown
 }
 ```
 
@@ -115,14 +178,22 @@ int main()
 
 ### 2.2 变量
 
-在上文介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点。
+在上文介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点，后文均采用 **方案三** 的方式。
 
 ```cpp
 // server.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/server.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     rm::Server srv(4840);
     srv.start();
 
@@ -138,7 +209,12 @@ int main()
     // 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
     srv.addVariableNode(num);
 
-    srv.join();
+    while (!stop)
+    {
+        srv.spinOnce();
+        std::this_thread::sleep_for(10ms); // 这里的延时是为了减少 CPU 占用，当然不加延时也完全可以
+    }
+    // srv.shutdown(); 可省略，后文不再赘述
 }
 ```
 
@@ -173,12 +249,19 @@ int main()
 
 ```cpp
 // server.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/server.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     rm::Server srv(4840);
-    srv.start();
 
     // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<bool(ServerView, const NodeId &, InputVariables, OutputVariables)> 的可调用对象
     rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables iargs, rm::OutputVariables oargs) {
@@ -202,7 +285,12 @@ int main()
 
     // 方法节点添加至服务器
     server.addMethodNode(method);
-    srv.join();
+    
+    while (!stop)
+    {
+        srv.spinOnce();
+        std::this_thread::sleep_for(10ms); // 这里的延时是为了减少 CPU 占用，当然不加延时也完全可以，后文同理
+    }
 }
 ```
 
@@ -244,12 +332,19 @@ int main()
 
 ```cpp
 // server.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/server.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     rm::Server srv(4840);
-    srv.start();
     // 准备对象节点数据 A
     rm::Object a;
     a.browse_name = a.description = a.display_name = "A";
@@ -278,7 +373,11 @@ int main()
     // 添加对象节点 B2 至服务器
     srv.addObjectNode(b2, node_a);
 
-    srv.join();
+    while (!stop)
+    {
+        srv.spinOnce();
+        std::this_thread::sleep_for(10ms);
+    }
 }
 ```
 
@@ -312,12 +411,19 @@ int main()
 
 ```cpp
 // server.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/server.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     rm::Server srv(4840);
-    srv.start();
     // 准备对象节点数据 A
     rm::Object a;
     a.browse_name = a.description = a.display_name = "A";
@@ -336,22 +442,34 @@ int main()
     num_view.add(node_num1, node_num2);
     // 添加至服务器
     srv.addViewNode(num_view);
-    srv.join();
+    
+    while (!stop)
+    {
+        srv.spinOnce();
+        std::this_thread::sleep_for(10ms);
+    }
 }
 ```
 
 ### 2.6 监视
 
-在服务器中添加待监视的变量节点
+OPC UA 支持变量节点和事件的监视，下面以监视变量节点为例。首先在服务器中添加待监视的变量节点
 
 ```cpp
 // server.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/server.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     rm::Server srv(4840);
-    srv.start();
 
     // 定义 int 型变量
     rm::Variable num = 100;
@@ -361,7 +479,11 @@ int main()
     // 添加到服务器的默认位置
     srv.addVariableNode(num);
 
-    srv.join();
+    while (!stop)
+    {
+        srv.spinOnce();
+        std::this_thread::sleep_for(10ms);
+    }
 }
 ```
 
@@ -409,6 +531,36 @@ int main()
 }
 ```
 
+### 2.7 定时
+
+@ref opcua 为服务器和客户端均提供了循环定时器，用于周期性执行任务。下面的示例演示在 **服务器** 中创建并添加定时器。
+
+```cpp
+// server.cpp
+#include <csignal>
+#include <rmvl/opcua/server.hpp>
+
+bool stop = false;
+
+int main()
+{
+    signal(SIGINT, [](int) { stop = true; });
+
+    rm::Server srv(4840);
+
+    int times{};
+    // 创建定时器，每 1s 执行一次
+    rm::ServerTimer timer(srv, 1000, [&](rm::ServerView) {
+        // 定时器回调函数
+        printf("Timer callback, times = %d\n", times);
+        times++;
+    });
+
+    while (!stop)
+        srv.spinOnce();
+}
+```
+
 ## 3. 发布/订阅 {#opcua_pub_sub}
 
 这是一段来自 [open62541 手册](https://www.open62541.org)中有关 PubSub 的介绍。
@@ -449,32 +601,43 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
 
 ```cpp
 // publisher.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/publisher.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     // 创建 OPC UA 发布者，端口为 4840
     rm::Publisher<rm::TransportID::UDP_UADP> pub("DemoNumberPub", "opc.udp://224.0.0.22:4840");
+
     // 添加变量节点至发布者自身的服务器中
     rm::Variable num = 3.14;
     num.browse_name = "number";
     num.display_name = "Number";
     num.description = "数字";
     auto num_node = pub.addVariableNode(num);
-    // 发布者的服务器运行
-    pub.start();
     // 准备待发布的数据
-    std::vector<PublishedDataSet> pds_list;
+    std::vector<rm::PublishedDataSet> pds_list;
     pds_list.emplace_back("Number 1", num_node);
 
     // 发布数据
     pub.publish(pds_list, 50);
 
-    /* other code */
-    /* 例如 num_node 所对应的值可以直接在这里修改 */
-
-    // 线程阻塞，直到调用了 pub.stop()，线程才会继续执行。
-    pub.join();
+    while (!stop)
+    {
+        /* other code */
+        
+        /* 例如 num_node 所对应的值可以直接在这里修改 */
+        
+        pub.spinOnce();
+        std::this_thread::sleep_for(10ms);
+    }
 }
 ```
 
@@ -482,14 +645,20 @@ int main()
 
 ```cpp
 // subscriber.cpp
+#include <csignal>
+#include <thread>
 #include <rmvl/opcua/subscriber.hpp>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
 
 int main()
 {
+    signal(SIGINT, [](int) { stop = true; });
+
     // 创建 OPC UA 订阅者
     rm::Subscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
-    // 订阅者的服务器运行
-    sub.start();
 
     // 准备需要订阅的数据
     // 这里只订阅 1 个，如果订阅多个请使用 std::vector
@@ -505,13 +674,18 @@ int main()
     auto nodes = sub.subscribe("DemoNumberPub", {meta_data});
     // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
     // 订阅返回值是一个 NodeId 列表，存放订阅接收的数据的 NodeId
-
-    // 读取订阅的已更新的数据
-    auto sub_val = sub.read(nodes.front());
-    std::printf("Sub value [1] = %f\n", sub_val.cast<double>());
     
-    // 线程阻塞，直到调用了 sub.stop()，线程才会继续执行。
-    sub.join();
+    while (!stop)
+    {
+        // 读取订阅的已更新的数据
+        auto sub_val = sub.read(nodes.front());
+        std::printf("Sub value [1] = %f\n", sub_val.cast<double>());
+        
+        /* other code */
+        
+        sub.spinOnce();
+        std::this_thread::sleep_for(10ms);
+    }
 }
 ```
 
@@ -529,7 +703,7 @@ int main()
 
 |    类型    |       参数名        | 默认值 |                             注释                             |
 | :--------: | :-----------------: | :----: | :----------------------------------------------------------: |
-| `uint32_t` |    SPIN_TIMEOUT     |   10   |               服务器超时响应的时间，单位 (ms)                |
+| `uint32_t` | CLIENT_WAIT_TIMEOUT |   10   |               服务器超时响应的时间，单位 (ms)                |
 |  `double`  |  SAMPLING_INTERVAL  |   2    |             服务器监视变量的采样速度，单位 (ms)              |
 |  `double`  | PUBLISHING_INTERVAL |   2    | 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms) |
 | `uint32_t` |   LIFETIME_COUNT    |  100   | 在没有发布任何消息的情况下，订阅请求所期望的能够保持活动状态的最大发布周期数 |

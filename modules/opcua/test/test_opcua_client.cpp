@@ -9,6 +9,8 @@
  *
  */
 
+#include <thread>
+
 #include <gtest/gtest.h>
 
 #include "rmvl/opcua/client.hpp"
@@ -25,13 +27,18 @@ TEST(OPC_UA_ClientTest, connect)
 {
     rm::UserConfig config;
     rm::Server srv(4999, "Test Server", {{"admin", "admin"}});
-    srv.start();
-    std::this_thread::sleep_for(10ms);
+    std::thread t(&rm::Server::spin, &srv);
+    std::this_thread::sleep_for(50ms);
 
     rm::Client cli1("opc.tcp://127.0.0.1:4999", {"admin", "admin"});
     EXPECT_TRUE(cli1.ok());
     rm::Client cli2("opc.tcp://127.0.0.1:4999", {"admin", "123456"});
     EXPECT_FALSE(cli2.ok());
+
+    cli1.shutdown();
+    cli2.shutdown();
+    srv.shutdown();
+    t.join();
 };
 
 void configServer(rm::Server &srv)
@@ -43,7 +50,7 @@ void configServer(rm::Server &srv)
     single_value.display_name = "单值";
     srv.addVariableNode(single_value);
     // 添加数组变量节点
-    rm::Variable variable = std::vector({1, 2, 3, 4, 5});
+    rm::Variable variable = std::vector{1, 2, 3, 4, 5};
     variable.browse_name = "array";
     variable.description = "this is array";
     variable.display_name = "数组";
@@ -60,9 +67,6 @@ void configServer(rm::Server &srv)
     method.iargs = {{"a", UA_TYPES_INT32}, {"b", UA_TYPES_INT32}};
     method.oargs = {{"c", UA_TYPES_INT32}};
     srv.addMethodNode(method);
-    // 添加对象节点，包含字符串变量和乘法方法
-    srv.start();
-    std::this_thread::sleep_for(10ms);
 }
 
 // 路径搜索
@@ -70,6 +74,7 @@ TEST(OPC_UA_ClientTest, read_variable)
 {
     rm::Server srv(5000);
     configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5000");
     // 读取测试服务器上的变量值
     auto id = rm::nodeObjectsFolder | cli.find("array");
@@ -78,8 +83,10 @@ TEST(OPC_UA_ClientTest, read_variable)
     std::vector<int> vec = variable;
     for (size_t i = 0; i < vec.size(); ++i)
         EXPECT_EQ(vec[i], i + 1);
-    srv.stop();
-    srv.join();
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
 }
 
 // 变量读写
@@ -87,6 +94,7 @@ TEST(OPC_UA_ClientTest, variable_IO)
 {
     rm::Server srv(5001);
     configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5001");
     // 读取测试服务器上的变量值
     auto id = rm::nodeObjectsFolder | cli.find("single");
@@ -95,8 +103,10 @@ TEST(OPC_UA_ClientTest, variable_IO)
     EXPECT_FALSE(variable.empty());
     int single_value = rm::Variable::cast<int>(variable);
     EXPECT_EQ(single_value, 99);
-    srv.stop();
-    srv.join();
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
 }
 
 // 方法调用
@@ -104,14 +114,17 @@ TEST(OPC_UA_ClientTest, call)
 {
     rm::Server srv(5002);
     configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
     std::vector<rm::Variable> input = {1, 2};
     std::vector<rm::Variable> output;
     EXPECT_TRUE(cli.call("add", input, output));
     EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
-    srv.stop();
-    srv.join();
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
 }
 
 // 订阅
@@ -119,6 +132,7 @@ TEST(OPC_UA_ClientTest, variable_monitor)
 {
     rm::Server srv(5003);
     configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5003");
     // 订阅测试服务器上的变量
     int receive_data{};
@@ -138,14 +152,17 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     std::this_thread::sleep_for(10ms);
     cli.spinOnce();
     EXPECT_EQ(receive_data, 66);
-    srv.stop();
-    srv.join();
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
 }
 
 TEST(OPC_UA_ClientTest, event_monitor)
 {
     rm::Server srv(5004);
     configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
     rm::EventType etype;
     etype.browse_name = "TestEventType";
     etype.display_name = "测试事件类型";
@@ -161,17 +178,38 @@ TEST(OPC_UA_ClientTest, event_monitor)
         aaa = fields[1];
     });
     // 触发事件
-    rm::Event event(etype);
+    auto event = rm::Event::from(etype);
     event.source_name = "GtestServer";
     event.message = "this is test event";
     event["aaa"] = 66;
     srv.triggerEvent(rm::nodeServer, event);
     cli.spinOnce();
-    std::this_thread::sleep_for(10ms);
     EXPECT_EQ(source_name, "GtestServer");
     EXPECT_EQ(aaa, 66);
-    srv.stop();
-    srv.join();
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
+}
+
+TEST(OPC_UA_Client, timer_test)
+{
+    rm::Server srv(5005);
+    configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
+    std::this_thread::sleep_for(10ms);
+    rm::Client cli("opc.tcp://127.0.0.1:5005");
+    int times{};
+    auto timer = rm::ClientTimer(cli, 50., [&](rm::ClientView) { times++; });
+    std::this_thread::sleep_for(60ms);
+    cli.spinOnce();
+    std::this_thread::sleep_for(60ms);
+    cli.spinOnce();
+    EXPECT_EQ(times, 2);
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
 }
 
 } // namespace rm_test

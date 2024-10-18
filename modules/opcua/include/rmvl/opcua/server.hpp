@@ -11,10 +11,9 @@
 
 #pragma once
 
-#include <thread>
+#include <atomic>
+#include <chrono>
 #include <unordered_set>
-
-#include <open62541/nodeids.h>
 
 #include "event.hpp"
 #include "object.hpp"
@@ -47,6 +46,9 @@ public:
         return *this;
     }
 
+    //! 获取 OPC UA 服务器指针
+    inline UA_Server *get() const { return _server; }
+
     /**
      * @brief 获取路径搜索必要信息
      * @brief 需要配合管道运算符 `|` 完成路径搜索
@@ -77,6 +79,15 @@ public:
      * @return 是否写入成功
      */
     bool write(const NodeId &node, const Variable &val) const;
+
+    /**
+     * @brief 创建并触发事件
+     *
+     * @param[in] node_id 触发事件的节点 `NodeId`
+     * @param[in] event `rm::Event` 表示的事件
+     * @return 是否创建并触发成功？
+     */
+    bool triggerEvent(const NodeId &node_id, const Event &event) const;
 
 private:
     UA_Server *_server{nullptr}; //!< OPC UA 服务器指针
@@ -157,19 +168,28 @@ public:
 
     operator ServerView() const { return _server; }
 
-    //! 运行服务器，调用方线程不阻塞
-    void start();
-
-    //! 停止服务器
-    inline void stop() { _running = false; }
+    /**
+     * @brief 启动服务器并阻塞
+     * @note
+     * - 当 `rm::para::opcua_param.SERVER_WAIT` 为 `false` 时，该函数会立即返回，因此可在多线程环境下使用
+     * @note
+     * - 创建单线程事件循环，并在此事件循环中不断处理网络事件
+     */
+    void spin();
 
     /**
-     * @brief 阻塞
-     * @brief
-     * - 调用方线程阻塞，直到服务器执行 `stop()` 或意外停止后才继续运行
+     * @brief 单次处理网络层中的重复回调和事件（单次启动服务器）
+     * @note
+     * - 当 `rm::para::opcua_param.SERVER_WAIT` 为 `false` 时，该函数会立即返回，因此可在多线程环境下使用
+     * @note
+     * - 这一部分可以在事件驱动的单线程架构中由外部主循环驱动
      */
-    inline void join() { _run.join(); }
+    void spinOnce();
 
+    //! 停止服务器
+    inline void shutdown() { _running = false; }
+
+    // 完成所有回调，停止网络层，进行清理并释放资源
     ~Server();
 
     /****************************** 路径搜索 ******************************/
@@ -308,20 +328,50 @@ public:
      *
      * @param[in] node_id 触发事件的节点 `NodeId`
      * @param[in] event `rm::Event` 表示的事件
-     * @note `Server` 的 `node_id` 是 `rm::nodeServer`
      * @return 是否创建并触发成功？
      */
     bool triggerEvent(const NodeId &node_id, const Event &event) const;
 
 protected:
-    UA_Server *_server; //!< OPC UA 服务器指针
-    bool _running{};    //!< 服务器运行状态
-    std::thread _run;   //!< 服务器运行线程
+    UA_Server *_server;          //!< OPC UA 服务器指针
+    std::atomic_bool _running{}; //!< 服务器运行状态
 
 private:
     mutable std::vector<std::unique_ptr<ValueCallbackWrapper>> _vcb_gc;       //!< 值回调函数
     mutable std::vector<std::unique_ptr<DataSourceCallbackWrapper>> _dscb_gc; //!< 数据源回调函数
     mutable std::vector<std::unique_ptr<MethodCallback>> _mcb_gc;             //!< 方法回调函数
+};
+
+//! OPC UA 服务器定时器
+class ServerTimer final
+{
+public:
+    using Callback = std::function<void(ServerView)>; //!< 定时器回调函数
+
+    /**
+     * @brief 创建 OPC UA 服务器定时器
+     *
+     * @param[in] sv 服务器视图
+     * @param[in] period 定时器周期，单位：毫秒 `ms`
+     * @param[in] callback 定时器回调函数
+     */
+    ServerTimer(ServerView sv, double period, Callback callback);
+
+    ServerTimer(const ServerTimer &) = delete;
+    ServerTimer(ServerTimer &&) = default;
+
+    ServerTimer &operator=(const ServerTimer &) = delete;
+    ServerTimer &operator=(ServerTimer &&) = default;
+
+    ~ServerTimer() { cancel(); }
+
+    //! 取消定时器
+    void cancel();
+
+private:
+    ServerView _sv; //!< 服务器视图
+    Callback _cb;   //!< 定时器回调函数
+    uint64_t _id{}; //!< 定时器 ID
 };
 
 //! @} opcua

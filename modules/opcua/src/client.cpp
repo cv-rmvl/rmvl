@@ -69,17 +69,25 @@ Client::Client(std::string_view address, const UserConfig &usr)
     }
 }
 
+bool Client::shutdown()
+{
+    if (_client == nullptr)
+        return false;
+    auto status = UA_Client_disconnect(_client);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to disconnect the client: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    UA_Client_delete(_client);
+    _client = nullptr;
+    return true;
+}
+
 Client::~Client()
 {
     if (_client != nullptr)
-    {
-        if (_client == nullptr)
-            return;
-        auto status = UA_Client_disconnect(_client);
-        if (status != UA_STATUSCODE_GOOD)
-            WARNING_("Failed to disconnect the client");
-        UA_Client_delete(_client);
-    }
+        shutdown();
 }
 
 void Client::spin() const
@@ -87,7 +95,7 @@ void Client::spin() const
     bool warning{};
     while (true)
     {
-        auto status = UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT);
+        auto status = UA_Client_run_iterate(_client, para::opcua_param.CLIENT_WAIT_TIMEOUT);
         if (!warning && status != UA_STATUSCODE_GOOD)
         {
             WARNING_("No events and message received, spinning indefinitely, error status: %s", UA_StatusCode_name(status));
@@ -99,7 +107,7 @@ void Client::spin() const
 
 void Client::spinOnce() const
 {
-    UA_Client_run_iterate(_client, para::opcua_param.SPIN_TIMEOUT);
+    UA_Client_run_iterate(_client, para::opcua_param.CLIENT_WAIT_TIMEOUT);
 }
 
 ////////////////////////// 功能配置 //////////////////////////
@@ -351,6 +359,33 @@ bool ClientView::write(const NodeId &node, const Variable &val) const
 {
     RMVL_DbgAssert(_client != nullptr);
     return clientWrite(_client, node, val);
+}
+
+/////////////////////// 客户端定时器 ///////////////////////
+
+static void timer_cb(UA_Client *p_server, void *data)
+{
+    auto &func = *reinterpret_cast<ClientTimer::Callback *>(data);
+    func(p_server);
+}
+
+ClientTimer::ClientTimer(ClientView cv, double period, Callback callback) : _cv(cv), _cb(callback)
+{
+    auto status = UA_Client_addRepeatedCallback(_cv.get(), timer_cb, &_cb, period, &_id);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to add repeated callback: %s", UA_StatusCode_name(status));
+        _id = 0;
+    }
+}
+
+void ClientTimer::cancel()
+{
+    if (_id != 0)
+    {
+        UA_Client_removeCallback(_cv.get(), _id);
+        _id = 0;
+    }
 }
 
 } // namespace rm

@@ -67,6 +67,8 @@ private:
     UA_UInt32 _size{};
 
 public:
+    VariableType() = default;
+
     /**
      * @brief 单值构造，设置默认值
      *
@@ -102,6 +104,9 @@ public:
     //! 获取数据类型
     inline DataType getDataType() const { return _data_type; }
 
+    //! 判断变量类型节点是否为空
+    constexpr bool empty() const { return _size == 0; }
+
     //! 获取大小 @note 未初始化则返回 `0`
     inline UA_UInt32 size() const { return _size; }
 };
@@ -132,11 +137,12 @@ public:
     Variable(const std::vector<Tp> &arr) : access_level(3U), _value(arr), _data_type(DataType(typeid(Tp))), _size(static_cast<UA_UInt32>(arr.size())) {}
 
     /**
-     * @brief 从变量类型构造新的变量节点
+     * @brief 从变量类型创建新的变量节点
      *
      * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
+     * @return 新的变量节点
      */
-    explicit Variable(VariableType &vtype) : access_level(3U), _type(&vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
+    static inline Variable from(const VariableType &vtype) { return Variable(vtype); }
 
     /**
      * @brief 比较两个变量是否相等，当且仅当两个变量的数据类型、维数、数据值均相等时返回
@@ -192,7 +198,7 @@ public:
      * @see _type
      * @return 变量类型
      */
-    inline const VariableType *type() const { return _type; }
+    inline const VariableType type() const { return _type; }
 
     //! 获取数据
     inline const auto &data() const { return _value; }
@@ -229,14 +235,16 @@ public:
     uint8_t access_level{};
 
 private:
+    explicit Variable(const VariableType &vtype) : access_level(3U), _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
+
     /**
      * @brief 对应的用 `rm::VariableType` 表示的变量类型
      * @brief
-     * - 默认情况下为 `nullptr`，添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
+     * - 添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
      * @brief
      * - 作为变量类型节点、变量节点之间链接的依据
      */
-    VariableType *_type{nullptr};
+    VariableType _type{};
     //! 数据
     std::any _value;
     //! 数据类型

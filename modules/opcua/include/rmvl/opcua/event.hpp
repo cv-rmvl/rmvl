@@ -88,11 +88,12 @@ public:
     Event() = default;
 
     /**
-     * @brief 从事件类型构造新的事件
+     * @brief 从事件类型创建新的事件
      *
      * @param[in] etype 既存的待作为事件类型信息的使用 `rm::EventType` 表示的变量类型
+     * @return 新的事件
      */
-    Event(EventType &etype) : _type(&etype), _properties(etype.data()) {}
+    static inline Event from(const EventType &etype) { return Event(etype); }
 
     /**
      * @brief 添加非默认属性至事件类型中
@@ -123,15 +124,8 @@ public:
      */
     inline const auto &data() const { return _properties; }
 
-    /**
-     * @brief 设置事件类型
-     *
-     * @param[in] type 既存的待作为事件类型信息的使用 `rm::EventType` 表示的变量类型
-     */
-    inline void setType(EventType &type) { _type = &type; }
-
     //! 获取事件类型
-    inline const EventType *type() const { return _type; }
+    inline EventType type() const { return _type; }
 
     uint16_t ns{1U};         //!< 命名空间索引，默认为 `1`
     std::string source_name; //!< 默认属性：事件源名称
@@ -139,7 +133,9 @@ public:
     uint16_t severity{};     //!< 默认属性：事件严重程度
 
 private:
-    EventType *_type{nullptr};                        //!< 事件类型的指针
+    Event(const EventType &etype) : _type(etype), _properties(etype.data()) {}
+
+    EventType _type{};                                //!< 事件类型
     std::unordered_map<std::string, int> _properties; //!< 非默认属性列表（仅支持 `int` 整型）
 };
 
