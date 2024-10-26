@@ -2,6 +2,7 @@
 C++ to Python binding code generator
 """
 
+import json
 import os
 import re
 from typing import Union, List, Tuple
@@ -52,6 +53,9 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
         )
     elif mode == "using":
         return re.search(r"using\s+(\w+)\s*=\s*(.+);", line)
+    # RMVL_W_SUBST
+    elif mode == "subst":
+        return re.search(r"RMVL_W_SUBST\(\"(\w+)\"\)", line)
     # RMVL_W
     elif mode == "constructor":
         return re.search(
@@ -59,7 +63,7 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
         )
     elif mode == "method":
         return re.search(
-            r"RMVL_W\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(operator\(\)|operator==|operator!=|operator\+|operator-|\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)",
+            r"RMVL_W\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(?:&)?(operator\(\)|operator\[\]|operator==|operator!=|operator\+|operator-|\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)",
             line,
         )
     elif mode == "static_method":
@@ -69,7 +73,7 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
         )
     elif mode == "const_method":
         return re.search(
-            r"RMVL_W\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*const",
+            r"RMVL_W\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(?:&)?(operator\(\)|operator\[\]|operator==|operator!=|operator\+|operator-|\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*const",
             line,
         )
     elif mode == "convert_method":
@@ -138,6 +142,7 @@ def split_parameters(params: str) -> Tuple[List[str], List[str], List[str]]:
 
 
 types = {
+    "auto": "Any",
     # fundamental types
     "void": "None",
     "int": "int",
@@ -157,6 +162,16 @@ types = {
     "Vec": "Tuple",
 }
 
+def remove_cvref(s: str) -> str:
+    """
+    ### Remove `const`, `&`, `*` from a C++ type string
+    #### Parameters
+    `s` ─ C++ type string
+    #### Returns
+    `(str)`: string without cvref
+    """
+    s = re.sub(r"const\s+|&", "", s)
+    return s
 
 def remove_t(s: str) -> str:
     """
@@ -169,7 +184,7 @@ def remove_t(s: str) -> str:
     # remove static, extern
     s = re.sub(r"static\s+|extern\s+", "", s)
     # remove cvref
-    s = re.sub(r"const\s+|&", "", s)
+    s = remove_cvref(s)
     # remove namespace
     s = re.sub(r"\w+::", "", s)
     # remove inline and constexpr
@@ -191,23 +206,31 @@ def type_convert(cpp_type: str) -> str:
     """
 
     # Remove `const`, `&`, `*`, `namespace`, `inline`, `constexpr`
-    cpp_type = remove_t(cpp_type)
+    cpp_type = remove_t(cpp_type).strip()
 
     def convert_vector(match: re.Match) -> str:
         """
         Convert `vector<...>` to `List[...]`
         """
-        inner = match.group(1)
+        inner : str = match.group(1)
         converted = type_convert(inner)
         return f"List[{converted}]"
 
-    def convert_pair_Tuple(match: re.Match) -> str:
+    def convert_pair_tuple(match: re.Match) -> str:
         """
         Convert `pair<...>`, `Tuple<...>` to `Tuple[...]`
         """
-        inner = match.group(2)
+        inner : str = match.group(2)
         converted = ", ".join(type_convert(x.strip()) for x in inner.split(","))
-        return f"Tuple[{converted}]"
+        return f"tuple[{converted}]"
+
+    def convert_unordered_map(match: re.Match) -> str:
+        """
+        Convert `unordered_map<...>` to `dict[...]`
+        """
+        inner : str = match.group(1)
+        key, value = map(type_convert, (x.strip() for x in inner.split(",")))
+        return f"dict[{key}, {value}]"
 
     def convert_function(match: re.Match) -> str:
         """
@@ -254,8 +277,10 @@ def type_convert(cpp_type: str) -> str:
     cpp_type = re.sub(r"^vector<(.+)>$", convert_vector, cpp_type)
     # array<..., size> -> List[...]
     cpp_type = re.sub(r"^array<([^,]+),\s*\d+>$", convert_array, cpp_type)
-    # pair<...>, Tuple<...> -> Tuple[...]
-    cpp_type = re.sub(r"^(pair|Tuple)<(.+)>$", convert_pair_Tuple, cpp_type)
+    # pair<...>, tuple<...> -> tuple[...]
+    cpp_type = re.sub(r"^(pair|tuple)<(.+)>$", convert_pair_tuple, cpp_type)
+    # unordered_map<...> -> dict[...]
+    cpp_type = re.sub(r"^unordered_map<(.+)>$", convert_unordered_map, cpp_type)
     # function<return_type(arg_types)> -> callable[[arg_types], return_type]
     cpp_type = re.sub(r"^function<([^(]+)\(([^)]*)\)>$", convert_function, cpp_type)
     # convert cv types
@@ -271,7 +296,7 @@ def type_convert(cpp_type: str) -> str:
     return cpp_type
 
 
-def generate_python_binding(lines: List[str]) -> str:
+def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
     """
     ### Generate py binding code from C++ header file
     #### Parameters
@@ -286,9 +311,11 @@ def generate_python_binding(lines: List[str]) -> str:
     cur_class = None
     functions = defaultdict(list)
     convert_content = []
-    # To store enum definitions
-    enums = []
+    # To store enum class definitions
+    enum_classes = []
+    enums = list[str]()
     in_enum = False
+    cur_enum_class = None
     cur_enum = None
 
     for line in lines:
@@ -296,23 +323,35 @@ def generate_python_binding(lines: List[str]) -> str:
 
         if line.startswith("//") or not line:
             continue
-        # Enum detection
-        if line.startswith("enum ") or (in_enum and line.startswith("{")):
+        # Enum class and enum detection
+        elif line.startswith("enum class") or (in_enum and line.startswith("{")):
             in_enum = True
-            enum_match = re.search(r"enum(?:\s+class)?\s+(\w+)", line)
-            if enum_match:
-                cur_enum = [enum_match.group(1), []]
+            mch = re.search(r"enum class\s+(\w+)", line)
+            if mch:
+                cur_enum_class = [mch.group(1), []]
+        elif line.startswith("enum ") or (in_enum and line.startswith("{")):
+            in_enum = True
+            mch = re.search(r"enum\s+(\w+)", line)
+            if mch:
+                cur_enum = mch.group(1)
         elif in_enum and "}" in line:
             in_enum = False
-            if cur_enum:
-                enums.append(cur_enum)
+            if cur_enum_class:
+                enum_classes.append(cur_enum_class)
+                types[cur_enum_class[0]] = cur_enum_class[0]
+                cur_enum_class = None
+            elif cur_enum:
+                types[cur_enum] = cur_enum
                 cur_enum = None
-        elif in_enum and cur_enum:
+        elif in_enum and (cur_enum_class or cur_enum):
             match = re.match(r"(\w+)", line)
             if match:
                 value = match.group(1).strip()
-                cur_enum[1].append(value)
-
+                if cur_enum_class:
+                    cur_enum_class[1].append(value)
+                elif cur_enum:
+                    enums.append(value)
+                continue
         # Class or function with 'RMVL_EXPORTS_W' macro
         elif "RMVL_EXPORTS_W" in line:
             # Start of a new class
@@ -322,14 +361,14 @@ def generate_python_binding(lines: List[str]) -> str:
                 if mch:
                     cur_class = mch.group(1)
                     class_content.append(
-                        f'    py::class_<{cur_class}>(m, "{cur_class}")'
+                        f'    py::class_<{cur_class}>(m, "{cur_class}", py::dynamic_attr())'
                     )
                 # Aggregate class
                 mch = re_match("aggregate_class", line)
                 if mch:
                     cur_class = mch.group(1)
                     class_content.append(
-                        f'    py::class_<{cur_class}>(m, "{cur_class}")'
+                        f'    py::class_<{cur_class}>(m, "{cur_class}", py::dynamic_attr())'
                     )
                     class_content.append("        .def(py::init<>())")
                 # Inherited class
@@ -347,7 +386,32 @@ def generate_python_binding(lines: List[str]) -> str:
                     return_type, func_name, params = mch.groups()
                     type_list, id_list, default_list = split_parameters(params)
                     functions[func_name].append((type_list, id_list, default_list))
-
+        # Class method with 'RMVL_W_SUBST' macro
+        elif line.startswith("RMVL_W_SUBST"):
+            mch = re_match("subst", line)
+            if mch and misc:
+                alias_str = mch.group(1)    
+                with open(misc, "r") as f:
+                    json_content: dict = json.load(f)
+                    if cur_class:
+                        if alias_str not in json_content:
+                            class_content.append(
+                                f"        // No binding information for \"{alias_str}\""
+                            )
+                        else:
+                            bind_alias = json_content[alias_str].get("bind", [])
+                            for bind_alias_each in bind_alias:
+                                class_content.append(f"        {bind_alias_each}")
+                    else:
+                        if alias_str not in json_content:
+                            binding_code.append(
+                                f"    // No binding information for \"{alias_str}\""
+                            )
+                        else:
+                            bind_alias = json_content[alias_str].get("bind", [])
+                            for bind_alias_each in bind_alias:
+                                binding_code.append(f"    {bind_alias_each}")
+                    
         # Class method with 'RMVL_W[_xxx]' macro
         elif line.startswith("RMVL_W") and cur_class:
             # Constructor
@@ -361,7 +425,7 @@ def generate_python_binding(lines: List[str]) -> str:
                 for type, id, default in zip(type_list, id_list, default_list):
                     if default == "{}":
                         class_content.append(
-                            f'             "{id}"_a = {remove_t(type)}{{}},'
+                            f'             "{id}"_a = {remove_cvref(type)}{{}},'
                         )
                     elif default:
                         class_content.append(f'             "{id}"_a = {default},')
@@ -388,7 +452,7 @@ def generate_python_binding(lines: List[str]) -> str:
                 for type, id, default in zip(type_list, id_list, default_list):
                     if default == "{}":
                         class_content.append(
-                            f'             "{id}"_a = {remove_t(type)}{{}},'
+                            f'             "{id}"_a = {remove_cvref(type)}{{}},'
                         )
                     elif default:
                         class_content.append(f'             "{id}"_a = {default},')
@@ -407,7 +471,7 @@ def generate_python_binding(lines: List[str]) -> str:
                 for type, id, default in zip(type_list, id_list, default_list):
                     if default == "{}":
                         class_content.append(
-                            f'             "{id}"_a = {remove_t(type)}{{}},'
+                            f'             "{id}"_a = {remove_cvref(type)}{{}},'
                         )
                     elif default:
                         class_content.append(f'             "{id}"_a = {default},')
@@ -424,6 +488,11 @@ def generate_python_binding(lines: List[str]) -> str:
                 if method_name == "operator()":
                     class_content.append(
                         f'        .def("__call__", &{cur_class}::operator(),'
+                    )
+                # operator[] overload
+                elif method_name == "operator[]":
+                    class_content.append(
+                        f'        .def("__setitem__", &{cur_class}::operator[],'
                     )
                 # operator== overload
                 elif method_name == "operator==":
@@ -453,7 +522,7 @@ def generate_python_binding(lines: List[str]) -> str:
                 for type, id, default in zip(type_list, id_list, default_list):
                     if default == "{}":
                         class_content.append(
-                            f'             "{id}"_a = {remove_t(type)}{{}},'
+                            f'             "{id}"_a = {remove_cvref(type)}{{}},'
                         )
                     elif default:
                         class_content.append(f'             "{id}"_a = {default},')
@@ -475,7 +544,7 @@ def generate_python_binding(lines: List[str]) -> str:
             if mch:
                 type_name, var_name = mch.groups()
                 binding_code.append(
-                    f'    m.attr("{var_name}") = py::cast(&{var_name}, py::return_value_policy::automatic_reference);'
+                    f'    m.attr("{var_name}") = py::cast({var_name});'
                 )
 
         # End of the class
@@ -495,7 +564,7 @@ def generate_python_binding(lines: List[str]) -> str:
             binding_code.append(f'    m.def("{func_name}", &{func_name},')
             for type, id, default in zip(type_list, id_list, default_list):
                 if default == "{}":
-                    binding_code.append(f'          "{id}"_a = {remove_t(type)}{{}},')
+                    binding_code.append(f'          "{id}"_a = {remove_cvref(type)}{{}},')
                 elif default:
                     binding_code.append(f'          "{id}"_a = {default},')
                 else:
@@ -509,7 +578,7 @@ def generate_python_binding(lines: List[str]) -> str:
                 for type, id, default in zip(type_list, id_list, default_list):
                     if default == "{}":
                         binding_code.append(
-                            f'          "{id}"_a = {remove_t(type)}{{}},'
+                            f'          "{id}"_a = {remove_cvref(type)}{{}},'
                         )
                     elif default:
                         binding_code.append(f'          "{id}"_a = {default},')
@@ -519,22 +588,23 @@ def generate_python_binding(lines: List[str]) -> str:
 
     # Process enums
     tmp_bd_code = []
-    for enum_name, enum_values in enums:
+    for enum_name, enum_values in enum_classes:
         tmp_bd_code.append(f'    py::enum_<{enum_name}>(m, "{enum_name}")')
         for value in enum_values:
             tmp_bd_code.append(f'        .value("{value}", {enum_name}::{value})')
         tmp_bd_code.append("        .export_values();")
-
+    for enum in enums:
+        tmp_bd_code.append(f'    m.attr("{enum}") = py::cast<int>({enum});')
     binding_code.insert(0, "\n".join(tmp_bd_code))
     return "\n".join(binding_code)
 
 
-def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
+def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
     """
     ### Generate .pyi file content and documents configurations from C++ header file
     #### Parameters
-    - `lines`: List of strings containing C++ header file lines
-    - `doc_path`: path of the pydoc cfg file
+    - `lines`: list of strings containing C++ header file lines
+    - `doc`: path of the pydoc cfg file
     #### Returns
     `(str)`: generated .pyi file content
     """
@@ -551,6 +621,8 @@ def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
     in_enum = False
     cur_enum_class = None
     cur_enum = None
+    # To store typings
+    typings = []
 
     for line in lines:
         line = line.strip()
@@ -563,7 +635,7 @@ def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
             mch = re_match("using", line)
             if mch:
                 alias, target = mch.groups()
-                types[alias] = type_convert(target)
+                typings.append(f"{alias} = {type_convert(target)}")
                 continue
         # Enum class and enum detection
         elif line.startswith("enum class") or (in_enum and line.startswith("{")):
@@ -620,7 +692,31 @@ def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
                     functions[func_name].append(
                         (return_type, type_list, id_list, default_list)
                     )
-
+        # Class method with 'RMVL_W_SUBST' macro
+        elif line.startswith("RMVL_W_SUBST"):
+            mch = re_match("subst", line)
+            if mch and misc:
+                alias_str = mch.group(1)
+                with open(misc, "r") as f:
+                    json_content: dict = json.load(f)
+                    if cur_class:
+                        if alias_str not in json_content:
+                            class_content.append(
+                                f"    # No binding information for \"{alias_str}\""
+                            )
+                        else:
+                            bind_alias = json_content[alias_str].get("pyi", [])
+                            for bind_alias_each in bind_alias:
+                                class_content.append(f"    {bind_alias_each}")
+                    else:
+                        if alias_str not in json_content:
+                            pyi_content.append(
+                                f"# No binding information for \"{alias_str}\""
+                            )
+                        else:
+                            bind_alias = json_content[alias_str].get("pyi", [])
+                            for bind_alias_each in bind_alias:
+                                pyi_content.append(f"{bind_alias_each}")
         # Class method with 'RMVL_W[_xxx]' macro
         elif line.startswith("RMVL_W") and cur_class:
             # Constructor
@@ -635,7 +731,7 @@ def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
                     ]
                 ).replace("::", ".")
                 class_content.append(
-                    f"    @overload\n    def __init__(self, {param_str}) -> None: ..."
+                    f"    @overload\n    def __init__(self, {param_str}) -> {name}: ..."
                 )
                 continue
             # Convert method
@@ -688,6 +784,10 @@ def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
             cur_class = None
             class_content = []
 
+    # Process typings
+    for typing in typings:
+        pyi_content.append(typing)
+
     # Process global functions
     for func_name, overloads in functions.items():
         if len(overloads) > 1:
@@ -729,9 +829,9 @@ def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
     pyi_content.insert(0, "\n".join(tmp_pyi_content))
 
     # Generate doc cfg
-    if doc_path:
-        pyrmvl_cst_path = f"{doc_path}/pyrmvl_cst.cfg"
-        pyrmvl_fns_path = f"{doc_path}/pyrmvl_fns.cfg"
+    if doc:
+        pyrmvl_cst_path = f"{doc}/pyrmvl_cst.cfg"
+        pyrmvl_fns_path = f"{doc}/pyrmvl_fns.cfg"
         if os.path.exists(pyrmvl_cst_path):
             with open(pyrmvl_cst_path, "a") as file:
                 for enum_name, enum_values in enum_classes:
@@ -769,7 +869,10 @@ if __name__ == "__main__":
         help="'bind' for python binding code, 'pyi' for python interface file and doc config file",
     )
     parser.add_argument(
-        "--doc_path", type=str, help="path of the documents configuration file"
+        "--doc", type=str, help="path of the documents configuration file"
+    )
+    parser.add_argument(
+        "--misc", type=str, help="path of the miscellaneous configuration file"
     )
 
     args = parser.parse_args()
@@ -777,10 +880,10 @@ if __name__ == "__main__":
     with open(file, "r") as file:
         lines = file.readlines()
 
-    if args.mode == "bind" or args.mode == "0":
-        binding_code = generate_python_binding(lines)
-    elif args.mode == "pyi" or args.mode == "1":
-        binding_code = generate_pyi(lines, args.doc_path)
+    if args.mode == "bind":
+        binding_code = generate_python_binding(lines, args.misc)
+    elif args.mode == "pyi":
+        binding_code = generate_pyi(lines, args.doc, args.misc)
     else:
-        raise ValueError("\033[31;1mInvalid mode\033[0m. Use 'bind (0)' or 'pyi (1)'")
+        raise ValueError("\033[31;1mInvalid mode\033[0m. Use 'bind' or 'pyi'")
     print(binding_code)

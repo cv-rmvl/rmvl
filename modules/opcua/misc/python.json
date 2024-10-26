@@ -1,0 +1,185 @@
+{
+    "VT": {
+        "bind": [
+            ".def(py::init<bool>())",
+            ".def(py::init<int>())",
+            ".def(py::init<double>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, value: bool) -> VariableType: ...",
+            "@overload",
+            "def __init__(self, value: int) -> VariableType: ...",
+            "@overload",
+            "def __init__(self, value: float) -> VariableType: ..."
+        ]
+    },
+    "VT_Str": {
+        "bind": [
+            ".def(py::init<std::string>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, value: str) -> VariableType: ..."
+        ]
+    },
+    "VT_List": {
+        "bind": [
+            ".def(py::init<const std::vector<int> &>())",
+            ".def(py::init<const std::vector<double> &>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, value: list[int]) -> VariableType: ...",
+            "@overload",
+            "def __init__(self, value: list[float]) -> VariableType: ..."
+        ]
+    },
+    "VT_cast": {
+        "bind": [
+            ".def(\"bool\", py::overload_cast<>(&VariableType::cast<bool>, py::const_))",
+            ".def(\"int\", py::overload_cast<>(&VariableType::cast<int>, py::const_))",
+            ".def(\"float\", py::overload_cast<>(&VariableType::cast<double>, py::const_))",
+            ".def(\"str\", py::overload_cast<>(&VariableType::cast<std::string>, py::const_))",
+            ".def(\"list_int\", py::overload_cast<>(&VariableType::cast<std::vector<int>>, py::const_))",
+            ".def(\"list_float\", py::overload_cast<>(&VariableType::cast<std::vector<double>>, py::const_))"
+
+        ],
+        "pyi": [
+            "def bool(self) -> bool: ...",
+            "def int(self) -> int: ...",
+            "def float(self) -> float: ...",
+            "def str(self) -> str: ...",
+            "def list_int(self) -> list[int]: ...",
+            "def list_float(self) -> list[float]: ..."
+        ]
+    },
+    "V": {
+        "bind": [
+            ".def(py::init<bool>())",
+            ".def(py::init<int>())",
+            ".def(py::init<double>())",
+            ".def(py::init<std::string>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, value: bool) -> Variable: ...",
+            "@overload",
+            "def __init__(self, value: int) -> Variable: ...",
+            "@overload",
+            "def __init__(self, value: float) -> Variable: ...",
+            "@overload",
+            "def __init__(self, value: str) -> Variable: ..."
+        ]
+    },
+    "V_Str": {
+        "bind": [
+            ".def(py::init<std::string>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, value: str) -> Variable: ..."
+        ]
+    },
+    "V_List": {
+        "bind": [
+            ".def(py::init<const std::vector<int> &>())",
+            ".def(py::init<const std::vector<double> &>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, value: list[int]) -> Variable: ...",
+            "@overload",
+            "def __init__(self, value: list[float]) -> Variable: ..."
+        ]
+    },
+    "V_cast": {
+        "bind": [
+            ".def(\"bool\", py::overload_cast<>(&Variable::cast<bool>, py::const_))",
+            ".def(\"int\", py::overload_cast<>(&Variable::cast<int>, py::const_))",
+            ".def(\"float\", py::overload_cast<>(&Variable::cast<double>, py::const_))",
+            ".def(\"str\", py::overload_cast<>(&Variable::cast<std::string>, py::const_))",
+            ".def(\"list_int\", py::overload_cast<>(&Variable::cast<std::vector<int>>, py::const_))",
+            ".def(\"list_float\", py::overload_cast<>(&Variable::cast<std::vector<double>>, py::const_))"
+        ],
+        "pyi": [
+            "def bool(self) -> bool: ...",
+            "def int(self) -> int: ...",
+            "def float(self) -> float: ...",
+            "def str(self) -> str: ...",
+            "def list_int(self) -> list[int]: ...",
+            "def list_float(self) -> list[float]: ..."
+        ]
+    },
+    "M": {
+        "bind": [
+            ".def(py::init<MethodCallback>())"
+        ],
+        "pyi": [
+            "@overload",
+            "def __init__(self, cb: Callable[[ServerView, NodeId, list[Variable], list[Variable]], bool]) -> Method: ..."
+        ]
+    },
+    "ET_Idx": {
+        "bind": [
+            ".def(\"__getitem__\", [](EventType &et, const std::string &browse_name) -> int & { return et[browse_name]; })",
+            ".def(\"__setitem__\", [](EventType &et, const std::string &browse_name, int prop) { et[browse_name] = prop; })"
+        ],
+        "pyi": [
+            "def __getitem__(self, browse_name: str) -> int: ...",
+            "def __setitem__(self, browse_name: str, prop: int) -> None: ..."
+        ]
+    },
+    "E_Idx": {
+        "bind": [
+            ".def(\"__getitem__\", [](Event &e, const std::string &name) -> int & { return e[name]; })",
+            ".def(\"__setitem__\", [](Event &e, const std::string &name, int prop) { e[name] = prop; })"
+        ],
+        "pyi": [
+            "def __getitem__(self, browse_name: str) -> int: ...",
+            "def __setitem__(self, browse_name: str, prop: int) -> None: ..."
+        ]
+    },
+    "OT_Idx": {
+        "bind": [
+            ".def(\"__getitem__\", [](ObjectType &ot, const std::string &name) -> Variable & { return ot[name]; })",
+            ".def(\"__setitem__\", [](ObjectType &ot, const std::string &name, const Variable &v) { ot[name] = v; })"
+        ],
+        "pyi": [
+            "def __getitem__(self, browse_name: str) -> int: ...",
+            "def __setitem__(self, browse_name: str, v: Variable) -> None: ..."
+        ]
+    },
+    "O_Idx": {
+        "bind": [
+            ".def(\"__getitem__\", [](Object &o, const std::string &name) -> Variable & { return o[name]; })",
+            ".def(\"__setitem__\", [](Object &o, const std::string &name, const Variable &v) { o[name] = v; })"
+        ],
+        "pyi": [
+            "def __getitem__(self, browse_name: str) -> int: ...",
+            "def __setitem__(self, browse_name: str, v: Variable) -> None: ..."
+        ]
+    },
+    "View_Add": {
+        "bind": [
+            ".def(\"add\", [](View& self, py::args args) { for (const auto& arg : args) { self.add(arg.cast<NodeId>()); } })"
+        ],
+        "pyi": [
+            "def add(self, *args: NodeId) -> None: ..."
+        ]
+    },
+    "DT_RW": {
+        "bind": [
+            "m.attr(\"tp_bool\") = py::cast(tpBoolean);",
+            "m.attr(\"tp_int\") = py::cast(tpInt32);",
+            "m.attr(\"tp_float\") = py::cast(tpDouble);",
+            "m.attr(\"tp_str\") = py::cast(tpString);"
+        ],
+        "pyi": [
+            "tp_bool: DataType = ...",
+            "tp_int: DataType = ...",
+            "tp_float: DataType = ...",
+            "tp_str: DataType = ..."
+        ]
+    }
+}

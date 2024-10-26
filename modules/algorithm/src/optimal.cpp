@@ -18,8 +18,6 @@
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/algorithm/numcal.hpp"
 
-#include <iostream>
-
 namespace rm
 {
 

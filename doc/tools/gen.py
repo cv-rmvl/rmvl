@@ -30,6 +30,18 @@ def add_fn(ns: str, name: str, arg: str, ret: str):
     if name == "[[call]]":
         full_name = f"{ns}::operator()"
         dst_name = f"{ns}::__call__"
+    elif name == "[[eq]]":
+        full_name = f"{ns}::operator=="
+        dst_name = f"{ns}::__eq__"
+    elif name == "[[ne]]":
+        full_name = f"{ns}::operator!="
+        dst_name = f"{ns}::__ne__"
+    elif name == "[[get]]":
+        full_name = f"{ns}::operator[]"
+        dst_name = f"{ns}::__getitem__"
+    elif name == "[[set]]":
+        full_name = f"{ns}::operator[]"
+        dst_name = f"{ns}::__setitem__"
 
     # replace special return values
     if ret == "[[con]]":

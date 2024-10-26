@@ -31,8 +31,8 @@
 namespace rm
 {
 
-Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const std::string &address, uint16_t port,
-                                              const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name)
+Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint16_t port,
+                       const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
 #if OPCUA_VERSION < 10400
@@ -43,7 +43,7 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
     connect_config.transportProfileUri = UA_STRING(const_cast<char *>("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp"));
     connect_config.enabled = UA_TRUE;
-    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(address))};
+    UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(addr))};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
 #if OPCUA_VERSION >= 10400
     connect_config.publisherId.uint32 = UA_UInt32_random();
@@ -58,7 +58,7 @@ Subscriber<TransportID::UDP_UADP>::Subscriber(const std::string &sub_name, const
     }
 }
 
-std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
+std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
 {
     //////////////// 添加 ReaderGroup (RG) ///////////////
     UA_ReaderGroupConfig rg_config{};
@@ -119,7 +119,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
     Object sub_obj;
     sub_obj.browse_name = sub_obj.description = sub_obj.display_name = dataset_name;
     auto obj_id = addObjectNode(sub_obj);
-    if (UA_NodeId_isNull(&obj_id))
+    if (obj_id.empty())
     {
         ERROR_("Failed to add object node, \"%s\"", UA_StatusCode_name(status));
         return {};
@@ -136,7 +136,7 @@ std::vector<NodeId> Subscriber<TransportID::UDP_UADP>::subscribe(const std::stri
         attr.dataType = raw_fields[i].dataType;
         attr.valueRank = raw_fields[i].valueRank;
         attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
-        NodeId node_id;
+        UA_NodeId node_id;
         status = UA_Server_addVariableNode(
             _server, UA_NODEID_NULL, obj_id, nodeHasComponent,
             UA_QUALIFIEDNAME(fields[i].ns, helper::to_char(fields[i].name)),

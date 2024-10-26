@@ -22,24 +22,8 @@ namespace rm
 //! @{
 
 //! 数据集字段元数据
-struct FieldMetaData final
+struct RMVL_EXPORTS_W_AG FieldMetaData final
 {
-
-    //! 字段名称
-    std::string name;
-
-    /**
-     * @brief 字段类型
-     * @see DataType
-     */
-    DataType type;
-
-    //! 字段 ValueRank
-    int value_rank{};
-
-    //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
-
     /**
      * @brief 从变量创建字段元数据
      * @brief
@@ -53,41 +37,37 @@ struct FieldMetaData final
      *
      * @param[in] val 变量，可参考 @ref rm::Variable
      */
-    static FieldMetaData create(const Variable &val) { return {val.browse_name, val.getDataType(), val.size() == 1 ? -1 : 1, val.ns}; }
+    static FieldMetaData makeFrom(const Variable &val) { return {val.browse_name, val.getDataType(), val.size() == 1 ? -1 : 1, val.ns}; }
+
+    //! 字段名称
+    RMVL_W_RW std::string name;
+
+    /**
+     * @brief 字段类型
+     * @see DataType
+     */
+    RMVL_W_RW DataType type;
+
+    //! 字段 ValueRank
+    RMVL_W_RW int value_rank{};
+
+    //! 命名空间索引，默认为 `1`
+    RMVL_W_RW uint16_t ns{1U};
 };
 
-/**
- * @brief OPC UA 订阅者
- *
- * @tparam Tpid 传输协议 ID，可参考 `rm::TransportID`
- *
- * @details **特化**
- * - @ref Subscriber<TransportID::UDP_UADP>
- */
-template <TransportID Tpid>
-class Subscriber final
-{
-    static_assert(Tpid != TransportID::MQTT_UADP, "OPC UA subscriber specialization using \033[33mMQTT\033[0m protocol"
-                                                  " and \033[33mUADP\033[0m serialization is not currently supported!");
-    static_assert(Tpid != TransportID::MQTT_JSON, "OPC UA subscriber specialization using \033[33mMQTT\033[0m protocol"
-                                                  " and \033[33mJSON\033[0m serialization is not currently supported!");
-};
-
-//! 使用 `UDP` 协议以及 `UADP` 序列化方式的订阅者特化
-template <>
-class Subscriber<TransportID::UDP_UADP> : public Server
+//! OPC UA 订阅者
+class RMVL_EXPORTS_W Subscriber : public Server
 {
 public:
     /**
      * @brief 创建 OPC UA 订阅者
      *
      * @param[in] sub_name 订阅者名称
-     * @param[in] address 订阅地址，形如 `opc.udp://224.0.0.22:4840`
+     * @param[in] addr 订阅地址，形如 `opc.udp://224.0.0.22:4840`
      * @param[in] port 端口号，与 @ref Server::Server 的端口号概念一致，默认为 4850
      * @param[in] users 用户列表，默认为空，可参考 @ref UserConfig
      */
-    Subscriber(const std::string &sub_name, const std::string &address, uint16_t port = 4850U,
-               const std::vector<UserConfig> &users = {});
+    RMVL_W Subscriber(std::string_view sub_name, const std::string &addr, uint16_t port = 4850U, const std::vector<UserConfig> &users = {});
 
     /**
      * @brief 订阅数据集
@@ -96,12 +76,12 @@ public:
      * @param[in] fields 数据集字段元数据列表
      * @return 订阅的变量对应的 `NodeId` 列表，每个 `NodeId` 均存在于订阅者自身的服务器中
      */
-    std::vector<NodeId> subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
+    RMVL_W std::vector<NodeId> subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields);
 
 private:
-    NodeId _connection_id{}; //!< 连接 ID
-    NodeId _rg_id{};         //!< ReaderGroup 读取组 ID
-    NodeId _dsr_id{};        //!< DataSetReader 数据集读取器 ID
+    UA_NodeId _connection_id{}; //!< 连接 ID
+    UA_NodeId _rg_id{};         //!< ReaderGroup 读取组 ID
+    UA_NodeId _dsr_id{};        //!< DataSetReader 数据集读取器 ID
 
     std::string _name;               //!< 订阅者名称
     std::hash<std::string> _strhash; //!< 字符串哈希函数

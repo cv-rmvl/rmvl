@@ -334,8 +334,7 @@ function(rmvl_generate_para target_name)
   endif()
   set(file_name "param/${target_name}.para")
   set(para_msg "Generating IDL ${target_name}.para")
-  message(STATUS "${para_msg}")
-  if(DEFINED BUILD_${the_module}_INIT AND NOT BUILD_${the_module}_INIT)
+  if(DEFINED BUILD_rmvl_${target_name}_INIT AND NOT BUILD_rmvl_${target_name}_INIT)
     message(STATUS "${para_msg} - skipped")
     return()
   endif()
@@ -408,6 +407,7 @@ function(rmvl_generate_para target_name)
     )
   endif()
   unset(para_include_path)
+  message(STATUS "${para_msg} - done")
 endfunction()
 
 # ----------------------------------------------------------------------------
@@ -422,7 +422,6 @@ endfunction()
 function(rmvl_generate_module_para module_name)
   ############################## message ##############################
   set(para_msg "Generating IDL ${module_name} Module")
-  message(STATUS "${para_msg}")
   ######################## Generate C++ header ########################
   set(para_module_header_details "")
   foreach(_sub ${RMVLPARA_${module_name}})
@@ -437,4 +436,5 @@ function(rmvl_generate_module_para module_name)
     ${CMAKE_CURRENT_LIST_DIR}/include/rmvlpara/${module_name}.hpp
     @ONLY
   )
+  message(STATUS "${para_msg} - done")
 endfunction()

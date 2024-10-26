@@ -47,6 +47,7 @@
 #define RMVL_EXPORTS_W RMVL_EXPORTS    //!< 导出符号并生成包装器代码
 #define RMVL_EXPORTS_W_AG RMVL_EXPORTS //!< 导出符号，指定为聚合类，并生成包装器代码
 #define RMVL_W                         //!< 为方法生成包装器代码
+#define RMVL_W_SUBST(str)              //!< 为方法生成包装器代码，并指定从 `misc` 中替换
 #define RMVL_W_RW                      //!< 为读写属性生成包装器代码
 
 /******************************** 静态检查分析 ********************************/

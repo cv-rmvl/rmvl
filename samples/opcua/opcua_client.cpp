@@ -44,8 +44,7 @@ void call(Client &client)
     std::cin >> num1;
     std::cout << "请输入 num2: ";
     std::cin >> num2;
-    std::vector<Variable> oargs;
-    bool result = client.call("add", {num1, num2}, oargs);
+    auto [result, oargs] = client.call("add", {num1, num2});
     if (result)
         std::cout << "\033[32m计算结果: " << oargs[0].cast<int>() << "\033[0m\n";
     else
@@ -54,8 +53,8 @@ void call(Client &client)
 
 int main()
 {
-    Client client("opc.tcp://127.0.0.1:4840");
-    if (!client.ok())
+    Client cli("opc.tcp://127.0.0.1:4840");
+    if (!cli.ok())
         return -1;
     while (true)
     {
@@ -64,11 +63,11 @@ int main()
         std::string num{};
         std::cin >> num;
         if (num == "0")
-            value<int>(client, nodeObjectsFolder | client.find("value_1"));
+            value<int>(cli, cli.find("value_1"));
         else if (num == "1")
-            value<double>(client, nodeObjectsFolder | client.find("value_2"));
+            value<double>(cli, cli.find("value_2"));
         else if (num == "2")
-            call(client);
+            call(cli);
         else if (num == "q")
             break;
         else

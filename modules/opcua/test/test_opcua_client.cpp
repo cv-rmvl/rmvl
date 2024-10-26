@@ -56,16 +56,16 @@ void configServer(rm::Server &srv)
     variable.display_name = "数组";
     srv.addVariableNode(variable);
     // 添加加法方法节点
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables input, rm::OutputVariables output) {
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &input) {
         int a = input[0], b = input[1];
-        output = {a + b};
-        return true;
+        rm::Variables output = {a + b};
+        return std::make_pair(true, output);
     };
     method.browse_name = "add";
     method.description = "this is add method";
     method.display_name = "加法";
-    method.iargs = {{"a", UA_TYPES_INT32}, {"b", UA_TYPES_INT32}};
-    method.oargs = {{"c", UA_TYPES_INT32}};
+    method.iargs = {{"a", rm::tpInt32}, {"b", rm::tpInt32}};
+    method.oargs = {{"c", rm::tpInt32}};
     srv.addMethodNode(method);
 }
 
@@ -77,7 +77,7 @@ TEST(OPC_UA_ClientTest, read_variable)
     std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5000");
     // 读取测试服务器上的变量值
-    auto id = rm::nodeObjectsFolder | cli.find("array");
+    auto id = cli.find("array");
     rm::Variable variable = cli.read(id);
     EXPECT_FALSE(variable.empty());
     std::vector<int> vec = variable;
@@ -97,7 +97,7 @@ TEST(OPC_UA_ClientTest, variable_IO)
     std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5001");
     // 读取测试服务器上的变量值
-    auto id = rm::nodeObjectsFolder | cli.find("single");
+    auto id = cli.find("single");
     EXPECT_TRUE(cli.write(id, 99));
     rm::Variable variable = cli.read(id);
     EXPECT_FALSE(variable.empty());
@@ -118,8 +118,8 @@ TEST(OPC_UA_ClientTest, call)
     rm::Client cli("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
     std::vector<rm::Variable> input = {1, 2};
-    std::vector<rm::Variable> output;
-    EXPECT_TRUE(cli.call("add", input, output));
+    auto [res, output] = cli.call("add", input);
+    EXPECT_TRUE(res);
     EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
 
     cli.shutdown();
@@ -136,7 +136,7 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     rm::Client cli("opc.tcp://127.0.0.1:5003");
     // 订阅测试服务器上的变量
     int receive_data{};
-    auto node_id = rm::nodeObjectsFolder | cli.find("single");
+    auto node_id = cli.find("single");
     auto on_change = [&](rm::ClientView, const rm::Variable &value) {
         receive_data = value;
     };
@@ -173,12 +173,12 @@ TEST(OPC_UA_ClientTest, event_monitor)
 
     std::string source_name;
     int aaa{};
-    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, [&](rm::ClientView, rm::InputVariables fields) {
-        source_name = fields[0].cast<const char *>();
+    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, [&](rm::ClientView, const rm::Variables &fields) {
+        source_name = fields[0].cast<std::string>();
         aaa = fields[1];
     });
     // 触发事件
-    auto event = rm::Event::from(etype);
+    auto event = rm::Event::makeFrom(etype);
     event.source_name = "GtestServer";
     event.message = "this is test event";
     event["aaa"] = 66;

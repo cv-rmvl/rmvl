@@ -112,8 +112,28 @@ void Client::spinOnce() const
 
 ////////////////////////// 功能配置 //////////////////////////
 
+static NodeId clientFindNode(UA_Client *p_cli, std::string_view browse_path, const NodeId &src_nd)
+{
+    RMVL_DbgAssert(p_cli != nullptr);
+
+    auto paths = helper::split(browse_path, '/');
+    if (paths.empty())
+        return src_nd;
+    ClientView cv{p_cli};
+    NodeId retval = src_nd;
+    for (const auto &path : paths)
+    {
+        retval = retval | cv.node(path);
+        if (retval.empty())
+            break;
+    }
+    return retval;
+}
+
 static Variable clientRead(UA_Client *p_client, const NodeId &node)
 {
+    RMVL_DbgAssert(p_client != nullptr);
+
     UA_Variant p_val;
     UA_Variant_init(&p_val);
     UA_StatusCode status = UA_Client_readValueAttribute(p_client, node, &p_val);
@@ -126,6 +146,8 @@ static Variable clientRead(UA_Client *p_client, const NodeId &node)
 
 static bool clientWrite(UA_Client *p_client, const NodeId &node, const Variable &val)
 {
+    RMVL_DbgAssert(p_client != nullptr);
+
     UA_Variant new_variant = helper::cvtVariable(val);
     auto status = UA_Client_writeValueAttribute(p_client, node, &new_variant);
     UA_Variant_clear(&new_variant);
@@ -137,19 +159,13 @@ static bool clientWrite(UA_Client *p_client, const NodeId &node, const Variable 
     return true;
 }
 
-Variable Client::read(const NodeId &node) const
-{
-    RMVL_DbgAssert(_client != nullptr);
-    return clientRead(_client, node);
-}
+NodeId Client::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return clientFindNode(_client, browse_path, src_nd); }
 
-bool Client::write(const NodeId &node, const Variable &val) const
-{
-    RMVL_DbgAssert(_client != nullptr);
-    return clientWrite(_client, node, val);
-}
+Variable Client::read(const NodeId &nd) const { return clientRead(_client, nd); }
 
-bool Client::call(const NodeId &obj_node, const std::string &name, const std::vector<Variable> &inputs, std::vector<Variable> &outputs) const
+bool Client::write(const NodeId &nd, const Variable &val) const { return clientWrite(_client, nd, val); }
+
+std::pair<bool, Variables> Client::call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -161,29 +177,30 @@ bool Client::call(const NodeId &obj_node, const std::string &name, const std::ve
     size_t output_size;
     UA_Variant *output_variants;
     // 获取方法节点
-    NodeId method_node = obj_node | find(name);
+    NodeId method_node = obj_nd | node(name);
     if (method_node.empty())
     {
-        ERROR_("Failed to find the method node: %s", name.c_str());
-        return false;
+        ERROR_("Failed to find the method node: %s", name.data());
+        return {false, {}};
     }
     // 调用方法
-    UA_StatusCode status = UA_Client_call(_client, obj_node, method_node, input_variants.size(),
+    UA_StatusCode status = UA_Client_call(_client, obj_nd, method_node, input_variants.size(),
                                           input_variants.data(), &output_size, &output_variants);
     for (auto &input_variant : input_variants)
         UA_Variant_clear(&input_variant);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to call the method, node id: %d, error code: %s",
-               method_node.nid.identifier.numeric, UA_StatusCode_name(status));
-        return false;
+               method_node.data().identifier.numeric, UA_StatusCode_name(status));
+        return {false, {}};
     }
+    rm::Variables outputs;
     outputs.reserve(output_size);
     for (size_t i = 0; i < output_size; ++i)
         outputs.push_back(helper::cvtVariable(output_variants[i]));
     for (size_t i = 0; i < output_size; ++i)
         UA_Variant_clear(&output_variants[i]);
-    return true;
+    return {true, outputs};
 }
 
 NodeId Client::addViewNode(const View &view) const
@@ -196,14 +213,16 @@ NodeId Client::addViewNode(const View &view) const
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.description));
     // 创建并添加 View 节点
+    UA_NodeId out_new_nd{};
     auto status = UA_Client_addViewNode(
         _client, UA_NODEID_NULL, nodeViewsFolder, nodeOrganizes,
-        UA_QUALIFIEDNAME(view.ns, helper::to_char(view.browse_name)), attr, &retval);
+        UA_QUALIFIEDNAME(view.ns, helper::to_char(view.browse_name)), attr, &out_new_nd);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to add view node, error: %s", UA_StatusCode_name(status));
         return {};
     }
+    retval = out_new_nd;
     // 添加引用
     for (const auto &node : view.data())
     {
@@ -245,7 +264,7 @@ static void data_change_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt3
     on_change(client, helper::cvtVariable(value->value));
 }
 
-bool Client::monitor(NodeId node, DataChangeNotificationCallback on_change, uint32_t queue_size)
+bool Client::monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32_t q_size)
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -254,10 +273,10 @@ bool Client::monitor(NodeId node, DataChangeNotificationCallback on_change, uint
     if (!createSubscription(_client, resp))
         return false;
     // 创建监视项请求
-    UA_MonitoredItemCreateRequest request = UA_MonitoredItemCreateRequest_default(node);
+    UA_MonitoredItemCreateRequest request = UA_MonitoredItemCreateRequest_default(nd);
     request.requestedParameters.samplingInterval = para::opcua_param.SAMPLING_INTERVAL;
     request.requestedParameters.discardOldest = true;
-    request.requestedParameters.queueSize = queue_size;
+    request.requestedParameters.queueSize = q_size;
     // 创建监视器
     auto context = std::make_unique<DataChangeNotificationCallback>(on_change);
     UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createDataChange(
@@ -268,7 +287,7 @@ bool Client::monitor(NodeId node, DataChangeNotificationCallback on_change, uint
         return false;
     }
     _dccb_gc.push_back(std::move(context));
-    _monitor_map[node.nid.identifier.numeric] = {resp.subscriptionId, result.monitoredItemId};
+    _monitor_map[nd.data().identifier.numeric] = {resp.subscriptionId, result.monitoredItemId};
     return true;
 }
 
@@ -281,7 +300,7 @@ static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, voi
     on_event(client, datas);
 }
 
-bool Client::monitor(NodeId node, const std::vector<std::string> &names, EventNotificationCallback on_event)
+bool Client::monitor(NodeId nd, const std::vector<std::string> &names, EventNotificationCallback on_event)
 {
     RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
@@ -291,7 +310,7 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, EventNo
 
     UA_MonitoredItemCreateRequest request_item;
     UA_MonitoredItemCreateRequest_init(&request_item);
-    request_item.itemToMonitor.nodeId = node;
+    request_item.itemToMonitor.nodeId = nd;
     request_item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
     request_item.monitoringMode = UA_MONITORINGMODE_REPORTING;
     // 准备 BrowseName 列表
@@ -331,45 +350,39 @@ bool Client::monitor(NodeId node, const std::vector<std::string> &names, EventNo
     return true;
 }
 
-bool Client::remove(NodeId node)
+bool Client::remove(NodeId nd)
 {
-    if (_monitor_map.find(node.nid.identifier.numeric) == _monitor_map.end())
+    if (_monitor_map.find(nd.data().identifier.numeric) == _monitor_map.end())
     {
-        ERROR_("Failed to find the monitor, node id: %d", node.nid.identifier.numeric);
+        ERROR_("Failed to find the monitor, node id: %d", nd.data().identifier.numeric);
         return false;
     }
-    auto [sub_id, mon_id] = _monitor_map.at(node.nid.identifier.numeric);
+    auto [sub_id, mon_id] = _monitor_map.at(nd.data().identifier.numeric);
     auto status = UA_Client_MonitoredItems_deleteSingle(_client, sub_id, mon_id);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to remove monitor, error: %s", UA_StatusCode_name(status));
         return false;
     }
-    _monitor_map.erase(node.nid.identifier.numeric);
+    _monitor_map.erase(nd.data().identifier.numeric);
     return true;
 }
 
-Variable ClientView::read(const NodeId &node) const
-{
-    RMVL_DbgAssert(_client != nullptr);
-    return clientRead(_client, node);
-}
+//////////////////////// 客户端视图 ////////////////////////
 
-bool ClientView::write(const NodeId &node, const Variable &val) const
-{
-    RMVL_DbgAssert(_client != nullptr);
-    return clientWrite(_client, node, val);
-}
+NodeId ClientView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return clientFindNode(_client, browse_path, src_nd); }
+Variable ClientView::read(const NodeId &nd) const { return clientRead(_client, nd); }
+bool ClientView::write(const NodeId &nd, const Variable &val) const { return clientWrite(_client, nd, val); }
 
 /////////////////////// 客户端定时器 ///////////////////////
 
 static void timer_cb(UA_Client *p_server, void *data)
 {
-    auto &func = *reinterpret_cast<ClientTimer::Callback *>(data);
+    auto &func = *reinterpret_cast<std::function<void(ClientView)> *>(data);
     func(p_server);
 }
 
-ClientTimer::ClientTimer(ClientView cv, double period, Callback callback) : _cv(cv), _cb(callback)
+ClientTimer::ClientTimer(ClientView cv, double period, std::function<void(ClientView)> callback) : _cv(cv), _cb(callback)
 {
     auto status = UA_Client_addRepeatedCallback(_cv.get(), timer_cb, &_cb, period, &_id);
     if (status != UA_STATUSCODE_GOOD)

@@ -100,7 +100,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
         ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
 }
 
-Server::Server(ServerUserConfig on_config, uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users)
+Server::Server(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users)
 {
     if (on_config != nullptr)
         on_config(_server);
@@ -122,13 +122,31 @@ Server::~Server()
     UA_Server_delete(_server);
 }
 
-static Variable serverRead(UA_Server *p_server, const NodeId &node)
+static NodeId serverFindNode(UA_Server *p_server, std::string_view browse_path, const NodeId &src_nd)
+{
+    RMVL_DbgAssert(p_server != nullptr);
+
+    auto paths = helper::split(browse_path, '/');
+    if (paths.empty())
+        return src_nd;
+    ServerView sv{p_server};
+    NodeId retval = src_nd;
+    for (const auto &path : paths)
+    {
+        retval = retval | sv.node(path);
+        if (retval.empty())
+            break;
+    }
+    return retval;
+}
+
+static Variable serverRead(UA_Server *p_server, const NodeId &nd)
 {
     RMVL_DbgAssert(p_server != nullptr);
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
-    auto status = UA_Server_readValue(p_server, node, &p_val);
+    auto status = UA_Server_readValue(p_server, nd, &p_val);
     if (status != UA_STATUSCODE_GOOD)
         return {};
     Variable retval = helper::cvtVariable(p_val);
@@ -136,31 +154,31 @@ static Variable serverRead(UA_Server *p_server, const NodeId &node)
     return retval;
 }
 
-static bool serverWrite(UA_Server *p_server, const NodeId &node, const Variable &val)
+static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &val)
 {
     RMVL_DbgAssert(p_server != nullptr);
 
     auto variant = helper::cvtVariable(val);
-    auto status = UA_Server_writeValue(p_server, node, variant);
+    auto status = UA_Server_writeValue(p_server, nd, variant);
     UA_Variant_clear(&variant);
     if (status != UA_STATUSCODE_GOOD)
         ERROR_("Failed to write variable, error code: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
 }
 
-static bool serverTriggerEvent(UA_Server *server, const NodeId &node_id, const Event &event)
+static bool serverTriggerEvent(UA_Server *server, const NodeId &nd, const Event &event)
 {
     RMVL_DbgAssert(server != nullptr);
 
     ServerView sv{server};
-    NodeId type_id = nodeBaseEventType | sv.find(event.type().browse_name);
+    NodeId type_id = nodeBaseEventType | sv.node(event.type().browse_name);
     if (type_id.empty())
     {
         ERROR_("Failed to find the event type ID during triggering event");
         return false;
     }
     // 创建事件
-    NodeId event_id;
+    UA_NodeId event_id;
     auto status = UA_Server_createEvent(server, type_id, &event_id);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -179,14 +197,14 @@ static bool serverTriggerEvent(UA_Server *server, const NodeId &node_id, const E
     // 设置事件自定义属性
     for (const auto &[browse_name, prop] : event.data())
     {
-        NodeId sub_node_id = event_id | sv.find(browse_name);
-        if (!sub_node_id.empty())
+        NodeId sub_nd = event_id | sv.node(browse_name);
+        if (!sub_nd.empty())
             UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
                                                  &prop, &UA_TYPES[UA_TYPES_INT32]);
     }
 
     // 触发事件
-    status = UA_Server_triggerEvent(server, event_id, node_id, nullptr, true);
+    status = UA_Server_triggerEvent(server, event_id, nd, nullptr, true);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
@@ -197,7 +215,9 @@ static bool serverTriggerEvent(UA_Server *server, const NodeId &node_id, const E
 
 ///////////////////////// 节点配置 /////////////////////////
 
-NodeId Server::addVariableTypeNode(const VariableType &vtype) const
+NodeId Server::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return serverFindNode(_server, browse_path, src_nd); }
+
+NodeId Server::addVariableTypeNode(const VariableType &vtype)
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -214,7 +234,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype) const
     }
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(vtype.description));
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(vtype.display_name));
-    NodeId retval;
+    UA_NodeId retval{};
     auto status = UA_Server_addVariableTypeNode(
         _server, UA_NODEID_NULL, nodeBaseDataVariableType, nodeHasSubtype,
         UA_QUALIFIEDNAME(vtype.ns, helper::to_char(vtype.browse_name)),
@@ -228,7 +248,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype) const
     return retval;
 }
 
-NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) const noexcept
+NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -252,19 +272,19 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) con
     const auto variable_type = val.type();
     if (!variable_type.empty())
     {
-        type_id = type_id | find(variable_type.browse_name);
+        type_id = type_id | node(variable_type.browse_name);
         if (type_id.empty())
         {
             ERROR_("Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
     }
-    NodeId retval;
+    UA_NodeId retval;
     // 添加节点至服务器
     NodeId object_folder_id{nodeObjectsFolder};
-    NodeId ref_id = (parent_id == object_folder_id) ? nodeOrganizes : nodeHasComponent;
+    NodeId ref_id = (parent_nd == object_folder_id) ? nodeOrganizes : nodeHasComponent;
     auto status = UA_Server_addVariableNode(
-        _server, UA_NODEID_NULL, parent_id, ref_id, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
+        _server, UA_NODEID_NULL, parent_nd, ref_id, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -276,7 +296,7 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_id) con
 }
 
 Variable Server::read(const NodeId &node) const { return serverRead(_server, node); }
-bool Server::write(const NodeId &node, const Variable &val) const { return serverWrite(_server, node, val); }
+bool Server::write(const NodeId &node, const Variable &val) { return serverWrite(_server, node, val); }
 
 static void value_cb_before_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid,
                                  void *context, const UA_NumericRange *, const UA_DataValue *value)
@@ -292,13 +312,13 @@ static void value_cb_after_write(UA_Server *server, const UA_NodeId *, void *, c
     on_write(server, *nodeId, data->hasValue ? helper::cvtVariable(data->value) : Variable{});
 }
 
-bool Server::addVariableNodeValueCallback(NodeId id, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) const noexcept
+bool Server::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
     // 设置节点上下文
     auto context = std::make_unique<ValueCallbackWrapper>(std::forward<ValueCallbackBeforeRead>(before_read),
                                                           std::forward<ValueCallbackAfterWrite>(after_write));
-    auto status = UA_Server_setNodeContext(_server, id, context.get());
+    auto status = UA_Server_setNodeContext(_server, nd, context.get());
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to set node context: %s", UA_StatusCode_name(status));
@@ -307,7 +327,7 @@ bool Server::addVariableNodeValueCallback(NodeId id, ValueCallbackBeforeRead bef
     _vcb_gc.push_back(std::move(context));
     // 设置回调函数
     UA_ValueCallback callback{value_cb_before_read, value_cb_after_write};
-    status = UA_Server_setVariableNode_valueCallback(_server, id, callback);
+    status = UA_Server_setVariableNode_valueCallback(_server, nd, callback);
     if (status != UA_STATUSCODE_GOOD)
         ERROR_("Function addVariableNodeValueCallBack: %s", UA_StatusCode_name(status));
     return status == UA_STATUSCODE_GOOD;
@@ -333,7 +353,7 @@ static UA_StatusCode datasource_cb_on_write(UA_Server *server, const UA_NodeId *
     return value->hasValue ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADNOTFOUND;
 }
 
-NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_id) const noexcept
+NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_nd) noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -347,20 +367,20 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
     const auto variable_type = val.type();
     if (!variable_type.empty())
     {
-        type_id = type_id | find(variable_type.browse_name);
+        type_id = type_id | node(variable_type.browse_name);
         if (type_id.empty())
         {
             ERROR_("Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
     }
-    NodeId retval;
+    UA_NodeId retval;
     // 获取数据源重定向信息
     UA_DataSource data_source = {datasource_cb_on_read, datasource_cb_on_write};
     // 添加节点至服务器
     auto context = std::make_unique<DataSourceCallbackWrapper>(std::forward<DataSourceRead>(on_read), std::forward<DataSourceWrite>(on_write));
     auto status = UA_Server_addDataSourceVariableNode(
-        _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
+        _server, UA_NODEID_NULL, parent_nd, nodeOrganizes, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
         type_id, attr, data_source, context.get(), &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -379,19 +399,23 @@ static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, con
     std::vector<Variable> iargs(input_size);
     for (size_t i = 0; i < input_size; ++i)
         iargs[i] = helper::cvtVariable(input[i]);
-    std::vector<Variable> oargs(output_size);
-    bool res = on_method(server, *object_id, iargs, oargs);
-    if (oargs.size() != output_size)
+    auto [res, oargs] = on_method(server, *object_id, iargs);
+    if (!res)
+        return UA_STATUSCODE_BADINTERNALERROR;
+    else
     {
-        ERROR_("The number of output arguments does not match the number of input arguments");
-        return UA_STATUSCODE_BADINVALIDARGUMENT;
+        if (oargs.size() != output_size)
+        {
+            ERROR_("The number of output arguments does not match the number of input arguments");
+            return UA_STATUSCODE_BADINVALIDARGUMENT;
+        }
+        for (size_t i = 0; i < output_size; ++i)
+            output[i] = helper::cvtVariable(oargs[i]);
+        return UA_STATUSCODE_GOOD;
     }
-    for (size_t i = 0; i < output_size; ++i)
-        output[i] = helper::cvtVariable(oargs[i]);
-    return res ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADINTERNALERROR;
 }
 
-NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) const
+NodeId Server::addMethodNode(const Method &method, const NodeId &parent_nd)
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -411,9 +435,9 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) cons
         outputs.push_back(helper::cvtArgument(arg));
     // 添加节点
     auto context = std::make_unique<MethodCallback>(method.func);
-    NodeId retval;
+    UA_NodeId retval;
     auto status = UA_Server_addMethodNode(
-        _server, UA_NODEID_NULL, parent_id, nodeHasComponent, UA_QUALIFIEDNAME(method.ns, helper::to_char(method.browse_name)),
+        _server, UA_NODEID_NULL, parent_nd, nodeHasComponent, UA_QUALIFIEDNAME(method.ns, helper::to_char(method.browse_name)),
         attr, method_cb, inputs.size(), inputs.data(), outputs.size(), outputs.data(), context.get(), &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -432,16 +456,16 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_id) cons
     return retval;
 }
 
-bool Server::setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) const
+bool Server::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_method)
 {
     RMVL_DbgAssert(_server != nullptr);
     auto context = std::make_unique<MethodCallback>(on_method);
-    if (UA_Server_setNodeContext(_server, id, context.get()))
+    if (UA_Server_setNodeContext(_server, nd, context.get()))
     {
         ERROR_("Failed to set node context");
         return false;
     }
-    auto ret = UA_Server_setMethodNodeCallback(_server, id, method_cb);
+    auto ret = UA_Server_setMethodNodeCallback(_server, nd, method_cb);
     if (ret != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to set method node callback: %s", UA_StatusCode_name(ret));
@@ -451,7 +475,7 @@ bool Server::setMethodNodeCallBack(const NodeId &id, MethodCallback on_method) c
     return true;
 }
 
-NodeId Server::addObjectTypeNode(const ObjectType &otype) const
+NodeId Server::addObjectTypeNode(const ObjectType &otype)
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -459,9 +483,8 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype) const
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(otype.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(otype.description));
-    NodeId retval;
     // 获取父节点的 NodeId
-    NodeId parent_id{nodeBaseObjectType};
+    NodeId parent_nd{nodeBaseObjectType};
     const ObjectType *current = otype.base();
     std::stack<std::string> base_stack;
     while (current != nullptr)
@@ -471,16 +494,17 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype) const
     }
     while (!base_stack.empty())
     {
-        parent_id = parent_id | find(base_stack.top());
+        parent_nd = parent_nd | node(base_stack.top());
         base_stack.pop();
     }
-    if (parent_id.empty())
+    if (parent_nd.empty())
     {
         ERROR_("Failed to find the base object type ID during adding object type node");
-        parent_id = nodeBaseObjectType;
+        parent_nd = nodeBaseObjectType;
     }
+    UA_NodeId retval;
     auto status = UA_Server_addObjectTypeNode(
-        _server, UA_NODEID_NULL, parent_id,
+        _server, UA_NODEID_NULL, parent_nd,
         nodeHasSubtype,
         UA_QUALIFIEDNAME(otype.ns, helper::to_char(otype.browse_name)),
         attr, nullptr, &retval);
@@ -510,7 +534,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype) const
     return retval;
 }
 
-NodeId Server::addObjectNode(const Object &obj, NodeId parent_id) const
+NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -529,7 +553,7 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id) const
     }
     while (!base_stack.empty())
     {
-        type_id = type_id | find(base_stack.top());
+        type_id = type_id | node(base_stack.top());
         base_stack.pop();
     }
     if (type_id.empty())
@@ -538,9 +562,9 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id) const
         type_id = nodeBaseObjectType;
     }
     // 添加至服务器
-    NodeId retval;
+    UA_NodeId retval;
     auto status = UA_Server_addObjectNode(
-        _server, UA_NODEID_NULL, parent_id, nodeOrganizes, UA_QUALIFIEDNAME(obj.ns, helper::to_char(obj.browse_name)),
+        _server, UA_NODEID_NULL, parent_nd, nodeOrganizes, UA_QUALIFIEDNAME(obj.ns, helper::to_char(obj.browse_name)),
         type_id, attr, nullptr, &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -550,30 +574,30 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_id) const
     // 添加额外变量节点
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
-        auto sub_node_id = retval | find(browse_name);
-        if (!sub_node_id.empty())
-            write(sub_node_id, variable);
+        auto sub_nd = retval | node(browse_name);
+        if (!sub_nd.empty())
+            write(sub_nd, variable);
         else
             addVariableNode(variable, retval);
     }
     // 添加额外方法节点
     for (const auto &[browse_name, method] : obj.getMethods())
     {
-        auto sub_node_id = retval | find(browse_name);
-        if (!sub_node_id.empty())
-            setMethodNodeCallBack(sub_node_id, method.func);
+        auto sub_nd = retval | node(browse_name);
+        if (!sub_nd.empty())
+            setMethodNodeCallBack(sub_nd, method.func);
         else
             addMethodNode(method, retval);
     }
     return retval;
 }
 
-NodeId Server::addViewNode(const View &view) const
+NodeId Server::addViewNode(const View &view)
 {
     RMVL_DbgAssert(_server != nullptr);
 
     // 准备数据
-    NodeId retval;
+    UA_NodeId retval;
     UA_ViewAttributes attr = UA_ViewAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(view.description));
@@ -602,11 +626,11 @@ NodeId Server::addViewNode(const View &view) const
     return retval;
 }
 
-NodeId Server::addEventTypeNode(const EventType &etype) const
+NodeId Server::addEventTypeNode(const EventType &etype)
 {
     RMVL_DbgAssert(_server != nullptr);
 
-    NodeId retval;
+    UA_NodeId retval;
     UA_ObjectTypeAttributes attr = UA_ObjectTypeAttributes_default;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(etype.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(etype.description));
@@ -628,7 +652,7 @@ NodeId Server::addEventTypeNode(const EventType &etype) const
         val_attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(browse_name));
         val_attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
         UA_Variant_setScalarCopy(&val_attr.value, &val, &UA_TYPES[UA_TYPES_INT32]);
-        NodeId sub_id;
+        UA_NodeId sub_id;
         status = UA_Server_addVariableNode(
             _server, UA_NODEID_NULL, retval, nodeHasProperty,
             UA_QUALIFIEDNAME(etype.ns, helper::to_char(browse_name)), nodePropertyType,
@@ -652,23 +676,24 @@ NodeId Server::addEventTypeNode(const EventType &etype) const
     return retval;
 }
 
-bool Server::triggerEvent(const NodeId &node_id, const Event &event) const { return serverTriggerEvent(_server, node_id, event); }
+bool Server::triggerEvent(const NodeId &nd, const Event &event) const { return serverTriggerEvent(_server, nd, event); }
 
 //////////////////////// 服务端视图 ////////////////////////
 
-Variable ServerView::read(const NodeId &node) const { return serverRead(_server, node); }
-bool ServerView::write(const NodeId &node, const Variable &val) const { return serverWrite(_server, node, val); }
-bool ServerView::triggerEvent(const NodeId &node_id, const Event &event) const { return serverTriggerEvent(_server, node_id, event); }
+NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return serverFindNode(_server, browse_path, src_nd); }
+Variable ServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
+bool ServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
+bool ServerView::triggerEvent(const NodeId &nd, const Event &event) const { return serverTriggerEvent(_server, nd, event); }
 
 /////////////////////// 服务器定时器 ///////////////////////
 
 static void timer_cb(UA_Server *p_server, void *data)
 {
-    auto &func = *reinterpret_cast<ServerTimer::Callback *>(data);
+    auto &func = *reinterpret_cast<std::function<void(ServerView)> *>(data);
     func(p_server);
 }
 
-ServerTimer::ServerTimer(ServerView sv, double period, Callback callback) : _sv(sv), _cb(callback)
+ServerTimer::ServerTimer(ServerView sv, double period, std::function<void(ServerView)> callback) : _sv(sv), _cb(callback)
 {
     auto status = UA_Server_addRepeatedCallback(_sv.get(), timer_cb, &_cb, period, &_id);
     if (status != UA_STATUSCODE_GOOD)
