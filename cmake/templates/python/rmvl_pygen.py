@@ -4,11 +4,12 @@ C++ to Python binding code generator
 
 import os
 import re
+from typing import Union, List, Tuple
 import argparse
 from collections import defaultdict
 
 
-def re_match(mode: str, line: str) -> re.Match | None:
+def re_match(mode: str, line: str) -> Union[re.Match, None]:
     """
     ### Regex match a line in C++ header file
     #### Parameters
@@ -29,7 +30,7 @@ def re_match(mode: str, line: str) -> re.Match | None:
 
     `line`: `str` ─ String containing C++ header file line
     #### Returns
-    `(re.Match | None)`: Match result, return `None` if no match
+    `Union[re.Match, None]`: Match result, return `None` if no match
     """
     if mode == "normal_class":
         return re.search(r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?$", line)
@@ -88,13 +89,13 @@ def re_match(mode: str, line: str) -> re.Match | None:
         return None
 
 
-def split_parameters(params: str) -> tuple[list[str], list[str], list[str]]:
+def split_parameters(params: str) -> Tuple[List[str], List[str], List[str]]:
     """
     ### split parameters and default values from a string containing parameters
     #### Parameters
     `params`: `str` ─ string containing parameters and optional default values
     #### Returns
-    `tuple[list[str], list[str], list[str]]`: a tuple containing three lists:
+    `Tuple[List[str], List[str], List[str]]`: a Tuple containing three Lists:
     - List of parameter types
     - List of parameter names
     - List of default values, if a parameter has no default value, the corresponding element will be `None`
@@ -151,9 +152,9 @@ types = {
     "string_view": "str",
     # cv types
     "Mat": "np.ndarray",
-    "Matx": "tuple",
-    "Point": "tuple",
-    "Vec": "tuple",
+    "Matx": "Tuple",
+    "Point": "Tuple",
+    "Vec": "Tuple",
 }
 
 
@@ -186,7 +187,7 @@ def type_convert(cpp_type: str) -> str:
     #### Example
     >>> type_convert('vector<int>')
     returns
-    >>> 'list[int]'
+    >>> 'List[int]'
     """
 
     # Remove `const`, `&`, `*`, `namespace`, `inline`, `constexpr`
@@ -194,19 +195,19 @@ def type_convert(cpp_type: str) -> str:
 
     def convert_vector(match: re.Match) -> str:
         """
-        Convert `vector<...>` to `list[...]`
+        Convert `vector<...>` to `List[...]`
         """
         inner = match.group(1)
         converted = type_convert(inner)
-        return f"list[{converted}]"
+        return f"List[{converted}]"
 
-    def convert_pair_tuple(match: re.Match) -> str:
+    def convert_pair_Tuple(match: re.Match) -> str:
         """
-        Convert `pair<...>`, `tuple<...>` to `tuple[...]`
+        Convert `pair<...>`, `Tuple<...>` to `Tuple[...]`
         """
         inner = match.group(2)
         converted = ", ".join(type_convert(x.strip()) for x in inner.split(","))
-        return f"tuple[{converted}]"
+        return f"Tuple[{converted}]"
 
     def convert_function(match: re.Match) -> str:
         """
@@ -220,10 +221,10 @@ def type_convert(cpp_type: str) -> str:
 
     def convert_array(match: re.Match) -> str:
         """
-        Convert `array<..., size>` to `list[...]`
+        Convert `array<..., size>` to `List[...]`
         """
         inner = type_convert(match.group(1))
-        return f"list[{inner}]"
+        return f"List[{inner}]"
 
     def convert_identifier(match: re.Match) -> str:
         """
@@ -233,36 +234,36 @@ def type_convert(cpp_type: str) -> str:
 
     def convert_matx(match: re.Match) -> str:
         """
-        Convert `Matx<...>` to `tuple`
+        Convert `Matx<...>` to `Tuple`
         """
         tp, m, n = match.group(1), match.group(2), match.group(3)
         inner = type_convert(tp)
-        return f"tuple[{', '.join([inner] * int(m) * int(n))}]"
+        return f"Tuple[{', '.join([inner] * int(m) * int(n))}]"
 
     def convert_vec(match: re.Match) -> str:
         """
-        Convert `Vec<...>` to `tuple`
+        Convert `Vec<...>` to `Tuple`
         """
         tp, n = match.group(1), match.group(2)
         inner = type_convert(tp)
-        return f"tuple[{', '.join([inner] * int(n))}]"
+        return f"Tuple[{', '.join([inner] * int(n))}]"
 
     # bitset<...> -> int
     cpp_type = re.sub(r"^bitset<\d+>", "int", cpp_type)
-    # vector<...> -> list[...]
+    # vector<...> -> List[...]
     cpp_type = re.sub(r"^vector<(.+)>$", convert_vector, cpp_type)
-    # array<..., size> -> list[...]
+    # array<..., size> -> List[...]
     cpp_type = re.sub(r"^array<([^,]+),\s*\d+>$", convert_array, cpp_type)
-    # pair<...>, tuple<...> -> tuple[...]
-    cpp_type = re.sub(r"^(pair|tuple)<(.+)>$", convert_pair_tuple, cpp_type)
+    # pair<...>, Tuple<...> -> Tuple[...]
+    cpp_type = re.sub(r"^(pair|Tuple)<(.+)>$", convert_pair_Tuple, cpp_type)
     # function<return_type(arg_types)> -> callable[[arg_types], return_type]
     cpp_type = re.sub(r"^function<([^(]+)\(([^)]*)\)>$", convert_function, cpp_type)
     # convert cv types
     cpp_type = re.sub(r"^Matx<([^,]+),\s*(\d+),\s*(\d+)>$", convert_matx, cpp_type)
-    cpp_type = re.sub(r"^Point$", "tuple[int, int]", cpp_type)
-    cpp_type = re.sub(r"^Point2[fd]$", "tuple[float, float]", cpp_type)
-    cpp_type = re.sub(r"^Point3i$", "tuple[int, int, int]", cpp_type)
-    cpp_type = re.sub(r"^Point3[fd]$", "tuple[float, float, float]", cpp_type)
+    cpp_type = re.sub(r"^Point$", "Tuple[int, int]", cpp_type)
+    cpp_type = re.sub(r"^Point2[fd]$", "Tuple[float, float]", cpp_type)
+    cpp_type = re.sub(r"^Point3i$", "Tuple[int, int, int]", cpp_type)
+    cpp_type = re.sub(r"^Point3[fd]$", "Tuple[float, float, float]", cpp_type)
     cpp_type = re.sub(r"^Vec<([^,]+),\s*(\d+)>$", convert_vec, cpp_type)
     # convert identifier
     cpp_type = re.sub(r"^\b\w+\b$", convert_identifier, cpp_type)
@@ -270,11 +271,11 @@ def type_convert(cpp_type: str) -> str:
     return cpp_type
 
 
-def generate_python_binding(lines: list[str]) -> str:
+def generate_python_binding(lines: List[str]) -> str:
     """
     ### Generate py binding code from C++ header file
     #### Parameters
-    - `lines`: list of strings containing C++ header file lines
+    - `lines`: List of strings containing C++ header file lines
     #### Returns
     `(str)`: generated py binding code
     """
@@ -528,11 +529,11 @@ def generate_python_binding(lines: list[str]) -> str:
     return "\n".join(binding_code)
 
 
-def generate_pyi(lines: list[str], doc_path: str | None) -> str:
+def generate_pyi(lines: List[str], doc_path: Union[str, None]) -> str:
     """
     ### Generate .pyi file content and documents configurations from C++ header file
     #### Parameters
-    - `lines`: list of strings containing C++ header file lines
+    - `lines`: List of strings containing C++ header file lines
     - `doc_path`: path of the pydoc cfg file
     #### Returns
     `(str)`: generated .pyi file content
@@ -546,7 +547,7 @@ def generate_pyi(lines: list[str], doc_path: str | None) -> str:
     functions = defaultdict(list)
     # To store enum class definitions
     enum_classes = []
-    enums = list[str]()
+    enums = []
     in_enum = False
     cur_enum_class = None
     cur_enum = None
