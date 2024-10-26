@@ -34,8 +34,8 @@ namespace rm
 /************************************************************************************/
 /************************************** 发布者 **************************************/
 
-Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const std::string &address, uint16_t port,
-                                            const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name)
+Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_t port,
+                     const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
 #if OPCUA_VERSION < 10400
@@ -46,7 +46,7 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
     connect_config.transportProfileUri = UA_STRING(const_cast<char *>("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp"));
     connect_config.enabled = UA_TRUE;
-    std::string url_str = address + ":" + std::to_string(port);
+    std::string url_str = addr + ":" + std::to_string(port);
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(url_str))};
     UA_Variant_setScalar(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     // 用哈希值作为发布者 ID
@@ -72,7 +72,7 @@ Publisher<TransportID::UDP_UADP>::Publisher(const std::string &pub_name, const s
     if (pds_status.addResult != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to add published dataset, \"%s\"",
-                     UA_StatusCode_name(pds_status.addResult));
+               UA_StatusCode_name(pds_status.addResult));
         return;
     }
 }
@@ -88,24 +88,24 @@ static inline UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd)
     return dsf_config;
 }
 
-bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSet> &datas, double duration)
+bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double duration)
 {
     ////////////////////// 前置条件 //////////////////////
     if (_server == nullptr)
         RMVL_Error(RMVL_StsNullPtr, "Server is nullptr.");
-    if (_connection_id.empty())
+    if (UA_NodeId_isNull(&_connection_id))
         return false;
 
     ////////////// 添加 DataSetField (DSF) ///////////////
     for (const auto &pds : datas)
     {
         auto dsf_config = getPDS(pds);
-        NodeId dsf_node_id;
+        UA_NodeId dsf_node_id;
         auto result = UA_Server_addDataSetField(_server, _pds_id, &dsf_config, &dsf_node_id);
         if (result.result != UA_STATUSCODE_GOOD)
         {
             ERROR_("Failed to add dataset field, name: \"%s\", status code: \"%s\"",
-                         pds.name.c_str(), UA_StatusCode_name(result.result));
+                   pds.name.c_str(), UA_StatusCode_name(result.result));
             return false;
         }
     }
@@ -137,7 +137,7 @@ bool Publisher<TransportID::UDP_UADP>::publish(const std::vector<PublishedDataSe
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to set writer group operational, \"%s\"",
-                     UA_StatusCode_name(status));
+               UA_StatusCode_name(status));
         return false;
     }
     ////////////// 添加 DataSetWriter (DSW) //////////////

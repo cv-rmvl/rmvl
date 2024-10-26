@@ -27,18 +27,18 @@ namespace rm
  * @brief
  * - 数据包含变量节点列表、方法节点列表
  */
-class ObjectType final
+class RMVL_EXPORTS_W ObjectType final
 {
 public:
     //! 构造 `rm::ObjectType` 对象类型
-    ObjectType() = default;
+    RMVL_W ObjectType() = default;
 
     /**
      * @brief 添加变量节点至 `rm::ObjectType` 对象类型中
      *
      * @param[in] variable 变量节点
      */
-    inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
+    RMVL_W inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
 
     /**
      * @brief 访问指定的变量节点
@@ -46,6 +46,7 @@ public:
      * @param[in] browse_name 变量节点的浏览名 BrowseName
      * @return 用 `rm::Variable` 表示的变量的左值引用
      */
+    RMVL_W_SUBST("OT_Idx")
     inline Variable &operator[](const std::string &browse_name) { return _variables[browse_name]; }
 
     /**
@@ -53,14 +54,14 @@ public:
      *
      * @param[in] method 方法节点
      */
-    inline void add(const Method &method) { _methods[method.browse_name] = method; }
+    RMVL_W inline void add(const Method &method) { _methods[method.browse_name] = method; }
 
     /**
      * @brief 判断对象类型是否为空
-     * 
+     *
      * @return 是否为空
      */
-    inline bool empty() const { return _variables.empty() && _methods.empty() && _base == nullptr; }
+    RMVL_W inline bool empty() const { return _variables.empty() && _methods.empty() && _base == nullptr; }
 
     /**
      * @brief 设置基类 `rm::ObjectType` 对象类型
@@ -76,17 +77,17 @@ public:
      */
     inline const ObjectType *base() const { return _base; }
 
-    inline const auto &getVariables() const { return _variables; }
+    RMVL_W inline const std::unordered_map<std::string, rm::Variable> &getVariables() const { return _variables; }
 
     /**
      * @brief 获取 `rm::Method` 表示的方法节点的列表
      *
      * @return 方法节点列表
      */
-    inline const auto &getMethods() const { return _methods; }
+    RMVL_W inline const std::unordered_map<std::string, rm::Method> &getMethods() const { return _methods; }
 
     //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
+    RMVL_W_RW uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -97,7 +98,7 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
      */
-    std::string browse_name{};
+    RMVL_W_RW std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -106,9 +107,9 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
      */
-    std::string display_name{};
+    RMVL_W_RW std::string display_name{};
     //! 对象类型的描述 - `zh-CN`
-    std::string description{};
+    RMVL_W_RW std::string description{};
 
 private:
     //! 继承的 `rm::ObjectType` 对象类型
@@ -134,10 +135,10 @@ private:
 };
 
 //! OPC UA 对象
-class Object final
+class RMVL_EXPORTS_W Object final
 {
 public:
-    Object() = default;
+    RMVL_W Object() = default;
 
     /**
      * @brief 从对象类型构创建的对象节点
@@ -145,25 +146,24 @@ public:
      * @param[in] otype 既存的待作为对象节点类型信息的使用 `rm::ObjectType` 表示的变量类型
      * @return 新的 `rm::Object` 对象节点
      */
-    static inline Object from(const ObjectType &otype) { return Object(otype); }
-
+    RMVL_W static inline Object makeFrom(const ObjectType &otype) { return Object(otype); }
 
     //! 获取对象类型 `rm::ObjectType`
-    inline ObjectType type() const { return _type; }
+    RMVL_W inline ObjectType type() const { return _type; }
 
     /**
      * @brief 添加（额外的）变量节点至 `rm::Object` 对象中
      *
      * @param[in] variable 变量节点
      */
-    inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
+    RMVL_W inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
 
     /**
      * @brief 添加（额外的）方法节点至 `rm::Object` 对象中
      *
      * @param[in] method 方法节点
      */
-    inline void add(const Method &method) { _methods[method.browse_name] = method; }
+    RMVL_W inline void add(const Method &method) { _methods[method.browse_name] = method; }
 
     /**
      * @brief 访问指定的变量节点
@@ -171,24 +171,32 @@ public:
      * @param[in] browse_name 变量节点的浏览名 BrowseName
      * @return 用 `rm::Variable` 表示的变量的左值引用
      */
+    RMVL_W_SUBST("O_Idx")
     inline Variable &operator[](const std::string &browse_name) { return _variables[browse_name]; }
+
+    /**
+     * @brief 判断对象是否为空
+     *
+     * @return 是否为空
+     */
+    RMVL_W inline bool empty() const { return _variables.empty() && _methods.empty(); }
 
     /**
      * @brief 获取 `rm::Variable` 表示的变量节点的列表
      *
      * @return 变量节点列表
      */
-    inline const auto &getVariables() const { return _variables; }
+    RMVL_W inline const std::unordered_map<std::string, rm::Variable> &getVariables() const { return _variables; }
 
     /**
      * @brief 获取 `rm::Method` 表示的方法节点的列表
      *
      * @return 方法节点列表
      */
-    inline const auto &getMethods() const { return _methods; }
+    RMVL_W inline const std::unordered_map<std::string, rm::Method> &getMethods() const { return _methods; }
 
     //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
+    RMVL_W_RW uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -197,7 +205,7 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
      */
-    std::string browse_name{};
+    RMVL_W_RW std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -206,9 +214,9 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
      */
-    std::string display_name{};
+    RMVL_W_RW std::string display_name{};
     //! 对象的描述 - `zh-CN`
-    std::string description{};
+    RMVL_W_RW std::string description{};
 
 private:
     explicit Object(const ObjectType &otype) : _type(otype), _variables(otype.getVariables()), _methods(otype.getMethods()) {}

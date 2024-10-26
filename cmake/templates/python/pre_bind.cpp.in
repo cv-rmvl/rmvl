@@ -1,7 +1,7 @@
+#include <opencv2/core.hpp>
+
 namespace pybind11::detail
 {
-
-#ifdef HAVE_OPENCV_CORE
 
 template <>
 struct type_caster<cv::Mat>
@@ -144,8 +144,5 @@ public:
         return t.release();
     }
 };
-
-
-#endif // HAVE_OPENCV_CORE
 
 } // namespace pybind11::detail

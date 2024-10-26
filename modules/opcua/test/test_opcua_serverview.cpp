@@ -33,12 +33,12 @@ void setup(Server &srv)
     method.browse_name = "plus";
     method.display_name = "Input + Number";
     method.description = "输入值加数";
-    method.func = [](ServerView sv, const NodeId &obj_id, InputVariables inputs, OutputVariables) {
-        auto num_node = obj_id | sv.find("num");
+    method.func = [](ServerView sv, const NodeId &obj_id, const Variables &inputs) -> std::pair<bool, Variables> {
+        auto num_node = obj_id | sv.node("num");
         int num = sv.read(num_node);
         Variable dst = inputs.front().cast<int>() + num;
         sv.write(num_node, dst);
-        return true;
+        return {true, {}};
     };
     method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
     srv.addMethodNode(method);
@@ -52,12 +52,11 @@ TEST(OPC_UA_ServerView, read_variable_in_method)
 
     Client cli("opc.tcp://127.0.0.1:6000");
     ASSERT_TRUE(cli.ok());
-    EXPECT_EQ(cli.read(nodeObjectsFolder | cli.find("num")), 1);
+    EXPECT_EQ(cli.read(cli.find("num")), 1);
     std::vector<Variable> inputs = {2};
-    std::vector<Variable> outputs;
-
-    EXPECT_TRUE(cli.call("plus", inputs, outputs));
-    EXPECT_EQ(cli.read(nodeObjectsFolder | cli.find("num")), 3);
+    auto [res, outputs] = cli.call("plus", inputs);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(cli.read(cli.find("num")), 3);
 
     cli.shutdown();
     srv.shutdown();

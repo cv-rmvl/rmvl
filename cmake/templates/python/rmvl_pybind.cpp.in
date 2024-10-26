@@ -9,7 +9,7 @@ namespace py = pybind11;
 using namespace py::literals;
 @RMVL_PYBIND_NS@
 
-#include "pre_bind.hpp"
+@PREBIND_CONTENTS@
 
 PYBIND11_MODULE(@RMVL_PYBIND_NAME@, m)
 {

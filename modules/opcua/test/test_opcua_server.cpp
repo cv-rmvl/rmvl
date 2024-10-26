@@ -44,7 +44,7 @@ TEST(OPC_UA_Server, add_variable_node)
     variable.description = "this is test double";
     variable.display_name = "测试双精度浮点数";
     auto node = srv.addVariableNode(variable);
-    EXPECT_FALSE(UA_NodeId_isNull(&node));
+    EXPECT_FALSE(node.empty());
     srv.spinOnce();
 }
 
@@ -74,7 +74,7 @@ TEST(OPC_UA_Server, add_data_source_variable_node)
         data_source = val.cast<int>();
     };
     auto node = srv.addDataSourceVariableNode(variable, on_read, on_write);
-    EXPECT_FALSE(UA_NodeId_isNull(&node));
+    EXPECT_FALSE(node.empty());
     srv.spinOnce();
 }
 
@@ -87,7 +87,7 @@ TEST(OPC_UA_Server, add_variable_type_node)
     variable_type.description = "this is test string";
     variable_type.display_name = "测试字符串";
     auto node = srv.addVariableTypeNode(variable_type);
-    EXPECT_FALSE(UA_NodeId_isNull(&node));
+    EXPECT_FALSE(node.empty());
     srv.spinOnce();
 }
 
@@ -95,7 +95,7 @@ TEST(OPC_UA_Server, add_variable_type_node)
 TEST(OPC_UA_Server, add_method_node)
 {
     rm::Server srv(4832);
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables, rm::OutputVariables) { return true; };
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
     method.browse_name = "test_method";
     method.description = "this is test method";
     method.display_name = "测试方法";
@@ -117,7 +117,7 @@ TEST(OPC_UA_Server, add_object_node)
     val1.display_name = "测试变量 1";
     object.add(val1);
     auto id = srv.addObjectNode(object);
-    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    EXPECT_FALSE(id.empty());
     srv.spinOnce();
 }
 
@@ -138,10 +138,10 @@ TEST(OPC_UA_Server, add_object_node_with_method)
     method.browse_name = "test_method";
     method.description = "this is test method";
     method.display_name = "测试方法";
-    method.func = [](rm::ServerView, const rm::NodeId &, rm::InputVariables, rm::OutputVariables) { return true; };
+    method.func = [](rm::ServerView, const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
     object.add(method);
     auto id = srv.addObjectNode(object);
-    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    EXPECT_FALSE(id.empty());
     srv.spinOnce();
 }
 
@@ -159,7 +159,7 @@ TEST(OPC_UA_Server, add_object_type_node)
     val1.display_name = "测试变量 1";
     object_type.add(val1);
     auto id = srv.addObjectTypeNode(object_type);
-    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    EXPECT_FALSE(id.empty());
     srv.spinOnce();
 }
 
@@ -177,12 +177,12 @@ TEST(OPC_UA_Server, create_object_by_object_type)
     val1.display_name = "测试变量 1";
     object_type.add(val1);
     srv.addObjectTypeNode(object_type);
-    auto object = rm::Object::from(object_type);
+    auto object = rm::Object::makeFrom(object_type);
     object.browse_name = "test_object";
     object.description = "this is test object";
     object.display_name = "测试对象";
     auto id = srv.addObjectNode(object);
-    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    EXPECT_FALSE(id.empty());
     srv.spinOnce();
 }
 
@@ -200,8 +200,8 @@ TEST(OPC_UA_Server, find_node)
     val1.display_name = "测试变量 1";
     object.add(val1);
     auto id = srv.addObjectNode(object);
-    auto target = rm::nodeObjectsFolder | srv.find("test_object");
-    EXPECT_TRUE(UA_NodeId_equal(&id, &target));
+    auto target = srv.find("test_object");
+    EXPECT_EQ(id, target);
     srv.spinOnce();
 }
 
@@ -216,8 +216,8 @@ TEST(OPC_UA_Server, add_event_type_node)
     int val = 3;
     event_type.add("test_val", val);
     auto id = srv.addEventTypeNode(event_type);
-    auto target = rm::nodeBaseEventType | srv.find("test_event_type");
-    EXPECT_TRUE(UA_NodeId_equal(&id, &target));
+    auto target = srv.find("test_event_type", rm::nodeBaseEventType);
+    EXPECT_EQ(id, target);
     srv.spinOnce();
 }
 
@@ -234,7 +234,7 @@ TEST(OPC_UA_Server, trigger_event)
     event_type.add("test_val", val);
     srv.addEventTypeNode(event_type);
     // 创建事件
-    auto event = rm::Event::from(event_type);
+    auto event = rm::Event::makeFrom(event_type);
     event.source_name = "test_event";
     event.message = "this is test event";
     event.severity = 1;
@@ -249,8 +249,8 @@ TEST(OPC_UA_Server, function_ptr)
 {
     rm::Server srv(testnum, 4865);
     srv.spinOnce();
-    auto id = rm::nodeObjectsFolder | srv.find("TestNumber");
-    EXPECT_FALSE(UA_NodeId_isNull(&id));
+    auto id = srv.find("TestNumber");
+    EXPECT_FALSE(id.empty());
 }
 
 // 视图节点
@@ -271,8 +271,8 @@ TEST(OPC_UA_Server, view_node)
     view.description = "this is test view";
     view.display_name = "测试视图";
     auto view_id = srv.addViewNode(view);
-    auto target_view_id = rm::nodeViewsFolder | srv.find("test_view");
-    EXPECT_TRUE(UA_NodeId_equal(&view_id, &target_view_id));
+    auto target_view_id = rm::nodeViewsFolder | srv.node("test_view");
+    EXPECT_EQ(view_id, target_view_id);
 }
 
 TEST(OPC_UA_Server, timer_test)

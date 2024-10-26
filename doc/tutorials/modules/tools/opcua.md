@@ -16,9 +16,9 @@
 
 相关模块： @ref opcua
 
-## 1. 简介
+## 1. 简介 {#tutorial_opcua_intro}
 
-### 1.1 OPC UA 是什么
+### 1.1 OPC UA 是什么 {#tutorial_opcua_intro_what}
 
 [OPC UA](https://opcfoundation.org/about/opc-technologies/opc-ua/)（全称为 Open Platform Communications Unified Architecture）是一种用于工业和物联网（IoT）应用的开放通信协议和架构。它提供了一种统一的框架，用于在不同设备和系统之间实现数据传输、通信和集成。
 
@@ -36,7 +36,7 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 </div>
 
-### 1.2 地址空间
+### 1.2 地址空间 {#tutorial_opcua_intro_address_space}
 
 在 OPC UA 中，所有的数据都被组织成一个地址空间，地址空间中的每一个元素都被称为一个节点。每个节点都有一个唯一的节点号，在 @ref opcua 中表示为 rm::NodeId 。
 
@@ -46,39 +46,57 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 </center>
 
-1. 对象类型节点 rm::ObjectType ：提供对象的定义，即对象的抽象，与类相当，且子类可以继承父类的特征，方便模型的扩充。该节点包括对象的各种数据类型，数据的语义，以及控制方式。OPC UA 命名空间 `0` 中规定了多个基础的对象类型节点。如使用最广的 BaseObjectType（在 RMVL 中表示为 `rm::nodeBaseObjectType`），所有对象类型节点都需要继承该节点再进行扩充。在对具体设备建模的过程中，应该将设备组成的各部分分解为不同的对象分别建模，再用引用节点将各部分按照实际设备中的关系相关联，从而得到完整设备的对象类型节点。
+**对象类型节点 rm::ObjectType**
 
-2. 对象节点 rm::Object ：将对象类型实例化即可得到对象节点，该节点是设备在数字空间的映射。所有对设备数据的访问都能在该模型中访问到对应的数据节点。所有对 设备的控制都转换为方法节点的触发。设备产生的消息在节点对象中将触发对应的事件。
+提供对象的定义，即对象的抽象，与类相当，且子类可以继承父类的特征，方便模型的扩充。该节点包括对象的各种数据类型，数据的语义，以及控制方式。OPC UA 命名空间 `0` 中规定了多个基础的对象类型节点。如使用最广的 BaseObjectType（在 RMVL 中表示为 `rm::nodeBaseObjectType`），所有对象类型节点都需要继承该节点再进行扩充。在对具体设备建模的过程中，应该将设备组成的各部分分解为不同的对象分别建模，再用引用节点将各部分按照实际设备中的关系相关联，从而得到完整设备的对象类型节点。
 
-3. 引用类型节点 **ReferenceType** ：引用类型描述了引用的语义，而引用用于定义引用两端的节点之间的关系。最常用的引用类型如 Organizes（在 RMVL 中表示为 `rm::nodeOrganizes`），表示节点之间的层级关系，如同文件夹与文件夹内的文件，数据层级复杂的设备，需要通过多种引用类型对设备信息节点之间的关系进行描述。
+**对象节点 rm::Object**
 
-4. 数据类型节点 rm::DataType ：数据类型节点描述了变量节点中变量的数据类型。在 OPC UA 信息模型在命名空间 `0` 中定义了多种内置的数据类型，包括整型、浮点型、 字符串等多个类型，能对变量的数据进行准确的描述。也可以自定义数据类型，比如描述二维坐标的 `2DPoint` 等类型，获得更符合数据本身的描述。@note 注意：此类节点并不能提供具体的数据构成，只是提供了数据类型的一个描述，因此 RMVL 中的 @ref opcua 仅提供内置数据类型。若计划提供数据的构成，比如包含的数据长度等信息，请使用变量类型节点 rm::VariableType 。
+将对象类型实例化即可得到对象节点，该节点是设备在数字空间的映射。所有对设备数据的访问都能在该模型中访问到对应的数据节点。所有对 设备的控制都转换为方法节点的触发。设备产生的消息在节点对象中将触发对应的事件。
 
-5. 变量类型节点 rm::VariableType ：该节点提供了对变量节点的定义，是设备中各种数据的抽象。常用引用中的 HasTypeDefinition 引用节点连接数据类型节点，对数据类型进行描述（在 RMVL 中表示为 `rm::nodeHasTypeDefinition`）。用 HasProperty 引用节点对数据的语义进行描述（在 RMVL 中表示为 `rm::nodeHasProperty`）。也可以使用自定义的数据类型节点对变量的数据进行描述，具有灵活性。
+**引用类型节点 ReferenceType**
 
-6. 变量节点 rm::Variable ：该节点是变量类型节点的实例，也是使用的最多的节点。客户端访问设备数据有以下 3 种方式。
+引用类型描述了引用的语义，而引用用于定义引用两端的节点之间的关系。最常用的引用类型如 Organizes（在 RMVL 中表示为 `rm::nodeOrganizes`），表示节点之间的层级关系，如同文件夹与文件夹内的文件，数据层级复杂的设备，需要通过多种引用类型对设备信息节点之间的关系进行描述。
 
-   <div class="full_width_table">
+**数据类型节点 rm::DataType**
 
-   |    访问方式    |                             介绍                             |                             备注                             |
-   | :------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-   |    直接读写    | 将设备多模态数据写入对应的变量节点，然后客户端读取对应节点内保存的数值 | 如果客户端要获取设备最新的值，需要一直手动去触发对设备数据源的读取请求 |
-   |     值回调     | 客户端发起 **IO** 请求后，服务器在 **读取前** 和 **写入后** 分别调用对应的回调函数 |     可以利用此功能在需要访问数据的时候才让服务器更新数据     |
-   | 数据源变量节点 | 客户端的读取请求直接重定向到设备的数据源中，即客户端直接从数据源获取数据，变量节点不存储数据 | 缩减了数据先写入变量节点再进行读取的过程，但多个客户端连接访问同一数据时会增大服务器与设备之间的传输负载 |
+数据类型节点描述了变量节点中变量的数据类型。在 OPC UA 信息模型在命名空间 `0` 中定义了多种内置的数据类型，包括整型、浮点型、 字符串等多个类型，能对变量的数据进行准确的描述。也可以自定义数据类型，比如描述二维坐标的 `2DPoint` 等类型，获得更符合数据本身的描述。@note 注意：此类节点并不能提供具体的数据构成，只是提供了数据类型的一个描述，因此 RMVL 中的 @ref opcua 仅提供内置数据类型。若计划提供数据的构成，比如包含的数据长度等信息，请使用变量类型节点 rm::VariableType 。
 
-   </div>
+**变量类型节点 rm::VariableType**
 
-7. 方法节点 rm::Method ：方法节点是对设备控制方法在数字模型中的映射。方法节点可以通过服务器或客户端进行调用，然后将会对设备的控制器发送指令，使得设备执行对应的操作。常见的方法节点有：触发视觉采集、电机反转、设备初始化等。
+该节点提供了对变量节点的定义，是设备中各种数据的抽象。常用引用中的 HasTypeDefinition 引用节点连接数据类型节点，对数据类型进行描述（在 RMVL 中表示为 `rm::nodeHasTypeDefinition`）。用 HasProperty 引用节点对数据的语义进行描述（在 RMVL 中表示为 `rm::nodeHasProperty`）。也可以使用自定义的数据类型节点对变量的数据进行描述，具有灵活性。
 
-8. 视图节点 rm::View ：视图节点可将地址空间中感兴趣的节点提取出来，作为一个子集，视图节点作为该子集的入口，方便客户端浏览。
+**变量节点 rm::Variable**
 
-## 2. 服务器/客户端 {#opcua_server_client}
+该节点是变量类型节点的实例，也是使用的最多的节点。客户端访问设备数据有以下 3 种方式。
+
+<div class="full_width_table">
+
+|    访问方式    |                             介绍                             |                             备注                             |
+| :------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+|    直接读写    | 将设备多模态数据写入对应的变量节点，然后客户端读取对应节点内保存的数值 | 如果客户端要获取设备最新的值，需要一直手动去触发对设备数据源的读取请求 |
+|     值回调     | 客户端发起 **IO** 请求后，服务器在 **读取前** 和 **写入后** 分别调用对应的回调函数 |     可以利用此功能在需要访问数据的时候才让服务器更新数据     |
+| 数据源变量节点 | 客户端的读取请求直接重定向到设备的数据源中，即客户端直接从数据源获取数据，变量节点不存储数据 | 缩减了数据先写入变量节点再进行读取的过程，但多个客户端连接访问同一数据时会增大服务器与设备之间的传输负载 |
+
+</div>
+
+**方法节点 rm::Method**
+
+方法节点是对设备控制方法在数字模型中的映射。方法节点可以通过服务器或客户端进行调用，然后将会对设备的控制器发送指令，使得设备执行对应的操作。常见的方法节点有：触发视觉采集、电机反转、设备初始化等。
+
+**视图节点 rm::View**
+
+视图节点可将地址空间中感兴趣的节点提取出来，作为一个子集，视图节点作为该子集的入口，方便客户端浏览。
+
+## 2. 服务器/客户端 {#tutorial_opcua_server_client}
 
 基于服务器/客户端的方式是 OPC UA 最基本的一种通信方式，上文的地址空间在服务器/客户端通信的过程中完全展现出来。下面列举一些 opcua 模块中常用的服务器与客户端通信的内容。
 
 ### 2.1 初始化
 
 **服务器**
+
+@add_toggle_cpp
 
 **方案一**
 
@@ -161,7 +179,38 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+Python 的信号处理机制依赖于 Python 解释器的 GIL，因此在 Python 中无法通过常规方式结束 `spin`（除非直接结束进程），但是可以使用 `spinOnce` 执行单次事件循环，因此需要自定义主循环。
+
+```python
+# server.py
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+# 创建 OPC UA 服务器，端口为 4840
+srv = rm.Server(4840)
+# 服务器运行
+while not stop:
+    # other code
+    srv.spinOnce()
+```
+
+@end_toggle
+
 **客户端**
+
+@add_toggle_cpp
 
 ```cpp
 // client.cpp
@@ -176,9 +225,25 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client.py
+import rm
+
+# 创建 OPC UA 客户端，连接到
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+```
+
+@end_toggle
+
 ### 2.2 变量
 
-在上文介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点，后文均采用 **方案三** 的方式。
+在上文 @ref tutorial_opcua_intro_address_space 中介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点，后文均采用 `while + spinOnce` 的方式处理异步事件。
+
+@add_toggle_cpp
 
 ```cpp
 // server.cpp
@@ -195,7 +260,6 @@ int main()
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);
-    srv.start();
 
     // 定义 double 型变量，如果要强制使用 3.14 定义 float 型变量，
     // 可以使用 rm::Variable num = float(3.14);
@@ -218,7 +282,54 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+"""
+RMVL-Python 的 opcua 模块仅支持
+
+- int, float, str, bool
+- list[int], list[float]
+
+类型的变量
+"""
+
+svr = rm.Server(4840)
+# 定义 float 型变量
+num = rm.Variable(3.14)
+# 浏览名 BrowseName
+num.browse_name = "number"
+# 显示名 DisplayName
+num.display_name = "Number"
+# 描述
+num.description = "数字"
+# 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
+svr.addVariableNode(num)
+
+while not stop:
+    svr.spinOnce()
+# srv.shutdown() 可省略，后文不再赘述
+```
+
+@end_toggle
+
 然后在客户端中直接读取变量节点。
+
+@add_toggle_cpp
 
 ```cpp
 // client.cpp
@@ -229,7 +340,9 @@ int main()
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
-    auto node = rm::nodeObjectsFolder | cli.find("number");
+    auto node = rm::nodeObjectsFolder | cli.node("number");
+    // 或者可以直接使用 find 方法，寻找 rm::nodeObjectsFolder 下命名空间为 1 的节点（更推荐！）
+    // auto node = cli.find("number");
     // 读取变量
     rm::Variable target = cli.read(node);
     // 判断是否为空
@@ -240,12 +353,39 @@ int main()
     }
     // 使用静态成员函数将 target 转化为目标格式，并打印
     printf("%f\n", rm::Variable::cast<double>(target));
+    // 或者直接使用 target 的成员函数进行转化
+    // printf("%f\n", target.cast<double>());
 }
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client.py
+import rm
+
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+# 路径搜索，寻找待读取的变量
+node = cli.find("number")
+# 读取变量
+target = cli.read(node)
+# 判断是否为空
+if target.empty():
+    print("Failed to read the variable.")
+    exit(0)
+# 使用静态成员函数将 target 转化为目标格式，并打印
+print(target.double())
+```
+
+@end_toggle
 
 ### 2.3 方法
 
 在服务器中添加两数之和的方法节点，供客户端调用。
+
+@add_toggle_cpp
 
 ```cpp
 // server.cpp
@@ -263,28 +403,30 @@ int main()
 
     rm::Server srv(4840);
 
-    // 定义方法，初始化或设置 rm::Method::func 成员必须使用形如 function<bool(ServerView, const NodeId &, InputVariables, OutputVariables)> 的可调用对象
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, rm::InputVariables iargs, rm::OutputVariables oargs) {
+    // 定义方法，初始化或设置 rm::Method::func 成员必须使用一下兼容形式的可调用对象
+    // std::function<pair<bool, rm::Variables>(rm::ServerView, const rm::NodeId &, const rm::Variables &)>
+    // 其中 rm::Variables 是 std::vector<rm::Variable> 的别名
+    rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &iargs) {
         int num1 = iargs[0], num2 = iargs[1];
-        oargs[0] = num1 + num2;
-        return true;
+        rm::Variables oargs = {num1 + num2};
+        return std::make_tuple(true, oargs);
     };
     method.browse_name = "add";
     method.display_name = "Add";
     method.description = "两数之和";
     // 定义函数传入参数 iargs 的类型说明
-    method.iargs = {{"Number 1", UA_TYPES_INT32}, {"Number 2", UA_TYPES_INT32}};
+    method.iargs = {{"Number 1", rm::tpInt32}, {"Number 2", rm::tpInt32}};
     // 定义函数返回值 oargs 的类型说明
-    method.oargs = {{"Sum", UA_TYPES_INT32}};
+    method.oargs = {{"Sum", rm::tpInt32}};
 
     /*
-        1. 数据类型均使用在 open62541 中定义的 UA_TYPES_ 作为前缀的宏
-        2. {"Number 1", UA_TYPES_INT32} 的部分是 rm::Argument 的聚合类，表示方法的参数
+        1. 数据类型也可使用在 open62541 中定义的 UA_TYPES_ 作为前缀的宏，如 rm::tpInt32 可使用 UA_TYPES_INT32 宏
+        2. {"Number 1", rm::tpInt32} 的部分是 rm::Argument 的聚合类，表示方法的参数
         3. 允许有多个返回值，即 oargs 的长度允许 > 1
     */
 
     // 方法节点添加至服务器
-    server.addMethodNode(method);
+    srv.addMethodNode(method);
     
     while (!stop)
     {
@@ -294,7 +436,68 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+
+# 定义方法，初始化或设置 rm.Method.func 成员必须使用以下形式的可调用对象
+# Callable[[ServerView, NodeId, Variables, Variables], tuple[bool, Variables]]
+# 其中 Variables 是 list[Variable] 的别名
+def add(sv, objnd, iargs):
+    num1, num2 = iargs
+    oarg = rm.Variable(num1.int() + num2.int())
+    return True, [oarg]
+
+
+method = rm.Method(add)
+method.browse_name = "add"
+method.display_name = "Add"
+method.description = "两数之和"
+# 定义函数传入参数 iargs 的类型说明
+iarg1 = rm.Argument()
+iarg1.name = "Number 1"
+iarg1.type = rm.tp_int
+iarg2 = rm.Argument()
+iarg2.name = "Number 2"
+iarg2.type = rm.tp_int
+method.iargs = [iarg1, iarg2]
+# 定义函数返回值 oargs 的类型说明
+oarg = rm.Argument()
+oarg.name = "Sum"
+oarg.type = rm.tp_int
+method.oargs = [oarg]
+
+"""
+允许有多个返回值，即 oargs 的长度允许 > 1
+"""
+
+# 方法节点添加至服务器
+svr.addMethodNode(method)
+
+while not stop:
+    svr.spinOnce()
+```
+
+@end_toggle
+
 在客户端调用指定方法。
+
+@add_toggle_cpp
 
 ```cpp
 // client.cpp
@@ -305,30 +508,56 @@ int main()
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
-    std::vector<rm::Variable> input = {1, 2};
-    // 设置输出参数，用来存储结果
-    std::vector<rm::Variable> output;
-    // 调用方法，判断调用是否成功
-    if (!cli.call("add", input, output))
+    std::vector<rm::Variable> iargs = {1, 2};
+    // 调用方法，判断调用是否成功，并存储结果
+    auto [res, oargs] = cli.call("add", iargs);
+    if (!res)
     {
         ERROR_("Failed to call the method");
         return 0;
     }
     // 输出结果
-    printf("retval = %d\n", rm::Variable::cast<int>(output.front()));
+    printf("retval = %d\n", oargs.front().cast<int>());
 }
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client.py
+import rm
+
+cli = rm.Client("opc.tcp://127.0.0.0:4840")
+
+# 设置输入参数
+iargs = [rm.Variable(1), rm.Variable(2)]
+# 调用方法，判断调用是否成功，并存储结果
+res, oargs = cli.call("add", iargs)
+if not res:
+    print("Failed to call the method")
+    exit(0)
+# 输出结果
+print(f"retval = {oargs[0].int()}")
+```
+
+@end_toggle
 
 ### 2.4 对象
 
 在服务器中添加对象节点：
 
-- A
-  - B1
-    - C1: `3.14`
-    - C2: `666`
-  - B2
-    - C3: `"xyz"`
+```
+A
+├── B1
+│   ├── C1: 3.14
+│   └── C2: 666
+└── B2
+    └── C3: "xyz"
+```
+
+@add_toggle_cpp
 
 ```cpp
 // server.cpp
@@ -381,7 +610,62 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+# 准备对象节点数据 A
+a = rm.Object()
+a.browse_name = a.description = a.display_name = "A"
+# 添加对象节点 A 至服务器
+node_a = svr.addObjectNode(a)
+# 准备对象节点数据 B1
+b1 = rm.Object()
+b1.browse_name = b1.description = b1.display_name = "B1"
+# 准备 B1 的变量节点 C1
+c1 = rm.Variable(3.14)
+c1.browse_name = c1.description = c1.display_name = "C1"
+b1.add(c1)
+# 准备 B1 的变量节点 C2
+c2 = rm.Variable(666)
+c2.browse_name = c2.description = c2.display_name = "C2"
+b1.add(c2)
+# 添加对象节点 B1 至服务器
+svr.addObjectNode(b1, node_a)
+# 准备对象节点数据 B2
+b2 = rm.Object()
+b2.browse_name = b2.description = b2.display_name = "B2"
+# 准备 B2 的变量节点 C3
+c3 = rm.Variable("xyz")
+c3.browse_name = c3.description = c3.display_name = "C3"
+b2.add(c3)
+# 添加对象节点 B2 至服务器
+svr.addObjectNode(b2, node_a)
+
+while not stop:
+    svr.spinOnce()
+```
+
+@end_toggle
+
 在客户端寻找 `C2` 和 `C3` 并打印。
+
+@add_toggle_cpp
 
 ```cpp
 // client.cpp
@@ -393,21 +677,45 @@ int main()
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 路径搜索寻找 C2
-    auto node_c2 = rm::nodeObjectsFolder | cli.find("A") | cli.find("B1") | cli.find("C2");
-    rm::Variable c2;
-    cli.read(node_c2, c2);
-    std::cout << rm::Variable::cast<int>(c2) << std::endl;
+    auto node_c2 = rm::nodeObjectsFolder | cli.node("A") | cli.node("B1") | cli.node("C2");
+    // 也可以直接使用 find 方法，寻找 rm::nodeObjectsFolder 下的节点（更推荐！）
+    // auto node_c2 = cli.find("A/B1/C2");
+    rm::Variable c2 = cli.read(node_c2);
+    std::cout << c2.cast<int>() << std::endl;
     // 路径搜索寻找 C3
-    auto node_c3 = rm::nodeObjectsFolder | cli.find("A") | cli.find("B2") | cli.find("C3");
-    rm::Variable c3;
-    cli.read(node_c3, c3);
-    std::cout << rm::Variable::cast<const char *>(c3) << std::endl;
+    auto node_c3 = cli.find("A/B2/C3");
+    rm::Variable c3 = cli.read(node_c3);
+    std::cout << c3.cast<std::string>() << std::endl;
 }
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client.py
+import rm
+
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+
+# 路径搜索寻找 C2
+node_c2 = cli.find("A/B1/C2")
+c2 = cli.read(node_c2)
+print(c2.int())
+# 路径搜索寻找 C3
+node_c3 = cli.find("A/B2/C3")
+c3 = cli.read(node_c3)
+print(c3.str())
+```
+
+@end_toggle
 
 ### 2.5 视图
 
 在 `nodeObjectsFolder` 中先添加 `A/num1`、`num2` 2 个变量节点，并将 `num1` 和 `num2` 加入视图，下面的示例演示在 **服务器** 中创建并添加视图节点。若要在客户端中进行此操作，创建并添加视图节点的步骤基本一致，这里不做展示。需要注意的是，在客户端中创建并添加视图节点，需要提前在服务器中加入对应的（变量、方法、对象……）节点
+
+@add_toggle_cpp
 
 ```cpp
 // server.cpp
@@ -431,8 +739,8 @@ int main()
     uaCreateVariable(num1, 1);
     a.add(num1);
     auto node_a = srv.addObjectNode(a);
-    auto node_num1 = node_a | srv.find("num1");
-    // 这里使用宏来创建 num2
+    auto node_num1 = srv.find("A/num1");
+    // 这里稍微展示一下，使用宏来创建 num2，这里也可以使用上文的方式创建 :)
     uaCreateVariable(num2, 2);
     auto node_num2 = srv.addVariableNode(num2);
 
@@ -451,9 +759,57 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+# 准备对象节点数据 A
+a = rm.Object()
+a.browse_name = a.description = a.display_name = "A"
+# 创建 num1
+num1 = rm.Variable(1)
+num1.browse_name = num1.description = num1.display_name = "num1"
+a.add(num1)
+node_a = svr.addObjectNode(a)
+node_num1 = svr.find("A/num1")
+# 创建 num2
+num2 = rm.Variable(2)
+num2.browse_name = num2.description = num2.display_name = "num2"
+node_num2 = svr.addVariableNode(num2)
+
+# 创建视图
+num_view = rm.View()
+# 添加节点至视图
+num_view.add(node_num1, node_num2)
+# 添加至服务器
+svr.addViewNode(num_view)
+
+while not stop:
+    svr.spinOnce()
+```
+
+@end_toggle
+
 ### 2.6 监视
 
 OPC UA 支持变量节点和事件的监视，下面以监视变量节点为例。首先在服务器中添加待监视的变量节点
+
+@add_toggle_cpp
 
 ```cpp
 // server.cpp
@@ -487,10 +843,46 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+# 定义 int 型变量
+num = rm.Variable(100)
+num.browse_name = "number"
+num.display_name = "Number"
+num.description = "数字"
+# 添加到服务器的默认位置
+svr.addVariableNode(num)
+
+while not stop:
+    svr.spinOnce()
+```
+
+@end_toggle
+
 在客户端 1 中修改变量节点的数据
+
+@add_toggle_cpp
 
 ```cpp
 // client_1.cpp
+#include <thread>
 #include <rmvl/opcua/client.hpp>
 
 using namespace std::chrono_literals;
@@ -498,7 +890,7 @@ using namespace std::chrono_literals;
 int main()
 {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
-    auto node = rm::nodeObjectsFolder | cli.find("number");
+    auto node = cli.find("number");
     for (int i = 0; i < 100; ++i)
     {
         std::this_thread::sleep_for(1s);
@@ -510,7 +902,31 @@ int main()
 }
 ```
 
-在客户端 2 中监视变量节点
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client_1.py
+
+import rm
+import time
+
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+node = cli.find("number")
+for i in range(100):
+    time.sleep(1)
+    # 写入数据
+    success = cli.write(node, rm.Variable(i + 200))
+    if not success:
+        print("Failed to write data to the variable.")
+```
+
+@end_toggle
+
+然后，在客户端 2 中监视变量节点
+
+@add_toggle_cpp
 
 ```cpp
 // client_2.cpp
@@ -519,21 +935,55 @@ int main()
 int main()
 {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
-    auto node = rm::nodeObjectsFolder | cli.find("number");
+    auto node = cli.find("number");
     // 监视变量
-    auto on_change = [](ClientView, const rm::Variable &value) {
+    auto on_change = [](rm::ClientView, const rm::Variable &value) {
         int receive_data = value;
         printf("Data (n=number) was changed to: %d\n", receive_data);
     };
-    client.monitor(node, on_change, 5);
+    cli.monitor(node, on_change, 5);
     // 线程阻塞
-    client.spin();
+    cli.spin();
 }
 ```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client_2.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+node = cli.find("number")
+
+# 监视变量
+def on_change(view, value):
+    receive_data = value.int()
+    print(f"Data (n=number) was changed to: {receive_data}")
+
+cli.monitor(node, on_change, 5)
+
+while not stop:
+    cli.spinOnce()
+```
+
+@end_toggle
 
 ### 2.7 定时
 
 @ref opcua 为服务器和客户端均提供了循环定时器，用于周期性执行任务。下面的示例演示在 **服务器** 中创建并添加定时器。
+
+@add_toggle_cpp
 
 ```cpp
 // server.cpp
@@ -561,7 +1011,42 @@ int main()
 }
 ```
 
-## 3. 发布/订阅 {#opcua_pub_sub}
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+
+times = 0
+# 创建定时器，每 1s 执行一次
+def timer_callback(view):
+    global times
+    print(f"Timer callback, times = {times}")
+    times += 1
+
+timer = rm.ServerTimer(svr, 1000, timer_callback)
+
+while not stop:
+    svr.spinOnce()
+```
+
+@end_toggle
+
+## 3. 发布/订阅 {#tutorial_opcua_pub_sub}
 
 这是一段来自 [open62541 手册](https://www.open62541.org)中有关 PubSub 的介绍。
 
@@ -595,9 +1080,11 @@ int main()
 
 RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订阅机制，目前支持 `UADP` 的消息映射方式，对应的枚举类型是 `TransportID::UDP_UADP`。
 
-需要留意的是，OPC UA 的发布订阅模型仍然是建立在 @ref opcua_server_client 模型之上的，此外 @ref opcua 的 PubSub 在实现上是继承于 rm::Server 的，因此，RMVL 的发布订阅模型在使用时具备服务器的所有功能，初始化、释放资源等操作与服务器完全一致。
+需要留意的是，OPC UA 的发布订阅模型仍然是建立在 @ref tutorial_opcua_server_client 模型之上的，此外 @ref opcua 的 PubSub 在实现上是继承于 rm::Server 的，因此，RMVL 的发布订阅模型在使用时具备服务器的所有功能，初始化、释放资源等操作与服务器完全一致。
 
 **创建发布者**
+
+@add_toggle_cpp
 
 ```cpp
 // publisher.cpp
@@ -641,7 +1128,50 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# publisher.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+# 创建 OPC UA 发布者，端口为 4840
+pub = rm.Publisher(rm.TransportID.UDP_UADP, "DemoNumberPub", "opc.udp://224.0.0.22:4840")
+
+# 添加变量节点至发布者自身的服务器中
+num = rm.Variable(3.14)
+num.browse_name = "number"
+num.display_name = "Number"
+num.description = "数字"
+num_node = pub.addVariableNode(num)
+# 准备待发布的数据
+pds_list = [rm.PublishedDataSet("Number 1", num_node)]
+
+# 发布数据
+pub.publish(pds_list, 50)
+
+while not stop:
+    # other code
+    # 例如 num_node 所对应的值可以直接在这里修改
+    pub.spinOnce()
+```
+
+@end_toggle
+
 **创建订阅者**
+
+@add_toggle_cpp
 
 ```cpp
 // subscriber.cpp
@@ -661,13 +1191,12 @@ int main()
     rm::Subscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
 
     // 准备需要订阅的数据
-    // 这里只订阅 1 个，如果订阅多个请使用 std::vector
-    rm::FieldMetaData meta_data{"Number 1", UA_TYPES_DOUBLE, UA_VALUERANK_SCALAR};
+    rm::FieldMetaData meta_data{"Number 1", rm::tpDouble, -1};
 
     /* 也可以通过创建变量对 meta_data 进行初始化，例如以下代码
     rm::Variable num = 1.0; // 这个 1.0 只是代表是个 Double 类型的数据 
     num.browse_name = "Number 1";
-    auto meta_data = rm::FieldMetaData::create(num);
+    auto meta_data = rm::FieldMetaData::makeFrom(num);
     */
     
     // 订阅数据，第 2 个参数传入的是 std::vector 类型的数据，单个数据请使用初始化列表
@@ -689,6 +1218,52 @@ int main()
 }
 ```
 
+@end_toggle
+
+@add_toggle_python
+
+```python
+# subscriber.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+# 创建 OPC UA 订阅者
+sub = rm.Subscriber(rm.TransportID.UDP_UADP, "DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841)
+
+# 准备需要订阅的数据
+meta_data = rm.FieldMetaData("Number 1", rm.tp_float, -1)
+
+"""
+也可以通过创建变量对 meta_data 进行初始化，例如以下代码
+num = rm.Variable(1.0) # 这个 1.0 只是代表是个 Double 类型的数据
+num.browse_name = "Number 1"
+meta_data = rm.FieldMetaData.makeFrom(num)
+"""
+
+# 订阅数据，第 2 个参数传入的是 list 类型的数据，单个数据请使用列表
+nodes = sub.subscribe("DemoNumberPub", [meta_data])
+
+while not stop:
+    # 读取订阅的已更新的数据
+    sub_val = sub.read(nodes[0])
+    print(f"Sub value [1] = {sub_val.float()}")
+    
+    # other code
+    
+    sub.spinOnce()
+```
+
+@end_toggle
+
 ### 3.2 有代理 Pub/Sub
 
 @warning RMVL 目前暂不支持有代理的发布订阅机制。
@@ -703,6 +1278,8 @@ int main()
 
 |    类型    |       参数名        | 默认值 |                             注释                             |
 | :--------: | :-----------------: | :----: | :----------------------------------------------------------: |
+|   `bool`   |     SERVER_WAIT     | false  |         单次处理网络事件时，允许服务器等待最多 50ms          |
+| `uint32_t` |   CONNECT_TIMEOUT   | 30000  |           请求连接时，判定为超时的时间，单位 (ms)            |
 | `uint32_t` | CLIENT_WAIT_TIMEOUT |   10   |               服务器超时响应的时间，单位 (ms)                |
 |  `double`  |  SAMPLING_INTERVAL  |   2    |             服务器监视变量的采样速度，单位 (ms)              |
 |  `double`  | PUBLISHING_INTERVAL |   2    | 服务器尝试发布数据变更的期望时间间隔，若数据未变更则不会发布，单位 (ms) |
@@ -735,7 +1312,7 @@ int main()
 
 具体安装细节可参考 [opcua-modeler on Github](https://github.com/FreeOpcUa/opcua-modeler) 的 README。
 
-#### 4.2.2 可视化配置 OPC UA 信息模型
+#### 4.2.2 可视化配置 OPC UA
 
 对于项目创建或导出等内容，此处不做过多介绍，可参考[此博客](https://wanghao1314.blog.csdn.net/article/details/104092781)了解上述内容。
 
@@ -762,26 +1339,54 @@ python3 ./nodeset_compiler.py \
   myNodeSet # myNodeSet 是要生成的文件名，包含 myNodeSet.h 和 myNodeSet.c，请自行设置
 ```
 
-### 4.3 不占有所有权的服务器视图
+### 4.3 不占有所有权的 C/S 视图
 
 `rm::Server` 使用 RAII 进行设计，一个对象占有了服务器的所有权和生命周期，当对象析构时，会自动停止并结束服务器。使用 `rm::ServerView` 来获取不占有所有权的服务器视图，并进行变量读写、路径搜索的操作，下面用服务器视图的单元测试作为示例。
 
+@add_toggle_cpp
+
 ```cpp
-rm::Method method = [](rm::ServerView sv, const rm::NodeId &, rm::InputVariables iargs, rm::OutputVariables) {
-    auto num_node = rm::nodeObjectsFolder | sv.find("num");
+rm::Method method = [](rm::ServerView sv, const rm::NodeId &, const Variables &iargs) {
+    auto num_node = sv.find("num");
     int num = sv.read(num_node).cast<int>();
     sv.write(num_node, iargs[0].cast<int>() + num);
-    return true;
+    return std::make_pair(true, rm::Variables{});
 };
 method.browse_name = "plus";
 method.display_name = "Input + Number";
 method.description = "输入值加数";
-method.iargs = {{"input", UA_TYPES_INT32, 1, "输入值"}};
+method.iargs = {{"input", rm::tpInt32, 1, "输入值"}};
 srv.addMethodNode(method);
 ```
 
----
+@end_toggle
 
-## 5. 引用
+@add_toggle_python
+
+```python
+def plus(sv, objnd, iargs):
+    num_node = sv.find("num")
+    num = sv.read(num_node).int()
+    sv.write(num_node, iargs[0].int() + num)
+    return True, []
+
+method = rm.Method(plus)
+method.browse_name = "plus"
+method.display_name = "Input + Number"
+method.description = "输入值加数"
+iarg = rm.Argument()
+iarg.name = "input"
+iarg.type = rm.tp_int
+iarg.dims = 1
+iarg.description = "输入值"
+method.iargs = [iarg]
+srv.addMethodNode(method)
+```
+
+@end_toggle
+
+同样的，客户端也可以使用 `rm::ClientView` 来获取不占有所有权的客户端视图，进行变量读写、路径搜索的操作，此处不再赘述。
+
+## 5. 参考内容
 
 @cite FreeOpcUa22 UaModeler · FreeOpcUa/opcua-modeler · Github

@@ -18,10 +18,10 @@ int main()
     Variable value_2 = 3.14;
     value_2.display_name = "Value 2";
     value_2.browse_name = "value_2";
-    Method add = [](ServerView, const NodeId &, InputVariables iargs, OutputVariables oargs) -> bool {
+    Method add = [](ServerView, const NodeId &, const Variables &iargs) -> std::pair<bool, Variables> {
         int num1 = iargs[0], num2 = iargs[1];
-        oargs[0] = num1 + num2;
-        return true;
+        Variables oargs = {num1 + num2};
+        return {true, oargs};
     };
     add.display_name = "Add";
     add.browse_name = "add";

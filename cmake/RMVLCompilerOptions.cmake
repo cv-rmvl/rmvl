@@ -334,11 +334,6 @@ if(BUILD_PYTHON)
       "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
       @ONLY
     )
-    configure_file(
-      "${CMAKE_CURRENT_LIST_DIR}/templates/python/pre_bind.hpp"
-      "${RMVL_PYBIND_OUTPUT_DIR}/pre_bind.hpp"
-      COPYONLY
-    )
     if(BUILD_DOCS)
       file(WRITE ${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_cst.cfg "# constants configuration for pyrmvl\n")
       configure_file(

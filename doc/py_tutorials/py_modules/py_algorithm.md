@@ -7,6 +7,7 @@
 @brief RMVL-Python algorithm 模块的使用示例
 
 @prev_tutorial{tutorial_py_core}
+@next_tutorial{tutorial_py_opcua}
 
 @tableofcontents
 

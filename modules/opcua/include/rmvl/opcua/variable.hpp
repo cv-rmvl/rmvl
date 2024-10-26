@@ -14,13 +14,13 @@
 #include <any>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include "rmvl/core/util.hpp"
 
 #include "utilities.hpp"
 
-namespace rm {
+namespace rm
+{
 
 //! @addtogroup opcua
 //! @{
@@ -32,52 +32,30 @@ enum AccessLevel : uint8_t
 };
 
 //! OPC UA 变量类型
-class VariableType final
+class RMVL_EXPORTS_W VariableType final
 {
 public:
-    //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
-
-    /**
-     * @brief 浏览名称 BrowseName
-     * @brief
-     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
-     * @brief
-     * - 同一个命名空间 `ns` 下该名称不能重复
-     */
-    std::string browse_name{};
-
-    /**
-     * @brief 展示名称 DisplayName
-     * @brief
-     * - 在服务器上对外展示的名字 - `en-US`
-     * @brief
-     * - 同一个命名空间 `ns` 下该名称可以相同
-     */
-    std::string display_name{};
-    //! 变量类型的描述 - `zh-CN`
-    std::string description{};
-
-private:
-    //! 默认数据
-    std::any _value;
-    //! 数据类型
-    DataType _data_type{};
-    //! 数据大小
-    UA_UInt32 _size{};
-
-public:
-    VariableType() = default;
+    RMVL_W VariableType() = default;
 
     /**
      * @brief 单值构造，设置默认值
      *
-     * @tparam Tp 变量的存储数据类型，必须是基础类型或者 `const char *` 表示的字符串类型
+     * @tparam Tp 变量的存储数据类型，必须是可包含 `cv` 限定符的基础类型及其引用类型
      * @param[in] val 标量、数量值
      */
-    template <typename Tp, typename DecayT = typename std::decay_t<Tp>,
-              typename = std::enable_if_t<std::is_fundamental_v<DecayT> || std::is_same_v<DecayT, const char *>>>
+    template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
+    RMVL_W_SUBST("VT")
     VariableType(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
+
+    /**
+     * @brief 字符串构造，设置默认值
+     *
+     * @tparam Tp 字符串变量的存储数据类型，必须是 `std::string`、`std::string_view`、C 风格字符串指针或者字符串字面量
+     * @param[in] str 字符串
+     */
+    template <typename Tp, typename = std::enable_if_t<std::is_convertible_v<Tp, std::string>>>
+    RMVL_W_SUBST("VT_Str")
+    VariableType(Tp &&str) : _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -86,6 +64,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
+    RMVL_W_SUBST("VT_List")
     VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(arr.size()) {}
 
     /**
@@ -98,34 +77,85 @@ public:
     template <typename Tp>
     static inline Tp cast(const rm::VariableType &val) { return std::any_cast<Tp>(val.data()); }
 
+    /**
+     * @brief 将变量节点转化为指定类型的数据
+     *
+     * @tparam Tp 变量的数据类型
+     * @return 该数据类型的数据
+     */
+    template <typename Tp>
+    RMVL_W_SUBST("VT_cast")
+    inline Tp cast() const { return std::any_cast<Tp>(this->data()); }
+
     //! 获取默认数据
     inline const auto &data() const { return _value; }
 
     //! 获取数据类型
-    inline DataType getDataType() const { return _data_type; }
+    RMVL_W inline DataType getDataType() const { return _data_type; }
 
     //! 判断变量类型节点是否为空
-    constexpr bool empty() const { return _size == 0; }
+    RMVL_W constexpr bool empty() const { return _size == 0; }
 
     //! 获取大小 @note 未初始化则返回 `0`
-    inline UA_UInt32 size() const { return _size; }
+    RMVL_W inline uint32_t size() const { return _size; }
+
+    //! 命名空间索引，默认为 `1`
+    RMVL_W_RW uint16_t ns{1U};
+
+    /**
+     * @brief 浏览名称 BrowseName
+     * @brief
+     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称不能重复
+     */
+    RMVL_W_RW std::string browse_name{};
+
+    /**
+     * @brief 展示名称 DisplayName
+     * @brief
+     * - 在服务器上对外展示的名字 - `en-US`
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称可以相同
+     */
+    RMVL_W_RW std::string display_name{};
+    //! 变量类型的描述 - `zh-CN`
+    RMVL_W_RW std::string description{};
+
+private:
+    //! 默认数据
+    std::any _value;
+    //! 数据类型
+    DataType _data_type{};
+    //! 数据大小
+    uint32_t _size{};
 };
 
 //! OPC UA 变量
-class Variable final
+class RMVL_EXPORTS_W Variable final
 {
 public:
-    Variable() = default;
+    RMVL_W Variable() = default;
 
     /**
      * @brief 单值构造
      *
-     * @tparam Tp 变量的存储数据类型，必须是可包含 `cv` 限定符的基础类型及其引用类型，和 `const char *` 表示的字符串类型
+     * @tparam Tp 变量的存储数据类型，必须是可包含 `cv` 限定符的基础类型及其引用类型
      * @param[in] val 标量、数量值
      */
-    template <typename Tp, typename DecayT = typename std::decay_t<Tp>,
-              typename = std::enable_if_t<std::is_fundamental_v<DecayT> || std::is_same_v<DecayT, const char *>>>
+    template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
+    RMVL_W_SUBST("V")
     Variable(Tp val) : access_level(3U), _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
+
+    /**
+     * @brief 字符串构造
+     *
+     * @tparam Tp 字符串变量的存储数据类型，必须是 `std::string`、`std::string_view`、C 风格字符串指针或者字符串字面量
+     * @param[in] str 字符串
+     */
+    template <typename Tp, typename = std::enable_if_t<std::is_convertible_v<Tp, std::string>>>
+    RMVL_W_SUBST("V_Str")
+    Variable(Tp &&str) : access_level(3U), _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
 
     /**
      * @brief 列表构造
@@ -134,6 +164,7 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
+    RMVL_W_SUBST("V_List")
     Variable(const std::vector<Tp> &arr) : access_level(3U), _value(arr), _data_type(DataType(typeid(Tp))), _size(static_cast<UA_UInt32>(arr.size())) {}
 
     /**
@@ -142,7 +173,7 @@ public:
      * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
      * @return 新的变量节点
      */
-    static inline Variable from(const VariableType &vtype) { return Variable(vtype); }
+    RMVL_W static inline Variable makeFrom(const VariableType &vtype) { return Variable(vtype); }
 
     /**
      * @brief 比较两个变量是否相等，当且仅当两个变量的数据类型、维数、数据值均相等时返回
@@ -151,7 +182,7 @@ public:
      * @param[in] val 另一个变量
      * @return 是否相等
      */
-    bool operator==(const Variable &val) const;
+    RMVL_W bool operator==(const Variable &val) const;
 
     /**
      * @brief 比较两个变量是否不等
@@ -160,10 +191,10 @@ public:
      * @param[in] val 另一个变量
      * @return 是否不等
      */
-    inline bool operator!=(const Variable &val) const { return !(*this == val); }
+    RMVL_W inline bool operator!=(const Variable &val) const { return !(*this == val); }
 
     //! 判断变量节点是否为空
-    constexpr bool empty() const { return _size == 0; }
+    RMVL_W constexpr bool empty() const { return _size == 0; }
 
     /**
      * @brief 将变量节点转化为指定类型的数据
@@ -182,10 +213,11 @@ public:
      * @return 该数据类型的数据
      */
     template <typename Tp>
+    RMVL_W_SUBST("V_cast")
     inline Tp cast() const { return std::any_cast<Tp>(this->data()); }
 
     //! 基本数据类型转换函数
-    template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT> || std::is_same_v<DecayT, const char *>>>
+    template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
     operator Tp() const { return std::any_cast<Tp>(_value); }
 
     //! 列表数据类型转换函数
@@ -198,19 +230,23 @@ public:
      * @see _type
      * @return 变量类型
      */
-    inline const VariableType type() const { return _type; }
+    RMVL_W inline const VariableType type() const { return _type; }
 
     //! 获取数据
     inline const auto &data() const { return _value; }
 
     //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
-    inline DataType getDataType() const { return _data_type; }
+    RMVL_W inline DataType getDataType() const { return _data_type; }
 
     //! 获取大小 @note 未初始化则返回 `0`
-    inline UA_UInt32 size() const { return _size; }
+    RMVL_W inline uint32_t size() const { return _size; }
 
+private:
+    explicit Variable(const VariableType &vtype) : access_level(3U), _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
+
+public:
     //! 命名空间索引，默认为 `1`
-    uint16_t ns{1U};
+    RMVL_W_RW uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -219,7 +255,7 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
      */
-    std::string browse_name{};
+    RMVL_W_RW std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -228,15 +264,13 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
      */
-    std::string display_name{};
+    RMVL_W_RW std::string display_name{};
     //! 变量的描述
-    std::string description{};
+    RMVL_W_RW std::string description{};
     //! 访问性
-    uint8_t access_level{};
+    RMVL_W_RW uint8_t access_level{};
 
 private:
-    explicit Variable(const VariableType &vtype) : access_level(3U), _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
-
     /**
      * @brief 对应的用 `rm::VariableType` 表示的变量类型
      * @brief
@@ -250,7 +284,7 @@ private:
     //! 数据类型
     DataType _data_type{};
     //! 数据大小
-    UA_UInt32 _size{};
+    uint32_t _size{};
 };
 
 /**
@@ -273,10 +307,8 @@ private:
     rm::Variable val{__VA_ARGS__}; \
     val.browse_name = val.display_name = val.description = #val
 
-//! 输入变量列表
-using InputVariables = const std::vector<Variable> &;
-//! 输出变量列表
-using OutputVariables = std::vector<Variable> &;
+//! 变量列表
+using Variables = std::vector<Variable>;
 
 //! @} opcua
 

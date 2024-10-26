@@ -32,7 +32,8 @@ const std::unordered_map<std::type_index, UA_UInt32> DataType::_map =
      {std::type_index(typeid(UA_UInt64)), UA_TYPES_UINT64},
      {std::type_index(typeid(UA_Float)), UA_TYPES_FLOAT},
      {std::type_index(typeid(UA_Double)), UA_TYPES_DOUBLE},
-     {std::type_index(typeid(const char *)), UA_TYPES_STRING}};
+     {std::type_index(typeid(const char *)), UA_TYPES_STRING},
+     {std::type_index(typeid(std::string)), UA_TYPES_STRING}};
 
 NodeId operator|(NodeId origin, FindNodeInServer &&fnis)
 {
@@ -110,7 +111,7 @@ bool Variable::operator==(const Variable &val) const
         case UA_TYPES_DOUBLE:
             return std::any_cast<double>(_value) == std::any_cast<double>(val._value);
         case UA_TYPES_STRING:
-            return std::any_cast<const char *>(_value) == std::any_cast<const char *>(val._value);
+            return std::any_cast<std::string>(_value) == std::any_cast<std::string>(val._value);
         default:
             return false;
         }
@@ -158,7 +159,7 @@ UA_Variant cvtVariable(const Variable &val) noexcept
         switch (val.getDataType())
         {
         case UA_TYPES_STRING: {
-            UA_String str = UA_STRING(const_cast<char *>(std::any_cast<const char *>(data)));
+            UA_String str = UA_STRING(to_char(std::any_cast<std::string>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
             break;
         }
@@ -367,7 +368,7 @@ UA_Variant cvtVariable(const VariableType &vtype) noexcept
         switch (vtype.getDataType())
         {
         case UA_TYPES_STRING: {
-            UA_String str = UA_STRING(to_char(std::any_cast<const char *>(data)));
+            UA_String str = UA_STRING(to_char(std::any_cast<std::string>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
             break;
         }
@@ -505,7 +506,7 @@ UA_Argument cvtArgument(const Argument &arg) noexcept
     UA_Argument_init(&argument);
     argument.name = UA_STRING(to_char(arg.name));
     argument.description = UA_LOCALIZEDTEXT(zh_CN(), to_char(arg.description));
-    argument.dataType = UA_TYPES[arg.data_type].typeId;
+    argument.dataType = UA_TYPES[arg.type].typeId;
     RMVL_Assert(arg.dims);
     if (arg.dims == 1)
     {
@@ -520,6 +521,23 @@ UA_Argument cvtArgument(const Argument &arg) noexcept
         argument.arrayDimensions = &const_cast<Argument &>(arg).dims;
     }
     return argument;
+}
+
+std::vector<std::string> split(std::string_view str, char delim)
+{
+    std::vector<std::string> res;
+    if (str.empty())
+        return res;
+    std::string::size_type start{};
+    std::string::size_type index = str.find(delim, start);
+    while (index != std::string::npos)
+    {
+        res.emplace_back(str.substr(start, index - start));
+        start = index + 1;
+        index = str.find(delim, start);
+    }
+    res.emplace_back(str.substr(start));
+    return res;
 }
 
 } // namespace helper
