@@ -9,8 +9,8 @@ find_path(
 # add libraries
 find_library(
   MvSDK_LIB
-  PATHS "/lib"
   NAMES "libMVSDK.so"
+  PATHS "/lib"
   NO_DEFAULT_PATH
 )
 

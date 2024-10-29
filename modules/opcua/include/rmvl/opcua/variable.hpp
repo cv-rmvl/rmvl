@@ -220,6 +220,9 @@ public:
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
     operator Tp() const { return std::any_cast<Tp>(_value); }
 
+    //! 字符串数据类型转换函数
+    operator std::string() const { return std::any_cast<std::string>(_value); }
+
     //! 列表数据类型转换函数
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
     operator std::vector<Tp>() const { return std::any_cast<std::vector<Tp>>(_value); }

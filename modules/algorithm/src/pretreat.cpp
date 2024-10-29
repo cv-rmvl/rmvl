@@ -19,7 +19,7 @@
 namespace rm
 {
 
-cv::Mat binary(cv::Mat src, PixChannel ch1, PixChannel ch2, uint8_t thresh)
+cv::Mat binary(cv::Mat src, uint8_t ch1, uint8_t ch2, uint8_t thresh)
 {
     if (src.type() != CV_8UC3)
         RMVL_Error(RMVL_StsBadArg, "The image type of \"src\" is incorrect");

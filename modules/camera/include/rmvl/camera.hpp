@@ -30,4 +30,8 @@
 #include "camera/opt_camera.h"
 #endif // HAVE_RMVL_OPT_CAMERA
 
+#ifdef HAVE_RMVL_GALAXY_CAMERA
+#include "camera/galaxy_camera.h"
+#endif // HAVE_RMVL_GALAXY_CAMERA
+
 #endif // HAVE_RMVL_CAMERA

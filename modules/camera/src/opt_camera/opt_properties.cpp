@@ -43,7 +43,7 @@ bool OptCamera::Impl::set(int propId, double value) noexcept
     case CAMERA_SATURATION:
         return OPT_SetIntFeatureValue(_handle, "Saturation", static_cast<int64_t>(value)) == OPT_OK;
     default:
-        ERROR_("opt - Try to set an undefined variable, propId: %d.", propId);
+        WARNING_("(opt) Try to set an undefined variable, propId: %d.", propId);
         return false;
     }
 }
@@ -71,7 +71,7 @@ double OptCamera::Impl::get(int propId) const noexcept
     case CAMERA_SATURATION:
         return OPT_GetIntFeatureValue(_handle, "Saturation", &iretval) == OPT_OK ? static_cast<double>(iretval) : -1.0;
     default:
-        ERROR_("opt - try to get an undefined variable, propId: %d.", propId);
+        WARNING_("(opt) Try to get an undefined variable, propId: %d.", propId);
         return -1.0;
     }
 }

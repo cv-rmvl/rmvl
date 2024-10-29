@@ -61,6 +61,7 @@ public:
      */
     RMVL_W double operator()(double x) const noexcept;
 
+private:
     std::vector<double> _coeffs; //!< 多项式系数
 };
 
@@ -105,6 +106,7 @@ public:
      */
     RMVL_W double operator()(double x) const;
 
+private:
     std::vector<double> _xs;                    //!< 插值节点
     std::vector<std::vector<double>> _diffquot; //!< 差商表
 };

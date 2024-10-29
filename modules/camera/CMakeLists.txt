@@ -26,6 +26,9 @@ rmvl_update_build(hik_camera HikSDK_FOUND AND BUILD_rmvl_camera)
 # opt
 find_package(OPTCameraSDK QUIET)
 rmvl_update_build(opt_camera OPTCameraSDK_FOUND AND BUILD_rmvl_camera)
+# galaxy
+find_package(GalaxySDK QUIET)
+rmvl_update_build(galaxy_camera GalaxySDK_FOUND AND BUILD_rmvl_camera)
 
 # --------------------------------------------------------------------------
 #   Build camera sub-library
@@ -66,6 +69,18 @@ rmvl_add_module(
   EXTERNAL ${OPTCameraSDK_LIBS}
 )
 
+# galaxy
+rmvl_generate_para(
+  galaxy_camera
+  MODULE camera
+)
+rmvl_add_module(
+  galaxy_camera
+  DEPENDS camera
+  EXTRA_HEADER ${GalaxySDK_INCLUDE_DIRS}
+  EXTERNAL ${GalaxySDK_LIBS}
+)
+
 rmvl_generate_module_para(camera)
 
 # --------------------------------------------------------------------------
@@ -84,7 +99,7 @@ if(BUILD_PYTHON)
     list(APPEND cam_inc rmvl/camera/camutils.hpp rmvlpara/camera/camera.h) 
     list(APPEND cam_dep camera)
   endif()
-  foreach(m mv hik opt)
+  foreach(m mv hik opt galaxy)
     if(BUILD_rmvl_${m}_camera)
       list(APPEND cam_inc rmvl/camera/${m}_camera.h rmvlpara/camera/${m}_camera.h) 
       list(APPEND cam_dep ${m}_camera)

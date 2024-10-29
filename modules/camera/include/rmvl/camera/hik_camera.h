@@ -1,11 +1,11 @@
 /**
  * @file hik_camera.h
- * @author RoboMaster Vision Community
- * @brief Hik Robot 工业相机库
+ * @author zhaoxi (535394140@qq.com)
+ * @brief HikRobot 工业相机库
  * @version 2.0
  * @date 2023-12-14
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 
@@ -19,7 +19,7 @@ namespace rm
 
 //! @addtogroup camera
 //! @{
-//! @defgroup hik_camera 海康机器人（HikRobot）工业相机库
+//! @defgroup hik_camera 海康机器人（HikRobot）USB3.0 系列工业相机库
 //! @}
 
 //! @addtogroup hik_camera
@@ -61,6 +61,9 @@ public:
      * @return HikCamera 对象独享指针
      */
     static inline std::unique_ptr<HikCamera> make_capture(CameraConfig init_mode, std::string_view serial = "") { return std::make_unique<HikCamera>(init_mode, serial); }
+
+    //! 获取相机库版本
+    RMVL_W static std::string version();
 
     /**
      * @brief 设置相机参数/事件

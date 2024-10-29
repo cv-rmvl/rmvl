@@ -66,6 +66,11 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
             r"RMVL_W\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(?:&)?(operator\(\)|operator\[\]|operator==|operator!=|operator\+|operator-|\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)",
             line,
         )
+    elif mode == "pure_virtual":
+        return re.search(
+            r"RMVL_W\s+virtual\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(?:&)?(operator\(\)|operator\[\]|operator==|operator!=|operator\+|operator-|\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*=\s*0",
+            line,
+        )
     elif mode == "static_method":
         return re.search(
             r"RMVL_W\s+static\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)",
@@ -99,7 +104,7 @@ def split_parameters(params: str) -> Tuple[List[str], List[str], List[str]]:
     #### Parameters
     `params`: `str` ─ string containing parameters and optional default values
     #### Returns
-    `Tuple[List[str], List[str], List[str]]`: a Tuple containing three Lists:
+    `Tuple[List[str], List[str], List[str]]`: a tuple containing three lists:
     - List of parameter types
     - List of parameter names
     - List of default values, if a parameter has no default value, the corresponding element will be `None`
@@ -162,6 +167,7 @@ types = {
     "Vec": "Tuple",
 }
 
+
 def remove_cvref(s: str) -> str:
     """
     ### Remove `const`, `&`, `*` from a C++ type string
@@ -172,6 +178,7 @@ def remove_cvref(s: str) -> str:
     """
     s = re.sub(r"const\s+|&", "", s)
     return s
+
 
 def remove_t(s: str) -> str:
     """
@@ -208,19 +215,27 @@ def type_convert(cpp_type: str) -> str:
     # Remove `const`, `&`, `*`, `namespace`, `inline`, `constexpr`
     cpp_type = remove_t(cpp_type).strip()
 
-    def convert_vector(match: re.Match) -> str:
+    def convert_list(match: re.Match) -> str:
         """
         Convert `vector<...>` to `List[...]`
         """
-        inner : str = match.group(1)
+        inner: str = match.group(2)
         converted = type_convert(inner)
         return f"List[{converted}]"
+
+    def convert_complex(match: re.Match) -> str:
+        """
+        Convert `complex<...>` to `complex[...]`
+        """
+        inner: str = match.group(1)
+        converted = type_convert(inner)
+        return f"complex"
 
     def convert_pair_tuple(match: re.Match) -> str:
         """
         Convert `pair<...>`, `Tuple<...>` to `Tuple[...]`
         """
-        inner : str = match.group(2)
+        inner: str = match.group(2)
         converted = ", ".join(type_convert(x.strip()) for x in inner.split(","))
         return f"tuple[{converted}]"
 
@@ -228,7 +243,7 @@ def type_convert(cpp_type: str) -> str:
         """
         Convert `unordered_map<...>` to `dict[...]`
         """
-        inner : str = match.group(1)
+        inner: str = match.group(1)
         key, value = map(type_convert, (x.strip() for x in inner.split(",")))
         return f"dict[{key}, {value}]"
 
@@ -273,8 +288,10 @@ def type_convert(cpp_type: str) -> str:
 
     # bitset<...> -> int
     cpp_type = re.sub(r"^bitset<\d+>", "int", cpp_type)
-    # vector<...> -> List[...]
-    cpp_type = re.sub(r"^vector<(.+)>$", convert_vector, cpp_type)
+    # vector<...> / deque<...> -> List[...]
+    cpp_type = re.sub(r"^(vector|deque)<(.+)>$", convert_list, cpp_type)
+    # complex<...> -> complex
+    cpp_type = re.sub(r"^complex<(.+)>$", convert_complex, cpp_type)
     # array<..., size> -> List[...]
     cpp_type = re.sub(r"^array<([^,]+),\s*\d+>$", convert_array, cpp_type)
     # pair<...>, tuple<...> -> tuple[...]
@@ -313,7 +330,7 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
     convert_content = []
     # To store enum class definitions
     enum_classes = []
-    enums = list[str]()
+    enums = []
     in_enum = False
     cur_enum_class = None
     cur_enum = None
@@ -390,13 +407,13 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
         elif line.startswith("RMVL_W_SUBST"):
             mch = re_match("subst", line)
             if mch and misc:
-                alias_str = mch.group(1)    
+                alias_str = mch.group(1)
                 with open(misc, "r") as f:
                     json_content: dict = json.load(f)
                     if cur_class:
                         if alias_str not in json_content:
                             class_content.append(
-                                f"        // No binding information for \"{alias_str}\""
+                                f'        // No binding information for "{alias_str}"'
                             )
                         else:
                             bind_alias = json_content[alias_str].get("bind", [])
@@ -405,13 +422,13 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                     else:
                         if alias_str not in json_content:
                             binding_code.append(
-                                f"    // No binding information for \"{alias_str}\""
+                                f'    // No binding information for "{alias_str}"'
                             )
                         else:
                             bind_alias = json_content[alias_str].get("bind", [])
                             for bind_alias_each in bind_alias:
                                 binding_code.append(f"    {bind_alias_each}")
-                    
+
         # Class method with 'RMVL_W[_xxx]' macro
         elif line.startswith("RMVL_W") and cur_class:
             # Constructor
@@ -440,6 +457,25 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                 convert_content.append(
                     f"    py::implicitly_convertible<{cur_class}, {cvt_class}>();"
                 )
+                continue
+            # Pure virtual method
+            mch = re_match("pure_virtual", line)
+            if mch:
+                return_type, method_name, params = mch.groups()
+                type_list, id_list, default_list = split_parameters(params)
+                class_content.append(
+                    f'        .def("{method_name}", &{cur_class}::{method_name}, py::pure_virtual(),'
+                )
+                for type, id, default in zip(type_list, id_list, default_list):
+                    if default == "{}":
+                        class_content.append(
+                            f'             "{id}"_a = {remove_cvref(type)}{{}},'
+                        )
+                    elif default:
+                        class_content.append(f'             "{id}"_a = {default},')
+                    else:
+                        class_content.append(f'             "{id}"_a,')
+                class_content[-1] = class_content[-1][:-1] + ")"
                 continue
             # Static method
             mch = re_match("static_method", line)
@@ -543,9 +579,7 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
             mch = re_match("variable", line)
             if mch:
                 type_name, var_name = mch.groups()
-                binding_code.append(
-                    f'    m.attr("{var_name}") = py::cast({var_name});'
-                )
+                binding_code.append(f'    m.attr("{var_name}") = py::cast({var_name});')
 
         # End of the class
         elif line == "};" and cur_class:
@@ -564,7 +598,9 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
             binding_code.append(f'    m.def("{func_name}", &{func_name},')
             for type, id, default in zip(type_list, id_list, default_list):
                 if default == "{}":
-                    binding_code.append(f'          "{id}"_a = {remove_cvref(type)}{{}},')
+                    binding_code.append(
+                        f'          "{id}"_a = {remove_cvref(type)}{{}},'
+                    )
                 elif default:
                     binding_code.append(f'          "{id}"_a = {default},')
                 else:
@@ -599,7 +635,87 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
     return "\n".join(binding_code)
 
 
-def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
+def generate_comment(comments: List[str]) -> List[str]:
+    """
+    ### Generate comment from a list of comments
+    #### Parameters
+    `comments` ─ list of comments
+    #### Returns
+    `(str)`: generated comment
+    """
+
+    # @param[??] val xxx -> `val` [??] - xxx
+    def format_param(match: re.Match) -> str:
+        return f"- [{match.group(1)}] `{match.group(2)}` ─ {match.group(3)}\n"
+
+    # @param val xxx -> `val` - xxx
+    def format_param_no_type(match: re.Match) -> str:
+        return f"- `{match.group(1)}` ─ {match.group(2)}\n"
+
+    # @brief xxx -> xxx
+    def format_brief(match: re.Match) -> str:
+        return f"{match.group(1)}\n"
+
+    # @return xxx -> Returns: xxx
+    def format_return(match: re.Match) -> str:
+        return f"Returns: {match.group(1)}\n"
+
+    # @note xxx -> Note: xxx
+    def format_note(match: re.Match) -> str:
+        return f"> {match.group(1)}\n"
+
+    is_code = False
+    is_py_code = False
+
+    # @code{.xxx}-> ```xxx
+    def format_code(match: re.Match) -> str:
+        nonlocal is_code, is_py_code
+        is_code = True
+        is_py_code = match.group(1) == "py"
+        return "# Example:"
+
+    # @endcode -> ```
+    def format_endcode(match: re.Match) -> str:
+        nonlocal is_code, is_py_code
+        is_code = False
+        is_py_code = False
+        return ""
+
+    # Format comments
+    retval = ["", '"""']
+    for comment in comments:
+        # Remove leading and trailing spaces
+        comment = comment.strip()
+        # Format code
+        comment = re.sub(r"@code{\.(\w+)}", format_code, comment)
+        comment = re.sub(r"@endcode", format_endcode, comment)
+
+        if is_code and is_py_code:
+            comment = f">>> {comment}"
+        elif is_code:
+            continue
+        else:
+            # Format param
+            comment = re.sub(r"@param\[(\w+)\]\s+(\w+)\s+(.*)", format_param, comment)
+            comment = re.sub(r"@param\s+(\w+)\s+(.*)", format_param_no_type, comment)
+            # Format brief
+            comment = re.sub(r"@brief\s+(.*)", format_brief, comment)
+            # Format return
+            comment = re.sub(r"@return\s+(.*)", format_return, comment)
+            # Format note
+            comment = re.sub(r"@note\s+(.*)", format_note, comment)
+
+        retval.append(comment)
+
+    retval.append('"""')
+    retval.append("")
+
+    return retval
+
+
+def generate_pyi(
+    lines: List[str], doc: Union[str, None], misc: Union[str, None]
+) -> str:
     """
     ### Generate .pyi file content and documents configurations from C++ header file
     #### Parameters
@@ -610,6 +726,9 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
     """
 
     pyi_content = []
+    # To store current comment
+    in_comment = False
+    cur_comment = []
     # To store functions for overload detection
     class_content = []
     para_class_fordoc = []
@@ -627,15 +746,34 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
     for line in lines:
         line = line.strip()
 
-        if line.startswith("//") or not line:
+        # Comment detection
+        if line.startswith("//! @") or line.startswith("// ") or not line:
             continue
+        elif line.startswith("//! "):
+            in_comment = False
+            cur_comment.clear()
+            cur_comment.append(line[4:])
+        elif line.startswith("/**"):
+            in_comment = True
+            cur_comment.clear()
+        elif in_comment:
+            if line.startswith("*/"):
+                in_comment = False
+            elif len(line) > 2:
+                cur_comment.append(line[2:])
+            else:
+                continue
 
         # Using directive
-        if line.startswith("using"):
+        elif line.startswith("using"):
             mch = re_match("using", line)
             if mch:
                 alias, target = mch.groups()
-                typings.append(f"{alias} = {type_convert(target)}")
+                target = type_convert(target)
+                if not target.startswith("unique_ptr") and not target.startswith(
+                    "shared_ptr"
+                ):
+                    typings.append(f"{alias} = {target}")
                 continue
         # Enum class and enum detection
         elif line.startswith("enum class") or (in_enum and line.startswith("{")):
@@ -674,14 +812,14 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
                 # Normal class or aggregate class
                 mch = re_match("normal_aggregate_class", line)
                 if mch:
-                    cur_class = mch.group(2)
+                    cur_class: str = mch.group(2)
                     class_content.append(f"class {cur_class}:")
                     if cur_class.endswith("Param"):
                         para_class_fordoc.append(cur_class)
                 # Inherited class
                 mch = re_match("inherited_class", line)
                 if mch:
-                    cur_class = mch.group(1)
+                    cur_class: str = mch.group(1)
                     class_content.append(f"class {cur_class}({mch.group(3)}):")
             # Global function definition
             else:
@@ -702,7 +840,7 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
                     if cur_class:
                         if alias_str not in json_content:
                             class_content.append(
-                                f"    # No binding information for \"{alias_str}\""
+                                f'    # No binding information for "{alias_str}"'
                             )
                         else:
                             bind_alias = json_content[alias_str].get("pyi", [])
@@ -711,7 +849,7 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
                     else:
                         if alias_str not in json_content:
                             pyi_content.append(
-                                f"# No binding information for \"{alias_str}\""
+                                f'# No binding information for "{alias_str}"'
                             )
                         else:
                             bind_alias = json_content[alias_str].get("pyi", [])
@@ -730,14 +868,30 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
                         for id, tp, d in zip(id_list, type_list, default_list)
                     ]
                 ).replace("::", ".")
+                class_content_cmt = "\n        ".join(generate_comment(cur_comment))
                 class_content.append(
-                    f"    @overload\n    def __init__(self, {param_str}) -> {name}: ..."
+                    f"    @overload\n    def __init__(self, {param_str}) -> {name}:{class_content_cmt}..."
                 )
                 continue
             # Convert method
             mch = re_match("convert_method", line)
             if mch:
                 continue
+            # Pure virtual method
+            mch = re_match("pure_virtual", line)
+            if mch:
+                return_type, method_name, params = mch.groups()
+                type_list, id_list, default_list = split_parameters(params)
+                param_str = ", ".join(
+                    [
+                        f"{id}: {type_convert(t)}" + (f" = {d}" if d else "")
+                        for id, t, d in zip(id_list, type_list, default_list)
+                    ]
+                ).replace("::", ".")
+                class_content_cmt = "\n        ".join(generate_comment(cur_comment))
+                class_content.append(
+                    f"    @overload\n    def {method_name}(self, {param_str}) -> {type_convert(return_type)}:{class_content_cmt}..."
+                )
             # Class method and static method
             mch = re_match("method", line)
             if mch:
@@ -759,8 +913,9 @@ def generate_pyi(lines: list[str], doc: str | None, misc: str | None) -> str:
                     method_name = "__add__"
                 elif method_name == "operator-":
                     method_name = "__sub__"
+                class_content_cmt = "\n        ".join(generate_comment(cur_comment))
                 class_content.append(
-                    f"    @overload\n    def {method_name}(self, {param_str}) -> {type_convert(return_type)}: ..."
+                    f"    @overload\n    def {method_name}(self, {param_str}) -> {type_convert(return_type)}:{class_content_cmt}..."
                 )
                 continue
             # Class member variable

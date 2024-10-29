@@ -1,5 +1,5 @@
-set(mvcam_sdk_path "$ENV{MVCAM_SDK_PATH}")
-if(mvcam_sdk_path STREQUAL "")
+set(hik_sdk_path "$ENV{MVCAM_SDK_PATH}")
+if(hik_sdk_path STREQUAL "")
   set(HikSDK_FOUND FALSE)
   return()
 endif()
@@ -8,7 +8,7 @@ endif()
 find_path(
   HikSDK_INCLUDE_DIR
   NAMES CameraParams.h MvCameraControl.h MvErrorDefine.h MvISPErrorDefine.h PixelType.h
-  PATHS "${mvcam_sdk_path}/include"
+  PATHS "${hik_sdk_path}/include"
   NO_DEFAULT_PATH
 )
 
@@ -30,7 +30,7 @@ endif()
 find_library(
   HikSDK_LIB
   NAMES "libMvCameraControl.so"
-  PATHS "${mvcam_sdk_path}/lib/${ARCH_HIKLIB}"
+  PATHS "${hik_sdk_path}/lib/${ARCH_HIKLIB}"
   NO_DEFAULT_PATH
 )
 

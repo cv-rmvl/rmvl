@@ -1,11 +1,11 @@
 /**
  * @file camutils.hpp
- * @author RoboMaster Vision Community
+ * @author zhaoxi (535394140@qq.com)
  * @brief
  * @version 1.0
  * @date 2022-09-30
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 
@@ -44,7 +44,7 @@ enum class HandleMode : uint8_t
 {
     Index, //!< 相机的索引号 `(0, 1, 2 ...)`
     Key,   //!< 制造商：序列号 S/N
-    ID,    //!< 手动设置的相机 ID
+    MAC,   //!< 相机的 MAC 地址
     IP     //!< IP 地址
 };
 
