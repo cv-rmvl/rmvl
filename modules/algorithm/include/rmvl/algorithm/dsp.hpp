@@ -18,6 +18,8 @@
 #include <opencv2/core/mat.hpp>
 #endif // HAVE_OPENCV
 
+#include "rmvl/core/rmvldef.hpp"
+
 namespace rm
 {
 
@@ -52,7 +54,7 @@ enum class GxType
  * @param[in] xt 时域复信号
  * @return 频域复信号
  */
-ComplexSignal dft(const ComplexSignal &xt);
+RMVL_EXPORTS_W ComplexSignal dft(const ComplexSignal &xt);
 
 /**
  * @brief 计算离散傅里叶逆变换
@@ -60,7 +62,7 @@ ComplexSignal dft(const ComplexSignal &xt);
  * @param[in] Xf 频域复信号
  * @return 时域复信号
  */
-ComplexSignal idft(const ComplexSignal &Xf);
+RMVL_EXPORTS_W ComplexSignal idft(const ComplexSignal &Xf);
 
 /**
  * @brief 计算信号谱
@@ -69,7 +71,7 @@ ComplexSignal idft(const ComplexSignal &Xf);
  * @param[in] type 谱类型
  * @return 实数信号谱
  */
-RealSignal Gx(const ComplexSignal &x, GxType type);
+RMVL_EXPORTS_W RealSignal Gx(const ComplexSignal &x, GxType type);
 
 #ifdef HAVE_OPENCV
 
@@ -80,7 +82,7 @@ RealSignal Gx(const ComplexSignal &x, GxType type);
  * @param[in] color 颜色
  * @return `cv::Mat` 表示的绘制图像
  */
-cv::Mat draw(const RealSignal &datas, const cv::Scalar &color);
+RMVL_EXPORTS_W cv::Mat draw(const RealSignal &datas, const cv::Scalar &color);
 
 #endif // HAVE_OPENCV
 

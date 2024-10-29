@@ -54,7 +54,7 @@ bool HikCamera::Impl::set(int propId, double value) noexcept
     case CAMERA_TRIGGER_SOFT:
         return MV_CC_SetCommandValue(_handle, "TriggerSoftware") == MV_OK;
     default:
-        ERROR_("Try to set undefined variable, id: %d.", propId);
+        WARNING_("(hik) Try to set undefined variable, id: %d.", propId);
         return false;
     }
 }
@@ -67,33 +67,33 @@ double HikCamera::Impl::get(int propId) const noexcept
     {
     // Properties
     case CAMERA_EXPOSURE:
-        return MV_CC_GetFloatValue(_handle, "ExposureTime", &f_value) == MV_OK ? f_value.fCurValue : -1;
+        return MV_CC_GetFloatValue(_handle, "ExposureTime", &f_value) == MV_OK ? f_value.fCurValue : -1.0;
     case CAMERA_GAIN:
-        return MV_CC_GetFloatValue(_handle, "Gain", &f_value) == MV_OK ? f_value.fCurValue : -1;
+        return MV_CC_GetFloatValue(_handle, "Gain", &f_value) == MV_OK ? f_value.fCurValue : -1.0;
     case CAMERA_WB_BGAIN:
         return MV_CC_SetEnumValue(_handle, "BalanceRatioSelector", 2) == MV_OK && // Blue
                        MV_CC_GetIntValue(_handle, "BalanceRatio", &i_value) == MV_OK
                    ? static_cast<double>(i_value.nCurValue)
-                   : -1;
+                   : -1.0;
     case CAMERA_WB_GGAIN:
         return MV_CC_SetEnumValue(_handle, "BalanceRatioSelector", 1) == MV_OK && // Green
                        MV_CC_GetIntValue(_handle, "BalanceRatio", &i_value) == MV_OK
                    ? static_cast<double>(i_value.nCurValue)
-                   : -1;
+                   : -1.0;
     case CAMERA_WB_RGAIN:
         return MV_CC_SetEnumValue(_handle, "BalanceRatioSelector", 0) == MV_OK && // Red
                        MV_CC_GetIntValue(_handle, "BalanceRatio", &i_value) == MV_OK
                    ? static_cast<double>(i_value.nCurValue)
-                   : -1;
+                   : -1.0;
     case CAMERA_TRIGGER_COUNT:
-        return MV_CC_GetIntValue(_handle, "AcquisitionBurstFrameCount", &i_value) == MV_OK ? static_cast<double>(i_value.nCurValue) : -1;
+        return MV_CC_GetIntValue(_handle, "AcquisitionBurstFrameCount", &i_value) == MV_OK ? static_cast<double>(i_value.nCurValue) : -1.0;
     case CAMERA_TRIGGER_DELAY:
-        return MV_CC_GetFloatValue(_handle, "TriggerDelay", &f_value) == MV_OK ? static_cast<double>(f_value.fCurValue) : -1;
+        return MV_CC_GetFloatValue(_handle, "TriggerDelay", &f_value) == MV_OK ? static_cast<double>(f_value.fCurValue) : -1.0;
     case CAMERA_SATURATION:
-        return MV_CC_GetFloatValue(_handle, "Saturation", &f_value) == MV_OK ? static_cast<double>(f_value.fCurValue) : -1;
+        return MV_CC_GetFloatValue(_handle, "Saturation", &f_value) == MV_OK ? static_cast<double>(f_value.fCurValue) : -1.0;
     default:
-        ERROR_("Try to set undefined variable, id: %d.", propId);
-        return false;
+        WARNING_("(hik) Try to set undefined variable, id: %d.", propId);
+        return -1.0;
     }
 }
 

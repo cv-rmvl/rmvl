@@ -101,12 +101,12 @@ bool OptCamera::Impl::open() noexcept
     // 第一次置零相机状态用于判断是否检测到相机
     int status = OPT_EnumDevices(&_device_list, interfaceTypeAll);
     int camera_counts = _device_list.nDevNum;
-    INFO_("opt - Camera enum status: %s", optGetErrorString(status));
-    INFO_("opt - Camera counts: %d", camera_counts);
+    INFO_("(opt) Camera enum status: %s", optGetErrorString(status));
+    INFO_("(opt) Camera counts: %d", camera_counts);
     // 没有连接设备
     if (camera_counts == 0)
     {
-        ERROR_("opt - Could not find the camera devise.");
+        ERROR_("(opt) Could not find the camera devise.");
         return false;
     }
     // 创建设备句柄
@@ -114,28 +114,28 @@ bool OptCamera::Impl::open() noexcept
     status = OPT_CreateHandle(&_handle, handle_map[static_cast<size_t>(handle_mode)], reinterpret_cast<void *>(const_cast<char *>(_camera_info.c_str())));
     if (status != OPT_OK)
     {
-        ERROR_("opt - Failed to create camera handle! %s", optGetErrorString(status));
+        ERROR_("(opt) Failed to create camera handle! %s", optGetErrorString(status));
         return false;
     }
     // 打开相机
     status = OPT_Open(_handle);
     if (status != OPT_OK)
     {
-        ERROR_("opt - Failed to open camera! %s", optGetErrorString(status));
+        ERROR_("(opt) Failed to open camera! %s", optGetErrorString(status));
         return false;
     }
     // 设置采集方式
     status = OPT_SetEnumFeatureSymbol(_handle, "AcquisitionMode", grab_mode == GrabMode::Continuous ? "Continuous" : "SingleFrame");
     if (status != OPT_OK)
     {
-        ERROR_("opt - Failed to set acquisition mode: %s", optGetErrorString(status));
+        ERROR_("(opt) Failed to set acquisition mode: %s", optGetErrorString(status));
         return false;
     }
     // 设置触发模式，连续采集不采用触发模式
     OPT_SetEnumFeatureSymbol(_handle, "TriggerMode", grab_mode == GrabMode::Continuous ? "Off" : "On");
     if (status != OPT_OK)
     {
-        ERROR_("opt - Failed to set trigger mode: %s", optGetErrorString(status));
+        ERROR_("(opt) Failed to set trigger mode: %s", optGetErrorString(status));
         return false;
     }
     // 为单帧采集（触发模式下）设置触发源
@@ -154,7 +154,7 @@ bool OptCamera::Impl::open() noexcept
     }
     if (status != OPT_OK)
     {
-        ERROR_("opt - Failed to set trigger source: %s", optGetErrorString(status));
+        ERROR_("(opt) Failed to set trigger source: %s", optGetErrorString(status));
         return false;
     }
     return true;
@@ -167,7 +167,7 @@ bool OptCamera::Impl::read(cv::OutputArray image) noexcept
         auto status = OPT_StartGrabbing(_handle);
         if (status != OPT_OK)
         {
-            ERROR_("opt - Failed to start grabbing: %s", optGetErrorString(status));
+            ERROR_("(opt) Failed to start grabbing: %s", optGetErrorString(status));
             return false;
         }
     }
@@ -180,7 +180,7 @@ bool OptCamera::Impl::retrieve(cv::OutputArray image) noexcept
     int status = OPT_GetFrame(_handle, &_src_frame, 1000);
     if (status != OPT_OK)
     {
-        ERROR_("opt - Failed to get frame: %s", optGetErrorString(status));
+        ERROR_("(opt) Failed to get frame: %s", optGetErrorString(status));
         image.assign(cv::Mat());
         return false;
     }
@@ -190,7 +190,7 @@ bool OptCamera::Impl::retrieve(cv::OutputArray image) noexcept
     OPT_EPixelType &pixel_format = _src_frame.frameInfo.pixelFormat;
     if (pixel_format != gvspPixelMono8 && pixel_format != gvspPixelBayRG8)
     {
-        ERROR_("opt - Unknown pixel format, only support Mono8 and BayRG8.");
+        ERROR_("(opt) Unknown pixel format, only support Mono8 and BayRG8.");
         image.assign(cv::Mat());
         return false;
     }
@@ -242,7 +242,7 @@ bool OptCamera::Impl::retrieve(cv::OutputArray image) noexcept
         return true;
     };
     // retrieve failed
-    ERROR_("opt - Failed to retrieve, unsupported mode: %d.", static_cast<int>(flag));
+    ERROR_("(opt) Failed to retrieve, unsupported mode: %d.", static_cast<int>(flag));
     image.assign(cv::Mat());
     return false;
 }
@@ -265,7 +265,7 @@ void OptCamera::Impl::release() noexcept
 bool OptCamera::Impl::reconnect() noexcept
 {
     using namespace std::chrono_literals;
-    WARNING_("opt - Reconnecting...");
+    WARNING_("(opt) Reconnecting...");
     release();
     std::this_thread::sleep_for(200ms);
     return open();

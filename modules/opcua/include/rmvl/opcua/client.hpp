@@ -295,12 +295,15 @@ public:
      */
     RMVL_W ClientTimer(ClientView cv, double period, std::function<void(ClientView)> callback);
 
+    //! @cond
     ClientTimer(const ClientTimer &) = delete;
     ClientTimer(ClientTimer &&) = default;
 
     ClientTimer &operator=(const ClientTimer &) = delete;
     ClientTimer &operator=(ClientTimer &&) = default;
+    //! @endcond
 
+    //! 释放资源，并取消定时器
     ~ClientTimer() { cancel(); }
 
     //! 取消定时器

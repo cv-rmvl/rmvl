@@ -1367,7 +1367,8 @@ srv.addMethodNode(method);
 def plus(sv, objnd, iargs):
     num_node = sv.find("num")
     num = sv.read(num_node).int()
-    sv.write(num_node, iargs[0].int() + num)
+    iarg = iargs[0].int()
+    sv.write(num_node, rm.Variable(iarg + num))
     return True, []
 
 method = rm.Method(plus)

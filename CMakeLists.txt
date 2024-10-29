@@ -171,6 +171,7 @@ status("     Camera:")
 status("        MindVision:"        BUILD_rmvl_mv_camera THEN YES ELSE NO)
 status("        HikRobot:"          BUILD_rmvl_hik_camera THEN YES ELSE NO)
 status("        OPT:"               BUILD_rmvl_opt_camera THEN YES ELSE NO)
+status("        Galaxy:"            BUILD_rmvl_galaxy_camera THEN YES ELSE NO)
 status("     Light controller:")
 status("        OPT:"               BUILD_rmvl_opt_light_control THEN YES ELSE NO)
 
@@ -215,7 +216,7 @@ if(BUILD_PYTHON)
   status("        pybind11:"        "ver ${pybind11_VERSION}")
   status("     Interpreter:"        "${RMVL_PYTHON_EXECUTABLE} (ver ${RMVL_PYTHON_VERSION})")
   status("     Libraries:"          "${RMVL_PYTHON_LIBRARIES}")
-  status("     install path:"       "${RMVL_PYTHON_INSTALL_SUFFIX}")
+  status("     install path:"       "${RMVL_PYTHON_INSTALL_PATH}")
 endif()
 
 # ======================== Test and examples ========================

@@ -13,6 +13,8 @@
 
 #ifdef HAVE_OPENCV
 
+#include "rmvl/core/rmvldef.hpp"
+
 #include <opencv2/core/mat.hpp>
 
 namespace rm
@@ -46,12 +48,12 @@ enum PixChannel : uint8_t
  * @endcode
  *
  * @param[in] src 通道类型为 BGR 的原图像
- * @param[in] ch1 通道1
- * @param[in] ch2 通道2
+ * @param[in] ch1 通道 1，可参考 rm::PixChannel
+ * @param[in] ch2 通道 2，可参考 rm::PixChannel
  * @param[in] threshold 相减阈值，像素通道相减的值若小于该阈值则置 `0`，大于则置 `255`
  * @return 二值图像
  */
-cv::Mat binary(cv::Mat src, PixChannel ch1, PixChannel ch2, uint8_t threshold);
+RMVL_EXPORTS_W cv::Mat binary(cv::Mat src, uint8_t ch1, uint8_t ch2, uint8_t threshold);
 
 /**
  * @brief 亮度阈值二值化
@@ -60,7 +62,7 @@ cv::Mat binary(cv::Mat src, PixChannel ch1, PixChannel ch2, uint8_t threshold);
  * @param[in] threshold 亮度阈值，像素亮度小于该阈值则置 `0`，大于则置 `255`
  * @return 二值图像
  */
-cv::Mat binary(cv::Mat src, uint8_t threshold);
+RMVL_EXPORTS_W cv::Mat binary(cv::Mat src, uint8_t threshold);
 
 //! @} algorithm_pretreat
 

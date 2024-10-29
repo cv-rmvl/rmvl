@@ -100,12 +100,7 @@ if(BUILD_PYTHON)
       OUTPUT_VARIABLE _std_packages_path
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    if("${_std_packages_path}" MATCHES "site-packages")
-      set(_packages_path "python${RMVL_PYTHON_VERSION_MAJOR}.${RMVL_PYTHON_VERSION_MINOR}/site-packages")
-    else() # debian based assumed, install to the dist-packages.
-      set(_packages_path "python${RMVL_PYTHON_VERSION_MAJOR}.${RMVL_PYTHON_VERSION_MINOR}/dist-packages")
-    endif()
-    set(RMVL_PYTHON_INSTALL_SUFFIX "lib/${_packages_path}/rm")
+    set(RMVL_PYTHON_INSTALL_PATH "${_std_packages_path}/rm")
   endif()
 endif()
 

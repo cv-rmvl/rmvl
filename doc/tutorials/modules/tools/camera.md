@@ -17,6 +17,7 @@
 - 迈德威视工业相机 rm::MvCamera
 - 海康机器人工业相机 rm::HikCamera
 - 奥普特机器视觉工业相机 rm::OptCamera
+- 大恒图像 Galaxy 工业相机 rm::GalaxyCamera
 
 ## 1. 如何使用
 

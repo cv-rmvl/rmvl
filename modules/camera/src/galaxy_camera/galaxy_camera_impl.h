@@ -1,35 +1,23 @@
 /**
- * @file hik_camera_impl.h
+ * @file galaxy_camera_impl.h
  * @author zhaoxi (535394140@qq.com)
- * @brief 海康相机实现
+ * @brief
  * @version 1.0
- * @date 2023-12-13
+ * @date 2024-10-27
  *
- * @copyright Copyright 2023 (c), zhaoxi
+ * @copyright Copyright 2024 (c), zhaoxi
  *
  */
 
 #pragma once
 
-#include <MvCameraControl.h>
-
-#include "rmvl/camera/hik_camera.h"
+#include "rmvl/camera/galaxy_camera.h"
 
 namespace rm
 {
 
-class HikCamera::Impl
+class GalaxyCamera::Impl
 {
-    // -------------------------- 相机信息 --------------------------
-    void *_handle;           //!< 相机设备句柄
-    CameraConfig _init_mode; //!< 初始化配置模式
-    std::string _serial;     //!< 相机序列号 S/N
-    bool _opened{};          //!< 相机是否打开
-
-    // -------------------------- 图像信息 --------------------------
-    MV_FRAME_OUT _p_out;          //!< 输出图像的数据及信息
-    std::vector<uchar> _p_dstbuf; //!< 输出数据缓存
-
 public:
     /**
      * @brief 构造函数
@@ -59,6 +47,9 @@ public:
      */
     double get(int propId) const noexcept;
 
+    //! 打开相机
+    bool open() noexcept;
+
     //! 相机是否打开
     inline bool isOpened() const noexcept { return _opened; }
 
@@ -82,15 +73,24 @@ public:
      */
     bool read(cv::OutputArray image) noexcept;
 
-    //! 打开相机
-    bool open() noexcept;
-
     //! 相机重连
     bool reconnect() noexcept;
 
 private:
-    //! 错误码转字符串
-    const char *errorCode2Str(unsigned int code) noexcept;
+    CameraConfig _config{};  //!< 相机配置
+    std::string _id{};       //!< 相机唯一标识
+    GX_DEV_HANDLE _handle{}; //!< 相机句柄
+    bool _opened{};          //!< 相机是否打开
+
+#ifdef __linux__
+    PGX_FRAME_BUFFER _buffer{}; //!< 帧缓存
+#else
+    GX_FRAME_DATA _data{}; //!< 帧数据
+    int64_t _payload{};    //!< 负载大小
+#endif // __linux__
 };
+
+//! 获取 GX_STATUS 错误信息
+const char *getGXError() noexcept;
 
 } // namespace rm

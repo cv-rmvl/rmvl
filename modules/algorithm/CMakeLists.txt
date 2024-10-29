@@ -14,10 +14,24 @@ endif()
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  rmvl_generate_python(algorithm
-    FILES rmvl/algorithm/numcal.hpp rmvlpara/algorithm.hpp
-    DEPENDS algorithm
-  )
+  if(WITH_OPENCV)
+    foreach(m numcal dsp pretreat)
+      list(APPEND alg_inc rmvl/algorithm/${m}.hpp)
+    endforeach()
+    rmvl_generate_python(algorithm
+      FILES ${alg_inc} rmvlpara/algorithm.hpp
+      DEPENDS algorithm
+      USE_PREBIND
+    )
+  else()
+    foreach(m numcal)
+      list(APPEND alg_inc rmvl/algorithm/${m}.hpp)
+    endforeach()
+    rmvl_generate_python(algorithm
+      FILES ${alg_inc} rmvlpara/algorithm.hpp
+      DEPENDS algorithm
+    )
+  endif()
 endif()
 
 # ----------------------------------------------------------------------------

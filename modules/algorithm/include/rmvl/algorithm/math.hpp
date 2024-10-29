@@ -555,7 +555,7 @@ inline std::vector<T> &operator/=(std::vector<T> &vec, T val)
 // ------------------------【数学模型算法】------------------------
 
 //! 熵权 TOPSIS 算法
-class EwTopsis
+class RMVL_EXPORTS_W EwTopsis
 {
     RMVL_IMPL;
 
@@ -565,14 +565,14 @@ public:
      *
      * @param[in] samples 样本指标
      */
-    EwTopsis(const std::vector<std::vector<double>> &samples);
+    RMVL_W EwTopsis(const std::vector<std::vector<double>> &samples);
 
     /**
      * @brief 基于权熵 TOPSIS 推理出最终的指标
      *
      * @return 最终指标
      */
-    std::vector<double> inference();
+    RMVL_W std::vector<double> inference();
 };
 
 //! KM 算法求解器

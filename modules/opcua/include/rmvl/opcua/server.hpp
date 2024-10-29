@@ -384,12 +384,15 @@ public:
      */
     RMVL_W ServerTimer(ServerView sv, double period, std::function<void(ServerView)> callback);
 
+    //! @cond
     ServerTimer(const ServerTimer &) = delete;
     ServerTimer(ServerTimer &&) = default;
 
     ServerTimer &operator=(const ServerTimer &) = delete;
     ServerTimer &operator=(ServerTimer &&) = default;
+    //! @endcond
 
+    //! 释放资源，并取消定时器
     ~ServerTimer() { cancel(); }
 
     //! 取消定时器

@@ -1,11 +1,11 @@
 /**
  * @file mv_camera.h
- * @author RoboMaster Vision Community
+ * @author zhaoxi (535394140@qq.com)
  * @brief 迈德威视相机库
  * @version 3.0
  * @date 2023-12-14
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 
@@ -63,6 +63,9 @@ public:
     {
         return std::make_unique<MvCamera>(init_mode, serial);
     }
+
+    //! 获取相机库版本
+    RMVL_W static std::string version();
 
     /**
      * @brief 设置相机参数/事件

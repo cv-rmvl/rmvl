@@ -80,7 +80,7 @@ bool MvCamera::Impl::set(int propId, double value) noexcept
         else
             return false;
     default:
-        ERROR_("mv - Try to set undefined variable, id: %d.", propId);
+        WARNING_("(mv) Try to set undefined variable, id: %d.", propId);
         return false;
     }
 }
@@ -125,7 +125,7 @@ double MvCamera::Impl::get(int propId) const noexcept
     case CAMERA_FRAME_WIDTH:
         return static_cast<double>(_frame_info.iWidth);
     default:
-        ERROR_("mv - Try to get undefined variable, id: %d.", propId);
+        WARNING_("(mv) Try to get undefined variable, id: %d.", propId);
         return CAMERA_STATUS_FAILED;
     }
 }

@@ -42,6 +42,7 @@ endfunction()
 __find_imported_modules(mvsdk MvSDK)
 __find_imported_modules(hiksdk HikSDK)
 __find_imported_modules(optcamsdk OPTCameraSDK)
+__find_imported_modules(galaxysdk GalaxySDK)
 __find_imported_modules(optlc OPTLightCtrl)
 
 set(RMVL_3RD_PKGS_CONFIGCMAKE "")
@@ -138,6 +139,6 @@ install(
 if(BUILD_PYTHON)
   install(
     FILES "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/${RMVL_PYTHON_INSTALL_SUFFIX}"
+    DESTINATION "${RMVL_PYTHON_INSTALL_PATH}"
   )
 endif()

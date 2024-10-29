@@ -23,7 +23,7 @@ static void help()
            "     -help, -?                \033[32m# 显示帮助信息\033[0m\n"
            "     -w=<board_width>         \033[32m# 每一个板尺寸内角的数目 (格子数 - 1)\033[0m\n"
            "     -h=<board_height>        \033[32m# 每一个板尺寸内角的数目 (格子数 - 1)\033[0m\n"
-           "     [-c=<config_path>]       \033[32m# 相机光学参数配置文件路径\033[0m\n"
+           "     [-c]                     \033[32m# 采用自定的相机光学参数，使用当前目录下的 out_param.yml 文件\033[0m\n"
            "     [-pt=<pattern>]          \033[32m# 图案类型: 棋盘 (chessboard) 或圆形网格 (circles, acircles)\033[0m\n"
            "     [-n=<number_of_frames>]  \033[32m# 用于校准的帧数\033[0m\n"
            "                              \033[32m# (如果没有指定，它将被设置为实际可用的板视图数)\033[0m\n"

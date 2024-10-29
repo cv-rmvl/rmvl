@@ -93,25 +93,31 @@ sudo apt install libeigen3-dev
   <th class="markdownTableHeadCenter">CMake 包 <code>find_package(..)</code></th>
   <th class="markdownTableHeadCenter">SDK 下载地址（点击即可下载）</th></tr>
 <tr class="markdownTableRowOdd">
-  <td class="markdownTableBodyCenter" rowspan="3">相机</td>
+  <td class="markdownTableBodyCenter" rowspan="4">相机</td>
   <td class="markdownTableBodyCenter">MindVision</td>
   <td class="markdownTableBodyCenter">MvSDK</td>
   <td class="markdownTableBodyCenter">
-    <a href="https://www.mindvision.com.cn/uploadfiles/SDK/linuxSDK_V2.1.0.37.tar.gz">For all arch</a>
+    <a href="https://www.mindvision.com.cn/category/software/">For all arch</a>
   </td></tr>
 <tr class="markdownTableRowEven">
   <td class="markdownTableBodyCenter">HikVision</td>
   <td class="markdownTableBodyCenter">HikSDK</td>
   <td class="markdownTableBodyCenter">
-    <a href="https://www.hikrobotics.com/cn2/source/support/software/MVS_STD_GML_V2.1.2_221208.zip">For all arch</a>
+    <a href="https://www.hikrobotics.com/cn2/source/support/software/MVS_STD_GML_V2.1.2_221208.zip">For all arch（点击即可下载）</a>
   </td></tr>
 <tr class="markdownTableRowOdd">
   <td class="markdownTableBodyCenter">OPT</td>
   <td class="markdownTableBodyCenter">OPTCameraSDK</td>
   <td class="markdownTableBodyCenter">
-    <a href="https://vision.scutbot.cn/files/OPTCameraDemo_Ver3.1_Linux_x86_Build20220429.run">For all arch</a>
+    <a href="https://vision.scutbot.cn/files/OPTCameraDemo_Ver3.1_Linux_x86_Build20220429.run">For all arch（点击即可下载）</a>
   </td></tr>
 <tr class="markdownTableRowEven">
+  <td class="markdownTableBodyCenter">DaHeng Galaxy</td>
+  <td class="markdownTableBodyCenter">GalaxySDK</td>
+  <td class="markdownTableBodyCenter">
+    <a href="https://www.daheng-imaging.com/downloads/softwares/">For all arch</a>
+  </td></tr>
+<tr class="markdownTableRowOdd">
   <td class="markdownTableBodyCenter">光源控制器</td>
   <td class="markdownTableBodyCenter">OPT</td>
   <td class="markdownTableBodyCenter">OPTLightCtrl</td>

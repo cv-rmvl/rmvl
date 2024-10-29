@@ -27,6 +27,13 @@ bool MvCamera::isOpened() const { return _impl->isOpened(); }
 bool MvCamera::read(cv::OutputArray image) { return _impl->read(image); }
 bool MvCamera::reconnect() { return _impl->reconnect(); }
 
+std::string MvCamera::version()
+{
+    char vstr[128];
+    auto status = CameraSdkGetVersionString(vstr);
+    return status == CAMERA_STATUS_SUCCESS ? vstr : "unknown";
+}
+
 MvCamera::Impl::Impl(CameraConfig init_mode, std::string_view serial) noexcept
     : _camera_id(serial), _camera_list(new tSdkCameraDevInfo[_camera_counts]),
       _grab_mode(init_mode.grab_mode), _retrieve_mode(init_mode.retrieve_mode) { open(); }
@@ -43,44 +50,45 @@ MvCamera::Impl::~Impl() noexcept
 bool MvCamera::Impl::open() noexcept
 {
     CameraSdkInit(1);
-    // 枚举设备，并建立设备列表
+    // ----------------------- 设备枚举 -----------------------
     _status = CameraEnumerateDevice(_camera_list, &_camera_counts);
     if (_status == CAMERA_STATUS_SUCCESS)
-        PASS_("mv - camera enum status: %s", CameraGetErrorString(_status));
+        PASS_("(mv) Camera enum status: %s", CameraGetErrorString(_status));
     else
-        INFO_("mv - camera enum status: %s", CameraGetErrorString(_status));
-    INFO_("mv - camera quantity: %d", _camera_counts);
+        INFO_("(mv) Camera enum status: %s", CameraGetErrorString(_status));
+    INFO_("(mv) Camera quantity: %d", _camera_counts);
     // 无设备连接
     if (_camera_counts == 0)
     {
-        ERROR_("mv - could not find the camera devise.");
+        ERROR_("(mv) Could not find the camera devise.");
         return false;
     }
+    // ------------------ 选择设备并创建句柄 ------------------
     // Key: 序列号, Val: 相机设备信息哈希表
     std::unordered_map<std::string, tSdkCameraDevInfo *> id_info;
     for (INT enum_idx = 0; enum_idx < _camera_counts; ++enum_idx)
         id_info[_camera_list[enum_idx].acSn] = &_camera_list[enum_idx];
-    // 若无序列号，初始化第一个相机
+    // ----------------------- 打开相机 -----------------------
+    // 根据序列号初始化相机，或初始化第一个相机
     if (_camera_id.empty())
         _status = CameraInit(_camera_list, -1, -1, &_handle);
-    // 根据序列号初始化相机
     else if (id_info.find(_camera_id) != id_info.end())
         _status = CameraInit(id_info[_camera_id], -1, -1, &_handle);
     else
     {
-        ERROR_("mv - could not find the camera according to the specific S/N");
+        ERROR_("(mv) Could not find the camera according to the specific S/N");
         return false;
     }
     // 初始化失败
     if (_status == CAMERA_STATUS_SUCCESS)
-        PASS_("mv - camera initial status: %s", CameraGetErrorString(_status));
+        PASS_("(mv) Camera initial status: %s", CameraGetErrorString(_status));
     else
     {
-        ERROR_("mv - failed to initial the camera device: %s", CameraGetErrorString(_status));
+        ERROR_("(mv) Failed to initial the camera device: %s", CameraGetErrorString(_status));
         return false;
     }
 
-    // 设置采集模式
+    // --------------------- 设置工作模式 ---------------------
     CameraSetTriggerMode(_handle, static_cast<int>(_grab_mode));
     // 整合的设备描述信息
     tSdkCameraCapbility capability;
@@ -125,7 +133,7 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
 {
     if (_channel != 1 && _channel != 3)
     {
-        ERROR_("mv - camera image _channel: %d.", _channel);
+        ERROR_("(mv) Camera image channel: %d.", _channel);
         image.assign(cv::Mat());
         CameraReleaseImageBuffer(_handle, _pbyBuffer);
         return false;
@@ -145,7 +153,7 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
         else
         {
             image.assign(cv::Mat());
-            ERROR_("mv - failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
+            ERROR_("(mv) Failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
             retflag = false;
         }
         return retflag;
@@ -171,7 +179,7 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
         return true;
     }
 
-    ERROR_("mv - failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
+    ERROR_("(mv) Failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
     image.assign(cv::Mat());
     return false;
 }
@@ -179,7 +187,7 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
 bool MvCamera::Impl::reconnect() noexcept
 {
     using namespace std::chrono_literals;    
-    INFO_("mv - camera device reconnect");
+    INFO_("(mv) Camera device reconnect");
     release();
     std::this_thread::sleep_for(100ms);
 
