@@ -29,24 +29,24 @@ namespace rm
 static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
 {
     // 宽度比值
-    float width_ratio = (lhs->getWidth() > rhs->getWidth()) ? lhs->getWidth() / rhs->getWidth()
-                                                            : rhs->getWidth() / lhs->getWidth();
+    float width_ratio = (lhs->width() > rhs->width()) ? lhs->width() / rhs->width()
+                                                            : rhs->width() / lhs->width();
     if (width_ratio > para::gyro_detector_param.MAX_WIDTH_RATIO)
     {
         DEBUG_INFO_("can't be union: width_ratio = %f", width_ratio);
         return false;
     }
     // 高度比值
-    float height_ratio = (lhs->getHeight() > rhs->getHeight()) ? lhs->getHeight() / rhs->getHeight()
-                                                               : rhs->getHeight() / lhs->getHeight();
+    float height_ratio = (lhs->height() > rhs->height()) ? lhs->height() / rhs->height()
+                                                               : rhs->height() / lhs->height();
     if (height_ratio > para::gyro_detector_param.MAX_HEIGHT_RATIO)
     {
         DEBUG_INFO_("can't be union: height_ratio = %f", height_ratio);
         return false;
     }
-    float avg_height = std::max(lhs->getHeight(), rhs->getHeight());
+    float avg_height = std::max(lhs->height(), rhs->height());
     // 水平距离及与高度的比值
-    float dx = std::abs(lhs->getCenter().x - rhs->getCenter().x);
+    float dx = std::abs(lhs->center().x - rhs->center().x);
     float dx_ratio = dx / avg_height;
     if (dx_ratio > para::gyro_detector_param.MAX_X_DISTANCE_RATIO ||
         dx_ratio < para::gyro_detector_param.MIN_X_DISTANCE_RATIO)
@@ -55,7 +55,7 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
         return false;
     }
     // 垂直距离及与高度的比值
-    float dy = std::abs(lhs->getCenter().y - rhs->getCenter().y);
+    float dy = std::abs(lhs->center().y - rhs->center().y);
     float dy_ratio = dy / avg_height;
     if (dy_ratio > para::gyro_detector_param.MAX_Y_DISTANCE_RATIO)
     {
@@ -63,10 +63,10 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
         return false;
     }
     // 角度需要呈 "/  \" 样
-    if (lhs->getAngle() < 0 || rhs->getAngle() > 0)
+    if (lhs->angle() < 0 || rhs->angle() > 0)
         return false;
     // 角度差距要稍大
-    float delta_angle = lhs->getAngle() * rhs->getAngle();
+    float delta_angle = lhs->angle() * rhs->angle();
     if (delta_angle < para::gyro_detector_param.MIN_MULTIPLE_ANGLE ||
         delta_angle > para::gyro_detector_param.MAX_MULTIPLE_ANGLE)
     {
@@ -84,7 +84,7 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
     {
         // 从左到右排序得到有序的装甲板序列
         sort(combos.begin(), combos.end(), [](combo::const_ptr lhs, combo::const_ptr rhs) {
-            return lhs->getCenter().x < rhs->getCenter().x;
+            return lhs->center().x < rhs->center().x;
         });
         UnionFind<combo::ptr> uf(combos.begin(), combos.end());
         for (size_t i = 0; i + 1 < combos.size(); ++i)
@@ -125,7 +125,7 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
             for (size_t i = 0; i < combo_size; i++)
             {
                 combo::const_ptr p_combo = combo_vec[i];
-                combos_t[i] = p_combo->getExtrinsics().tvec();
+                combos_t[i] = p_combo->extrinsics().tvec();
                 combos_P[i] = Armor::cast(p_combo)->getPose();
                 combos_r[i] = para::gyro_group_param.INIT_RADIUS;
             }
@@ -243,11 +243,11 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
                  groups.end());
     // 删除 2D 中心点相距过近的 group
     sort(groups.begin(), groups.end(), [](group::const_ptr lhs, group::const_ptr rhs) {
-        return lhs->getCenter().x < rhs->getCenter().x;
+        return lhs->center().x < rhs->center().x;
     });
     std::unordered_set<group::const_ptr> erase_group_set;
     for (size_t i = 1; i < groups.size(); ++i)
-        if (getDistance(groups[i]->getCenter(), groups[i - 1]->getCenter()) < para::gyro_detector_param.MIN_CENTER_DIS)
+        if (getDistance(groups[i]->center(), groups[i - 1]->center()) < para::gyro_detector_param.MIN_CENTER_DIS)
             erase_group_set.insert(groups[i]);
     groups.erase(remove_if(groups.begin(), groups.end(), [&erase_group_set](group::const_ptr p_group) {
                      return erase_group_set.find(p_group) != erase_group_set.end();
@@ -262,7 +262,7 @@ void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr>
     std::unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
     // 根据距离 distance 排序，选出待匹配的 trackers
     sort(trackers.begin(), trackers.end(), [](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-        return lhs->getExtrinsics().distance() < rhs->getExtrinsics().distance();
+        return lhs->extrinsics().distance() < rhs->extrinsics().distance();
     });
     // 待匹配参考 tracker 的大小
     size_t ref_size = trackers.size();
@@ -277,10 +277,10 @@ void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr>
     for (auto p_combo : combos)
     {
         // 当前捕获到的新装甲板角点
-        const auto &cur_p = p_combo->getCorners();
+        const auto &cur_p = p_combo->corners();
         auto min_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-            const auto &lhs_p = lhs->front()->getCorners();
-            const auto &rhs_p = rhs->front()->getCorners();
+            const auto &lhs_p = lhs->front()->corners();
+            const auto &rhs_p = rhs->front()->corners();
             return (getDistance(cur_p[0], lhs_p[0]) + getDistance(cur_p[1], lhs_p[1]) +
                     getDistance(cur_p[2], lhs_p[2]) + getDistance(cur_p[3], lhs_p[3])) <
                    (getDistance(cur_p[0], rhs_p[0]) + getDistance(cur_p[1], rhs_p[1]) +
@@ -300,7 +300,7 @@ void GyroDetector::eraseFakeTracker(std::vector<tracker::ptr> &trackers)
 {
     // 删除
     trackers.erase(remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr p_tracker) {
-                       return p_tracker->getType().RobotTypeID == RobotType::UNKNOWN;
+                       return p_tracker->type().RobotTypeID == RobotType::UNKNOWN;
                    }),
                    trackers.end());
 }

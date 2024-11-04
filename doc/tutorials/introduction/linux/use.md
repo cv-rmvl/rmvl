@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     INFO_("size of armors = %ld", info.combos.size());
     for (auto p_combo : info.combos)
     {
-        const auto &corners = p_combo->getCorners();
+        const auto &corners = p_combo->corners();
         cv::line(src, corners[0], corners[2], cv::Scalar(0, 255, 0), 2);
         cv::line(src, corners[1], corners[3], cv::Scalar(0, 255, 0), 2);
     }

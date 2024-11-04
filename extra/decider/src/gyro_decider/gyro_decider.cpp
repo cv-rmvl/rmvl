@@ -55,7 +55,7 @@ static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, cv:
         RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"GyroGroup::ptr\"");
     // 旋转预测增量的分量计算
     float c = cos(rotangle), s = sin(rotangle);
-    const auto &tvec = p_tracker->getExtrinsics().tvec();
+    const auto &tvec = p_tracker->extrinsics().tvec();
     cv::Vec3f center2combo_pose = tvec - p_gyro_group->getCenter3D(); // 旋转中心到 combo 的向量
     cv::Matx33f rot = {c, 0, s,
                        0, 1, 0,
@@ -94,7 +94,7 @@ static cv::Point2f calculateHighSpeedBasicResponse(group::ptr target_group, trac
     cv::Point3f min_pitch3d;
     min_pitch3d.x = GyroGroup::cast(target_group)->getCenter3D()(0);
     for (const auto &p_target : target_group->data())
-        min_pitch3d.y += p_target->getExtrinsics().tvec()(1);
+        min_pitch3d.y += p_target->extrinsics().tvec()(1);
     min_pitch3d.y /= static_cast<float>(target_group->data().size());
     min_pitch3d.z = predict_center3d.z;
     auto min_pitch_target2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, min_pitch3d);
@@ -199,7 +199,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, RMStatus,
             // 将补偿的角度换算为坐标点
             info.shoot_center = calculateRelativeCenter(para::camera_param.cameraMatrix, -comp);
             if (getDistance(info.exp_center2d, info.shoot_center) <=
-                para::gyro_decider_param.NORMAL_RADIUS_RATIO * info.target->front()->getHeight())
+                para::gyro_decider_param.NORMAL_RADIUS_RATIO * info.target->front()->height())
                 info.can_shoot = true;
         }
     }
@@ -243,8 +243,8 @@ group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &g
     auto max_group = *max_element(groups.begin(), groups.end(), [&](group::const_ptr g1, group::ptr g2) {
         GyroGroup::const_ptr lhs = GyroGroup::cast(g1);
         GyroGroup::const_ptr rhs = GyroGroup::cast(g2);
-        auto type_lhs = g1->getType().RobotTypeID;
-        auto type_rhs = g1->getType().RobotTypeID;
+        auto type_lhs = g1->type().RobotTypeID;
+        auto type_rhs = g1->type().RobotTypeID;
         // 需要满足: 优先级 rhs > lhs
         if (_priority.find(type_lhs) != _priority.end() &&
             _priority.find(type_rhs) != _priority.end() &&
@@ -255,8 +255,8 @@ group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &g
                    getDistance(rhs->getCenter3D(), cv::Vec3f(), CalPlane::xOz);
     });
     // 当前最高优先级
-    if (_priority.find(max_group->getType().RobotTypeID) != _priority.end() &&
-        _priority[max_group->getType().RobotTypeID] <= 0)
+    if (_priority.find(max_group->type().RobotTypeID) != _priority.end() &&
+        _priority[max_group->type().RobotTypeID] <= 0)
         return nullptr;
     else
         return max_group;

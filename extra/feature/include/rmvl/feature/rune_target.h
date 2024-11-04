@@ -22,13 +22,6 @@ namespace rm
 //! 神符靶心特征
 class RuneTarget : public feature
 {
-private:
-    std::vector<cv::Point> _contour; //!< 轮廓点集
-    cv::RotatedRect _rotated_rect;   //!< 旋转矩形
-    float _ratio{};                  //!< 长宽比
-    bool _is_active{};               //!< 是否处于激活状态
-    float _radius{};                 //!< 半径
-
     struct ContourPoint
     {
         cv::Point contour_point;
@@ -40,9 +33,11 @@ public:
     using ptr = std::shared_ptr<RuneTarget>;
     using const_ptr = std::shared_ptr<const RuneTarget>;
 
+    //! @cond
     RuneTarget() = default;
     RuneTarget(const std::vector<cv::Point> &, const cv::RotatedRect &, bool is_active);
     RuneTarget(const cv::Point &center, bool is_active);
+    //! @endcond
 
     /**
      * @brief 使用轮廓和层次结构构造 RuneTarget 的构造接口
@@ -69,21 +64,7 @@ public:
      */
     feature::ptr clone() override { return std::make_shared<RuneTarget>(*this); }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<RuneTarget>(p_feature); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const RuneTarget>(p_feature); }
+    RMVL_FEATURE_CAST(RuneTarget)
 
     //! 获取长宽比
     inline float getRatio() const { return _ratio; }
@@ -95,6 +76,11 @@ public:
     inline const std::vector<cv::Point> &getContours() { return _contour; }
 
 private:
+    std::vector<cv::Point> _contour; //!< 轮廓点集
+    cv::RotatedRect _rotated_rect;   //!< 旋转矩形
+    float _ratio{};                  //!< 长宽比
+    bool _is_active{};               //!< 是否处于激活状态
+    float _radius{};                 //!< 半径
 };
 
 //! @} rune_target

@@ -233,17 +233,17 @@ RuneCenter::ptr RuneDetector::getBestCenter(const std::vector<RuneTarget::ptr> &
             for (size_t i = 0; i + 1 < rune_targets.size(); i++)
             {
                 // 靶心连线方向
-                cv::Vec2f dvec = rune_targets[i]->getCenter() - rune_targets[i + 1]->getCenter();
+                cv::Vec2f dvec = rune_targets[i]->center() - rune_targets[i + 1]->center();
                 cv::Matx22f rotate = {0, 1,
                                       -1, 0};
                 // 靶心连线垂线
                 cv::Vec2f vvec = rotate * dvec;
                 // 靶心连线中点
-                cv::Vec2f midp = (rune_targets[i]->getCenter() + rune_targets[i + 1]->getCenter()) / 2;
+                cv::Vec2f midp = (rune_targets[i]->center() + rune_targets[i + 1]->center()) / 2;
                 // 与中垂线的距离比值
                 float distance_ratio = getDistance(cv::Vec4f(vvec(0), vvec(1), midp(0), midp(1)),
-                                                   p_center->getCenter(), false) /
-                                       p_center->getHeight();
+                                                   p_center->center(), false) /
+                                       p_center->height();
                 if (distance_ratio > para::rune_param.MAX_MID_LINE_RATIO)
                 {
                     center_set.erase(p_center);
@@ -267,7 +267,7 @@ RuneCenter::ptr RuneDetector::getBestCenter(const std::vector<RuneTarget::ptr> &
         for (auto &p_target : rune_targets)
         {
             // target 到 center 的距离与 center 尺寸的比值
-            float radius_ratio = getDistance(p_target->getCenter(), p_center->getCenter()) / p_center->getHeight();
+            float radius_ratio = getDistance(p_target->center(), p_center->center()) / p_center->height();
             // 扇叶为未激活且距离比值过大或过小，跳过
             if (!p_target->isActive() && (radius_ratio < para::rune_param.MIN_RADIUS_RATIO ||
                                           radius_ratio > para::rune_param.MAX_RADIUS_RATIO))

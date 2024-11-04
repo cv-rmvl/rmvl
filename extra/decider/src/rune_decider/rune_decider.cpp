@@ -33,12 +33,12 @@ static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, c
 {
     auto p_rune = Rune::cast(ref_tracker->front());
     // 特征距离
-    cv::Point2f rune_center = p_rune->at(1)->getCenter();
+    cv::Point2f rune_center = p_rune->at(1)->center();
     float feature_distance = p_rune->getFeatureDis();
     // 动态预测点
     cv::Point2f predict_center;
-    predict_center.x = rune_center.x + feature_distance * cos(deg2rad(ref_tracker->getAngle() + d_predict));
-    predict_center.y = rune_center.y - feature_distance * sin(deg2rad(ref_tracker->getAngle() + d_predict));
+    predict_center.x = rune_center.x + feature_distance * cos(deg2rad(ref_tracker->angle() + d_predict));
+    predict_center.y = rune_center.y - feature_distance * sin(deg2rad(ref_tracker->angle() + d_predict));
     // 平面修正
     auto correct_vec = Rune::verticalConvertToCamera(predict_center - rune_center,
                                                      ref_tracker->front()->getGyroData().rotation.pitch);
@@ -60,7 +60,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     true_trackers.reserve(5);
 
     for (auto &p_tracker : groups.front()->data())
-        if (p_tracker->getType().RuneTypeID == flag.RuneTypeID)
+        if (p_tracker->type().RuneTypeID == flag.RuneTypeID)
             true_trackers.emplace_back(p_tracker);
 
     if (last_target != nullptr)
@@ -76,7 +76,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
         // 已激活神符决策
         if (flag.RuneTypeID == RuneType::ACTIVE)
             info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
-                return lhs->getCenter().y < rhs->getCenter().y;
+                return lhs->center().y < rhs->center().y;
             });
         // 未激活神符决策
         else
@@ -94,7 +94,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
         {
             // 寻找最下方神符
             info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
-                return lhs->getCenter().y < rhs->getCenter().y;
+                return lhs->center().y < rhs->center().y;
             });
         }
         else
@@ -175,9 +175,9 @@ bool RuneDecider::judgeShoot(tracker::ptr target_tracker, RuneType rune_mode,
     switch (rune_mode)
     {
     case RuneType::ACTIVE: // 已激活
-        return center_dis <= para::rune_decider_param.DISTURB_RADIUS_RATIO * target_tracker->front()->at(1)->getWidth();
+        return center_dis <= para::rune_decider_param.DISTURB_RADIUS_RATIO * target_tracker->front()->at(1)->width();
     default: // 默认: 未激活
-        return center_dis <= para::rune_decider_param.NORMAL_RADIUS_RATIO * target_tracker->front()->at(1)->getWidth();
+        return center_dis <= para::rune_decider_param.NORMAL_RADIUS_RATIO * target_tracker->front()->at(1)->width();
     }
 }
 

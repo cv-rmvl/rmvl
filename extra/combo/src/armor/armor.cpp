@@ -28,14 +28,14 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
         return nullptr;
 
     // ------------------------【左右灯条长度比值】------------------------
-    float length_l = p_left->getHeight();
-    float length_r = p_right->getHeight();
+    float length_l = p_left->height();
+    float length_r = p_right->height();
     // 获取长度偏差
     float length_ratio = (length_l / length_r >= 1) ? length_l / length_r : length_r / length_l;
 
     // ------------------------【左右灯条宽度比值】------------------------
-    float width_l = p_left->getWidth();
-    float width_r = p_right->getWidth();
+    float width_l = p_left->width();
+    float width_r = p_right->width();
     // 获取宽度偏差
     float width_ratio = (width_l / width_r >= 1) ? width_l / width_r : width_r / width_l;
 
@@ -43,14 +43,14 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
     float top_angle = getHAngle(p_left->getTopPoint(), p_right->getTopPoint(), DEG);
     float bottom_angle = getHAngle(p_left->getBottomPoint(), p_right->getBottomPoint(), DEG);
     float corner_angle = (top_angle + bottom_angle) / 2.f;
-    corner_angle = abs((p_left->getAngle() + p_right->getAngle()) / 2.f + corner_angle);
+    corner_angle = abs((p_left->angle() + p_right->angle()) / 2.f + corner_angle);
     // 获取角度偏差
-    float angle_diff = abs(p_left->getAngle() - p_right->getAngle());
+    float angle_diff = abs(p_left->angle() - p_right->angle());
 
     // -------------------------【装甲板长宽比值】-------------------------
     float combo_height = (length_l + length_r) / 2.f;
     // 灯条间距 + 一个即为装甲板的宽
-    float combo_width = getDistance(p_left->getCenter(), p_right->getCenter()) + (width_l + width_r / 2.f);
+    float combo_width = getDistance(p_left->center(), p_right->center()) + (width_l + width_r / 2.f);
     float combo_ratio = combo_width / combo_height;
 
     // --------------------------【更新匹配误差】--------------------------
@@ -119,13 +119,13 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
     _width = combo_w;
     _combo_ratio = combo_r;
     // 获取装甲板中心
-    _center = (p_left->getCenter() + p_right->getCenter()) / 2.f;
+    _center = (p_left->center() + p_right->center()) / 2.f;
     // 获取相对角度
     _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, _center);
     // 获取当前装甲板对应的陀螺仪位置信息
     _gyro_data = gyro_data;
     // 装甲板角度
-    _angle = (p_left->getAngle() + p_right->getAngle()) / 2.f;
+    _angle = (p_left->angle() + p_right->angle()) / 2.f;
     // 匹配大小装甲板
     if (armor_size_type == ArmorSizeType::UNKNOWN)
         _type.ArmorSizeTypeID = matchArmorType();

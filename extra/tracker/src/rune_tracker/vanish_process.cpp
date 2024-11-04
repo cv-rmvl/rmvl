@@ -32,8 +32,8 @@ static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, doub
     auto p_rune_target = RuneTarget::cast(ref_rune->at(0));
     auto p_rune_center = RuneCenter::cast(ref_rune->at(1));
     // 获取中心点
-    auto old_target = p_rune_target->getCenter();
-    auto old_center = p_rune_center->getCenter();
+    auto old_target = p_rune_target->center();
+    auto old_center = p_rune_center->center();
     // 绕 center 旋转
     cv::Vec2f target_vec(old_target.x - old_center.x,
                          old_target.y - old_center.y);
@@ -65,7 +65,7 @@ void RuneTracker::update(double tick, const GyroData &gyro_data)
     // 获取帧差时间
     float t = 0.f;
     if (_combo_deque.size() >= 2)
-        t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
+        t = (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1);
     else
         t = para::rune_tracker_param.SAMPLE_INTERVAL / 1000.;
     _filter.setA({1, t,
@@ -75,12 +75,12 @@ void RuneTracker::update(double tick, const GyroData &gyro_data)
 
     auto p_rune = runeConstructForced(Rune::cast(_combo_deque.front()),
                                       rotate_pre(0) - _angle, tick, gyro_data);
-    _angle = p_rune->getAngle();
+    _angle = p_rune->angle();
 
-    float rad_angle = deg2rad(p_rune->getAngle());
-    float feature_dis = getDistance(p_rune->at(0)->getCenter(), p_rune->at(1)->getCenter());
-    cv::Point2f relative_center = {p_rune->at(1)->getCenter().x + std::cos(rad_angle) * feature_dis,
-                                   p_rune->at(1)->getCenter().y - std::sin(rad_angle) * feature_dis};
+    float rad_angle = deg2rad(p_rune->angle());
+    float feature_dis = getDistance(p_rune->at(0)->center(), p_rune->at(1)->center());
+    cv::Point2f relative_center = {p_rune->at(1)->center().x + std::cos(rad_angle) * feature_dis,
+                                   p_rune->at(1)->center().y - std::sin(rad_angle) * feature_dis};
 
     _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, relative_center);
     // 直接更新后验估计

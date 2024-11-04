@@ -134,8 +134,8 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
         {
             // 离 p_tracker 最近的 combo 及其距离
             auto min_it = min_element(combos.begin(), combos.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
-                return getDistance(lhs->getCenter(), p_tracker->front()->getCenter()) <
-                       getDistance(rhs->getCenter(), p_tracker->front()->getCenter());
+                return getDistance(lhs->center(), p_tracker->front()->center()) <
+                       getDistance(rhs->center(), p_tracker->front()->center());
             });
             p_tracker->update(*min_it);
             tag_set.erase(*min_it);
@@ -153,8 +153,8 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
         {
             // 离视觉标签最近的 tracker 及其距离
             auto min_dis_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-                return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
-                       getDistance(p_combo->getCenter(), rhs->front()->getCenter());
+                return getDistance(p_combo->center(), lhs->front()->center()) <
+                       getDistance(p_combo->center(), rhs->front()->center());
             });
             min_dis_tracker->update(p_combo);
             tracker_set.erase(min_dis_tracker);
@@ -174,11 +174,11 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
         {
             // 离 tracker 最近的 combo
             auto min_it = *min_element(tag_set.begin(), tag_set.end(), [&](combo::const_ptr combo_1, combo::const_ptr combo_2) {
-                return getDistance(combo_1->getCenter(), trackers[i]->front()->getCenter()) <
-                       getDistance(combo_2->getCenter(), trackers[i]->front()->getCenter());
+                return getDistance(combo_1->center(), trackers[i]->front()->center()) <
+                       getDistance(combo_2->center(), trackers[i]->front()->center());
             });
             // 最短距离
-            float min_dis = getDistance(min_it->getCenter(), trackers[i]->front()->getCenter());
+            float min_dis = getDistance(min_it->center(), trackers[i]->front()->center());
             // 判断是否突变
             //! @todo 这段掉帧处理需要增加其他信息，保证 tracker 的匹配正确
             if (isChange(min_dis))

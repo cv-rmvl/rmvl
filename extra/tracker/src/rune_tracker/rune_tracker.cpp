@@ -17,12 +17,12 @@ namespace rm
 
 void RuneTracker::updateFromRune(combo::ptr p_combo)
 {
-    _width = p_combo->getWidth();
-    _height = p_combo->getHeight();
-    _corners = p_combo->getCorners();
-    _extrinsic = p_combo->getExtrinsics();
-    _center = p_combo->getCenter();
-    _type = p_combo->getType();
+    _width = p_combo->width();
+    _height = p_combo->height();
+    _corners = p_combo->corners();
+    _extrinsic = p_combo->extrinsics();
+    _center = p_combo->center();
+    _type = p_combo->type();
     _relative_angle = p_combo->getRelativeAngle();
 }
 
@@ -31,9 +31,9 @@ RuneTracker::RuneTracker(combo::ptr p_rune)
     if (p_rune == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is null pointer");
     _combo_deque.emplace_front(p_rune);
-    initFilter(p_rune->getAngle(), 0.f);
-    _angle = p_rune->getAngle();
-    _center = p_rune->getCenter();
+    initFilter(p_rune->angle(), 0.f);
+    _angle = p_rune->angle();
+    _center = p_rune->center();
     updateFromRune(p_rune);
 }
 
@@ -42,7 +42,7 @@ tracker::ptr RuneTracker::clone()
     auto retval = std::make_shared<RuneTracker>(*this);
     // 更新内部所有组合体
     for (auto &p_combo : retval->_combo_deque)
-        p_combo = p_combo->clone(p_combo->getTick());
+        p_combo = p_combo->clone(p_combo->tick());
     return retval;
 }
 
@@ -60,7 +60,7 @@ void RuneTracker::update(combo::ptr p_rune)
         // 更新滤波器
         float t = 0.f;
         if (_combo_deque.size() >= 2)
-            t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
+            t = (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1);
         else
             t = para::rune_tracker_param.SAMPLE_INTERVAL / 1000.;
         updateRotateFilter(t);
@@ -75,9 +75,9 @@ float RuneTracker::calculateTotalAngle()
 {
     // 若当前容器 size < 2 则圈数为默认0
     if (_combo_deque.size() < 2)
-        return front()->getAngle();
-    float current_angle = _combo_deque.at(0)->getAngle();
-    float last_angle = _combo_deque.at(1)->getAngle();
+        return front()->angle();
+    float current_angle = _combo_deque.at(0)->angle();
+    float last_angle = _combo_deque.at(1)->angle();
     // 角度判断，计算圈数
     if (current_angle > 135.f && last_angle < -135.f) // 顺时针
         _round--;

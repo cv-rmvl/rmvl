@@ -31,7 +31,7 @@ namespace rm
  */
 static inline bool isChange(const combo::ptr &t_combo, const combo::ptr &combo, float dis)
 {
-    return ((t_combo->getAngle() * combo->getAngle() < -80.f) || dis > para::armor_detector_param.MAX_TRACKER_DELTA_DIS);
+    return ((t_combo->angle() * combo->angle() < -80.f) || dis > para::armor_detector_param.MAX_TRACKER_DELTA_DIS);
 }
 
 void ArmorDetector::match(std::vector<group::ptr> &groups, const std::vector<combo::ptr> &combos)
@@ -64,8 +64,8 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
         {
             // 离 p_tracker 最近的 combo 及其距离
             auto min_it = std::min_element(combos.begin(), combos.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
-                return getDistance(lhs->getCenter(), p_tracker->front()->getCenter()) <
-                       getDistance(rhs->getCenter(), p_tracker->front()->getCenter());
+                return getDistance(lhs->center(), p_tracker->front()->center()) <
+                       getDistance(rhs->center(), p_tracker->front()->center());
             });
             p_tracker->update(*min_it);
             armor_set.erase(*min_it);
@@ -83,8 +83,8 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
         {
             // 离 armor 最近的 tracker 及其距离
             auto min_dis_tracker = std::min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-                return getDistance(p_combo->getCenter(), lhs->front()->getCenter()) <
-                       getDistance(p_combo->getCenter(), rhs->front()->getCenter());
+                return getDistance(p_combo->center(), lhs->front()->center()) <
+                       getDistance(p_combo->center(), rhs->front()->center());
             });
             min_dis_tracker->get()->update(p_combo);
             tracker_set.erase(*min_dis_tracker);
@@ -104,11 +104,11 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
         {
             // 离 tracker 最近的 combo
             auto min_it = std::min_element(armor_set.begin(), armor_set.end(), [&](const combo::ptr &lhs, const combo::ptr &rhs) {
-                return getDistance(lhs->getCenter(), trackers[i]->front()->getCenter()) <
-                       getDistance(rhs->getCenter(), trackers[i]->front()->getCenter());
+                return getDistance(lhs->center(), trackers[i]->front()->center()) <
+                       getDistance(rhs->center(), trackers[i]->front()->center());
             });
             // 最短距离
-            float min_dis = getDistance(min_it->get()->getCenter(), trackers[i]->front()->getCenter());
+            float min_dis = getDistance(min_it->get()->center(), trackers[i]->front()->center());
             // 判断是否突变
             if (isChange(trackers[i]->front(), *min_it, min_dis))
             {
@@ -136,7 +136,7 @@ void ArmorDetector::eraseFakeTracker(std::vector<tracker::ptr> &trackers)
 {
     // 删除
     trackers.erase(std::remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr t1) {
-                       return t1->getType().RobotTypeID == RobotType::UNKNOWN;
+                       return t1->type().RobotTypeID == RobotType::UNKNOWN;
                    }),
                    trackers.end());
 }

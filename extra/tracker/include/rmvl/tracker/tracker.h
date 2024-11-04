@@ -80,24 +80,28 @@ public:
     inline combo::ptr at(size_t _n) const { return _combo_deque.at(_n); }
 
     //! 追踪器类型
-    inline RMStatus getType() const { return _type; }
+    inline RMStatus type() const { return _type; }
     //! 追踪器修正后的高度
-    inline float getHeight() const { return _height; }
+    inline float height() const { return _height; }
     //! 追踪器修正后的宽度
-    inline float getWidth() const { return _width; }
+    inline float width() const { return _width; }
     //! 追踪器修正后的角度
-    inline float getAngle() const { return _angle; }
+    inline float angle() const { return _angle; }
     //! 追踪器修正后的中心点
-    inline const cv::Point2f &getCenter() const { return _center; }
+    inline const cv::Point2f &center() const { return _center; }
     //! 追踪器修正后的角点
-    inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
+    inline const std::vector<cv::Point2f> &corners() const { return _corners; }
     //! 修正后的相对角度（角度制）
     inline const cv::Point2f &getRelativeAngle() const { return _relative_angle; }
     //! 修正后的相机外参
-    inline const CameraExtrinsics &getExtrinsics() const { return _extrinsic; }
+    inline const CameraExtrinsics &extrinsics() const { return _extrinsic; }
     //! 获取追踪器修正后的目标转角速度（角度制）
-    inline const cv::Point2f &getSpeed() const { return _speed; }
+    inline const cv::Point2f &speed() const { return _speed; }
 };
+
+#define RMVL_TRACKER_CAST(name)                                                                           \
+    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<name>(p_tracker); } \
+    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const name>(p_tracker); }
 
 //! 默认追踪器，时间序列仅用于存储组合体，可退化为 `combos` 使用
 class DefaultTracker final : public tracker
@@ -106,8 +110,10 @@ public:
     using ptr = std::shared_ptr<DefaultTracker>;
     using const_ptr = std::shared_ptr<const DefaultTracker>;
 
+    //! @cond
     DefaultTracker() = default;
     explicit DefaultTracker(combo::ptr);
+    //! @endcond
 
     /**
      * @brief 构造 DefaultTracker
@@ -133,6 +139,8 @@ public:
 
     //! 未捕获 `combo`，仅更新消失帧数
     inline void update(double, const GyroData &) override { _vanish_num++; }
+
+    RMVL_TRACKER_CAST(DefaultTracker)
 
 private:
     /**
