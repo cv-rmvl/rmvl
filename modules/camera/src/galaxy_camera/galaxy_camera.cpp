@@ -43,7 +43,10 @@ const char *getGXError() noexcept
     return errinfo;
 }
 
-GalaxyCamera::Impl::Impl(CameraConfig config, std::string_view id) noexcept : _config(config), _id(id), _opened(open()) {}
+GalaxyCamera::Impl::Impl(CameraConfig config, std::string_view id) noexcept : _config(config), _id(id)
+{
+    _opened = open();
+}
 
 bool GalaxyCamera::Impl::open() noexcept
 {
@@ -94,7 +97,7 @@ bool GalaxyCamera::Impl::open() noexcept
             GX_DEVICE_IP_INFO ipinfo;
             if (info[i].deviceClass != GX_DEVICE_CLASS_GEV)
                 continue;
-            status = GXGetDeviceIPInfo(i, &ipinfo);
+            status = GXGetDeviceIPInfo(i + 1, &ipinfo);
             if (status != GX_STATUS_SUCCESS)
             {
                 ERROR_("(galaxy) Failed to get device ip info (error: \"%s\")", getGXError());
@@ -204,7 +207,7 @@ bool GalaxyCamera::Impl::open() noexcept
         ERROR_("(galaxy) Failed to get payload size (error: \"%s\")", getGXError());
         return false;
     }
-    _data.pImgBuf = new char[_payload];
+    _data.pImgBuf = malloc(_payload);
     status = GXSendCommand(_handle, GX_COMMAND_ACQUISITION_START);
 #endif
     if (status != GX_STATUS_SUCCESS)
@@ -330,7 +333,7 @@ void GalaxyCamera::Impl::release() noexcept
     if (status != GX_STATUS_SUCCESS)
         ERROR_("(galaxy) Failed to stop stream (error: \"%s\")", getGXError());
 #ifndef __linux__
-    delete[] _data.pImgBuf;
+    free(_data.pImgBuf);
 #endif
     // ----------------------- 关闭相机 -----------------------
     status = GXCloseDevice(_handle);
