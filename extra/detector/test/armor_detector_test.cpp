@@ -31,7 +31,7 @@ TEST_F(ArmorDetectorTest, single_armor_function_test)
     EXPECT_EQ(groups.size(), 1);
 
     if (info.combos.size() == 1)
-        EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
+        EXPECT_LE(getDistance(info.combos.front()->center(), center), 10);
     else
         FAIL();
 }
@@ -58,7 +58,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
     EXPECT_EQ(trackers.size(), 1);
 
     if (info.combos.size() == 1)
-        EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
+        EXPECT_LE(getDistance(info.combos.front()->center(), center), 10);
     else
         FAIL();
     // 单装甲板区域上方有灯条 ( /`/ )
@@ -72,7 +72,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
     EXPECT_EQ(trackers.size(), 1);
 
     if (info.combos.size() == 1)
-        EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
+        EXPECT_LE(getDistance(info.combos.front()->center(), center), 10);
     else
         FAIL();
     // 单装甲板左右有倾斜方向相反的灯条 ( / |·| \ )
@@ -86,7 +86,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
     EXPECT_EQ(groups.size(), 1);
 
     if (info.combos.size() == 1)
-        EXPECT_LE(getDistance(info.combos.front()->getCenter(), center), 10);
+        EXPECT_LE(getDistance(info.combos.front()->center(), center), 10);
     else
         FAIL();
 }
@@ -102,14 +102,14 @@ TEST_F(ArmorDetectorTest, more_armor_independence)
 
     sort(info.combos.begin(), info.combos.end(),
          [](const combo::ptr &lhs, const combo::ptr &rhs) {
-             return lhs->getCenter().x < rhs->getCenter().x;
+             return lhs->center().x < rhs->center().x;
          });
     EXPECT_EQ(info.combos.size(), 3);
     if (info.combos.size() == 3)
     {
-        EXPECT_LE(getDistance(info.combos[0]->getCenter(), cv::Point(200, 100)), 10);
-        EXPECT_LE(getDistance(info.combos[1]->getCenter(), cv::Point(500, 300)), 10);
-        EXPECT_LE(getDistance(info.combos[2]->getCenter(), cv::Point(800, 500)), 10);
+        EXPECT_LE(getDistance(info.combos[0]->center(), cv::Point(200, 100)), 10);
+        EXPECT_LE(getDistance(info.combos[1]->center(), cv::Point(500, 300)), 10);
+        EXPECT_LE(getDistance(info.combos[2]->center(), cv::Point(800, 500)), 10);
     }
 }
 

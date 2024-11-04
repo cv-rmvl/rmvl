@@ -33,9 +33,11 @@ public:
     using ptr = std::shared_ptr<LightBlob>;
     using const_ptr = std::shared_ptr<const LightBlob>;
 
+    //! @cond
     LightBlob() = default;
     LightBlob(const cv::Point2f &, const cv::Point2f &, float);
     LightBlob(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
+    //! @endcond
 
     //! 获取灯条顶端点
     inline const cv::Point2f &getTopPoint() const { return _top; }
@@ -62,26 +64,12 @@ public:
 
     /**
      * @brief 从另一个特征进行构造
-     * 
+     *
      * @return 指向新特征的共享指针
      */
     feature::ptr clone() override { return std::make_shared<LightBlob>(*this); }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<LightBlob>(p_feature); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const LightBlob>(p_feature); }
+    RMVL_FEATURE_CAST(LightBlob)
 
 private:
     /**

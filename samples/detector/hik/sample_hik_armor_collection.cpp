@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 static inline void draw(cv::Mat src, rm::combo::ptr p_combo)
 {
     // 角点
-    const auto &corners = p_combo->getCorners();
+    const auto &corners = p_combo->corners();
     for (int i = 0; i < 4; ++i)
         cv::line(src, corners[i], corners[(i + 1) % 4], cv::Scalar(0, 255, 0));
 }

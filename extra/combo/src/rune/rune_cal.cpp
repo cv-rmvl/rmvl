@@ -22,9 +22,9 @@ std::vector<cv::Point2f> Rune::calculatePoints(RuneTarget::ptr p_target, RuneCen
 {
     // -------------------------------【获取神符五个角点】-------------------------------
     // 中心点
-    cv::Point2f center = p_center->getCenter();
+    cv::Point2f center = p_center->center();
 
-    cv::Point2f target_center = p_target->getCenter();
+    cv::Point2f target_center = p_target->center();
     float radius = p_target->getRadius();
 
     cv::Point2f direction = (target_center - center) / getDistance(target_center, center);

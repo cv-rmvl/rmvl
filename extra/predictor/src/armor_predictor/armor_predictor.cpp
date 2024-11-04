@@ -30,7 +30,7 @@ PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const
             cv::Point2f gyro_speed = {p_tracker->front()->getGyroData().rotation.yaw_speed,
                                       p_tracker->front()->getGyroData().rotation.pitch_speed};
             // 计算用于预测的合成角速度
-            cv::Point2f speed = p_tracker->getSpeed() + gyro_speed;
+            cv::Point2f speed = p_tracker->speed() + gyro_speed;
             double dB_yaw = speed.x * para::armor_predictor_param.YAW_B;
             double dB_pitch = speed.y * para::armor_predictor_param.PITCH_B;
             double dKt_yaw = speed.x * para::armor_predictor_param.YAW_K * tf;

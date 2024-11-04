@@ -32,24 +32,22 @@ rm::feature 提供了 `clone` 纯虚拟函数，用于完全复制一份数据�
 
 #### 1.2.1 通用属性
 
-rm::feature 由于是扩展模块中最底层的数据组件，因此不存在数据结构类型的信息，仅有包含特征对应属性的信息，这一类信息都采用 `getXXX` 的形式来获取。特征类中包含了众多属性，有高度、宽度、角度、中心点、角点列表、面积、状态类型、相机外参，均可用形如 `getXXX` 的方法进行获取，以下是 rm::feature 对于这些方法的定义。
+rm::feature 由于是扩展模块中最底层的数据组件，因此不存在数据结构类型的信息，仅有包含特征对应属性的信息。特征类中包含了众多属性，有高度、宽度、角度、中心点、角点列表等，以下是 rm::feature 对于这些方法的定义。
 
 ```cpp
 // 获取特征面积
-inline float getArea() const { return _height * _width; }
+inline float area() const { return _height * _width; }
 // 获取特征中心点
-inline const cv::Point2f &getCenter() const { return _center; }
+inline const cv::Point2f &center() const { return _center; }
 // 获取特征宽度
-inline float getWidth() const { return _width; }
+inline float width() const { return _width; }
 // 获取特征高度
-inline float getHeight() const { return _height; }
+inline float height() const { return _height; }
 // 获取特征角度
-inline float getAngle() const { return _angle; }
+inline float angle() const { return _angle; }
 // 获取特征角点
-inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
+inline const std::vector<cv::Point2f> &corners() const { return _corners; }
 ```
-
-在使用上也和正常的函数完全一致。
 
 #### 1.2.2 派生类属性
 
@@ -59,7 +57,7 @@ inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
 auto p_light_blob = std::dynamic_pointer_cast<rm::LightBlob>(p_feature);
 ```
 
-代码比较冗长，好在所有的派生类都提供了一个转换接口 `cast`，为此我们可以像下面的代码一样，更方便的完成动态类型转换。
+代码比较冗长，不过好在所有的派生类都提供了一个转换接口 `cast`，为此我们可以像下面的代码一样，更方便的完成动态类型转换。
 
 ```cpp
 auto p_light_blob = rm::LightBlob::cast(p_feature);
@@ -82,5 +80,5 @@ auto top_point = p_light_blob->getTopPoint();
 2. 必须 public 继承于 `rm::feature` 基类；
 3. 必须定义 `MyFeature::ptr` 作为 `std::shared_ptr<MyFeature>` 的别名；
 4. 必须实现以 `MyFeature::ptr` 为返回值的 `MyFeature::make_feature` 静态工厂函数；
-5. 不得定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；
+5. 不得在派生类中定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；
 6. 需要定义好 `ptr`、`const_ptr` 智能指针类型别名，并分别实现 `cast` 转换函数

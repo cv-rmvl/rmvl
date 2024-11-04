@@ -109,7 +109,7 @@ CompensateInfo GyroCompensator::compensate(const std::vector<group::ptr> &groups
         // 直线距离
         auto dis = getDistance(p_gyro_group->getCenter3D(), cv::Vec3f{}) / 1000.;
         // 目标转角
-        auto relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, p_group->getCenter());
+        auto relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, p_group->center());
         // 提取当前陀螺仪角度
         auto gyro_angle = cv::Point2f(p_gyro_group->getGyroData().rotation.yaw,
                                       p_gyro_group->getGyroData().rotation.pitch);

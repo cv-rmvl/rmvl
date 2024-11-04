@@ -34,10 +34,10 @@ public:
     using ptr = std::shared_ptr<Pilot>;
     using const_ptr = std::shared_ptr<const Pilot>;
 
-    //! @warning 构造函数不直接使用
+    //! @cond
     Pilot(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
-    //! @warning 构造函数不直接使用
     Pilot(const float &, const float &, const cv::Point2f &, const float &, const std::vector<cv::Point2f> &);
+    //! @endcond
 
     /**
      * @brief 构造接口
@@ -70,21 +70,7 @@ public:
      */
     feature::ptr clone() override { return std::make_shared<Pilot>(*this); }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<Pilot>(p_feature); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const Pilot>(p_feature); }
+    RMVL_FEATURE_CAST(Pilot)
 
     //! 获取灯条左端点
     inline cv::Point2f getLeftPoint() { return _left; }

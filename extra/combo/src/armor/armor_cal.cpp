@@ -68,14 +68,14 @@ void Armor::cameraConvertToGyro(const cv::Matx33f &cam_rmat, const cv::Vec3f &ca
 bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
 {
     // Get the four corner points of the area where the armor is located: (a, b, c, d)
-    const auto &points = armor->getCorners();
+    const auto &points = armor->corners();
     cv::Vec2f ab = {points[1].x - points[0].x, points[1].y - points[0].y};
     cv::Vec2f cd = {points[3].x - points[2].x, points[3].y - points[2].y};
     // Define the real corner points of the armor
-    cv::Vec2f A = {armor->at(0)->getCenter().x - ab(0) / 2, armor->at(0)->getCenter().y - ab(1) / 2};
-    cv::Vec2f B = {armor->at(0)->getCenter().x + ab(0) / 2, armor->at(0)->getCenter().y + ab(1) / 2};
-    cv::Vec2f C = {armor->at(1)->getCenter().x - cd(0) / 2, armor->at(1)->getCenter().y - cd(1) / 2};
-    cv::Vec2f D = {armor->at(1)->getCenter().x + cd(0) / 2, armor->at(1)->getCenter().y + cd(1) / 2};
+    cv::Vec2f A = {armor->at(0)->center().x - ab(0) / 2, armor->at(0)->center().y - ab(1) / 2};
+    cv::Vec2f B = {armor->at(0)->center().x + ab(0) / 2, armor->at(0)->center().y + ab(1) / 2};
+    cv::Vec2f C = {armor->at(1)->center().x - cd(0) / 2, armor->at(1)->center().y - cd(1) / 2};
+    cv::Vec2f D = {armor->at(1)->center().x + cd(0) / 2, armor->at(1)->center().y + cd(1) / 2};
     // Define the real corner vectors of the armor
     cv::Vec2f AB = B - A;
     cv::Vec2f BC = C - B;
@@ -85,7 +85,7 @@ bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
     if (blob == armor->at(0) || blob == armor->at(1))
         return false;
     // Calculate
-    cv::Vec2f P = blob->getCenter();
+    cv::Vec2f P = blob->center();
     cv::Vec2f AP = P - A;
     cv::Vec2f BP = P - B;
     cv::Vec2f CP = P - C;
@@ -100,11 +100,11 @@ bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
 cv::Mat Armor::getNumberROI(cv::Mat src, const_ptr p_armor)
 {
     // 计算装甲板之间距离,该距离为获得的roi的边长
-    double h_dis = p_armor->getHeight() * para::armor_param.ROI_HEIGHT_RATIO;
-    double w_dis = p_armor->getWidth() * para::armor_param.ROI_WIDTH_RATIO;
+    double h_dis = p_armor->height() * para::armor_param.ROI_HEIGHT_RATIO;
+    double w_dis = p_armor->width() * para::armor_param.ROI_WIDTH_RATIO;
 
     // 图像中的 4 个角点
-    std::vector<cv::Point2f> corners = p_armor->getCorners();
+    std::vector<cv::Point2f> corners = p_armor->corners();
     if (corners.size() != 4)
         return cv::Mat();
 
@@ -118,10 +118,10 @@ cv::Mat Armor::getNumberROI(cv::Mat src, const_ptr p_armor)
     cv::Point2f e_hor_bottom = (corners[0] - corners[3]) / getDistance(corners[1], corners[2]);
 
     cv::Point2f src_corners[4];
-    src_corners[0] = cv::Point2f(p_armor->getCenter() - e_ver_left * h_dis / 2 + e_hor_top * w_dis / 2);     // 左上
-    src_corners[1] = cv::Point2f(p_armor->getCenter() + e_ver_left * h_dis / 2 + e_hor_bottom * w_dis / 2);  // 左下
-    src_corners[2] = cv::Point2f(p_armor->getCenter() - e_ver_right * h_dis / 2 - e_hor_top * w_dis / 2);    // 右上
-    src_corners[3] = cv::Point2f(p_armor->getCenter() + e_ver_right * h_dis / 2 - e_hor_bottom * w_dis / 2); // 右下
+    src_corners[0] = cv::Point2f(p_armor->center() - e_ver_left * h_dis / 2 + e_hor_top * w_dis / 2);     // 左上
+    src_corners[1] = cv::Point2f(p_armor->center() + e_ver_left * h_dis / 2 + e_hor_bottom * w_dis / 2);  // 左下
+    src_corners[2] = cv::Point2f(p_armor->center() - e_ver_right * h_dis / 2 - e_hor_top * w_dis / 2);    // 右上
+    src_corners[3] = cv::Point2f(p_armor->center() + e_ver_right * h_dis / 2 - e_hor_bottom * w_dis / 2); // 右下
 
     // 边界修正
     src_corners[0].y = src_corners[0].y < 0 ? 0 : src_corners[0].y;

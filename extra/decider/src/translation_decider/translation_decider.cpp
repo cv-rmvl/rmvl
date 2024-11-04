@@ -63,7 +63,7 @@ DecideInfo TranslationDecider::decide(const std::vector<group::ptr> &groups, RMS
 
             // 判断是否满足发弹条件
             if (getDistance(info.exp_center2d, info.shoot_center) <=
-                para::translation_decider_param.NORMAL_RADIUS_RATIO * info.target->front()->getHeight())
+                para::translation_decider_param.NORMAL_RADIUS_RATIO * info.target->front()->height())
                 info.can_shoot = true;
         }
     }
@@ -74,8 +74,8 @@ tracker::ptr TranslationDecider::getClosestTracker(cv::Mat img, const std::vecto
 {
     auto center = cv::Point2f(img.size() / 2);
     return *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-        cv::Point2f t1_delta_point = lhs->front()->getCenter() - center;
-        cv::Point2f t2_delta_point = rhs->front()->getCenter() - center;
+        cv::Point2f t1_delta_point = lhs->front()->center() - center;
+        cv::Point2f t2_delta_point = rhs->front()->center() - center;
         // 目标相对角距图像坐标系中心点距离
         return (t1_delta_point.x * t1_delta_point.x + t1_delta_point.y * t1_delta_point.y) <
                (t2_delta_point.x * t2_delta_point.x + t2_delta_point.y * t2_delta_point.y);

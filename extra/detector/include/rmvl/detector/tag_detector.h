@@ -54,7 +54,7 @@ public:
 
     /**
      * @brief 识别接口
-     * @note 提取出所有角点以及对应的类型，通过 `getTypes` 和 `getCorners` 方法可以获取
+     * @note 提取出所有角点以及对应的类型，通过 `type` 和 `corners` 方法可以获取
      *
      * @param[in out] groups 所有序列组
      * @param[in] src 原图像

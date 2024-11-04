@@ -28,9 +28,6 @@ endif()
 
 set(CMAKE_CXX_STANDARD ${max_version})
 
-set(CMAKE_JOB_POOL_COMPILE "compile")
-set(CMAKE_JOB_POOL_LINK "link")
-
 # ----------------------------------------------------------------------------
 #   Detect target platform architecture
 # ----------------------------------------------------------------------------

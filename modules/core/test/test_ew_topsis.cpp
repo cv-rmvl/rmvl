@@ -36,14 +36,14 @@ using Ew_ptr = std::shared_ptr<EwA>;
 
 class EwA
 {
-    cv::Point2f center;
-    float angle;
+    cv::Point2f _center;
+    float _angle;
 
 public:
-    EwA(cv::Point2f c, float a) : center(c), angle(a) {}
+    EwA(cv::Point2f c, float a) : _center(c), _angle(a) {}
 
-    inline cv::Point2f getCenter() { return center; }
-    inline float getAngle() { return angle; }
+    inline cv::Point2f center() { return _center; }
+    inline float angle() { return _angle; }
 
     static Ew_ptr make(float x, float y, float a) { return std::make_shared<EwA>(cv::Point2f(x, y), a); }
 };
@@ -75,8 +75,8 @@ TEST(EwTopsisTest, CustomData)
         {
             // 2 表示两个指标
             samples[c * standards.size() + s].resize(2);
-            samples[c * standards.size() + s][0] = -getDistance(currents[c]->getCenter(), standards[s]->getCenter());
-            samples[c * standards.size() + s][1] = -abs(currents[c]->getAngle() - standards[s]->getAngle());
+            samples[c * standards.size() + s][0] = -getDistance(currents[c]->center(), standards[s]->center());
+            samples[c * standards.size() + s][1] = -abs(currents[c]->angle() - standards[s]->angle());
         }
     }
     // (b) 运用熵权法推理

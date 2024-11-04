@@ -25,28 +25,26 @@ namespace rm
  * @brief 神符（能量机关）
  * @note
  * - `at(0)`: 神符靶心，`at(1)`: 神符旋转中心（R 标）
- * - `getAngle()` 获取的角度范围是 `[-180,180)`
- * - `getCorners()`
+ * - `angle()` 获取的角度范围是 `[-180,180)`
+ * - `corners()`
  *   - `[0]`: 靶心环最靠近神符中心的点
  *   - `[1]`: 靶心环与角点 `[0][2]` 的中垂线的交点（顺时针）
  *   - `[2]`: 靶心环最远离神符中心的点
  *   - `[3]`: 靶心环与角点 `[0][2]` 的中垂线的交点（顺时针）
  *   - `[4]`: 神符中心点
- * - `getExtrinsics` 数据仅直线距离 `distance` 有效
- * - `getCenter` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征 `at(1)`
+ * - `extrinsics` 数据仅直线距离 `distance` 有效
+ * - `center` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征 `at(1)`
  */
 class Rune final : public combo
 {
-    float _feature_dis{}; //!< 特征间距
-    bool _is_active{};    //!< 是否激活
-
 public:
     using ptr = std::shared_ptr<Rune>;
     using const_ptr = std::shared_ptr<const Rune>;
 
+    //! @cond
     Rune() = default;
-    //! @warning 禁止直接使用构造函数
     Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, double tick);
+    //! @endcond
 
     /**
      * @brief Rune 构造接口
@@ -69,21 +67,7 @@ public:
      */
     combo::ptr clone(double tick) override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_combo combo::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline Rune::ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Rune>(p_combo); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_combo combo::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline Rune::const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Rune>(p_combo); }
+    RMVL_COMBO_CAST(Rune)
 
     /**
      * @brief 相机平面中将角度值映射至垂直平面
@@ -125,6 +109,9 @@ private:
      * @return 按照左下，左上，右上，右下的顺序排列的角点向量
      */
     static std::vector<cv::Point2f> calculatePoints(RuneTarget::ptr p_target, RuneCenter::ptr p_center);
+
+    float _feature_dis{}; //!< 特征间距
+    bool _is_active{};    //!< 是否激活
 };
 
 //! @} combo_rune
