@@ -80,7 +80,6 @@ private:
     CameraConfig _config{};  //!< 相机配置
     std::string _id{};       //!< 相机唯一标识
     GX_DEV_HANDLE _handle{}; //!< 相机句柄
-    bool _opened{};          //!< 相机是否打开
 
 #ifdef __linux__
     PGX_FRAME_BUFFER _buffer{}; //!< 帧缓存
@@ -88,6 +87,8 @@ private:
     GX_FRAME_DATA _data{}; //!< 帧数据
     int64_t _payload{};    //!< 负载大小
 #endif // __linux__
+
+    bool _opened{}; //!< 相机是否打开
 };
 
 //! 获取 GX_STATUS 错误信息
