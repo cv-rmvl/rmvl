@@ -88,7 +88,7 @@ std::vector<Armor::ptr> GyroDetector::findArmors(std::vector<LightBlob::ptr> &li
 {
     // 灯条从左到右排序
     sort(light_blobs.begin(), light_blobs.end(), [](LightBlob::const_ptr lhs, LightBlob::const_ptr rhs) {
-        return lhs->getCenter().x < rhs->getCenter().x;
+        return lhs->center().x < rhs->center().x;
     });
     // 储存所有匹配到的装甲板
     std::vector<Armor::ptr> current_armors;
@@ -141,7 +141,7 @@ void GyroDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
         {
             // 共享左灯条 or 右灯条，优先匹配宽度小的
             if (armors[i]->at(0) == armors[j]->at(0) || armors[i]->at(1) == armors[j]->at(1))
-                armor_map[armors[i]->getWidth() > armors[j]->getWidth() ? armors[i] : armors[j]] = true;
+                armor_map[armors[i]->width() > armors[j]->width() ? armors[i] : armors[j]] = true;
             else if (armors[i]->at(0) == armors[j]->at(1) || armors[i]->at(1) == armors[j]->at(0))
                 armor_map[armors[i]->getError() > armors[j]->getError() ? armors[i] : armors[j]] = true;
         }
@@ -156,7 +156,7 @@ void GyroDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
 void GyroDetector::eraseFakeArmors(std::vector<Armor::ptr> &armors)
 {
     armors.erase(std::remove_if(armors.begin(), armors.end(), [](Armor::const_ptr it) {
-                     return it->getType().RobotTypeID == RobotType::UNKNOWN;
+                     return it->type().RobotTypeID == RobotType::UNKNOWN;
                  }),
                  armors.end());
 }
@@ -169,10 +169,10 @@ void GyroDetector::eraseBrightBlobs(cv::Mat src, std::vector<LightBlob::ptr> &bl
                     {
                         if (i == 0)
                             continue;
-                        int x = blob->getCenter().x - blob->getHeight() * i / 5;
+                        int x = blob->center().x - blob->height() * i / 5;
                         x = (x > src.cols) ? src.cols - 1 : x;
                         x = (x < 0) ? 1 : x;
-                        int y = blob->getCenter().y;
+                        int y = blob->center().y;
                         y = y < 0 ? 1 : y;
                         y = (y > src.rows) ? src.rows - 1 : y;
                         auto colors = src.at<cv::Vec3b>(y, x);

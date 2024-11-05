@@ -113,7 +113,7 @@ TEST_F(PlanarTrackerTest, tracker_update_with_none)
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
     p_tracker->update(tick, gyro_data);
     EXPECT_EQ(p_tracker->size(), 2);
-    EXPECT_EQ(p_tracker->front()->getCenter(), armor->getCenter());
+    EXPECT_EQ(p_tracker->front()->center(), armor->center());
     EXPECT_EQ(p_tracker->getVanishNumber(), 1);
 }
 

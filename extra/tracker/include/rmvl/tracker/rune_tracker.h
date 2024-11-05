@@ -26,8 +26,8 @@ namespace rm
 /**
  * @brief 神符时间序列
  * @note
- * - `getCenter()` 获取神符组合体修正的中心点，要获取神符旋转中心请访问对应特征
- * - `getAngle()` 考虑圈数的角度，即角度被映射至 \f$(-\infty,+\infty)\f$ 的范围，且不经过滤波
+ * - `center()` 获取神符组合体修正的中心点，要获取神符旋转中心请访问对应特征
+ * - `angle()` 考虑圈数的角度，即角度被映射至 \f$(-\infty,+\infty)\f$ 的范围，且不经过滤波
  */
 class RuneTracker final : public tracker
 {
@@ -62,21 +62,7 @@ public:
      */
     tracker::ptr clone() override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_tracker tracker::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<RuneTracker>(p_tracker); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_tracker tracker::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const RuneTracker>(p_tracker); }
+    RMVL_TRACKER_CAST(RuneTracker)
 
     /**
      * @brief 使用捕获的 `rm::Rune` 组合体更新追踪器

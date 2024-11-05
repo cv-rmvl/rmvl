@@ -33,24 +33,13 @@ public:
         APPEAR = 1U  //!< 出现
     };
 
-private:
-    float _duration{}; //!< 采样帧差时间
-    cv::Vec2f _pose;   //!< 修正后的装甲板姿态法向量
-    float _rotspeed{}; //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
-
-    KF63f _center3d_filter; //!< 位置滤波器
-    KF42f _pose_filter;     //!< 姿态滤波器
-
-    std::deque<RobotType> _type_deque; //!< 装甲板状态队列（数字）
-
-public:
     using ptr = std::shared_ptr<GyroTracker>;
     using const_ptr = std::shared_ptr<const GyroTracker>;
 
+    //! @cond
     GyroTracker() = delete;
-
-    //! 初始化追踪器
     explicit GyroTracker(combo::ptr p_armor);
+    //! @endcond
 
     /**
      * @brief 构建 GyroTracker
@@ -66,21 +55,7 @@ public:
      */
     tracker::ptr clone() override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_tracker tracker::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<GyroTracker>(p_tracker); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_tracker tracker::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const GyroTracker>(p_tracker); }
+    RMVL_TRACKER_CAST(GyroTracker)
 
     [[deprecated]] void update(double, const GyroData &) override {};
 
@@ -135,6 +110,15 @@ private:
      * @return 角速度（俯视图逆时针为正）
      */
     float calcRotationSpeed();
+
+    float _duration{}; //!< 采样帧差时间
+    cv::Vec2f _pose;   //!< 修正后的装甲板姿态法向量
+    float _rotspeed{}; //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
+
+    KF63f _center3d_filter; //!< 位置滤波器
+    KF42f _pose_filter;     //!< 姿态滤波器
+
+    std::deque<RobotType> _type_deque; //!< 装甲板状态队列（数字）
 };
 
 //! @} gyro_tracker

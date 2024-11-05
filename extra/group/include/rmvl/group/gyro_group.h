@@ -74,21 +74,7 @@ public:
      */
     group::ptr clone() override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_group group::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<GyroGroup>(p_group); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_group group::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const GyroGroup>(p_group); }
+    RMVL_GROUP_CAST(GyroGroup)
 
     /**
      * @brief 根据陀螺仪坐标系下装甲板外参信息和默认初始半径集合，得到修正的半径集合、序列组中心坐标、装甲板法向量集合

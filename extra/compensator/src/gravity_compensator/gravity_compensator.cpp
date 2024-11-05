@@ -123,7 +123,7 @@ CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr
         for (auto &p_tracker : p_group->data())
         {
             // 单位换算
-            double dis = p_tracker->getExtrinsics().distance() / 1000.;
+            double dis = p_tracker->extrinsics().distance() / 1000.;
             // 提取当前陀螺仪角度
             auto gyro_angle = cv::Point2f(p_tracker->front()->getGyroData().rotation.yaw,
                                           p_tracker->front()->getGyroData().rotation.pitch);

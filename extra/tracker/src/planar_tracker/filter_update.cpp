@@ -22,7 +22,7 @@ void PlanarTracker::initFilter()
     // 初始化距离滤波器
     _distance_filter.setR({para::planar_tracker_param.DIS_R});
     _distance_filter.setQ(para::planar_tracker_param.DIS_Q);
-    cv::Matx21f init_dis_vec = {first_combo->getExtrinsics().distance(), 0};
+    cv::Matx21f init_dis_vec = {first_combo->extrinsics().distance(), 0};
     _distance_filter.init(init_dis_vec, 1e5f);
     // 初始化运动滤波器
     _motion_filter.setR(para::planar_tracker_param.MOTION_R);
@@ -38,7 +38,7 @@ void PlanarTracker::updateDistanceFilter()
     // 设置状态转移矩阵
     _distance_filter.setA({1, 1,
                            0, 1});
-    float current_distance = _combo_deque.front()->getExtrinsics().distance();
+    float current_distance = _combo_deque.front()->extrinsics().distance();
     // 预测
     _distance_filter.predict();
     // 更新
@@ -51,7 +51,7 @@ void PlanarTracker::updateMotionFilter()
     // 采样时间
     float t = 0.f;
     if (_combo_deque.size() >= 2)
-        t = (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1);
+        t = (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1);
     else
         t = para::planar_tracker_param.SAMPLE_INTERVAL / 1000.;
     // 设置状态转移矩阵

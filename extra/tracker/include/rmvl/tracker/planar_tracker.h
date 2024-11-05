@@ -25,22 +25,13 @@ namespace rm
 //! 平面目标追踪器
 class PlanarTracker final : public tracker
 {
-private:
-    KF21f _distance_filter;             //!< 距离滤波器
-    KF42f _motion_filter;               //!< 运动滤波器
-    std::deque<float> _relative_speeds; //!< 图像速度的容器
-    std::deque<RMStatus> _type_deque;   //!< 状态队列
-
 public:
     using ptr = std::shared_ptr<PlanarTracker>;
     using const_ptr = std::shared_ptr<const PlanarTracker>;
 
-    /**
-     * @brief 构造，并初始化追踪器
-     *
-     * @param[in] p_combo 第一帧组合体
-     */
+    //! @cond
     explicit PlanarTracker(combo::ptr p_combo);
+    //! @endcond
 
     /**
      * @brief 构建 PlanarTracker
@@ -56,21 +47,7 @@ public:
      */
     tracker::ptr clone() override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_tracker tracker::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<PlanarTracker>(p_tracker); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_tracker tracker::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const PlanarTracker>(p_tracker); }
+    RMVL_TRACKER_CAST(PlanarTracker)
 
     /**
      * @brief 丢失目标时，使用时间点和陀螺仪数据更新平面目标追踪器
@@ -115,6 +92,11 @@ private:
      * @note 帧差时间 t: (若只有一帧则取默认采样时间，否则取平均数值)
      */
     void updateMotionFilter();
+
+    KF21f _distance_filter;             //!< 距离滤波器
+    KF42f _motion_filter;               //!< 运动滤波器
+    std::deque<float> _relative_speeds; //!< 图像速度的容器
+    std::deque<RMStatus> _type_deque;   //!< 状态队列
 };
 
 //! @} planar_tracker

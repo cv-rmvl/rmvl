@@ -16,12 +16,12 @@ namespace rm
 
 void DefaultTracker::updateData(combo::ptr p_combo)
 {
-    _height = p_combo->getHeight();
-    _width = p_combo->getHeight();
-    _angle = p_combo->getHeight();
-    _corners = p_combo->getCorners();
-    _center = p_combo->getCenter();
-    _extrinsic = p_combo->getExtrinsics();
+    _height = p_combo->height();
+    _width = p_combo->height();
+    _angle = p_combo->height();
+    _corners = p_combo->corners();
+    _center = p_combo->center();
+    _extrinsic = p_combo->extrinsics();
 }
 
 DefaultTracker::DefaultTracker(combo::ptr p_combo) : tracker()
@@ -37,7 +37,7 @@ tracker::ptr DefaultTracker::clone()
     auto retval = std::make_shared<DefaultTracker>(*this);
     // 更新内部所有组合体
     for (auto &p_combo : retval->_combo_deque)
-        p_combo = p_combo->clone(p_combo->getTick());
+        p_combo = p_combo->clone(p_combo->tick());
     return retval;
 }
 

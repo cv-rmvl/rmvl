@@ -96,7 +96,7 @@ public:
      *
      * @return 序列组中心
      */
-    inline const auto &getCenter() const { return _center; }
+    inline const auto &center() const { return _center; }
 
     /**
      * @brief 获取丢帧数量
@@ -110,8 +110,12 @@ public:
      *
      * @return RMStatus 该组类型
      */
-    inline RMStatus getType() const { return _type; }
+    inline RMStatus type() const { return _type; }
 };
+
+#define RMVL_GROUP_CAST(name)                                                                           \
+    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<name>(p_group); } \
+    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const name>(p_group); }
 
 //! 默认序列组（一般退化为 `trackers` 使用）
 class DefaultGroup final : public group
@@ -137,21 +141,7 @@ public:
         return retval;
     }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_group group::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<DefaultGroup>(p_group); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_group group::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const DefaultGroup>(p_group); }
+    RMVL_GROUP_CAST(DefaultGroup)
 
     //! DefaultGroup 同步操作
     void sync(const GyroData &, double) override {}

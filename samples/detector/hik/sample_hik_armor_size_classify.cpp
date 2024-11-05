@@ -45,7 +45,7 @@ void collect(rm::PixChannel color, rm::ArmorSizeType type, int begin_idx)
             armor_samples.at<float>(begin_idx + idx, 2) = p_armor->getLengthRatio(); // 灯条长度比
             armor_responses.at<int>(begin_idx + idx) = type == rm::ArmorSizeType::SMALL ? 1 : 2;
 
-            const auto &corners = p_armor->getCorners();
+            const auto &corners = p_armor->corners();
             for (int i = 0; i < 4; ++i)
                 line(frame, corners[i], corners[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
         }
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
             float result = p_svm->predict(test_sample);
             putText(frame, result == 1 ? "SMALL" : "BIG", cv::Point(20, 50),
                     cv::FONT_HERSHEY_COMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
-            const auto &corners = p_armor->getCorners();
+            const auto &corners = p_armor->corners();
             for (int i = 0; i < 4; ++i)
                 line(frame, corners[i], corners[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
         }
