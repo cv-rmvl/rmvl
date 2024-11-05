@@ -47,20 +47,24 @@ public:
     virtual ptr clone() = 0;
 
     //! 获取特征面积
-    inline float getArea() const { return _height * _width; }
+    inline float area() const { return _height * _width; }
     //! 获取特征中心点
-    inline const cv::Point2f &getCenter() const { return _center; }
+    inline const cv::Point2f &center() const { return _center; }
     //! 获取特征宽度
-    inline float getWidth() const { return _width; }
+    inline float width() const { return _width; }
     //! 获取特征高度
-    inline float getHeight() const { return _height; }
+    inline float height() const { return _height; }
     //! 获取特征角度
-    inline float getAngle() const { return _angle; }
+    inline float angle() const { return _angle; }
     //! 获取特征角点
-    inline const auto &getCorners() const { return _corners; }
+    inline const auto &corners() const { return _corners; }
     //! 获取状态信息
-    inline const RMStatus &getType() const { return _type; }
+    inline const RMStatus &type() const { return _type; }
 };
+
+#define RMVL_FEATURE_CAST(name)                                                                           \
+    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<name>(p_feature); } \
+    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const name>(p_feature); }
 
 //! 默认图像特征，仅表示一个孤立的点 `cv::Point2f`
 class DefaultFeature final : public feature
@@ -87,21 +91,7 @@ public:
      */
     feature::ptr clone() override { return std::make_shared<DefaultFeature>(*this); }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<DefaultFeature>(p_feature); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const DefaultFeature>(p_feature); }
+    RMVL_FEATURE_CAST(DefaultFeature)
 };
 
 //! @} feature

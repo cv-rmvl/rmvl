@@ -27,7 +27,7 @@ std::vector<std::vector<cv::Point2f>> corners;
 corners.reserve(combos.size());
 
 for (auto p_combo : combos)
-    corners.emplace_back(p_combo->getCorners());
+    corners.emplace_back(p_combo->corners());
 
 /* 当前循环到第 idx 轮 */
 

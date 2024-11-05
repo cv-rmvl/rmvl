@@ -31,8 +31,10 @@ public:
     using ptr = std::shared_ptr<RuneCenter>;
     using const_ptr = std::shared_ptr<const RuneCenter>;
 
+    //! @cond
     RuneCenter(const std::vector<cv::Point> &, cv::RotatedRect &);
     RuneCenter(const cv::Point2f &);
+    //! @endcond
 
     /**
      * @brief 使用特征中心点构造 RuneCenter 的构造接口
@@ -57,21 +59,7 @@ public:
      */
     feature::ptr clone() override { return std::make_shared<RuneCenter>(*this); }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<RuneCenter>(p_feature); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const RuneCenter>(p_feature); }
+    RMVL_FEATURE_CAST(RuneCenter)
 
     //! 获取长宽比
     inline float getRatio() { return _ratio; }

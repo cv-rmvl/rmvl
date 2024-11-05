@@ -38,21 +38,7 @@ public:
      */
     group::ptr clone() override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_group group::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<RuneGroup>(p_group); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_group group::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const RuneGroup>(p_group); }
+    RMVL_GROUP_CAST(RuneGroup)
 
     /**
      * @brief 神符序列组同步操作

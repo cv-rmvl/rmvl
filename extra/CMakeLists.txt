@@ -4,7 +4,7 @@ file(GLOB module_extra_st RELATIVE "${cur_path}" "${cur_path}/*")
 
 set(RMVL_EXTRA_MODULE "")
 foreach(m ${module_extra_st})
-  if(IS_DIRECTORY ${cur_path}/${m} AND (NOT (${m} STREQUAL include)))
+  if(IS_DIRECTORY ${cur_path}/${m})
     list(APPEND RMVL_EXTRA_MODULE "${m}")
   endif()
 endforeach()

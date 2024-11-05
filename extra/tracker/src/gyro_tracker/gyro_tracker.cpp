@@ -17,13 +17,13 @@ namespace rm
 
 void GyroTracker::updateFromCombo(combo::ptr p_combo)
 {
-    _height = p_combo->getHeight();
-    _width = p_combo->getWidth();
-    _angle = p_combo->getAngle();
-    _center = p_combo->getCenter();
+    _height = p_combo->height();
+    _width = p_combo->width();
+    _angle = p_combo->angle();
+    _center = p_combo->center();
     _relative_angle = p_combo->getRelativeAngle();
-    _corners = p_combo->getCorners();
-    _extrinsic = p_combo->getExtrinsics();
+    _corners = p_combo->corners();
+    _extrinsic = p_combo->extrinsics();
     _pose = Armor::cast(p_combo)->getPose();
 }
 
@@ -33,8 +33,8 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");
     updateFromCombo(p_armor);
 
-    _extrinsic = p_armor->getExtrinsics();
-    _type = p_armor->getType();
+    _extrinsic = p_armor->extrinsics();
+    _type = p_armor->type();
     _combo_deque.push_back(p_armor);
     _type_deque.push_back(_type.RobotTypeID);
     _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
@@ -46,7 +46,7 @@ tracker::ptr GyroTracker::clone()
     auto retval = std::make_shared<GyroTracker>(*this);
     // 更新内部所有组合体
     for (auto &p_combo : retval->_combo_deque)
-        p_combo = p_combo->clone(p_combo->getTick());
+        p_combo = p_combo->clone(p_combo->tick());
     return retval;
 }
 
@@ -58,12 +58,12 @@ void GyroTracker::update(combo::ptr p_armor)
     updateFromCombo(p_armor);
     _combo_deque.emplace_front(p_armor);
     // 更新装甲板类型
-    updateType(p_armor->getType());
+    updateType(p_armor->type());
     // 帧差时间计算
     if (_combo_deque.empty())
         RMVL_Error(RMVL_StsBadSize, "\"_combo_deque\" is empty");
     _duration = (_combo_deque.size() >= 2)
-                    ? (_combo_deque.front()->getTick() - _combo_deque.back()->getTick()) / static_cast<double>(_combo_deque.size() - 1)
+                    ? (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1)
                     : para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
     if (std::isnan(_duration))
         RMVL_Error(RMVL_StsDivByZero, "\"t\" is nan");

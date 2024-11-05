@@ -55,9 +55,9 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
     std::vector<float> rs(visible_num);       // 旋转半径
     for (size_t i = 0; i < visible_num; ++i)
     {
-        Rs[i] = visible_trackers[i]->getExtrinsics().R();
+        Rs[i] = visible_trackers[i]->extrinsics().R();
         Ps[i] = GyroTracker::cast(visible_trackers[i])->getPose();
-        ts[i] = visible_trackers[i]->getExtrinsics().tvec();
+        ts[i] = visible_trackers[i]->extrinsics().tvec();
         rs[i] = _tracker_state[visible_trackers[i]].radius();
     }
     if (visible_num != 0)
@@ -103,7 +103,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             // 旋转中心到组合体的线段向量
             cv::Vec2f tmp = -p_gyro_tracker->getPose() * current_state.radius();
             cv::Vec3f center2combo(tmp(0), 0, tmp(1));
-            cv::Matx33f new_rmat = rot * p_tracker->getExtrinsics().R();                                    // 新的旋转矩阵
+            cv::Matx33f new_rmat = rot * p_tracker->extrinsics().R();                                    // 新的旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo + cv::Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(p_tracker->front(), _gyro_data, new_rmat, new_tvec, _tick);
             p_tracker->update(p_armor);
@@ -125,7 +125,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             auto &current_state = _tracker_state[p_tracker];
             // 绕 y 轴旋转
             auto rot = euler2Mat(static_cast<float>(2_PI / _armor_num * static_cast<double>((i + 1))), Y);
-            cv::Matx33f new_rmat = rot * visible_tracker->getExtrinsics().R();                              // 新的旋转矩阵
+            cv::Matx33f new_rmat = rot * visible_tracker->extrinsics().R();                              // 新的旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo + cv::Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(visible_tracker->front(), _gyro_data, new_rmat, new_tvec, _tick);
             p_tracker->update(p_armor);
@@ -157,7 +157,7 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
             // 绕 y 轴旋转
             auto rot = euler2Mat(static_cast<float>(PI), Y);
             // 平移向量的旋转增量
-            cv::Matx33f new_rmat = rot * visible_trackers[i]->getExtrinsics().R();                             // 新旋转矩阵
+            cv::Matx33f new_rmat = rot * visible_trackers[i]->extrinsics().R();                             // 新旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo[i] + cv::Vec3f(0, current_state.delta_y(), 0); // 新平移向量
             auto p_armor = constructComboForced(visible_trackers[i]->front(), _gyro_data, new_rmat, new_tvec, _tick);
             // 同步高度差
@@ -168,8 +168,8 @@ void GyroGroup::sync(const GyroData &gyro_data, double tick)
     // ----------------------【更新 RobotType】----------------------
     std::vector<RobotType> robot_type_vec;
     for (auto p_tracker : _trackers)
-        if (p_tracker->getType().RobotTypeID != RobotType::UNKNOWN)
-            robot_type_vec.push_back(p_tracker->getType().RobotTypeID);
+        if (p_tracker->type().RobotTypeID != RobotType::UNKNOWN)
+            robot_type_vec.push_back(p_tracker->type().RobotTypeID);
     _type.RobotTypeID = robot_type_vec.empty() ? RobotType::UNKNOWN : calculateModeNum(robot_type_vec.begin(), robot_type_vec.end());
 }
 

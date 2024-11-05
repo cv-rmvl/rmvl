@@ -17,12 +17,12 @@ namespace rm
 DefaultCombo::DefaultCombo(feature::ptr p_feature, double tick) : combo()
 {
     _features = {p_feature};
-    _height = p_feature->getHeight();
-    _width = p_feature->getWidth();
-    _center = p_feature->getCenter();
-    _angle = p_feature->getAngle();
-    _corners = p_feature->getCorners();
-    _type = p_feature->getType();
+    _height = p_feature->height();
+    _width = p_feature->width();
+    _center = p_feature->center();
+    _angle = p_feature->angle();
+    _corners = p_feature->corners();
+    _type = p_feature->type();
     _tick = tick;
 }
 

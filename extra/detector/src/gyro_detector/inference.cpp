@@ -31,7 +31,7 @@ std::unordered_map<size_t, size_t> GyroDetector::ewTopsisInference(group::ptr gr
             // 2 表示两个指标
             samples[c * trackers.size() + t].resize(4);
             for (int i = 0; i < 4; i++)
-                samples[c * trackers.size() + t][i] = -getDistance(combos[c]->getCorners()[i], trackers[t]->front()->getCorners()[i]);
+                samples[c * trackers.size() + t][i] = -getDistance(combos[c]->corners()[i], trackers[t]->front()->corners()[i]);
         }
     }
     // (b) 运用熵权法推理

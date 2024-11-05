@@ -49,8 +49,8 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
         {
             // 离 p_tracker 最近的 active_rune
             combo::ptr closest_rune = *min_element(combos.begin(), combos.end(), [&p_tracker](combo::ptr lhs, combo::ptr rhs) {
-                return getDeltaAngle(lhs->getAngle(), p_tracker->front()->getAngle()) <
-                       getDeltaAngle(rhs->getAngle(), p_tracker->front()->getAngle());
+                return getDeltaAngle(lhs->angle(), p_tracker->front()->angle()) <
+                       getDeltaAngle(rhs->angle(), p_tracker->front()->angle());
             });
             p_tracker->update(closest_rune);
             combo_set.erase(closest_rune);
@@ -68,8 +68,8 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
         {
             // 离 active_rune 最近的 tracker
             tracker::ptr closest_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
-                return getDeltaAngle(p_combo->getAngle(), lhs->front()->getAngle()) <
-                       getDeltaAngle(p_combo->getAngle(), rhs->front()->getAngle());
+                return getDeltaAngle(p_combo->angle(), lhs->front()->angle()) <
+                       getDeltaAngle(p_combo->angle(), rhs->front()->angle());
             });
             closest_tracker->update(p_combo);
             tracker_set.erase(closest_tracker);
@@ -89,11 +89,11 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
         {
             // 离 tracker 最近的 p_combo
             combo::ptr closest_combo = *min_element(combo_set.begin(), combo_set.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
-                return getDeltaAngle(lhs->getAngle(), trackers[i]->front()->getAngle()) <
-                       getDeltaAngle(rhs->getAngle(), trackers[i]->front()->getAngle());
+                return getDeltaAngle(lhs->angle(), trackers[i]->front()->angle()) <
+                       getDeltaAngle(rhs->angle(), trackers[i]->front()->angle());
             });
             // 获取角度差
-            float min_delta_angle = getDeltaAngle(closest_combo->getAngle(), trackers[i]->front()->getAngle());
+            float min_delta_angle = getDeltaAngle(closest_combo->angle(), trackers[i]->front()->angle());
             // 判断是否角度差过大
             if (min_delta_angle < 50.f)
                 trackers[i]->update(closest_combo);

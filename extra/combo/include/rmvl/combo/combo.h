@@ -53,21 +53,21 @@ public:
     virtual ptr clone(double tick) = 0;
 
     //! 获取组合体高度
-    inline float getHeight() const { return _height; }
+    inline float height() const { return _height; }
     //! 获取组合体宽度
-    inline float getWidth() const { return _width; }
+    inline float width() const { return _width; }
     //! 获取组合体角度
-    inline float getAngle() const { return _angle; }
+    inline float angle() const { return _angle; }
     //! 获取组合体中心点
-    inline cv::Point2f getCenter() const { return _center; }
+    inline cv::Point2f center() const { return _center; }
     //! 获取组合体角点
-    inline const std::vector<cv::Point2f> &getCorners() const { return _corners; }
+    inline const std::vector<cv::Point2f> &corners() const { return _corners; }
     //! 获取组合体相机外参
-    inline const CameraExtrinsics &getExtrinsics() const { return _extrinsic; }
+    inline const CameraExtrinsics &extrinsics() const { return _extrinsic; }
     //! 获取组合体类型
-    inline RMStatus getType() const { return _type; }
+    inline RMStatus type() const { return _type; }
     //! 获取捕获该组合体的时间点
-    inline double getTick() const { return _tick; }
+    inline double tick() const { return _tick; }
     //! 获取组合体的相对目标转角
     inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
     //! 获取组合体当前的陀螺仪数据
@@ -97,6 +97,10 @@ public:
     inline bool empty() const { return _features.empty(); }
 };
 
+#define RMVL_COMBO_CAST(name)                                                                           \
+    static inline ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<name>(p_combo); } \
+    static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const name>(p_combo); }
+
 //! 默认组合体，包含一个固定的特征，退化为 `feature` 使用
 class DefaultCombo final : public combo
 {
@@ -104,8 +108,9 @@ public:
     using ptr = std::shared_ptr<DefaultCombo>;
     using const_ptr = std::shared_ptr<const DefaultCombo>;
 
-    //! @warning 构造函数不直接使用
+    //! @cond
     DefaultCombo(feature::ptr, double);
+    //! @endcond
 
     /**
      * @brief 构造 DefaultCombo
@@ -124,21 +129,7 @@ public:
      */
     combo::ptr clone(double tick) override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_combo combo::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<DefaultCombo>(p_combo); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_combo combo::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const DefaultCombo>(p_combo); }
+    RMVL_COMBO_CAST(DefaultCombo)
 };
 
 //! @} combo

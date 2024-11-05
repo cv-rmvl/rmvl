@@ -26,8 +26,9 @@ public:
     using ptr = std::shared_ptr<Tag>;
     using const_ptr = std::shared_ptr<const Tag>;
 
-    //! @warning 不直接使用构造函数
+    //! @cond
     Tag(const std::array<cv::Point2f, 4> &corners, TagType type);
+    //! @endcond
 
     /**
      * @brief 构造 Tag 对象
@@ -45,21 +46,7 @@ public:
      */
     feature::ptr clone() override { return std::make_shared<Tag>(*this); }
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<Tag>(p_feature); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_feature feature::const_ptr 抽象指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const Tag>(p_feature); }
+    RMVL_FEATURE_CAST(Tag)
 };
 
 //! @} tag

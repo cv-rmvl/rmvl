@@ -52,7 +52,7 @@ TEST(BuildRuneTest, calculate_rune_angle_0)
     auto rune = Rune::make_combo(rune_target, rune_center, GyroData(), Timer::now());
     EXPECT_TRUE(rune != nullptr);
     // 角度判断
-    EXPECT_LE(abs(rune->getAngle()), 1.f);
+    EXPECT_LE(abs(rune->angle()), 1.f);
 }
 
 TEST(BuildRuneTest, calculate_rune_angle_45)
@@ -62,7 +62,7 @@ TEST(BuildRuneTest, calculate_rune_angle_45)
     auto rune = Rune::make_combo(rune_target, rune_center, GyroData(), Timer::now());
     EXPECT_TRUE(rune != nullptr);
     // 角度判断
-    EXPECT_LE(abs(rune->getAngle() - 45.f), 5.f);
+    EXPECT_LE(abs(rune->angle() - 45.f), 5.f);
 }
 
 TEST(BuildRuneTest, calculate_rune_angle_90)
@@ -72,7 +72,7 @@ TEST(BuildRuneTest, calculate_rune_angle_90)
     auto rune = Rune::make_combo(rune_target, rune_center, GyroData(), Timer::now());
     EXPECT_TRUE(rune != nullptr);
     // 角度判断
-    EXPECT_LE(abs(rune->getAngle() - 90.f), 1.f);
+    EXPECT_LE(abs(rune->angle() - 90.f), 1.f);
 }
 
 TEST(BuildRuneTest, calculate_rune_angle_minus_90)
@@ -82,7 +82,7 @@ TEST(BuildRuneTest, calculate_rune_angle_minus_90)
     auto rune = Rune::make_combo(rune_target, rune_center, GyroData(), Timer::now());
     EXPECT_TRUE(rune != nullptr);
     // 角度判断
-    EXPECT_LE(abs(rune->getAngle() + 90.f), 1.f);
+    EXPECT_LE(abs(rune->angle() + 90.f), 1.f);
 }
 
 } // namespace rm_test

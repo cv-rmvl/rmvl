@@ -28,7 +28,7 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
     if (!force)
     {
         // ----------------------【特征面积之比是否合适】----------------------
-        float rune_area_ratio = p_target->getArea() / p_center->getArea();
+        float rune_area_ratio = p_target->area() / p_center->area();
         DEBUG_INFO_("rune 1.rune_area_ratio : %f", rune_area_ratio);
         DEBUG_INFO_("rune 1.rune_active : %d", p_target->isActive());
         if (rune_area_ratio < para::rune_param.MIN_AREA_RATIO ||
@@ -40,8 +40,8 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
         DEBUG_PASS_("rune 1.rune_area_ratio : pass");
         // ------------------------【特征间距是否合适】------------------------
         // 使用神符装甲板的长宽信息代表组合体的长宽信息
-        float rune_radius = getDistance(p_target->getCenter(), p_center->getCenter());
-        float radius_ratio = rune_radius / p_center->getHeight();
+        float rune_radius = getDistance(p_target->center(), p_center->center());
+        float radius_ratio = rune_radius / p_center->height();
         DEBUG_INFO_("rune 2.radius_ratio : %f", radius_ratio);
         if (radius_ratio < para::rune_param.MIN_RADIUS_RATIO ||
             radius_ratio > para::rune_param.MAX_RADIUS_RATIO)
@@ -58,10 +58,10 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
 Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &gyro_data, double tick)
 {
     _gyro_data = gyro_data;
-    _width = p_target->getWidth() + p_center->getWidth() + getDistance(p_target->getCenter(), p_center->getCenter());
-    _height = p_target->getHeight();
+    _width = p_target->width() + p_center->width() + getDistance(p_target->center(), p_center->center());
+    _height = p_target->height();
     // ------------- 获取神符中心 -------------
-    _center = p_target->getCenter();
+    _center = p_target->center();
     // ------------- 获取激活信息 -------------
     _is_active = p_target->isActive();
     // ----------- 计算相对目标转角 -----------
@@ -72,9 +72,9 @@ Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const GyroData &g
     // 计算距离
     _extrinsic.distance(para::rune_param.RUNE_DISTANCE * sec(deg2rad(absolute_angle)));
     // ------------- 更新神符角度 -------------
-    auto angle_vec = Rune::cameraConvertToVertical(p_target->getCenter() - p_center->getCenter(),
+    auto angle_vec = Rune::cameraConvertToVertical(p_target->center() - p_center->center(),
                                                    gyro_data.rotation.pitch);
-    _angle = getHAngle(p_center->getCenter(), cv::Point2f(angle_vec) + p_center->getCenter(), DEG);
+    _angle = getHAngle(p_center->center(), cv::Point2f(angle_vec) + p_center->center(), DEG);
     // ----------- 更新神符特征间距 -----------
     _feature_dis = getDistance(angle_vec, cv::Vec2f{});
     // ---------- 设置组合体特征指针 ----------

@@ -200,7 +200,7 @@ TEST_F(RuneDetectorTest, target1_center2)
 
     auto combos = detect();
     EXPECT_EQ(combos.size(), 1);
-    EXPECT_LE(combos.front()->getCenter().x, 700);
+    EXPECT_LE(combos.front()->center().x, 700);
 }
 
 TEST_F(RuneDetectorTest, 1_active_rune)
@@ -228,7 +228,7 @@ TEST_F(RuneDetectorTest, 1_inactive_1_active)
 
     sort(combos.begin(), combos.end(),
          [](const rm::combo::ptr &lhs, const rm::combo::ptr &rhs) {
-             return lhs->getCenter().x < rhs->getCenter().x;
+             return lhs->center().x < rhs->center().x;
          });
 
     auto rune1 = rm::Rune::cast(combos[0]);

@@ -47,9 +47,10 @@ public:
     using ptr = std::shared_ptr<Armor>;
     using const_ptr = std::shared_ptr<const Armor>;
 
+    //! @cond
     Armor() = default;
-    //! @warning 禁止直接使用构造函数
     Armor(LightBlob::ptr, LightBlob::ptr, const GyroData &, double, float, float, float, float, float, float, float, ArmorSizeType);
+    //! @endcond
 
     /**
      * @brief Armor 构造接口
@@ -73,21 +74,7 @@ public:
      */
     combo::ptr clone(double tick) override;
 
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_combo `combo::ptr` 指针
-     * @return 派生对象指针
-     */
-    static inline ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<Armor>(p_combo); }
-
-    /**
-     * @brief 动态类型转换
-     *
-     * @param[in] p_combo `combo::const_ptr` 指针
-     * @return 派生对象指针
-     */
-    static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const Armor>(p_combo); }
+    RMVL_COMBO_CAST(Armor)
 
     /**
      * @brief 加载 SVM 装甲板大小分类的 *.xml 文件
