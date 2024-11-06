@@ -24,7 +24,7 @@
 构造一个装甲板的代码如下
 
 ```cpp
-auto p_combo = rm::Armor::make_combo(p_left, p_right, gyro_data, tick);
+auto p_combo = rm::Armor::make_combo(p_left, p_right, imu_data, tick);
 ```
 
 rm::combo 提供了 `clone` 纯虚拟函数，用于完全复制一份数据，适合于强制构造无视匹配要求的情况。

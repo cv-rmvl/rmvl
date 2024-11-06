@@ -17,12 +17,12 @@ namespace rm
 {
 
 DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                                 const GyroData &gyro_data, double tick)
+                                 const ImuData &imu_data, double tick)
 {
     DetectInfo info{};
     info.src = src;
     _tick = tick;
-    _gyro_data = gyro_data;
+    _imu_data = imu_data;
     // 初始化存储信息
     if (groups.empty())
         groups.emplace_back(DefaultGroup::make_group());

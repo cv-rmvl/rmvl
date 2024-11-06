@@ -50,12 +50,12 @@ public:
     RMVL_TRACKER_CAST(PlanarTracker)
 
     /**
-     * @brief 丢失目标时，使用时间点和陀螺仪数据更新平面目标追踪器
+     * @brief 丢失目标时，使用时间点和 IMU 数据更新平面目标追踪器
      *
      * @param[in] tick 时间点
-     * @param[in] gyro_data 陀螺仪数据
+     * @param[in] imu_data IMU 数据
      */
-    void update(double tick, const GyroData &gyro_data) override;
+    void update(double tick, const ImuData &imu_data) override;
 
     /**
      * @brief 使用捕获的 `combo` 更新平面目标追踪器

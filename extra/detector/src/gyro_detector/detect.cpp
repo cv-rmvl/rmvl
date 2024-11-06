@@ -18,13 +18,13 @@ namespace rm
 {
 
 DetectInfo GyroDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                                const GyroData &gyro_data, double tick)
+                                const ImuData &imu_data, double tick)
 {
     // 识别信息
     DetectInfo info{};
     info.src = src;
     _tick = tick;
-    _gyro_data = gyro_data;
+    _imu_data = imu_data;
 
     // 二值化处理图像
     PixChannel ch_minus = color == RED ? BLUE : RED;

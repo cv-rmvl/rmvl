@@ -297,7 +297,7 @@ std::vector<Rune::ptr> RuneDetector::getRune(const std::vector<RuneTarget::ptr> 
     for (const auto &p_target : rune_targets)
     {
         DEBUG_INFO_("--------------------------------------");
-        Rune::ptr rune = Rune::make_combo(p_target, p_center, _gyro_data, _tick);
+        Rune::ptr rune = Rune::make_combo(p_target, p_center, _imu_data, _tick);
         if (rune != nullptr)
         {
             DEBUG_PASS_("rune pass");

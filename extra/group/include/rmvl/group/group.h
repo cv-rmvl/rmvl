@@ -46,10 +46,10 @@ public:
      * @note 根据当前已知的所有的 `tracker` 信息，同步整体 `group`
      *       的内部数据，例如序列组中心，自主构造新的 `tracker` 等
      *
-     * @param[in] gyro_data 最新陀螺仪数据
+     * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    virtual void sync(const GyroData &gyro_data, double tick) = 0;
+    virtual void sync(const ImuData &imu_data, double tick) = 0;
 
     /**
      * @brief 添加追踪器至序列组
@@ -144,7 +144,7 @@ public:
     RMVL_GROUP_CAST(DefaultGroup)
 
     //! DefaultGroup 同步操作
-    void sync(const GyroData &, double) override {}
+    void sync(const ImuData &, double) override {}
 };
 
 //! @} group

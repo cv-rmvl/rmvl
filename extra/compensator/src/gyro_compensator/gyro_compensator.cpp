@@ -110,9 +110,9 @@ CompensateInfo GyroCompensator::compensate(const std::vector<group::ptr> &groups
         auto dis = getDistance(p_gyro_group->getCenter3D(), cv::Vec3f{}) / 1000.;
         // 目标转角
         auto relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, p_group->center());
-        // 提取当前陀螺仪角度
-        auto gyro_angle = cv::Point2f(p_gyro_group->getGyroData().rotation.yaw,
-                                      p_gyro_group->getGyroData().rotation.pitch);
+        // 提取当前 IMU 角度
+        auto gyro_angle = cv::Point2f(p_gyro_group->getImuData().rotation.yaw,
+                                      p_gyro_group->getImuData().rotation.pitch);
         // 目标与云台转轴的连线与水平方向的夹角
         double angle = gyro_angle.y + relative_angle.y;
         double gp = rad2deg(-getPitch(dis * cos(deg2rad(-angle)), // 模型中角度要求向上为正，这里需取反

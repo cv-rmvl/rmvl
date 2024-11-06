@@ -25,10 +25,10 @@ TEST_F(ArmorDetectorTest, more_tracker_match_less_armor)
 {
     buildArmorImg(cv::Point(200, 800), -5.f);
     buildArmorImg(cv::Point(600, 400), 5.f);
-    p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    p_detector->detect(groups, src, RED, ImuData(), timer.now());
     resetImg();
     buildArmorImg(cv::Point(610, 405), 3.f);
-    auto info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    auto info = p_detector->detect(groups, src, RED, ImuData(), timer.now());
 
     auto &trackers = groups.front()->data();
     EXPECT_EQ(info.combos.size(), 1);
@@ -43,10 +43,10 @@ TEST_F(ArmorDetectorTest, tracker_match_an_equal_number_of_armor)
 {
     // 1 追踪器 1 帧间距离较近的装甲板
     buildArmorImg(cv::Point(200, 800), -5.f);
-    auto info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    auto info = p_detector->detect(groups, src, RED, ImuData(), timer.now());
     resetImg();
     buildArmorImg(cv::Point(210, 805), -7.f);
-    p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    p_detector->detect(groups, src, RED, ImuData(), timer.now());
 
     auto &trackers = groups.front()->data();
 
@@ -55,10 +55,10 @@ TEST_F(ArmorDetectorTest, tracker_match_an_equal_number_of_armor)
     resetImg();
     resetDetector();
     buildArmorImg(cv::Point(200, 800), -5.f);
-    info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    info = p_detector->detect(groups, src, RED, ImuData(), timer.now());
     resetImg();
     buildArmorImg(cv::Point(1000, 200), -7.f);
-    info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    info = p_detector->detect(groups, src, RED, ImuData(), timer.now());
 
     trackers = groups.front()->data();
     EXPECT_EQ(info.combos.size(), 1);
@@ -72,11 +72,11 @@ TEST_F(ArmorDetectorTest, tracker_match_an_equal_number_of_armor)
 TEST_F(ArmorDetectorTest, less_tracker_match_more_armor)
 {
     buildArmorImg(cv::Point(600, 400), 5.f);
-    auto info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    auto info = p_detector->detect(groups, src, RED, ImuData(), timer.now());
     resetImg();
     buildArmorImg(cv::Point(200, 800), -5.f);
     buildArmorImg(cv::Point(610, 405), 3.f);
-    info = p_detector->detect(groups, src, RED, GyroData(), timer.now());
+    info = p_detector->detect(groups, src, RED, ImuData(), timer.now());
 
     auto &trackers = groups.front()->data();
     EXPECT_EQ(info.combos.size(), 2);

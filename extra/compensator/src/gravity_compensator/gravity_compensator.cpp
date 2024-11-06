@@ -124,9 +124,9 @@ CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr
         {
             // 单位换算
             double dis = p_tracker->extrinsics().distance() / 1000.;
-            // 提取当前陀螺仪角度
-            auto gyro_angle = cv::Point2f(p_tracker->front()->getGyroData().rotation.yaw,
-                                          p_tracker->front()->getGyroData().rotation.pitch);
+            // 提取当前 IMU 角度
+            auto gyro_angle = cv::Point2f(p_tracker->front()->getImuData().rotation.yaw,
+                                          p_tracker->front()->getImuData().rotation.pitch);
             // 目标与云台转轴的连线与水平方向的夹角
             double angle = gyro_angle.y + p_tracker->getRelativeAngle().y;
             // 计算补偿角度和对应的子弹飞行时间（模型中角度要求向上为正，这里需取反）

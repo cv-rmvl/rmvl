@@ -59,11 +59,11 @@ public:
      * @param[in out] groups 所有序列组
      * @param[in] src 原图像
      * @param[in] color 待处理颜色
-     * @param[in] gyro_data 当前陀螺仪数据
+     * @param[in] imu_data 当前 IMU 数据
      * @param[in] tick 当前时间点
      */
     DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                      const GyroData &gyro_data, double tick) override;
+                      const ImuData &imu_data, double tick) override;
 
 private:
     /**

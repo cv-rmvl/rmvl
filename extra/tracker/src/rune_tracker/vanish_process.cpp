@@ -24,10 +24,10 @@ namespace rm
  * @param[in] ref_rune 参考神符组合体
  * @param[in] delta_angle 基于参考神符的角度增量（角度制）
  * @param[in] tick 最新时间点
- * @param[in] gyro_data 最新陀螺仪数据
+ * @param[in] imu_data 最新 IMU 数据
  * @return 构造出的神符
  */
-static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const GyroData &gyro_data)
+static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const ImuData &imu_data)
 {
     auto p_rune_target = RuneTarget::cast(ref_rune->at(0));
     auto p_rune_center = RuneCenter::cast(ref_rune->at(1));
@@ -41,9 +41,9 @@ static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, doub
                        -std::sin(deg2rad(delta_angle)), std::cos(deg2rad(delta_angle))};
     target_vec = rot * target_vec;
     // 获取新的神符中心图像中心点
-    auto old_gyro_angle = cv::Point2f(ref_rune->getGyroData().rotation.yaw,
-                                      ref_rune->getGyroData().rotation.pitch);
-    auto new_gyro_angle = cv::Point2f(gyro_data.rotation.yaw, gyro_data.rotation.pitch);
+    auto old_gyro_angle = cv::Point2f(ref_rune->getImuData().rotation.yaw,
+                                      ref_rune->getImuData().rotation.pitch);
+    auto new_gyro_angle = cv::Point2f(imu_data.rotation.yaw, imu_data.rotation.pitch);
     // -(new_gyro_angle - old_gyro_angle)
     auto dpoint = calculateRelativeCenter(para::camera_param.cameraMatrix, old_gyro_angle - new_gyro_angle) -
                   calculateRelativeCenter(para::camera_param.cameraMatrix, {});
@@ -53,10 +53,10 @@ static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, doub
     // 强制构造
     auto p_new_rune_center = RuneCenter::make_feature(new_center);
     auto p_new_rune_target = RuneTarget::make_feature(new_target, p_rune_target->isActive());
-    return Rune::make_combo(p_new_rune_target, p_new_rune_center, gyro_data, tick, true);
+    return Rune::make_combo(p_new_rune_target, p_new_rune_center, imu_data, tick, true);
 }
 
-void RuneTracker::update(double tick, const GyroData &gyro_data)
+void RuneTracker::update(double tick, const ImuData &imu_data)
 {
     // 判空
     if (_combo_deque.empty())
@@ -74,7 +74,7 @@ void RuneTracker::update(double tick, const GyroData &gyro_data)
     auto rotate_pre = _filter.predict();
 
     auto p_rune = runeConstructForced(Rune::cast(_combo_deque.front()),
-                                      rotate_pre(0) - _angle, tick, gyro_data);
+                                      rotate_pre(0) - _angle, tick, imu_data);
     _angle = p_rune->angle();
 
     float rad_angle = deg2rad(p_rune->angle());

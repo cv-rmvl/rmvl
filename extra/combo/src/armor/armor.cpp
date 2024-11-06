@@ -20,7 +20,7 @@
 namespace rm
 {
 
-std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
+std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data,
                                          double tick, ArmorSizeType armor_size_type)
 {
     // 判空
@@ -74,7 +74,7 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
             return nullptr;
     }
 
-    return std::make_shared<Armor>(p_left, p_right, gyro_data, tick,
+    return std::make_shared<Armor>(p_left, p_right, imu_data, tick,
                                    width_ratio, length_ratio, corner_angle, match_error,
                                    combo_height, combo_width, combo_ratio, armor_size_type);
 }
@@ -84,12 +84,12 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
  *
  * @param[in] cam_matrix 相机内参，用于解算相机外参
  * @param[in] distCoeffs 相机畸变参数，用于解算相机外参
- * @param[in] gyro_data 陀螺仪数据
+ * @param[in] imu_data IMU 数据
  * @param[in] type 装甲板类型
  * @param[in] corners 装甲板角点
  * @return CameraExtrinsics - 相机外参
  */
-static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const GyroData &gyro_data,
+static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const ImuData &imu_data,
                                            ArmorSizeType type, const std::vector<cv::Point2f> &corners)
 {
     cv::Vec3f rvec;             // 旋转向量
@@ -98,19 +98,19 @@ static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, cons
     type == ArmorSizeType::SMALL
         ? cv::solvePnP(para::armor_param.SMALL_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE)
         : cv::solvePnP(para::armor_param.BIG_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE);
-    // 变换为陀螺仪坐标系下
+    // 变换为 IMU 坐标系下
     cv::Matx33f rmat;
     cv::Rodrigues(rvec, rmat);
     cv::Matx33f gyro_rmat;
     cv::Vec3f gyro_tvec;
-    Armor::cameraConvertToGyro(rmat, tvec, gyro_data, gyro_rmat, gyro_tvec);
+    Armor::cameraConvertToImu(rmat, tvec, imu_data, gyro_rmat, gyro_tvec);
     extrinsic.R(gyro_rmat);
     extrinsic.tvec(gyro_tvec);
 
     return extrinsic;
 }
 
-Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data, double tick,
+Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, double tick,
              float width_r, float length_r, float corner_angle, float match_error,
              float combo_h, float combo_w, float combo_r, ArmorSizeType armor_size_type)
     : _width_ratio(width_r), _length_ratio(length_r), _corner_angle(corner_angle), _match_error(match_error)
@@ -122,8 +122,8 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
     _center = (p_left->center() + p_right->center()) / 2.f;
     // 获取相对角度
     _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, _center);
-    // 获取当前装甲板对应的陀螺仪位置信息
-    _gyro_data = gyro_data;
+    // 获取当前装甲板对应的 IMU 位置信息
+    _imu_data = imu_data;
     // 装甲板角度
     _angle = (p_left->angle() + p_right->angle()) / 2.f;
     // 匹配大小装甲板
@@ -138,7 +138,7 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro
                 p_right->getBottomPoint()}; // 右下
     // 计算相机外参
     _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs,
-                                    gyro_data, _type.ArmorSizeTypeID, _corners);
+                                    imu_data, _type.ArmorSizeTypeID, _corners);
     const auto &rmat = _extrinsic.R();
     _pose = cv::normalize(cv::Vec2f(rmat(0, 2), rmat(2, 2)));
     // 设置组合体的特征容器

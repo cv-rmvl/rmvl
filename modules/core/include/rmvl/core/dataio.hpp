@@ -1,7 +1,7 @@
 /**
  * @file dataio.hpp
  * @author RoboMaster Vision Community
- * @brief 陀螺仪数据
+ * @brief IMU 数据
  * @version 1.0
  * @date 2023-01-12
  *
@@ -26,8 +26,8 @@ namespace rm
 //! @addtogroup core_dataio
 //! @{
 
-//! 陀螺仪数据
-struct GyroData
+//! IMU 数据
+struct ImuData
 {
     //! 移动姿态信息
     struct Translation
@@ -52,17 +52,17 @@ struct GyroData
     } rotation;
 
     /**
-     * @brief 导出陀螺仪数据，可以是输出到控制台，也可以是输出到文件
+     * @brief 导出 IMU 数据，可以是输出到控制台，也可以是输出到文件
      * @brief
-     * - 以 `gyro_data` 的整体写入到输出流对象的末尾
+     * - 以 `imu_data` 的整体写入到输出流对象的末尾
      *
      * @param[in] out 输出流对象
-     * @param[in] data 待写入的陀螺仪数据
+     * @param[in] data 待写入的 IMU 数据
      */
-    static void write(std::ostream &out, const GyroData &data) noexcept;
+    static void write(std::ostream &out, const ImuData &data) noexcept;
 
     /**
-     * @brief 导入陀螺仪数据，可以是从控制台读取，也可以是从文件读取
+     * @brief 导入 IMU 数据，可以是从控制台读取，也可以是从文件读取
      * @brief
      * - 读取的文件形如以下内容
      * @code{.txt}
@@ -70,13 +70,13 @@ struct GyroData
      * 13.22, 14.23, 15.24, 16.25, 17.26, 18.27, 19.28, 20.29, 21.30, 22.31, 23.32, 24.33,
      * @endcode
      * @brief
-     * - 例如，第一次调用 `read` 方法时，陀螺仪平移的数据为 `(1.9, 2.11, 3.12, 4.13, 5.14, 6.15)`
+     * - 例如，第一次调用 `read` 方法时，IMU 平移的数据为 `(1.9, 2.11, 3.12, 4.13, 5.14, 6.15)`
      *   旋转的数据为 `(7.16, 8.17, 9.18, 10.19, 11.20, 12.21)`
      *
      * @param[in] in 输入流对象
-     * @param[out] data 读取出的陀螺仪数据
+     * @param[out] data 读取出的 IMU 数据
      */
-    static void read(std::istream &in, GyroData &data) noexcept;
+    static void read(std::istream &in, ImuData &data) noexcept;
 };
 
 /// @example samples/tutorial_code/dataio/sample_read_corners.cpp 角点数据读取例程
