@@ -100,7 +100,7 @@ std::vector<Armor::ptr> GyroDetector::findArmors(std::vector<LightBlob::ptr> &li
         for (size_t j = i + 1; j < light_blobs.size(); j++)
         {
             // 构造装甲板
-            Armor::ptr armor = Armor::make_combo(light_blobs[i], light_blobs[j], _gyro_data, _tick);
+            Armor::ptr armor = Armor::make_combo(light_blobs[i], light_blobs[j], _imu_data, _tick);
             // 是否找到目标（未找到则单次跳出）
             if (armor == nullptr)
                 continue;

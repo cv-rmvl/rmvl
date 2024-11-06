@@ -68,7 +68,7 @@ void PlanarTracker::update(combo::ptr p_combo)
         _combo_deque.pop_back();
 }
 
-void PlanarTracker::update(double tick, [[maybe_unused]] const GyroData &gyro_data)
+void PlanarTracker::update(double tick, [[maybe_unused]] const ImuData &imu_data)
 {
     if (_combo_deque.empty())
         return;

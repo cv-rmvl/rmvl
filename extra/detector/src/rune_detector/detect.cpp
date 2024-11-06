@@ -18,14 +18,14 @@ namespace rm
 {
 
 DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                                const GyroData &gyro_data, double tick)
+                                const ImuData &imu_data, double tick)
 {
     if (groups.size() > 1)
         RMVL_Error(RMVL_StsBadArg, "Size of the argument \"groups\" is greater than 1");
     DetectInfo info{};
     info.src = src;
     _tick = tick;
-    _gyro_data = gyro_data;
+    _imu_data = imu_data;
     // 初始化存储信息
     if (groups.empty())
         groups.emplace_back(RuneGroup::make_group());
@@ -44,7 +44,7 @@ DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, P
     if (rune_trackers.empty())
         groups = {RuneGroup::make_group()};
     else
-        rune_group->sync(_gyro_data, _tick);
+        rune_group->sync(_imu_data, _tick);
 
     return info;
 }

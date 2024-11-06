@@ -41,7 +41,7 @@ static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, c
     predict_center.y = rune_center.y - feature_distance * sin(deg2rad(ref_tracker->angle() + d_predict));
     // 平面修正
     auto correct_vec = Rune::verticalConvertToCamera(predict_center - rune_center,
-                                                     ref_tracker->front()->getGyroData().rotation.pitch);
+                                                     ref_tracker->front()->getImuData().rotation.pitch);
     d_center = rune_center + cv::Point2f(correct_vec);
     d_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, rune_center + cv::Point2f(correct_vec)) -
               ref_tracker->getRelativeAngle();

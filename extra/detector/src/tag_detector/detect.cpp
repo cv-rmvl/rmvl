@@ -40,12 +40,12 @@ TagDetector::~TagDetector()
 }
 
 DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel,
-                               const GyroData &gyro_data, double tick)
+                               const ImuData &imu_data, double tick)
 {
     DetectInfo info;
     info.src = src;
     _tick = tick;
-    _gyro_data = gyro_data;
+    _imu_data = imu_data;
     // 初始化存储信息
     if (groups.empty())
         groups.emplace_back(DefaultGroup::make_group());
@@ -161,7 +161,7 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
         }
         // 没有匹配到的序列传入 nullptr
         for (auto p_tracker : tracker_set)
-            p_tracker->update(_tick, _gyro_data);
+            p_tracker->update(_tick, _imu_data);
     }
     // 如果当前帧识别到的视觉标签 `rm::Tag` 数量 = 序列数量
     else
@@ -184,7 +184,7 @@ void TagDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<c
             if (isChange(min_dis))
             {
                 // 创建新序列，原来的序列打入 nullptr
-                trackers[i]->update(_tick, _gyro_data);
+                trackers[i]->update(_tick, _imu_data);
                 trackers.emplace_back(PlanarTracker::make_tracker(min_it));
             }
             else

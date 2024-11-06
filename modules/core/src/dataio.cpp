@@ -15,7 +15,7 @@
 #include "rmvl/core/dataio.hpp"
 #include "rmvl/core/util.hpp"
 
-void rm::GyroData::write(std::ostream &os, const GyroData &data) noexcept
+void rm::ImuData::write(std::ostream &os, const ImuData &data) noexcept
 {
     os << data.translation.x << ", " << data.translation.y << ", " << data.translation.z << ", "
        << data.translation.vx << ", " << data.translation.vy << ", " << data.translation.vz << ", "
@@ -23,7 +23,7 @@ void rm::GyroData::write(std::ostream &os, const GyroData &data) noexcept
        << data.rotation.yaw_speed << ", " << data.rotation.pitch_speed << ", " << data.rotation.roll_speed << "," << std::endl;
 }
 
-void rm::GyroData::read(std::istream &is, GyroData &data) noexcept
+void rm::ImuData::read(std::istream &is, ImuData &data) noexcept
 {
     std::string tstr[6];
     std::for_each(tstr, tstr + 6, [&is](std::string &s) { is >> s; });

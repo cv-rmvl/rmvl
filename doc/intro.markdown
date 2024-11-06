@@ -100,7 +100,7 @@ std::vector<rm::group::ptr> groups;
 /* ... */
 for (auto &p_detector : detectors)
 {
-    auto info = p_detector->detect(groups, src, color, gyro_data, tick);
+    auto info = p_detector->detect(groups, src, color, imu_data, tick);
     /* ... */
 }
 /* ... */
@@ -122,8 +122,8 @@ rm::predictor::ptr p_predictor = rm::ArmorPredictor::make_predictor();
 rm::decider::ptr p_decider = rm::TranslationDecider::make_decider();
 std::vector<rm::group::ptr> groups;
 /* ... */
-auto detect_info = p_detector->detect(groups, src, BLUE, rm::GyroData(), cv::getTickCount());
-auto compensate_info = p_compensator->compensate(groups, {gyro_data.yaw, gyro_data.pitch}, shoot_speed);
+auto detect_info = p_detector->detect(groups, src, BLUE, rm::ImuData(), cv::getTickCount());
+auto compensate_info = p_compensator->compensate(groups, {imu_data.yaw, imu_data.pitch}, shoot_speed);
 auto predict_info = p_predictor->predict(groups);
 auto decide_info = p_decider->decide(groups);
 /* ... */

@@ -26,9 +26,9 @@ PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const
         for (auto p_tracker : p_group->data())
         {
             double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
-            // 获取陀螺仪角速度
-            cv::Point2f gyro_speed = {p_tracker->front()->getGyroData().rotation.yaw_speed,
-                                      p_tracker->front()->getGyroData().rotation.pitch_speed};
+            // 获取 IMU 角速度
+            cv::Point2f gyro_speed = {p_tracker->front()->getImuData().rotation.yaw_speed,
+                                      p_tracker->front()->getImuData().rotation.pitch_speed};
             // 计算用于预测的合成角速度
             cv::Point2f speed = p_tracker->speed() + gyro_speed;
             double dB_yaw = speed.x * para::armor_predictor_param.YAW_B;

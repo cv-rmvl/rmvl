@@ -60,9 +60,9 @@ public:
      * @brief 未捕获 `combo`，但使用其余数据更新追踪器（即目标丢失时的操作）
      *
      * @param[in] tick 当前时间点
-     * @param[in] gyro_data 当前陀螺仪信息
+     * @param[in] imu_data 当前 IMU 信息
      */
-    virtual void update(double tick, const GyroData &gyro_data) = 0;
+    virtual void update(double tick, const ImuData &imu_data) = 0;
 
     //! 获取时间队列中最新的组合体
     inline combo::ptr front() const { return _combo_deque.front(); }
@@ -138,7 +138,7 @@ public:
     void update(combo::ptr p_combo) override;
 
     //! 未捕获 `combo`，仅更新消失帧数
-    inline void update(double, const GyroData &) override { _vanish_num++; }
+    inline void update(double, const ImuData &) override { _vanish_num++; }
 
     RMVL_TRACKER_CAST(DefaultTracker)
 

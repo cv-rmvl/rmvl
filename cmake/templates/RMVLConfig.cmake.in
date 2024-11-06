@@ -79,6 +79,8 @@ endif()
 # Get third-party libraries in the system, cross-compilation requires manual specification of these paths
 @RMVL_3RD_PKGS_CONFIGCMAKE@
 
+option(WITH_OPENCV "Enable opencv support" @WITH_OPENCV@)
+
 # Form list of modules (components) to find
 if(NOT RMVL_FIND_COMPONENTS)
   set(RMVL_FIND_COMPONENTS ${RMVL_LIB_COMPONENTS})
