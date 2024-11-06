@@ -45,10 +45,10 @@ public:
      * @note
      * - 计算整个序列组当前帧的原始数据 `raw_data`，并同步至 `datas` 中
      *
-     * @param[in] gyro_data 最新陀螺仪数据
+     * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    void sync(const GyroData &gyro_data, double tick) override;
+    void sync(const ImuData &imu_data, double tick) override;
 
     /**
      * @brief 获取原始数据队列

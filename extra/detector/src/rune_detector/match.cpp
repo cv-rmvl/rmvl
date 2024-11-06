@@ -76,7 +76,7 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
         }
         // 没有匹配到的序列则执行丢帧操作
         for (auto p_tracker : tracker_set)
-            p_tracker->update(_tick, _gyro_data);
+            p_tracker->update(_tick, _imu_data);
     }
     // 如果当前帧识别到的装甲板数量 = 序列数量
     else
@@ -99,7 +99,7 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
                 trackers[i]->update(closest_combo);
             else
             {
-                trackers[i]->update(_tick, _gyro_data);
+                trackers[i]->update(_tick, _imu_data);
                 trackers.emplace_back(RuneTracker::make_tracker(closest_combo));
             }
             combo_set.erase(closest_combo);

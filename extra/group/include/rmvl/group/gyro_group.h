@@ -29,7 +29,7 @@ namespace rm
 class GyroGroup final : public group
 {
     double _tick;        //!< 时间点
-    GyroData _gyro_data; //!< 当前陀螺仪数据
+    ImuData _imu_data; //!< 当前 IMU 数据
     bool _is_tracked{};  //!< 是否为目标序列组
 
     //! 追踪器状态哈希表 [追踪器 : 追踪器状态]
@@ -39,7 +39,7 @@ class GyroGroup final : public group
 
     std::deque<float> _rotspeed_deq; //!< 旋转速度时间队列（原始数据）
 
-    cv::Vec3f _center3d;   //!< 陀螺仪坐标系下旋转中心点坐标（滤波数据）
+    cv::Vec3f _center3d;   //!< IMU 坐标系下旋转中心点坐标（滤波数据）
     cv::Vec3f _speed3d;    //!< 旋转中心点平移速度（滤波数据）
     float _rotspeed = 0.f; //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
 
@@ -77,12 +77,12 @@ public:
     RMVL_GROUP_CAST(GyroGroup)
 
     /**
-     * @brief 根据陀螺仪坐标系下装甲板外参信息和默认初始半径集合，得到修正的半径集合、序列组中心坐标、装甲板法向量集合
+     * @brief 根据 IMU 坐标系下装甲板外参信息和默认初始半径集合，得到修正的半径集合、序列组中心坐标、装甲板法向量集合
      *
      * @param[in] gyro_poses 装甲板在相机坐标系下的姿态法向量集合 pose
      * @param[in] gyro_ts 装甲板在相机坐标系下的平移向量集合 t
      * @param[in] rs 装甲板旋转半径集合 r（传入初始的旋转半径）
-     * @param[out] gyro_center 装甲板序列组在陀螺仪坐标系下中心坐标
+     * @param[out] gyro_center 装甲板序列组在 IMU 坐标系下中心坐标
      */
     static void calcGroupFrom3DMessage(const std::vector<cv::Vec2f> &gyro_poses, const std::vector<cv::Vec3f> &gyro_ts,
                                        const std::vector<float> &rs, cv::Vec3f &gyro_center);
@@ -91,13 +91,13 @@ public:
      * @brief 强制构建 combo
      *
      * @param[in] p_combo 指定参考的组合体
-     * @param[in] gyro_data 最新陀螺仪数据
-     * @param[in] gyro_rmat 陀螺仪坐标系下装甲板的旋转矩阵
-     * @param[in] gyro_tvec 陀螺仪坐标系下装甲板的平移向量
+     * @param[in] imu_data 最新 IMU 数据
+     * @param[in] gyro_rmat IMU 坐标系下装甲板的旋转矩阵
+     * @param[in] gyro_tvec IMU 坐标系下装甲板的平移向量
      * @param[in] tick 当前时间点数据
      * @return 强制构建的 combo
      */
-    static combo::ptr constructComboForced(combo::ptr p_combo, const GyroData &gyro_data,
+    static combo::ptr constructComboForced(combo::ptr p_combo, const ImuData &imu_data,
                                            const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick);
 
     /**
@@ -111,10 +111,10 @@ public:
     /**
      * @brief GyroGroup 同步操作
      *
-     * @param[in] gyro_data 最新陀螺仪数据
+     * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    void sync(const GyroData &gyro_data, double tick);
+    void sync(const ImuData &imu_data, double tick);
 
     /**
      * @brief 获取追踪器状态
@@ -135,8 +135,8 @@ public:
     inline cv::Vec3f getSpeed3D() const { return _speed3d; }
     //! 获取相机坐标系自转角速度（俯视顺时针为正，滤波数据，弧度）
     inline float getRotatedSpeed() const { return _rotspeed; }
-    //! 获取陀螺仪数据
-    inline GyroData getGyroData() const { return _gyro_data; }
+    //! 获取 IMU 数据
+    inline ImuData getImuData() const { return _imu_data; }
     //! 获取旋转状态
     inline RotStatus getRotStatus() const { return _rot_status; }
 

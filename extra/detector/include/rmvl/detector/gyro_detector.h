@@ -49,12 +49,12 @@ public:
      * @param[in out] groups 序列组容器
      * @param[in] src 原图像
      * @param[in] color 待识别的颜色
-     * @param[in] gyro_data 陀螺仪数据
+     * @param[in] imu_data IMU 数据
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
     DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, rm::PixChannel color,
-                      const GyroData &gyro_data, double tick) override;
+                      const ImuData &imu_data, double tick) override;
 
     //! 构建 GyroDetector
     static inline std::unique_ptr<GyroDetector> make_detector(int armor_num = 0)

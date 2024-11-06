@@ -17,7 +17,7 @@
 namespace rm
 {
 
-void RuneGroup::sync(const GyroData &, double)
+void RuneGroup::sync(const ImuData &, double)
 {
     if (_trackers.empty())
         RMVL_Error(RMVL_StsBadSize, "trackers of the \"rune_group\" is empty!");

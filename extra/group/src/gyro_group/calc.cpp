@@ -67,12 +67,12 @@ void GyroGroup::calcGroupFrom3DMessage(const std::vector<cv::Vec2f> &gyro_poses,
     }
 }
 
-combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &gyro_data, const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick)
+combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const ImuData &imu_data, const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick)
 {
-    // 陀螺仪坐标系转化为相机坐标系
+    // IMU 坐标系转化为相机坐标系
     cv::Matx33f cam_rmat;
     cv::Vec3f cam_tvec;
-    Armor::gyroConvertToCamera(gyro_rmat, gyro_tvec, p_combo->getGyroData(), cam_rmat, cam_tvec);
+    Armor::imuConvertToCamera(gyro_rmat, gyro_tvec, p_combo->getImuData(), cam_rmat, cam_tvec);
 
     if (cam_tvec(2) <= 0)
         RMVL_Error_(RMVL_StsError, "Bad value of \"cam_tvec\", cam_tvec(2) = %.3f", cam_tvec(2));
@@ -87,7 +87,7 @@ combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const GyroData &g
     // 强制构造灯条与装甲板
     auto left = LightBlob::make_feature(new_corners[1], new_corners[0], p_combo->at(0)->width());
     auto right = LightBlob::make_feature(new_corners[2], new_corners[3], p_combo->at(1)->width());
-    return Armor::make_combo(left, right, gyro_data, tick, p_combo->type().ArmorSizeTypeID);
+    return Armor::make_combo(left, right, imu_data, tick, p_combo->type().ArmorSizeTypeID);
 }
 
 void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std::vector<TrackerState> &state_vec,
@@ -129,7 +129,7 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
         // 旋转中心点像素坐标系坐标
         auto I = cv::Matx33f::eye();
         cv::Vec3f cam_tvec;
-        Armor::gyroConvertToCamera(I, center_tvec, _gyro_data, I, cam_tvec);
+        Armor::imuConvertToCamera(I, center_tvec, _imu_data, I, cam_tvec);
         group_center2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, cam_tvec);
 
         // 2、3、4 号追踪器
@@ -137,11 +137,11 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
         {
             // 绕 y 轴旋转 90 * (i + 1) 度 (俯视图顺时针)
             auto y_rotate = euler2Mat(static_cast<float>(2_PI / _armor_num) * (i + 1), Y);
-            cv::Matx33f new_R = y_rotate * Rs.front(); // 陀螺仪坐标系下的新旋转矩阵
-            // 陀螺仪坐标系下的新装甲板到旋转中心点的方向向量
+            cv::Matx33f new_R = y_rotate * Rs.front(); // IMU 坐标系下的新旋转矩阵
+            // IMU 坐标系下的新装甲板到旋转中心点的方向向量
             cv::Vec3f new_pose = normalize(cv::Vec3f(new_R(0, 2), 0, new_R(2, 2)));
-            cv::Vec3f new_gyro_tvec = center_tvec - new_pose * r; // 陀螺仪坐标系下的新装甲板相机坐标系平移向量
-            combo::ptr armor = constructComboForced(p_combo, _gyro_data, new_R, new_gyro_tvec, _tick);
+            cv::Vec3f new_gyro_tvec = center_tvec - new_pose * r; // IMU 坐标系下的新装甲板相机坐标系平移向量
+            combo::ptr armor = constructComboForced(p_combo, _imu_data, new_R, new_gyro_tvec, _tick);
             // 追踪器信息
             combo_vec[i + 1] = armor;
             state_vec[i + 1] = TrackerState(i + 1, r, 0.f);
@@ -162,7 +162,7 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
         // 旋转中心点像素坐标系坐标
         auto I = cv::Matx33f::eye();
         cv::Vec3f cam_tvec;
-        Armor::gyroConvertToCamera(I, center_tvec, _gyro_data, I, cam_tvec);
+        Armor::imuConvertToCamera(I, center_tvec, _imu_data, I, cam_tvec);
         group_center2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, center_tvec);
         // 第三、四块装甲板
         for (int i = 0; i < _armor_num - 2; i++)
@@ -173,7 +173,7 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
             // 新装甲板到旋转中心点的方向向量
             cv::Vec3f new_pose = normalize(cv::Vec3f(new_R(0, 2), 0, new_R(2, 2)));
             cv::Vec3f new_tvec = center_tvec - new_pose * rs[i]; // 新装甲板平移向量
-            combo::ptr armor = constructComboForced(operate_combos[i], _gyro_data, new_R, new_tvec, _tick);
+            combo::ptr armor = constructComboForced(operate_combos[i], _imu_data, new_R, new_tvec, _tick);
             // 组合体信息
             combo_vec[i + 2] = armor;
             state_vec[i + 2] = TrackerState(i + 2, rs[i], state_vec[i].delta_y());

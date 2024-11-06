@@ -30,7 +30,7 @@ class PlanarTrackerTest : public testing::Test
 
 public:
     double tick{rm::Timer::now()};
-    rm::GyroData gyro_data{};
+    rm::ImuData imu_data{};
 
     void SetUp() override
     {
@@ -57,7 +57,7 @@ public:
     {
         rm::LightBlob::ptr left_blob = buildBlob(angle, center - cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
         rm::LightBlob::ptr right_blob = buildBlob(angle, center + cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
-        return rm::Armor::make_combo(left_blob, right_blob, rm::GyroData(), rm::Timer::now());
+        return rm::Armor::make_combo(left_blob, right_blob, rm::ImuData(), rm::Timer::now());
     }
 
     /**
@@ -111,7 +111,7 @@ TEST_F(PlanarTrackerTest, tracker_update_with_none)
     // 传入装甲板后传入空
     rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
-    p_tracker->update(tick, gyro_data);
+    p_tracker->update(tick, imu_data);
     EXPECT_EQ(p_tracker->size(), 2);
     EXPECT_EQ(p_tracker->front()->center(), armor->center());
     EXPECT_EQ(p_tracker->getVanishNumber(), 1);

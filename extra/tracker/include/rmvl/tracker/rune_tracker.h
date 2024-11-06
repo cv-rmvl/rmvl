@@ -72,12 +72,12 @@ public:
     void update(combo::ptr p_rune) override;
 
     /**
-     * @brief `rm::Rune` 目标丢失，使用时间点和陀螺仪数据更新追踪器
+     * @brief `rm::Rune` 目标丢失，使用时间点和 IMU 数据更新追踪器
      *
      * @param[in] tick 当前时间点
-     * @param[in] gyro_data 云台数据
+     * @param[in] imu_data 云台数据
      */
-    void update(double tick, const GyroData &gyro_data) override;
+    void update(double tick, const ImuData &imu_data) override;
 
     /**
      * @brief 滤波器初始化
@@ -116,9 +116,9 @@ private:
      * @brief 掉帧处理，更新滤波、估计后的考虑圈数的角度以及神符特征
      *
      * @param[in] tick 最新时间点
-     * @param[in] gyro 最新陀螺仪数据
+     * @param[in] gyro 最新 IMU 数据
      */
-    void vanishProcess(double tick, const GyroData &gyro_data);
+    void vanishProcess(double tick, const ImuData &imu_data);
 };
 
 //! @} rune_tracker

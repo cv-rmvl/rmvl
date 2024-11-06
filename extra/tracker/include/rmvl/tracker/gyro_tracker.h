@@ -57,7 +57,7 @@ public:
 
     RMVL_TRACKER_CAST(GyroTracker)
 
-    [[deprecated]] void update(double, const GyroData &) override {};
+    [[deprecated]] void update(double, const ImuData &) override {};
 
     /**
      * @brief 使用捕获的 `combo` 更新平面目标追踪器

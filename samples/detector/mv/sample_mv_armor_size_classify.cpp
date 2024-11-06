@@ -28,7 +28,7 @@ void collect(rm::PixChannel color, rm::ArmorSizeType type, int begin_idx)
         capture->read(frame);
         if (frame.empty())
             RMVL_Error(RMVL_StsBadSize, "frame is empty, something wrong with the camera.");
-        auto info = p_detector->detect(groups, frame, color, rm::GyroData(), rm::Timer::now());
+        auto info = p_detector->detect(groups, frame, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
         if (combos.size() != 1)
         {
@@ -174,7 +174,7 @@ int main(int argc, const char *argv[])
     printf("在键盘上按下一次 \033[33mEsc\033[0m 来暂停，按下两次 \033[33mEsc\033[0m 来退出测试\n");
     while (capture->read(frame))
     {
-        auto info = p_detector->detect(groups, frame, color, rm::GyroData(), rm::Timer::now());
+        auto info = p_detector->detect(groups, frame, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
         if (!combos.empty())
         {

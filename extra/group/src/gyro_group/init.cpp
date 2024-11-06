@@ -27,7 +27,7 @@ GyroGroup::GyroGroup(const std::vector<combo::ptr> &first_combos, int armor_num)
     std::vector<combo::ptr> combo_vec;   // 整车模型中的组合体列表
     cv::Vec3f group_center3d;            // 旋转中心点相机坐标
     cv::Point2f group_center2d;          // 旋转中心点像素坐标
-    _gyro_data = first_combos.front()->getGyroData();
+    _imu_data = first_combos.front()->getImuData();
     _tick = first_combos.front()->tick();
     // 获取 RobotType
     std::vector<RobotType> robot_type_vec;

@@ -49,7 +49,7 @@ public:
 
     //! @cond
     Armor() = default;
-    Armor(LightBlob::ptr, LightBlob::ptr, const GyroData &, double, float, float, float, float, float, float, float, ArmorSizeType);
+    Armor(LightBlob::ptr, LightBlob::ptr, const ImuData &, double, float, float, float, float, float, float, float, ArmorSizeType);
     //! @endcond
 
     /**
@@ -58,12 +58,12 @@ public:
      *
      * @param[in] p_left 左灯条共享指针
      * @param[in] p_right 右灯条共享指针
-     * @param[in] gyro_data 当前时刻组合特征对应的陀螺仪数据
+     * @param[in] imu_data 当前时刻组合特征对应的 IMU 数据
      * @param[in] tick 捕获组合特征的时间点
      * @param[in] armor_size_type 需要指定的大小装甲板类型，默认为 `ArmorSizeType::UNKNOWN`
      * @return 若成功，返回 Armor 的共享指针，否则返回空
      */
-    static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const GyroData &gyro_data,
+    static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data,
                           double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
 
     /**
@@ -84,28 +84,28 @@ public:
     static inline void loadSVM(const std::string &path) { _svm = cv::ml::SVM::load(path); }
 
     /**
-     * @brief 装甲板相机外参从陀螺仪坐标系转化为相机坐标系
+     * @brief 装甲板相机外参从 IMU 坐标系转化为相机坐标系
      *
-     * @param[in] gyro_rmat 陀螺仪坐标系下的装甲板旋转矩阵
-     * @param[in] gyro_tvec 陀螺仪坐标系下的装甲板平移向量
-     * @param[in] gyro_data 陀螺仪数据信息
+     * @param[in] gyro_rmat IMU 坐标系下的装甲板旋转矩阵
+     * @param[in] gyro_tvec IMU 坐标系下的装甲板平移向量
+     * @param[in] imu_data IMU 数据信息
      * @param[out] cam_rmat 相机坐标系下的装甲板旋转矩阵
      * @param[out] cam_tvec 相机坐标系下的装甲板平移向量
      */
-    static void gyroConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec,
-                                    const GyroData &gyro_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec);
+    static void imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec,
+                                   const ImuData &imu_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec);
 
     /**
-     * @brief 装甲板相机外参从相机坐标系转化为陀螺仪坐标系
+     * @brief 装甲板相机外参从相机坐标系转化为 IMU 坐标系
      *
      * @param[in] cam_rmat 相机坐标系下的装甲板旋转矩阵
      * @param[in] cam_tvec 相机坐标系下的装甲板平移向量
-     * @param[in] gyro_data 陀螺仪数据信息
-     * @param[out] gyro_rmat 陀螺仪坐标系下的装甲板旋转矩阵
-     * @param[out] gyro_tvec 陀螺仪坐标系下的装甲板平移向量
+     * @param[in] imu_data IMU 数据信息
+     * @param[out] gyro_rmat IMU 坐标系下的装甲板旋转矩阵
+     * @param[out] gyro_tvec IMU 坐标系下的装甲板平移向量
      */
-    static void cameraConvertToGyro(const cv::Matx33f &cam_rmat, const cv::Vec3f &cam_tvec,
-                                    const GyroData &gyro_data, cv::Matx33f &gyro_rmat, cv::Vec3f &gyro_tvec);
+    static void cameraConvertToImu(const cv::Matx33f &cam_rmat, const cv::Vec3f &cam_tvec,
+                                   const ImuData &imu_data, cv::Matx33f &gyro_rmat, cv::Vec3f &gyro_tvec);
 
     /**
      * @brief 判断单个装甲板所在区域内是否包含指定的灯条
