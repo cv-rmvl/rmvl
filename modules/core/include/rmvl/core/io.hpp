@@ -54,24 +54,24 @@ struct RMVL_EXPORTS_W_AG Rotation
     RMVL_W_RW float roll_speed = 0.f;  //!< 滚转角速度（顺时针运动为正）
 };
 
-//! 陀螺仪数据
-struct RMVL_EXPORTS_W_AG GyroData
+//! IMU 数据
+struct RMVL_EXPORTS_W_AG ImuData
 {
     RMVL_W_RW Translation translation; //!< 移动位置数据
     RMVL_W_RW Rotation rotation;       //!< 转动姿态数据
 
     /**
-     * @brief 导出陀螺仪数据，可以是输出到控制台，也可以是输出到文件
+     * @brief 导出 IMU 数据，可以是输出到控制台，也可以是输出到文件
      * @brief
-     * - 以 `gyro_data` 的整体写入到输出流对象的末尾
+     * - 以 `imu_data` 的整体写入到输出流对象的末尾
      *
      * @param[in] out 输出流对象
-     * @param[in] data 待写入的陀螺仪数据
+     * @param[in] data 待写入的 IMU 数据
      */
-    static void write(std::ostream &out, const GyroData &data) noexcept;
+    static void write(std::ostream &out, const ImuData &data) noexcept;
 
     /**
-     * @brief 导入陀螺仪数据，可以是从控制台读取，也可以是从文件读取
+     * @brief 导入 IMU 数据，可以是从控制台读取，也可以是从文件读取
      * @brief
      * - 读取的文件形如以下内容
      * @code{.txt}
@@ -79,29 +79,29 @@ struct RMVL_EXPORTS_W_AG GyroData
      * 13.22, 14.23, 15.24, 16.25, 17.26, 18.27, 19.28, 20.29, 21.30, 22.31, 23.32, 24.33,
      * @endcode
      * @brief
-     * - 例如，第一次调用 `read` 方法时，陀螺仪平移的数据为 `(1.9, 2.11, 3.12, 4.13, 5.14, 6.15)`
+     * - 例如，第一次调用 `read` 方法时，IMU 平移的数据为 `(1.9, 2.11, 3.12, 4.13, 5.14, 6.15)`
      *   旋转的数据为 `(7.16, 8.17, 9.18, 10.19, 11.20, 12.21)`
      *
      * @param[in] in 输入流对象
-     * @param[out] data 读取出的陀螺仪数据
+     * @param[out] data 读取出的 IMU 数据
      */
-    static void read(std::istream &in, GyroData &data) noexcept;
+    static void read(std::istream &in, ImuData &data) noexcept;
 
     /**
-     * @brief 导出所有陀螺仪数据到文件
+     * @brief 导出所有 IMU 数据到文件
      *
      * @param[in] output_file 输出文件路径
-     * @param[in] datas 待写入的所有陀螺仪数据
+     * @param[in] datas 待写入的所有 IMU 数据
      */
-    RMVL_W static void write(std::string_view output_file, const std::vector<GyroData> &datas) noexcept;
+    RMVL_W static void write(std::string_view output_file, const std::vector<ImuData> &datas) noexcept;
 
     /**
-     * @brief 从文件导入所有陀螺仪数据
+     * @brief 从文件导入所有 IMU 数据
      *
      * @param[in] input_file 输入文件路径
-     * @return 读取出的所有陀螺仪数据
+     * @return 读取出的所有 IMU 数据
      */
-    RMVL_W static std::vector<GyroData> read(std::string_view input_file) noexcept;
+    RMVL_W static std::vector<ImuData> read(std::string_view input_file) noexcept;
 };
 
 /// @example samples/tutorial_code/io/sample_read_corners.cpp 角点数据读取例程

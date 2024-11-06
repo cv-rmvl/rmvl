@@ -32,12 +32,12 @@ public:
      * @param[in out] groups 所有序列组
      * @param[in] src 原图像
      * @param[in] color 待识别的颜色
-     * @param[in] gyro_data 陀螺仪数据
+     * @param[in] imu_data IMU 数据
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
     DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                      const GyroData &gyro_data, double tick) override;
+                      const ImuData &imu_data, double tick) override;
 
     //! 构建 RuneDetector
     static inline std::unique_ptr<RuneDetector> make_detector() { return std::make_unique<RuneDetector>(); }

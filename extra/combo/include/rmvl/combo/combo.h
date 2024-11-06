@@ -35,7 +35,7 @@ protected:
     RMStatus _type{};                  //!< 类型
     cv::Point2f _center;               //!< 中心点
     cv::Point2f _relative_angle;       //!< 相对目标转角
-    GyroData _gyro_data;               //!< 当前陀螺仪数据
+    ImuData _imu_data;                 //!< 当前 IMU 数据
     std::vector<cv::Point2f> _corners; //!< 角点
     CameraExtrinsics _extrinsic;       //!< 相机外参
     double _tick{};                    //!< 捕获该组合体时的时间点
@@ -70,8 +70,8 @@ public:
     inline double tick() const { return _tick; }
     //! 获取组合体的相对目标转角
     inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
-    //! 获取组合体当前的陀螺仪数据
-    inline const GyroData &getGyroData() const { return _gyro_data; }
+    //! 获取组合体当前的 IMU 数据
+    inline const ImuData &getImuData() const { return _imu_data; }
 
     /**
      * @brief 获取指定特征
@@ -97,7 +97,7 @@ public:
     inline bool empty() const { return _features.empty(); }
 };
 
-#define RMVL_COMBO_CAST(name)                                                                           \
+#define RMVL_COMBO_CAST(name)                                                                       \
     static inline ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<name>(p_combo); } \
     static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const name>(p_combo); }
 

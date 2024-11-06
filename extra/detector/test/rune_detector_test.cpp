@@ -154,7 +154,7 @@ public:
 
     std::vector<rm::combo::ptr> detect()
     {
-        auto info = p_detector->detect(groups, src, rm::RED, rm::GyroData(), rm::Timer::now());
+        auto info = p_detector->detect(groups, src, rm::RED, rm::ImuData(), rm::Timer::now());
         return info.combos;
     }
 };

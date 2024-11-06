@@ -64,9 +64,9 @@ static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, cv:
     // 运动合成，计算 3D 预测增量
     cv::Vec3f motion_dp = translation_dp + rotation_dp;
     cv::Vec3f motion_p = tvec + motion_dp;
-    // 陀螺仪坐标系转相机坐标系
+    // IMU 坐标系转相机坐标系
     cv::Matx33f I = cv::Matx33f::eye();
-    Armor::gyroConvertToCamera(I, motion_p, p_gyro_group->getGyroData(), I, motion_p);
+    Armor::imuConvertToCamera(I, motion_p, p_gyro_group->getImuData(), I, motion_p);
     // 解算 3D 预测值
     point_p3d = motion_p;
     // 解算 2D 预测值

@@ -222,7 +222,7 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
         {
             try
             {
-                p_group->sync(_gyro_data, _tick);
+                p_group->sync(_imu_data, _tick);
             }
             catch (const rm::Exception &e)
             {
