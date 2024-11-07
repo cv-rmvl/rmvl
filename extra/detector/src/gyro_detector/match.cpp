@@ -90,8 +90,8 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
         for (size_t i = 0; i + 1 < combos.size(); ++i)
             for (size_t j = i + 1; j < combos.size(); ++j)
                 if (canBeUnion(combos[i], combos[j]))
-                    uf.unionSet(combos[i], combos[j]);
-        combo_maps = uf.exportData();
+                    uf.merge(combos[i], combos[j]);
+        combo_maps = uf.extract();
     }
     // groups 为空，进行初始化
     if (groups.empty())
