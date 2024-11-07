@@ -17,8 +17,7 @@
 namespace rm
 {
 
-DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                                const ImuData &imu_data, double tick)
+DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick)
 {
     if (groups.size() > 1)
         RMVL_Error(RMVL_StsBadArg, "Size of the argument \"groups\" is greater than 1");

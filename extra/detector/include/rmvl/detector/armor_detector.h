@@ -52,8 +52,7 @@ public:
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                      const ImuData &imu_data, double tick) override;
+    DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick) override;
 
     //! 构建 ArmorDetector
     static inline std::unique_ptr<ArmorDetector> make_detector() { return std::make_unique<ArmorDetector>(); }
