@@ -39,8 +39,7 @@ TagDetector::~TagDetector()
     tag25h9_destroy(_tf);
 }
 
-DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel,
-                               const ImuData &imu_data, double tick)
+DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel, const ImuData &imu_data, double tick)
 {
     DetectInfo info;
     info.src = src;

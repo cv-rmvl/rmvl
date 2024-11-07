@@ -16,8 +16,7 @@
 namespace rm
 {
 
-DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                                 const ImuData &imu_data, double tick)
+DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick)
 {
     DetectInfo info{};
     info.src = src;
