@@ -113,7 +113,7 @@ public:
     inline RMStatus type() const { return _type; }
 };
 
-#define RMVL_GROUP_CAST(name)                                                                           \
+#define RMVL_GROUP_CAST(name)                                                                       \
     static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<name>(p_group); } \
     static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const name>(p_group); }
 

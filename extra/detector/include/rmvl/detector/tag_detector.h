@@ -62,8 +62,7 @@ public:
      * @param[in] imu_data 当前 IMU 数据
      * @param[in] tick 当前时间点
      */
-    DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                      const ImuData &imu_data, double tick) override;
+    DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick) override;
 
 private:
     /**
