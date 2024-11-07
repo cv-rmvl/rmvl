@@ -34,7 +34,7 @@ struct DetectInfo
     cv::Mat gray;              //!< 灰度图列表
     cv::Mat bin;               //!< 二值图列表
     std::vector<cv::Mat> rois; //!< ROI 列表
-    cv::Mat rendergraphs;      //!< 渲染图列表
+    cv::Mat rendergraph;       //!< 渲染图
 
     std::vector<combo::ptr> combos;     //!< 当前帧所有组合体
     std::vector<feature::ptr> features; //!< 当前帧所有特征
@@ -44,7 +44,7 @@ struct DetectInfo
 class detector
 {
 protected:
-    double _tick;        //!< 每一帧对应的时间点
+    double _tick;      //!< 每一帧对应的时间点
     ImuData _imu_data; //!< 每一帧对应的 IMU 数据
 
 public:
@@ -64,8 +64,7 @@ public:
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    virtual DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
-                              const ImuData &imu_data, double tick) = 0;
+    virtual DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick) = 0;
 };
 
 //! @} detector

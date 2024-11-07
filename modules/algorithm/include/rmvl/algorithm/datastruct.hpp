@@ -233,7 +233,7 @@ public:
      * @param[in] val_b 元素 B
      * @return 是否在同一个集合
      */
-    inline bool isSameSet(const Tp &val_a, const Tp &val_b)
+    inline bool connected(const Tp &val_a, const Tp &val_b)
     {
         // Sign up?
         if (_element_set.find(val_a) == _element_set.end() ||
@@ -249,7 +249,7 @@ public:
      * @param[in] val_a 元素 A
      * @param[in] val_b 元素 B
      */
-    inline void unionSet(const Tp &val_a, const Tp &val_b)
+    inline void merge(const Tp &val_a, const Tp &val_b)
     {
         // Sign up?
         if (_element_set.find(val_a) == _element_set.end() ||
@@ -274,7 +274,7 @@ public:
      *
      * @return Key: 集合代表元素，Value: 集合
      */
-    inline std::unordered_map<Tp, std::vector<Tp>> exportData()
+    inline std::unordered_map<Tp, std::vector<Tp>> extract()
     {
         std::unordered_map<Tp, std::vector<Tp>> datas;
         for (const auto &map_pair : _size_map)
@@ -285,7 +285,7 @@ public:
     }
 
     //! 获取连通分量
-    inline int getConnectedComponent() { return _connected_component; }
+    inline int components() { return _connected_component; }
 
 private:
     //! 寻找代表元素

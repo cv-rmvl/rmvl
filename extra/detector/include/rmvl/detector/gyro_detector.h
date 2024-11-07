@@ -53,8 +53,7 @@ public:
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    DetectInfo detect(std::vector<group::ptr> &groups, cv::Mat &src, rm::PixChannel color,
-                      const ImuData &imu_data, double tick) override;
+    DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, rm::PixChannel color, const ImuData &imu_data, double tick) override;
 
     //! 构建 GyroDetector
     static inline std::unique_ptr<GyroDetector> make_detector(int armor_num = 0)

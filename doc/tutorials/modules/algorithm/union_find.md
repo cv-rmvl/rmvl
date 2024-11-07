@@ -31,9 +31,9 @@ rm::UnionFind 支持集合的快速合并、查找的结构，提供三种典型
 
 |              成员方法             |           含义           |
 | :-------------------------------: | :----------------------: |
-|       bool inSameSet(a, b);       | 两个元素是否在一个集合中 |
-|        void unionSet(a, b);       | 两个元素所在集合进行合并 |
-| void getConnectedComponent(a, b); |   获取并查集的连通分量   |
+|       bool connected(a, b);       | 两个元素是否在一个集合中 |
+|         void merge(a, b);         | 两个元素所在集合进行合并 |
+|       void components(a, b);      |   获取并查集的连通分量   |
 
 ## 3. 例题
 
@@ -107,15 +107,15 @@ public:
                 {
                     grid[r][c] = '0';
                     if (r - 1 >= 0 && grid[r - 1][c] == '1')
-                        uf.unionSet(r * cols + c, (r - 1) * cols + c);
+                        uf.merge(r * cols + c, (r - 1) * cols + c);
                     if (r + 1 < rows && grid[r + 1][c] == '1')
-                        uf.unionSet(r * cols + c, (r + 1) * cols + c);
+                        uf.merge(r * cols + c, (r + 1) * cols + c);
                     if (c - 1 >= 0 && grid[r][c - 1] == '1')
-                        uf.unionSet(r * cols + c, r * cols + c - 1);
+                        uf.merge(r * cols + c, r * cols + c - 1);
                     if (c + 1 < cols && grid[r][c + 1] == '1')
-                        uf.unionSet(r * cols + c, r * cols + c + 1);
+                        uf.merge(r * cols + c, r * cols + c + 1);
                 }
-        return uf.getConnectedComponent();
+        return uf.components();
     }
 };
 ```

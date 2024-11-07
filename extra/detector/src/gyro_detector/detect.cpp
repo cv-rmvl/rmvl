@@ -17,7 +17,7 @@
 namespace rm
 {
 
-DetectInfo GyroDetector::detect(std::vector<group::ptr> &groups, cv::Mat &src, PixChannel color,
+DetectInfo GyroDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color,
                                 const ImuData &imu_data, double tick)
 {
     // 识别信息
