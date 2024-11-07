@@ -15,14 +15,6 @@ if(NOT DEFINED galaxy_sdk_path)
   endif()
 endif()
 
-# add the include directories path
-find_path(
-  GalaxySDK_INCLUDE_DIR
-  NAMES GxIAPI.h DxImageProc.h
-  PATHS "${galaxy_sdk_path}/Development/VC SDK/inc"
-  NO_DEFAULT_PATH
-)
-
 # add libraries
 if(UNIX)
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "amd64")
@@ -35,6 +27,12 @@ if(UNIX)
     return()
   endif()
 
+  find_path(
+    GalaxySDK_INCLUDE_DIR
+    NAMES GxIAPI.h DxImageProc.h
+    PATHS "${galaxy_sdk_path}/inc"
+    NO_DEFAULT_PATH
+  )
   find_library(
     GalaxySDK_LIB
     NAMES "libgxiapi.so"
@@ -50,13 +48,18 @@ if(UNIX)
     )
   endif()
 elseif(WIN32)
+  find_path(
+    GalaxySDK_INCLUDE_DIR
+    NAMES GxIAPI.h DxImageProc.h
+    PATHS "${galaxy_sdk_path}/Development/VC SDK/inc"
+    NO_DEFAULT_PATH
+  )
   find_library(
     GalaxySDK_LIB
     NAMES GxIAPI.lib DxImageProc.lib
     PATHS "${galaxy_sdk_path}/Development/VC SDK/lib/x${sys_type}"
     NO_DEFAULT_PATH
   )
-
   find_file(
     GalaxySDK_DLL
     NAMES GxIAPI.dll DxImageProc.dll

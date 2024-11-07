@@ -1,5 +1,5 @@
 /**
- * @file mv_camera_MvCameraImpl.h
+ * @file mv_camera_impl.h
  * @author zhaoxi (535394140@qq.com)
  * @brief 工业相机实现
  * @version 1.0
