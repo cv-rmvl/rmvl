@@ -48,7 +48,7 @@ cv::Mat binary(cv::Mat src, uint8_t thresh)
     if (src.type() == CV_8UC3)
         cvtColor(src, bin, cv::COLOR_BGR2GRAY);
     else
-        bin = src;
+        bin = src.clone();
     threshold(bin, bin, thresh, 255, cv::THRESH_BINARY);
     return bin;
 }

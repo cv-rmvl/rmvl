@@ -209,13 +209,12 @@ constexpr auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &
 }
 
 /**
- * @brief 点到直线距离
- * @note 点 \f$P=(x_0,y_0)\f$ 到直线 \f$l:Ax+By+C=0\f$ 距离公式为
- *       \f[D(P,l)=\frac{Ax_0+By_0+C}{\sqrt{A^2+B^2}}\f]
+ * @brief 点到直线距离，其中 \f$P=(x_0,y_0)\f$ 到直线 \f$l:Ax+By+C=0\f$ 距离公式为
+ * \f[D(P,l)=\frac{Ax_0+By_0+C}{\sqrt{A^2+B^2}}\f]
  *
  * @tparam Tp1 直线方程数据类型
  * @tparam Tp2 平面点的数据类型
- * @param[in] line 用 `cv::Vec4_` 表示的直线方程 (vx, vy, x0, y0)
+ * @param[in] line 用 `cv::Vec4_` 表示的直线方程 \f$(v_x, v_y, x_0, y_0)\f$
  * @param[in] pt 平面点
  * @param[in] direc 是否区分距离的方向
  * @note
@@ -235,9 +234,10 @@ constexpr auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &p
 }
 
 /**
- * @brief 获取与水平方向的夹角，以平面直角坐标系 x 轴为分界线，
- *        逆时针为正方向，范围: (-180°, 180°]，默认返回弧度制
- *
+ * @brief 获取与水平方向的夹角，以平面直角坐标系 \f$x\f$ 轴为分界线， **逆时针** 为正方向，范围: \f$(-180°,180°]\f$ ，默认返回弧度制
+ * @note 与像素（图像）坐标系不同，像素（图像）坐标系中 \f$y\f$ 轴向下为正方向，而此函数将 \f$y\f$
+ *       轴向上设置为正方向，因此才能将逆时针表示为旋转的正方向
+ * 
  * @tparam Tp1 平面点 1 的数据类型
  * @tparam Tp2 平面点 2 的数据类型
  * @param[in] start 像素坐标系下的起点
@@ -253,8 +253,8 @@ constexpr auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &en
 }
 
 /**
- * @brief 获取与垂直方向的夹角，以平面直角坐标系 y 轴为分界线，
- *        顺时针为正方向，范围: (-180°, 180°]，默认返回弧度制
+ * @brief 获取与垂直方向的夹角，以平面直角坐标系 \f$y\f$ 轴为分界线，
+ *        **顺时针** 为正方向，范围: \f$(-180°,180°]\f$ ，默认返回弧度制
  *
  * @tparam Tp1 平面点 1 的数据类型
  * @tparam Tp2 平面点 2 的数据类型
@@ -278,7 +278,7 @@ constexpr auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &en
  * @tparam Tp 角度的数据类型
  * @param[in] angle_1 第 1 个角度
  * @param[in] angle_2 第 2 个角度
- * @return 夹角，角度的范围是 (-180°, 180°]
+ * @return 夹角，角度的范围是 \f$(-180°,180°]\f$
  */
 template <typename Tp>
 constexpr Tp getDeltaAngle(Tp angle_1, Tp angle_2)
@@ -362,7 +362,7 @@ constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + st
  * @tparam Tp 向量数据类型
  * @param[in] a 向量 A
  * @param[in] b 向量 B
- * @return 外积，若 retval = 0，则共线
+ * @return 外积，若 \f$\texttt{res} = 0\f$ 则共线，\f$\texttt{res} > 0\f$ 则方向向内，\f$\texttt{res} < 0\f$ 则方向向外
  */
 template <typename Tp>
 constexpr Tp cross2D(const cv::Vec<Tp, 2> &a, const cv::Vec<Tp, 2> &b) { return a(0) * b(1) - a(1) * b(0); }
@@ -373,7 +373,7 @@ constexpr Tp cross2D(const cv::Vec<Tp, 2> &a, const cv::Vec<Tp, 2> &b) { return 
  * @tparam Tp Point_数据类型
  * @param[in] a 向量 A
  * @param[in] b 向量 B
- * @return 外积，若 retval = 0，则共线
+ * @return 外积，若 \f$\texttt{res} = 0\f$ 则共线，\f$\texttt{res} > 0\f$ 则方向向内，\f$\texttt{res} < 0\f$ 则方向向外
  */
 template <typename Tp>
 constexpr Tp cross2D(const cv::Point_<Tp> &a, const cv::Point_<Tp> &b) { return a.x * b.y - a.y * b.x; }
