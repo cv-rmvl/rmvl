@@ -14,7 +14,6 @@
 #include "rmvl/detector/armor_detector.h"
 
 #include "rmvlpara/detector/armor_detector.h"
-#include "rmvlpara/tracker/planar_tracker.h"
 
 namespace rm
 {
@@ -36,12 +35,20 @@ static inline bool isChange(const combo::ptr &t_combo, const combo::ptr &combo, 
 
 void ArmorDetector::match(std::vector<group::ptr> &groups, const std::vector<combo::ptr> &combos)
 {
+    auto &trackers = groups.front()->data();
     // combo 匹配 tracker
-    matchArmors(groups.front()->data(), combos);
+    matchArmors(trackers, combos);
     // 删除因数字识别判断出的伪装甲板序列
-    // eraseFakeTracker(groups.front()->data());
-    // 删除 tracker
-    eraseNullTracker(groups.front()->data());
+    // trackers.erase(std::remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr t1) {
+    //                    return t1->type().RobotTypeID == RobotType::UNKNOWN;
+    //                }),
+    //                trackers.end());
+    // 删除失效的 tracker
+    trackers.erase(std::remove_if(trackers.begin(), trackers.end(),
+                                  [](tracker::const_ptr p_tracker) {
+                                      return p_tracker->invalid();
+                                  }),
+                   trackers.end());
 }
 
 void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos)
@@ -121,24 +128,6 @@ void ArmorDetector::matchArmors(std::vector<tracker::ptr> &trackers, const std::
             armor_set.erase(*min_it);
         }
     }
-}
-
-void ArmorDetector::eraseNullTracker(std::vector<tracker::ptr> &trackers)
-{
-    // 删除
-    trackers.erase(std::remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr p_tracker) {
-                       return p_tracker->getVanishNumber() >= para::planar_tracker_param.TRACK_FRAMES;
-                   }),
-                   trackers.end());
-}
-
-void ArmorDetector::eraseFakeTracker(std::vector<tracker::ptr> &trackers)
-{
-    // 删除
-    trackers.erase(std::remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr t1) {
-                       return t1->type().RobotTypeID == RobotType::UNKNOWN;
-                   }),
-                   trackers.end());
 }
 
 } // namespace rm

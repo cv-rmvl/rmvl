@@ -79,13 +79,8 @@ public:
      */
     void update(double tick, const ImuData &imu_data) override;
 
-    /**
-     * @brief 滤波器初始化
-     *
-     * @param[in] init_angle 初始角度
-     * @param[in] init_speed 初始速度
-     */
-    void initFilter(float init_angle = 0.f, float init_speed = 0.f);
+    //! 判断追踪器是否无效
+    bool invalid() const override;
 
     //! 获取神符滤波后的角速度（角度制）
     inline float getRotatedSpeed() { return _rotated_speed; }

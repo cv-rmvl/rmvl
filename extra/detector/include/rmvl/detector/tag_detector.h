@@ -63,22 +63,6 @@ public:
      * @param[in] tick 当前时间点
      */
     DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick) override;
-
-private:
-    /**
-     * @brief Tag 特征组合体匹配至时间序列
-     *
-     * @param[in out] trackers 所有追踪器序列
-     * @param[in] combos 每一帧的所有目标
-     */
-    void match(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos);
-
-    /**
-     * @brief 及时删除多帧为空的序列
-     *
-     * @param[in out] trackers 所有追踪器序列
-     */
-    void eraseNullTracker(std::vector<tracker::ptr> &trackers);
 };
 
 //! @} tag_detector

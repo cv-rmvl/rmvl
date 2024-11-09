@@ -17,7 +17,7 @@
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
-#include "rmvlpara/tracker/gyro_tracker.h"
+#include "rmvlpara/group/gyro_group.h"
 
 namespace rm
 {

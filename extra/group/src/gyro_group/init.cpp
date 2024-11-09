@@ -15,6 +15,7 @@
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
+#include "rmvlpara/group/gyro_group.h"
 
 namespace rm
 {
@@ -90,5 +91,7 @@ group::ptr GyroGroup::clone()
         retval->_tracker_state[p_tracker] = _tracker_state[p_tracker];
     return retval;
 }
+
+bool GyroGroup::invalid() const { return _vanish_num > para::gyro_group_param.TRACK_FRAMES; }
 
 } // namespace rm

@@ -31,11 +31,16 @@ RuneTracker::RuneTracker(combo::ptr p_rune)
     if (p_rune == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is null pointer");
     _combo_deque.emplace_front(p_rune);
-    initFilter(p_rune->angle(), 0.f);
+    // 初始化旋转滤波器
+    _filter.setR({para::rune_tracker_param.ROTATE_R});
+    _filter.setQ(para::rune_tracker_param.ROTATE_Q);
+    _filter.init({p_rune->angle(), 0.f}, 1e5f);
     _angle = p_rune->angle();
     _center = p_rune->center();
     updateFromRune(p_rune);
 }
+
+bool RuneTracker::invalid() const { return _vanish_num >= para::rune_tracker_param.TRACK_FRAMES; }
 
 tracker::ptr RuneTracker::clone()
 {

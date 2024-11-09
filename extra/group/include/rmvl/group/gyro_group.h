@@ -17,8 +17,6 @@
 #include "rmvl/group/group.h"
 #include "rmvl/group/gyro/utils.h"
 
-#include "rmvlpara/group/gyro_group.h"
-
 namespace rm
 {
 
@@ -74,6 +72,9 @@ public:
      */
     group::ptr clone() override;
 
+    //! 判断是否为无效序列组
+    bool invalid() const override;
+
     RMVL_GROUP_CAST(GyroGroup)
 
     /**
@@ -114,7 +115,7 @@ public:
      * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    void sync(const ImuData &imu_data, double tick);
+    void sync(const ImuData &imu_data, double tick) override;
 
     /**
      * @brief 获取追踪器状态

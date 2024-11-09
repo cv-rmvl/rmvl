@@ -62,6 +62,9 @@ public:
      */
     virtual void add(tracker::ptr p_tracker) { _trackers.emplace_back(p_tracker); }
 
+    //! 判断是否为无效序列组
+    virtual bool invalid() const { return false; }
+
     /**
      * @brief 获取同组所有的追踪器数据
      * @note 若仅需要对 `vector<tracker::ptr>` 做数据处理，使用此方法可直接实现 group 至 tracker 的退化

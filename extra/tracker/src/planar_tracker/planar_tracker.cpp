@@ -10,7 +10,6 @@
  */
 
 #include "rmvl/tracker/planar_tracker.h"
-
 #include "rmvlpara/tracker/planar_tracker.h"
 
 namespace rm
@@ -37,6 +36,8 @@ PlanarTracker::PlanarTracker(combo::ptr p_combo)
     _relative_angle = p_combo->getRelativeAngle();
     updateData(p_combo);
 }
+
+bool PlanarTracker::invalid() const { return _vanish_num >= para::planar_tracker_param.TRACK_FRAMES; }
 
 tracker::ptr PlanarTracker::clone()
 {
