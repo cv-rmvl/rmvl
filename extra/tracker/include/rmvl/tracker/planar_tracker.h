@@ -64,6 +64,9 @@ public:
      */
     void update(combo::ptr p_combo) override;
 
+    //! 判断追踪器是否无效
+    bool invalid() const override;
+
 private:
     /**
      * @brief 将 combo 中的数据更新至 tracker

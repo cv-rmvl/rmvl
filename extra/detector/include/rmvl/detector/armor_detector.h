@@ -129,20 +129,6 @@ private:
      * @param[in] combos 每一帧的所有目标
      */
     void matchArmors(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos);
-
-    /**
-     * @brief 及时删除多帧为空的序列
-     *
-     * @param[in out] trackers 所有追踪器序列
-     */
-    void eraseNullTracker(std::vector<tracker::ptr> &trackers);
-
-    /**
-     * @brief 删除因数字识别判断出的伪装甲板序列
-     *
-     * @param[in out] trackers 所有追踪器序列
-     */
-    void eraseFakeTracker(std::vector<tracker::ptr> &trackers);
 };
 
 //! @} armor_detector

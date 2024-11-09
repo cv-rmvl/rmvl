@@ -64,6 +64,9 @@ public:
      */
     virtual void update(double tick, const ImuData &imu_data) = 0;
 
+    //! 判断追踪器是否无效
+    virtual bool invalid() const { return false; }
+
     //! 获取时间队列中最新的组合体
     inline combo::ptr front() const { return _combo_deque.front(); }
     //! 获取时间队列中最后的组合体

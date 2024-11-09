@@ -14,8 +14,6 @@
 #include "rmvl/detector/rune_detector.h"
 #include "rmvl/group/rune_group.h"
 
-#include "rmvlpara/tracker/rune_tracker.h"
-
 namespace rm
 {
 
@@ -24,9 +22,7 @@ void RuneDetector::match(std::vector<tracker::ptr> &rune_trackers, const std::ve
     // 匹配
     this->matchRunes(rune_trackers, combos);
     // 删除
-    rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(), [](tracker::const_ptr p_tracker) {
-                            return p_tracker->getVanishNumber() >= para::rune_tracker_param.TRACK_FRAMES;
-                        }),
+    rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(), [](tracker::const_ptr p_tracker) { return p_tracker->invalid(); }),
                         rune_trackers.end());
 }
 

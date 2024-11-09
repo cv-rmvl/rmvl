@@ -41,7 +41,6 @@ tracker::ptr DefaultTracker::clone()
     return retval;
 }
 
-
 void DefaultTracker::update(combo::ptr p_combo)
 {
     updateData(p_combo);

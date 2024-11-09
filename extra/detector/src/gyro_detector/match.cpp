@@ -9,12 +9,13 @@
  *
  */
 
+#include "rmvl/core/datastruct.hpp"
 #include "rmvl/detector/gyro_detector.h"
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/core/datastruct.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/detector/gyro_detector.h"
+#include "rmvlpara/group/gyro_group.h"
 
 namespace rm
 {
@@ -30,7 +31,7 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
 {
     // 宽度比值
     float width_ratio = (lhs->width() > rhs->width()) ? lhs->width() / rhs->width()
-                                                            : rhs->width() / lhs->width();
+                                                      : rhs->width() / lhs->width();
     if (width_ratio > para::gyro_detector_param.MAX_WIDTH_RATIO)
     {
         DEBUG_INFO_("can't be union: width_ratio = %f", width_ratio);
@@ -38,7 +39,7 @@ static inline bool canBeUnion(const combo::ptr &lhs, const combo::ptr &rhs)
     }
     // 高度比值
     float height_ratio = (lhs->height() > rhs->height()) ? lhs->height() / rhs->height()
-                                                               : rhs->height() / lhs->height();
+                                                         : rhs->height() / lhs->height();
     if (height_ratio > para::gyro_detector_param.MAX_HEIGHT_RATIO)
     {
         DEBUG_INFO_("can't be union: height_ratio = %f", height_ratio);
@@ -237,10 +238,7 @@ void GyroDetector::match(std::vector<group::ptr> &groups, std::vector<combo::ptr
                      groups.end());
     }
     // 删除四个 tracker 同时消失数量过多的 group
-    groups.erase(remove_if(groups.begin(), groups.end(), [](group::const_ptr p_group) {
-                     return p_group->getVanishNumber() > para::gyro_group_param.TRACK_FRAMES;
-                 }),
-                 groups.end());
+    groups.erase(remove_if(groups.begin(), groups.end(), [](group::const_ptr val) { return val->invalid(); }), groups.end());
     // 删除 2D 中心点相距过近的 group
     sort(groups.begin(), groups.end(), [](group::const_ptr lhs, group::const_ptr rhs) {
         return lhs->center().x < rhs->center().x;

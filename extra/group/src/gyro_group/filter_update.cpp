@@ -11,7 +11,7 @@
 
 #include "rmvl/group/gyro_group.h"
 
-#include "rmvlpara/tracker/gyro_tracker.h"
+#include "rmvlpara/group/gyro_group.h"
 
 namespace rm
 {
