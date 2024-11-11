@@ -34,7 +34,7 @@
 数据处理中，最常见的一种函数形式是 \f[f(\pmb x)=\frac12\sum_{i=1}^m\varphi_i^2(\pmb x)\tag{1-1}\f]
 
 如果 \f$f(x)\f$ 的极小点 \f$x^*\f$ 满足 \f$f(x^*)< e\f$（\f$e\f$ 是预先给定的精度），那么可以认为 \f$x^*\f$ 是
-方程组 \f[\varphi_i(x_1,x_2,\cdots,x_n)=0,\quad i=1,2,\cdots,m(m\le n)\f] 的解。
+方程组 \f[\varphi_i(x_1,x_2,\cdots,x_n)=0,\quad i=1,2,\cdots,m(m\ge n)\f] 的解。
 
 对式 \f$\fml{1-1}\f$，可以用一阶导数运算来代替牛顿法中的二阶导数矩阵的求逆运算。因为
 
