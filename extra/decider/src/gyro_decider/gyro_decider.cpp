@@ -55,7 +55,7 @@ static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, cv:
         RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"GyroGroup::ptr\"");
     // 旋转预测增量的分量计算
     float c = cos(rotangle), s = sin(rotangle);
-    const auto &tvec = p_tracker->extrinsics().tvec();
+    const auto &tvec = p_tracker->extrinsic().tvec();
     cv::Vec3f center2combo_pose = tvec - p_gyro_group->getCenter3D(); // 旋转中心到 combo 的向量
     cv::Matx33f rot = {c, 0, s,
                        0, 1, 0,
@@ -66,7 +66,7 @@ static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, cv:
     cv::Vec3f motion_p = tvec + motion_dp;
     // IMU 坐标系转相机坐标系
     cv::Matx33f I = cv::Matx33f::eye();
-    Armor::imuConvertToCamera(I, motion_p, p_gyro_group->getImuData(), I, motion_p);
+    Armor::imuConvertToCamera(I, motion_p, p_gyro_group->imu(), I, motion_p);
     // 解算 3D 预测值
     point_p3d = motion_p;
     // 解算 2D 预测值
@@ -94,7 +94,7 @@ static cv::Point2f calculateHighSpeedBasicResponse(group::ptr target_group, trac
     cv::Point3f min_pitch3d;
     min_pitch3d.x = GyroGroup::cast(target_group)->getCenter3D()(0);
     for (const auto &p_target : target_group->data())
-        min_pitch3d.y += p_target->extrinsics().tvec()(1);
+        min_pitch3d.y += p_target->extrinsic().tvec()(1);
     min_pitch3d.y /= static_cast<float>(target_group->data().size());
     min_pitch3d.z = predict_center3d.z;
     auto min_pitch_target2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, min_pitch3d);

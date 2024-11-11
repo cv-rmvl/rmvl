@@ -23,7 +23,7 @@ void GyroTracker::updateFromCombo(combo::ptr p_combo)
     _center = p_combo->center();
     _relative_angle = p_combo->getRelativeAngle();
     _corners = p_combo->corners();
-    _extrinsic = p_combo->extrinsics();
+    _extrinsic = p_combo->extrinsic();
     _pose = Armor::cast(p_combo)->getPose();
 }
 
@@ -33,7 +33,7 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");
     updateFromCombo(p_armor);
 
-    _extrinsic = p_armor->extrinsics();
+    _extrinsic = p_armor->extrinsic();
     _type = p_armor->type();
     _combo_deque.push_back(p_armor);
     _type_deque.push_back(_type.RobotTypeID);

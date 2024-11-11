@@ -62,8 +62,16 @@ public:
     inline cv::Point2f center() const { return _center; }
     //! 获取组合体角点
     inline const std::vector<cv::Point2f> &corners() const { return _corners; }
+
+    /**
+     * @brief 获取指定角点
+     * 
+     * @param[in] idx 下标
+     * @return 指定角点 
+     */
+    inline cv::Point2f corner(int idx) const { return _corners[idx]; }
     //! 获取组合体相机外参
-    inline const CameraExtrinsics &extrinsics() const { return _extrinsic; }
+    inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
     //! 获取组合体类型
     inline RMStatus type() const { return _type; }
     //! 获取捕获该组合体的时间点
@@ -71,7 +79,7 @@ public:
     //! 获取组合体的相对目标转角
     inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
     //! 获取组合体当前的 IMU 数据
-    inline const ImuData &getImuData() const { return _imu_data; }
+    inline const ImuData &imu() const { return _imu_data; }
 
     /**
      * @brief 获取指定特征

@@ -23,7 +23,7 @@ void GyroTracker::initFilter()
     // 初始化位置滤波器
     _center3d_filter.setR(para::gyro_tracker_param.POSITION_R);
     _center3d_filter.setQ(para::gyro_tracker_param.POSITION_Q);
-    const auto &tvec = first_combo->extrinsics().tvec();
+    const auto &tvec = first_combo->extrinsic().tvec();
     cv::Matx61f init_position_vec = {tvec(0), tvec(1), tvec(2), 0, 0, 0};
     _center3d_filter.init(init_position_vec, 1e5f);
     // 初始化姿态滤波器
@@ -47,7 +47,7 @@ void GyroTracker::updatePositionFilter()
     // 预测
     _center3d_filter.predict();
     // 更新
-    cv::Vec3f tvec = at(0)->extrinsics().tvec();
+    cv::Vec3f tvec = at(0)->extrinsic().tvec();
     cv::Matx61f correct_position = _center3d_filter.correct(tvec);
     _extrinsic.tvec({correct_position(0), correct_position(1), correct_position(2)});
 }

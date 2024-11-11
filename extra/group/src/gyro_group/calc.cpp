@@ -72,7 +72,7 @@ combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const ImuData &im
     // IMU 坐标系转化为相机坐标系
     cv::Matx33f cam_rmat;
     cv::Vec3f cam_tvec;
-    Armor::imuConvertToCamera(gyro_rmat, gyro_tvec, p_combo->getImuData(), cam_rmat, cam_tvec);
+    Armor::imuConvertToCamera(gyro_rmat, gyro_tvec, p_combo->imu(), cam_rmat, cam_tvec);
 
     if (cam_tvec(2) <= 0)
         RMVL_Error_(RMVL_StsError, "Bad value of \"cam_tvec\", cam_tvec(2) = %.3f", cam_tvec(2));
@@ -110,9 +110,9 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
     });
     for (size_t i = 0; i < visible_num; ++i)
     {
-        Rs[i] = operate_combos[i]->extrinsics().R();
+        Rs[i] = operate_combos[i]->extrinsic().R();
         Ps[i] = Armor::cast(operate_combos[i])->getPose();
-        ts[i] = operate_combos[i]->extrinsics().tvec();
+        ts[i] = operate_combos[i]->extrinsic().tvec();
         rs[i] = para::gyro_group_param.INIT_RADIUS;
     }
 
