@@ -325,8 +325,9 @@ enum class FminMode : uint8_t
 //! 最小二乘求解模式
 enum class LsqMode : uint8_t
 {
-    GN, //!< 改进的 Gauss-Newton 法
-    LM, //!< Levenberg-Marquardt 法 \cite Eade13 \cite Madsen04
+    SGN, //!< 改进的 Gauss-Newton 法，单次寻找最优步长的 Gauss-Newton 法
+    GN,  //!< Gauss-Newton 法
+    LM   //!< Levenberg-Marquardt 法 \cite Eade13 \cite Madsen04
 };
 
 //! 无约束多维函数优化选项
@@ -334,7 +335,7 @@ struct RMVL_EXPORTS_W_AG OptimalOptions
 {
     RMVL_W_RW DiffMode diff_mode{}; //!< 梯度计算模式，默认为中心差商 `DiffMode::Central`
     RMVL_W_RW FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
-    RMVL_W_RW LsqMode lsq_mode{};   //!< 最小二乘求解模式，默认为改进的 Gauss-Newton 法 `LsqMode::GN`
+    RMVL_W_RW LsqMode lsq_mode{};   //!< 最小二乘求解模式，默认为改进的 Gauss-Newton 法 `LsqMode::SGN`
     RMVL_W_RW int max_iter{1000};   //!< 最大迭代次数
     RMVL_W_RW double exterior{1e3}; //!< 外罚函数系数
     RMVL_W_RW double dx{1e-2};      //!< 求解步长

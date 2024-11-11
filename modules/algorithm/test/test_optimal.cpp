@@ -131,13 +131,23 @@ TEST(Optimal, lsqnonlin_sine)
         lsq_sine[i] = [=](const std::vector<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
 
     rm::OptimalOptions options;
+    // SGN
     options.max_iter = 50;
-    options.lsq_mode = rm::LsqMode::GN;
+    options.lsq_mode = rm::LsqMode::SGN;
     auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}, options);
     EXPECT_NEAR(x[0], 0.8, 1e-4);
     EXPECT_NEAR(x[1], 0.019, 1e-4);
     EXPECT_NEAR(x[2], -0.2, 1e-4);
     EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-4);
+    // GN
+    options.max_iter = 100;
+    options.lsq_mode = rm::LsqMode::GN;
+    x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}, options);
+    EXPECT_NEAR(x[0], 0.8, 1e-4);
+    EXPECT_NEAR(x[1], 0.019, 1e-4);
+    EXPECT_NEAR(x[2], -0.2, 1e-4);
+    EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-4);
+    // LM
     options.max_iter = 2000;
     options.lsq_mode = rm::LsqMode::LM;
     x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}, options);
@@ -153,17 +163,12 @@ TEST(Optimal, lsqnonlinRKF_sine)
     for (std::size_t i = 0; i < lsq_sine.size(); ++i)
         lsq_sine[i] = [=](const std::vector<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
 
-    rm::OptimalOptions options;
-    options.max_iter = 50;
-    options.lsq_mode = rm::LsqMode::GN;
-    auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber, options);
+    auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber);
     EXPECT_NEAR(x[0], 0.8, 1e-4);
     EXPECT_NEAR(x[1], 0.019, 1e-4);
     EXPECT_NEAR(x[2], -0.2, 1e-4);
     EXPECT_NEAR(x[3], 2.09 - 0.8, 1e-4);
-    options.max_iter = 2000;
-    options.lsq_mode = rm::LsqMode::LM;
-    x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Tukey, options);
+    x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Tukey);
     EXPECT_NEAR(x[0], 0.8, 1e-4);
     EXPECT_NEAR(x[1], 0.019, 1e-4);
     EXPECT_NEAR(x[2], -0.2, 1e-4);

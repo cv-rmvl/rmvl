@@ -13,6 +13,7 @@
 
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
+#include <unsupported/Eigen/NonLinearOptimization>
 #endif // HAVE_OPENCV
 
 #include "rmvl/algorithm/math.hpp"
@@ -412,6 +413,36 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
         // JᵀWJs = JᵀWf
         cv::Mat W = fnW(fvals);
         cv::solve(Jt * W * J, Jt * W * fvals, s, cv::DECOMP_CHOLESKY);
+        // 更新 xk
+        for (std::size_t i = 0; i < xk.size(); ++i)
+            xk[i] -= s.at<double>(i);
+    }
+    return xk;
+}
+
+// 改进的 Gauss-Newton 法
+static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
+{
+    if (x0.empty())
+        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
+    std::vector<double> xk(x0);
+    cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // J 矩阵 (M×N)
+    std::vector<double> phi(funcs.size());        // 函数值 (M×1)
+
+    auto fnW = robustSelect(rb);
+    for (int idx = 0; idx < options.max_iter; ++idx)
+    {
+        // 计算函数值和搜索方向
+        calcFs(funcs, xk, phi);
+        if (normL2(phi) < options.tol)
+            break;
+        calcJacobi(funcs, xk, options, J);
+        auto Jt = J.t();
+        cv::Mat fvals(phi);
+        cv::Mat s;
+        // JᵀWJs = JᵀWf
+        cv::Mat W = fnW(fvals);
+        cv::solve(Jt * W * J, Jt * W * fvals, s, cv::DECOMP_CHOLESKY);
         // 一维搜索 alpha
         auto func_alpha = [&](double alpha) {
             auto xk2 = xk;
@@ -431,77 +462,52 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
     return xk;
 }
 
-// Levenberg-Marquardt 法
-static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
+class LMFunctor
 {
-    std::vector<double> xk = x0;
-    const int n = static_cast<int>(xk.size());
-    const int m = static_cast<int>(funcs.size());
+public:
+    LMFunctor(const FuncNds &funcs, const std::vector<double> &x0, DiffMode diff_mode, double dx)
+        : _funcs(funcs), _x0(x0), _diff_mode(diff_mode), _dx(dx) {}
 
-    cv::Mat J(m, n, CV_64F);
-    std::vector<double> f_x(m);
-    std::vector<double> f_x_new(m);
-
-    cv::Mat g(n, 1, CV_64F);
-    cv::Mat H(n, n, CV_64F);
-    const auto I = cv::Mat::eye(n, n, CV_64F);
-    cv::Mat delta(n, 1, CV_64F);
-
-    double lambda{0.01};
-
-    auto fnW = robustSelect(rb);
-    for (int idx = 0; idx < options.max_iter; ++idx)
+    int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
     {
-        // 计算函数值和雅可比矩阵
-        calcFs(funcs, xk, f_x);
-        cv::Mat fvals(f_x);
-        calcJacobi(funcs, xk, options, J);
-
-        auto W = fnW(fvals);
-        g = J.t() * W * fvals; // g = JᵀWf
-        H = J.t() * W * J;     // H = JᵀWJ
-
-        while (idx < options.max_iter)
-        {
-            cv::solve(H + lambda * I, g, delta, cv::DECOMP_CHOLESKY);
-
-            // 更新参数
-            std::vector<double> new_xk = xk;
-            for (int i = 0; i < n; ++i)
-                new_xk[i] -= delta.at<double>(i, 0);
-
-            // 计算新的函数值
-            calcFs(funcs, new_xk, f_x_new);
-
-            // 计算误差变化
-            double current_error{}, new_error{};
-            for (int i = 0; i < m; ++i)
-            {
-                current_error += f_x[i] * f_x[i];
-                new_error += f_x_new[i] * f_x_new[i];
-            }
-            // 接受新参数，减小 lambda
-            if (new_error < current_error)
-            {
-                xk = std::move(new_xk);
-                lambda /= 2;
-                break;
-            }
-            // 拒绝新参数，增加 lambda
-            else
-            {
-                lambda *= 2;
-                idx++;
-            }
-        }
-
-        // 检查收敛条件
-        double delta_norm = cv::norm(delta);
-        if (delta_norm < options.tol)
-            break;
+        for (std::size_t i = 0; i < _funcs.size(); i++)
+            fvec[i] = _funcs[i](std::vector<double>(x.data(), x.data() + x.size()));
+        return 0;
     }
 
-    return xk;
+    int df(const Eigen::VectorXd &x, Eigen::MatrixXd &fjac) const
+    {
+        std::vector<double> xk(x.data(), x.data() + x.size());
+        for (std::size_t i = 0; i < _funcs.size(); i++)
+        {
+            auto xgrad = grad(_funcs[i], xk, _diff_mode, _dx);
+            for (std::size_t j = 0; j < xgrad.size(); j++)
+                fjac(i, j) = xgrad[j];
+        }
+        return 0;
+    }
+
+    int inputs() const { return _x0.size(); }
+    int values() const { return _funcs.size(); }
+
+private:
+    const FuncNds &_funcs;
+    const std::vector<double> &_x0;
+    DiffMode _diff_mode{};
+    double _dx{};
+};
+
+// Levenberg-Marquardt 法
+static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<double> &x0, RobustMode, const OptimalOptions &options)
+{
+    LMFunctor functor(funcs, x0, options.diff_mode, options.dx);
+    Eigen::LevenbergMarquardt<LMFunctor> lm(functor);
+    lm.parameters.maxfev = options.max_iter;
+    lm.parameters.xtol = options.tol;
+    lm.parameters.ftol = options.tol;
+    Eigen::VectorXd res = Eigen::Map<const Eigen::VectorXd>(x0.data(), x0.size());
+    lm.minimize(res);
+    return std::vector<double>(res.data(), res.data() + res.size());
 }
 
 std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
@@ -512,8 +518,10 @@ std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double>
     {
     case LsqMode::LM:
         return lsqnonlin_lm(funcs, x0, rb, options);
-    default:
+    case LsqMode::GN:
         return lsqnonlin_gn(funcs, x0, rb, options);
+    default: // LsqMode::SGN
+        return lsqnonlin_sgn(funcs, x0, rb, options);
     };
 }
 
@@ -522,7 +530,7 @@ std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double>
 std::vector<double> lsqnonlinRKF(const FuncNds &, const std::vector<double> &, const OptimalOptions &)
 {
     RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
-                                "RMVL by setting \"WITH_OPENCV=ON\" in CMake");
+                                "RMVL by setting \"WITH_OPENCV=ON\" and \"WITH_EIGEN3=ON\" in CMake");
     return {};
 }
 

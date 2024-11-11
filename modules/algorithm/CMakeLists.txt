@@ -3,8 +3,12 @@
 # ----------------------------------------------------------------------------
 rmvl_generate_para(algorithm)
 
-if(WITH_OPENCV)
-  rmvl_add_module(algorithm DEPENDS core EXTERNAL opencv_imgproc)
+if(WITH_OPENCV AND WITH_EIGEN3)
+  rmvl_add_module(algorithm
+    DEPENDS core
+    EXTRA_HEADER ${EIGEN3_INCLUDE_DIRS}
+    EXTERNAL opencv_imgproc
+  )
   rmvl_compile_definitions(algorithm PUBLIC HAVE_OPENCV)
 else()
   rmvl_add_module(algorithm DEPENDS core)
