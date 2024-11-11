@@ -97,7 +97,7 @@ public:
     //! 修正后的相对角度（角度制）
     inline const cv::Point2f &getRelativeAngle() const { return _relative_angle; }
     //! 修正后的相机外参
-    inline const CameraExtrinsics &extrinsics() const { return _extrinsic; }
+    inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
     //! 获取追踪器修正后的目标转角速度（角度制）
     inline const cv::Point2f &speed() const { return _speed; }
 };

@@ -137,7 +137,7 @@ public:
     //! 获取相机坐标系自转角速度（俯视顺时针为正，滤波数据，弧度）
     inline float getRotatedSpeed() const { return _rotspeed; }
     //! 获取 IMU 数据
-    inline ImuData getImuData() const { return _imu_data; }
+    inline ImuData imu() const { return _imu_data; }
     //! 获取旋转状态
     inline RotStatus getRotStatus() const { return _rot_status; }
 

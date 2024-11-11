@@ -41,8 +41,8 @@ static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, doub
                        -std::sin(deg2rad(delta_angle)), std::cos(deg2rad(delta_angle))};
     target_vec = rot * target_vec;
     // 获取新的神符中心图像中心点
-    auto old_gyro_angle = cv::Point2f(ref_rune->getImuData().rotation.yaw,
-                                      ref_rune->getImuData().rotation.pitch);
+    auto old_gyro_angle = cv::Point2f(ref_rune->imu().rotation.yaw,
+                                      ref_rune->imu().rotation.pitch);
     auto new_gyro_angle = cv::Point2f(imu_data.rotation.yaw, imu_data.rotation.pitch);
     // -(new_gyro_angle - old_gyro_angle)
     auto dpoint = calculateRelativeCenter(para::camera_param.cameraMatrix, old_gyro_angle - new_gyro_angle) -
