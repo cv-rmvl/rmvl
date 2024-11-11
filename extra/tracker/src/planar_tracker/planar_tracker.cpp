@@ -22,7 +22,7 @@ void PlanarTracker::updateData(combo::ptr p_combo)
     _angle = p_combo->height();
     _corners = p_combo->corners();
     _center = p_combo->center();
-    _extrinsic = p_combo->extrinsics();
+    _extrinsic = p_combo->extrinsic();
 }
 
 PlanarTracker::PlanarTracker(combo::ptr p_combo)

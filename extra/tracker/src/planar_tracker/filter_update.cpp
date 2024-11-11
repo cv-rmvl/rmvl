@@ -22,7 +22,7 @@ void PlanarTracker::initFilter()
     // 初始化距离滤波器
     _distance_filter.setR({para::planar_tracker_param.DIS_R});
     _distance_filter.setQ(para::planar_tracker_param.DIS_Q);
-    cv::Matx21f init_dis_vec = {first_combo->extrinsics().distance(), 0};
+    cv::Matx21f init_dis_vec = {first_combo->extrinsic().distance(), 0};
     _distance_filter.init(init_dis_vec, 1e5f);
     // 初始化运动滤波器
     _motion_filter.setR(para::planar_tracker_param.MOTION_R);
@@ -38,7 +38,7 @@ void PlanarTracker::updateDistanceFilter()
     // 设置状态转移矩阵
     _distance_filter.setA({1, 1,
                            0, 1});
-    float current_distance = _combo_deque.front()->extrinsics().distance();
+    float current_distance = _combo_deque.front()->extrinsic().distance();
     // 预测
     _distance_filter.predict();
     // 更新
