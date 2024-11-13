@@ -56,7 +56,7 @@ public:
      */
     rm::combo::ptr createArmor(cv::Vec3f tvec, float angle)
     {
-        auto rmat = rm::euler2Mat(angle, rm::Y);
+        auto rmat = rm::euler2Mat(angle, rm::EulerAxis::Y);
         cv::Vec3f rvec;
         cv::Rodrigues(rmat, rvec);
         std::vector<cv::Point2f> imagePoints;

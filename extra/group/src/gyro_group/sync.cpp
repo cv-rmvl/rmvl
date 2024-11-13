@@ -99,7 +99,7 @@ void GyroGroup::sync(const ImuData &imu_data, double tick)
         {
             auto p_gyro_tracker = GyroTracker::cast(p_tracker);
             // 绕 y 轴旋转
-            auto rot = euler2Mat(theta, Y);
+            auto rot = euler2Mat(theta, EulerAxis::Y);
             // 旋转中心到组合体的线段向量
             cv::Vec2f tmp = -p_gyro_tracker->getPose() * current_state.radius();
             cv::Vec3f center2combo(tmp(0), 0, tmp(1));
@@ -124,7 +124,7 @@ void GyroGroup::sync(const ImuData &imu_data, double tick)
                 RMVL_Error(RMVL_StsError, "The \"visible_tracker\" is equal to \"p_tracker\"");
             auto &current_state = _tracker_state[p_tracker];
             // 绕 y 轴旋转
-            auto rot = euler2Mat(static_cast<float>(2_PI / _armor_num * static_cast<double>((i + 1))), Y);
+            auto rot = euler2Mat(static_cast<float>(2_PI / _armor_num * static_cast<double>((i + 1))), EulerAxis::Y);
             cv::Matx33f new_rmat = rot * visible_tracker->extrinsic().R();                              // 新的旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo + cv::Vec3f(0, current_state.delta_y(), 0); // 新的平移向量
             auto p_armor = constructComboForced(visible_tracker->front(), _imu_data, new_rmat, new_tvec, _tick);
@@ -155,7 +155,7 @@ void GyroGroup::sync(const ImuData &imu_data, double tick)
             auto p_tracker = _trackers[(_tracker_state[visible_trackers[i]].index() + 2) % 4];
             auto &current_state = _tracker_state[p_tracker];
             // 绕 y 轴旋转
-            auto rot = euler2Mat(static_cast<float>(PI), Y);
+            auto rot = euler2Mat(static_cast<float>(PI), EulerAxis::Y);
             // 平移向量的旋转增量
             cv::Matx33f new_rmat = rot * visible_trackers[i]->extrinsic().R();                             // 新旋转矩阵
             cv::Vec3f new_tvec = _center3d + rot * center2combo[i] + cv::Vec3f(0, current_state.delta_y(), 0); // 新平移向量

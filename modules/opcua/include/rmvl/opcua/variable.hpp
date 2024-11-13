@@ -229,8 +229,9 @@ public:
 
     /**
      * @brief 获取用 `rm::VariableType` 表示的变量类型
-     *
-     * @see _type
+     * - 添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
+     * - 作为变量类型节点、变量节点之间链接的依据
+     * 
      * @return 变量类型
      */
     RMVL_W inline const VariableType type() const { return _type; }
@@ -274,13 +275,7 @@ public:
     RMVL_W_RW uint8_t access_level{};
 
 private:
-    /**
-     * @brief 对应的用 `rm::VariableType` 表示的变量类型
-     * @brief
-     * - 添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
-     * @brief
-     * - 作为变量类型节点、变量节点之间链接的依据
-     */
+    //! 变量类型
     VariableType _type{};
     //! 数据
     std::any _value;

@@ -136,7 +136,7 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
         for (int i = 0; i < _armor_num - 1; i++)
         {
             // 绕 y 轴旋转 90 * (i + 1) 度 (俯视图顺时针)
-            auto y_rotate = euler2Mat(static_cast<float>(2_PI / _armor_num) * (i + 1), Y);
+            auto y_rotate = euler2Mat(static_cast<float>(2_PI / _armor_num) * (i + 1), EulerAxis::Y);
             cv::Matx33f new_R = y_rotate * Rs.front(); // IMU 坐标系下的新旋转矩阵
             // IMU 坐标系下的新装甲板到旋转中心点的方向向量
             cv::Vec3f new_pose = normalize(cv::Vec3f(new_R(0, 2), 0, new_R(2, 2)));
