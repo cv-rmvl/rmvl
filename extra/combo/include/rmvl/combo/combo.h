@@ -65,9 +65,9 @@ public:
 
     /**
      * @brief 获取指定角点
-     * 
+     *
      * @param[in] idx 下标
-     * @return 指定角点 
+     * @return 指定角点
      */
     inline cv::Point2f corner(int idx) const { return _corners[idx]; }
     //! 获取组合体相机外参

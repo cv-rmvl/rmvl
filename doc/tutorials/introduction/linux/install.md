@@ -75,7 +75,8 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   ..
 
-make -j8 && sudo make install
+cmake --build . --parallel 8
+sudo cmake --install .
 ```
 
 @end_toggle
@@ -166,6 +167,8 @@ cmake ..
 
 ```shell
 cmake-gui ..
+# 或者使用 cmake-curses-gui 终端界面
+# ccmake ..
 ```
 
 @note
@@ -181,24 +184,33 @@ cmake -D BUILD_TESTS=ON ..
 编译 RMVL（这里开启 8 个线程进行编译，可灵活设置）
 
 ```shell
-make -j8
+cmake --build . --parallel 8
 ```
+
+此外，如果你使用的是
+
+- GNU Unix Makefile 构建系统，可使用 `make -j8`
+- Ninja 构建系统，可使用 `ninja`
+- Visual Studio 构建系统，可使用 `msbuild RMVL.sln`
+- Xcode 构建系统，可使用 `xcodebuild`
+
+来代替上述命令，但是太麻烦，不够通用，因此推荐使用第一个通用命令，让 CMake 自动选择构建系统
 
 @note 若启用了单元测试，可以运行 RMVL 单元测试的测试用例
 ```shell
 ctest
 ```
 
-在构建完成之后，可以通过 `make install` 来安装 RMVL 的头文件、库文件、和 CMake 配置文件
+在构建完成之后，可以通过 CMake 来安装 RMVL 的头文件、库文件、和 CMake 配置文件
 
 ```shell
-sudo make install
+cmake --install .
 ```
 
 同样可以选择线程数来加速安装过程
 
 ```shell
-sudo make install -j4
+cmake --install . --parallel 8
 ```
 
 #### 3.2 检查安装结果
