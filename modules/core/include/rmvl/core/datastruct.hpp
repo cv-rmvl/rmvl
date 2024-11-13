@@ -147,7 +147,7 @@ public:
     //! 获取堆顶元素
     inline const Tp &top() const { return _c.front(); }
     //! 导出容器
-    inline const Sequence &c() const { return _c; }
+    inline const Sequence &extract() const { return _c; }
 
 private:
     //! 交换 `_c` 数组中指定的两个下标的元素

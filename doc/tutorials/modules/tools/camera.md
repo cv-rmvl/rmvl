@@ -231,7 +231,7 @@ RMVL 提供了全局的相机参数对象: para::camera_param ，详情可参考
 
 ```bash
 cmake -DBUILD_EXAMPLES=ON ..
-make -j4
+cmake --build . --parallel 4
 cd build
 ```
 

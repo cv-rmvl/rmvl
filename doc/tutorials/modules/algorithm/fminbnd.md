@@ -144,7 +144,7 @@ RMVL 中提供了一维寻优的函数 rm::fminbnd ，以下展示了一维寻�
 mkdir build
 cd build
 cmake ..
-make -j2
+cmake --build . --parallel 4
 ./demo
 ```
 

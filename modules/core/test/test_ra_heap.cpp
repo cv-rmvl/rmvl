@@ -48,7 +48,7 @@ TEST(RaHeapTest, UpdateEraseExport_int)
     EXPECT_EQ(heap.top(), 2);
     heap.update(3, 1);
     EXPECT_EQ(heap.top(), 1);
-    const auto &vec = heap.c();
+    const auto &vec = heap.extract();
     EXPECT_EQ(vec.size(), 3);
     EXPECT_EQ(vec.front(), 1);
     heap.erase(2);

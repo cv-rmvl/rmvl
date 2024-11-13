@@ -157,7 +157,7 @@ RMVL 中提供了一元函数以及多元函数的微分工具，求解一元函
 mkdir build
 cd build
 cmake ..
-make -j2
+cmake --build .
 ./demo
 ```
 

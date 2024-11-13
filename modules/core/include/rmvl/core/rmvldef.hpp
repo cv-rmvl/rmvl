@@ -26,7 +26,7 @@
 
 #ifdef RMVL_Func
 // keep current value (through RMVL port file)
-#elif defined __GNUC__ || (defined (__cpluscplus) && (__cpluscplus >= 201103))
+#elif defined __GNUC__ || (defined(__cpluscplus) && (__cpluscplus >= 201103))
 #define RMVL_Func __func__
 #elif defined __clang__ && (__clang_minor__ * 100 + __clang_major__ >= 305)
 #define RMVL_Func __func__
@@ -36,7 +36,7 @@
 #define RMVL_Func __FUNCTION__
 #elif defined(__INTEL_COMPILER) && (_INTEL_COMPILER >= 600)
 #define RMVL_Func __FUNCTION__
-#elif defined __IBMCPP__ && __IBMCPP__ >=500
+#elif defined __IBMCPP__ && __IBMCPP__ >= 500
 #define RMVL_Func __FUNCTION__
 #elif defined __BORLAND__ && (__BORLANDC__ >= 0x550)
 #define RMVL_Func __FUNC__

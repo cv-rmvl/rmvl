@@ -59,12 +59,16 @@ rm::tracker 提供了 `clone` 纯虚拟函数，用于完全复制一份数据�
 
 ### 2.1 基本准则
 
-开发与使用是一脉相承的，设计一个新的 rm::tracker 派生类对象也要满足使用上的条件，一个新的派生类对象（假设定义为`Mytracker`）需要满足以下准则。
+开发与使用是一脉相承的，设计一个新的 rm::tracker 派生类对象也要满足使用上的条件，一个新的派生类对象（假设定义为 `MyTracker`）需要满足以下准则。
 
-1. 必须定义在 `namespace rm` 中，下文不再赘述；
-2. 必须 public 继承于 `rm::combo` 基类；
-3. 必须定义 `Mytracker::ptr` 作为 `std::shared_ptr<Mytracker>` 的别名；
-4. 必须实现以 `Mytracker::ptr` 为返回值的 `Mytracker::make_feature` 静态工厂函数；
+1. 必须定义在 `namespace rm` 中；
+2. 必须 public 继承于 `rm::tracker` 基类；
+3. 必须定义 `MyTracker::ptr` 和 `MyTracker::const_ptr` 作为 `std::shared_ptr<MyTracker>` 和 `std::shared_ptr<const MyTracker>` 的别名；
+4. 必须实现以 `MyTracker::ptr` 为返回值的 `MyTracker::make_feature` 静态工厂函数；
 5. 不得定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；
-6. 需要定义好 `ptr`、`const_ptr` 智能指针类型别名，并分别实现 `cast` 转换函数
+6. 实现从基类共享指针动态转换到派生共享指针的 `cast` 静态函数，方便起见，可以使用 `RMVL_TRACKER_CAST` 宏，例如
+
+   ```cpp
+   RMVL_TRACKER_CAST(MyTracker);
+   ```
 
