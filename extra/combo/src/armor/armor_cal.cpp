@@ -49,8 +49,8 @@ ArmorSizeType Armor::matchArmorType()
 void Armor::imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec,
                                const ImuData &imu_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec)
 {
-    auto rot = euler2Mat(deg2rad(imu_data.rotation.yaw), Y) *
-               euler2Mat(deg2rad(-imu_data.rotation.pitch), X);
+    auto rot = euler2Mat(deg2rad(imu_data.rotation.yaw), EulerAxis::Y) *
+               euler2Mat(deg2rad(-imu_data.rotation.pitch), EulerAxis::X);
     rot = rot.inv();
     cam_rmat = rot * gyro_rmat;
     cam_tvec = rot * gyro_tvec;
@@ -59,8 +59,8 @@ void Armor::imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gy
 void Armor::cameraConvertToImu(const cv::Matx33f &cam_rmat, const cv::Vec3f &cam_tvec,
                                const ImuData &imu_data, cv::Matx33f &gyro_rmat, cv::Vec3f &gyro_tvec)
 {
-    auto rot = euler2Mat(deg2rad(imu_data.rotation.yaw), Y) *   // yaw 方向与 Y 轴欧拉角方向相同
-               euler2Mat(deg2rad(-imu_data.rotation.pitch), X); // pitch 方向与 X 轴欧拉角方向相反
+    auto rot = euler2Mat(deg2rad(imu_data.rotation.yaw), EulerAxis::Y) *   // yaw 方向与 Y 轴欧拉角方向相同
+               euler2Mat(deg2rad(-imu_data.rotation.pitch), EulerAxis::X); // pitch 方向与 X 轴欧拉角方向相反
     gyro_rmat = rot * cam_rmat;
     gyro_tvec = rot * cam_tvec;
 }

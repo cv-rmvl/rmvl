@@ -43,7 +43,13 @@ string serial_number  # 相机序列号
 
 这里列出参数规范文件的参数类型表
 
-<center>表1：参数类型表
+<div class="full_width_table">
+
+<center>
+
+表1：参数类型表
+
+</center>
 
 | 数据类型 | 含义                                                         |
 | :------: | :----------------------------------------------------------- |
@@ -52,7 +58,7 @@ string serial_number  # 相机序列号
 | 复合类型 | 1. 包括 `vector` 和形如 `Point?` 的类型<br>2. 对标 C++ 的 `std::vector` 以及 OpenCV 的`cv::Point2?` 和 `cv::Point3?`<br>3. 只能使用列表初始化，例如 `{1, 2, 3}` |
 | 枚举类型 | 1. 需要用户自定以 `enum` 开头和 `endenum` 结尾的数据类型声明<br />2. 对标 C++ 的有作用域枚举类型 `enum class`<br />3. 变量的定义上与有作用域枚举类型一致，例如 `Color COLOR_MODE = Color::RED` |
 
-</center>
+</div>
 
 如果要给某一条参数设置默认值，需要使用 `=` 完成，不需要默认参数（仅由运行时加载设置）则不需要使用 `=` 进行赋值，例如
 

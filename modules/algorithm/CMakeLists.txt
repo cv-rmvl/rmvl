@@ -19,7 +19,7 @@ endif()
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
   if(WITH_OPENCV)
-    foreach(m numcal dsp pretreat)
+    foreach(m numcal dsp pretreat transform)
       list(APPEND alg_inc rmvl/algorithm/${m}.hpp)
     endforeach()
     rmvl_generate_python(algorithm
