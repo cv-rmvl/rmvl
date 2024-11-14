@@ -3,10 +3,10 @@ name: 1.x in Linux
 on:
   push:
     branches:
-      - master
+      - 1.x
   pull_request:
     branches:
-      - master
+      - 1.x
 
 jobs:
   cmake-support-x86_64:
