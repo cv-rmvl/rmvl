@@ -143,7 +143,7 @@ target_link_libraries(demo PRIVATE ${RMVL_LIBS})
 mkdir build
 cd build
 cmake ..
-make -j2
+cmake --build . --parallel 4
 ./demo
 ```
 

@@ -74,11 +74,15 @@ auto top_point = p_light_blob->getTopPoint();
 
 ### 2.1 基本准则
 
-开发与使用是一脉相承的，设计一个新的 rm::feature 派生类对象也要满足使用上的条件，一个新的派生类对象（假设定义为`MyFeature`）需要满足以下准则。
+开发与使用是一脉相承的，设计一个新的 rm::feature 派生类对象也要满足使用上的条件，一个新的派生类对象（假设定义为 `MyFeature`）需要满足以下准则。
 
-1. 必须定义在 `namespace rm` 中，下文不再赘述；
+1. 必须定义在 `namespace rm` 中；
 2. 必须 public 继承于 `rm::feature` 基类；
-3. 必须定义 `MyFeature::ptr` 作为 `std::shared_ptr<MyFeature>` 的别名；
+3. 必须定义 `MyFeature::ptr` 和 `MyFeature::const_ptr` 作为 `std::shared_ptr<MyFeature>` 和 `std::shared_ptr<const MyFeature>` 的别名；
 4. 必须实现以 `MyFeature::ptr` 为返回值的 `MyFeature::make_feature` 静态工厂函数；
 5. 不得在派生类中定义公开数据成员，避免对数据成员的直接操作，设置、获取操作应该使用形如 `setXXX` 或 `getXXX` 的成员方法；
-6. 需要定义好 `ptr`、`const_ptr` 智能指针类型别名，并分别实现 `cast` 转换函数
+6. 实现从基类共享指针动态转换到派生共享指针的 `cast` 静态函数，方便起见，可以使用 `RMVL_FEATURE_CAST` 宏，例如
+
+   ```cpp
+   RMVL_FEATURE_CAST(MyFeature);
+   ```

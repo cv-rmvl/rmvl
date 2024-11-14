@@ -45,10 +45,10 @@ cmake -DCMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake ..
 ccmake -DCMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake ..
 ```
 
-运行构建 `make`
+运行构建命令
 
 ```bash
-make -j4
+cmake --build . --parallel 4
 ```
 
 ### 自定义工具链构建 RMVL
