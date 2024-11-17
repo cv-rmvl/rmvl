@@ -24,7 +24,7 @@ namespace rm
 //! @{
 
 //! 图像中的轮廓特征
-class feature
+class RMVL_EXPORTS_W_ABS feature
 {
 protected:
     float _width{};                    //!< 特征宽度
@@ -44,22 +44,22 @@ public:
      *
      * @return 指向新特征的共享指针
      */
-    virtual ptr clone() = 0;
+    RMVL_W virtual ptr clone() = 0;
 
     //! 获取特征面积
-    inline float area() const { return _height * _width; }
+    RMVL_W inline float area() const { return _height * _width; }
     //! 获取特征中心点
-    inline const cv::Point2f &center() const { return _center; }
+    RMVL_W inline const cv::Point2f &center() const { return _center; }
     //! 获取特征宽度
-    inline float width() const { return _width; }
+    RMVL_W inline float width() const { return _width; }
     //! 获取特征高度
-    inline float height() const { return _height; }
+    RMVL_W inline float height() const { return _height; }
     //! 获取特征角度
-    inline float angle() const { return _angle; }
+    RMVL_W inline float angle() const { return _angle; }
     //! 获取特征角点
-    inline const auto &corners() const { return _corners; }
+    RMVL_W inline const std::vector<cv::Point2f> &corners() const { return _corners; }
     //! 获取状态信息
-    inline const RMStatus &type() const { return _type; }
+    RMVL_W inline const RMStatus &type() const { return _type; }
 };
 
 #define RMVL_FEATURE_CAST(name)                                                                           \
@@ -67,7 +67,7 @@ public:
     static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const name>(p_feature); }
 
 //! 默认图像特征，仅表示一个孤立的点 `cv::Point2f`
-class DefaultFeature final : public feature
+class RMVL_EXPORTS_W_DES DefaultFeature final : public feature
 {
 public:
     using ptr = std::shared_ptr<DefaultFeature>;
@@ -82,14 +82,14 @@ public:
      * @param[in] p 孤立的二维点
      * @return DefaultFeature 共享指针
      */
-    static inline ptr make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
+    RMVL_W static inline ptr make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
 
     /**
      * @brief 从另一个特征进行构造
      *
      * @return 指向新特征的共享指针
      */
-    feature::ptr clone() override { return std::make_shared<DefaultFeature>(*this); }
+    RMVL_W feature::ptr clone() override { return std::make_shared<DefaultFeature>(*this); }
 
     RMVL_FEATURE_CAST(DefaultFeature)
 };

@@ -7,7 +7,7 @@ if(WITH_OPENCV AND WITH_EIGEN3)
   rmvl_add_module(algorithm
     DEPENDS core
     EXTRA_HEADER ${EIGEN3_INCLUDE_DIRS}
-    EXTERNAL opencv_imgproc
+    EXTERNAL opencv_calib3d
   )
   rmvl_compile_definitions(algorithm PUBLIC HAVE_OPENCV)
 else()

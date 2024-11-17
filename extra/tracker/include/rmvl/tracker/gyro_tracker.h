@@ -11,8 +11,8 @@
 
 #pragma once
 
-#include "rmvl/combo/armor.h"
 #include "rmvl/algorithm/kalman.hpp"
+#include "rmvl/combo/armor.h"
 
 #include "tracker.h"
 
@@ -23,16 +23,9 @@ namespace rm
 //! @{
 
 //! 整车状态追踪器
-class GyroTracker final : public tracker
+class RMVL_EXPORTS_W_DES GyroTracker final : public tracker
 {
 public:
-    //! 消失状态
-    enum VanishState : uint8_t
-    {
-        VANISH = 0U, //!< 丢失
-        APPEAR = 1U  //!< 出现
-    };
-
     using ptr = std::shared_ptr<GyroTracker>;
     using const_ptr = std::shared_ptr<const GyroTracker>;
 
@@ -46,14 +39,14 @@ public:
      *
      * @param[in] p_armor 第一帧装甲（不允许为空）
      */
-    static inline ptr make_tracker(combo::ptr p_armor) { return std::make_shared<GyroTracker>(p_armor); }
+    RMVL_W static inline ptr make_tracker(combo::ptr p_armor) { return std::make_shared<GyroTracker>(p_armor); }
 
     /**
      * @brief 从另一个追踪器进行构造
      *
      * @return 指向新追踪器的共享指针
      */
-    tracker::ptr clone() override;
+    RMVL_W tracker::ptr clone() override;
 
     RMVL_TRACKER_CAST(GyroTracker)
 
@@ -64,21 +57,21 @@ public:
      *
      * @param[in] p_combo 待传入 tracker 的平面目标，必须严格保证不为空
      */
-    void update(combo::ptr p_combo) override;
+    RMVL_W void update(combo::ptr p_combo) override;
 
     /**
      * @brief 更新消失状态
      *
-     * @param[in] state 消失状态
+     * @param[in] is_vanish 是否消失
      */
-    inline void updateVanishState(VanishState state) { state == VANISH ? _vanish_num++ : _vanish_num = 0; }
+    RMVL_W inline void updateVanishState(bool is_vanish) { is_vanish ? _vanish_num++ : _vanish_num = 0; }
 
     //! 获取帧差时间
-    inline float getDuration() const { return _duration; }
+    RMVL_W inline float getDuration() const { return _duration; }
     //! 获取修正后的装甲板姿态法向量
-    inline const cv::Vec2f &getPose() const { return _pose; }
+    RMVL_W inline const cv::Vec2f &getPose() const { return _pose; }
     //! 获取绕 y 轴的自转角速度（俯视顺时针为正，滤波数据，弧度）
-    inline float getRotatedSpeed() const { return _rotspeed; }
+    RMVL_W inline float getRotatedSpeed() const { return _rotspeed; }
 
 private:
     /**

@@ -121,53 +121,53 @@ enum CameraProperties : uint16_t
 };
 
 //! 相机外参
-class CameraExtrinsics
+class RMVL_EXPORTS_W CameraExtrinsics
 {
 public:
     //! 获取平移向量
-    inline const cv::Vec3f &tvec() const { return _tvec; }
+    RMVL_W inline const cv::Vec3f &tvec() const { return _tvec; }
     //! 获取旋转向量
-    inline const cv::Vec3f &rvec() const { return _rvec; }
+    RMVL_W inline const cv::Vec3f &rvec() const { return _rvec; }
     //! 获取旋转矩阵
-    inline const cv::Matx33f &R() const { return _r; }
+    RMVL_W inline const cv::Matx33f &R() const { return _r; }
     //! 获取外参矩阵
-    inline const cv::Matx44f &T() const { return _t; }
+    RMVL_W inline const cv::Matx44f &T() const { return _t; }
     //! 获取yaw
-    inline float yaw() const { return _yaw; }
+    RMVL_W inline float yaw() const { return _yaw; }
     //! 获取pitch
-    inline float pitch() const { return _pitch; }
+    RMVL_W inline float pitch() const { return _pitch; }
     //! 获取roll
-    inline float roll() const { return _roll; }
+    RMVL_W inline float roll() const { return _roll; }
     //! 获取距离
-    inline float distance() const { return _distance; }
+    RMVL_W inline float distance() const { return _distance; }
 
     /**
      * @brief 设置平移向量
      *
      * @param[in] tvec 平移向量
      */
-    void tvec(const cv::Vec3f &tvec);
+    RMVL_W void tvec(const cv::Vec3f &tvec);
 
     /**
      * @brief 设置旋转向量
      *
      * @param[in] rvec 旋转向量
      */
-    void rvec(const cv::Vec3f &rvec);
+    RMVL_W void rvec(const cv::Vec3f &rvec);
 
     /**
      * @brief 设置旋转矩阵
      *
      * @param[in] R 旋转矩阵
      */
-    void R(const cv::Matx33f &R);
+    RMVL_W void R(const cv::Matx33f &R);
 
     /**
      * @brief 设置距离
      *
      * @param[in] distance 距离
      */
-    inline void distance(float distance) { _distance = distance; }
+    RMVL_W inline void distance(float distance) { _distance = distance; }
 
 private:
     float _yaw{};                        //!< 外参 Yaw 角

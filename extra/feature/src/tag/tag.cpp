@@ -17,7 +17,7 @@
 namespace rm
 {
 
-Tag::Tag(const std::array<cv::Point2f, 4> &corners, TagType type)
+Tag::Tag(const std::vector<cv::Point2f> &corners, TagType type)
 {
     size_t corners_size = corners.size();
     if (corners_size != 4)

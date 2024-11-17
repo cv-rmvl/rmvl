@@ -287,11 +287,11 @@ void GyroDetector::matchOneGroup(group::ptr group, const std::vector<combo::ptr>
         min_tracker->update(p_combo);   // 更新追踪器
         tracker_set.erase(min_tracker); // 移出待匹配追踪器序列
         auto p_gyro_tracker = GyroTracker::cast(min_tracker);
-        p_gyro_tracker->updateVanishState(GyroTracker::APPEAR); // 设置为可见
+        p_gyro_tracker->updateVanishState(false); // 设置为可见
     }
     // 没有匹配到的序列设置为不可见
     for (auto p_tracker : tracker_set)
-        GyroTracker::cast(p_tracker)->updateVanishState(GyroTracker::VANISH);
+        GyroTracker::cast(p_tracker)->updateVanishState(true);
 }
 
 void GyroDetector::eraseFakeTracker(std::vector<tracker::ptr> &trackers)

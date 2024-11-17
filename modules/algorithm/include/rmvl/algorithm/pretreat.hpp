@@ -34,10 +34,10 @@ namespace rm
 //! 像素通道枚举
 enum PixChannel : uint8_t
 {
-    BLUE,  //!< 蓝色通道
-    GREEN, //!< 绿色通道
-    RED,   //!< 红色通道
-    AUTO   //!< 自动处理（未定义通道）
+    BLUE,     //!< 蓝色通道
+    GREEN,    //!< 绿色通道
+    RED,      //!< 红色通道
+    AUTOCOLOR //!< 自动处理（未定义通道）
 };
 
 /**

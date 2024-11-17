@@ -136,6 +136,107 @@ inline bool isHierarchyCenter(const std::vector<std::vector<cv::Point>> &contour
     return false;
 }
 
+/**
+ * @brief 获取最佳的神符中心点
+ * @note 在已知的所有中心点中寻找到最适合作为中心点的一个特征
+ *
+ * @param[in] p_targets 所有神符靶心
+ * @param[in] p_centers 所有神符中心点
+ * @return RuneCenter::ptr
+ */
+static RuneCenter::ptr getBestCenter(const std::vector<RuneTarget::ptr> &rune_targets, const std::vector<RuneCenter::ptr> &rune_centers)
+{
+    // 神符中心集合
+    std::unordered_set<RuneCenter::ptr> center_set(rune_centers.begin(), rune_centers.end());
+    // 筛除离神符连线中垂线过远的中心
+    if (rune_targets.size() > 1)
+    {
+        for (auto &p_center : rune_centers)
+        {
+            for (size_t i = 0; i + 1 < rune_targets.size(); i++)
+            {
+                // 靶心连线方向
+                cv::Vec2f dvec = rune_targets[i]->center() - rune_targets[i + 1]->center();
+                cv::Matx22f rotate = {0, 1,
+                                      -1, 0};
+                // 靶心连线垂线
+                cv::Vec2f vvec = rotate * dvec;
+                // 靶心连线中点
+                cv::Vec2f midp = (rune_targets[i]->center() + rune_targets[i + 1]->center()) / 2;
+                // 与中垂线的距离比值
+                float distance_ratio = getDistance(cv::Vec4f(vvec(0), vvec(1), midp(0), midp(1)),
+                                                   p_center->center(), false) /
+                                       p_center->height();
+                if (distance_ratio > para::rune_param.MAX_MID_LINE_RATIO)
+                {
+                    center_set.erase(p_center);
+                    break;
+                }
+            }
+        }
+    }
+    // 判空
+    if (center_set.empty())
+        return nullptr;
+    // [神符中心 : 距离比值差]
+    std::unordered_map<RuneCenter::ptr, float> center_ratio_differences;
+    center_ratio_differences.reserve(center_set.size());
+    for (auto &p_center : center_set)
+    {
+        center_ratio_differences[p_center] = FLOAT_MAX;
+        // 距离比值差序列
+        std::vector<float> dratio;
+        dratio.reserve(rune_targets.size());
+        for (auto &p_target : rune_targets)
+        {
+            // target 到 center 的距离与 center 尺寸的比值
+            float radius_ratio = getDistance(p_target->center(), p_center->center()) / p_center->height();
+            // 扇叶为未激活且距离比值过大或过小，跳过
+            if (!p_target->isActive() && (radius_ratio < para::rune_param.MIN_RADIUS_RATIO ||
+                                          radius_ratio > para::rune_param.MAX_RADIUS_RATIO))
+                continue;
+            dratio.push_back(std::abs(para::rune_param.BEST_RADIUS_RATIO - radius_ratio));
+        }
+        if (!dratio.empty())
+            center_ratio_differences[p_center] = *min_element(dratio.begin(), dratio.end());
+    }
+
+    // 选择距离比值差最小的中心
+    return min_element(center_ratio_differences.begin(), center_ratio_differences.end(), [](const auto &lhs, const auto &rhs) {
+               return lhs.second < rhs.second;
+           })
+        ->first;
+}
+
+/**
+ * @brief 获取未激活的神符
+ *
+ * @param[in] p_targets 所有神符靶心
+ * @param[in] p_center 最佳神符中心点
+ * @return 未激活的神符
+ */
+static std::vector<Rune::ptr> getRune(const std::vector<RuneTarget::ptr> &rune_targets, RuneCenter::ptr p_center, const ImuData &imu_data, double tick)
+{
+    if (rune_targets.empty())
+        return {};
+    if (!p_center)
+        return {};
+
+    std::vector<Rune::ptr> retval;
+    // 神符外侧、神符支架两两匹配
+    for (const auto &p_target : rune_targets)
+    {
+        DEBUG_INFO_("--------------------------------------");
+        Rune::ptr rune = Rune::make_combo(p_target, p_center, imu_data, tick);
+        if (rune != nullptr)
+        {
+            DEBUG_PASS_("rune pass");
+            retval.push_back(rune);
+        }
+    }
+    return retval;
+}
+
 void RuneDetector::find(cv::Mat src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos)
 {
     std::vector<std::vector<cv::Point>> contours; // 轮廓二维向量
@@ -212,99 +313,13 @@ void RuneDetector::find(cv::Mat src, std::vector<feature::ptr> &features, std::v
     if (best_center == nullptr)
         return;
     // 获取尚未激活的神符
-    std::vector<Rune::ptr> runes = getRune(rune_targets, best_center);
+    std::vector<Rune::ptr> runes = getRune(rune_targets, best_center, _imu_data, _tick);
     // 更新特征、组合体集合
     for (const auto &p_rune_target : rune_targets)
         features.emplace_back(p_rune_target);
     features.emplace_back(best_center);
     for (const auto &p_combo : runes)
         combos.emplace_back(p_combo);
-}
-
-RuneCenter::ptr RuneDetector::getBestCenter(const std::vector<RuneTarget::ptr> &rune_targets, const std::vector<RuneCenter::ptr> &rune_centers)
-{
-    // 神符中心集合
-    std::unordered_set<RuneCenter::ptr> center_set(rune_centers.begin(), rune_centers.end());
-    // 筛除离神符连线中垂线过远的中心
-    if (rune_targets.size() > 1)
-    {
-        for (auto &p_center : rune_centers)
-        {
-            for (size_t i = 0; i + 1 < rune_targets.size(); i++)
-            {
-                // 靶心连线方向
-                cv::Vec2f dvec = rune_targets[i]->center() - rune_targets[i + 1]->center();
-                cv::Matx22f rotate = {0, 1,
-                                      -1, 0};
-                // 靶心连线垂线
-                cv::Vec2f vvec = rotate * dvec;
-                // 靶心连线中点
-                cv::Vec2f midp = (rune_targets[i]->center() + rune_targets[i + 1]->center()) / 2;
-                // 与中垂线的距离比值
-                float distance_ratio = getDistance(cv::Vec4f(vvec(0), vvec(1), midp(0), midp(1)),
-                                                   p_center->center(), false) /
-                                       p_center->height();
-                if (distance_ratio > para::rune_param.MAX_MID_LINE_RATIO)
-                {
-                    center_set.erase(p_center);
-                    break;
-                }
-            }
-        }
-    }
-    // 判空
-    if (center_set.empty())
-        return nullptr;
-    // [神符中心 : 距离比值差]
-    std::unordered_map<RuneCenter::ptr, float> center_ratio_differences;
-    center_ratio_differences.reserve(center_set.size());
-    for (auto &p_center : center_set)
-    {
-        center_ratio_differences[p_center] = FLOAT_MAX;
-        // 距离比值差序列
-        std::vector<float> dratio;
-        dratio.reserve(rune_targets.size());
-        for (auto &p_target : rune_targets)
-        {
-            // target 到 center 的距离与 center 尺寸的比值
-            float radius_ratio = getDistance(p_target->center(), p_center->center()) / p_center->height();
-            // 扇叶为未激活且距离比值过大或过小，跳过
-            if (!p_target->isActive() && (radius_ratio < para::rune_param.MIN_RADIUS_RATIO ||
-                                          radius_ratio > para::rune_param.MAX_RADIUS_RATIO))
-                continue;
-            dratio.push_back(std::abs(para::rune_param.BEST_RADIUS_RATIO - radius_ratio));
-        }
-        if (!dratio.empty())
-            center_ratio_differences[p_center] = *min_element(dratio.begin(), dratio.end());
-    }
-
-    // 选择距离比值差最小的中心
-    return min_element(center_ratio_differences.begin(), center_ratio_differences.end(), [](const auto &lhs, const auto &rhs) {
-               return lhs.second < rhs.second;
-           })
-        ->first;
-}
-
-std::vector<Rune::ptr> RuneDetector::getRune(const std::vector<RuneTarget::ptr> &rune_targets, RuneCenter::ptr p_center)
-{
-    if (rune_targets.empty())
-        return {};
-    if (!p_center)
-        return {};
-
-    std::vector<Rune::ptr> retval;
-    // 神符外侧、神符支架两两匹配
-    for (const auto &p_target : rune_targets)
-    {
-        DEBUG_INFO_("--------------------------------------");
-        Rune::ptr rune = Rune::make_combo(p_target, p_center, _imu_data, _tick);
-        if (rune != nullptr)
-        {
-            DEBUG_PASS_("rune pass");
-            retval.push_back(rune);
-        }
-    }
-    return retval;
 }
 
 } // namespace rm

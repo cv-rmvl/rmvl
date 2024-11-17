@@ -50,4 +50,6 @@ void DefaultTracker::update(combo::ptr p_combo)
     _vanish_num = 0;
 }
 
+void DefaultTracker::update(double, const ImuData &) { _vanish_num++; }
+
 } // namespace rm

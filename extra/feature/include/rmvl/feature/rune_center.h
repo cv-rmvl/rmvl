@@ -20,7 +20,7 @@ namespace rm
 //! @{
 
 //! 神符中心特征
-class RuneCenter : public feature
+class RMVL_EXPORTS_W_DES RuneCenter : public feature
 {
 private:
     std::vector<cv::Point> _contour; //!< 轮廓点集
@@ -42,7 +42,7 @@ public:
      * @param[in] center 特征中心点
      * @return 如果成功，返回 RuneCenter 的共享指针，否则返回 nullptr
      */
-    static inline ptr make_feature(const cv::Point2f &center) { return std::make_shared<RuneCenter>(center); }
+    RMVL_W static inline ptr make_feature(const cv::Point2f &center) { return std::make_shared<RuneCenter>(center); }
 
     /**
      * @brief 使用轮廓和层次结构构造 RuneCenter 的构造接口
@@ -50,21 +50,16 @@ public:
      * @param[in] contour 轮廓
      * @return 如果成功，返回 RuneCenter 的共享指针，否则返回 nullptr
      */
-    static ptr make_feature(const std::vector<cv::Point> &contour);
+    RMVL_W static ptr make_feature(const std::vector<cv::Point> &contour);
 
     /**
      * @brief 从另一个特征进行构造
-     * 
+     *
      * @return 指向新特征的共享指针
      */
-    feature::ptr clone() override { return std::make_shared<RuneCenter>(*this); }
+    RMVL_W feature::ptr clone() override { return std::make_shared<RuneCenter>(*this); }
 
     RMVL_FEATURE_CAST(RuneCenter)
-
-    //! 获取长宽比
-    inline float getRatio() { return _ratio; }
-    //! 获取轮廓点集
-    inline const std::vector<cv::Point> &getContour() { return _contour; }
 };
 
 //! @} rune_center

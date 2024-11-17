@@ -23,7 +23,7 @@ namespace rm
 //! @{
 
 //! 平面目标追踪器
-class PlanarTracker final : public tracker
+class RMVL_EXPORTS_W_DES PlanarTracker final : public tracker
 {
 public:
     using ptr = std::shared_ptr<PlanarTracker>;
@@ -38,14 +38,14 @@ public:
      *
      * @param[in] p_combo 第一帧平面目标组合特征（不允许为空）
      */
-    static inline ptr make_tracker(combo::ptr p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
+    RMVL_W static inline ptr make_tracker(combo::ptr p_combo) { return std::make_shared<PlanarTracker>(p_combo); }
 
     /**
      * @brief 从另一个追踪器进行构造
      *
      * @return 指向新追踪器的共享指针
      */
-    tracker::ptr clone() override;
+    RMVL_W tracker::ptr clone() override;
 
     RMVL_TRACKER_CAST(PlanarTracker)
 
@@ -55,17 +55,17 @@ public:
      * @param[in] tick 时间点
      * @param[in] imu_data IMU 数据
      */
-    void update(double tick, const ImuData &imu_data) override;
+    RMVL_W void update(double tick, const ImuData &imu_data) override;
 
     /**
      * @brief 使用捕获的 `combo` 更新平面目标追踪器
      *
      * @param[in] p_combo 待传入 tracker 的平面目标，必须严格保证不为空
      */
-    void update(combo::ptr p_combo) override;
+    RMVL_W void update(combo::ptr p_combo) override;
 
     //! 判断追踪器是否无效
-    bool invalid() const override;
+    RMVL_W bool invalid() const override;
 
 private:
     /**

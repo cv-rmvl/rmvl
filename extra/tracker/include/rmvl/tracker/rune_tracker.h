@@ -13,8 +13,8 @@
 
 #include <deque>
 
-#include "rmvl/combo/rune.h"
 #include "rmvl/algorithm/kalman.hpp"
+#include "rmvl/combo/rune.h"
 #include "tracker.h"
 
 namespace rm
@@ -29,7 +29,7 @@ namespace rm
  * - `center()` 获取神符组合体修正的中心点，要获取神符旋转中心请访问对应特征
  * - `angle()` 考虑圈数的角度，即角度被映射至 \f$(-\infty,+\infty)\f$ 的范围，且不经过滤波
  */
-class RuneTracker final : public tracker
+class RMVL_EXPORTS_W_DES RuneTracker final : public tracker
 {
     int _round{};         //!< 圈数
     float _rotated_speed; //!< 神符旋转角速度
@@ -39,28 +39,24 @@ public:
     using ptr = std::shared_ptr<RuneTracker>;
     using const_ptr = std::shared_ptr<const RuneTracker>;
 
+    //! @cond
     RuneTracker() = delete;
-
-    /**
-     * @brief 初始化 RuneTracker
-     *
-     * @param[in] p_rune 第一帧神符
-     */
     explicit RuneTracker(combo::ptr p_rune);
+    //! @endcond
 
     /**
      * @brief 构建 RuneTracker
      *
      * @param[in] p_rune 第一帧神符模块组合特征（不允许为空）
      */
-    static inline ptr make_tracker(combo::ptr p_rune) { return std::make_shared<RuneTracker>(p_rune); }
+    RMVL_W static inline ptr make_tracker(combo::ptr p_rune) { return std::make_shared<RuneTracker>(p_rune); }
 
     /**
      * @brief 从另一个追踪器进行构造
      *
      * @return 指向新追踪器的共享指针
      */
-    tracker::ptr clone() override;
+    RMVL_W tracker::ptr clone() override;
 
     RMVL_TRACKER_CAST(RuneTracker)
 
@@ -69,7 +65,7 @@ public:
      *
      * @param[in] p_rune 神符共享指针
      */
-    void update(combo::ptr p_rune) override;
+    RMVL_W void update(combo::ptr p_rune) override;
 
     /**
      * @brief `rm::Rune` 目标丢失，使用时间点和 IMU 数据更新追踪器
@@ -77,13 +73,13 @@ public:
      * @param[in] tick 当前时间点
      * @param[in] imu_data 云台数据
      */
-    void update(double tick, const ImuData &imu_data) override;
+    RMVL_W void update(double tick, const ImuData &imu_data) override;
 
     //! 判断追踪器是否无效
-    bool invalid() const override;
+    RMVL_W bool invalid() const override;
 
     //! 获取神符滤波后的角速度（角度制）
-    inline float getRotatedSpeed() { return _rotated_speed; }
+    RMVL_W inline float getRotatedSpeed() { return _rotated_speed; }
 
 private:
     /**
@@ -106,14 +102,6 @@ private:
      * @param[in] t 帧差时间
      */
     void updateRotateFilter(float t);
-
-    /**
-     * @brief 掉帧处理，更新滤波、估计后的考虑圈数的角度以及神符特征
-     *
-     * @param[in] tick 最新时间点
-     * @param[in] gyro 最新 IMU 数据
-     */
-    void vanishProcess(double tick, const ImuData &imu_data);
 };
 
 //! @} rune_tracker

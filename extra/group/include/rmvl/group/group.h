@@ -20,7 +20,7 @@ namespace rm
 //! @{
 
 //! 相关追踪器的空间集合（序列组）
-class group
+class RMVL_EXPORTS_W_ABS group
 {
 protected:
     std::vector<tracker::ptr> _trackers; //!< 同组追踪器
@@ -39,7 +39,7 @@ public:
      *
      * @return 指向新序列组的共享指针
      */
-    virtual ptr clone() = 0;
+    RMVL_W virtual ptr clone() = 0;
 
     /**
      * @brief 序列组同步操作
@@ -49,21 +49,20 @@ public:
      * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    virtual void sync(const ImuData &imu_data, double tick) = 0;
+    RMVL_W virtual void sync(const ImuData &imu_data, double tick) = 0;
 
     /**
      * @brief 添加追踪器至序列组
      * @note
-     * - 当捕获到的新追踪器 `p_tracker` 计划更新至内部 `_trackers`
-     *   时，可调用此方法完成更新
+     * - 当捕获到的新追踪器 `p_tracker` 计划更新至内部 `_trackers` 时，可调用此方法完成更新
      * - 需要注意的是，此方法不执行同步操作 `sync()`，其派生类在实现过程中也需统一，避免执行 `sync()`
      *
      * @param p_tracker 新的追踪器 `tracker`
      */
-    virtual void add(tracker::ptr p_tracker) { _trackers.emplace_back(p_tracker); }
+    RMVL_W virtual void add(tracker::ptr p_tracker) { _trackers.emplace_back(p_tracker); }
 
     //! 判断是否为无效序列组
-    virtual bool invalid() const { return false; }
+    RMVL_W virtual bool invalid() const { return false; }
 
     /**
      * @brief 获取同组所有的追踪器数据
@@ -71,49 +70,49 @@ public:
      *
      * @return 同组追踪器
      */
-    inline auto &data() { return _trackers; }
+    RMVL_W inline std::vector<rm::tracker::ptr> &data() { return _trackers; }
 
     /**
      * @brief 获取同组追踪器的数量
      *
      * @return 同组追踪器的数量
      */
-    inline size_t size() const { return _trackers.size(); }
+    RMVL_W inline size_t size() const { return _trackers.size(); }
 
     /**
      * @brief 判断同组追踪器是否为空
      *
      * @return 同组追踪器是否为空
      */
-    inline bool empty() const { return _trackers.empty(); }
+    RMVL_W inline bool empty() const { return _trackers.empty(); }
 
     /**
      * @brief 获取指定追踪器
      *
      * @param[in] idx 追踪器下标
      */
-    inline tracker::ptr at(size_t idx) const { return _trackers.at(idx); }
+    RMVL_W inline tracker::ptr at(size_t idx) const { return _trackers.at(idx); }
 
     /**
      * @brief 获取序列组中心
      *
      * @return 序列组中心
      */
-    inline const auto &center() const { return _center; }
+    RMVL_W inline const cv::Point2f &center() const { return _center; }
 
     /**
      * @brief 获取丢帧数量
      *
      * @return 丢帧数量
      */
-    inline uint32_t getVanishNumber() const { return _vanish_num; }
+    RMVL_W inline uint32_t getVanishNumber() const { return _vanish_num; }
 
     /**
      * @brief 获取该组类型
      *
      * @return RMStatus 该组类型
      */
-    inline RMStatus type() const { return _type; }
+    RMVL_W inline const RMStatus &type() const { return _type; }
 };
 
 #define RMVL_GROUP_CAST(name)                                                                       \
@@ -121,33 +120,31 @@ public:
     static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const name>(p_group); }
 
 //! 默认序列组（一般退化为 `trackers` 使用）
-class DefaultGroup final : public group
+class RMVL_EXPORTS_W_DES DefaultGroup final : public group
 {
 public:
     using ptr = std::shared_ptr<DefaultGroup>;
     using const_ptr = std::shared_ptr<const DefaultGroup>;
 
     //! 构建 DefaultGroup
-    static inline ptr make_group() { return std::make_shared<DefaultGroup>(); }
+    RMVL_W static inline ptr make_group() { return std::make_shared<DefaultGroup>(); }
 
     /**
      * @brief 从另一个序列组进行构造
      *
      * @return 指向新序列组的共享指针
      */
-    group::ptr clone() override
-    {
-        auto retval = std::make_shared<DefaultGroup>(*this);
-        // 更新内部所有追踪器
-        for (auto &p_tracker : retval->_trackers)
-            p_tracker = p_tracker->clone();
-        return retval;
-    }
+    RMVL_W group::ptr clone() override;
 
     RMVL_GROUP_CAST(DefaultGroup)
 
-    //! DefaultGroup 同步操作
-    void sync(const ImuData &, double) override {}
+    /**
+     * @brief DefaultGroup 同步操作（空实现，不执行任何操作）
+     * 
+     * @param[in] imu 最新 IMU 数据
+     * @param[in] tick 最新时间点，可用 `rm::Timer::now()` 获取
+     */
+    RMVL_W void sync(const ImuData &imu, double tick) override;
 };
 
 //! @} group

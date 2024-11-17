@@ -16,7 +16,14 @@
 namespace rm
 {
 
-DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick)
+ArmorDetector::ArmorDetector(std::string_view model)
+{
+    _ort = std::make_unique<ClassificationNet>(model);
+    for (int i = 0; i < 9; ++i)
+        _robot_t[i] = static_cast<RobotType>(i);
+}
+
+DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick)
 {
     DetectInfo info{};
     info.src = src;

@@ -26,21 +26,18 @@ namespace rm
 //! @example samples/detector/hik/sample_hik_armor_collection.cpp 装甲板收集例程 Armor collection demo
 
 //! 装甲板识别模块
-class ArmorDetector final : public detector
+class RMVL_EXPORTS_W_DEU ArmorDetector final : public detector
 {
     std::unique_ptr<OnnxNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
 
 public:
+    //! @cond
     ArmorDetector() = default;
     ~ArmorDetector() = default;
 
-    explicit ArmorDetector(const std::string &model)
-    {
-        _ort = std::make_unique<ClassificationNet>(model);
-        for (int i = 0; i < 9; ++i)
-            _robot_t[i] = static_cast<RobotType>(i);
-    }
+    explicit ArmorDetector(std::string_view model);
+    //! @endcond
 
     /**
      * @brief 装甲板识别核心函数
@@ -52,17 +49,17 @@ public:
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick) override;
+    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
 
     //! 构建 ArmorDetector
-    static inline std::unique_ptr<ArmorDetector> make_detector() { return std::make_unique<ArmorDetector>(); }
+    RMVL_W static inline auto make_detector() { return std::make_unique<ArmorDetector>(); }
 
     /**
      * @brief 构建 ArmorDetector
      *
      * @param[in] model ONNX_Runtime 数字识别模型
      */
-    static inline std::unique_ptr<ArmorDetector> make_detector(const std::string &model) { return std::make_unique<ArmorDetector>(model); }
+    RMVL_W static inline auto make_detector(std::string_view model) { return std::make_unique<ArmorDetector>(model); }
 
 private:
     /**

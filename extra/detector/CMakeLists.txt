@@ -46,12 +46,35 @@ rmvl_generate_para(
 if(WITH_APRILTAG)
   rmvl_add_module(
     tag_detector
-    DEPENDS detector
+    DEPENDS detector planar_tracker tag 
     EXTERNAL apriltag 
   )
 endif()
 
 rmvl_generate_module_para(detector)
+
+# ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m detector armor_detector gyro_detector rune_detector tag_detector)
+    if(BUILD_rmvl_${m})
+      list(APPEND detector_inc rmvl/detector/${m}.h) 
+      list(APPEND detector_dep ${m})
+    endif()
+  endforeach() 
+  foreach(m armor_detector gyro_detector rune_detector tag_detector)
+    if(BUILD_rmvl_${m})
+      list(APPEND detector_inc rmvlpara/detector/${m}.h) 
+    endif()
+  endforeach()
+
+  rmvl_generate_python(detector
+    FILES ${detector_inc}
+    DEPENDS ${detector_dep}
+    USE_PREBIND
+  )
+endif()
 
 # ----------------------------------------------------------------------------
 #  Build the test program
