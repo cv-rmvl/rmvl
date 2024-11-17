@@ -10,8 +10,8 @@
  */
 #pragma once
 
-#include "rmvl/camera/camutils.hpp"
 #include "rmvl/algorithm/math.hpp"
+#include "rmvl/camera/camutils.hpp"
 #include "rmvl/types.hpp"
 
 #include "rmvl/core/io.hpp"
@@ -24,7 +24,7 @@ namespace rm
 //! @{
 
 //! 特征组合体
-class combo
+class RMVL_EXPORTS_W_ABS combo
 {
 protected:
     std::vector<feature::ptr> _features; //!< 特征列表
@@ -50,18 +50,18 @@ public:
      * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    virtual ptr clone(double tick) = 0;
+    RMVL_W virtual ptr clone(double tick) = 0;
 
     //! 获取组合体高度
-    inline float height() const { return _height; }
+    RMVL_W inline float height() const { return _height; }
     //! 获取组合体宽度
-    inline float width() const { return _width; }
+    RMVL_W inline float width() const { return _width; }
     //! 获取组合体角度
-    inline float angle() const { return _angle; }
+    RMVL_W inline float angle() const { return _angle; }
     //! 获取组合体中心点
-    inline cv::Point2f center() const { return _center; }
+    RMVL_W inline cv::Point2f center() const { return _center; }
     //! 获取组合体角点
-    inline const std::vector<cv::Point2f> &corners() const { return _corners; }
+    RMVL_W inline const std::vector<cv::Point2f> &corners() const { return _corners; }
 
     /**
      * @brief 获取指定角点
@@ -69,17 +69,17 @@ public:
      * @param[in] idx 下标
      * @return 指定角点
      */
-    inline cv::Point2f corner(int idx) const { return _corners[idx]; }
+    RMVL_W inline cv::Point2f corner(int idx) const { return _corners[idx]; }
     //! 获取组合体相机外参
-    inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
+    RMVL_W inline const CameraExtrinsics extrinsic() const { return _extrinsic; }
     //! 获取组合体类型
-    inline RMStatus type() const { return _type; }
+    RMVL_W inline RMStatus type() const { return _type; }
     //! 获取捕获该组合体的时间点
-    inline double tick() const { return _tick; }
+    RMVL_W inline double tick() const { return _tick; }
     //! 获取组合体的相对目标转角
-    inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
+    RMVL_W inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
     //! 获取组合体当前的 IMU 数据
-    inline const ImuData &imu() const { return _imu_data; }
+    RMVL_W inline const ImuData &imu() const { return _imu_data; }
 
     /**
      * @brief 获取指定特征
@@ -87,7 +87,7 @@ public:
      * @param[in] idx 下标
      * @return 指定特征
      */
-    inline feature::ptr at(std::size_t idx) { return _features.at(idx); }
+    RMVL_W inline feature::ptr at(std::size_t idx) { return _features.at(idx); }
 
     /**
      * @brief 获取指定特征
@@ -98,11 +98,11 @@ public:
     inline const feature::const_ptr at(std::size_t idx) const { return _features.at(idx); }
 
     //! 获取特征列表数据
-    inline const auto &data() const { return _features; }
+    RMVL_W inline const std::vector<feature::ptr> &data() const { return _features; }
     //! 获取特征列表大小
-    inline std::size_t size() const { return _features.size(); }
+    RMVL_W inline std::size_t size() const { return _features.size(); }
     //! 判断特征列表是否为空
-    inline bool empty() const { return _features.empty(); }
+    RMVL_W inline bool empty() const { return _features.empty(); }
 };
 
 #define RMVL_COMBO_CAST(name)                                                                       \
@@ -110,7 +110,7 @@ public:
     static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const name>(p_combo); }
 
 //! 默认组合体，包含一个固定的特征，退化为 `feature` 使用
-class DefaultCombo final : public combo
+class RMVL_EXPORTS_W_DES DefaultCombo final : public combo
 {
 public:
     using ptr = std::shared_ptr<DefaultCombo>;
@@ -127,7 +127,7 @@ public:
      * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
      * @return DefaultCombo 共享指针
      */
-    static inline ptr make_combo(feature::ptr p_feature, double tick) { return std::make_shared<DefaultCombo>(p_feature, tick); }
+    RMVL_W static inline ptr make_combo(feature::ptr p_feature, double tick) { return std::make_shared<DefaultCombo>(p_feature, tick); }
 
     /**
      * @brief 从另一个组合体进行构造
@@ -135,7 +135,7 @@ public:
      * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    combo::ptr clone(double tick) override;
+    RMVL_W combo::ptr clone(double tick) override;
 
     RMVL_COMBO_CAST(DefaultCombo)
 };

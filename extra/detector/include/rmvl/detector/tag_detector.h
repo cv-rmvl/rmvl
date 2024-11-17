@@ -37,20 +37,26 @@ namespace rm
  * @note 仅支持 Tag25h9 格式
  * @cite AprilRobotics23
  */
-class TagDetector final : public detector
+class RMVL_EXPORTS_W_DEU TagDetector final : public detector
 {
-    apriltag_family_t *_tf;
-    apriltag_detector_t *_td;
+    apriltag_family_t *_tf{};
+    apriltag_detector_t *_td{};
 
 public:
+    using ptr = std::unique_ptr<TagDetector>;
+
+    //! @cond
     TagDetector();
     ~TagDetector();
 
     TagDetector(const TagDetector &) = delete;
-    TagDetector(TagDetector &&) = delete;
+    TagDetector(TagDetector &&) = default;
+    TagDetector &operator=(const TagDetector &) = delete;
+    TagDetector &operator=(TagDetector &&) = default;
+    //! @endcond
 
     //! 构造 TagDetector
-    static inline std::unique_ptr<TagDetector> make_detector() { return std::make_unique<TagDetector>(); }
+    RMVL_W static inline ptr make_detector() { return std::make_unique<TagDetector>(); }
 
     /**
      * @brief 识别接口
@@ -62,7 +68,7 @@ public:
      * @param[in] imu_data 当前 IMU 数据
      * @param[in] tick 当前时间点
      */
-    DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel color, const ImuData &imu_data, double tick) override;
+    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
 };
 
 //! @} tag_detector

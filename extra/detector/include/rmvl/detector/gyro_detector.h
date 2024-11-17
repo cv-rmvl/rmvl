@@ -25,7 +25,7 @@ namespace rm
 //! @{
 
 //! 整车状态识别模块
-class GyroDetector final : public detector
+class RMVL_EXPORTS_W_DEU GyroDetector final : public detector
 {
     int _armor_num; //!< 默认装甲板数目
 
@@ -33,15 +33,13 @@ class GyroDetector final : public detector
     std::unordered_map<int, RobotType> _robot_t;
 
 public:
+    using ptr = std::unique_ptr<GyroDetector>;
+
+    //! @cond
     GyroDetector(int armor_num) : _armor_num(armor_num) {}
     ~GyroDetector() = default;
-
-    GyroDetector(const std::string &model, int armor_num) : _armor_num(armor_num)
-    {
-        _ort = std::make_unique<ClassificationNet>(model);
-        for (int i = 0; i < 9; ++i)
-            _robot_t[i] = static_cast<RobotType>(i);
-    }
+    GyroDetector(std::string_view model, int armor_num);
+    //! @endcond
 
     /**
      * @brief 装甲板识别核心函数
@@ -53,24 +51,24 @@ public:
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, rm::PixChannel color, const ImuData &imu_data, double tick) override;
+    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
 
-    //! 构建 GyroDetector
-    static inline std::unique_ptr<GyroDetector> make_detector(int armor_num = 0)
-    {
-        return std::make_unique<GyroDetector>(armor_num);
-    }
+    /**
+     * @brief 构建 GyroDetector
+     * 
+     * @param[in] armor_num 装甲板数目（默认为`0`，表示自动判断）
+     * @return 指向 GyroDetector 的唯一指针
+     */
+    RMVL_W static inline ptr make_detector(int armor_num = 0) { return std::make_unique<GyroDetector>(armor_num); }
 
     /**
      * @brief 构建 GyroDetector
      *
      * @param[in] model ONNX-Runtime 数字识别模型
      * @param[in] armor_num 装甲板数目（默认为`0`，表示自动判断）
+     * @return 指向 GyroDetector 的唯一指针
      */
-    static inline std::unique_ptr<GyroDetector> make_detector(const std::string &model, int armor_num = 0)
-    {
-        return std::make_unique<GyroDetector>(model, armor_num);
-    }
+    RMVL_W static inline ptr make_detector(std::string_view model, int armor_num = 0) { return std::make_unique<GyroDetector>(model, armor_num); }
 
 private:
     /**

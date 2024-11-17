@@ -135,7 +135,7 @@ static void match(std::vector<tracker::ptr> &trackers, const std::vector<combo::
     }
 }
 
-DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, PixChannel, const ImuData &imu_data, double tick)
+DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t, const ImuData &imu_data, double tick)
 {
     DetectInfo info;
     info.src = src;
@@ -146,7 +146,7 @@ DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &s
         groups.emplace_back(DefaultGroup::make_group());
 
     cvtColor(src, info.gray, cv::COLOR_BGR2GRAY);
-    std::vector<std::array<cv::Point2f, 4>> corners;
+    std::vector<std::vector<cv::Point2f>> corners;
     std::vector<TagType> types;
 
     // 格式转换
@@ -159,6 +159,8 @@ DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &s
     zarray_t *detections = apriltag_detector_detect(_td, &apriltag_img);
     int target_size = zarray_size(detections);
     corners.resize(target_size);
+    for (int i = 0; i < target_size; i++)
+        corners[i].resize(4);
     types.resize(target_size);
     for (int i = 0; i < target_size; i++)
     {

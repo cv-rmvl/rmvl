@@ -11,27 +11,24 @@
 
 #include "rmvl/types.hpp"
 
-std::string rm::RMStatus::to_string(rm::RobotType type)
+namespace rm
 {
-    switch (type)
-    {
-    case rm::RobotType::HERO:
-        return "HERO";
-    case rm::RobotType::ENGINEER:
-        return "ENGINEER";
-    case rm::RobotType::INFANTRY_3:
-        return "INFANTRY_3";
-    case rm::RobotType::INFANTRY_4:
-        return "INFANTRY_4";
-    case rm::RobotType::INFANTRY_5:
-        return "INFANTRY_5";
-    case rm::RobotType::OUTPOST:
-        return "OUTPOST";
-    case rm::RobotType::BASE:
-        return "BASE";
-    case rm::RobotType::SENTRY:
-        return "SENTRY";
-    default:
-        return "UNKNOWN";
-    }
+
+std::string RMStatus::to_string(RobotType type)
+{
+    constexpr const char *type_map[] = {"UNKNOWN", "HERO", "ENGINEER", "INFANTRY_3", "INFANTRY_4", "INFANTRY_5", "OUTPOST", "BASE", "SENTRY"};
+    return type_map[static_cast<int>(type)];
 }
+
+std::string RMStatus::to_string(TagType type)
+{
+    constexpr const char *type_map[] = {
+        "UNKNOWN",
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
+        "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+        "U", "V", "W", "X", "Y", "Z"};
+    return type_map[static_cast<int>(type)];
+}
+
+} // namespace rm

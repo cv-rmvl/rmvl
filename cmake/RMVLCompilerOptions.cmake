@@ -334,6 +334,11 @@ if(BUILD_PYTHON)
       "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
       @ONLY
     )
+    configure_file(
+      "${CMAKE_CURRENT_LIST_DIR}/templates/python/rmvl_init.pyi"
+      "${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.pyi"
+      @ONLY
+    )
     if(BUILD_DOCS)
       file(WRITE ${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_cst.cfg "# constants configuration for pyrmvl\n")
       configure_file(

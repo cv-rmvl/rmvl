@@ -39,6 +39,29 @@ rmvl_add_module(
 rmvl_generate_module_para(tracker)
 
 # ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m tracker planar_tracker gyro_tracker rune_tracker)
+    if(BUILD_rmvl_${m})
+      list(APPEND tracker_inc rmvl/tracker/${m}.h) 
+      list(APPEND tracker_dep ${m})
+    endif()
+  endforeach() 
+  foreach(m planar_tracker gyro_tracker rune_tracker)
+    if(BUILD_rmvl_${m})
+      list(APPEND tracker_inc rmvlpara/tracker/${m}.h) 
+    endif()
+  endforeach()
+
+  rmvl_generate_python(tracker
+    FILES ${tracker_inc}
+    DEPENDS ${tracker_dep}
+    USE_PREBIND
+  )
+endif()
+
+# ----------------------------------------------------------------------------
 #  build the test program
 # ----------------------------------------------------------------------------
 if(BUILD_TESTS)

@@ -23,7 +23,7 @@ namespace rm
  * @brief 装甲板灯条
  * @note "/" 状态角度为正
  */
-class LightBlob : public feature
+class RMVL_EXPORTS_W_DES LightBlob : public feature
 {
     cv::RotatedRect _rotated_rect; //!< 旋转矩形
     cv::Point2f _top;              //!< 上顶点
@@ -40,9 +40,9 @@ public:
     //! @endcond
 
     //! 获取灯条顶端点
-    inline const cv::Point2f &getTopPoint() const { return _top; }
+    RMVL_W inline const cv::Point2f &getTopPoint() const { return _top; }
     //! 获取灯条底端点
-    inline const cv::Point2f &getBottomPoint() const { return _bottom; }
+    RMVL_W inline const cv::Point2f &getBottomPoint() const { return _bottom; }
 
     /**
      * @brief LightBlob 构造接口
@@ -50,7 +50,7 @@ public:
      * @param[in] contour 特征轮廓
      * @return 若构造成功则返回 LightBlob 的共享指针，否则返回 nullptr
      */
-    static std::shared_ptr<LightBlob> make_feature(const std::vector<cv::Point> &contour);
+    RMVL_W static ptr make_feature(const std::vector<cv::Point> &contour);
 
     /**
      * @brief LightBlob 构造接口，使用若干参数
@@ -60,14 +60,14 @@ public:
      * @param[in] width 灯条宽度
      * @return 若构造成功则返回 LightBlob 的共享指针，否则返回 nullptr
      */
-    static inline ptr make_feature(const cv::Point2f &top, const cv::Point2f &bottom, float width) { return std::make_shared<LightBlob>(top, bottom, width); }
+    RMVL_W static inline ptr make_feature(const cv::Point2f &top, const cv::Point2f &bottom, float width) { return std::make_shared<LightBlob>(top, bottom, width); }
 
     /**
      * @brief 从另一个特征进行构造
      *
      * @return 指向新特征的共享指针
      */
-    feature::ptr clone() override { return std::make_shared<LightBlob>(*this); }
+    RMVL_W feature::ptr clone() override { return std::make_shared<LightBlob>(*this); }
 
     RMVL_FEATURE_CAST(LightBlob)
 

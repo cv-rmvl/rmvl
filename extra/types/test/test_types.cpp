@@ -16,21 +16,19 @@
 namespace rm_test
 {
 
-TEST(RMStatus_test, default_type_to_string)
+TEST(RMStatus_test, tag_type_to_string)
 {
     auto str = std::string{};
-    str = rm::RMStatus::to_string(rm::ArmorSizeType::SMALL);
-    EXPECT_EQ(str, "1");
-    str = rm::RMStatus::to_string(rm::CompensateType::LEFT);
-    EXPECT_EQ(str, "3");
-    str = rm::RMStatus::to_string(2);
-    EXPECT_EQ(str, "2");
+    str = rm::RMStatus::to_string(rm::TagType::NUM_0);
+    EXPECT_EQ(str, "0");
+    str = rm::RMStatus::to_string(rm::TagType::CHAR_K);
+    EXPECT_EQ(str, "K");
 }
 
 TEST(RMStatus_test, robot_type_to_string)
 {
     auto str = std::string{};
-    str = rm::RMStatus::to_string({});
+    str = rm::RMStatus::to_string(rm::RobotType{});
     EXPECT_EQ(str, "UNKNOWN");
     str = rm::RMStatus::to_string(rm::RobotType::INFANTRY_4);
     EXPECT_EQ(str, "INFANTRY_4");

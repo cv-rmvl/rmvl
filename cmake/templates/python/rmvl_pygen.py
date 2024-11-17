@@ -5,7 +5,7 @@ C++ to Python binding code generator
 import json
 import os
 import re
-from typing import Union, List, Tuple
+from typing import Union, List, Dict, Tuple
 import argparse
 from collections import defaultdict
 
@@ -41,9 +41,23 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
         return re.search(
             r"(class|struct)\s+RMVL_EXPORTS_(?:W|W_AG)\s+(\w+)\s*(?:final)?$", line
         )
+    elif mode == "abs_class":
+        return re.search(r"class\s+RMVL_EXPORTS_W_ABS\s+(\w+)\s*$", line)
+    elif mode == "abu_class":
+        return re.search(r"class\s+RMVL_EXPORTS_W_ABU\s+(\w+)\s*$", line)
     elif mode == "inherited_class":
         return re.search(
-            r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?:\s+(public)?\s+(\w+)\s*$",
+            r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*$",
+            line,
+        )
+    elif mode == "des_class":
+        return re.search(
+            r"class\s+RMVL_EXPORTS_W_DES\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*$",
+            line,
+        )
+    elif mode == "deu_class":
+        return re.search(
+            r"class\s+RMVL_EXPORTS_W_DEU\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*$",
             line,
         )
     elif mode == "global_function":
@@ -148,9 +162,11 @@ def split_parameters(params: str) -> Tuple[List[str], List[str], List[str]]:
 
 types = {
     "auto": "Any",
+    "any": "Any",
     # fundamental types
     "void": "None",
     "int": "int",
+    "long": "int",
     "uint8_t": "int",
     "uint16_t": "int",
     "uint32_t": "int",
@@ -188,14 +204,16 @@ def remove_t(s: str) -> str:
     #### Returns
     `(str)`: string without modifiers
     """
+    # remove ::ptr
+    s = re.sub(r"::ptr", "", s)
     # remove static, extern
     s = re.sub(r"static\s+|extern\s+", "", s)
     # remove cvref
     s = remove_cvref(s)
     # remove namespace
     s = re.sub(r"\w+::", "", s)
-    # remove inline and constexpr
-    s = re.sub(r"constexpr\s+|inline\s+", "", s)
+    # remove inline, constexpr and virtual
+    s = re.sub(r"constexpr\s+|inline\s+|virtual\s+", "", s)
     return s
 
 
@@ -212,7 +230,7 @@ def type_convert(cpp_type: str) -> str:
     >>> 'List[int]'
     """
 
-    # Remove `const`, `&`, `*`, `namespace`, `inline`, `constexpr`
+    # Remove `const`, `&`, `*`, `namespace`, etc.
     cpp_type = remove_t(cpp_type).strip()
 
     def convert_list(match: re.Match) -> str:
@@ -252,9 +270,8 @@ def type_convert(cpp_type: str) -> str:
         Convert `function<return_type(arg_types)>` to `Callable[[arg_types], return_type]`
         """
         return_type = type_convert(match.group(1))
-        arg_types = ", ".join(
-            type_convert(x.strip()) for x in match.group(2).split(",")
-        )
+        params: str = match.group(2)
+        arg_types = ", ".join(type_convert(x.strip()) for x in params.split(","))
         return f"Callable[[{arg_types}], {return_type}]"
 
     def convert_array(match: re.Match) -> str:
@@ -277,6 +294,17 @@ def type_convert(cpp_type: str) -> str:
         tp, m, n = match.group(1), match.group(2), match.group(3)
         inner = type_convert(tp)
         return f"Tuple[{', '.join([inner] * int(m) * int(n))}]"
+    
+    def convert_simple_matx(match: re.Match) -> str:
+        """
+        Convert `Matx???` to `Tuple`
+        """
+        m, n, tp = match.group(1), match.group(2), match.group(3)
+        if tp == "f" or tp == "d":
+            inner = "float"
+        else:
+            inner = "int"
+        return f"Tuple[{', '.join([inner] * int(m) * int(n))}]"
 
     def convert_vec(match: re.Match) -> str:
         """
@@ -284,6 +312,17 @@ def type_convert(cpp_type: str) -> str:
         """
         tp, n = match.group(1), match.group(2)
         inner = type_convert(tp)
+        return f"Tuple[{', '.join([inner] * int(n))}]"
+    
+    def convert_simple_vec(match: re.Match) -> str:
+        """
+        Convert `Vec??` to `Tuple`
+        """
+        n, tp = match.group(1), match.group(2)
+        if tp == "f" or tp == "d":
+            inner = "float"
+        else:
+            inner = "int"
         return f"Tuple[{', '.join([inner] * int(n))}]"
 
     # bitset<...> -> int
@@ -301,12 +340,16 @@ def type_convert(cpp_type: str) -> str:
     # function<return_type(arg_types)> -> callable[[arg_types], return_type]
     cpp_type = re.sub(r"^function<([^(]+)\(([^)]*)\)>$", convert_function, cpp_type)
     # convert cv types
-    cpp_type = re.sub(r"^Matx<([^,]+),\s*(\d+),\s*(\d+)>$", convert_matx, cpp_type)
     cpp_type = re.sub(r"^Point$", "Tuple[int, int]", cpp_type)
     cpp_type = re.sub(r"^Point2[fd]$", "Tuple[float, float]", cpp_type)
     cpp_type = re.sub(r"^Point3i$", "Tuple[int, int, int]", cpp_type)
     cpp_type = re.sub(r"^Point3[fd]$", "Tuple[float, float, float]", cpp_type)
+    cpp_type = re.sub(r"^Size$", "Tuple[int, int]", cpp_type)
+    cpp_type = re.sub(r"^Scalar$", "Tuple[int, int, int, int]", cpp_type)
+    cpp_type = re.sub(r"^Matx<([^,]+),\s*(\d+),\s*(\d+)>$", convert_matx, cpp_type)
     cpp_type = re.sub(r"^Vec<([^,]+),\s*(\d+)>$", convert_vec, cpp_type)
+    cpp_type = re.sub(r"^Matx(\d+)(\d+)([fdi])$", convert_simple_matx, cpp_type)
+    cpp_type = re.sub(r"^Vec(\d+)([fdi])$", convert_simple_vec, cpp_type)
     # convert identifier
     cpp_type = re.sub(r"^\b\w+\b$", convert_identifier, cpp_type)
 
@@ -322,23 +365,28 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
     `(str)`: generated py binding code
     """
 
-    binding_code = []
+    binding_code: List[str] = []
     # To store functions for overload detection
-    class_content = []
-    cur_class = None
+    class_content: List[str] = []
+    cur_class: str = None
     functions = defaultdict(list)
     convert_content = []
     # To store enum class definitions
-    enum_classes = []
-    enums = []
+    enum_classes: List[Tuple[str, List[str]]] = []
+    enums: List[str] = []
     in_enum = False
-    cur_enum_class = None
+    cur_enum_class: Tuple[str, List[str]] = None
     cur_enum = None
 
     for line in lines:
         line = line.strip()
 
-        if line.startswith("//") or not line:
+        if (
+            line.startswith("//")
+            or line.startswith("/*")
+            or line.startswith("* ")
+            or not line
+        ):
             continue
         # Enum class and enum detection
         elif line.startswith("enum class") or (in_enum and line.startswith("{")):
@@ -380,6 +428,7 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                     class_content.append(
                         f'    py::class_<{cur_class}>(m, "{cur_class}", py::dynamic_attr())'
                     )
+                    continue
                 # Aggregate class
                 mch = re_match("aggregate_class", line)
                 if mch:
@@ -388,14 +437,43 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                         f'    py::class_<{cur_class}>(m, "{cur_class}", py::dynamic_attr())'
                     )
                     class_content.append("        .def(py::init<>())")
+                    continue
+                # Abstract class
+                mch = re_match("abs_class", line)
+                if mch:
+                    cur_class = mch.group(1)
+                    class_content.append(
+                        f'    py::class_<{cur_class}, std::shared_ptr<{cur_class}>>(m, "{cur_class}")'
+                    )
+                    continue
+                mch = re_match("abu_class", line)
+                if mch:
+                    cur_class = mch.group(1)
+                    class_content.append(
+                        f'    py::class_<{cur_class}, std::unique_ptr<{cur_class}>>(m, "{cur_class}")'
+                    )
                 # Inherited class
                 mch = re_match("inherited_class", line)
                 if mch:
                     cur_class = mch.group(1)
+                    inherited_class = mch.group(3)
                     class_content.append(
-                        f'    py::class_<{cur_class}, {mch.group(3)}>(m, "{cur_class}")'
+                        f'    py::class_<{cur_class}, {inherited_class}>(m, "{cur_class}")'
                     )
-
+                    continue
+                # Derived class
+                mch = re_match("des_class", line)
+                if mch:
+                    cur_class, des_class = mch.group(1), mch.group(3)
+                    class_content.append(
+                        f'    py::class_<{cur_class}, {des_class}, std::shared_ptr<{cur_class}>>(m, "{cur_class}")'
+                    )
+                mch = re_match("deu_class", line)
+                if mch:
+                    cur_class, deu_class = mch.group(1), mch.group(3)
+                    class_content.append(
+                        f'    py::class_<{cur_class}, {deu_class}, std::unique_ptr<{cur_class}>>(m, "{cur_class}")'
+                    )
             # Global normal function
             else:
                 mch = re_match("global_function", line)
@@ -403,6 +481,7 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                     return_type, func_name, params = mch.groups()
                     type_list, id_list, default_list = split_parameters(params)
                     functions[func_name].append((type_list, id_list, default_list))
+                    continue
         # Class method with 'RMVL_W_SUBST' macro
         elif line.startswith("RMVL_W_SUBST"):
             mch = re_match("subst", line)
@@ -464,7 +543,7 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                 return_type, method_name, params = mch.groups()
                 type_list, id_list, default_list = split_parameters(params)
                 class_content.append(
-                    f'        .def("{method_name}", &{cur_class}::{method_name}, py::pure_virtual(),'
+                    f'        .def("{method_name}", py::overload_cast<{", ".join(type_list)}>(&{cur_class}::{method_name}),'
                 )
                 for type, id, default in zip(type_list, id_list, default_list):
                     if default == "{}":
@@ -725,20 +804,20 @@ def generate_pyi(
     `(str)`: generated .pyi file content
     """
 
-    pyi_content = []
+    pyi_content: List[str] = []
     # To store current comment
     in_comment = False
     cur_comment = []
     # To store functions for overload detection
-    class_content = []
-    para_class_fordoc = []
+    class_content: List[str] = []
+    para_class_fordoc: List[str] = []
     cur_class = None
     functions = defaultdict(list)
     # To store enum class definitions
     enum_classes = []
     enums = []
     in_enum = False
-    cur_enum_class = None
+    cur_enum_class: Tuple[str, List[str]] = None
     cur_enum = None
     # To store typings
     typings = []
@@ -816,11 +895,34 @@ def generate_pyi(
                     class_content.append(f"class {cur_class}:")
                     if cur_class.endswith("Param"):
                         para_class_fordoc.append(cur_class)
+                    continue
+                mch = re_match("abs_class", line)
+                if mch:
+                    cur_class: str = mch.group(1)
+                    class_content.append(f"class {cur_class}(ABC):")
+                    continue
+                mch = re_match("abu_class", line)
+                if mch:
+                    cur_class: str = mch.group(1)
+                    class_content.append(f"class {cur_class}(ABC):")
+                    continue
                 # Inherited class
                 mch = re_match("inherited_class", line)
                 if mch:
                     cur_class: str = mch.group(1)
                     class_content.append(f"class {cur_class}({mch.group(3)}):")
+                    continue
+                # Derived class
+                mch = re_match("des_class", line)
+                if mch:
+                    cur_class: str = mch.group(1)
+                    class_content.append(f"class {cur_class}({mch.group(3)}):")
+                    continue
+                mch = re_match("deu_class", line)
+                if mch:
+                    cur_class: str = mch.group(1)
+                    class_content.append(f"class {cur_class}({mch.group(3)}):")
+                    continue
             # Global function definition
             else:
                 mch = re_match("global_function", line)
@@ -836,7 +938,7 @@ def generate_pyi(
             if mch and misc:
                 alias_str = mch.group(1)
                 with open(misc, "r") as f:
-                    json_content: dict = json.load(f)
+                    json_content: dict[str, dict] = json.load(f)
                     if cur_class:
                         if alias_str not in json_content:
                             class_content.append(
@@ -864,7 +966,7 @@ def generate_pyi(
                 type_list, id_list, default_list = split_parameters(params)
                 param_str = ", ".join(
                     [
-                        f"{id}: {type_convert(tp)}" + (f" = {d}" if d else "")
+                        f"{id}: {type_convert(tp)}" + (f" = {d.capitalize()}" if d in ["true", "false"] else f" = {d}" if d else "")
                         for id, tp, d in zip(id_list, type_list, default_list)
                     ]
                 ).replace("::", ".")
@@ -881,26 +983,33 @@ def generate_pyi(
             mch = re_match("pure_virtual", line)
             if mch:
                 return_type, method_name, params = mch.groups()
+                return_type = type_convert(return_type)
+                if return_type == "ptr" or return_type == "const_ptr":
+                    return_type = cur_class
                 type_list, id_list, default_list = split_parameters(params)
                 param_str = ", ".join(
                     [
-                        f"{id}: {type_convert(t)}" + (f" = {d}" if d else "")
-                        for id, t, d in zip(id_list, type_list, default_list)
+                        f"{id}: {type_convert(tp)}" + (f" = {d}" if d else "")
+                        for id, tp, d in zip(id_list, type_list, default_list)
                     ]
                 ).replace("::", ".")
                 class_content_cmt = "\n        ".join(generate_comment(cur_comment))
                 class_content.append(
-                    f"    @overload\n    def {method_name}(self, {param_str}) -> {type_convert(return_type)}:{class_content_cmt}..."
+                    f"    @abstractmethod\n    @overload\n    def {method_name}(self, {param_str}) -> {return_type}:{class_content_cmt}..."
                 )
+                continue
             # Class method and static method
             mch = re_match("method", line)
             if mch:
                 return_type, method_name, params = mch.groups()
+                return_type = type_convert(return_type)
+                if return_type == "ptr" or return_type == "const_ptr":
+                    return_type = cur_class
                 type_list, id_list, default_list = split_parameters(params)
                 param_str = ", ".join(
                     [
-                        f"{id}: {type_convert(t)}" + (f" = {d}" if d else "")
-                        for id, t, d in zip(id_list, type_list, default_list)
+                        f"{id}: {type_convert(tp)}" + (f" = {d.capitalize()}" if d in ["true", "false"] else f" = {d}" if d else "")
+                        for id, tp, d in zip(id_list, type_list, default_list)
                     ]
                 ).replace("::", ".")
                 if method_name == "operator()":
@@ -915,7 +1024,7 @@ def generate_pyi(
                     method_name = "__sub__"
                 class_content_cmt = "\n        ".join(generate_comment(cur_comment))
                 class_content.append(
-                    f"    @overload\n    def {method_name}(self, {param_str}) -> {type_convert(return_type)}:{class_content_cmt}..."
+                    f"    @overload\n    def {method_name}(self, {param_str}) -> {return_type}:{class_content_cmt}..."
                 )
                 continue
             # Class member variable

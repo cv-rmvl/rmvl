@@ -14,7 +14,9 @@
 #include <any>
 #include <onnxruntime/onnxruntime_cxx_api.h>
 
-#include "rmvl/algorithm/pretreat.hpp"
+#include <opencv2/core/mat.hpp>
+
+#include "rmvl/core/rmvldef.hpp"
 
 namespace rm
 {
@@ -32,27 +34,27 @@ enum class OrtProvider : uint8_t
 };
 
 //! 预处理选项
-struct PreprocessOptions
+struct RMVL_EXPORTS_W_AG PreprocessOptions
 {
-    std::vector<float> means; //!< 均值
-    std::vector<float> stds;  //!< 标准差
+    RMVL_W_RW std::vector<float> means; //!< 均值
+    RMVL_W_RW std::vector<float> stds;  //!< 标准差
 };
 
 //! 后处理选项
-struct PostprocessOptions
+struct RMVL_EXPORTS_W_AG PostprocessOptions
 {
-    PixChannel color{};          //!< 颜色通道
-    std::vector<float> thresh{}; //!< 阈值向量
+    RMVL_W_RW uint8_t color{};             //!< 颜色通道
+    RMVL_W_RW std::vector<float> thresh{}; //!< 阈值向量
 };
 
 //! ONNX-Runtime (Ort) 部署库基类 \cite microsoft23ort
-class OnnxNet
+class RMVL_EXPORTS_W OnnxNet
 {
 protected:
-    Ort::MemoryInfo _memory_info;                 //!< 内存分配信息
-    Ort::Env _env;                                //!< 环境配置
-    Ort::SessionOptions _session_options;         //!< 会话选项
-    std::unique_ptr<Ort::Session> _session;       //!< 会话
+    Ort::MemoryInfo _memory_info;           //!< 内存分配信息
+    Ort::Env _env;                          //!< 环境配置
+    Ort::SessionOptions _session_options;   //!< 会话选项
+    std::unique_ptr<Ort::Session> _session; //!< 会话
 #if ORT_API_VERSION < 12
     std::vector<const char *> _inames; //!< 输入名称
     std::vector<const char *> _onames; //!< 输出名称
@@ -68,12 +70,12 @@ public:
      * @param[in] model_path 模型路径，如果该路径不存在，则程序将因错误而退出
      * @param[in] prov Ort 提供者
      */
-    OnnxNet(std::string_view model_path, OrtProvider prov);
+    RMVL_W OnnxNet(std::string_view model_path, OrtProvider prov);
 
     //! 打印环境信息
-    static void printEnvInfo() noexcept;
+    RMVL_W static void printEnvInfo() noexcept;
     //! 打印模型信息
-    void printModelInfo() noexcept;
+    RMVL_W void printModelInfo() noexcept;
 
     /**
      * @brief 推理
@@ -84,7 +86,9 @@ public:
      * @return 使用 `std::any` 表示的所有推理结果，需要根据具体的网络进行解析
      * @note 可使用 `<class-type>::cast` 函数对返回类型进行转换
      */
-    std::any inference(const std::vector<cv::Mat> &images, const PreprocessOptions &preop, const PostprocessOptions &postop);
+    RMVL_W std::any inference(const std::vector<cv::Mat> &images, const PreprocessOptions &preop, const PostprocessOptions &postop);
+
+    virtual ~OnnxNet() = default;
 
 private:
     /**
@@ -94,7 +98,7 @@ private:
      * @param[in] preop 预处理选项，不同网络有不同的预处理选项
      * @return 模型的输入 Tensors
      */
-    virtual std::vector<Ort::Value> preProcess(const std::vector<cv::Mat> &images, const PreprocessOptions &preop) = 0;
+    virtual std::vector<Ort::Value> preProcess(const std::vector<cv::Mat> &images, const PreprocessOptions &preop);
 
     /**
      * @brief 后处理
@@ -103,7 +107,7 @@ private:
      * @param[in] postop 后处理选项，不同网络有不同的后处理选项
      * @return 使用 `std::any` 表示的所有推理结果，需要根据具体的网络进行解析
      */
-    virtual std::any postProcess(const std::vector<Ort::Value> &output_tensors, const PostprocessOptions &postop) = 0;
+    virtual std::any postProcess(const std::vector<Ort::Value> &output_tensors, const PostprocessOptions &postop);
 };
 
 /**
@@ -114,7 +118,7 @@ private:
  * @note
  * - 输出层为 `[1, n]`，其中 `n` 为类别数
  */
-class ClassificationNet : public OnnxNet
+class RMVL_EXPORTS_W ClassificationNet : public OnnxNet
 {
     std::vector<std::vector<float>> _iarrays; //!< 输入数组
 
@@ -125,7 +129,7 @@ public:
      * @param[in] result 使用 `std::any` 表示的推理结果
      * @return 转换后的推理结果，为 `std::pair<int, float>` 类型，表示分类结果及其置信度
      */
-    static std::pair<int, float> cast(const std::any &result) { return std::any_cast<std::pair<int, float>>(result); }
+    RMVL_W static std::pair<int, float> cast(const std::any &result) { return std::any_cast<std::pair<int, float>>(result); }
 
     /**
      * @brief 创建分类网络对象
@@ -133,7 +137,7 @@ public:
      * @param[in] model_path 模型路径，如果该路径不存在，则程序将因错误而退出
      * @param[in] prov Ort 提供者，默认为 `OrtProvider::CPU`
      */
-    ClassificationNet(std::string_view model_path, OrtProvider prov = OrtProvider::CPU);
+    RMVL_W ClassificationNet(std::string_view model_path, OrtProvider prov = OrtProvider::CPU);
 
 private:
     /**

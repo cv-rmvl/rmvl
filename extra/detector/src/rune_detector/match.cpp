@@ -17,16 +17,7 @@
 namespace rm
 {
 
-void RuneDetector::match(std::vector<tracker::ptr> &rune_trackers, const std::vector<combo::ptr> &combos)
-{
-    // 匹配
-    this->matchRunes(rune_trackers, combos);
-    // 删除
-    rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(), [](tracker::const_ptr p_tracker) { return p_tracker->invalid(); }),
-                        rune_trackers.end());
-}
-
-void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos)
+static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos, const ImuData &imu_data, double tick)
 {
     // 如果 trackers 为空先为每个识别到的 active_rune 开辟序列
     if (trackers.empty())
@@ -72,7 +63,7 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
         }
         // 没有匹配到的序列则执行丢帧操作
         for (auto p_tracker : tracker_set)
-            p_tracker->update(_tick, _imu_data);
+            p_tracker->update(tick, imu_data);
     }
     // 如果当前帧识别到的装甲板数量 = 序列数量
     else
@@ -95,12 +86,21 @@ void RuneDetector::matchRunes(std::vector<tracker::ptr> &trackers, const std::ve
                 trackers[i]->update(closest_combo);
             else
             {
-                trackers[i]->update(_tick, _imu_data);
+                trackers[i]->update(tick, imu_data);
                 trackers.emplace_back(RuneTracker::make_tracker(closest_combo));
             }
             combo_set.erase(closest_combo);
         }
     }
+}
+
+void RuneDetector::match(std::vector<tracker::ptr> &rune_trackers, const std::vector<combo::ptr> &combos)
+{
+    // 匹配
+    matchRunes(rune_trackers, combos, _imu_data, _tick);
+    // 删除
+    rune_trackers.erase(remove_if(rune_trackers.begin(), rune_trackers.end(), [](tracker::const_ptr p_tracker) { return p_tracker->invalid(); }),
+                        rune_trackers.end());
 }
 
 } // namespace rm

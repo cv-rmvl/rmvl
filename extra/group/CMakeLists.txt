@@ -1,10 +1,7 @@
 # ----------------------------------------------------------------------------
 #  Generate para and add module for each group
 # ----------------------------------------------------------------------------
-rmvl_add_module(
-  group INTERFACE
-  DEPENDS tracker
-)
+rmvl_add_module(group DEPENDS tracker)
 
 # gyro_group
 rmvl_generate_para(
@@ -27,6 +24,29 @@ rmvl_add_module(
 )
 
 rmvl_generate_module_para(group)
+
+# ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m group gyro_group rune_group)
+    if(BUILD_rmvl_${m})
+      list(APPEND group_inc rmvl/group/${m}.h) 
+      list(APPEND group_dep ${m})
+    endif()
+  endforeach() 
+  foreach(m gyro_group rune_group)
+    if(BUILD_rmvl_${m})
+      list(APPEND group_inc rmvlpara/group/${m}.h) 
+    endif()
+  endforeach()
+
+  rmvl_generate_python(group
+    FILES ${group_inc}
+    DEPENDS ${group_dep}
+    USE_PREBIND
+  )
+endif()
 
 # ----------------------------------------------------------------------------
 #  Build the test program

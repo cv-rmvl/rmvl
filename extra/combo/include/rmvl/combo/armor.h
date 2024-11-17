@@ -31,18 +31,8 @@ namespace rm
  * - 特征包括 `[0]`: 左灯条，`[1]`: 右灯条
  * - 角点为 `[0]`: 左灯条下顶点，`[1]`: 左灯条上顶点，`[2]`: 右灯条上顶点，`[3]`: 右灯条下顶点
  */
-class Armor : public combo
+class RMVL_EXPORTS_W_DES Armor final : public combo
 {
-    float _combo_ratio{};  //!< 组合特征宽高比
-    float _width_ratio{};  //!< 左右灯条宽度比
-    float _length_ratio{}; //!< 左右灯条长度比
-    float _corner_angle{}; //!< 左右灯条错位角
-    float _match_error{};  //!< 匹配误差
-
-    cv::Vec2f _pose; //!< 装甲板姿态法向量
-
-    static cv::Ptr<cv::ml::SVM> _svm; //!< 大小装甲板二分类 SVM
-
 public:
     using ptr = std::shared_ptr<Armor>;
     using const_ptr = std::shared_ptr<const Armor>;
@@ -63,8 +53,7 @@ public:
      * @param[in] armor_size_type 需要指定的大小装甲板类型，默认为 `ArmorSizeType::UNKNOWN`
      * @return 若成功，返回 Armor 的共享指针，否则返回空
      */
-    static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data,
-                          double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
+    RMVL_W static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
 
     /**
      * @brief 从另一个组合体进行构造
@@ -72,7 +61,7 @@ public:
      * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    combo::ptr clone(double tick) override;
+    RMVL_W combo::ptr clone(double tick) override;
 
     RMVL_COMBO_CAST(Armor)
 
@@ -81,7 +70,7 @@ public:
      *
      * @param[in] path *.xml 文件路径
      */
-    static inline void loadSVM(const std::string &path) { _svm = cv::ml::SVM::load(path); }
+    RMVL_W static inline void loadSVM(const std::string &path) { _svm = cv::ml::SVM::load(path); }
 
     /**
      * @brief 装甲板相机外参从 IMU 坐标系转化为相机坐标系
@@ -126,23 +115,19 @@ public:
     static cv::Mat getNumberROI(cv::Mat src, const_ptr p_armor);
 
     //! 获取组合特征宽高比
-    inline float getComboRatio() { return _combo_ratio; }
+    RMVL_W inline float getComboRatio() { return _combo_ratio; }
     //! 获取左右灯条宽度的比值
-    inline float getWidthRatio() { return _width_ratio; }
+    RMVL_W inline float getWidthRatio() { return _width_ratio; }
     //! 获取左右灯条长度的比值
-    inline float getLengthRatio() { return _length_ratio; }
+    RMVL_W inline float getLengthRatio() { return _length_ratio; }
     //! 获取左右灯条错位角
-    inline float getCornerAngle() { return _corner_angle; }
+    RMVL_W inline float getCornerAngle() { return _corner_angle; }
     //! 获取匹配误差
-    inline float getError() { return _match_error; }
-    //! 获取装甲板大小类型
-    inline ArmorSizeType getArmorType() { return _type.ArmorSizeTypeID; }
+    RMVL_W inline float getError() { return _match_error; }
     //! 设置机器人类型 RobotType
-    inline void setType(RobotType stat) { _type.RobotTypeID = stat; }
-    //! 设置相机外参
-    inline void setExtrinsic(const CameraExtrinsics &extrinsic) { _extrinsic = extrinsic; }
+    RMVL_W inline void setType(RobotType stat) { _type.RobotTypeID = stat; }
     //! 获取装甲板姿态法向量
-    inline const cv::Vec2f &getPose() const { return _pose; }
+    RMVL_W inline const cv::Vec2f &getPose() const { return _pose; }
 
 private:
     /**
@@ -151,6 +136,16 @@ private:
      * @return Armor::ArmorType
      */
     ArmorSizeType matchArmorType();
+
+    float _combo_ratio{};  //!< 组合特征宽高比
+    float _width_ratio{};  //!< 左右灯条宽度比
+    float _length_ratio{}; //!< 左右灯条长度比
+    float _corner_angle{}; //!< 左右灯条错位角
+    float _match_error{};  //!< 匹配误差
+
+    cv::Vec2f _pose; //!< 装甲板姿态法向量
+
+    static cv::Ptr<cv::ml::SVM> _svm; //!< 大小装甲板二分类 SVM
 };
 
 inline cv::Ptr<cv::ml::SVM> Armor::_svm = nullptr;

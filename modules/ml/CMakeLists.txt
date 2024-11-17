@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------------------
+#  Generate para and add module for ml
+# ----------------------------------------------------------------------------
 rmvl_update_build(ml WITH_OPENCV)
 rmvl_add_module(
   ml INTERFACE
@@ -13,7 +16,27 @@ rmvl_add_module(
   EXTERNAL ${Ort_LIBS}
 )
 
-# test
+# ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m ort)
+    if(BUILD_rmvl_${m})
+      list(APPEND ml_inc rmvl/ml/${m}.h) 
+      list(APPEND ml_dep ${m})
+    endif()
+  endforeach()
+  
+  rmvl_generate_python(ml
+    FILES ${ml_inc}
+    DEPENDS ${ml_dep}
+    USE_PREBIND
+  )
+endif()
+
+# ----------------------------------------------------------------------------
+#  Build the test program
+# --------------------------------------------------------------------------
 if(BUILD_TESTS)
 
 endif(BUILD_TESTS)

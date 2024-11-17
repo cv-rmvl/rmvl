@@ -135,10 +135,11 @@ install(
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}/templates"
 )
 
-# install file: __init__.py of 'rm' module
+# install file: __init__.py and rmvl_typing.pyi of 'rm' module
 if(BUILD_PYTHON)
   install(
     FILES "${RMVL_PYTHON_OUTPUT_DIR}/__init__.py"
+          "${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.pyi"
     DESTINATION "${RMVL_PYTHON_INSTALL_PATH}"
   )
 endif()

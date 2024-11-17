@@ -38,7 +38,7 @@ void GyroGroup::sync(const ImuData &imu_data, double tick)
     for (auto &p_tracker : _trackers)
         if (p_tracker->getVanishNumber() == 0)
             visible_trackers.push_back(p_tracker);
-    // --------------【更新序列组的时间点IMU 数据】--------------
+    // --------------【更新序列组的时间点 IMU 数据】--------------
     _tick = tick;
     _imu_data = imu_data;
     // ----【计算出待更新至序列组整体状态的必要信息，并完成同步】----

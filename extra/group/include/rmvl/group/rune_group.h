@@ -20,23 +20,21 @@ namespace rm
 //! @{
 
 //! 神符序列组
-class RuneGroup final : public group
+class RMVL_EXPORTS_W_DES RuneGroup final : public group
 {
-    std::deque<double> _datas; //!< 原始角度数据
-
 public:
     using ptr = std::shared_ptr<RuneGroup>;
     using const_ptr = std::shared_ptr<const RuneGroup>;
 
     //! 构建 RuneGroup
-    static inline ptr make_group() { return std::make_shared<RuneGroup>(); }
+    RMVL_W static inline ptr make_group() { return std::make_shared<RuneGroup>(); }
 
     /**
      * @brief 从另一个序列组进行构造
      *
      * @return 指向新序列组的共享指针
      */
-    group::ptr clone() override;
+    RMVL_W group::ptr clone() override;
 
     RMVL_GROUP_CAST(RuneGroup)
 
@@ -48,14 +46,17 @@ public:
      * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    void sync(const ImuData &imu_data, double tick) override;
+    RMVL_W void sync(const ImuData &imu_data, double tick) override;
 
     /**
      * @brief 获取原始数据队列
      *
      * @return 原始数据队列
      */
-    inline const auto &getRawDatas() const { return _datas; }
+    inline const std::deque<double> &getRawDatas() const { return _datas; }
+
+private:
+    std::deque<double> _datas; //!< 原始角度数据
 };
 
 //! @} rune_group

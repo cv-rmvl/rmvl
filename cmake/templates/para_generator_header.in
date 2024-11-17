@@ -37,6 +37,7 @@ class RMVL_EXPORTS_W @class_name@
 public:
 @para_header_details@
 
+    //! 创建 @class_name@ 参数对象 @warning 不建议手动创建对象
     RMVL_W @class_name@() = default;
 
     /**

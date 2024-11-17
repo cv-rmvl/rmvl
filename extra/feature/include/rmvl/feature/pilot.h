@@ -23,7 +23,7 @@ namespace rm
  * @brief 前哨、基地的引导灯
  * @note 角点包括左顶点、右顶点
  */
-class Pilot : public feature
+class RMVL_EXPORTS_W_DES Pilot : public feature
 {
 private:
     cv::RotatedRect _rotated_rect; //!< 旋转矩形
@@ -46,7 +46,7 @@ public:
      * @param tri 包含引导灯颜色信息的灰度图像（三值图: 0, 125, 255）
      * @return 如果能够被成功构造，将返回引导灯的共享指针，否则返回空
      */
-    static ptr make_feature(const std::vector<cv::Point> &contour, cv::Mat &tri);
+    RMVL_W static ptr make_feature(const std::vector<cv::Point> &contour, cv::Mat &tri);
 
     /**
      * @brief 构造 Pilot
@@ -58,24 +58,19 @@ public:
      * @param[in] ref_corners 参考角点
      * @return 返回 Pilot 的共享指针
      */
-    static inline ptr make_feature(float ref_width, float ref_height, const cv::Point2f &ref_center, float ref_angle, const std::vector<cv::Point2f> &ref_corners)
+    RMVL_W static inline ptr make_feature(float ref_width, float ref_height, const cv::Point2f &ref_center, float ref_angle, const std::vector<cv::Point2f> &ref_corners)
     {
         return std::make_shared<Pilot>(ref_width, ref_height, ref_center, ref_angle, ref_corners);
     }
 
     /**
      * @brief 从另一个特征进行构造
-     * 
+     *
      * @return 指向新特征的共享指针
      */
-    feature::ptr clone() override { return std::make_shared<Pilot>(*this); }
+    RMVL_W feature::ptr clone() override { return std::make_shared<Pilot>(*this); }
 
     RMVL_FEATURE_CAST(Pilot)
-
-    //! 获取灯条左端点
-    inline cv::Point2f getLeftPoint() { return _left; }
-    //! 获取灯条右端点
-    inline cv::Point2f getRightPoint() { return _right; }
 };
 
 //! @} pilot

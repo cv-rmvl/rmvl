@@ -9,8 +9,8 @@
  *
  */
 
-#include "rmvl/core/util.hpp"
 #include "rmvl/ml/ort.h"
+#include "rmvl/core/util.hpp"
 
 namespace rm
 {
@@ -58,8 +58,12 @@ OnnxNet::OnnxNet(std::string_view model_path, OrtProvider prov) : _memory_info(O
 #endif
 }
 
+std::vector<Ort::Value> OnnxNet::preProcess(const std::vector<cv::Mat> &, const PreprocessOptions &) { return {}; }
+std::any OnnxNet::postProcess(const std::vector<Ort::Value> &, const PostprocessOptions &) { return {}; }
+
 std::any OnnxNet::inference(const std::vector<cv::Mat> &images, const PreprocessOptions &preop, const PostprocessOptions &postop)
 {
+    RMVL_Assert(_session != nullptr);
     auto itensors = preProcess(images, preop);
 #if ORT_API_VERSION < 12
     return postProcess(_session->Run(Ort::RunOptions{nullptr}, _inames.data(), itensors.data(), itensors.size(), _onames.data(), _onames.size()), postop);

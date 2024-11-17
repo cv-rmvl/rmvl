@@ -51,18 +51,18 @@ matd_t *matd_create(int rows, int cols)
     if (rows == 0 || cols == 0)
         return matd_create_scalar(0);
 
-    matd_t *m = calloc(1, sizeof(matd_t) + (rows*cols*sizeof(double)));
+    matd_t *m = calloc(1, sizeof(matd_t));
     m->nrows = rows;
     m->ncols = cols;
+    m->data = calloc(rows * cols, sizeof(double));
 
     return m;
 }
 
 matd_t *matd_create_scalar(TYPE v)
 {
-    matd_t *m = calloc(1, sizeof(matd_t) + sizeof(double));
-    m->nrows = 0;
-    m->ncols = 0;
+    matd_t *m = calloc(1, sizeof(matd_t));
+    m->data = calloc(1, sizeof(double));
     m->data[0] = v;
 
     return m;
@@ -220,7 +220,8 @@ void matd_destroy(matd_t *m)
     if (!m)
         return;
 
-    assert(m != NULL);
+    assert(m->data != NULL);
+    free(m->data);
     free(m);
 }
 

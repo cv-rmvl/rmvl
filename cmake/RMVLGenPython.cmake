@@ -51,7 +51,10 @@ endfunction()
 #     )
 # ----------------------------------------------------------------------------
 function(rmvl_generate_python _name)
+  set(msg_prefix "Generating Python bindings code for ${_name}")
+  message(STATUS "${msg_prefix}")
   if(DEFINED BUILD_rmvl_${_name}_INIT AND NOT BUILD_rmvl_${_name}_INIT)
+    message(STATUS "${msg_prefix} - skipped")
     return()
   endif()
   set(options "USE_PREBIND")
@@ -114,14 +117,13 @@ function(rmvl_generate_python _name)
   else()
     _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS)
   endif()
-  configure_file(
-    ${pybind_ws}/rmvl_pyi.pyi.in
-    ${RMVL_PYTHON_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.pyi
-    @ONLY
-  )
 
-  # generate __init__.py file content
+  # generate __init__.py, rmvl_typing.pyi and submodules *.pyi file content
   file(APPEND ${RMVL_PYTHON_OUTPUT_DIR}/__init__.py "from .${RMVL_PYBIND_NAME} import *\n")
+  set(rmvl_typing_content "# ========== DO NOT MODIFY THIS FILE ! ==========\n# ${_name} module\n# ===============================================\n${RMVL_PYI_CONTENTS}\n")
+  file(APPEND ${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.pyi "${rmvl_typing_content}")
+  set(pyi_content "# DO NOT MODIFY THIS FILE !\nfrom .rmvl_typing import *")
+  file(WRITE ${RMVL_PYTHON_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.pyi "${pyi_content}")
 
   # install python interface file
   install(
@@ -132,4 +134,5 @@ function(rmvl_generate_python _name)
     TARGETS ${RMVL_PYBIND_NAME}
     LIBRARY DESTINATION ${RMVL_PYTHON_INSTALL_PATH}
   )
+  message(STATUS "${msg_prefix} - done")
 endfunction()

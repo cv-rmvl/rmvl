@@ -1,9 +1,8 @@
 # build lists of modules to be documented
 set(cur_path "${CMAKE_CURRENT_SOURCE_DIR}")
-file(GLOB module_extra_st RELATIVE "${cur_path}" "${cur_path}/*")
 
 set(RMVL_EXTRA_MODULE "")
-foreach(m ${module_extra_st})
+foreach(m types feature combo tracker group detector compensator predictor decider) # The order of addition must be ensured
   if(IS_DIRECTORY ${cur_path}/${m})
     list(APPEND RMVL_EXTRA_MODULE "${m}")
   endif()

@@ -56,6 +56,29 @@ rmvl_add_module(
 rmvl_generate_module_para(feature)
 
 # ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m feature light_blob pilot rune_center rune_target tag)
+    if(BUILD_rmvl_${m})
+      list(APPEND feature_inc rmvl/feature/${m}.h) 
+      list(APPEND feature_dep ${m})
+    endif()
+  endforeach() 
+  foreach(m light_blob pilot rune_center rune_target)
+    if(BUILD_rmvl_${m})
+      list(APPEND feature_inc rmvlpara/feature/${m}.h) 
+    endif()
+  endforeach()
+
+  rmvl_generate_python(feature
+    FILES ${feature_inc}
+    DEPENDS ${feature_dep}
+    USE_PREBIND
+  )
+endif()
+
+# ----------------------------------------------------------------------------
 #  build the test program
 # ----------------------------------------------------------------------------
 if(BUILD_TESTS)

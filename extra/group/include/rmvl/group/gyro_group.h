@@ -15,41 +15,63 @@
 
 #include "rmvl/algorithm/kalman.hpp"
 #include "rmvl/group/group.h"
-#include "rmvl/group/gyro/utils.h"
 
 namespace rm
 {
+
+//! 序列组中的追踪器状态
+class TrackerState
+{
+    std::size_t _index = 0; //!< 在车组中追踪器的序号
+    float _radius = 0.f;    //!< 旋转半径
+    float _delta_y = 0.f;   //!< 与旋转中心的高度差（向下为正）
+
+public:
+    TrackerState() = default;
+
+    /**
+     * @brief 追踪器信息结构体直接初始化
+     *
+     * @param[in] index 在车组中追踪器的序号
+     * @param[in] radius 旋转半径
+     * @param[in] delta_y 与旋转中心的高度差（向下为正）
+     */
+    TrackerState(int index, float radius, float delta_y) : _index(index), _radius(radius), _delta_y(delta_y) {}
+
+    //! 获取在车组中追踪器的序号
+    inline size_t index() const { return _index; }
+    //! 获取旋转半径
+    inline float radius() const { return _radius; }
+    //! 与旋转中心的高度差（向下为正）
+    inline float delta_y() const { return _delta_y; }
+    //! 更新在车组中追踪器的序号
+    inline void index(int idx) { _index = idx; }
+    //! 更新旋转半径
+    inline void radius(float r) { _radius = r; }
+    //! 更新与旋转中心的高度差（向下为正）
+    inline void delta_y(float dy) { _delta_y = dy; }
+};
+
+//! 旋转状态类型
+enum class RotStatus : uint8_t
+{
+    LOW_ROT_SPEED,  //!< 低转速
+    HIGH_ROT_SPEED, //!< 高转速
+};
 
 //! @addtogroup gyro_group
 //! @{
 
 //! 整车状态序列组
-class GyroGroup final : public group
+class RMVL_EXPORTS_W_DES GyroGroup final : public group
 {
-    double _tick;        //!< 时间点
-    ImuData _imu_data; //!< 当前 IMU 数据
-    bool _is_tracked{};  //!< 是否为目标序列组
-
-    //! 追踪器状态哈希表 [追踪器 : 追踪器状态]
-    std::unordered_map<tracker::ptr, TrackerState> _tracker_state;
-
-    KF63f _center3d_filter; //!< 旋转中心点位置滤波器
-
-    std::deque<float> _rotspeed_deq; //!< 旋转速度时间队列（原始数据）
-
-    cv::Vec3f _center3d;   //!< IMU 坐标系下旋转中心点坐标（滤波数据）
-    cv::Vec3f _speed3d;    //!< 旋转中心点平移速度（滤波数据）
-    float _rotspeed = 0.f; //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
-
-    RotStatus _rot_status = RotStatus::LOW_ROT_SPEED; //!< 当前旋转状态
-
-    int _armor_num = 4; //!< 装甲板数量
-
 public:
     using ptr = std::shared_ptr<GyroGroup>;
     using const_ptr = std::shared_ptr<const GyroGroup>;
 
+    //! @cond
     GyroGroup(const std::vector<combo::ptr> &combos, int armor_num);
+    //! @endcond
 
     /**
      * @brief 根据第一帧识别到的组合体构建 GyroGroup
@@ -58,7 +80,7 @@ public:
      * @param[in] first_combos 组合体列表
      * @param[in] armor_num 强制指定装甲板个数（小于 1 表示自动判断）
      */
-    static inline ptr make_group(const std::vector<combo::ptr> &first_combos, int armor_num)
+    RMVL_W static inline ptr make_group(const std::vector<combo::ptr> &first_combos, int armor_num)
     {
         if (first_combos.size() != 1 && first_combos.size() != 2)
             return nullptr;
@@ -70,10 +92,10 @@ public:
      *
      * @return 指向新序列组的共享指针
      */
-    group::ptr clone() override;
+    RMVL_W group::ptr clone() override;
 
     //! 判断是否为无效序列组
-    bool invalid() const override;
+    RMVL_W bool invalid() const override;
 
     RMVL_GROUP_CAST(GyroGroup)
 
@@ -115,7 +137,7 @@ public:
      * @param[in] imu_data 最新 IMU 数据
      * @param[in] tick 最新时间点
      */
-    void sync(const ImuData &imu_data, double tick) override;
+    RMVL_W void sync(const ImuData &imu_data, double tick) override;
 
     /**
      * @brief 获取追踪器状态
@@ -131,15 +153,15 @@ public:
     }
 
     //! 获取最新的车组旋转中心点
-    inline cv::Vec3f getCenter3D() const { return _center3d; }
+    RMVL_W inline cv::Vec3f getCenter3D() const { return _center3d; }
     //! 获取旋转中心点移动速度
-    inline cv::Vec3f getSpeed3D() const { return _speed3d; }
+    RMVL_W inline cv::Vec3f getSpeed3D() const { return _speed3d; }
     //! 获取相机坐标系自转角速度（俯视顺时针为正，滤波数据，弧度）
-    inline float getRotatedSpeed() const { return _rotspeed; }
+    RMVL_W inline float getRotatedSpeed() const { return _rotspeed; }
     //! 获取 IMU 数据
-    inline ImuData imu() const { return _imu_data; }
+    RMVL_W inline ImuData imu() const { return _imu_data; }
     //! 获取旋转状态
-    inline RotStatus getRotStatus() const { return _rot_status; }
+    RMVL_W inline RotStatus getRotStatus() const { return _rot_status; }
 
 private:
     /**
@@ -152,8 +174,7 @@ private:
      * @param[out] group_center2d 旋转中心点像素坐标
      */
     void getGroupInfo(const std::vector<combo::ptr> &visible_combos, std::vector<TrackerState> &state_vec,
-                      std::vector<combo::ptr> &combo_vec, cv::Vec3f &group_center3d,
-                      cv::Point2f &group_center2d);
+                      std::vector<combo::ptr> &combo_vec, cv::Vec3f &group_center3d, cv::Point2f &group_center2d);
 
     /**
      * @brief 初始化序列组
@@ -191,6 +212,25 @@ private:
 
     //! 更新group的旋转状态
     void updateRotStatus();
+
+    double _tick{};      //!< 时间点
+    ImuData _imu_data{}; //!< 当前 IMU 数据
+    bool _is_tracked{};  //!< 是否为目标序列组
+
+    //! 追踪器状态哈希表 [追踪器 : 追踪器状态]
+    std::unordered_map<tracker::ptr, TrackerState> _tracker_state{};
+
+    KF63f _center3d_filter{}; //!< 旋转中心点位置滤波器
+
+    std::deque<float> _rotspeed_deq{}; //!< 旋转速度时间队列（原始数据）
+
+    cv::Vec3f _center3d{}; //!< IMU 坐标系下旋转中心点坐标（滤波数据）
+    cv::Vec3f _speed3d{};  //!< 旋转中心点平移速度（滤波数据）
+    float _rotspeed = 0.f; //!< 绕 y 轴自转角速度（俯视顺时针为正，滤波数据，弧度）
+
+    RotStatus _rot_status = RotStatus::LOW_ROT_SPEED; //!< 当前旋转状态
+
+    int _armor_num = 4; //!< 装甲板数量
 };
 
 //! @} gyro_group

@@ -13,7 +13,8 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   armor
-  DEPENDS combo light_blob 
+  DEPENDS combo light_blob
+  EXTERNAL opencv_ml
 )
 
 # rune
@@ -27,6 +28,28 @@ rmvl_add_module(
 )
 
 rmvl_generate_module_para(combo)
+# ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m combo armor rune)
+    if(BUILD_rmvl_${m})
+      list(APPEND combo_inc rmvl/combo/${m}.h) 
+      list(APPEND combo_dep ${m})
+    endif()
+  endforeach() 
+  foreach(m armor rune)
+    if(BUILD_rmvl_${m})
+      list(APPEND combo_inc rmvlpara/combo/${m}.h) 
+    endif()
+  endforeach()
+
+  rmvl_generate_python(combo
+    FILES ${combo_inc}
+    DEPENDS ${combo_dep}
+    USE_PREBIND
+  )
+endif()
 
 # ----------------------------------------------------------------------------
 #  build the test program

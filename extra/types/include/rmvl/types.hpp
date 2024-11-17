@@ -104,23 +104,13 @@ enum class CompensateType : uint8_t
 };
 
 //! 状态类型
-struct RMStatus
+struct RMVL_EXPORTS_W_AG RMStatus
 {
-    ArmorSizeType ArmorSizeTypeID{};   //!< 装甲板大小类型
-    RuneType RuneTypeID{};             //!< 能量机关激活类型
-    CompensateType CompensateTypeID{}; //!< 强制补偿类型
-    RobotType RobotTypeID{};           //!< 机器人类型
-    TagType TagTypeID{};               //!< AprilTag 视觉标签类型
-
-    /**
-     * @brief 将类型转化为 `std::string` 类型
-     *
-     * @tparam Tp 数据类型
-     * @param[in] type RMStatus 子类型
-     * @return 字符串类型
-     */
-    template <typename Tp>
-    static std::string to_string(Tp type) { return std::to_string(static_cast<uint8_t>(type)); }
+    RMVL_W_RW ArmorSizeType ArmorSizeTypeID{};   //!< 装甲板大小类型
+    RMVL_W_RW RuneType RuneTypeID{};             //!< 能量机关激活类型
+    RMVL_W_RW CompensateType CompensateTypeID{}; //!< 强制补偿类型
+    RMVL_W_RW RobotType RobotTypeID{};           //!< 机器人类型
+    RMVL_W_RW TagType TagTypeID{};               //!< AprilTag 视觉标签类型
 
     /**
      * @brief 将机器人类型转化为 `std::string` 类型
@@ -128,17 +118,24 @@ struct RMStatus
      * @param[in] type RobotType 类型
      * @return 字符串类型
      */
-    static std::string to_string(RobotType type);
-};
+    RMVL_W static std::string to_string(RobotType type);
 
-/**
- * @brief 判断两个 RMStatus 是否相等
- *
- * @param[in] lhs 左操作数
- * @param[in] rhs 右操作数
- * @return 是否相等
- */
-inline bool operator==(const RMStatus &lhs, const RMStatus &rhs) { return reflect::equal(lhs, rhs); }
+    /**
+     * @brief 将视觉标签类型转化为 `std::string` 类型
+     *
+     * @param[in] type TagType 类型
+     * @return 字符串类型
+     */
+    RMVL_W static std::string to_string(TagType type);
+
+    /**
+     * @brief 判断两个 RMStatus 是否相等
+     *
+     * @param[in] val RMStatus 类型
+     * @return 是否相等
+     */
+    RMVL_W inline bool operator==(const RMStatus &val) const { return reflect::equal(*this, val); }
+};
 
 //! @} types
 
