@@ -301,14 +301,14 @@ bool Server::write(const NodeId &node, const Variable &val) { return serverWrite
 static void value_cb_before_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid,
                                  void *context, const UA_NumericRange *, const UA_DataValue *value)
 {
-    auto &on_read = static_cast<Server::ValueCallbackWrapper *>(context)->first;
+    auto &on_read = reinterpret_cast<Server::ValueCallbackWrapper *>(context)->first;
     on_read(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
 }
 
 static void value_cb_after_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeId,
                                  void *context, const UA_NumericRange *, const UA_DataValue *data)
 {
-    auto &on_write = static_cast<Server::ValueCallbackWrapper *>(context)->second;
+    auto &on_write = reinterpret_cast<Server::ValueCallbackWrapper *>(context)->second;
     on_write(server, *nodeId, data->hasValue ? helper::cvtVariable(data->value) : Variable{});
 }
 
@@ -336,7 +336,7 @@ bool Server::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead bef
 static UA_StatusCode datasource_cb_on_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
                                            UA_Boolean, const UA_NumericRange *, UA_DataValue *value)
 {
-    auto on_read = static_cast<Server::DataSourceCallbackWrapper *>(context)->first;
+    auto on_read = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->first;
     auto retval = on_read(server, *nodeid);
     if (retval.empty())
         return UA_STATUSCODE_BADNOTFOUND;
@@ -348,7 +348,7 @@ static UA_StatusCode datasource_cb_on_read(UA_Server *server, const UA_NodeId *,
 static UA_StatusCode datasource_cb_on_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
                                             const UA_NumericRange *, const UA_DataValue *value)
 {
-    auto on_write = static_cast<Server::DataSourceCallbackWrapper *>(context)->second;
+    auto on_write = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->second;
     on_write(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
     return value->hasValue ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADNOTFOUND;
 }
@@ -395,7 +395,7 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
 static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *object_id,
                                void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
 {
-    auto &on_method = *static_cast<MethodCallback *>(context);
+    auto &on_method = *reinterpret_cast<MethodCallback *>(context);
     std::vector<Variable> iargs(input_size);
     for (size_t i = 0; i < input_size; ++i)
         iargs[i] = helper::cvtVariable(input[i]);

@@ -260,7 +260,7 @@ static bool createSubscription(UA_Client *p_client, UA_CreateSubscriptionRespons
 
 static void data_change_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, void *context, UA_DataValue *value)
 {
-    auto &on_change = *static_cast<DataChangeNotificationCallback *>(context);
+    auto &on_change = *reinterpret_cast<DataChangeNotificationCallback *>(context);
     on_change(client, helper::cvtVariable(value->value));
 }
 
@@ -293,7 +293,7 @@ bool Client::monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32
 
 static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, void *context, size_t events_num, UA_Variant *event_fields)
 {
-    auto &on_event = *static_cast<EventNotificationCallback *>(context);
+    auto &on_event = *reinterpret_cast<EventNotificationCallback *>(context);
     std::vector<Variable> datas(events_num);
     for (size_t i = 0; i < events_num; ++i)
         datas[i] = helper::cvtVariable(event_fields[i]);

@@ -24,7 +24,36 @@ namespace rm
 
 RMVL_IMPL_DEF(SerialPort)
 
-SerialPort::SerialPort(const std::string &device, int baud_rate) : _impl(new Impl(device, baud_rate)) {}
+int getBaudRate(BaudRate baud_rate)
+{
+#ifdef _WIN32
+    switch (baud_rate)
+    {
+    case BaudRate::BR_57600:
+        return 57600;
+    case BaudRate::BR_115200:
+        return 115200;
+    case BaudRate::BR_230400:
+        return 230400;
+    default:
+        return 115200;
+    }
+#else
+    switch (baud_rate)
+    {
+    case BaudRate::BR_57600:
+        return B57600;
+    case BaudRate::BR_115200:
+        return B115200;
+    case BaudRate::BR_230400:
+        return B230400;
+    default:
+        return B115200;
+    }
+#endif
+}
+
+SerialPort::SerialPort(std::string_view device, BaudRate baud_rate) : _impl(new Impl(device, baud_rate)) {}
 bool SerialPort::isOpened() const { return _impl->isOpened(); }
 long int SerialPort::fdwrite(void *data, size_t length) { return _impl->fdwrite(data, length); }
 long int SerialPort::fdread(void *data, size_t len) { return _impl->fdread(data, len); }

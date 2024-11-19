@@ -4,9 +4,9 @@
  * @brief 数据 IO 与通信模块
  * @version 2.0
  * @date 2024-10-03
- * 
+ *
  * @copyright Copyright 2024 (c), zhaoxi
- * 
+ *
  */
 
 #pragma once
@@ -140,17 +140,24 @@ void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>
 
 ///////////////////////////////////// 串口通信 /////////////////////////////////////
 
+enum class BaudRate
+{
+    BR_57600,  //!< 波特率 57600
+    BR_115200, //!< 波特率 115200
+    BR_230400, //!< 波特率 230400
+};
+
 //! 串行接口通信库
-class SerialPort
+class RMVL_EXPORTS SerialPort
 {
 public:
     /**
      * @brief 构造新 SerialPort 对象
      *
      * @param[in] device 设备名
-     * @param[in] baud_rate 波特率，默认为 `B115200`
+     * @param[in] baud_rate 波特率，一般为 `BaudRate::BR_115200`
      */
-    explicit SerialPort(const std::string &device, int baud_rate = 0010002);
+    SerialPort(std::string_view device, BaudRate baud_rate);
 
     SerialPort(const SerialPort &) = delete;
     SerialPort(SerialPort &&) = default;
@@ -211,7 +218,7 @@ private:
 //////////////////////////////////// 进程间通信 ////////////////////////////////////
 
 //! 命名管道服务端
-class PipeServer
+class RMVL_EXPORTS_W PipeServer
 {
     RMVL_IMPL;
 
@@ -229,7 +236,7 @@ public:
      * @param[in] name 命名管道名称，Windows 下的命名管道名称为 `\\.\pipe\` +`name`, Linux
      *                 下的命名管道名称为 `/tmp/` + `name`，长度不超过 256 个字符
      */
-    PipeServer(std::string_view name);
+    RMVL_W PipeServer(std::string_view name);
 
     /**
      * @brief 从管道读取数据
@@ -239,6 +246,14 @@ public:
      */
     bool read(std::string &data);
 
+    //! @cond
+    RMVL_W inline std::tuple<bool, std::string> read()
+    {
+        std::string data;
+        return {read(data), data};
+    }
+    //! @endcond
+
     inline bool operator>>(std::string &data) { return read(data); }
 
     /**
@@ -247,13 +262,13 @@ public:
      * @param[in] data 待写入的数据
      * @return 是否写入成功
      */
-    bool write(std::string_view data);
+    RMVL_W bool write(std::string_view data);
 
     inline bool operator<<(std::string_view data) { return write(data); }
 };
 
 //! 命名管道客户端
-class PipeClient
+class RMVL_EXPORTS_W PipeClient
 {
     RMVL_IMPL;
 
@@ -268,7 +283,7 @@ public:
      *
      * @param[in] name 命名管道名称
      */
-    PipeClient(std::string_view name);
+    RMVL_W PipeClient(std::string_view name);
 
     /**
      * @brief 从管道读取数据
@@ -278,6 +293,14 @@ public:
      */
     bool read(std::string &data);
 
+    //! @cond
+    RMVL_W inline std::tuple<bool, std::string> read()
+    {
+        std::string data;
+        return {read(data), data};
+    }
+    //! @endcond
+
     inline bool operator>>(std::string &data) { return read(data); }
 
     /**
@@ -286,7 +309,7 @@ public:
      * @param[in] data 待写入的数据
      * @return 是否写入成功
      */
-    bool write(std::string_view data);
+    RMVL_W bool write(std::string_view data);
 
     inline bool operator<<(std::string_view data) { return write(data); }
 };

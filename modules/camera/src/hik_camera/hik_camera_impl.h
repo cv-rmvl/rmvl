@@ -21,10 +21,10 @@ namespace rm
 class HikCamera::Impl
 {
     // -------------------------- 相机信息 --------------------------
-    void *_handle;           //!< 相机设备句柄
-    CameraConfig _init_mode; //!< 初始化配置模式
-    std::string _serial;     //!< 相机序列号 S/N
-    bool _opened{};          //!< 相机是否打开
+    void *_handle;     //!< 相机设备句柄
+    CameraConfig _cfg; //!< 初始化配置模式
+    std::string _info; //!< 相机唯一标识
+    bool _opened{};    //!< 相机是否打开
 
     // -------------------------- 图像信息 --------------------------
     MV_FRAME_OUT _p_out;          //!< 输出图像的数据及信息
@@ -34,10 +34,10 @@ public:
     /**
      * @brief 构造函数
      *
-     * @param init_mode 相机初始化配置模式
-     * @param serial 相机唯一序列号
+     * @param cfg 相机初始化配置模式
+     * @param info 相机唯一标识
      */
-    Impl(CameraConfig init_mode, std::string_view serial) noexcept;
+    Impl(CameraConfig cfg, std::string_view info) noexcept;
 
     //! 析构函数
     ~Impl() noexcept;

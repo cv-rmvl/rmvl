@@ -10,7 +10,6 @@
  */
 
 #include <opencv2/imgproc.hpp>
-#include <thread>
 
 #include "opt_camera_impl.h"
 
@@ -267,7 +266,7 @@ bool OptCamera::Impl::reconnect() noexcept
     using namespace std::chrono_literals;
     WARNING_("(opt) Reconnecting...");
     release();
-    std::this_thread::sleep_for(200ms);
+    usleep(100000);
     return open();
 }
 

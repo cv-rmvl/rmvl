@@ -22,14 +22,12 @@
 namespace rm
 {
 
+int getBaudRate(BaudRate baud_rate);
+
 class SerialPort::Impl
 {
 public:
-#ifdef _WIN32
-    explicit Impl(const std::string &device = {}, int baud_rate = 115200) : _device(device), _baud_rate(baud_rate) { open(); }
-#else
-    explicit Impl(const std::string &device = {}, int baud_rate = B115200) : _device(device), _baud_rate(baud_rate) { open(); }
-#endif
+    explicit Impl(std::string_view device, BaudRate baud_rate) : _device(device), _baud_rate(getBaudRate(baud_rate)) { open(); }
 
     ~Impl() { close(); }
 

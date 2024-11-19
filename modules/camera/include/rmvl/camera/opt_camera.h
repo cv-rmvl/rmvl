@@ -20,7 +20,7 @@ namespace rm
 
 //! @addtogroup camera
 //! @{
-//! @defgroup opt_camera 奥普特机器视觉 USB3.0/GigE(PoE) 系列工业相机库
+//! @defgroup opt_camera 奥普特机器视觉 USB3.0/GigE 系列工业相机库
 //! @}
 
 //! @addtogroup opt_camera

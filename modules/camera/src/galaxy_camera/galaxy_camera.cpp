@@ -9,7 +9,6 @@
  *
  */
 
-#include <thread>
 #include <unordered_set>
 
 #include <DxImageProc.h>
@@ -318,7 +317,7 @@ bool GalaxyCamera::Impl::reconnect() noexcept
     using namespace std::chrono_literals;
     INFO_("(hik) Camera device reconnect");
     release();
-    std::this_thread::sleep_for(100ms);
+    usleep(100000);
     return open();
 }
 
