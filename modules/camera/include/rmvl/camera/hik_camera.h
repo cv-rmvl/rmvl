@@ -19,7 +19,7 @@ namespace rm
 
 //! @addtogroup camera
 //! @{
-//! @defgroup hik_camera 海康机器人（HikRobot）USB3.0 系列工业相机库
+//! @defgroup hik_camera 海康机器人 USB3.0/GigE 系列工业相机库
 //! @}
 
 //! @addtogroup hik_camera
@@ -42,10 +42,10 @@ public:
     /**
      * @brief 创建 HikCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
-     * @param[in] serial 相机唯一序列号
+     * @param[in] cfg 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
+     * @param[in] info 相机唯一标识
      */
-    RMVL_W HikCamera(CameraConfig init_mode, std::string_view serial = "");
+    RMVL_W HikCamera(CameraConfig cfg, std::string_view info = "");
 
     //! @cond
     HikCamera(const HikCamera &) = delete;
@@ -56,11 +56,11 @@ public:
      * @brief 构建 HikCamera 对象
      * @note 此相机库仅支持 USB 相机设备，暂时对 GigE 网口相机不兼容
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
-     * @param[in] serial 相机唯一序列号
+     * @param[in] cfg 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleModes
+     * @param[in] info 相机唯一序列号
      * @return HikCamera 对象独享指针
      */
-    static inline std::unique_ptr<HikCamera> make_capture(CameraConfig init_mode, std::string_view serial = "") { return std::make_unique<HikCamera>(init_mode, serial); }
+    static inline std::unique_ptr<HikCamera> make_capture(CameraConfig cfg, std::string_view info = "") { return std::make_unique<HikCamera>(cfg, info); }
 
     //! 获取相机库版本
     RMVL_W static std::string version();

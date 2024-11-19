@@ -9,7 +9,6 @@
  *
  */
 
-#include <thread>
 #include <unordered_set>
 
 #include <opencv2/imgproc.hpp>
@@ -21,7 +20,7 @@ namespace rm
 
 RMVL_IMPL_DEF(HikCamera)
 
-HikCamera::HikCamera(CameraConfig init_mode, std::string_view serial) : _impl(new HikCamera::Impl(init_mode, serial)) {}
+HikCamera::HikCamera(CameraConfig cfg, std::string_view info) : _impl(new HikCamera::Impl(cfg, info)) {}
 bool HikCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double HikCamera::get(int propId) const { return _impl->get(propId); }
 bool HikCamera::read(cv::OutputArray image) { return _impl->read(image); }
@@ -47,8 +46,7 @@ std::string HikCamera::version()
 static const MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init =
     {0, 0, PixelType_Gvsp_Undefined, nullptr, 0, PixelType_Gvsp_Undefined, nullptr, 0, 0, {0}};
 
-HikCamera::Impl::Impl(CameraConfig init_mode, std::string_view serial) noexcept
-    : _init_mode(init_mode), _serial(serial) { _opened = open(); }
+HikCamera::Impl::Impl(CameraConfig cfg, std::string_view info) noexcept : _cfg(cfg), _info(info) { _opened = open(); }
 
 HikCamera::Impl::~Impl() noexcept { release(); }
 
@@ -77,21 +75,32 @@ void HikCamera::Impl::release() noexcept
     }
 }
 
+static inline std::string ip2Str(unsigned int ip)
+{
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%u.%u.%u.%u", (ip >> 24) & 0xff, (ip >> 16) & 0xff, (ip >> 8) & 0xff, ip & 0xff);
+    return buf;
+}
+
 bool HikCamera::Impl::open() noexcept
 {
     // 提取初始化模式
-    auto grab_mode = _init_mode.grab_mode;
-    auto trigger_chn = _init_mode.trigger_channel;
+    auto handle_mode = _cfg.handle_mode;
+    auto grab_mode = _cfg.grab_mode;
+    auto trigger_chn = _cfg.trigger_channel;
     // ----------------------- 设备枚举 -----------------------
     int ret = MV_OK;
     MV_CC_DEVICE_INFO_LIST devices; //!< 设备信息列表
-    ret = MV_CC_EnumDevices(MV_USB_DEVICE, &devices);
+    ret = MV_CC_EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &devices);
     if (ret == MV_OK)
         PASS_("(hik) Camera enum status: %s", errorCode2Str(ret));
     else
         INFO_("(hik) Camera enum status: %s", errorCode2Str(ret));
-    auto nums = devices.nDeviceNum;
-    INFO_("(hik) Camera quantity: %u", nums);
+    unsigned int nums = devices.nDeviceNum;
+    int u3v_nums{}, gige_nums{};
+    for (unsigned int i = 0; i < nums; ++i)
+        devices.pDeviceInfo[i]->nTLayerType == MV_USB_DEVICE ? u3v_nums++ : gige_nums++;
+    INFO_("(hik) Camera quantity: %u (U3V: %d, GigE: %d)", nums, u3v_nums, gige_nums);
     // 无设备连接
     if (nums == 0)
     {
@@ -99,22 +108,64 @@ bool HikCamera::Impl::open() noexcept
         return false;
     }
     // ------------------ 选择设备并创建句柄 ------------------
-    std::unordered_map<std::string, MV_CC_DEVICE_INFO *> sn_device;
-    // 设备列表指针数组
-    auto device_info_arr = devices.pDeviceInfo;
-    // 哈希匹配
-    for (unsigned int i = 0; i < nums; ++i)
-    {
-        if (device_info_arr[i] == nullptr)
-            break;
-        std::string sn = reinterpret_cast<char *>(device_info_arr[i]->SpecialInfo.stUsb3VInfo.chSerialNumber);
-        sn_device[sn] = device_info_arr[i];
-    }
-    // 查找指定设备，否则选取第一个设备
-    if (sn_device.find(_serial) != sn_device.end())
-        ret = MV_CC_CreateHandle(&_handle, sn_device[_serial]);
+    if (_info.empty())
+        ret = MV_CC_CreateHandle(&_handle, devices.pDeviceInfo[0]);
     else
-        ret = MV_CC_CreateHandle(&_handle, device_info_arr[0]);
+    {
+        std::unordered_map<std::string, MV_CC_DEVICE_INFO *> info_map;
+        // 设备列表指针数组
+        auto device_info_arr = devices.pDeviceInfo;
+        // 哈希匹配
+        if (handle_mode == HandleMode::Key)
+        {
+            for (unsigned int i = 0; i < nums; ++i)
+            {
+                if (device_info_arr[i] == nullptr)
+                    break;
+                if (device_info_arr[i]->nTLayerType == MV_USB_DEVICE)
+                {
+                    std::string sn = reinterpret_cast<char *>(device_info_arr[i]->SpecialInfo.stUsb3VInfo.chSerialNumber);
+                    info_map[sn] = device_info_arr[i];
+                }
+                else
+                {
+                    std::string sn = reinterpret_cast<char *>(device_info_arr[i]->SpecialInfo.stGigEInfo.chSerialNumber);
+                    info_map[sn] = device_info_arr[i];
+                }
+            }
+        }
+        else if (handle_mode == HandleMode::IP)
+        {
+            for (unsigned int i = 0; i < nums; ++i)
+            {
+                if (device_info_arr[i] == nullptr)
+                    break;
+                if (device_info_arr[i]->nTLayerType == MV_GIGE_DEVICE)
+                {
+                    std::string ip = ip2Str(device_info_arr[i]->SpecialInfo.stGigEInfo.nCurrentIp);
+                    info_map[ip] = device_info_arr[i];
+                }
+            }
+        }
+        else if (handle_mode == HandleMode::Index)
+        {
+            for (unsigned int i = 0; i < nums; ++i)
+            {
+                if (device_info_arr[i] == nullptr)
+                    break;
+                info_map[std::to_string(i)] = device_info_arr[i];
+            }
+        }
+        // 查找指定设备，否则选取第一个设备
+        if (info_map.find(_info) != info_map.end())
+            ret = MV_CC_CreateHandle(&_handle, info_map[_info]);
+        else
+        {
+            ERROR_("(hik) Could not find the specific camera device: %s", _info.c_str());
+            return false;
+        }
+    }
+
     if (ret != MV_OK)
     {
         ERROR_("(hik) Failed to create handle (error: \"%s\")", errorCode2Str(ret));
@@ -137,6 +188,7 @@ bool HikCamera::Impl::open() noexcept
         ERROR_("(hik) Failed to set trigger mode (error: \"%s\")", errorCode2Str(ret));
         return false;
     }
+
     // ---------------------- 设置触发源 ----------------------
     if (grab_mode == GrabMode::Software)
         ret = MV_CC_SetEnumValue(_handle, "TriggerSource", MV_TRIGGER_SOURCE_SOFTWARE); // 软触发
@@ -242,7 +294,7 @@ bool HikCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcep
     }
     // 无效参数
     else
-        ERROR_("(hik) Failed to retrieve, invalid retrieve mode: %d.", static_cast<int>(_init_mode.retrieve_mode));
+        ERROR_("(hik) Failed to retrieve, invalid retrieve mode: %d.", static_cast<int>(_cfg.retrieve_mode));
     // 处理失败默认操作
     image.assign(cv::Mat());
     return false;
@@ -253,7 +305,7 @@ bool HikCamera::Impl::read(cv::OutputArray image) noexcept
     // 获取图像地址
     auto ret = MV_CC_GetImageBuffer(_handle, &_p_out, 1000);
     if (ret == MV_OK)
-        retrieve(image, _init_mode.retrieve_mode);
+        retrieve(image, _cfg.retrieve_mode);
     else
     {
         WARNING_("(hik) No data in getting image buffer");
@@ -278,7 +330,7 @@ bool HikCamera::Impl::reconnect() noexcept
     using namespace std::chrono_literals;
     INFO_("(hik) Camera device reconnect");
     release();
-    std::this_thread::sleep_for(100ms);
+    usleep(100000);
     open();
     return true;
 }

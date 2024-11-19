@@ -19,7 +19,7 @@ namespace rm
 
 //! @addtogroup camera
 //! @{
-//! @defgroup mv_camera 迈德威视（MindVision）相机库
+//! @defgroup mv_camera 迈德威视 USB3.0 相机库
 //! @}
 
 //! @addtogroup mv_camera
