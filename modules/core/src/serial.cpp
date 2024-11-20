@@ -106,7 +106,7 @@ void rm::SerialPort::close()
     _is_open = false;
 }
 
-ssize_t rm::SerialPort::fdwrite(void *data, size_t length)
+ssize_t rm::SerialPort::fdwrite(const void *data, size_t length)
 {
     ssize_t len_result = -1;
     if (_is_open)
