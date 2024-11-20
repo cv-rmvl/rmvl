@@ -35,9 +35,9 @@ public:
     void close();
 
     //! 串口是否打开
-    inline bool isOpened() const { return _is_open; };
+    inline bool isOpened() const { return _is_open; }
     //! 写入数据
-    long int fdwrite(void *data, std::size_t len);
+    long int fdwrite(const void *data, std::size_t len);
     //! 读取数据
     long int fdread(void *data, std::size_t len);
 

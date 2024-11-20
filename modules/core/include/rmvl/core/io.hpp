@@ -207,7 +207,7 @@ public:
 
 private:
     //! 写入数据（基于文件描述符）
-    long int fdwrite(void *data, size_t len);
+    long int fdwrite(const void *data, size_t len);
 
     //! 读取数据（基于文件描述符）
     long int fdread(void *data, size_t len);

@@ -55,7 +55,7 @@ int getBaudRate(BaudRate baud_rate)
 
 SerialPort::SerialPort(std::string_view device, BaudRate baud_rate) : _impl(new Impl(device, baud_rate)) {}
 bool SerialPort::isOpened() const { return _impl->isOpened(); }
-long int SerialPort::fdwrite(void *data, size_t length) { return _impl->fdwrite(data, length); }
+long int SerialPort::fdwrite(const void *data, size_t length) { return _impl->fdwrite(data, length); }
 long int SerialPort::fdread(void *data, size_t len) { return _impl->fdread(data, len); }
 
 #ifdef _WIN32
@@ -166,7 +166,7 @@ void SerialPort::Impl::close()
     _is_open = false;
 }
 
-long int SerialPort::Impl::fdwrite(void *data, std::size_t length)
+long int SerialPort::Impl::fdwrite(const void *data, std::size_t length)
 {
     ssize_t len_result = -1;
     if (_is_open)
