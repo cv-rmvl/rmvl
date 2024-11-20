@@ -116,7 +116,7 @@ private:
      * @param[in] len 待写入字长
      * @return 是否完整写入
      */
-    ssize_t fdwrite(void *data, size_t len);
+    ssize_t fdwrite(const void *data, size_t len);
 
     /**
      * @brief 读取数据（基于文件描述符）
