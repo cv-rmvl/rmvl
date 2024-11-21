@@ -12,6 +12,7 @@
 #pragma once
 
 #include <array>
+#include <cstring>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -140,11 +141,28 @@ void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>
 
 ///////////////////////////////////// 串口通信 /////////////////////////////////////
 
-enum class BaudRate
+enum class BaudRate : uint8_t
 {
+    BR_1200,   //!< 波特率 1200
+    BR_4800,   //!< 波特率 4800
+    BR_9600,   //!< 波特率 9600
+    BR_19200,  //!< 波特率 19200
     BR_57600,  //!< 波特率 57600
     BR_115200, //!< 波特率 115200
-    BR_230400, //!< 波特率 230400
+};
+
+//! 串口数据读取模式
+enum class SPReadMode : uint8_t
+{
+    BLOCK,   //!< 阻塞模式，即读取数据时会一直等待直到有数据到来
+    NONBLOCK //!< 非阻塞模式，即读取数据时不会等待，如果没有数据到来则立即返回 `-1`
+};
+
+//! 串口通信模式
+struct RMVL_EXPORTS SerialPortMode
+{
+    BaudRate baud_rate{BaudRate::BR_115200}; //!< 波特率
+    SPReadMode read_mode{SPReadMode::BLOCK}; //!< 读取模式
 };
 
 //! 串行接口通信库
@@ -155,9 +173,9 @@ public:
      * @brief 构造新 SerialPort 对象
      *
      * @param[in] device 设备名
-     * @param[in] baud_rate 波特率，一般为 `BaudRate::BR_115200`
+     * @param[in] mode 串口通信模式
      */
-    SerialPort(std::string_view device, BaudRate baud_rate);
+    SerialPort(std::string_view device, SerialPortMode mode = {});
 
     SerialPort(const SerialPort &) = delete;
     SerialPort(SerialPort &&) = default;
@@ -165,26 +183,26 @@ public:
     SerialPort &operator=(SerialPort &&) = default;
 
     /**
-     * @brief 从串口读取数据到结构体
+     * @brief 从串口读取数据到聚合体中
      * @note 每次读取后会清空缓冲区
      *
-     * @tparam Tp 读取到结构体的类型
+     * @tparam Tp 读取到聚合体的类型
      * @param[in] head_flag 头帧
      * @param[in] tail_flag 尾帧
-     * @param[out] data 读取的结构体数据
+     * @param[out] data 读取的聚合体数据
      * @return 是否读取成功
      */
-    template <typename Tp>
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
     inline bool read(unsigned char head_flag, unsigned char tail_flag, Tp &data)
     {
-        bool retval{false};
+        bool retval{};
         constexpr int LENGTH = 512, SIZE = sizeof(Tp);
         unsigned char buffer[LENGTH] = {0};
         auto len_result = fdread(buffer, LENGTH);
         for (long int i = 0; (i + SIZE + 1) < len_result; i++)
             if (buffer[i] == head_flag && buffer[i + SIZE + 1] == tail_flag)
             {
-                auto p = memcpy(&data, &buffer[i + 1], SIZE);
+                auto p = std::memcpy(&data, &buffer[i + 1], SIZE);
                 if (p == &data)
                     retval = true;
             }
@@ -192,15 +210,44 @@ public:
     }
 
     /**
-     * @brief 结构体数据写入串口
+     * @brief 不带头尾标志的数据读取，从串口读取数据到聚合体中
+     *
+     * @tparam Tp 读取到聚合体的类型
+     * @param[out] data 读取的聚合体数据
+     * @return 是否读取成功
+     */
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
+    inline bool read(Tp &data)
+    {
+        bool retval{};
+        constexpr int LENGTH = 512, SIZE = sizeof(Tp);
+        unsigned char buffer[LENGTH] = {0};
+        auto len_result = fdread(buffer, LENGTH);
+        if (len_result >= SIZE)
+        {
+            auto p = std::memcpy(&data, buffer, SIZE);
+            if (p == &data)
+                retval = true;
+        }
+        return retval;
+    }
+
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
+    inline SerialPort &operator>>(Tp &data) { return (this->read(data), *this); }
+
+    /**
+     * @brief 数据写入串口
      * @note 每次写入前会清空缓冲区
      *
-     * @tparam Tp 写入结构体的类型
-     * @param[in] data 要写入的结构体
+     * @tparam Tp 写入聚合体的类型
+     * @param[in] data 要写入的聚合体
      * @return 是否写入成功
      */
-    template <typename Tp>
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
     inline bool write(const Tp &data) { return (sizeof(data) == fdwrite(&data, sizeof(data))); }
+
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
+    inline SerialPort &operator<<(const Tp &data) { return (this->write(data), *this); }
 
     //! 串口是否打开
     bool isOpened() const;

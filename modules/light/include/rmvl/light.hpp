@@ -12,7 +12,8 @@
 /**
  * @defgroup light 光源控制器
  * @{
- * @defgroup opt_light_control OPT 奥普特光源控制器
+ * @defgroup opt_light_control OPT 奥普特 GigE 光源控制库
+ * @defgroup hik_light_control 海康机器人 RS-232 光源控制库
  * @}
  */
 
