@@ -16,6 +16,7 @@
 #ifndef _WIN32
 #include <dirent.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <unistd.h>
 #endif
 
@@ -24,36 +25,44 @@ namespace rm
 
 RMVL_IMPL_DEF(SerialPort)
 
-int getBaudRate(BaudRate baud_rate)
+static unsigned int getBaudRate(BaudRate baud_rate)
 {
 #ifdef _WIN32
     switch (baud_rate)
     {
+    case BaudRate::BR_1200:
+        return 1200;
+    case BaudRate::BR_4800:
+        return 4800;
+    case BaudRate::BR_9600:
+        return 9600;
     case BaudRate::BR_57600:
         return 57600;
     case BaudRate::BR_115200:
         return 115200;
-    case BaudRate::BR_230400:
-        return 230400;
     default:
         return 115200;
     }
 #else
     switch (baud_rate)
     {
+    case BaudRate::BR_1200:
+        return B1200;
+    case BaudRate::BR_4800:
+        return B4800;
+    case BaudRate::BR_9600:
+        return B9600;
     case BaudRate::BR_57600:
         return B57600;
     case BaudRate::BR_115200:
         return B115200;
-    case BaudRate::BR_230400:
-        return B230400;
     default:
         return B115200;
     }
 #endif
 }
 
-SerialPort::SerialPort(std::string_view device, BaudRate baud_rate) : _impl(new Impl(device, baud_rate)) {}
+SerialPort::SerialPort(std::string_view device, SerialPortMode mode) : _impl(new Impl(device, mode)) {}
 bool SerialPort::isOpened() const { return _impl->isOpened(); }
 long int SerialPort::fdwrite(const void *data, size_t length) { return _impl->fdwrite(data, length); }
 long int SerialPort::fdread(void *data, size_t len) { return _impl->fdread(data, len); }
@@ -61,23 +70,57 @@ long int SerialPort::fdread(void *data, size_t len) { return _impl->fdread(data,
 #ifdef _WIN32
 void SerialPort::Impl::open()
 {
-    _is_open = false;
     INFO_("Opening the serial port: %s", _device.c_str());
-    _handle = CreateFileA(_device.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-
+    _handle = CreateFileA(
+        _device.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
     if (_handle == INVALID_HANDLE_VALUE)
     {
         ERROR_("Failed to open the serial port.");
+        _is_open = false;
         return;
     }
 
-    DCB dcb;
+    COMMTIMEOUTS timeouts{};
+    if (_mode.read_mode == SPReadMode::BLOCK)
+    {
+        timeouts.ReadIntervalTimeout = 0;
+        timeouts.ReadTotalTimeoutConstant = 0;
+        timeouts.ReadTotalTimeoutMultiplier = 0;
+    }
+    else
+    {
+        timeouts.ReadIntervalTimeout = MAXDWORD;
+        timeouts.ReadTotalTimeoutConstant = 0;
+        timeouts.ReadTotalTimeoutMultiplier = 0;
+    }
+    timeouts.WriteTotalTimeoutConstant = 1;
+    timeouts.WriteTotalTimeoutMultiplier = 1;
+    if (!SetCommTimeouts(_handle, &timeouts))
+    {
+        WARNING_("Failed to set the serial port timeout.");
+        _is_open = false;
+        return;
+    }
+
+    DCB dcb{};
     GetCommState(_handle, &dcb);
-    dcb.BaudRate = _baud_rate;
-    dcb.ByteSize = 8;
-    dcb.Parity = NOPARITY;
-    dcb.StopBits = ONESTOPBIT;
-    SetCommState(_handle, &dcb);
+    DWORD bps = getBaudRate(_mode.baud_rate);
+    dcb.BaudRate = bps;        // 波特率
+    dcb.ByteSize = 8;          // 数据位
+    dcb.Parity = NOPARITY;     // 无校验
+    dcb.StopBits = ONESTOPBIT; // 1 位停止位
+    if (!SetCommState(_handle, &dcb))
+    {
+        WARNING_("Failed to set the serial port state.");
+        _is_open = false;
+        return;
+    }
 
     _is_open = true;
 }
@@ -89,14 +132,14 @@ void SerialPort::Impl::close()
     _is_open = false;
 }
 
-long int SerialPort::Impl::fdwrite(void *data, std::size_t len)
+long int SerialPort::Impl::fdwrite(const void *data, std::size_t len)
 {
     DWORD len_result{};
     if (_is_open)
     {
         if (!WriteFile(_handle, data, static_cast<DWORD>(len), &len_result, nullptr))
         {
-            WARNING_("Unable to write to serial port, error code: %d", ::GetLastError());
+            WARNING_("Unable to write to serial port, error code: %ld", ::GetLastError());
             open();
         }
         else
@@ -114,7 +157,7 @@ long int SerialPort::Impl::fdread(void *data, std::size_t len)
     {
         if (!ReadFile(_handle, data, static_cast<DWORD>(len), &len_result, nullptr))
         {
-            WARNING_("The serial port cannot be read, error code: %d, restart...", ::GetLastError());
+            WARNING_("The serial port cannot be read, error code: %ld, restart...", ::GetLastError());
             open();
         }
     }
@@ -128,33 +171,40 @@ long int SerialPort::Impl::fdread(void *data, std::size_t len)
 #else
 void SerialPort::Impl::open()
 {
-    _is_open = false;
     INFO_("Opening the serial port: %s", _device.c_str());
-    _fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY); // 非堵塞情况
-
+    _fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (_fd == -1)
     {
         ERROR_("Failed to open the serial port.");
+        _is_open = false;
         return;
     }
-    tcgetattr(_fd, &_option);
+    if (_mode.read_mode == SPReadMode::BLOCK)
+    {
+        // 清除 O_NDELAY 标志，设置为阻塞模式
+        int flags = fcntl(_fd, F_GETFL, 0);
+        flags &= ~O_NONBLOCK;
+        fcntl(_fd, F_SETFL, flags);
+    }
+
+    termios option;
+    tcgetattr(_fd, &option);
 
     // 修改所获得的参数
-    _option.c_iflag = 0;                 // 原始输入模式
-    _option.c_oflag = 0;                 // 原始输出模式
-    _option.c_lflag = 0;                 // 关闭终端模式
-    _option.c_cflag |= (CLOCAL | CREAD); // 设置控制模式状态，本地连接，接收使能
-    _option.c_cflag &= ~CSIZE;           // 字符长度，设置数据位之前一定要屏掉这个位
-    _option.c_cflag &= ~CRTSCTS;         // 无硬件流控
-    _option.c_cflag |= CS8;              // 8位数据长度
-    _option.c_cflag &= ~CSTOPB;          // 1位停止位
-    _option.c_cc[VTIME] = 0;
-    _option.c_cc[VMIN] = 0;
-    cfsetospeed(&_option, _baud_rate); // 设置输入波特率
-    cfsetispeed(&_option, _baud_rate); // 设置输出波特率
+    option.c_iflag = 0;                 // 原始输入模式
+    option.c_oflag = 0;                 // 原始输出模式
+    option.c_lflag = 0;                 // 关闭终端模式
+    option.c_cflag |= (CLOCAL | CREAD); // 设置控制模式状态，本地连接，接收使能
+    option.c_cflag &= ~CSIZE;           // 字符长度，设置数据位之前一定要屏掉这个位
+    option.c_cflag &= ~CRTSCTS;         // 无硬件流控
+    option.c_cflag |= CS8;              // 8 位数据长度
+    option.c_cflag &= ~CSTOPB;          // 1 位停止位
+    option.c_cc[VTIME] = 0;
+    option.c_cc[VMIN] = _mode.read_mode == SPReadMode::BLOCK ? 1 : 0;
+    cfsetspeed(&option, getBaudRate(_mode.baud_rate)); // 设置输入波特率
 
     // 设置新属性，TCSANOW：所有改变立即生效
-    tcsetattr(_fd, TCSANOW, &_option);
+    tcsetattr(_fd, TCSANOW, &option);
 
     _is_open = true;
 }

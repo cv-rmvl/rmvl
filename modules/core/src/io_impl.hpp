@@ -13,8 +13,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#else
-#include <termios.h>
 #endif
 
 #include "rmvl/core/io.hpp"
@@ -22,12 +20,10 @@
 namespace rm
 {
 
-int getBaudRate(BaudRate baud_rate);
-
 class SerialPort::Impl
 {
 public:
-    explicit Impl(std::string_view device, BaudRate baud_rate) : _device(device), _baud_rate(getBaudRate(baud_rate)) { open(); }
+    explicit Impl(std::string_view device, SerialPortMode mode = {}) : _device(device), _mode(mode) { open(); }
 
     ~Impl() { close(); }
 
@@ -45,12 +41,11 @@ private:
 #ifdef _WIN32
     HANDLE _handle{INVALID_HANDLE_VALUE}; //!< 文件句柄
 #else
-    int _fd{-1};     //!< 文件描述符
-    termios _option; //!< 终端控制
+    int _fd{-1}; //!< 文件描述符
 #endif
-    bool _is_open{};     //!< 串口打开标志位
-    std::string _device; //!< 设备名
-    int _baud_rate{};    //!< 波特率
+    bool _is_open{};      //!< 串口打开标志位
+    std::string _device;  //!< 设备名
+    SerialPortMode _mode; //!< 串口通信模式
 };
 
 class PipeServer::Impl
