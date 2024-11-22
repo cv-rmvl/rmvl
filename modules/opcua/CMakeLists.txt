@@ -19,7 +19,7 @@ if(BUILD_PYTHON)
     list(APPEND opcua_inc rmvl/opcua/${m}.hpp)
   endforeach()
   rmvl_generate_python(opcua
-    FILES ${opcua_inc}
+    FILES ${opcua_inc} rmvlpara/opcua.hpp
     DEPENDS opcua
   )
 endif()
