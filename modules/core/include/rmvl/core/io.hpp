@@ -168,6 +168,8 @@ struct RMVL_EXPORTS SerialPortMode
 //! 串行接口通信库
 class RMVL_EXPORTS SerialPort
 {
+    RMVL_IMPL;
+
 public:
     /**
      * @brief 构造新 SerialPort 对象
@@ -258,8 +260,6 @@ private:
 
     //! 读取数据（基于文件描述符）
     long int fdread(void *data, size_t len);
-
-    RMVL_IMPL;
 };
 
 //////////////////////////////////// 进程间通信 ////////////////////////////////////
@@ -301,7 +301,7 @@ public:
     }
     //! @endcond
 
-    inline bool operator>>(std::string &data) { return read(data); }
+    inline PipeServer &operator>>(std::string &data) { return (read(data), *this); }
 
     /**
      * @brief 向管道写入数据
@@ -311,7 +311,7 @@ public:
      */
     RMVL_W bool write(std::string_view data);
 
-    inline bool operator<<(std::string_view data) { return write(data); }
+    inline PipeServer &operator<<(std::string_view data) { return (write(data), *this); }
 };
 
 //! 命名管道客户端
@@ -348,7 +348,7 @@ public:
     }
     //! @endcond
 
-    inline bool operator>>(std::string &data) { return read(data); }
+    inline PipeClient &operator>>(std::string &data) { return (read(data), *this); }
 
     /**
      * @brief 向管道写入数据
@@ -358,7 +358,7 @@ public:
      */
     RMVL_W bool write(std::string_view data);
 
-    inline bool operator<<(std::string_view data) { return write(data); }
+    inline PipeClient &operator<<(std::string_view data) { return (write(data), *this); }
 };
 
 //! @} core_io
