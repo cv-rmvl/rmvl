@@ -3,7 +3,7 @@ name: CI Create Release
 on:
   push:
     tags:
-      - '1.*'
+      - '2.*'
 
 permissions:
   contents: write
