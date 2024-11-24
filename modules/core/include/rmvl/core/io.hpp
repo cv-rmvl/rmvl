@@ -144,29 +144,31 @@ void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>
 enum class BaudRate : uint8_t
 {
     BR_1200,   //!< 波特率 1200
+    BR_2400,   //!< 波特率 2400
     BR_4800,   //!< 波特率 4800
     BR_9600,   //!< 波特率 9600
     BR_19200,  //!< 波特率 19200
+    BR_38400,  //!< 波特率 38400
     BR_57600,  //!< 波特率 57600
     BR_115200, //!< 波特率 115200
 };
 
 //! 串口数据读取模式
-enum class SPReadMode : uint8_t
+enum class SerialReadMode : uint8_t
 {
     BLOCK,   //!< 阻塞模式，即读取数据时会一直等待直到有数据到来
     NONBLOCK //!< 非阻塞模式，即读取数据时不会等待，如果没有数据到来则立即返回 `-1`
 };
 
 //! 串口通信模式
-struct RMVL_EXPORTS SerialPortMode
+struct RMVL_EXPORTS_W_AG SerialPortMode
 {
-    BaudRate baud_rate{BaudRate::BR_115200}; //!< 波特率
-    SPReadMode read_mode{SPReadMode::BLOCK}; //!< 读取模式
+    RMVL_W_RW BaudRate baud_rate{BaudRate::BR_115200};         //!< 波特率
+    RMVL_W_RW SerialReadMode read_mode{SerialReadMode::BLOCK}; //!< 读取模式
 };
 
 //! 串行接口通信库
-class RMVL_EXPORTS SerialPort
+class RMVL_EXPORTS_W SerialPort
 {
     RMVL_IMPL;
 
@@ -177,7 +179,7 @@ public:
      * @param[in] device 设备名
      * @param[in] mode 串口通信模式
      */
-    SerialPort(std::string_view device, SerialPortMode mode = {});
+    RMVL_W SerialPort(std::string_view device, SerialPortMode mode = {});
 
     SerialPort(const SerialPort &) = delete;
     SerialPort(SerialPort &&) = default;
@@ -199,7 +201,7 @@ public:
     {
         bool retval{};
         constexpr int LENGTH = 512, SIZE = sizeof(Tp);
-        unsigned char buffer[LENGTH] = {0};
+        unsigned char buffer[LENGTH]{};
         auto len_result = fdread(buffer, LENGTH);
         for (long int i = 0; (i + SIZE + 1) < len_result; i++)
             if (buffer[i] == head_flag && buffer[i + SIZE + 1] == tail_flag)
@@ -222,19 +224,27 @@ public:
     inline bool read(Tp &data)
     {
         bool retval{};
-        constexpr int LENGTH = 512, SIZE = sizeof(Tp);
-        unsigned char buffer[LENGTH] = {0};
-        auto len_result = fdread(buffer, LENGTH);
-        if (len_result >= SIZE)
+        constexpr int MAX_LENGTH = 512, MAX_READ_DST = sizeof(Tp);
+        char buffer[MAX_LENGTH]{};
+        auto len_result = fdread(buffer, MAX_LENGTH);
+        if (len_result > 0 && len_result <= MAX_READ_DST)
         {
-            auto p = std::memcpy(&data, buffer, SIZE);
+            auto p = std::memcpy(&data, buffer, len_result);
             if (p == &data)
                 retval = true;
         }
         return retval;
     }
 
-    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
+    /**
+     * @brief 不带头尾标志的数据读取，从串口读取字符串
+     *
+     * @param[out] data 读取的字符串
+     * @return 是否读取成功
+     */
+    bool read(std::string &data);
+
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp> || std::is_same_v<Tp, std::string>>>
     inline SerialPort &operator>>(Tp &data) { return (this->read(data), *this); }
 
     /**
@@ -248,11 +258,21 @@ public:
     template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
     inline bool write(const Tp &data) { return (sizeof(data) == fdwrite(&data, sizeof(data))); }
 
-    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
+    /**
+     * @brief 写入字符串到串口
+     *
+     * @param[in] data 待写入的字符串
+     * @return 是否写入成功
+     */
+    inline bool write(std::string_view data) { return fdwrite(data.data(), data.length()) > 0; }
+
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp> || std::is_same_v<Tp, std::string_view>>>
     inline SerialPort &operator<<(const Tp &data) { return (this->write(data), *this); }
 
     //! 串口是否打开
     bool isOpened() const;
+
+    RMVL_W_SUBST("Serial")
 
 private:
     //! 写入数据（基于文件描述符）
