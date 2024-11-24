@@ -31,27 +31,39 @@ static unsigned int getBaudRate(BaudRate baud_rate)
     switch (baud_rate)
     {
     case BaudRate::BR_1200:
-        return 1200;
+        return CBR_1200;
+    case BaudRate::BR_2400:
+        return CBR_2400;
     case BaudRate::BR_4800:
-        return 4800;
+        return CBR_4800;
     case BaudRate::BR_9600:
-        return 9600;
+        return CBR_9600;
+    case BaudRate::BR_19200:
+        return CBR_19200;
+    case BaudRate::BR_38400:
+        return CBR_38400;
     case BaudRate::BR_57600:
-        return 57600;
+        return CBR_57600;
     case BaudRate::BR_115200:
-        return 115200;
+        return CBR_115200;
     default:
-        return 115200;
+        return CBR_115200;
     }
 #else
     switch (baud_rate)
     {
     case BaudRate::BR_1200:
         return B1200;
+    case BaudRate::BR_2400:
+        return B2400;
     case BaudRate::BR_4800:
         return B4800;
     case BaudRate::BR_9600:
         return B9600;
+    case BaudRate::BR_19200:
+        return B19200;
+    case BaudRate::BR_38400:
+        return B38400;
     case BaudRate::BR_57600:
         return B57600;
     case BaudRate::BR_115200:
@@ -64,6 +76,21 @@ static unsigned int getBaudRate(BaudRate baud_rate)
 
 SerialPort::SerialPort(std::string_view device, SerialPortMode mode) : _impl(new Impl(device, mode)) {}
 bool SerialPort::isOpened() const { return _impl->isOpened(); }
+
+bool SerialPort::read(std::string &data)
+{
+    bool retval{};
+    constexpr int MAX_LENGTH{256};
+    char buffer[MAX_LENGTH]{};
+    auto len_result = fdread(buffer, MAX_LENGTH);
+    if (len_result > 0)
+    {
+        data.assign(buffer, len_result);
+        retval = true;
+    }
+    return retval;
+}
+
 long int SerialPort::fdwrite(const void *data, size_t length) { return _impl->fdwrite(data, length); }
 long int SerialPort::fdread(void *data, size_t len) { return _impl->fdread(data, len); }
 
@@ -87,7 +114,7 @@ void SerialPort::Impl::open()
     }
 
     COMMTIMEOUTS timeouts{};
-    if (_mode.read_mode == SPReadMode::BLOCK)
+    if (_mode.read_mode == SerialReadMode::BLOCK)
     {
         timeouts.ReadIntervalTimeout = 0;
         timeouts.ReadTotalTimeoutConstant = 0;
@@ -179,7 +206,7 @@ void SerialPort::Impl::open()
         _is_open = false;
         return;
     }
-    if (_mode.read_mode == SPReadMode::BLOCK)
+    if (_mode.read_mode == SerialReadMode::BLOCK)
     {
         // 清除 O_NDELAY 标志，设置为阻塞模式
         int flags = fcntl(_fd, F_GETFL, 0);
@@ -200,7 +227,7 @@ void SerialPort::Impl::open()
     option.c_cflag |= CS8;              // 8 位数据长度
     option.c_cflag &= ~CSTOPB;          // 1 位停止位
     option.c_cc[VTIME] = 0;
-    option.c_cc[VMIN] = _mode.read_mode == SPReadMode::BLOCK ? 1 : 0;
+    option.c_cc[VMIN] = _mode.read_mode == SerialReadMode::BLOCK ? 1 : 0;
     cfsetspeed(&option, getBaudRate(_mode.baud_rate)); // 设置输入波特率
 
     // 设置新属性，TCSANOW：所有改变立即生效
