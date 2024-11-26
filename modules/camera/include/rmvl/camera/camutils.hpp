@@ -1,7 +1,7 @@
 /**
  * @file camutils.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief
+ * @brief 相机基本配置信息
  * @version 1.0
  * @date 2022-09-30
  *

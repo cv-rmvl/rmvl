@@ -30,7 +30,7 @@ int main()
     // 创建光源控制器对象
     auto light_controller = rm::OPTLightController();
     // 连接光源控制器
-    auto lipc = rm::LightIpConfig{"192.168.1.100", "192.168.1.1", "255.255.255.0"};
+    auto lipc = rm::OPTLightIpConfig{"192.168.1.100", "192.168.1.1", "255.255.255.0"};
     light_controller.connect(lipc);
     // 打开指定的通道
     light_controller.openChannels({1});
@@ -51,7 +51,7 @@ import rm
 # 创建光源控制器对象
 light_controller = rm.OPTLightController()
 # 连接光源控制器
-cfg = rm.LightIpConfig()
+cfg = rm.OPTLightIpConfig()
 cfg.ip = "192.168.1.100"
 cfg.gateway = "192.168.1.1"
 cfg.netmask = "255.255.255.0"

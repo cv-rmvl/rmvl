@@ -1,3 +1,7 @@
+# ----------------------------------------------------------------------------
+#  Light control module
+# ----------------------------------------------------------------------------
+# opt_light_control
 find_package(OPTLightCtrl QUIET)
 rmvl_update_build(opt_light_control OPTLightCtrl_FOUND)
 
@@ -11,14 +15,36 @@ rmvl_link_libraries(
   PRIVATE optlc
 )
 
+# hik_light_control
+rmvl_generate_para(
+  hik_light_control
+  MODULE light
+)
+
+rmvl_add_module(
+  hik_light_control
+  DEPENDS core
+) 
+
+# ----------------------------------------------------------------------------
+#  Parameters module for 'light'
+# ----------------------------------------------------------------------------
+rmvl_generate_module_para(light)
+
 # ----------------------------------------------------------------------------
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  foreach(m opt)
+  set(light_inc rmvl/light/lightutils.hpp)
+  foreach(m opt hik)
     if(BUILD_rmvl_${m}_light_control)
       list(APPEND light_inc rmvl/light/${m}_light_control.h)
       list(APPEND light_dep ${m}_light_control)
+    endif()
+  endforeach()
+  foreach(m hik)
+    if(BUILD_rmvl_${m}_light_control)
+      list(APPEND light_inc rmvlpara/light/${m}_light_control.h)
     endif()
   endforeach()
   rmvl_generate_python(light
