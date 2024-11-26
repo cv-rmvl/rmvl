@@ -22,3 +22,7 @@
 #ifdef HAVE_RMVL_OPT_LIGHT_CONTROL
 #include "light/opt_light_control.h"
 #endif // HAVE_RMVL_OPT_LIGHT_CONTROL
+
+#ifdef HAVE_RMVL_HIK_LIGHT_CONTROL
+#include "light/hik_light_control.h"
+#endif // HAVE_RMVL_HIK_LIGHT_CONTROL
