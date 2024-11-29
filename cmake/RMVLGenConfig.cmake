@@ -93,12 +93,12 @@ list(REMOVE_DUPLICATES RMVL_INCLUDE_DIRS)
 foreach(m ${RMVL_INCLUDE_DIRS})
   rmvl_install_directories(
     ${m} DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/${RMVL_INCLUDE_INSTALL_PATH}
+    ${RMVL_INCLUDE_INSTALL_PATH}
   )
 endforeach(m ${RMVL_INCLUDE_DIRS})
 
 # --------------------------------------------------------------------------------------------
-#  Part 3/3: Make install
+#  Part 3/3: Generate install target
 # --------------------------------------------------------------------------------------------
 file(RELATIVE_PATH RMVL_INSTALL_PATH_RELATIVE_CONFIGCMAKE 
   "${CMAKE_INSTALL_PREFIX}/${RMVL_CONFIG_INSTALL_PATH}/" ${CMAKE_INSTALL_PREFIX})
