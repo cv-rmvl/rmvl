@@ -58,7 +58,7 @@ function(rmvl_install_directories _dir)
   if(IS_DESTINATION)
     set(install_dir ${IS_DESTINATION})
   else()
-    set(install_dir ${CMAKE_INSTALL_PREFIX}/${_dir})
+    set(install_dir ${_dir})
   endif()
 
   install(DIRECTORY ${dirs} DESTINATION ${install_dir} OPTIONAL)

@@ -39,6 +39,8 @@ endif()
 
 project(
   RMVL
+  DESCRIPTION "Robotic Manipulation and Vision Library"
+  HOMEPAGE_URL "https://cv-rmvl.github.io"
   LANGUAGES CXX C
 )
 
@@ -232,3 +234,8 @@ status("----------------------------------------------------------------------")
 status("")
 
 rmvl_finalize_status()
+
+# ----------------------------------------------------------------------------
+# CPack stuff
+# ----------------------------------------------------------------------------
+include(cmake/RMVLPackaging.cmake)
