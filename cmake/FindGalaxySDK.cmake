@@ -1,8 +1,8 @@
-if(NOT DEFINED galaxy_sdk_path)
+if(NOT DEFINED GalaxySDK_Path)
   if(UNIX)
-    set(galaxy_sdk_path "/opt/Galaxy_camera")
+    set(GalaxySDK_Path "/opt/Galaxy_camera")
   elseif(WIN32)
-    set(galaxy_sdk_path "C:/Program Files/Daheng Imaging/GalaxySDK")
+    set(GalaxySDK_Path "C:/Program Files/Daheng Imaging/GalaxySDK")
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(sys_type "64")
     else()
@@ -30,13 +30,13 @@ if(UNIX)
   find_path(
     GalaxySDK_INCLUDE_DIR
     NAMES GxIAPI.h DxImageProc.h
-    PATHS "${galaxy_sdk_path}/inc"
+    PATHS "${GalaxySDK_Path}/inc"
     NO_DEFAULT_PATH
   )
   find_library(
     GalaxySDK_LIB
     NAMES "libgxiapi.so"
-    PATHS "${galaxy_sdk_path}/lib/${arch_galaxylib}"
+    PATHS "${GalaxySDK_Path}/lib/${arch_galaxylib}"
     NO_DEFAULT_PATH
   )
 
@@ -51,19 +51,19 @@ elseif(WIN32)
   find_path(
     GalaxySDK_INCLUDE_DIR
     NAMES GxIAPI.h DxImageProc.h
-    PATHS "${galaxy_sdk_path}/Development/VC SDK/inc"
+    PATHS "${GalaxySDK_Path}/Development/VC SDK/inc"
     NO_DEFAULT_PATH
   )
   find_library(
     GalaxySDK_LIB
     NAMES GxIAPI.lib DxImageProc.lib
-    PATHS "${galaxy_sdk_path}/Development/VC SDK/lib/x${sys_type}"
+    PATHS "${GalaxySDK_Path}/Development/VC SDK/lib/x${sys_type}"
     NO_DEFAULT_PATH
   )
   find_file(
     GalaxySDK_DLL
     NAMES GxIAPI.dll DxImageProc.dll
-    PATHS "${galaxy_sdk_path}/APIDll/Win${sys_type}"
+    PATHS "${GalaxySDK_Path}/APIDll/Win${sys_type}"
     NO_DEFAULT_PATH
   )
 

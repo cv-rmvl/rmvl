@@ -232,19 +232,26 @@ endif()
 # ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
-# eigen3
-find_package(Eigen3 QUIET)
-if(Eigen3_FOUND)
-  option(WITH_EIGEN3 "Enable libeigen3 support" ON)
-else()
-  unset(WITH_EIGEN3 CACHE)
-  option(WITH_EIGEN3 "Enable libeigen3 support" OFF)
-endif()
 
 # opencv
 find_package(OpenCV QUIET)
 if(OpenCV_FOUND)
   option(WITH_OPENCV "Enable opencv support" ON)
+  # get the path of all 'DLLs' of OpenCV for Windows
+  if(WIN32)
+    if(TARGET opencv_world)
+      get_target_property(opencv_world_dll_path opencv_world IMPORTED_LOCATION_RELEASE)
+      get_target_property(opencv_world_lib_path opencv_world IMPORTED_IMPLIB_RELEASE)
+      if(EXISTS ${opencv_world_dll_path} AND EXISTS ${opencv_world_lib_path})
+        set(OpenCV_DLL_PATHS ${opencv_world_dll_path})
+        set(OpenCV_LIB_PATHS ${opencv_world_lib_path})
+      endif()
+    endif()
+    set(OpenCV_DLL_PATHS ${OpenCV_DLL_PATHS} CACHE INTERNAL "OpenCV DLL paths")
+    set(OpenCV_LIB_PATHS ${OpenCV_LIB_PATHS} CACHE INTERNAL "OpenCV LIB paths")
+    get_filename_component(OpenCV_DLL_NAME ${OpenCV_DLL_PATHS} NAME CACHE)
+    get_filename_component(OpenCV_LIB_NAME ${OpenCV_LIB_PATHS} NAME CACHE)
+  endif()
 else()
   unset(WITH_OPENCV CACHE)
   option(WITH_OPENCV "Enable opencv support" OFF)
@@ -259,33 +266,41 @@ else()
   option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" OFF)
 endif()
 
+# Set the "WITH_" and "BUILD_" compilation options of 3rdparty, with "build_default_status"
+# as the default value of "BUILD_". If "BUILD_" is ON, automatically set "WITH_" to ON, otherwise,
+# by default, find the 3rdparty from the system path as the default value of "WITH_".
+macro(_rmvl_set_build_with_3rdparty _name build_default_status)
+  # uppercase and lowercase
+  string(TOUPPER ${_name} upper_name)
+  string(TOLOWER ${_name} lower_name)
+  # "build" 3rdparty option
+  option(BUILD_${upper_name} "Build the 3rd party: ${_name}" ${build_default_status})
+  if(BUILD_${upper_name})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/${lower_name})
+  endif()
+  # "with" 3rdparty option
+  if(BUILD_${upper_name})
+    unset(WITH_${upper_name} CACHE)
+    option(WITH_${upper_name} "Enable ${_name} support" ON)
+  else()
+    find_package(${_name} QUIET)
+    if(${_name}_FOUND)
+      option(WITH_${upper_name} "Enable ${_name} support" ON)
+    else()
+      unset(WITH_${upper_name} CACHE)
+      option(WITH_${upper_name} "Enable ${_name} support" OFF)
+    endif()
+  endif()
+endmacro()
+
+# eigen3
+_rmvl_set_build_with_3rdparty(Eigen3 OFF)
+
 # apriltag
-option(BUILD_APRILTAG "Build the 3rd party: apriltag" ON)
-if(BUILD_APRILTAG)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/apriltag)
-  option(WITH_APRILTAG "Enable apriltag support" ON)
-else()
-  unset(WITH_APRILTAG CACHE)
-  option(WITH_APRILTAG "Enable apriltag support" OFF)
-endif()
+_rmvl_set_build_with_3rdparty(apriltag ON)
 
 # open62541
-option(BUILD_OPEN62541 "Build the 3rd party: open62541" OFF)
-if(BUILD_OPEN62541)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/open62541)
-endif()
-if(BUILD_OPEN62541)
-  unset(WITH_OPEN62541 CACHE)
-  option(WITH_OPEN62541 "Enable open62541 support" ON)
-else()
-  find_package(open62541 QUIET)
-  if(open62541_FOUND)
-    option(WITH_OPEN62541 "Enable open62541 support" ON)
-  else()
-    unset(WITH_OPEN62541 CACHE)
-    option(WITH_OPEN62541 "Enable open62541 support" OFF)
-  endif()
-endif()
+_rmvl_set_build_with_3rdparty(open62541 OFF)
 
 # ----------------------------------------------------------------------------
 #   Module and other options
@@ -346,6 +361,15 @@ if(BUILD_PYTHON)
         "${RMVL_PYDOC_OUTPUT_DIR}/pyrmvl_fns.cfg"
         COPYONLY
       )
+    endif()
+    if(UNIX)
+      execute_process(
+        COMMAND ${RMVL_PYTHON_EXECUTABLE} -c "from sysconfig import *; print(get_path('purelib'))"
+        RESULT_VARIABLE _rmvlpy_process
+        OUTPUT_VARIABLE _std_packages_path
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(RMVL_PYTHON_INSTALL_PATH "${_std_packages_path}/rm")
     endif()
   endif()
 endif()

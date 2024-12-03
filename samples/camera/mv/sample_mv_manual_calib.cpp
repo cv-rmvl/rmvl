@@ -5,8 +5,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/camera/mv_camera.h"
 #include "rmvl/algorithm/math.hpp"
+#include "rmvl/camera/mv_camera.h"
 
 using namespace std::chrono_literals;
 
@@ -83,23 +83,23 @@ int main()
 
     // 设置滑动条
     cv::createTrackbar("内参 (0, 0)", "控制面板", nullptr, 10000, cameraMatrixCallBack, &(matrix_pose.at(0)));
-    cv::setTrackbarPos("内参 (0, 0)", "控制面板", cameraMatrix(0, 0));
+    cv::setTrackbarPos("内参 (0, 0)", "控制面板", static_cast<int>(cameraMatrix(0, 0)));
     cv::createTrackbar("内参 (1, 1)", "控制面板", nullptr, 10000, cameraMatrixCallBack, &(matrix_pose.at(0)));
-    cv::setTrackbarPos("内参 (1, 1)", "控制面板", cameraMatrix(1, 1));
+    cv::setTrackbarPos("内参 (1, 1)", "控制面板", static_cast<int>(cameraMatrix(1, 1)));
     cv::createTrackbar("内参 (0, 2)", "控制面板", nullptr, 3000, cameraMatrixCallBack, &(matrix_pose.at(2)));
-    cv::setTrackbarPos("内参 (0, 2)", "控制面板", cameraMatrix(0, 2));
+    cv::setTrackbarPos("内参 (0, 2)", "控制面板", static_cast<int>(cameraMatrix(0, 2)));
     cv::createTrackbar("内参 (1, 2)", "控制面板", nullptr, 3000, cameraMatrixCallBack, &(matrix_pose.at(5)));
-    cv::setTrackbarPos("内参 (1, 2)", "控制面板", cameraMatrix(1, 2));
+    cv::setTrackbarPos("内参 (1, 2)", "控制面板", static_cast<int>(cameraMatrix(1, 2)));
     cv::createTrackbar("畸变 0", "控制面板", nullptr, 10000, distCoeffCallBack, &(dist_pose.at(0)));
-    cv::setTrackbarPos("畸变 0", "控制面板", distCoeffs(0, 0) * 5000 + 5000);
+    cv::setTrackbarPos("畸变 0", "控制面板", static_cast<int>(distCoeffs(0, 0)) * 5000 + 5000);
     cv::createTrackbar("畸变 1", "控制面板", nullptr, 10000, distCoeffCallBack, &(dist_pose.at(1)));
-    cv::setTrackbarPos("畸变 1", "控制面板", distCoeffs(1, 0) * 5000 + 5000);
+    cv::setTrackbarPos("畸变 1", "控制面板", static_cast<int>(distCoeffs(1, 0)) * 5000 + 5000);
     cv::createTrackbar("畸变 2", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(2)));
-    cv::setTrackbarPos("畸变 2", "控制面板", distCoeffs(2, 0) * 5000 + 500);
+    cv::setTrackbarPos("畸变 2", "控制面板", static_cast<int>(distCoeffs(2, 0)) * 5000 + 500);
     cv::createTrackbar("畸变 3", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(3)));
-    cv::setTrackbarPos("畸变 3", "控制面板", distCoeffs(3, 0) * 5000 + 500);
+    cv::setTrackbarPos("畸变 3", "控制面板", static_cast<int>(distCoeffs(3, 0)) * 5000 + 500);
     cv::createTrackbar("畸变 4", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(4)));
-    cv::setTrackbarPos("畸变 4", "控制面板", distCoeffs(4, 0) * 5000 + 500);
+    cv::setTrackbarPos("畸变 4", "控制面板", static_cast<int>(distCoeffs(4, 0)) * 5000 + 500);
 
     std::this_thread::sleep_for(1s);
 
@@ -108,7 +108,8 @@ int main()
     cv::Mat frame;
     if (!capture.read(frame))
         return -1;
-    resizeWindow("图像画面", cv::Size(frame.cols * 0.8, frame.rows * 0.8));
+    resizeWindow("图像画面", cv::Size(static_cast<int>(frame.cols * 0.8),
+                                      static_cast<int>(frame.rows * 0.8)));
 
     while (true)
     {

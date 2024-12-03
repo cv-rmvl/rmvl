@@ -50,7 +50,7 @@ RealSignal Gx(const ComplexSignal &x, GxType type)
 
 cv::Mat draw(const RealSignal &datas, const cv::Scalar &color)
 {
-    cv::Mat img(cv::Size(datas.size() * 2.5, datas.size() * 1.5), CV_8UC3, cv::Scalar(40, 40, 40));
+    cv::Mat img(cv::Size(int(datas.size() * 2.5), int(datas.size() * 1.5)), CV_8UC3, cv::Scalar(40, 40, 40));
     int cx{img.cols / 2}, cy{img.rows / 2};
 
     double max_val = *std::max_element(datas.begin(), datas.end(), [](double lhs, double rhs) { return std::abs(lhs) < std::abs(rhs); });
@@ -73,16 +73,16 @@ cv::Mat draw(const RealSignal &datas, const cv::Scalar &color)
 
 ComplexSignal dft(const ComplexSignal &xt)
 {
-    const std::size_t N = xt.size();
+    const int N = static_cast<int>(xt.size());
     // std::deque -> cv::Mat
     cv::Mat input(1, N, CV_64FC2);
-    for (std::size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
         input.at<cv::Vec2d>(0, i) = {xt[i].real(), xt[i].imag()};
     cv::Mat output;
     // process
     cv::dft(input, output, cv::DFT_COMPLEX_OUTPUT);
     ComplexSignal res(N);
-    for (std::size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
         res[i] = {output.at<cv::Vec2d>(0, i)[0], output.at<cv::Vec2d>(0, i)[1]};
 
     return res;
@@ -90,16 +90,16 @@ ComplexSignal dft(const ComplexSignal &xt)
 
 ComplexSignal idft(const ComplexSignal &Xf)
 {
-    const std::size_t N = Xf.size();
+    const int N = static_cast<int>(Xf.size());
     // std::deque -> cv::Mat
     cv::Mat input(1, N, CV_64FC2);
-    for (std::size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
         input.at<cv::Vec2d>(0, i) = {Xf[i].real(), Xf[i].imag()};
     cv::Mat output;
     // process
     cv::dft(input, output, cv::DFT_INVERSE | cv::DFT_COMPLEX_OUTPUT);
     ComplexSignal res(N);
-    for (std::size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
         res[i] = {output.at<cv::Vec2d>(0, i)[0] / N, output.at<cv::Vec2d>(0, i)[1] / N};
 
     return res;

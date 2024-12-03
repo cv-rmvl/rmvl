@@ -47,7 +47,10 @@ if(WITH_APRILTAG)
   rmvl_add_module(
     tag_detector
     DEPENDS detector planar_tracker tag 
-    EXTERNAL apriltag 
+  )
+  rmvl_link_libraries(
+    tag_detector
+    PRIVATE apriltag
   )
 endif()
 

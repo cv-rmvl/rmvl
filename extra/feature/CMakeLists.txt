@@ -4,7 +4,6 @@
 rmvl_add_module(
   feature INTERFACE
   DEPENDS types algorithm
-  EXTERNAL opencv_imgproc opencv_calib3d
 )
 
 # light_blob

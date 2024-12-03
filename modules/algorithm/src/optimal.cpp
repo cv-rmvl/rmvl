@@ -323,7 +323,7 @@ static inline void calcJacobi(const FuncNds &funcs, const std::vector<double> &x
     {
         auto xgrad = grad(funcs[i], xk, options.diff_mode, options.dx);
         for (std::size_t j = 0; j < xgrad.size(); ++j)
-            jac.at<double>(i, j) = xgrad[j];
+            jac.at<double>(static_cast<int>(i), static_cast<int>(j)) = xgrad[j];
     }
 }
 
@@ -396,8 +396,8 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
     std::vector<double> xk(x0);
-    cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // J 矩阵 (M×N)
-    std::vector<double> phi(funcs.size());        // 函数值 (M×1)
+    cv::Mat J(static_cast<int>(funcs.size()), static_cast<int>(x0.size()), CV_64FC1); // J 矩阵 (M×N)
+    std::vector<double> phi(funcs.size());                                            // 函数值 (M×1)
 
     auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
@@ -415,7 +415,7 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
         cv::solve(Jt * W * J, Jt * W * fvals, s, cv::DECOMP_CHOLESKY);
         // 更新 xk
         for (std::size_t i = 0; i < xk.size(); ++i)
-            xk[i] -= s.at<double>(i);
+            xk[i] -= s.at<double>(static_cast<int>(i));
     }
     return xk;
 }
@@ -426,8 +426,8 @@ static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector
     if (x0.empty())
         RMVL_Error(RMVL_StsBadArg, "x0 is empty");
     std::vector<double> xk(x0);
-    cv::Mat J(funcs.size(), x0.size(), CV_64FC1); // J 矩阵 (M×N)
-    std::vector<double> phi(funcs.size());        // 函数值 (M×1)
+    cv::Mat J(static_cast<int>(funcs.size()), static_cast<int>(x0.size()), CV_64FC1); // J 矩阵 (M×N)
+    std::vector<double> phi(funcs.size());                                            // 函数值 (M×1)
 
     auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
@@ -447,7 +447,7 @@ static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector
         auto func_alpha = [&](double alpha) {
             auto xk2 = xk;
             for (std::size_t i = 0; i < xk.size(); ++i)
-                xk2[i] -= alpha * s.at<double>(i, 0);
+                xk2[i] -= alpha * s.at<double>(static_cast<int>(i), 0);
             std::vector<double> fvals2(funcs.size());
             for (std::size_t i = 0; i < funcs.size(); ++i)
                 fvals2[i] = funcs[i](xk2);
@@ -457,7 +457,7 @@ static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector
         double alpha = fminbnd(func_alpha, a, b, options).first;
         // 更新 xk
         for (std::size_t i = 0; i < xk.size(); ++i)
-            xk[i] -= alpha * s.at<double>(i);
+            xk[i] -= alpha * s.at<double>(static_cast<int>(i));
     }
     return xk;
 }
@@ -487,8 +487,8 @@ public:
         return 0;
     }
 
-    int inputs() const { return _x0.size(); }
-    int values() const { return _funcs.size(); }
+    int inputs() const { return static_cast<int>(_x0.size()); }
+    int values() const { return static_cast<int>(_funcs.size()); }
 
 private:
     const FuncNds &_funcs;

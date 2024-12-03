@@ -41,8 +41,7 @@ rmvl_generate_para(
 rmvl_add_module(
   mv_camera
   DEPENDS camera
-  EXTRA_HEADER ${MvSDK_INCLUDE_DIRS}
-  EXTERNAL ${MvSDK_LIBS}
+  EXTERNAL mvsdk
 )
 
 # hik
@@ -53,8 +52,7 @@ rmvl_generate_para(
 rmvl_add_module(
   hik_camera
   DEPENDS camera
-  EXTRA_HEADER ${HikSDK_INCLUDE_DIRS}
-  EXTERNAL ${HikSDK_LIBS}
+  EXTERNAL hiksdk
 )
 
 # opt
@@ -65,8 +63,7 @@ rmvl_generate_para(
 rmvl_add_module(
   opt_camera
   DEPENDS camera
-  EXTRA_HEADER ${OPTCameraSDK_INCLUDE_DIRS}
-  EXTERNAL ${OPTCameraSDK_LIBS}
+  EXTERNAL optcamsdk
 )
 
 # galaxy
@@ -77,11 +74,40 @@ rmvl_generate_para(
 rmvl_add_module(
   galaxy_camera
   DEPENDS camera
-  EXTRA_HEADER ${GalaxySDK_INCLUDE_DIRS}
-  EXTERNAL ${GalaxySDK_LIBS}
+  EXTERNAL galaxysdk
 )
 
 rmvl_generate_module_para(camera)
+
+# --------------------------------------------------------------------------
+#   Install the necessary library for OS
+# --------------------------------------------------------------------------
+foreach(SDK MvSDK HikSDK OPTCameraSDK GalaxySDK)
+  if(${SDK}_FOUND AND DEFINED ${SDK}_LIB)
+    if(IS_SYMLINK "${${SDK}_LIB}")
+      get_filename_component(lib_realname ${${SDK}_LIB} REALPATH)
+      set(lib_install ${lib_realname} ${${SDK}_LIB})
+    else()
+      set(lib_install ${${SDK}_LIB})
+    endif()
+    install(
+      FILES ${lib_install}
+      DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
+    )
+    if(DEFINED ${SDK}_DLL)
+      if(IS_SYMLINK "${${SDK}_DLL}")
+        get_filename_component(dll_realname ${${SDK}_DLL} REALPATH)
+        set(dll_install ${dll_realname} ${${SDK}_DLL})
+      else()
+        set(dll_install ${${SDK}_DLL})
+      endif()
+      install(
+        FILES ${dll_install}
+        DESTINATION ${RMVL_BIN_INSTALL_PATH}
+      )
+    endif()
+  endif()
+endforeach()
 
 # --------------------------------------------------------------------------
 #   Other functions

@@ -9,6 +9,7 @@
  *
  */
 
+#include <thread>
 #include <unordered_set>
 
 #include <opencv2/imgproc.hpp>
@@ -330,7 +331,7 @@ bool HikCamera::Impl::reconnect() noexcept
     using namespace std::chrono_literals;
     INFO_("(hik) Camera device reconnect");
     release();
-    usleep(100000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     open();
     return true;
 }

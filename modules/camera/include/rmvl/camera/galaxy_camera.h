@@ -37,10 +37,10 @@ public:
     /**
      * @brief 创建 GalaxyCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
+     * @param[in] cfg 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
      * @param[in] id 相机标识，可以是序列号、IP 地址等
      */
-    RMVL_W GalaxyCamera(CameraConfig init_mode, std::string_view id = "");
+    RMVL_W GalaxyCamera(CameraConfig cfg, std::string_view id = "");
 
     //! @cond
     GalaxyCamera(const GalaxyCamera &) = delete;
@@ -53,11 +53,11 @@ public:
     /**
      * @brief 构建 GalaxyCamera 对象
      *
-     * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
+     * @param[in] cfg 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
      * @param[in] id 相机标识，可以是序列号、IP 地址等
      * @return GalaxyCamera 对象独享指针
      */
-    static inline std::unique_ptr<GalaxyCamera> make_capture(CameraConfig init_mode, std::string_view id = "") { return std::make_unique<GalaxyCamera>(init_mode, id); }
+    static std::unique_ptr<GalaxyCamera> make_capture(CameraConfig cfg, std::string_view id = "") { return std::make_unique<GalaxyCamera>(cfg, id); }
 
     /**
      * @brief 设置相机参数/事件
@@ -66,7 +66,7 @@ public:
      * @param[in] value 参数/事件值
      * @return 是否设置成功
      */
-    RMVL_W bool set(int prop_id, double value = 0.0);
+    RMVL_W bool set(int prop_id, double value = 0.0) const;
 
     /**
      * @brief 获取相机参数
@@ -119,7 +119,7 @@ public:
      *
      * @return 是否成功重连
      */
-    RMVL_W bool reconnect();
+    RMVL_W bool reconnect() const;
 };
 
 //! @} galaxy_camera

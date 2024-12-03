@@ -12,7 +12,7 @@ static int r_gain = 100;
 static int g_gain = 100;
 static int b_gain = 100;
 
-rm::MvCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::SDK));
+rm::MvCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
 void exposureCallBack(int pos, void *)
 {
@@ -81,15 +81,13 @@ int main()
 
     std::this_thread::sleep_for(1s);
 
-    [[maybe_unused]] int ch = system("clear");
-
     const char *file_name = "out_para.yml";
     printf("Press the 's' key to save the parameters to the yaml file: \033[33m%s\033[0m\n", file_name);
 
     cv::Mat frame;
     if (!cap.read(frame))
         return -1;
-    resizeWindow("图像画面", cv::Size(frame.cols * 0.8, frame.rows * 0.8));
+    resizeWindow("图像画面", cv::Size(static_cast<int>(frame.cols * 0.8), static_cast<int>(frame.rows * 0.8)));
 
     while (true)
     {

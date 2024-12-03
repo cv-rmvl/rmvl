@@ -142,13 +142,13 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     };
     EXPECT_TRUE(cli.monitor(node_id, on_change, 5));
     // 数据更新
-    cli.write(node_id, 66);
+    EXPECT_TRUE(cli.write(node_id, 66));
     std::this_thread::sleep_for(10ms);
     cli.spinOnce();
     EXPECT_EQ(receive_data, 66);
     // 移除监视后的数据按预期不会更新
     cli.remove(node_id);
-    cli.write(node_id, 123);
+    EXPECT_TRUE(cli.write(node_id, 123));
     std::this_thread::sleep_for(10ms);
     cli.spinOnce();
     EXPECT_EQ(receive_data, 66);
@@ -182,7 +182,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     event.source_name = "GtestServer";
     event.message = "this is test event";
     event["aaa"] = 66;
-    srv.triggerEvent(rm::nodeServer, event);
+    EXPECT_TRUE(srv.triggerEvent(rm::nodeServer, event));
     cli.spinOnce();
     EXPECT_EQ(source_name, "GtestServer");
     EXPECT_EQ(aaa, 66);

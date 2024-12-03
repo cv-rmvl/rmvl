@@ -14,18 +14,18 @@ void read(ClientView client, const rm::NodeId &node)
 template <typename Tp>
 void write(ClientView client, const rm::NodeId &node)
 {
-    std::cout << "请输入要写入的值: ";
+    std::cout << "Please input the value to write: ";
     Tp val{};
     std::cin >> val;
     client.write(node, val);
-    std::cout << "\033[32m写入成功\033[0m\n";
+    std::cout << "\033[32mSuccess to write\033[0m\n";
 }
 
 template <typename Tp>
 void value(ClientView client, const rm::NodeId &node)
 {
-    std::cout << "- 0: 读取\n- 1: 写入\n";
-    std::cout << "请输入要操作的编号: \n";
+    std::cout << "- 0: Read\n- 1: Write\n";
+    std::cout << "Please input the number to operate: \n";
     std::string num{};
     std::cin >> num;
     if (num == "0")
@@ -33,22 +33,22 @@ void value(ClientView client, const rm::NodeId &node)
     else if (num == "1")
         write<Tp>(client, node);
     else
-        printf("\033[31m无效的编号\033[0m\n");
+        printf("\033[31mInvalid number\033[0m\n");
 }
 
 void call(Client &client)
 {
     int num1{}, num2{};
-    std::cout << "计算两数之和 num1 + num2:\n";
-    std::cout << "请输入 num1: ";
+    std::cout << "Calculate the sum of 'num1' and 'num2':\n";
+    std::cout << "Input num1: ";
     std::cin >> num1;
-    std::cout << "请输入 num2: ";
+    std::cout << "Input num2: ";
     std::cin >> num2;
     auto [result, oargs] = client.call("add", {num1, num2});
     if (result)
-        std::cout << "\033[32m计算结果: " << oargs[0].cast<int>() << "\033[0m\n";
+        std::cout << "\033[32mResult: " << oargs[0].cast<int>() << "\033[0m\n";
     else
-        std::cout << "\033[31m调用失败\033[0m\n";
+        std::cout << "\033[31mFail to call the method node\033[0m\n";
 }
 
 int main()
@@ -58,8 +58,8 @@ int main()
         return -1;
     while (true)
     {
-        std::cout << "- 0: value_1\n- 1: value_2\n- 2: add\n- q: 退出程序\n";
-        std::cout << "请输入要操作的编号: \n";
+        std::cout << "- 0: value_1\n- 1: value_2\n- 2: add\n- q: Exit\n";
+        std::cout << "Please input the number to operate:\n";
         std::string num{};
         std::cin >> num;
         if (num == "0")
@@ -71,7 +71,7 @@ int main()
         else if (num == "q")
             break;
         else
-            printf("\033[31m无效的编号\033[0m\n");
+            printf("\033[31mInvalid number\033[0m\n");
     }
 
     return 0;

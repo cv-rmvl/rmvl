@@ -10,7 +10,7 @@ int main()
 {
     int ret = MV_OK;
     MV_CC_DEVICE_INFO_LIST camera_list;
-    ret = MV_CC_EnumDevices(MV_USB_DEVICE, &camera_list);
+    ret = MV_CC_EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &camera_list);
     if (ret != MV_OK)
         INFO_("failed to enum camera devices");
     unsigned int nums = camera_list.nDeviceNum;

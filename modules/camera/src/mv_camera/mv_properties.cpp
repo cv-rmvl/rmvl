@@ -54,11 +54,13 @@ bool MvCamera::Impl::set(int propId, double value) noexcept
             return CameraSetTriggerDelayTime(_handle, static_cast<UINT>(value)) == CAMERA_STATUS_SUCCESS;
         else
             return false;
+#ifndef _WIN32
     case CAMERA_TRIGGER_PERIOD:
         if (_grab_mode != GrabMode::Continuous)
             return CameraSetTriggerPeriodTime(_handle, static_cast<UINT>(value)) == CAMERA_STATUS_SUCCESS;
         else
             return false;
+#endif // _WIN32
     case CAMERA_GAMMA:
         _gamma = static_cast<int>(value);
         return CameraSetGamma(_handle, _gamma) == CAMERA_STATUS_SUCCESS;
@@ -109,9 +111,11 @@ double MvCamera::Impl::get(int propId) const noexcept
     case CAMERA_TRIGGER_DELAY:
         UINT trigger_delay;
         return CameraGetTriggerDelayTime(_handle, &trigger_delay) == 0 ? trigger_delay : -1;
+#ifndef _WIN32
     case CAMERA_TRIGGER_PERIOD:
         UINT trigger_period;
         return CameraGetTriggerPeriodTime(_handle, &trigger_period) == 0 ? trigger_period : -1;
+#endif // _WIN32
     case CAMERA_GAMMA:
         return _gamma;
     case CAMERA_CONTRAST:

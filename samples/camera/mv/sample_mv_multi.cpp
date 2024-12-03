@@ -4,11 +4,15 @@
 
 #include "rmvl/camera/mv_camera.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif // _WIN32
+
 #include <CameraApi.h>
 
 int main()
 {
-    INT camera_counts = 8;
+    int camera_counts = 8;
     std::vector<tSdkCameraDevInfo> camera_list(camera_counts);
     auto status = CameraEnumerateDevice(camera_list.data(), &camera_counts);
     if (status != CAMERA_STATUS_SUCCESS)
@@ -62,7 +66,8 @@ int main()
     cv::Mat frame;
     if (!capture.read(frame))
         return -1;
-    resizeWindow("frame", cv::Size(frame.cols * 0.8, frame.rows * 0.8));
+    resizeWindow("frame", cv::Size(static_cast<int>(frame.cols * 0.8),
+                                   static_cast<int>(frame.rows * 0.8)));
 
     while (capture.read(frame))
     {

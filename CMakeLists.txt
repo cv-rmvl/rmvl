@@ -59,10 +59,10 @@ include_directories(${CMAKE_BINARY_DIR})
 
 # RMVL version number from sources
 include(cmake/RMVLVersion.cmake)
-# RMVL compile configure and options
-include(cmake/RMVLCompilerOptions.cmake)
 # RMVL Install layout 
 include(cmake/RMVLInstall.cmake)
+# RMVL compile configure and options
+include(cmake/RMVLCompilerOptions.cmake)
 # RMVL build module
 include(cmake/RMVLModule.cmake)
 # RMVL extra target
@@ -176,6 +176,7 @@ status("        OPT:"               BUILD_rmvl_opt_camera THEN YES ELSE NO)
 status("        Galaxy:"            BUILD_rmvl_galaxy_camera THEN YES ELSE NO)
 status("     Light controller:")
 status("        OPT:"               BUILD_rmvl_opt_light_control THEN YES ELSE NO)
+status("        HikRobot:"          BUILD_rmvl_hik_light_control THEN YES ELSE NO)
 
 # ========================== RMVL modules ===========================
 set(RMVL_MAIN_MODULES_BUILD ${RMVL_MODULES_BUILD})

@@ -111,9 +111,9 @@ public:
 
 private:
     //! 形如 `UA_TYPES_<xxx>` 的类型标志位
-    static const std::unordered_map<std::type_index, UA_UInt32> _map;
+    static const std::unordered_map<std::type_index, uint32_t> _map;
     //! 数据类型 ID
-    UA_UInt32 _id{};
+    uint32_t _id{};
 };
 
 /**

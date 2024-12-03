@@ -35,11 +35,15 @@ set_target_properties(
   ARCHIVE_OUTPUT_DIRECTORY ${3P_LIBRARY_OUTPUT_PATH}
 )
 
-if(NOT BUILD_SHARED_LIBS)
-  install(
-    TARGETS apriltag
-    EXPORT RMVLModules
-    ARCHIVE DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
-    OPTIONAL
-  )
+install(
+  TARGETS apriltag
+  EXPORT RMVLModules
+  ARCHIVE DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
+  OPTIONAL
+)
+
+if(UNIX)
+  set(apriltag_LIB "libapriltag.a" CACHE INTERNAL "name of the apriltag library")
+elseif(WIN32)
+  set(apriltag_LIB "apriltag.lib" CACHE INTERNAL "name of the apriltag library")
 endif()

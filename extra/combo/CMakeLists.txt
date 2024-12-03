@@ -14,7 +14,6 @@ rmvl_generate_para(
 rmvl_add_module(
   armor
   DEPENDS combo light_blob
-  EXTERNAL opencv_ml
 )
 
 # rune
