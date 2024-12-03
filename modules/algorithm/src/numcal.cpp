@@ -86,22 +86,23 @@ CurveFitter::CurveFitter(const std::vector<double> &xs, const std::vector<double
         if (order.test(i))
             _idx.push_back(i);
     // 构建法方程系数矩阵 G
-    cv::Mat G(_idx.size(), _idx.size(), CV_64FC1);
-    for (size_t i = 0; i < _idx.size(); ++i)
+    int idx_size = static_cast<int>(_idx.size());
+    cv::Mat G(idx_size, idx_size, CV_64FC1);
+    for (int i = 0; i < idx_size; ++i)
     {
-        for (size_t j = 0; j < _idx.size(); ++j)
+        for (int j = 0; j < idx_size; ++j)
         {
             G.at<double>(i, j) = 0.0;
-            for (size_t k = 0; k < xs.size(); ++k)
+            for (int k = 0; k < static_cast<int>(xs.size()); ++k)
                 G.at<double>(i, j) += std::pow(xs[k], _idx[i] + _idx[j]);
         }
     }
     // 构建法方程系数矩阵 b
-    cv::Mat b(_idx.size(), 1, CV_64FC1);
-    for (size_t i = 0; i < _idx.size(); ++i)
+    cv::Mat b(idx_size, 1, CV_64FC1);
+    for (int i = 0; i < idx_size; ++i)
     {
         b.at<double>(i) = 0.0;
-        for (size_t k = 0; k < xs.size(); ++k)
+        for (std::size_t k = 0; k < xs.size(); ++k)
             b.at<double>(i) += std::pow(xs[k], _idx[i]) * ys[k];
     }
     // 求解法方程

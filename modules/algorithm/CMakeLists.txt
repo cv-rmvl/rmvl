@@ -7,7 +7,6 @@ if(WITH_OPENCV AND WITH_EIGEN3)
   rmvl_add_module(algorithm
     DEPENDS core
     EXTRA_HEADER ${EIGEN3_INCLUDE_DIRS}
-    EXTERNAL opencv_calib3d
   )
   rmvl_compile_definitions(algorithm PUBLIC HAVE_OPENCV)
 else()
@@ -53,7 +52,7 @@ if(BUILD_PERF_TESTS)
   rmvl_add_test(
     algorithm Performance
     DEPENDS algorithm
-    EXTERNAL benchmark::benchmark_main $<$<BOOL:${WITH_OPENCV}>:opencv_video>
+    EXTERNAL benchmark::benchmark_main
   )
 endif(BUILD_PERF_TESTS)
 

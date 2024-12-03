@@ -9,6 +9,7 @@
  *
  */
 
+#include <thread>
 #include <unordered_set>
 
 #include <DxImageProc.h>
@@ -25,12 +26,12 @@ namespace rm
 
 RMVL_IMPL_DEF(GalaxyCamera)
 
-GalaxyCamera::GalaxyCamera(CameraConfig config, std::string_view id) : _impl(new GalaxyCamera::Impl(config, id)) {}
-bool GalaxyCamera::set(int prop_id, double value) { return _impl->set(prop_id, value); }
+GalaxyCamera::GalaxyCamera(CameraConfig cfg, std::string_view id) : _impl(new GalaxyCamera::Impl(cfg, id)) {}
+bool GalaxyCamera::set(int prop_id, double value) const { return _impl->set(prop_id, value); }
 double GalaxyCamera::get(int prop_id) const { return _impl->get(prop_id); }
 bool GalaxyCamera::isOpened() const { return _impl->isOpened(); }
 bool GalaxyCamera::read(cv::OutputArray image) { return _impl->read(image); }
-bool GalaxyCamera::reconnect() { return _impl->reconnect(); }
+bool GalaxyCamera::reconnect() const { return _impl->reconnect(); }
 
 std::string GalaxyCamera::version() { return GXGetLibVersion(); }
 
@@ -317,7 +318,7 @@ bool GalaxyCamera::Impl::reconnect() noexcept
     using namespace std::chrono_literals;
     INFO_("(hik) Camera device reconnect");
     release();
-    usleep(100000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return open();
 }
 

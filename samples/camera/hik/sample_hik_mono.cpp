@@ -7,7 +7,7 @@
 
 using namespace std::chrono_literals;
 
-static int exposure = 1000;
+static int exposure = 5000;
 static int gain = 0;
 static int r_gain = 1200;
 static int g_gain = 1200;
@@ -47,9 +47,9 @@ int main()
     namedWindow("控制面板", cv::WINDOW_AUTOSIZE);
     cv::Mat track_bar_img(cv::Size(750, 1), CV_8UC1, cv::Scalar(60, 60, 60));
 
-    cv::createTrackbar("曝光值", "控制面板", nullptr, 10000, exposureCallBack, nullptr);
+    cv::createTrackbar("曝光值", "控制面板", nullptr, 70000, exposureCallBack, nullptr);
     cv::setTrackbarPos("曝光值", "控制面板", exposure);
-    cv::createTrackbar("增益值", "控制面板", nullptr, 16, gainCallBack, nullptr);
+    cv::createTrackbar("增益值", "控制面板", nullptr, 30, gainCallBack, nullptr);
     cv::setTrackbarPos("增益值", "控制面板", gain);
     cv::createTrackbar("红通道", "控制面板", nullptr, 3000, rGainCallBack, nullptr);
     cv::setTrackbarPos("红通道", "控制面板", r_gain);
@@ -59,8 +59,6 @@ int main()
     cv::setTrackbarPos("蓝通道", "控制面板", b_gain);
 
     std::this_thread::sleep_for(1s);
-
-    [[maybe_unused]] int ch = system("clear");
 
     const char *file_name = "out_para.yml";
     printf("Press the 's' key to save the parameters to the yaml file: \033[33m%s\033[0m\n", file_name);

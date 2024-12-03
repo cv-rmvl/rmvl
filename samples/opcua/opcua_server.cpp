@@ -30,7 +30,7 @@ int main()
     server.addVariableNode(value_1);
     server.addVariableNode(value_2);
     server.addMethodNode(add);
-    printf("节点信息:\n");
+    printf("Node Infomation:\n");
     printf("  ObjectFolders:\n");
     printf("  - value_1:\n");
     printf("      node: Variable\n");

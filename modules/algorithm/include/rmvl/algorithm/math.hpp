@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 #include <numeric>
 #include <unordered_map>
 #include <vector>
@@ -20,7 +21,6 @@
 #include <opencv2/core/matx.hpp>
 #else
 #include <algorithm>
-#include <functional>
 #include <memory>
 #endif // HAVE_OPENCV
 
@@ -237,7 +237,7 @@ constexpr auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &p
  * @brief 获取与水平方向的夹角，以平面直角坐标系 \f$x\f$ 轴为分界线， **逆时针** 为正方向，范围: \f$(-180°,180°]\f$ ，默认返回弧度制
  * @note 与像素（图像）坐标系不同，像素（图像）坐标系中 \f$y\f$ 轴向下为正方向，而此函数将 \f$y\f$
  *       轴向上设置为正方向，因此才能将逆时针表示为旋转的正方向
- * 
+ *
  * @tparam Tp1 平面点 1 的数据类型
  * @tparam Tp2 平面点 2 的数据类型
  * @param[in] start 像素坐标系下的起点

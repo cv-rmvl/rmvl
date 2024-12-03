@@ -22,10 +22,10 @@ public:
     /**
      * @brief 构造函数
      *
-     * @param init_mode 相机初始化配置模式
-     * @param serial 相机唯一序列号
+     * @param cfg 相机初始化配置模式
+     * @param id 相机唯一序列号
      */
-    Impl(CameraConfig init_mode, std::string_view serial) noexcept;
+    Impl(CameraConfig cfg, std::string_view id) noexcept;
 
     //! 析构函数
     ~Impl() noexcept;

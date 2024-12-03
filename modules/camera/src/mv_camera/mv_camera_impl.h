@@ -11,6 +11,9 @@
 
 #pragma once
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif // _WIN32
 #include <CameraApi.h>
 
 #include "rmvl/camera/mv_camera.h"

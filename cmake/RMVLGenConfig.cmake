@@ -17,10 +17,12 @@ set(RMVL_MODULES_CONFIGCMAKE ${RMVL_MODULES_BUILD})
 set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "")
 # --------------------------------------------------------------------
 #  Usage:
-#   find the imported modules for RMVLConfig.cmake.
+#   find the imported modules for RMVLConfig.cmake, including some 3rd-
+#   party libraries
 #
 #  Note:
-#   These targets are typically found using the file 'FindXxx.cmake'
+#   These targets are typically found using the file 'FindXxx.cmake' or
+#   created by the 'CMakeLists.txt' in '3rdparty' directory.
 #
 #  Example:
 #   __find_imported_modules(
@@ -30,54 +32,40 @@ set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "")
 # --------------------------------------------------------------------
 function(__find_imported_modules target pkg_name)
   set(PKG_MODULE_CONFIGCMAKE ${target})
-  set(PKG_LOCATION_CONFIGCMAKE ${${pkg_name}_LIB})
-  set(PKG_INCLUDE_DIRS_CONFIGCMAKE ${${pkg_name}_INCLUDE_DIR})
-  if(NOT PKG_LOCATION_CONFIGCMAKE OR NOT PKG_INCLUDE_DIRS_CONFIGCMAKE)
+  # get file name excluding path
+  if(${pkg_name}_LIB)
+    get_filename_component(pkg_lib_name ${${pkg_name}_LIB} NAME)
+  else()
     return()
   endif()
+  if(${pkg_name}_DLL)
+    get_filename_component(pkg_dll_name ${${pkg_name}_DLL} NAME)
+  endif()
+  # for Windows
+  if(pkg_dll_name)
+    set(PKG_WINIMPLIB_CONFIGCMAKE "\$\{RMVL_INSTALL_PATH\}/${RMVL_3P_LIB_INSTALL_PATH}/${pkg_lib_name}")
+    set(PKG_WINLOCATION_CONFIGCMAKE "\$\{RMVL_INSTALL_PATH\}/${RMVL_BIN_INSTALL_PATH}/${pkg_dll_name}")
+  else()
+    set(PKG_WINLOCATION_CONFIGCMAKE "\$\{RMVL_INSTALL_PATH\}/${RMVL_3P_LIB_INSTALL_PATH}/${pkg_lib_name}")
+  endif()
+  # for UNIX
+  set(PKG_LOCATION_CONFIGCMAKE "\$\{RMVL_INSTALL_PATH\}/${RMVL_3P_LIB_INSTALL_PATH}/${pkg_lib_name}")
+  
+  set(PKG_INCLUDE_CONFIGCMAKE "\$\{RMVL_INSTALL_PATH\}/${RMVL_INCLUDE_INSTALL_PATH}")
   rmvl_cmake_configure("${template_dir}/RMVLConfig-IMPORTED.cmake.in" MODULE_CONFIGCMAKE @ONLY)
   set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "${RMVL_MODULES_IMPORTED_CONFIGCMAKE}${MODULE_CONFIGCMAKE}\n" PARENT_SCOPE)
 endfunction()
 
+# SDK for hardware, they are *.so for Linux and *.dll (including import library *.lib) for Windows
 __find_imported_modules(mvsdk MvSDK)
 __find_imported_modules(hiksdk HikSDK)
 __find_imported_modules(optcamsdk OPTCameraSDK)
 __find_imported_modules(galaxysdk GalaxySDK)
 __find_imported_modules(optlc OPTLightCtrl)
 
-set(RMVL_3RD_PKGS_CONFIGCMAKE "")
-# --------------------------------------------------------------------
-#  Usage:
-#   Check whether the target or package required by the RMVL module
-#   exists. otherwise 'find_package' will be added to RMVL_3RD_PKGS_CONFIGCMAKE
-#   
-#  Example:
-#   __find_3rd_package_if(
-#     flag            # whether the package is required, if not, return
-#     TARGET apriltag # the target to be checked, 'FOUND' means
-#                       whether the package has been found
-#     apriltag        # the package name to be found in TARGET mode
-#   )
-# --------------------------------------------------------------------
-function(__find_3rd_package_if flag)
-  if(NOT ${flag})
-    return()
-  endif()
-  if("${ARGV1}" STREQUAL "TARGET")
-    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}if(NOT TARGET ${ARGV2})\n")
-    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}  find_package(${ARGV3} REQUIRED)\n")
-  elseif("${ARGV1}" STREQUAL "FOUND")
-    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}if(NOT ${ARGV2}_FOUND)\n")
-    set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}  find_package(${ARGV2} REQUIRED)\n")
-  else()
-    message(FATAL_ERROR "Unknown type of 3rd party package: ${ARGV1}")
-  endif()
-  set(RMVL_3RD_PKGS_CONFIGCMAKE "${RMVL_3RD_PKGS_CONFIGCMAKE}endif()\n\n" PARENT_SCOPE)
-endfunction()
-
-__find_3rd_package_if(WITH_OPENCV FOUND OpenCV)
-__find_3rd_package_if(WITH_APRILTAG TARGET apriltag apriltag)
-__find_3rd_package_if(WITH_OPEN62541 TARGET open62541::open62541 open62541)
+# 3rdparty libraries
+__find_imported_modules(apriltag apriltag)
+__find_imported_modules(open62541::open62541 open62541)
 
 # --------------------------------------------------------------------------------------------
 #  Part 2/3: Generate RMVLConfig.cmake

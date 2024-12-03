@@ -508,7 +508,7 @@ struct hash_aggregate
         std::size_t retval{};
         reflect::for_each(r, [&retval](const auto &val) {
             // boost::hash_combine
-            retval = retval ^ (std::hash<std::remove_reference_t<decltype(val)>>{}(val) << 1);
+            retval = retval ^ (std::hash<std::remove_cvref_t<decltype(val)>>{}(val) << 1);
         });
         return retval;
     }
