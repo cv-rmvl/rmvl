@@ -29,7 +29,7 @@ pybind11       Description    Seamless operability between C++11 and Python
                               not found in the system, it will be downloaded and built.
 
 eigen3         Description    A C++ template library for linear algebra
-               License        eigen3 is covered by the MPL-2.0 license, see eigen3/LICENSE
+               License        eigen3 is covered by the MPL-2.0 license, see eigen3/COPYING.APACHE
                Homepage       http://eigen.tuxfamily.org
                CMake options  1. BUILD_EIGEN3 to download and build this module (diabled by default)
                               2. WITH_EIGEN3 to enable eigen3 support for the core module

@@ -22,7 +22,7 @@ namespace rm
 class HikLightController::Impl
 {
 public:
-    Impl(const LightConfig &cfg, HikProductID pid, std::string_view id);
+    Impl(const LightConfig &cfg, std::string_view id);
 
     Impl(const Impl &) = delete;
     Impl(Impl &&) = default;
@@ -43,7 +43,6 @@ public:
     bool set(int chn, int val);
 
 private:
-    HikProductID _pid{};               //!< 光源控制器产品 ID
     std::unique_ptr<SerialPort> _sp{}; //!< 串口对象
 };
 
