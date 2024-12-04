@@ -22,12 +22,6 @@ namespace rm
 //! @addtogroup hik_light_control
 //! @{
 
-//! 海康机器人光源控制器产品 ID
-enum class HikProductID
-{
-    LEAD, //!< 点光源控制器
-};
-
 //! 海康机器人光源控制器
 class RMVL_EXPORTS_W HikLightController
 {
@@ -38,10 +32,9 @@ public:
      * @brief 构造海康机器人光源控制器对象，并使用建立连接
      *
      * @param[in] cfg 光源控制器配置
-     * @param[in] pid 光源控制器产品 ID
      * @param[in] id 光源控制器唯一标识，目前只支持串口设备名称
      */
-    RMVL_W HikLightController(const LightConfig &cfg, HikProductID pid, std::string_view id);
+    RMVL_W HikLightController(const LightConfig &cfg, std::string_view id);
 
     //! @cond
     HikLightController(const HikLightController &) = delete;
