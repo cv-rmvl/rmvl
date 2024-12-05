@@ -41,9 +41,3 @@ install(
   ARCHIVE DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
   OPTIONAL
 )
-
-if(UNIX)
-  set(apriltag_LIB "libapriltag.a" CACHE INTERNAL "name of the apriltag library")
-elseif(WIN32)
-  set(apriltag_LIB "apriltag.lib" CACHE INTERNAL "name of the apriltag library")
-endif()
