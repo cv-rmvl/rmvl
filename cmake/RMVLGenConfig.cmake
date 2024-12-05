@@ -63,9 +63,13 @@ __find_imported_modules(optcamsdk OPTCameraSDK)
 __find_imported_modules(galaxysdk GalaxySDK)
 __find_imported_modules(optlc OPTLightCtrl)
 
-# 3rdparty libraries
-__find_imported_modules(apriltag apriltag)
-__find_imported_modules(open62541::open62541 open62541)
+# 3rdparty (local source code)
+# all targets have been configured in the corresponding CMakeLists.txt, no need to configure again
+
+# 3rdparty (download)
+if(open62541_IN_3RD)
+  list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "include(\$\{RMVL_INSTALL_PATH\}/lib/cmake/open62541/open62541Config.cmake)\n")
+endif()
 
 # --------------------------------------------------------------------------------------------
 #  Part 2/3: Generate RMVLConfig.cmake

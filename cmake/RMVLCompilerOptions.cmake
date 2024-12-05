@@ -232,6 +232,9 @@ endif()
 # ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
+macro(_rmvl_set_target_in_3rd _name)
+  set(${_name}_IN_3RD ON CACHE INTERNAL "")
+endmacro()
 
 # opencv
 find_package(OpenCV QUIET)

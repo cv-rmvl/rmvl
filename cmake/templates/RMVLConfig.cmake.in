@@ -71,6 +71,7 @@ unset(__d)
 # =============================================================
 # Get imported targets found in Module mode
 @RMVL_MODULES_IMPORTED_CONFIGCMAKE@
+# 3rdparty (download)
 if(WIN32)
   if(NOT TARGET opencv_world)
     add_library(opencv_world SHARED IMPORTED)
@@ -86,6 +87,7 @@ else()
   endif()
 endif()
 
+@RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE@
 # Export configuration
 if(NOT TARGET rmvl_core)
   include(${CMAKE_CURRENT_LIST_DIR}/RMVLModules.cmake)
