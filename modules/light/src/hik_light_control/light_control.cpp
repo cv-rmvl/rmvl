@@ -25,7 +25,7 @@ HikLightController::Impl::Impl(const LightConfig &cfg, std::string_view id)
     {
         SerialPortMode mode{};
         mode.baud_rate = BaudRate::BR_19200;
-        mode.read_mode = SerialReadMode::BLOCK;
+        mode.read_mode = SerialReadMode::NONBLOCK;
         _sp = std::make_unique<SerialPort>(id, mode);
     }
     else
@@ -70,7 +70,15 @@ int HikLightController::Impl::get(int chn) const
         return -1;
     if (buf == "NG")
         return -1;
-    return std::stoi(std::string(buf.begin() + 1, buf.end()));
+    try
+    {
+        return std::stoi(std::string(buf.begin() + 1, buf.end()));
+    }
+    catch (const std::exception &)
+    {
+        ERROR_("Failed to obtain brightness, try to increase the 'DELAY_AFTER_WRITE' parameter");
+        return -1;
+    }
 }
 
 bool HikLightController::Impl::set(int chn, int val)

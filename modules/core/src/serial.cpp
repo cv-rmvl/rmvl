@@ -104,7 +104,7 @@ void SerialPort::Impl::open()
         0,
         nullptr,
         OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL,
+        0,
         nullptr);
     if (_handle == INVALID_HANDLE_VALUE)
     {
@@ -112,6 +112,8 @@ void SerialPort::Impl::open()
         _is_open = false;
         return;
     }
+
+    SetupComm(_handle, 1024, 1024);
 
     COMMTIMEOUTS timeouts{};
     if (_mode.read_mode == SerialReadMode::BLOCK)
@@ -126,8 +128,6 @@ void SerialPort::Impl::open()
         timeouts.ReadTotalTimeoutConstant = 0;
         timeouts.ReadTotalTimeoutMultiplier = 0;
     }
-    timeouts.WriteTotalTimeoutConstant = 1;
-    timeouts.WriteTotalTimeoutMultiplier = 1;
     if (!SetCommTimeouts(_handle, &timeouts))
     {
         WARNING_("Failed to set the serial port timeout.");
