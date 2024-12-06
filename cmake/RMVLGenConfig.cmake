@@ -67,8 +67,12 @@ __find_imported_modules(optlc OPTLightCtrl)
 # all targets have been configured in the corresponding CMakeLists.txt, no need to configure again
 
 # 3rdparty (download)
-if(open62541_IN_3RD)
-  list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "include(\$\{RMVL_INSTALL_PATH\}/lib/cmake/open62541/open62541Config.cmake)\n")
+if(WITH_OPEN62541)
+  if(open62541_IN_3RD)
+    list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "include(\$\{RMVL_INSTALL_PATH\}/lib/cmake/open62541/open62541Config.cmake)\n")
+  else()
+    list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "find_package(open62541 REQUIRED)\n")
+  endif()
 endif()
 
 # --------------------------------------------------------------------------------------------

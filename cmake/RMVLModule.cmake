@@ -173,7 +173,7 @@ macro(rmvl_add_module _name)
         ${the_module}
         INTERFACE ${MD_EXTRA_HEADER}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+        $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
       )
       foreach(_dep ${MD_DEPENDS})
         target_link_libraries(
@@ -190,7 +190,7 @@ macro(rmvl_add_module _name)
         ${the_module}
         PUBLIC ${MD_EXTRA_HEADER}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+        $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
         PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
       )
       foreach(_dep ${MD_DEPENDS})
