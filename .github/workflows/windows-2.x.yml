@@ -1,0 +1,17 @@
+name: 2.x in Windows
+
+on:
+  push:
+    branches:
+      - 2.x
+  pull_request:
+    branches:
+      - 2.x
+
+jobs:
+  cmake-support-x86_64:
+    name: CMake support for x86_64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install-win.yml@main
+  withoutdep-support-x86_64:
+    name: Without dependency support for x86_64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-withoutdep-win.yml@main

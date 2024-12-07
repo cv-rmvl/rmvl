@@ -1,13 +1,16 @@
 # ----------------------------------------------------------------------------
 #  Light control module
 # ----------------------------------------------------------------------------
+# light
+rmvl_add_module(light INTERFACE)
+
 # opt_light_control
 find_package(OPTLightCtrl QUIET)
 rmvl_update_build(opt_light_control OPTLightCtrl_FOUND)
 
 rmvl_add_module(
   opt_light_control
-  DEPENDS core
+  DEPENDS core light
 )
 
 rmvl_link_libraries(
@@ -23,7 +26,7 @@ rmvl_generate_para(
 
 rmvl_add_module(
   hik_light_control
-  DEPENDS core
+  DEPENDS core light
 ) 
 
 # ----------------------------------------------------------------------------
