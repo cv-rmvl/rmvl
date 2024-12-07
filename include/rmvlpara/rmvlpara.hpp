@@ -31,6 +31,10 @@
 #include "rmvlpara/opcua.hpp"
 #endif // HAVE_RMVL_OPCUA
 
+#ifdef HAVE_RMVL_LIGHT
+#include "rmvlpara/light.hpp"
+#endif // HAVE_RMVL_LIGHT
+
 /////////////////////////////////////
 ///////     extra modules     ///////
 /////////////////////////////////////
