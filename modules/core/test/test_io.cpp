@@ -4,12 +4,15 @@
  * @brief 数据 IO 与通信模块单元测试
  * @version 1.0
  * @date 2024-09-18
- * 
+ *
  * @copyright Copyright 2024 (c), zhaoxi
- * 
+ *
  */
 
 #include <fstream>
+#ifdef _WIN32
+#include <thread>
+#endif
 
 #include <gtest/gtest.h>
 
@@ -36,6 +39,22 @@ TEST(IOTest, corners_io)
 
 TEST(IOTest, pipe_io)
 {
+#ifdef _WIN32
+    std::thread t([&]() {
+        rm::PipeServer server("test_pipe");
+        EXPECT_TRUE(server.write("Hello"));
+        std::string msg{};
+        EXPECT_TRUE(server.read(msg));
+        EXPECT_EQ(msg, "world");
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    rm::PipeClient client("test_pipe");
+    std::string msg{};
+    EXPECT_TRUE(client.read(msg));
+    EXPECT_EQ(msg, "Hello");
+    EXPECT_TRUE(client.write("world"));
+    t.join();
+#else
     rm::PipeServer server("test_pipe");
     rm::PipeClient client("test_pipe");
     EXPECT_TRUE(server.write("hello"));
@@ -45,7 +64,7 @@ TEST(IOTest, pipe_io)
     EXPECT_TRUE(client.write("world"));
     EXPECT_TRUE(server.read(data));
     EXPECT_EQ(data, "world");
+#endif
 }
-
 
 } // namespace rm_test

@@ -27,8 +27,8 @@ TEST(DSPTest, dft)
     auto X = rm::dft(x);
     auto Gx = rm::Gx(X, rm::GxType::Amp);
     // 获取幅度谱最大值对应的频率
-    int max_it = std::max_element(Gx.begin(), Gx.end()) - Gx.begin();
-    EXPECT_EQ(max_it, f);
+    std::ptrdiff_t max_it = std::max_element(Gx.begin(), Gx.end()) - Gx.begin();
+    EXPECT_EQ(max_it, static_cast<std::ptrdiff_t>(f));
 }
 
 } // namespace rm_test

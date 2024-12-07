@@ -527,7 +527,7 @@ std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double>
 
 #else
 
-std::vector<double> lsqnonlinRKF(const FuncNds &, const std::vector<double> &, const OptimalOptions &)
+std::vector<double> lsqnonlinRKF(const FuncNds &, const std::vector<double> &, RobustMode, const OptimalOptions &)
 {
     RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
                                 "RMVL by setting \"WITH_OPENCV=ON\" and \"WITH_EIGEN3=ON\" in CMake");
