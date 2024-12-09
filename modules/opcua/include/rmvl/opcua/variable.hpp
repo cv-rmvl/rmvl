@@ -50,12 +50,9 @@ public:
     /**
      * @brief 字符串构造，设置默认值
      *
-     * @tparam Tp 字符串变量的存储数据类型，必须是 `std::string`、`std::string_view`、C 风格字符串指针或者字符串字面量
      * @param[in] str 字符串
      */
-    template <typename Tp, typename = std::enable_if_t<std::is_convertible_v<Tp, std::string>>>
-    RMVL_W_SUBST("VT_Str")
-    VariableType(Tp &&str) : _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W VariableType(std::string_view str) : _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -150,12 +147,9 @@ public:
     /**
      * @brief 字符串构造
      *
-     * @tparam Tp 字符串变量的存储数据类型，必须是 `std::string`、`std::string_view`、C 风格字符串指针或者字符串字面量
      * @param[in] str 字符串
      */
-    template <typename Tp, typename = std::enable_if_t<std::is_convertible_v<Tp, std::string>>>
-    RMVL_W_SUBST("V_Str")
-    Variable(Tp &&str) : access_level(3U), _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W Variable(std::string_view str) : access_level(3U), _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
 
     /**
      * @brief 列表构造
@@ -231,7 +225,7 @@ public:
      * @brief 获取用 `rm::VariableType` 表示的变量类型
      * - 添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
      * - 作为变量类型节点、变量节点之间链接的依据
-     * 
+     *
      * @return 变量类型
      */
     RMVL_W inline const VariableType type() const { return _type; }
