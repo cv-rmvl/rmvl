@@ -68,7 +68,7 @@ __find_imported_modules(optlc OPTLightCtrl)
 
 # 3rdparty (download)
 if(WITH_OPEN62541)
-  list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "if(TARGET open62541::open62541)")
+  list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "if(NOT TARGET open62541::open62541)")
   if(open62541_IN_3RD)
     list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "  include(\$\{RMVL_INSTALL_PATH\}/lib/cmake/open62541/open62541Config.cmake)")
   else()

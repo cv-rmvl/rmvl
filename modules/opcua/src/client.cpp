@@ -170,12 +170,12 @@ std::pair<bool, Variables> Client::call(const NodeId &obj_nd, std::string_view n
     RMVL_DbgAssert(_client != nullptr);
 
     // 初始化输入、输出参数
-    std::vector<UA_Variant> input_variants;
+    std::vector<UA_Variant> input_variants{};
     input_variants.reserve(inputs.size());
     for (const auto &input : inputs)
         input_variants.emplace_back(helper::cvtVariable(input));
-    size_t output_size;
-    UA_Variant *output_variants;
+    size_t output_size{};
+    UA_Variant *output_variants{};
     // 获取方法节点
     NodeId method_node = obj_nd | node(name);
     if (method_node.empty())
@@ -194,7 +194,7 @@ std::pair<bool, Variables> Client::call(const NodeId &obj_nd, std::string_view n
                method_node.data().identifier.numeric, UA_StatusCode_name(status));
         return {false, {}};
     }
-    rm::Variables outputs;
+    rm::Variables outputs{};
     outputs.reserve(output_size);
     for (size_t i = 0; i < output_size; ++i)
         outputs.push_back(helper::cvtVariable(output_variants[i]));
