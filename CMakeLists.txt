@@ -57,7 +57,7 @@ include(cmake/RMVLUtils.cmake)
 # ----------------------------------------------------------------------------
 #  Include necessary CMake modules
 # ----------------------------------------------------------------------------
-include_directories(${CMAKE_BINARY_DIR})
+include_directories(${PROJECT_BINARY_DIR})
 
 # RMVL version number from sources
 include(cmake/RMVLVersion.cmake)

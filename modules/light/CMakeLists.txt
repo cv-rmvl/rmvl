@@ -11,11 +11,7 @@ rmvl_update_build(opt_light_control OPTLightCtrl_FOUND)
 rmvl_add_module(
   opt_light_control
   DEPENDS core light
-)
-
-rmvl_link_libraries(
-  opt_light_control
-  PRIVATE optlc
+  EXTERNAL optlc
 )
 
 # hik_light_control

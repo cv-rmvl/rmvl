@@ -119,12 +119,10 @@ macro(rmvl_finalize_status)
   unset(_content)
   unset(RMVL_BUILD_INFO_STR CACHE)
 
-  if(DEFINED RMVL_MODULE_rmvl_core_BINARY_DIR)
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${RMVL_BUILD_INFO_FILE}" "${RMVL_MODULE_rmvl_core_BINARY_DIR}/version_string.inc"
-      OUTPUT_QUIET
-    )
-  endif()
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${RMVL_BUILD_INFO_FILE}" "${PROJECT_BINARY_DIR}/version_string.inc"
+    OUTPUT_QUIET
+  )
 endmacro()
 
 # ----------------------------------------------------------------------------

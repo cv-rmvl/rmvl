@@ -310,6 +310,19 @@ _rmvl_set_build_with_3rdparty(open62541 OFF)
 # ----------------------------------------------------------------------------
 #   Module and other options
 # ----------------------------------------------------------------------------
+option(BUILD_WORLD "Build all modules as a single library" OFF)
+if(BUILD_WORLD)
+  if(BUILD_SHARED_LIBS)
+    add_library(rmvl_world SHARED)
+    set_target_properties(
+      rmvl_world PROPERTIES
+      DEFINE_SYMBOL RMVLAPI_EXPORTS
+    )
+  else()
+    add_library(rmvl_world STATIC)
+  endif()
+endif()
+
 option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" OFF)
 if(NOT WITH_OPENCV)
   unset(BUILD_EXTRA CACHE)
