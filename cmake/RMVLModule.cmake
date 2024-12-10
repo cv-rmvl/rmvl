@@ -9,8 +9,19 @@
 #
 # RMVL_MODULE_${the_module}_LOCATION
 # RMVL_MODULE_${the_module}_BINARY_DIR
+#
+# 专为 rmvl_world 模块设置的全局变量
+#
+# RMVL_WORLD_SOURCES
+# RMVL_WORLD_EXTRA_INCLUDES
+# RMVL_WORLD_EXTRA_LINKS
+# RMVL_WORLD_EXTRA_DEFINITIONS
 
 set(RMVL_MODULES_BUILD "" CACHE INTERNAL "List of RMVL modules included into the build")
+set(RMVL_WORLD_SOURCES "" CACHE INTERNAL "Source files of RMVL modules")
+set(RMVL_WORLD_EXTRA_INCLUDES "" CACHE INTERNAL "Source files of RMVL modules")
+set(RMVL_WORLD_EXTRA_LINKS "" CACHE INTERNAL "Source files of RMVL modules")
+set(RMVL_WORLD_EXTRA_DEFINITIONS "" CACHE INTERNAL "Source files of RMVL modules")
 
 # ----------------------------------------------------------------------------
 #   将预处理定义添加至指定目标
@@ -25,7 +36,9 @@ set(RMVL_MODULES_BUILD "" CACHE INTERNAL "List of RMVL modules included into the
 #   )
 # ----------------------------------------------------------------------------
 macro(rmvl_compile_definitions _target)
-  if(TARGET rmvl_${_target})
+  if(BUILD_WORLD)
+    target_compile_definitions(rmvl_world ${ARGN})
+  else()
     target_compile_definitions(rmvl_${_target} ${ARGN})
   endif()
 endmacro(rmvl_compile_definitions _target)
@@ -155,15 +168,22 @@ macro(rmvl_add_module _name)
       if(MD_EXTRA_SOURCE)
         aux_source_directory(${module_dir}/${MD_EXTRA_SOURCE} extra_src)
       endif()
-      # Build to *.so / *.a
-      if(BUILD_SHARED_LIBS)
-        add_library(${the_module} SHARED ${target_src} ${para_src} ${extra_src})
-        set_target_properties(
-          ${the_module} PROPERTIES
-          DEFINE_SYMBOL RMVLAPI_EXPORTS
+      # Build to *.so (*.dll), *.a (*.lib) or *.o (*.obj)
+      if(BUILD_WORLD)
+        set(
+          RMVL_WORLD_SOURCES ${RMVL_WORLD_SOURCES} ${target_src} ${para_src} ${extra_src}
+          CACHE INTERNAL "Source files of RMVL modules"
         )
       else()
-        add_library(${the_module} STATIC ${target_src} ${para_src} ${extra_src})
+        if(BUILD_SHARED_LIBS)
+          add_library(${the_module} SHARED ${target_src} ${para_src} ${extra_src})
+          set_target_properties(
+            ${the_module} PROPERTIES
+            DEFINE_SYMBOL RMVLAPI_EXPORTS
+          )
+        else()
+          add_library(${the_module} STATIC ${target_src} ${para_src} ${extra_src})
+        endif()
       endif()
     endif(MD_INTERFACE)
 
@@ -185,37 +205,87 @@ macro(rmvl_add_module _name)
         ${the_module}
         INTERFACE ${MD_EXTERNAL}
       )
-    else() # public library
-      target_include_directories(
-        ${the_module}
-        PUBLIC ${MD_EXTRA_HEADER}
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-        $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
-        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+      # Install
+      install(
+        TARGETS ${the_module}
+        EXPORT RMVLModules
       )
-      foreach(_dep ${MD_DEPENDS})
+    else() # public library
+      if(BUILD_WORLD)
+        set(RMVL_WORLD_EXTRA_INCLUDES ${RMVL_WORLD_EXTRA_INCLUDES} ${MD_EXTRA_HEADER} CACHE INTERNAL "Source files of RMVL modules")
+        set(RMVL_WORLD_EXTRA_LINKS ${RMVL_WORLD_EXTRA_LINKS} ${MD_EXTERNAL} CACHE INTERNAL "Source files of RMVL modules")
+      else()
+        target_include_directories(
+          ${the_module}
+          PUBLIC ${MD_EXTRA_HEADER}
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+          $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
+        )
+        foreach(_dep ${MD_DEPENDS})
+          target_link_libraries(
+            ${the_module}
+            PUBLIC rmvl_${_dep}
+          )
+        endforeach(_dep ${MD_DEPENDS})
         target_link_libraries(
           ${the_module}
-          PUBLIC rmvl_${_dep}
+          PUBLIC ${MD_EXTERNAL}
         )
-      endforeach(_dep ${MD_DEPENDS})
-      target_link_libraries(
-        ${the_module}
-        PUBLIC ${MD_EXTERNAL}
-      )
+        set_target_properties(
+          ${the_module} PROPERTIES
+          OUTPUT_NAME "${the_module}${RMVL_LIBVERSION_SUFFIX}"
+          DEBUG_POSTFIX "${RMVL_DEBUG_POSTFIX}"
+          COMPILE_PDB_NAME "${the_module}${RMVL_LIBVERSION_SUFFIX}"
+          COMPILE_PDB_NAME_DEBUG "${the_module}${RMVL_LIBVERSION_SUFFIX}${RMVL_DEBUG_POSTFIX}"
+        )
+        # Install
+        install(
+          TARGETS ${the_module}
+          EXPORT RMVLModules
+          ARCHIVE DESTINATION ${RMVL_LIB_INSTALL_PATH}
+          LIBRARY DESTINATION ${RMVL_LIB_INSTALL_PATH}
+        )
+      endif()
     endif()
-    # Install
-    install(
-      TARGETS ${the_module}
-      EXPORT RMVLModules
-      ARCHIVE DESTINATION ${RMVL_LIB_INSTALL_PATH}
-      LIBRARY DESTINATION ${RMVL_LIB_INSTALL_PATH}
-    )
     list(APPEND modules_build ${the_module})
     set(RMVL_MODULES_BUILD ${RMVL_MODULES_BUILD} "${the_module}" CACHE INTERNAL "List of RMVL modules included into the build" FORCE)
   endif()
   unset(the_module)
 endmacro(rmvl_add_module _name)
+
+# ----------------------------------------------------------------------------
+#   添加 rmvl_world 模块
+#   用法:
+#     rmvl_add_world()
+# ----------------------------------------------------------------------------
+macro(rmvl_add_world)
+  # Add library
+  target_sources(rmvl_world PRIVATE ${RMVL_WORLD_SOURCES})
+  # Add dependence
+  target_include_directories(rmvl_world PUBLIC ${RMVL_WORLD_EXTRA_INCLUDES})
+  foreach(m ${RMVL_MODULES_BUILD})
+    target_include_directories(rmvl_world PUBLIC
+       $<BUILD_INTERFACE:${RMVL_MODULE_${m}_LOCATION}/include>
+       $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
+    )
+  endforeach()
+  target_link_libraries(rmvl_world PUBLIC ${RMVL_WORLD_EXTRA_LINKS})
+  set_target_properties(
+    rmvl_world PROPERTIES
+    OUTPUT_NAME "rmvl_world${RMVL_LIBVERSION_SUFFIX}"
+    DEBUG_POSTFIX "${RMVL_DEBUG_POSTFIX}"
+    COMPILE_PDB_NAME "rmvl_world${RMVL_LIBVERSION_SUFFIX}"
+    COMPILE_PDB_NAME_DEBUG "rmvl_world${RMVL_LIBVERSION_SUFFIX}${RMVL_DEBUG_POSTFIX}"
+  )
+  # Install
+  install(
+    TARGETS rmvl_world
+    EXPORT RMVLModules
+    ARCHIVE DESTINATION ${RMVL_LIB_INSTALL_PATH}
+    LIBRARY DESTINATION ${RMVL_LIB_INSTALL_PATH}
+  )
+  unset(all_obj_modules)
+endmacro()
 
 # ----------------------------------------------------------------------------
 #   将编译选项添加至指定目标
@@ -230,7 +300,9 @@ endmacro(rmvl_add_module _name)
 #   )
 # ----------------------------------------------------------------------------
 macro(rmvl_compile_options _target)
-  if(TARGET rmvl_${_target})
+  if(BUILD_WORLD)
+    target_compile_options(rmvl_world ${ARGN})
+  else()
     target_compile_options(rmvl_${_target} ${ARGN})
   endif()
 endmacro(rmvl_compile_options _target)
@@ -285,14 +357,17 @@ function(rmvl_add_test test_name test_kind)
   )
 
   # Add depends
-  foreach(_dep ${TS_DEPENDS})
-    if(TARGET rmvl_${_dep})
-      target_link_libraries(
-        ${the_target}
-        PRIVATE rmvl_${_dep}
-      )
+  if(TS_DEPENDS)
+    if(BUILD_WORLD)
+      target_link_libraries(${the_target} PRIVATE rmvl_world)
+    else()
+      foreach(_dep ${TS_DEPENDS})
+        if(TARGET rmvl_${_dep})
+          target_link_libraries(${the_target} PRIVATE rmvl_${_dep})
+        endif()
+      endforeach()
     endif()
-  endforeach(_dep ${TS_DEPENDS})
+  endif()
 
   # Test depends
   target_link_libraries(
@@ -339,9 +414,15 @@ macro(rmvl_add_exe exe_name)
   add_executable(${exe_name} ${EXE_SOURCES})
 
   # Add dependence
-  foreach(_dep ${EXE_DEPENDS})
-    target_link_libraries(${exe_name} rmvl_${_dep})
-  endforeach(_dep ${EXE_DEPENDS})
+  if(EXE_DEPENDS)
+    if(BUILD_WORLD)
+      target_link_libraries(${exe_name} rmvl_world)
+    else()
+      foreach(_dep ${EXE_DEPENDS})
+        target_link_libraries(${exe_name} rmvl_${_dep})
+      endforeach(_dep ${EXE_DEPENDS})
+    endif()
+  endif()
   target_link_libraries(${exe_name} ${EXE_EXTERNAL})
 
   # Install
@@ -364,9 +445,7 @@ endmacro(rmvl_add_exe exe_name)
 #   )
 # ----------------------------------------------------------------------------
 macro(rmvl_set_properties _target)
-  if(TARGET rmvl_${_target})
-    set_target_properties(rmvl_${_target} ${ARGN})
-  endif()
+  set_target_properties(rmvl_${_target} ${ARGN})
 endmacro(rmvl_set_properties _target)
 
 # ----------------------------------------------------------------------------
@@ -382,9 +461,7 @@ endmacro(rmvl_set_properties _target)
 #   )
 # ----------------------------------------------------------------------------
 macro(rmvl_link_directories _target)
-  if(TARGET rmvl_${_target})
-    target_link_directories(rmvl_${_target} ${ARGN})
-  endif()
+  target_link_directories(rmvl_${_target} ${ARGN})
 endmacro()
 
 # ----------------------------------------------------------------------------
@@ -400,7 +477,5 @@ endmacro()
 #   )
 # ----------------------------------------------------------------------------
 macro(rmvl_link_libraries _target)
-  if(TARGET rmvl_${_target})
-    target_link_libraries(rmvl_${_target} ${ARGN})
-  endif()
+  target_link_libraries(rmvl_${_target} ${ARGN})
 endmacro()

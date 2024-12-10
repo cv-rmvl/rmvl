@@ -41,7 +41,7 @@ if(UNIX)
   )
 
   if(NOT TARGET galaxysdk)
-    add_library(galaxysdk SHARED IMPORTED)
+    add_library(galaxysdk SHARED IMPORTED GLOBAL)
     set_target_properties(galaxysdk PROPERTIES
       IMPORTED_LOCATION "${GalaxySDK_LIB}"
       INTERFACE_INCLUDE_DIRECTORIES "${GalaxySDK_INCLUDE_DIR}"
@@ -68,7 +68,7 @@ elseif(WIN32)
   )
 
   if(NOT TARGET galaxysdk)
-    add_library(galaxysdk SHARED IMPORTED)
+    add_library(galaxysdk SHARED IMPORTED GLOBAL)
     set_target_properties(galaxysdk PROPERTIES
       IMPORTED_IMPLIB "${GalaxySDK_LIB}"
       IMPORTED_LOCATION "${GalaxySDK_DLL}"

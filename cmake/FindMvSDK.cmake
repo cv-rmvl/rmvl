@@ -15,7 +15,7 @@ if(UNIX)
   )
 
   if(NOT TARGET mvsdk)
-    add_library(mvsdk SHARED IMPORTED)
+    add_library(mvsdk SHARED IMPORTED GLOBAL)
     set_target_properties(mvsdk PROPERTIES
       IMPORTED_LOCATION "${MvSDK_LIB}"
       INTERFACE_INCLUDE_DIRECTORIES "${MvSDK_INCLUDE_DIR}"
@@ -57,7 +57,7 @@ elseif(WIN32)
   )
 
   if(NOT TARGET mvsdk)
-    add_library(mvsdk SHARED IMPORTED)
+    add_library(mvsdk SHARED IMPORTED GLOBAL)
     set_target_properties(mvsdk PROPERTIES
       IMPORTED_IMPLIB "${MvSDK_LIB}"
       IMPORTED_LOCATION "${MvSDK_DLL}"

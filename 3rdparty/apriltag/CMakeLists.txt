@@ -32,6 +32,7 @@ target_include_directories(
 set_target_properties(
   apriltag PROPERTIES
   OUTPUT_NAME apriltag
+  DEBUG_POSTFIX "${RMVL_DEBUG_POSTFIX}"
   ARCHIVE_OUTPUT_DIRECTORY ${3P_LIBRARY_OUTPUT_PATH}
 )
 

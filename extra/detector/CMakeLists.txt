@@ -39,20 +39,16 @@ rmvl_add_module(
 )
 
 # tag_detector
+rmvl_update_build(tag_detector WITH_APRILTAG)
 rmvl_generate_para(
   tag_detector
   MODULE detector
 )
-if(WITH_APRILTAG)
-  rmvl_add_module(
-    tag_detector
-    DEPENDS detector planar_tracker tag 
-  )
-  rmvl_link_libraries(
-    tag_detector
-    PRIVATE apriltag
-  )
-endif()
+rmvl_add_module(
+  tag_detector
+  DEPENDS detector planar_tracker tag
+  EXTERNAL apriltag
+)
 
 rmvl_generate_module_para(detector)
 

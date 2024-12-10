@@ -2,8 +2,12 @@
 #  Installation for CMake Module:  RMVLConfig.cmake
 #  Part 1/3: Prepare module list
 #  Part 2/3: Generate RMVLConfig.cmake
-#  Part 3/3: Make install
+#  Part 3/3: Generate install target
 # --------------------------------------------------------------------------------------------
+
+if(BUILD_WORLD)
+  rmvl_add_world()
+endif()
 
 set(cmake_dir "${CMAKE_SOURCE_DIR}/cmake")
 set(config_dir "${CMAKE_BINARY_DIR}/config-install")
@@ -12,7 +16,11 @@ set(template_dir "${cmake_dir}/templates")
 # --------------------------------------------------------------------------------------------
 #  Part 1/3: Prepare module list
 # --------------------------------------------------------------------------------------------
-set(RMVL_MODULES_CONFIGCMAKE ${RMVL_MODULES_BUILD})
+if(BUILD_WORLD)
+  set(RMVL_MODULES_CONFIGCMAKE world)
+else()
+  set(RMVL_MODULES_CONFIGCMAKE ${RMVL_MODULES_BUILD})
+endif()
 
 set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "")
 # --------------------------------------------------------------------
