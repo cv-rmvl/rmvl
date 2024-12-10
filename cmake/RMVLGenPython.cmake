@@ -102,9 +102,15 @@ function(rmvl_generate_python _name)
     DEPENDS ${RMVL_PYBIND_NAME}
   )
 
-  foreach(dep ${PY_DEPENDS})
-    target_link_libraries(${RMVL_PYBIND_NAME} PUBLIC rmvl_${dep})
-  endforeach()
+  if(PY_DEPENDS)
+    if(BUILD_WORLD)
+      target_link_libraries(${RMVL_PYBIND_NAME} PUBLIC rmvl_world)
+    else()
+      foreach(dep ${PY_DEPENDS})
+        target_link_libraries(${RMVL_PYBIND_NAME} PUBLIC rmvl_${dep})
+      endforeach()
+    endif()
+  endif()
 
   set_target_properties(
     ${RMVL_PYBIND_NAME} PROPERTIES

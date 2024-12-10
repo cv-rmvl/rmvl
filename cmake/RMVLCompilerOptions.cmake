@@ -104,7 +104,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/3rdparty/lib)
 
 # ----------------------------------------------------------------------------
-#   Build options
+#   Build options and configurations
 # ----------------------------------------------------------------------------
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(ENABLE_PIC "Generate position independent code (necessary for shared libraries)" ON)
@@ -134,6 +134,20 @@ if(ENABLE_LTO)
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
     endif()
   endif()
+endif()
+
+if(WIN32)
+  # postfix of DLLs
+  set(RMVL_LIBVERSION_SUFFIX "${RMVL_VERSION_MAJOR}${RMVL_VERSION_MINOR}${RMVL_VERSION_PATCH}" CACHE INTERNAL "RMVL library version suffix")
+  set(RMVL_DEBUG_POSTFIX "d" CACHE INTERNAL "RMVL debug postfix")
+else()
+  # postfix of *.so
+  set(RMVL_LIBVERSION_SUFFIX "")
+  set(RMVL_DEBUG_POSTFIX "")
+endif()
+
+if(DEFINED CMAKE_DEBUG_POSTFIX)
+  set(RMVL_DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}" CACHE INTERNAL "RMVL debug postfix")
 endif()
 
 # ----------------------------------------------------------------------------
@@ -310,6 +324,19 @@ _rmvl_set_build_with_3rdparty(open62541 OFF)
 # ----------------------------------------------------------------------------
 #   Module and other options
 # ----------------------------------------------------------------------------
+option(BUILD_WORLD "Build all modules as a single library" OFF)
+if(BUILD_WORLD)
+  if(BUILD_SHARED_LIBS)
+    add_library(rmvl_world SHARED)
+    set_target_properties(
+      rmvl_world PROPERTIES
+      DEFINE_SYMBOL RMVLAPI_EXPORTS
+    )
+  else()
+    add_library(rmvl_world STATIC)
+  endif()
+endif()
+
 option(BUILD_EXTRA "Build extra modules containing 4 data components and 4 function modules" OFF)
 if(NOT WITH_OPENCV)
   unset(BUILD_EXTRA CACHE)
