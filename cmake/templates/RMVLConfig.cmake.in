@@ -72,28 +72,31 @@ unset(__d)
 # Get imported targets found in Module mode
 @RMVL_MODULES_IMPORTED_CONFIGCMAKE@
 # 3rdparty (download)
-if(WIN32)
-  if(NOT TARGET opencv_world)
-    add_library(opencv_world SHARED IMPORTED)
-    set_target_properties(opencv_world PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${RMVL_INSTALL_PATH}/@RMVL_INCLUDE_INSTALL_PATH@"
-      IMPORTED_IMPLIB "${RMVL_INSTALL_PATH}/@RMVL_3P_LIB_INSTALL_PATH@/@OpenCV_LIB_NAME@"
-      IMPORTED_LOCATION "${RMVL_INSTALL_PATH}/@RMVL_BIN_INSTALL_PATH@/@OpenCV_DLL_NAME@"
-    )
-  endif()
-else()
-  if(NOT TARGET opencv_core)
-    find_package(OpenCV REQUIRED)
+option(WITH_OPENCV "Enable opencv support" @WITH_OPENCV@)
+
+if(WITH_OPENCV)
+  if(WIN32)
+    if(NOT TARGET opencv_world)
+      add_library(opencv_world SHARED IMPORTED)
+      set_target_properties(opencv_world PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${RMVL_INSTALL_PATH}/@RMVL_INCLUDE_INSTALL_PATH@"
+        IMPORTED_IMPLIB "${RMVL_INSTALL_PATH}/@RMVL_3P_LIB_INSTALL_PATH@/@OpenCV_LIB_NAME@"
+        IMPORTED_LOCATION "${RMVL_INSTALL_PATH}/@RMVL_BIN_INSTALL_PATH@/@OpenCV_DLL_NAME@"
+      )
+    endif()
+  else()
+    if(NOT TARGET opencv_core)
+      find_package(OpenCV REQUIRED)
+    endif()
   endif()
 endif()
 
 @RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE@
+
 # Export configuration
 if(NOT TARGET rmvl_core)
   include(${CMAKE_CURRENT_LIST_DIR}/RMVLModules.cmake)
 endif()
-
-option(WITH_OPENCV "Enable opencv support" @WITH_OPENCV@)
 
 # Form list of modules (components) to find
 if(NOT RMVL_FIND_COMPONENTS)

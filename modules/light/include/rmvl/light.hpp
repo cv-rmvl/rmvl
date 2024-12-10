@@ -9,6 +9,8 @@
  * 
  */
 
+#pragma once
+
 /**
  * @defgroup light 光源控制器
  * @{

@@ -41,7 +41,7 @@ TEST(OPC_UA_ClientTest, connect)
     t.join();
 };
 
-void configServer(rm::Server &srv)
+static void configServer(rm::Server &srv)
 {
     // 添加单变量节点
     rm::Variable single_value = 42;

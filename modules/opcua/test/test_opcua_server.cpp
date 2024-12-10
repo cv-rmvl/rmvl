@@ -22,7 +22,7 @@ namespace rm_test
 TEST(OPC_UA_Server, variable_config)
 {
     // 变量类型节点、字符串
-    rm::VariableType variable_type = "string_test";
+    rm::VariableType variable_type{"string_test"};
     EXPECT_EQ(variable_type.size(), 1);
     EXPECT_EQ(variable_type.getDataType(), UA_TYPES_STRING);
     // 添加变量节点、双精度浮点数
@@ -82,7 +82,7 @@ TEST(OPC_UA_Server, add_data_source_variable_node)
 TEST(OPC_UA_Server, add_variable_type_node)
 {
     rm::Server srv(4830);
-    rm::VariableType variable_type = "string_test";
+    rm::VariableType variable_type{"string_test"};
     variable_type.browse_name = "test_string";
     variable_type.description = "this is test string";
     variable_type.display_name = "测试字符串";
@@ -280,7 +280,7 @@ TEST(OPC_UA_Server, timer_test)
     rm::Server srv(4875);
     uaCreateVariable(val, 0);
     auto nd = srv.addVariableNode(val);
-    srv.spinOnce();    
+    srv.spinOnce();
 
     int times{};
 

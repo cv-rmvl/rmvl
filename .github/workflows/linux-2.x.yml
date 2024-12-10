@@ -10,18 +10,24 @@ on:
 
 jobs:
   cmake-support-x86_64:
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install.yml@main
+    name: CMake support for x86_64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install-u22.yml@main
   withoutdep-support-x86_64:
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-withoutdep.yml@main
+    name: Without dependency support for x86_64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-withoutdep-u22.yml@main
   python-support-x86_64:
+    name: Python support for x86_64
     needs: withoutdep-support-x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-pybind.yml@main
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-pybind-u22.yml@main
   minimal-support-x86_64:
+    name: Minimal support for x86_64
     needs: [cmake-support-x86_64, withoutdep-support-x86_64]
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main
   generic-support-x86_64:
+    name: Generic support for x86_64
     needs: [cmake-support-x86_64, withoutdep-support-x86_64]
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-generic.yml@main
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-generic-u22.yml@main
   gcc14-support-x86_64:
+    name: GCC 14 support for x86_64
     needs: [cmake-support-x86_64, withoutdep-support-x86_64]
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u24.yml@main

@@ -11,8 +11,8 @@
 
 #ifndef _WIN32
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include "io_impl.hpp"
@@ -94,27 +94,27 @@ PipeServer::Impl::Impl(std::string_view name) : _name("\\\\.\\pipe\\"s + name.da
 
 PipeClient::Impl::Impl(std::string_view name)
 {
+    std::string pipe_name = "\\\\.\\pipe\\"s + name.data();
     _handle = CreateFileA(
-        ("\\\\.\\pipe\\"s + name.data()).c_str(), // 命名管道名称
-        GENERIC_READ | GENERIC_WRITE,             // 读写权限
-        0,                                        // 不共享
-        nullptr,                                  // 默认安全属性
-        OPEN_EXISTING,                            // 打开已存在的管道
-        0,                                        // 默认属性
-        nullptr);                                 // 无模板文件
+        pipe_name.c_str(),            // 命名管道名称
+        GENERIC_READ | GENERIC_WRITE, // 读写权限
+        0,                            // 不共享
+        nullptr,                      // 默认安全属性
+        OPEN_EXISTING,                // 打开已存在的管道
+        0,                            // 默认属性
+        nullptr);                     // 无模板文件
     if (_handle == INVALID_HANDLE_VALUE)
     {
         ERROR_("Failed to open named pipe");
         return;
     }
-    DWORD mode = PIPE_READMODE_MESSAGE;
-    if (!SetNamedPipeHandleState(_handle, &mode, nullptr, nullptr))
-    {
-        ERROR_("Failed to set named pipe handle state");
-        CloseHandle(_handle);
-        return;
-    }
-    return;
+}
+
+PipeServer::Impl::~Impl()
+{
+    if (!DisconnectNamedPipe(_handle))
+        ERROR_("Failed to disconnect named pipe");
+    closePipe(_handle);
 }
 
 bool PipeServer::Impl::read(std::string &data) { return readPipe(_handle, data); }

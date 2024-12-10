@@ -14,15 +14,6 @@
             "def __init__(self, value: float) -> VariableType: ..."
         ]
     },
-    "VT_Str": {
-        "bind": [
-            ".def(py::init<std::string>())"
-        ],
-        "pyi": [
-            "@overload",
-            "def __init__(self, value: str) -> VariableType: ..."
-        ]
-    },
     "VT_List": {
         "bind": [
             ".def(py::init<const std::vector<int> &>())",
@@ -58,8 +49,7 @@
         "bind": [
             ".def(py::init<bool>())",
             ".def(py::init<int>())",
-            ".def(py::init<double>())",
-            ".def(py::init<std::string>())"
+            ".def(py::init<double>())"
         ],
         "pyi": [
             "@overload",
@@ -68,15 +58,6 @@
             "def __init__(self, value: int) -> Variable: ...",
             "@overload",
             "def __init__(self, value: float) -> Variable: ...",
-            "@overload",
-            "def __init__(self, value: str) -> Variable: ..."
-        ]
-    },
-    "V_Str": {
-        "bind": [
-            ".def(py::init<std::string>())"
-        ],
-        "pyi": [
             "@overload",
             "def __init__(self, value: str) -> Variable: ..."
         ]
