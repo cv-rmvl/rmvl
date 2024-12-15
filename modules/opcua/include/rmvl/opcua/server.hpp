@@ -124,24 +124,6 @@ using ValueCallbackBeforeRead = std::function<void(ServerView, const NodeId &, c
  */
 using ValueCallbackAfterWrite = std::function<void(ServerView, const NodeId &, const Variable &)>;
 
-/**
- * @brief 数据源回调函数，Read 函数指针定义
- *
- * @param[in] server_view OPC UA 服务器视图，指代当前服务器
- * @param[in] nodeid 待读取的变量节点的 `NodeId`
- * @return 向服务器提供的待读取的变量
- */
-using DataSourceRead = std::function<Variable(ServerView, const NodeId &)>;
-
-/**
- * @brief 数据源回调函数，Write 函数指针定义
- *
- * @param[in] server_view OPC UA 服务器视图，指代当前服务器
- * @param[in] nodeid 待写入的变量节点的 `NodeId`
- * @param[in] value 从服务器接收到的变量，一般用于写入外部数据
- */
-using DataSourceWrite = std::function<void(ServerView, const NodeId &, const Variable &)>;
-
 //! OPC UA 服务器
 class RMVL_EXPORTS_W Server
 {
@@ -269,20 +251,13 @@ public:
 
     /**
      * @brief 添加数据源变量节点 VariableNode 至指定父节点中
-     * @brief 数据源变量节点不同于变量节点的值回调
-     * @brief
-     * - 值回调是在现有变量节点之上添加读取 **前** 和写入 **后** 的回调函数，本质上仍然是从服务器中获取数据
-     * @brief
-     * - 数据源变量节点会把每次 IO 都绑定到各自的回调函数中，即可以重定向到一个实际的物理过程中，从而跟服务器本身的数据读写脱离关系
+     * @see DataSourceVariable
      *
-     * @param[in] val `rm::Variable` 表示的变量，仅取 `browse_name`、`description`、`display_name`、`access_level`
-     *                以及 `ns` 字段，以及对应的变量类型节点
-     * @param[in] on_read 重定向的读取回调函数
-     * @param[in] on_write 重定向的写入回调函数
+     * @param[in] val `rm::DataSourceVariable` 表示的数据源变量
      * @param[in] parent_nd 指定父节点的 `NodeId`，默认为 `rm::nodeObjectsFolder`
      * @return 添加至服务器后，对应数据源变量节点的唯一标识 `NodeId`
      */
-    RMVL_W NodeId addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_nd = nodeObjectsFolder) noexcept;
+    RMVL_W NodeId addDataSourceVariableNode(const DataSourceVariable &val, NodeId parent_nd = nodeObjectsFolder) noexcept;
 
     /**
      * @brief 从指定的变量节点读数据

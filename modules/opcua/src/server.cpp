@@ -38,11 +38,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
         {para::LogLevel::LOG_FATAL, UA_LOGLEVEL_FATAL},
     };
 
-#if OPCUA_VERSION < 10400
-    init_config.logger = UA_Log_Stdout_withLevel(loglvl_srv.at(para::opcua_param.SERVER_LOGLEVEL));
-#else
     init_config.logging = UA_Log_Stdout_new(loglvl_srv.at(para::opcua_param.SERVER_LOGLEVEL));
-#endif
     // 设置服务器配置
     UA_ServerConfig_setMinimal(&init_config, port, nullptr);
     // 初始化服务器
@@ -77,16 +73,7 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
         }
         // 修改访问控制
         config->accessControl.clear(&config->accessControl);
-#if OPCUA_VERSION >= 10400
         UA_AccessControl_default(config, false, nullptr, usr_passwd.size(), usr_passwd.data());
-#elif OPCUA_VERSION >= 10300 && OPCUA_VERSION < 10400
-        UA_AccessControl_default(config, false, nullptr,
-                                 &config->securityPolicies[config->securityPoliciesSize - 1].policyUri,
-                                 usr_passwd.size(), usr_passwd.data());
-#else
-        UA_AccessControl_default(config, false, &config->securityPolicies[config->securityPoliciesSize - 1].policyUri,
-                                 usr_passwd.size(), usr_passwd.data());
-#endif
     }
 
     // 设置垃圾回收容量
@@ -333,11 +320,13 @@ bool Server::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead bef
     return status == UA_STATUSCODE_GOOD;
 }
 
-static UA_StatusCode datasource_cb_on_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
+static UA_StatusCode datasource_cb_on_read(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
                                            UA_Boolean, const UA_NumericRange *, UA_DataValue *value)
 {
     auto on_read = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->first;
-    auto retval = on_read(server, *nodeid);
+    if (on_read == nullptr)
+        return UA_STATUSCODE_BADNOTSUPPORTED;
+    auto retval = on_read(*nodeid);
     if (retval.empty())
         return UA_STATUSCODE_BADNOTFOUND;
     value->hasValue = true;
@@ -345,15 +334,17 @@ static UA_StatusCode datasource_cb_on_read(UA_Server *server, const UA_NodeId *,
     return UA_STATUSCODE_GOOD;
 }
 
-static UA_StatusCode datasource_cb_on_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
+static UA_StatusCode datasource_cb_on_write(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
                                             const UA_NumericRange *, const UA_DataValue *value)
 {
     auto on_write = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->second;
-    on_write(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
+    if (on_write == nullptr)
+        return UA_STATUSCODE_BADNOTSUPPORTED;
+    on_write(*nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
     return value->hasValue ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADNOTFOUND;
 }
 
-NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_read, DataSourceWrite on_write, NodeId parent_nd) noexcept
+NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId parent_nd) noexcept
 {
     RMVL_DbgAssert(_server != nullptr);
 
@@ -362,26 +353,14 @@ NodeId Server::addDataSourceVariableNode(const Variable &val, DataSourceRead on_
     attr.accessLevel = val.access_level;
     attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(val.display_name));
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(val.description));
-    // 获取变量节点的变量类型节点
-    NodeId type_id{nodeBaseDataVariableType};
-    const auto variable_type = val.type();
-    if (!variable_type.empty())
-    {
-        type_id = type_id | node(variable_type.browse_name);
-        if (type_id.empty())
-        {
-            ERROR_("Failed to find the variable type ID during adding variable node");
-            type_id = nodeBaseDataVariableType;
-        }
-    }
     UA_NodeId retval;
     // 获取数据源重定向信息
     UA_DataSource data_source = {datasource_cb_on_read, datasource_cb_on_write};
     // 添加节点至服务器
-    auto context = std::make_unique<DataSourceCallbackWrapper>(std::forward<DataSourceRead>(on_read), std::forward<DataSourceWrite>(on_write));
+    auto context = std::make_unique<DataSourceCallbackWrapper>(val.on_read, val.on_write);
     auto status = UA_Server_addDataSourceVariableNode(
         _server, UA_NODEID_NULL, parent_nd, nodeOrganizes, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
-        type_id, attr, data_source, context.get(), &retval);
+        UA_NODEID_NULL, attr, data_source, context.get(), &retval);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to add data source variable node: %s", UA_StatusCode_name(status));

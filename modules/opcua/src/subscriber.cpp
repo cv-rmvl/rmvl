@@ -14,9 +14,6 @@
 #ifdef UA_ENABLE_PUBSUB
 
 #include <open62541/plugin/log_stdout.h>
-#if OPCUA_VERSION < 10400
-#include <open62541/plugin/pubsub_udp.h>
-#endif
 #include <open62541/server_config_default.h>
 
 #ifdef UA_ENABLE_PUBSUB_MQTT
@@ -35,9 +32,6 @@ Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint1
                        const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
-#if OPCUA_VERSION < 10400
-    UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
-#endif
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
@@ -45,11 +39,7 @@ Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint1
     connect_config.enabled = UA_TRUE;
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(addr))};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
-#if OPCUA_VERSION >= 10400
     connect_config.publisherId.uint32 = UA_UInt32_random();
-#else
-    connect_config.publisherId.numeric = UA_UInt32_random();
-#endif
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD)
     {
@@ -73,8 +63,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
     status = UA_Server_setReaderGroupOperational(_server, _rg_id);
     if (status != UA_STATUSCODE_GOOD)
     {
-        ERROR_("Failed to set reader group operational, \"%s\"",
-               UA_StatusCode_name(status));
+        ERROR_("Failed to set reader group operational, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
 

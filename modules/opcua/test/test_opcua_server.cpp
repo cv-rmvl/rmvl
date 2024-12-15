@@ -64,16 +64,14 @@ TEST(OPC_UA_Server, add_data_source_variable_node)
 {
     int data_source{};
     rm::Server srv(4825, "TestServer");
-    uaCreateVariable(variable);
-
-    // Callback
-    auto on_read = [&](rm::ServerView, const rm::NodeId &) -> rm::Variable {
-        return data_source;
-    };
-    auto on_write = [&](rm::ServerView, const rm::NodeId &, const rm::Variable &val) {
+    rm::DataSourceVariable v;
+    v.browse_name = v.display_name = "test_int";
+    v.description = "this is test int";
+    v.on_read = [&](const rm::NodeId &) -> rm::Variable { return data_source; };
+    v.on_write = [&](const rm::NodeId &, const rm::Variable &val) {
         data_source = val.cast<int>();
     };
-    auto node = srv.addDataSourceVariableNode(variable, on_read, on_write);
+    auto node = srv.addDataSourceVariableNode(v);
     EXPECT_FALSE(node.empty());
     srv.spinOnce();
 }

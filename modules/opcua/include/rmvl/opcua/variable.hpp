@@ -12,6 +12,7 @@
 #pragma once
 
 #include <any>
+#include <functional>
 #include <memory>
 #include <utility>
 
@@ -299,8 +300,76 @@ private:
     rm::Variable val{__VA_ARGS__}; \
     val.browse_name = val.display_name = val.description = #val
 
-//! 变量列表
+//! 变量列表别名
 using Variables = std::vector<Variable>;
+
+/**
+ * @brief 数据源回调函数，Read 函数指针定义
+ *
+ * @param[in] nodeid 待读取的变量节点的 `NodeId`
+ * @return 向服务器提供的待读取的变量
+ */
+using DataSourceRead = std::function<Variable(const NodeId &)>;
+
+/**
+ * @brief 数据源回调函数，Write 函数指针定义
+ *
+ * @param[in] nodeid 待写入的变量节点的 `NodeId`
+ * @param[in] value 从服务器接收到的变量，一般用于写入外部数据
+ */
+using DataSourceWrite = std::function<void(const NodeId &, const Variable &)>;
+
+/**
+ * @brief OPC UA 数据源变量
+ * @note 数据源变量节点不同于变量节点的值回调
+ * @note
+ * - 值回调是在现有变量节点之上添加读取 **前** 和写入 **后** 的回调函数，本质上仍然是从服务器中获取数据
+ * @note
+ * - 数据源变量节点会把每次 IO 都绑定到各自的回调函数中，即可以重定向到一个实际的物理过程中，从而跟服务器本身的数据读写脱离关系
+ */
+struct RMVL_EXPORTS_W_AG DataSourceVariable
+{
+    //! 命名空间索引，默认为 `1`
+    RMVL_W_RW uint16_t ns{1U};
+
+    /**
+     * @brief 浏览名称 BrowseName
+     * @brief
+     * - 属于非服务器层面的 ID 号，可用于完成路径搜索
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称不能重复
+     */
+    RMVL_W_RW std::string browse_name{};
+
+    /**
+     * @brief 展示名称 DisplayName
+     * @brief
+     * - 在服务器上对外展示的名字 - `en-US`
+     * @brief
+     * - 同一个命名空间 `ns` 下该名称可以相同
+     */
+    RMVL_W_RW std::string display_name{};
+    //! 变量的描述
+    RMVL_W_RW std::string description{};
+    //! 访问性
+    RMVL_W_RW uint8_t access_level{};
+
+    /**
+     * @brief 数据源 Read 回调函数
+     *
+     * @param[in] nd `const rm::NodeId &` 类型节点 ID
+     * @return `rm::Variable`
+     */
+    RMVL_W_RW DataSourceRead on_read{};
+
+    /**
+     * @brief 数据源 Write 回调函数
+     *
+     * @param[in] nd `const rm::NodeId &` 类型节点 ID
+     * @param[in] value `const rm::Variable &` 类型变量
+     */
+    RMVL_W_RW DataSourceWrite on_write{};
+};
 
 //! @} opcua
 

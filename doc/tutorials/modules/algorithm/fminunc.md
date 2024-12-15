@@ -118,7 +118,7 @@ auto [x, fval] = rm::fminunc(quadratic, {0, 0});
 ```cpp
 #include <cstdio>
 
-#include <rmvl/numcal.hpp>
+#include <rmvl/algorithm/numcal.hpp>
 
 int main()
 {

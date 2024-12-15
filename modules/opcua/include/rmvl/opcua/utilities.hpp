@@ -32,6 +32,8 @@ namespace rm
                           UA_OPEN62541_VER_MINOR * 100 + \
                           UA_OPEN62541_VER_PATCH
 
+static_assert(OPCUA_VERSION >= 10400, "The version of open62541 must be greater than or equal to 1.4.0");
+
 //! @addtogroup opcua
 //! @{
 
