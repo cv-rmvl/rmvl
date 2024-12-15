@@ -37,11 +37,7 @@ Client::Client(std::string_view address, const UserConfig &usr)
 {
     UA_ClientConfig init_config{};
     // 修改日志
-#if OPCUA_VERSION < 10400
-    init_config.logger = UA_Log_Stdout_withLevel(loglvl_cli.at(para::opcua_param.CLIENT_LOGLEVEL));
-#else
     init_config.logging = UA_Log_Stdout_new(loglvl_cli.at(para::opcua_param.CLIENT_LOGLEVEL));
-#endif
     // 设置默认配置
     auto status = UA_ClientConfig_setDefault(&init_config);
     if (status != UA_STATUSCODE_GOOD)

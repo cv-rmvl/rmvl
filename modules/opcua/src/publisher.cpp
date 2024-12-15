@@ -14,9 +14,6 @@
 #ifdef UA_ENABLE_PUBSUB
 
 #include <open62541/plugin/log_stdout.h>
-#if OPCUA_VERSION < 10400
-#include <open62541/plugin/pubsub_udp.h>
-#endif
 #include <open62541/server_config_default.h>
 
 #ifdef UA_ENABLE_PUBSUB_MQTT
@@ -38,9 +35,6 @@ Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_
                      const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name)
 {
     //////////////////// 添加连接配置 ////////////////////
-#if OPCUA_VERSION < 10400
-    UA_ServerConfig_addPubSubTransportLayer(UA_Server_getConfig(_server), UA_PubSubTransportLayerUDPMP());
-#endif
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
@@ -50,13 +44,8 @@ Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(url_str))};
     UA_Variant_setScalar(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     // 用哈希值作为发布者 ID
-#if OPCUA_VERSION >= 10400
     connect_config.publisherIdType = UA_PUBLISHERIDTYPE_UINT16;
     connect_config.publisherId.uint16 = _strhash(_name + "Connection") % 0x4000u;
-#else
-    connect_config.publisherIdType = UA_PUBSUB_PUBLISHERID_NUMERIC;
-    connect_config.publisherId.numeric = _strhash(_name + "Connection") % 0x4000u;
-#endif
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD)
     {

@@ -55,6 +55,16 @@ static void configServer(rm::Server &srv)
     variable.description = "this is array";
     variable.display_name = "数组";
     srv.addVariableNode(variable);
+    // 添加数据源变量节点
+    static int dv_src{};
+    rm::DataSourceVariable dv;
+    dv.browse_name = "data_source";
+    dv.display_name = "this is data source";
+    dv.description = "单值（数据源）";
+    dv.access_level = rm::VARIABLE_READ | rm::VARIABLE_WRITE;
+    dv.on_read = [](const rm::NodeId &) -> rm::Variable { return dv_src; };
+    dv.on_write = [](const rm::NodeId &, const rm::Variable &val) { dv_src = val; };
+    srv.addDataSourceVariableNode(dv);
     // 添加加法方法节点
     rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &input) {
         int a = input[0], b = input[1];
@@ -70,7 +80,7 @@ static void configServer(rm::Server &srv)
 }
 
 // 路径搜索
-TEST(OPC_UA_ClientTest, read_variable)
+TEST(OPC_UA_ClientTest, path_search)
 {
     rm::Server srv(5000);
     configServer(srv);
@@ -206,6 +216,26 @@ TEST(OPC_UA_Client, timer_test)
     std::this_thread::sleep_for(60ms);
     cli.spinOnce();
     EXPECT_EQ(times, 2);
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
+}
+
+// 数据源变量读写
+TEST(OPC_UA_ClientTest, data_source_variable_IO)
+{
+    rm::Server srv(5006);
+    configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
+    rm::Client cli("opc.tcp://127.0.0.1:5006");
+    // 读取测试服务器上的变量值
+    auto id = cli.find("data_source");
+    EXPECT_TRUE(cli.write(id, 99));
+    rm::Variable variable = cli.read(id);
+    EXPECT_FALSE(variable.empty());
+    int single_value = variable;
+    EXPECT_EQ(single_value, 99);
 
     cli.shutdown();
     srv.shutdown();

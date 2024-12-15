@@ -13,7 +13,7 @@ RMVL 起源于 SRVL（SCUT Robotlab Vision Library——华南理工大学机器
 - **2.x** —— *2022.01* 发布<span style="color: green">（未开源）</span>，使用抽象工厂设计模式后出现了维护困难的情况，包括但不限于多个 @ref function_modules 共同组合，导致产生非常多的派生工厂，此版本针对这一弊端移除了原先所有的设计模式，各功能模块仅单独存在，不再另外设置组合或其他强依赖关系。此外， **2.x** 相较于 **1.x** 添加了全新的内容： @ref group 。
 - **3.x** —— *2022.08* 发布<span style="color: green">（未开源）</span>，架构、功能进一步完善。在开发上，添加了 CI-CD 自动化构建测试工具，使用 GoogleTest 为已有的组件、模块添加了单元测试，使用 benchmark 为部分功能添加了性能基准测试；在功能上，移除原先所有的 `group` 组件，重定义并完善了 `group` 组件所应当具备的功能，后续在此系列代码基础上，完成了 **RM2023 版整车状态估计** ；在使用上，顶层模块与视觉库完全分离，涉及到各个功能开启或关闭的逻辑功能将设置在顶层模块，这一部分内容由用户自行实现。此外，该版本完善了 CMake 的项目构建方式，并且可通过 `make install/uninstall` 完成编译安装、卸载。
 - **4.x** —— *2023.09* 发布<span style="color: green">（已开源）</span>，并登陆 [Github](https://github.com) 平台，更名 RMVL 以追求更加广泛的使用场景。并发布了 **RMVL 1.x** 系列版本，该系列彻底形成了面向对象迭代器设计模式与责任链设计模式相互结合的代码架构。 **4.x** 版本在设计之初主要为了简化数据组件的开发，移除了不属于 @ref data_components 管理的，但在 @ref function_modules 中被设置的信息。此外还为各个 @ref function_modules 加入了 `XxxInfo` 的信息类。该版本首次加入命名空间 `rm`，避免了与其他库命名冲突的情况。此外，该版本极大程度简化并统一了参数模块的定义方式，将原先繁琐的参数定义、加载的功能使用自定义的参数文件 `*.para` 以及一组 CMake 函数 `rmvl_generate_para` 自动完成 C++ 代码生成与文档注解生成，为了更进一步简化参数模块的设计，RMVL 提供了 Visual Studio Code 的插件，为 `*.para` 文件提供语法高亮、代码提示、悬浮提示与代码块，并为 RMVL 中的部分函数与宏提供了代码提示、悬浮提示与代码块。
-- **RMVL 2.x** —— *2024.09* 发布<span style="color: green">（已开源）</span>，在功能上，该系列首次加入了 Python 支持，可参考 @ref tutorials_python ，此外还为 Windows 用户提供了 MSVC 编译器的支持。在架构上，新增 @ref algorithm ，将原先 @ref core 中的各类算法迁移至该模块。
+- **RMVL 2.x** —— *2024.09* 发布<span style="color: green">（已开源）</span>，在功能上，该系列首次加入了 Python 支持，可参考 @ref tutorials_python ，此外还为 Windows 用户提供了 MSVC 编译器的支持，使用 CPack 工具，为 Windows，以及 Debian 系 Linux 发行版制作安装包。在架构上，新增 @ref algorithm ，将原先 @ref core 中的各类算法迁移至该模块。
 
 #### 使用对象与基本情况
 

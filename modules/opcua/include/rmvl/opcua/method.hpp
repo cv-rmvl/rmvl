@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <functional>
-
 #include "variable.hpp"
 
 namespace rm
