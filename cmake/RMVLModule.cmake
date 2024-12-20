@@ -265,10 +265,13 @@ macro(rmvl_add_world)
   target_include_directories(rmvl_world PUBLIC ${RMVL_WORLD_EXTRA_INCLUDES})
   foreach(m ${RMVL_MODULES_BUILD})
     target_include_directories(rmvl_world PUBLIC
-       $<BUILD_INTERFACE:${RMVL_MODULE_${m}_LOCATION}/include>
-       $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
+      $<BUILD_INTERFACE:${RMVL_MODULE_${m}_LOCATION}/include>
     )
   endforeach()
+  target_include_directories(
+    rmvl_world PUBLIC
+    $<INSTALL_INTERFACE:${RMVL_INCLUDE_INSTALL_PATH}>
+  )
   target_link_libraries(rmvl_world PUBLIC ${RMVL_WORLD_EXTRA_LINKS})
   set_target_properties(
     rmvl_world PROPERTIES

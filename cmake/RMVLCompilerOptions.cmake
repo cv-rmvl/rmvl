@@ -316,6 +316,9 @@ endmacro()
 
 # eigen3
 _rmvl_set_build_with_3rdparty(Eigen3 OFF)
+if(WITH_EIGEN3)
+  include_directories(${EIGEN3_INCLUDE_DIR})
+endif()
 
 # apriltag
 _rmvl_set_build_with_3rdparty(apriltag ON)
