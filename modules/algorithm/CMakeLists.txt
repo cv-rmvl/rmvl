@@ -4,10 +4,7 @@
 rmvl_generate_para(algorithm)
 
 if(WITH_OPENCV AND WITH_EIGEN3)
-  rmvl_add_module(algorithm
-    DEPENDS core
-    EXTRA_HEADER ${EIGEN3_INCLUDE_DIRS}
-  )
+  rmvl_add_module(algorithm DEPENDS core)
   rmvl_compile_definitions(algorithm PUBLIC HAVE_OPENCV)
 else()
   rmvl_add_module(algorithm DEPENDS core)
