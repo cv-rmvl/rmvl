@@ -183,7 +183,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
 
     std::string source_name;
     int aaa{};
-    cli.monitor(rm::nodeServer, {"SourceName", "aaa"}, [&](rm::ClientView, const rm::Variables &fields) {
+    cli.monitor({"SourceName", "aaa"}, [&](rm::ClientView, const rm::Variables &fields) {
         source_name = fields[0].cast<std::string>();
         aaa = fields[1];
     });
@@ -192,7 +192,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     event.source_name = "GtestServer";
     event.message = "this is test event";
     event["aaa"] = 66;
-    EXPECT_TRUE(srv.triggerEvent(rm::nodeServer, event));
+    EXPECT_TRUE(srv.triggerEvent(event));
     cli.spinOnce();
     EXPECT_EQ(source_name, "GtestServer");
     EXPECT_EQ(aaa, 66);

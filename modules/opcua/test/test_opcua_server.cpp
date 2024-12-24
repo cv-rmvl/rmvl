@@ -238,7 +238,7 @@ TEST(OPC_UA_Server, trigger_event)
     event.severity = 1;
     event["test_val1"] = 99;
     // 触发事件
-    EXPECT_TRUE(srv.triggerEvent(UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), event));
+    EXPECT_TRUE(srv.triggerEvent(event));
     srv.spinOnce();
 }
 

@@ -421,8 +421,8 @@ if(BUILD_TESTS)
   # Using gtests command
   include(GoogleTest)
   # Find GoogleTest
-  find_package(GTest)
   find_package(Threads)
+  find_package(GTest QUIET)
   if(NOT GTest_FOUND)
     # For Windows: Prevent overriding the parent project's compiler/linker settings
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

@@ -296,7 +296,7 @@ static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, voi
     on_event(client, datas);
 }
 
-bool Client::monitor(NodeId nd, const std::vector<std::string> &names, EventNotificationCallback on_event)
+bool Client::monitor(const std::vector<std::string> &names, EventNotificationCallback on_event)
 {
     RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
@@ -306,6 +306,8 @@ bool Client::monitor(NodeId nd, const std::vector<std::string> &names, EventNoti
 
     UA_MonitoredItemCreateRequest request_item;
     UA_MonitoredItemCreateRequest_init(&request_item);
+
+    auto nd = UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER);
     request_item.itemToMonitor.nodeId = nd;
     request_item.itemToMonitor.attributeId = UA_ATTRIBUTEID_EVENTNOTIFIER;
     request_item.monitoringMode = UA_MONITORINGMODE_REPORTING;

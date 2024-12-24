@@ -256,12 +256,11 @@ public:
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
      *
-     * @param[in] nd 待监视节点的 `NodeId`
      * @param[in] names 关注的事件属性名列表，参考 Event::data()
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
-    RMVL_W bool monitor(NodeId nd, const std::vector<std::string> &names, EventNotificationCallback on_event);
+    RMVL_W bool monitor(const std::vector<std::string> &names, EventNotificationCallback on_event);
 
     /**
      * @brief 移除监视项
