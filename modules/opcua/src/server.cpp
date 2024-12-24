@@ -153,7 +153,7 @@ static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &v
     return status == UA_STATUSCODE_GOOD;
 }
 
-static bool serverTriggerEvent(UA_Server *server, const NodeId &nd, const Event &event)
+static bool serverTriggerEvent(UA_Server *server, const Event &event)
 {
     RMVL_DbgAssert(server != nullptr);
 
@@ -191,7 +191,7 @@ static bool serverTriggerEvent(UA_Server *server, const NodeId &nd, const Event 
     }
 
     // 触发事件
-    status = UA_Server_triggerEvent(server, event_id, nd, nullptr, true);
+    status = UA_Server_triggerEvent(server, event_id, UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), nullptr, true);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
@@ -655,14 +655,14 @@ NodeId Server::addEventTypeNode(const EventType &etype)
     return retval;
 }
 
-bool Server::triggerEvent(const NodeId &nd, const Event &event) const { return serverTriggerEvent(_server, nd, event); }
+bool Server::triggerEvent(const Event &event) const { return serverTriggerEvent(_server, event); }
 
 //////////////////////// 服务端视图 ////////////////////////
 
 NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return serverFindNode(_server, browse_path, src_nd); }
 Variable ServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
 bool ServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
-bool ServerView::triggerEvent(const NodeId &nd, const Event &event) const { return serverTriggerEvent(_server, nd, event); }
+bool ServerView::triggerEvent(const Event &event) const { return serverTriggerEvent(_server, event); }
 
 /////////////////////// 服务器定时器 ///////////////////////
 

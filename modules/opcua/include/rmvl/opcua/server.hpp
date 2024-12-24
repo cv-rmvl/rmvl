@@ -96,11 +96,10 @@ public:
     /**
      * @brief 创建并触发事件
      *
-     * @param[in] nd 触发事件的节点 `NodeId`
      * @param[in] event `rm::Event` 表示的事件
      * @return 是否创建并触发成功？
      */
-    RMVL_W bool triggerEvent(const NodeId &nd, const Event &event) const;
+    RMVL_W bool triggerEvent(const Event &event) const;
 
 private:
     UA_Server *_server{nullptr}; //!< OPC UA 服务器指针
@@ -330,11 +329,10 @@ public:
     /**
      * @brief 创建并触发事件
      *
-     * @param[in] nd 触发事件的节点 `NodeId`
      * @param[in] event `rm::Event` 表示的事件
      * @return 是否创建并触发成功？
      */
-    RMVL_W bool triggerEvent(const NodeId &nd, const Event &event) const;
+    RMVL_W bool triggerEvent(const Event &event) const;
 
 protected:
     UA_Server *_server;          //!< OPC UA 服务器指针
