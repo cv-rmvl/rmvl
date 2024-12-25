@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+#include <rmvl/core/str.hpp>
+
 #include <rmvl/light/hik_light_control.h>
 #include <rmvlpara/light/hik_light_control.h>
 
@@ -40,23 +42,6 @@ static void cmd_help()
 static void warning()
 {
     std::cout << "\033[33mWarning: The command is invalid.\033[0m\n";
-}
-
-static std::vector<std::string> split(std::string_view str, char delim)
-{
-    std::vector<std::string> res;
-    if (str.empty())
-        return res;
-    std::string::size_type start = str.find_first_not_of(delim);
-    std::string::size_type index = str.find(delim, start);
-    while (index != std::string::npos)
-    {
-        res.emplace_back(str.substr(start, index - start));
-        start = str.find_first_not_of(delim, index);
-        index = str.find(delim, start);
-    }
-    res.emplace_back(str.substr(start));
-    return res;
 }
 
 static void parametersCtl(std::vector<std::string> &cmds)
@@ -179,7 +164,7 @@ int main(int argc, char *argv[])
         std::cout << ">>> ";
         std::string cmd{};
         std::getline(std::cin, cmd);
-        auto cmds = split(cmd, ' ');
+        auto cmds = rm::str::split(cmd, " ");
         if (cmds.empty())
             continue;
         // Parameters control

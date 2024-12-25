@@ -71,7 +71,7 @@ public:
      */
     RMVL_W inline cv::Point2f corner(int idx) const { return _corners[idx]; }
     //! 获取组合体相机外参
-    RMVL_W inline const CameraExtrinsics extrinsic() const { return _extrinsic; }
+    RMVL_W inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
     //! 获取组合体类型
     RMVL_W inline RMStatus type() const { return _type; }
     //! 获取捕获该组合体的时间点

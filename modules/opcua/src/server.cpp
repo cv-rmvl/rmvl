@@ -15,6 +15,7 @@
 #include <open62541/plugin/log_stdout.h>
 #include <open62541/server_config_default.h>
 
+#include "rmvl/core/str.hpp"
 #include "rmvl/opcua/server.hpp"
 #include "rmvlpara/opcua.hpp"
 
@@ -113,7 +114,7 @@ static NodeId serverFindNode(UA_Server *p_server, std::string_view browse_path, 
 {
     RMVL_DbgAssert(p_server != nullptr);
 
-    auto paths = helper::split(browse_path, '/');
+    auto paths = str::split(browse_path, "/");
     if (paths.empty())
         return src_nd;
     ServerView sv{p_server};

@@ -526,23 +526,6 @@ UA_Argument cvtArgument(const Argument &arg) noexcept
     return argument;
 }
 
-std::vector<std::string> split(std::string_view str, char delim)
-{
-    std::vector<std::string> res;
-    if (str.empty())
-        return res;
-    std::string::size_type start{};
-    std::string::size_type index = str.find(delim, start);
-    while (index != std::string::npos)
-    {
-        res.emplace_back(str.substr(start, index - start));
-        start = index + 1;
-        index = str.find(delim, start);
-    }
-    res.emplace_back(str.substr(start));
-    return res;
-}
-
 } // namespace helper
 
 } // namespace rm

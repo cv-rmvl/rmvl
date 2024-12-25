@@ -11,7 +11,19 @@
 
 #pragma once
 
-//! @defgroup core RMVL 核心模块
+/**
+ * @defgroup core RMVL 核心模块
+ * @{
+ * @brief 涵盖了有关异常处理、定时器、编程工具等相关内容
+ * @details
+ * - 异常处理可参考 rm::Exception 类，提供了异常处理的相关函数
+ * - 定时器可参考 rm::Timer 类
+ * - 编程工具包括了 @ref core_reflect 、 @ref core_meta 、@ref core_str 和 @ref core_io 等
+ * @defgroup core_reflect 聚合体编译期反射
+ * @defgroup core_meta 元编程
+ * @defgroup core_str Python 风格的字符串处理
+ * @} core
+ */
 
 /**
  * @defgroup para 参数模块
