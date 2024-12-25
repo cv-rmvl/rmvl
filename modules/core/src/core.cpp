@@ -10,9 +10,12 @@
  */
 
 #include <cstdarg>
-#include <cstring>
 
 #include "rmvl/core/util.hpp"
+#include "rmvl/core/str.hpp"
+
+namespace rm
+{
 
 static constexpr const char *rmvlErrorStr(int status)
 {
@@ -51,9 +54,9 @@ static constexpr const char *rmvlErrorStr(int status)
     }
 }
 
-std::string rm::format(const char *fmt, ...)
+std::string format(const char *fmt, ...)
 {
-    char buf[1024];
+    char buf[1024]{};
     va_list args;
     va_start(args, fmt);
 #ifdef _WIN32
@@ -66,22 +69,22 @@ std::string rm::format(const char *fmt, ...)
     return str;
 }
 
-rm::Exception::Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line)
+Exception::Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line)
     : code(_code), err(_err), func(_func), file(_file), line(_line)
 {
     if (!func.empty())
-        msg = rm::format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
-                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                         file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
+        msg = format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
+                     ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                     file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
     else
-        msg = rm::format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
-                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                         file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
+        msg = format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
+                     ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                     file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
 }
 
-void rm::error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
+void error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
 {
-    rm::Exception exc(_code, _err, _func, _file, _line);
+    Exception exc(_code, _err, _func, _file, _line);
 
     RMVL_ERRHANDLE(exc);
 
@@ -94,10 +97,45 @@ void rm::error(int _code, std::string_view _err, const char *_func, const char *
 #endif // _GNUC_
 }
 
-const char *rm::getBuildInformation()
+const char *getBuildInformation()
 {
     static const char *build_info =
 #include "version_string.inc"
         ;
     return build_info;
 }
+
+namespace str
+{
+
+std::vector<std::string> split(std::string_view str, std::string_view delim)
+{
+    std::vector<std::string> res;
+    if (str.empty())
+        return res;
+    std::string::size_type start = str.find_first_not_of(delim);
+    std::string::size_type index = str.find(delim, start);
+    while (index != std::string::npos)
+    {
+        res.emplace_back(str.substr(start, index - start));
+        start = str.find_first_not_of(delim, index);
+        index = str.find(delim, start);
+    }
+    res.emplace_back(str.substr(start));
+    return res;
+}
+
+std::string join(const std::vector<std::string> &strs, std::string_view delim)
+{
+    std::string res;
+    if (strs.empty())
+        return res;
+    for (const auto &str : strs)
+        res += str + delim.data();
+    res.pop_back();
+    return res;
+}
+
+} // namespace str
+
+} // namespace rm

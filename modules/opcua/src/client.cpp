@@ -15,6 +15,7 @@
 #include <open62541/plugin/log_stdout.h>
 
 #include "rmvl/opcua/client.hpp"
+#include "rmvl/core/str.hpp"
 #include "rmvlpara/opcua.hpp"
 
 #include "cvt.hpp"
@@ -112,7 +113,7 @@ static NodeId clientFindNode(UA_Client *p_cli, std::string_view browse_path, con
 {
     RMVL_DbgAssert(p_cli != nullptr);
 
-    auto paths = helper::split(browse_path, '/');
+    auto paths = str::split(browse_path, "/");
     if (paths.empty())
         return src_nd;
     ClientView cv{p_cli};

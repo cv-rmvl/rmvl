@@ -47,46 +47,45 @@ public:
     /**
      * @brief 构造 OPC UA 节点 ID
      *
-     * @param[in] ns 命名空间
-     * @param[in] id 节点号
+     * @param[in] ns_ 命名空间
+     * @param[in] id_ 节点号
      */
-    RMVL_W constexpr NodeId(uint16_t ns, uint32_t id) : _ns{ns}, _id{id} {}
+    RMVL_W constexpr NodeId(uint16_t ns_, uint32_t id_) : ns{ns_}, id{id_} {}
 
     /**
      * @brief 构造 OPC UA 节点 ID
      *
      * @param[in] nd 使用 `UA_NodeId` 表示的节点 ID
      */
-    NodeId(const UA_NodeId &nd) : _ns{nd.namespaceIndex}, _id{nd.identifier.numeric} {}
+    NodeId(const UA_NodeId &nd) : ns{nd.namespaceIndex}, id{nd.identifier.numeric} {}
 
-    NodeId(const NodeId &nd) : _id(nd._id) {}
-    NodeId(NodeId &&nd) noexcept : _id(nd._id) {}
+    NodeId(const NodeId &nd) : id(nd.id) {}
+    NodeId(NodeId &&nd) noexcept : id(nd.id) {}
 
-    inline void operator=(const NodeId &nd) { _ns = nd._ns, _id = nd._id; }
-    inline void operator=(NodeId &&nd) noexcept { _ns = nd._ns, _id = nd._id; }
+    inline void operator=(const NodeId &nd) { ns = nd.ns, id = nd.id; }
+    inline void operator=(NodeId &&nd) noexcept { ns = nd.ns, id = nd.id; }
 
-    RMVL_W inline bool operator==(const NodeId &nd) const { return _ns == nd._ns && _id == nd._id; }
+    RMVL_W inline bool operator==(const NodeId &nd) const { return ns == nd.ns && id == nd.id; }
     RMVL_W inline bool operator!=(const NodeId &nd) const { return !(*this == nd); }
 
     //! 到 `UA_NodeId` 的转换
-    constexpr operator UA_NodeId() const { return UA_NodeId{_ns, UA_NODEIDTYPE_NUMERIC, _id}; }
+    constexpr operator UA_NodeId() const { return UA_NodeId{ns, UA_NODEIDTYPE_NUMERIC, id}; }
 
     //! 获取节点 ID
-    inline UA_NodeId data() const { return UA_NodeId{_ns, UA_NODEIDTYPE_NUMERIC, _id}; }
+    inline UA_NodeId data() const { return UA_NodeId{ns, UA_NODEIDTYPE_NUMERIC, id}; }
 
     /**
      * @brief 判断节点 ID 是否为空
      *
      * @return 是否为空
      */
-    RMVL_W inline bool empty() const { return _ns == 0 && _id == 0; }
+    RMVL_W inline bool empty() const { return ns == 0 && id == 0; }
 
     //! 清空节点 ID
-    RMVL_W inline void clear() { _ns = 0, _id = 0; }
+    RMVL_W inline void clear() { ns = 0, id = 0; }
 
-private:
-    uint16_t _ns{}; //!< 命名空间
-    uint32_t _id{}; //!< 节点号
+    RMVL_W_RW uint16_t ns{}; //!< 命名空间
+    RMVL_W_RW uint32_t id{}; //!< 节点号
 };
 
 //! OPC UA 数据类型
@@ -212,15 +211,6 @@ inline constexpr char *zh_CN() { return const_cast<char *>("zh-CN"); }
 inline constexpr char *en_US() { return const_cast<char *>("en-US"); }
 //! 转为 `char *`
 inline char *to_char(std::string_view str) { return const_cast<char *>(str.data()); }
-
-/**
- * @brief 字符串分割
- *
- * @param[in] str 待分割字符串
- * @param[in] delim 分割符
- * @return 分割后的字符串列表
- */
-std::vector<std::string> split(std::string_view str, char delim);
 
 } // namespace helper
 

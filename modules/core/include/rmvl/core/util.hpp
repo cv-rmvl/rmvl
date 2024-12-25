@@ -299,7 +299,7 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 
 } // namespace helper
 
-//! @addtogroup core
+//! @addtogroup core_reflect
 //! @{
 
 /**
@@ -488,11 +488,11 @@ inline bool equal(const Tp &lhs, const Tp &rhs)
     }
 }
 
-//! @} core
+//! @} core_reflect
 
 } // namespace reflect
 
-//! @addtogroup core
+//! @addtogroup core_meta
 //! @{
 
 /**
@@ -544,6 +544,6 @@ struct hash_traits<Tp, std::enable_if_t<std::is_aggregate_v<Tp>>>
     using hash_func = hash_aggregate<Tp>;
 };
 
-//! @} core
+//! @} core_meta
 
 } // namespace rm
