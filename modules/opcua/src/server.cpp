@@ -372,14 +372,14 @@ NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId p
     return retval;
 }
 
-static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *object_id,
+static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *,
                                void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
 {
     auto &on_method = *reinterpret_cast<MethodCallback *>(context);
     std::vector<Variable> iargs(input_size);
     for (size_t i = 0; i < input_size; ++i)
         iargs[i] = helper::cvtVariable(input[i]);
-    auto [res, oargs] = on_method(server, *object_id, iargs);
+    auto [res, oargs] = on_method(server, iargs);
     if (!res)
         return UA_STATUSCODE_BADINTERNALERROR;
     else

@@ -36,13 +36,12 @@ struct RMVL_EXPORTS_W_AG Argument final
 /**
  * @brief OPC UA 方法回调函数
  *
- * @param[in] server_view 服务器视图，指代当前服务器
- * @param[in] obj_id 方法节点所在对象的 `NodeId`
+ * @param[in] sv 服务器视图，指代当前服务器
  * @param[in] iargs 输入参数列表
  * @retval res, oargs
  * @return 是否成功完成当前操作，以及输出参数列表
  */
-using MethodCallback = std::function<std::pair<bool, std::vector<Variable>>(ServerView, const NodeId &, const std::vector<Variable> &)>;
+using MethodCallback = std::function<std::pair<bool, std::vector<Variable>>(ServerView, const std::vector<Variable> &)>;
 
 //! OPC UA 方法
 class RMVL_EXPORTS_W Method final

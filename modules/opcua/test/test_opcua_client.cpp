@@ -66,7 +66,7 @@ static void configServer(rm::Server &srv)
     dv.on_write = [](const rm::NodeId &, const rm::Variable &val) { dv_src = val; };
     srv.addDataSourceVariableNode(dv);
     // 添加加法方法节点
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &input) {
+    rm::Method method = [](rm::ServerView, const rm::Variables &input) {
         int a = input[0], b = input[1];
         rm::Variables output = {a + b};
         return std::make_pair(true, output);
