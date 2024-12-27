@@ -108,8 +108,8 @@ private:
 /**
  * @brief 值回调函数，Read 可调用对象定义
  *
- * @param[in] server_view OPC UA 服务器视图，指代当前服务器
- * @param[in] node_id 待读取的变量节点的 `NodeId`
+ * @param[in] sv OPC UA 服务器视图，指代当前服务器
+ * @param[in] nd 待读取的变量节点的 `NodeId`
  * @param[in] value 服务器读取到的变量
  */
 using ValueCallbackBeforeRead = std::function<void(ServerView, const NodeId &, const Variable &)>;
@@ -117,8 +117,8 @@ using ValueCallbackBeforeRead = std::function<void(ServerView, const NodeId &, c
 /**
  * @brief 值回调函数，Write 可调用对象定义
  *
- * @param[in] server_view OPC UA 服务器视图，指代当前服务器
- * @param[in] nodeid 待写入的变量节点的 `NodeId`
+ * @param[in] sv OPC UA 服务器视图，指代当前服务器
+ * @param[in] nd 待写入的变量节点的 `NodeId`
  * @param[in] data 服务器写入的变量
  */
 using ValueCallbackAfterWrite = std::function<void(ServerView, const NodeId &, const Variable &)>;

@@ -88,7 +88,7 @@ int main()
     value_2.browse_name = "value_2";
 
     std::string last_call = "-- None --";
-    Method add = [&](ServerView, const NodeId &, const Variables &iargs) -> std::pair<bool, Variables> {
+    Method add = [&](ServerView, const Variables &iargs) -> std::pair<bool, Variables> {
         int num1 = iargs[0], num2 = iargs[1];
         int res = num1 + num2;
         last_call = "Result: " + std::to_string(res);

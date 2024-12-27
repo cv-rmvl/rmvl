@@ -306,7 +306,7 @@ using Variables = std::vector<Variable>;
 /**
  * @brief 数据源回调函数，Read 函数指针定义
  *
- * @param[in] nodeid 待读取的变量节点的 `NodeId`
+ * @param[in] nd 待读取的变量节点的 `NodeId`
  * @return 向服务器提供的待读取的变量
  */
 using DataSourceRead = std::function<Variable(const NodeId &)>;
@@ -314,7 +314,7 @@ using DataSourceRead = std::function<Variable(const NodeId &)>;
 /**
  * @brief 数据源回调函数，Write 函数指针定义
  *
- * @param[in] nodeid 待写入的变量节点的 `NodeId`
+ * @param[in] nd 待写入的变量节点的 `NodeId`
  * @param[in] value 从服务器接收到的变量，一般用于写入外部数据
  */
 using DataSourceWrite = std::function<void(const NodeId &, const Variable &)>;

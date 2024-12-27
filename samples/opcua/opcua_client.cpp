@@ -11,7 +11,41 @@
 
 using namespace rm;
 
-#ifndef _WIN32
+enum class Direction
+{
+    UP = 1,
+    DOWN = 2,
+    LEFT = 3,
+    RIGHT = 4,
+    ENTER = 0,
+    OTHER = -1
+};
+
+#ifdef _WIN32
+//! 获取方向
+Direction get_direction()
+{
+    int ch = _getch();
+    if (ch == 0xE0)
+    {
+        ch = _getch();
+        switch (ch)
+        {
+        case 72:
+            return Direction::UP;
+        case 80:
+            return Direction::DOWN;
+        case 75:
+            return Direction::LEFT;
+        case 77:
+            return Direction::RIGHT;
+        }
+    }
+    else if (ch == '\r' || ch == '\n')
+        return Direction::ENTER;
+    return Direction::OTHER;
+}
+#else
 // 设置终端为非阻塞模式
 void setNonBlocking(bool enable)
 {
@@ -41,6 +75,30 @@ char _getch()
     setNonBlocking(false);
     return buf;
 }
+
+//! 获取方向
+Direction get_direction()
+{
+    char ch = _getch();
+    if (ch == '\033')
+    {
+        _getch(); // 跳过 '['
+        switch (_getch())
+        {
+        case 'A':
+            return Direction::UP;
+        case 'B':
+            return Direction::DOWN;
+        case 'C':
+            return Direction::RIGHT;
+        case 'D':
+            return Direction::LEFT;
+        }
+    }
+    else if (ch == '\r' || ch == '\n')
+        return Direction::ENTER;
+    return Direction::OTHER;
+}
 #endif
 
 //! 清屏
@@ -58,21 +116,17 @@ static void clear_sreen()
     }
 }
 
-//! 清除提示
-static void clear_tips() { std::cout << "\033[1;18H\033[K\033[2;18H\033[K\033[3;18H\033[K\033[4;18H\033[K" << std::flush; }
-
 //! 清除标记
 static void clear_mark()
 {
-    std::cout << "\033[1;3H0\033[2;3H1\033[3;3H2\033[4;3Hq"
-                 "\033[0m\033[1;14H   \033[2;14H   \033[3;14H   \033[4;14H   "
-              << std::flush;
+    printf("\033[1;3H0\033[2;3H1\033[3;3H2\033[4;3Hq\033[0m\033[1;14H%*s\033[2;14H%*s\033[3;14H%*s\033[4;14H%*s",
+           13, " ", 13, " ", 13, " ", 13, " ");
+    fflush(stdout);
 }
 
 //! 查找节点，并标记
 static rm::NodeId find_node_and_mark(Client &cli, int id)
 {
-    clear_tips();
     constexpr const char *names[] = {"value_1", "value_2", "add"};
     std::cout << "\033[" << id + 1 << ";14H\033[1;5;33m<--\033[0m" << std::flush;
     return cli.find(names[id]);
@@ -82,48 +136,62 @@ static rm::NodeId find_node_and_mark(Client &cli, int id)
 static std::string tips_op()
 {
     std::cout << "\033[1;3H\033[33m0\033[2;3H1\033[3;3H2\033[4;3Hq\033[0m"
-                 "\033[1;31H\033[K┌───────────────────┐"
-                 "\033[2;31H\033[K│   Input the ID:   │"
-                 "\033[3;31H\033[K│ -->               │"
-                 "\033[4;31H\033[K└───────────────────┘"
-                 "\033[3;37H"
+                 "\033[1;26H\033[K┌───────────────────────┐"
+                 "\033[2;26H\033[K│     Input the ID:     │"
+                 "\033[3;26H\033[K│                       │"
+                 "\033[4;26H\033[K└───────────────────────┘"
               << std::flush;
+    constexpr const char *choice_map[4] = {"0", "1", "2", "q"};
+    uint8_t choice_idx{};
+    Direction ch{Direction::OTHER};
+    while (true)
+    {
+        if (choice_idx == 0)
+            std::cout << "\033[3;28H\033[3;4;33m'0'\033[0m   '1'   '2'   'q'\033[5;1H" << std::flush;
+        else if (choice_idx == 1)
+            std::cout << "\033[3;28H'0'   \033[3;4;33m'1'\033[0m   '2'   'q'\033[5;1H" << std::flush;
+        else if (choice_idx == 2)
+            std::cout << "\033[3;28H'0'   '1'   \033[3;4;33m'2'\033[0m   'q'\033[5;1H" << std::flush;
+        else
+            std::cout << "\033[3;28H'0'   '1'   '2'   \033[3;4;33m'q'\033[0m\033[5;1H" << std::flush;
 
-    std::string num{};
-    std::cin >> num;
+        ch = get_direction();
+        if (ch == Direction::RIGHT)
+            choice_idx = (choice_idx + 1) % 4;
+        else if (ch == Direction::LEFT)
+            choice_idx = (choice_idx + 3) % 4;
+        else if (ch == Direction::ENTER)
+            break;
+    }
     clear_mark();
-    return num;
+    return choice_map[choice_idx];
 }
 
 //! 提示输入读 or 写
-static std::string tips_rw()
+static int tips_rw()
 {
-    std::cout << "\033[1;18H┌──────────┐"
-                 "\033[2;18H│ \033[33m0\033[0m: Read  │"
-                 "\033[3;18H│ \033[33m1\033[0m: Write │"
-                 "\033[4;18H└──────────┘"
-                 "\033[1;31H┌───────────────────┐"
-                 "\033[2;31H│ Input the number: │"
-                 "\033[3;31H│ -->               │"
-                 "\033[4;31H└───────────────────┘"
-                 "\033[3;37H"
+    std::cout << "\033[1;26H┌───────────────────────┐"
+                 "\033[2;26H│ Select the operation: │"
+                 "\033[3;26H│    Read      Write    │"
+                 "\033[4;26H└───────────────────────┘"
               << std::flush;
-    std::string val{};
-    std::cin >> val;
-    clear_tips();
-    return val;
-}
+    uint8_t choice_idx{};
+    auto ch{Direction::OTHER};
+    while (true)
+    {
+        if (choice_idx == 0)
+            std::cout << "\033[3;31H\033[3;4;33mRead\033[0m      Write\033[5;1H" << std::flush;
+        else
+            std::cout << "\033[3;31HRead      \033[3;4;33mWrite\033[0m\033[5;1H" << std::flush;
 
-//! 提示错误
-static void warning()
-{
-    clear_mark();
-    std::cout << "\033[31m"
-                 "\033[1;18H┌─────────┐"
-                 "\033[2;18H│ Invalid │"
-                 "\033[3;18H│  Input  │"
-                 "\033[4;18H└─────────┘\033[0m"
-              << std::flush;
+        ch = get_direction();
+        if (ch == Direction::ENTER)
+            break;
+        else if (ch != Direction::OTHER)
+            choice_idx = !choice_idx;
+    }
+
+    return choice_idx;
 }
 
 //! 提示输入写入值
@@ -132,11 +200,11 @@ static Tp tips_val(int id)
 {
     std::cout << "\033[" << id + 1
               << ";18H\033[1;5;33mWrite\033[0m"
-                 "\033[1;31H┌───────────────────┐"
-                 "\033[2;31H│ Input the value:  │"
-                 "\033[3;31H│ -->               │"
-                 "\033[4;31H└───────────────────┘"
-                 "\033[3;37H"
+                 "\033[1;26H┌───────────────────────┐"
+                 "\033[2;26H│    Input the value    │"
+                 "\033[3;26H│ -->                   │"
+                 "\033[4;26H└───────────────────────┘"
+                 "\033[3;32H"
               << std::flush;
     Tp val{};
     std::cin >> val;
@@ -146,12 +214,12 @@ static Tp tips_val(int id)
 //! 提示输入参数
 static int tips_arg(std::string_view str)
 {
-    std::cout << "\033[1;31H┌─ Calculate the sum of 2 numbers ─┐"
-                 "\033[2;31H│                                  │"
-                 "\033[3;31H│ -->                              │"
-                 "\033[4;31H└──────────────────────────────────┘"
-                 "\033[2;33H"
-              << "Input the \033[33m" << str << "\033[0m argument (int): " << "\033[3;37H"
+    std::cout << "\033[1;26H┌─ Calculate the sum of 2 numbers ─┐"
+                 "\033[2;26H│                                  │"
+                 "\033[3;26H│ -->                              │"
+                 "\033[4;26H└──────────────────────────────────┘"
+                 "\033[2;28H"
+              << "Input the \033[33m" << str << "\033[0m argument (int): " << "\033[3;32H"
               << std::flush;
     int val{};
     std::cin >> val;
@@ -162,7 +230,8 @@ static int tips_arg(std::string_view str)
 template <typename Tp>
 static void show_value(int id, Tp val)
 {
-    std::cout << "\033[" << id + 1 << ";14H\033[1;32m<--\033[0m \033[32mValue: " << val << "\033[0m" << std::flush;
+    clear_mark();
+    std::cout << "\033[" << id + 1 << ";14H\033[1;32m<--\033[0m \033[32m" << val << "\033[0m" << std::flush;
 }
 
 //! 询问是否退出
@@ -177,45 +246,21 @@ static bool ask_exit()
                  "\033[7;24H └────────────────────────────────────────┘"
               << std::flush;
     int choice{}; // 0: Yes, 1: No
-    char ch{};
+    Direction ch{Direction::OTHER};
     while (true)
     {
-        // 显示当前选择
         if (choice == 0)
             std::cout << "\033[5;35H\033[3;4;33mYes\033[0m                 No\033[5;1H" << std::flush;
         else
             std::cout << "\033[5;35HYes                 \033[3;4;33mNo\033[0m\033[5;1H" << std::flush;
 
-        // 获取用户输入
-        ch = _getch();
-
-        // 根据用户输入更新选择
-        if (ch == '\033')
-        {
-            // 如果是转义序列
-            _getch(); // 跳过 '['
-            switch (_getch())
-            {
-            case 'A':
-            case 'B':
-            case 'C':
-            case 'D':
-                choice = !choice;
-                break;
-            }
-        }
-        else if (ch == '\r' || ch == '\n')
+        ch = get_direction();
+        if (ch == Direction::ENTER)
             break;
+        else if (ch != Direction::OTHER)
+            choice = !choice;
     }
-    std::cout << "\033[1;24H\033[K"
-                 "\033[2;24H\033[K"
-                 "\033[3;24H\033[K"
-                 "\033[4;24H\033[K"
-                 "\033[5;24H\033[K"
-                 "\033[6;24H\033[K"
-                 "\033[7;24H\033[K"
-              << std::flush;
-
+    std::cout << "\033[1;24H\033[K\033[2;24H\033[K\033[3;24H\033[K\033[4;24H\033[K\033[5;24H\033[K\033[6;24H\033[K\033[7;24H\033[K" << std::flush;
     return choice == 0;
 }
 
@@ -232,38 +277,34 @@ int main()
         if (num == "0")
         {
             auto nd = find_node_and_mark(cli, 0);
-            std::string val = tips_rw();
-            if (val == "0")
+            int rw = tips_rw();
+            if (rw == 0)
             {
                 int val = cli.read(nd);
                 show_value(0, val);
             }
-            else if (val == "1")
+            else
             {
                 int val = tips_val<int>(0);
                 cli.write(nd, val);
                 show_value(0, val);
             }
-            else
-                warning();
         }
         else if (num == "1")
         {
             auto nd = find_node_and_mark(cli, 1);
-            std::string val = tips_rw();
-            if (val == "0")
+            int rw = tips_rw();
+            if (rw == 0)
             {
                 double val = cli.read(nd);
                 show_value(1, val);
             }
-            else if (val == "1")
+            else
             {
                 double val = tips_val<double>(1);
                 cli.write(nd, val);
                 show_value(1, val);
             }
-            else
-                warning();
         }
         else if (num == "2")
         {
@@ -276,7 +317,7 @@ int main()
             else
                 std::cout << "\033[3;14H\033[31m\u2716\033[0m" << std::flush;
         }
-        else if (num == "q")
+        else
         {
             if (ask_exit())
             {
@@ -284,8 +325,6 @@ int main()
                 break;
             }
         }
-        else
-            warning();
     }
 
     return 0;

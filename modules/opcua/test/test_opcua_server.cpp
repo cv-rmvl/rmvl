@@ -93,7 +93,7 @@ TEST(OPC_UA_Server, add_variable_type_node)
 TEST(OPC_UA_Server, add_method_node)
 {
     rm::Server srv(4832);
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
+    rm::Method method = [](rm::ServerView, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
     method.browse_name = "test_method";
     method.description = "this is test method";
     method.display_name = "测试方法";
@@ -136,7 +136,7 @@ TEST(OPC_UA_Server, add_object_node_with_method)
     method.browse_name = "test_method";
     method.description = "this is test method";
     method.display_name = "测试方法";
-    method.func = [](rm::ServerView, const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
+    method.func = [](rm::ServerView, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
     object.add(method);
     auto id = srv.addObjectNode(object);
     EXPECT_FALSE(id.empty());
