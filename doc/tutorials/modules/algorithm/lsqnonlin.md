@@ -140,7 +140,7 @@ if len(datas) == 20:
 ```cpp
 rm::FuncNds lsq_sine(datas.size());
 for (std::size_t i = 0; i < datas.size(); ++i)
-    lsq_sine.push_back([=](const std::vector<double> &x) {
+    lsq_sine.push_back([=](const std::valarray<double> &x) {
         return x[0] * std::sin(x[1] * i + x[2]) + x[3] - datas[i];
     });
 

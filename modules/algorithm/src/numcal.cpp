@@ -153,8 +153,8 @@ double NonlinearSolver::operator()(double x0, double eps, std::size_t max_iter) 
 }
 
 RungeKutta::RungeKutta(
-    const Odes &fs, const std::vector<double> &p,
-    const std::vector<double> &lam, const std::vector<std::vector<double>> &r)
+    const Odes &fs, const std::valarray<double> &p,
+    const std::valarray<double> &lam, const std::valarray<std::valarray<double>> &r)
     : _ks(p.size()), _fs(fs), _p(p), _lambda(lam), _r(r)
 {
     // Initialize "ks"
@@ -179,15 +179,15 @@ RungeKutta::RungeKutta(
  * @param[in out] x 初始位置的因变量
  * @param[in out] ks 加权平均系数 k
  */
-static inline void calcRK(const std::vector<std::vector<double>> &r, const std::vector<double> &p,
-                          const std::vector<double> &lambda, const Odes &fs, const double h,
-                          double &t, std::vector<double> &x, std::vector<std::vector<double>> &ks)
+static inline void calcRK(const std::valarray<std::valarray<double>> &r, const std::valarray<double> &p,
+                          const std::valarray<double> &lambda, const Odes &fs, const double h,
+                          double &t, std::valarray<double> &x, std::vector<std::valarray<double>> &ks)
 {
     // 依次计算每个加权平均系数 k_i
     for (std::size_t i = 0; i < ks.size(); i++)
     {
         // 计算 (a_i, k)
-        std::vector<double> inner_prod(fs.size());
+        std::valarray<double> inner_prod(fs.size());
         for (std::size_t n = 0; n < i; n++)
             inner_prod += r[i][n] * ks[n]; // \sum_r^i a_{ir}k_r
         // 计算 F
@@ -205,30 +205,31 @@ static inline void calcRK(const std::vector<std::vector<double>> &r, const std::
     }
 }
 
-std::vector<std::vector<double>> RungeKutta::solve(double h, std::size_t n)
+std::vector<std::valarray<double>> RungeKutta::solve(double h, std::size_t n)
 {
-    if (_x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "The initial value must be set.");
+    if (_x0.size() != _fs.size())
+        RMVL_Error(RMVL_StsBadArg, "The initial value must be equal to the number of equations.");
     double t{_t0};
-    std::vector<double> x{_x0};
-    std::vector<std::vector<double>> retval(n + 1);
-    retval[0] = x;
+    std::valarray<double> x{_x0};
+    std::vector<std::valarray<double>> retval;
+    retval.reserve(n + 1);
+    retval.push_back(x);
     for (std::size_t idx = 0; idx < n; idx++)
     {
         calcRK(_r, _p, _lambda, _fs, h, t, x, _ks);
         // 保存结果
-        retval[idx + 1] = x;
+        retval.push_back(x);
     }
     return retval;
 }
 
 #if __cpp_lib_generator >= 202207L
-std::generator<std::vector<double>> RungeKutta::generate(double h, std::size_t n)
+std::generator<std::valarray<double>> RungeKutta::generate(double h, std::size_t n)
 {
-    if (_x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "The initial value must be set.");
+    if (_x0.size() != _fs.size())
+        RMVL_Error(RMVL_StsBadArg, "The initial must be equal to the number of equations.");
     double t{_t0};
-    std::vector<double> x{_x0};
+    std::valarray<double> x{_x0};
     for (std::size_t idx = 0; idx < n; idx++)
     {
         calcRK(_r, _p, _lambda, _fs, h, t, x, _ks);

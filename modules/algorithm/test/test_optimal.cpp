@@ -18,12 +18,12 @@ namespace rm_test
 {
 
 static inline double f1d(double x) { return x * x - 4 * x + 7; }
-static inline double rosenbrock(const std::vector<double> &x)
+static inline double rosenbrock(const std::valarray<double> &x)
 {
     const auto &x1 = x[0], &x2 = x[1];
     return 100 * (x2 - x1 * x1) * (x2 - x1 * x1) + (1 - x1) * (1 - x1);
 }
-static inline double quadratic(const std::vector<double> &x)
+static inline double quadratic(const std::valarray<double> &x)
 {
     const auto &x1 = x[0], &x2 = x[1];
     return 60 - 10 * x1 - 4 * x2 + x1 * x1 + x2 * x2 - x1 * x2;
@@ -74,7 +74,7 @@ TEST(Optimal, fmincon_degredate_to_fminunc)
     EXPECT_NEAR(fval, 8, 1e-4);
 }
 
-static inline double ceq(const std::vector<double> &x) { return x[0] + x[1] - 10; }
+static inline double ceq(const std::valarray<double> &x) { return x[0] + x[1] - 10; }
 
 TEST(Optimal, fmincon_equation_con)
 {
@@ -87,9 +87,9 @@ TEST(Optimal, fmincon_equation_con)
     EXPECT_NEAR(fval, 12, 1e-2);
 }
 
-static inline double cle1(const std::vector<double> &x) { return -x[0] - x[1] + 10; }
-static inline double cle2(const std::vector<double> &x) { return 2 * x[0] + x[1] - 30; }
-static inline double cle3(const std::vector<double> &x) { return -x[0] + x[1] - 5; }
+static inline double cle1(const std::valarray<double> &x) { return -x[0] - x[1] + 10; }
+static inline double cle2(const std::valarray<double> &x) { return 2 * x[0] + x[1] - 30; }
+static inline double cle3(const std::valarray<double> &x) { return -x[0] + x[1] - 5; }
 
 TEST(Optimal, fmincon_inequality_con)
 {
@@ -101,8 +101,8 @@ TEST(Optimal, fmincon_inequality_con)
 
 #ifdef HAVE_OPENCV
 
-static inline double lsq_linear1(const std::vector<double> &x) { return x[0] + x[1] - 6; }
-static inline double lsq_linear2(const std::vector<double> &x) { return x[0] - x[1] - 4; }
+static inline double lsq_linear1(const std::valarray<double> &x) { return x[0] + x[1] - 6; }
+static inline double lsq_linear2(const std::valarray<double> &x) { return x[0] - x[1] - 4; }
 
 TEST(Optimal, lsqnonlin_linear)
 {
@@ -128,7 +128,7 @@ TEST(Optimal, lsqnonlin_sine)
 {
     rm::FuncNds lsq_sine(5);
     for (std::size_t i = 0; i < lsq_sine.size(); ++i)
-        lsq_sine[i] = [=](const std::vector<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
+        lsq_sine[i] = [=](const std::valarray<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
 
     rm::OptimalOptions options;
     // SGN
@@ -161,7 +161,7 @@ TEST(Optimal, lsqnonlinRKF_sine)
 {
     rm::FuncNds lsq_sine(5);
     for (std::size_t i = 0; i < lsq_sine.size(); ++i)
-        lsq_sine[i] = [=](const std::vector<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
+        lsq_sine[i] = [=](const std::valarray<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
 
     auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber);
     EXPECT_NEAR(x[0], 0.8, 1e-4);

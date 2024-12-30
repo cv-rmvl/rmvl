@@ -1,5 +1,5 @@
 /**
- * @file core_c.cpp
+ * @file core.cpp
  * @author RoboMaster Vision Community
  * @brief
  * @version 1.0

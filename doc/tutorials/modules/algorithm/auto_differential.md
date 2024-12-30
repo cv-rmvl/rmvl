@@ -173,7 +173,7 @@ print("f'(1) = {:.2f}".format(dydx))
 int main()
 {
     // 自定义函数 f(x,y) = x²+y²+4x-3y
-    rm::FuncNd func([](const std::vector<double> &x) { return x[0] * x[0] + x[1] * x[1] + 4 * x[0] - 3 * x[1]; });
+    rm::FuncNd func([](const std::valarray<double> &x) { return x[0] * x[0] + x[1] * x[1] + 4 * x[0] - 3 * x[1]; });
 
     // 计算 f'(1, 2)
     auto dydx = rm::grad(func, {1, 2});
