@@ -34,7 +34,7 @@ static inline double partial(Func1d func, double x_dx, double dx)
 }
 
 // 中心差商计算多元函数偏导数
-static inline double partial(FuncNd func, std::vector<double> &x_dx, std::size_t idx, double dx)
+static inline double partial(FuncNd func, std::valarray<double> &x_dx, std::size_t idx, double dx)
 {
     x_dx[idx] += dx;
     double f1 = func(x_dx);
@@ -70,7 +70,7 @@ double derivative(Func1d func, double x, DiffMode mode, double dx)
  * @param[in] dx 计算偏导数时的步长
  * @return 函数在指定点的梯度向量
  */
-static void calcGrad(FuncNd func, const std::vector<double> &x, std::vector<double> &xgrad, DiffMode mode, double dx)
+static void calcGrad(FuncNd func, const std::valarray<double> &x, std::valarray<double> &xgrad, DiffMode mode, double dx)
 {
     auto x_dx{x};
     if (mode == DiffMode::Ridders)
@@ -88,9 +88,9 @@ static void calcGrad(FuncNd func, const std::vector<double> &x, std::vector<doub
             xgrad[i] = partial(func, x_dx, i, dx);
 }
 
-std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mode, double dx)
+std::valarray<double> grad(FuncNd func, const std::valarray<double> &x, DiffMode mode, double dx)
 {
-    std::vector<double> ret(x.size());
+    std::valarray<double> ret(x.size());
     calcGrad(func, x, ret, mode, dx);
     return ret;
 }
@@ -101,12 +101,9 @@ std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mod
  * @param[in] x 向量
  * @return 二范数
  */
-static inline double normL2(const std::vector<double> &x)
+static inline double normL2(const std::valarray<double> &x)
 {
-    double retval{};
-    for (auto &&v : x)
-        retval += v * v;
-    return std::sqrt(retval);
+    return std::sqrt(std::inner_product(std::begin(x), std::end(x), std::begin(x), 0.0));
 }
 
 std::pair<double, double> region(Func1d func, double x0, double delta)
@@ -154,17 +151,17 @@ std::pair<double, double> fminbnd(Func1d func, double x1, double x2, const Optim
 }
 
 // 共轭梯度法
-static double fminunc_cg(FuncNd func, std::vector<double> &xk, const OptimalOptions &options)
+static double fminunc_cg(FuncNd func, std::valarray<double> &xk, const OptimalOptions &options)
 {
-    std::vector<double> s = -xk;
-    std::vector<double> xk_grad = grad(func, xk, options.diff_mode, options.dx), xk2_grad(xk_grad.size());
+    std::valarray<double> s = -xk;
+    std::valarray<double> xk_grad = grad(func, xk, options.diff_mode, options.dx), xk2_grad(xk_grad.size());
     // 判断是否收敛
     double nbl_xk = normL2(xk_grad);
     if (nbl_xk < options.tol)
         return func(xk);
     // 一维搜索函数
     auto func_alpha = [&](double alpha) {
-        auto xk2 = xk + alpha * s;
+        std::valarray<double> xk2 = xk + alpha * s;
         return func(xk2);
     };
     double retfval{};
@@ -183,7 +180,7 @@ static double fminunc_cg(FuncNd func, std::vector<double> &xk, const OptimalOpti
         if (nbl_xk2 < options.tol)
             break;
         // 计算 beta
-        double nbl_xk_xk2 = std::inner_product(xk_grad.begin(), xk_grad.end(), xk2_grad.begin(), 0.0);
+        double nbl_xk_xk2 = std::inner_product(std::begin(xk_grad), std::end(xk_grad), std::begin(xk2_grad), 0.0);
         double beta = std::max((nbl_xk2 * nbl_xk2 - nbl_xk_xk2) / (nbl_xk * nbl_xk), 0.0);
         // 更新搜索方向
         for (std::size_t j = 0; j < s.size(); ++j)
@@ -194,11 +191,11 @@ static double fminunc_cg(FuncNd func, std::vector<double> &xk, const OptimalOpti
 }
 
 // 单纯形法
-static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOptions &options)
+static double fminunc_splx(FuncNd func, std::valarray<double> &xk, const OptimalOptions &options)
 {
     const std::size_t dim = xk.size(); // 维度
     const std::size_t N = dim + 1;     // 单纯形点的个数
-    std::vector<std::pair<std::vector<double>, double>> splx(N);
+    std::vector<std::pair<std::valarray<double>, double>> splx(N);
     for (auto &p : splx)
         p = {xk, 0};
     for (std::size_t i = 0; i < dim; ++i)
@@ -210,13 +207,11 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
     {
         std::sort(splx.begin(), splx.end(), [](const auto &a, const auto &b) { return a.second < b.second; });
         // 求出除最大值点外的所有点的中心
-        std::vector<double> xc(dim);
+        std::valarray<double> xc(dim);
         std::for_each(splx.begin(), splx.end() - 1, [&](const auto &vp) { xc += vp.first; });
         xc /= static_cast<double>(N - 1);
         // 反射 xr = xc + alpha * (xc - xh)，其中 alpha = 1
-        std::vector<double> xr(dim);
-        for (std::size_t j = 0; j < dim; ++j)
-            xr[j] = 2 * xc[j] - splx.back().first[j];
+        std::valarray<double> xr = 2.0 * xc - splx.back().first;
 
         double fxr = func(xr);
         // f(xn-1) <= f(xr)，反射点函数值大于最差点，则重新计算反射点（反压缩）
@@ -232,9 +227,7 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
         if (fxr < splx[0].second)
         {
             // 扩展 xe = xc + gamma * (xc - xh)，其中 gamma = 2
-            std::vector<double> xe(dim);
-            for (std::size_t j = 0; j < dim; ++j)
-                xe[j] = 3 * xc[j] - 2 * splx.back().first[j];
+            std::valarray<double> xe = 3.0 * xc - 2.0 * splx.back().first;
             double fxe = func(xe);
             splx.back() = fxe < fxr ? std::make_pair(std::move(xe), fxe) : std::make_pair(std::move(xr), fxr);
         }
@@ -245,9 +238,7 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
         else
         {
             // 压缩 xs = xc + beta * (xc - xh)，其中 beta = 0.5
-            std::vector<double> xs(dim);
-            for (std::size_t j = 0; j < dim; ++j)
-                xs[j] = 1.5 * xc[j] - 0.5 * splx.back().first[j];
+            std::valarray<double> xs = 1.5 * xc - 0.5 * splx.back().first;
             double fxs = func(xs);
             if (fxs < splx.back().second)
                 splx.back() = {std::move(xs), fxs};
@@ -255,8 +246,7 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
             {
                 for (std::size_t i = 1; i < N; ++i)
                 {
-                    for (std::size_t j = 0; j < dim; ++j)
-                        splx[i].first[j] = 0.5 * (splx[i].first[j] + splx[0].first[j]);
+                    splx[i].first = 0.5 * (splx[i].first + splx[0].first);
                     splx[i].second = func(splx[i].first);
                 }
             }
@@ -269,11 +259,10 @@ static double fminunc_splx(FuncNd func, std::vector<double> &xk, const OptimalOp
     return splx[0].second;
 }
 
-std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options)
+std::pair<std::valarray<double>, double> fminunc(FuncNd func, const std::valarray<double> &x0, const OptimalOptions &options)
 {
-    if (x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
-    std::vector<double> xk{x0};
+    RMVL_DbgAssert(x0.size() > 0);
+    std::valarray<double> xk{x0};
     double fval{};
     switch (options.fmin_mode)
     {
@@ -287,15 +276,14 @@ std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<do
     return {xk, fval};
 }
 
-std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options)
+std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options)
 {
-    if (x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
+    RMVL_DbgAssert(x0.size() > 0);
     if (c.empty() && ceq.empty())
         return fminunc(func, x0, options);
     // 外罚函数
     const double M{options.exterior};
-    FuncNd farg = [&](const std::vector<double> &xk) -> double {
+    FuncNd farg = [&](const std::valarray<double> &xk) -> double {
         double fval = func(xk), ceqval{}, cval{};
         for (const auto &v : ceq)
             ceqval += v(xk) * v(xk);
@@ -317,7 +305,7 @@ std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<do
  * @param[in] options 优化选项
  * @param[out] jac 雅可比矩阵
  */
-static inline void calcJacobi(const FuncNds &funcs, const std::vector<double> &xk, const OptimalOptions &options, cv::Mat &jac)
+static inline void calcJacobi(const FuncNds &funcs, const std::valarray<double> &xk, const OptimalOptions &options, cv::Mat &jac)
 {
     for (std::size_t i = 0; i < funcs.size(); ++i)
     {
@@ -334,7 +322,7 @@ static inline void calcJacobi(const FuncNds &funcs, const std::vector<double> &x
  * @param[in] xk 指定位置的自变量
  * @param[out] phi 函数值
  */
-static inline void calcFs(const FuncNds &funcs, const std::vector<double> &xk, std::vector<double> &phi)
+static inline void calcFs(const FuncNds &funcs, const std::valarray<double> &xk, std::valarray<double> &phi)
 {
     for (std::size_t i = 0; i < funcs.size(); ++i)
         phi[i] = funcs[i](xk);
@@ -391,13 +379,12 @@ static std::function<cv::Mat(const cv::Mat &)> robustSelect(RobustMode rb)
 }
 
 // Gauss-Newton 法
-static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
+static std::valarray<double> lsqnonlin_gn(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
-    if (x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
-    std::vector<double> xk(x0);
+    RMVL_DbgAssert(x0.size() > 0);
+    std::valarray<double> xk(x0);
     cv::Mat J(static_cast<int>(funcs.size()), static_cast<int>(x0.size()), CV_64FC1); // J 矩阵 (M×N)
-    std::vector<double> phi(funcs.size());                                            // 函数值 (M×1)
+    std::valarray<double> phi(funcs.size());                                          // 函数值 (M×1)
 
     auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
@@ -408,7 +395,7 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
             break;
         calcJacobi(funcs, xk, options, J);
         auto Jt = J.t();
-        cv::Mat fvals(phi);
+        cv::Mat fvals(phi.size(), 1, CV_64FC1, &phi[0]);
         cv::Mat s;
         // JᵀWJs = JᵀWf
         cv::Mat W = fnW(fvals);
@@ -421,13 +408,12 @@ static std::vector<double> lsqnonlin_gn(const FuncNds &funcs, const std::vector<
 }
 
 // 改进的 Gauss-Newton 法
-static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
+static std::valarray<double> lsqnonlin_sgn(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
-    if (x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
-    std::vector<double> xk(x0);
+    RMVL_DbgAssert(x0.size() > 0);
+    std::valarray<double> xk(x0);
     cv::Mat J(static_cast<int>(funcs.size()), static_cast<int>(x0.size()), CV_64FC1); // J 矩阵 (M×N)
-    std::vector<double> phi(funcs.size());                                            // 函数值 (M×1)
+    std::valarray<double> phi(funcs.size());                                          // 函数值 (M×1)
 
     auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
@@ -438,7 +424,7 @@ static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector
             break;
         calcJacobi(funcs, xk, options, J);
         auto Jt = J.t();
-        cv::Mat fvals(phi);
+        cv::Mat fvals(phi.size(), 1, CV_64FC1, &phi[0]);
         cv::Mat s;
         // JᵀWJs = JᵀWf
         cv::Mat W = fnW(fvals);
@@ -448,7 +434,7 @@ static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector
             auto xk2 = xk;
             for (std::size_t i = 0; i < xk.size(); ++i)
                 xk2[i] -= alpha * s.at<double>(static_cast<int>(i), 0);
-            std::vector<double> fvals2(funcs.size());
+            std::valarray<double> fvals2(funcs.size());
             for (std::size_t i = 0; i < funcs.size(); ++i)
                 fvals2[i] = funcs[i](xk2);
             return normL2(fvals2);
@@ -465,19 +451,19 @@ static std::vector<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vector
 class LMFunctor
 {
 public:
-    LMFunctor(const FuncNds &funcs, const std::vector<double> &x0, DiffMode diff_mode, double dx)
+    LMFunctor(const FuncNds &funcs, const std::valarray<double> &x0, DiffMode diff_mode, double dx)
         : _funcs(funcs), _x0(x0), _diff_mode(diff_mode), _dx(dx) {}
 
     int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
     {
         for (std::size_t i = 0; i < _funcs.size(); i++)
-            fvec[i] = _funcs[i](std::vector<double>(x.data(), x.data() + x.size()));
+            fvec[i] = _funcs[i](std::valarray<double>(x.data(), x.size()));
         return 0;
     }
 
     int df(const Eigen::VectorXd &x, Eigen::MatrixXd &fjac) const
     {
-        std::vector<double> xk(x.data(), x.data() + x.size());
+        std::valarray<double> xk(x.data(), x.size());
         for (std::size_t i = 0; i < _funcs.size(); i++)
         {
             auto xgrad = grad(_funcs[i], xk, _diff_mode, _dx);
@@ -492,28 +478,27 @@ public:
 
 private:
     const FuncNds &_funcs;
-    const std::vector<double> &_x0;
+    const std::valarray<double> &_x0;
     DiffMode _diff_mode{};
     double _dx{};
 };
 
 // Levenberg-Marquardt 法
-static std::vector<double> lsqnonlin_lm(const FuncNds &funcs, const std::vector<double> &x0, RobustMode, const OptimalOptions &options)
+static std::valarray<double> lsqnonlin_lm(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode, const OptimalOptions &options)
 {
     LMFunctor functor(funcs, x0, options.diff_mode, options.dx);
     Eigen::LevenbergMarquardt<LMFunctor> lm(functor);
     lm.parameters.maxfev = options.max_iter;
     lm.parameters.xtol = options.tol;
     lm.parameters.ftol = options.tol;
-    Eigen::VectorXd res = Eigen::Map<const Eigen::VectorXd>(x0.data(), x0.size());
+    Eigen::VectorXd res = Eigen::Map<const Eigen::VectorXd>(&x0[0], x0.size());
     lm.minimize(res);
-    return std::vector<double>(res.data(), res.data() + res.size());
+    return std::valarray<double>(res.data(), res.size());
 }
 
-std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options)
+std::valarray<double> lsqnonlinRKF(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
-    if (x0.empty())
-        RMVL_Error(RMVL_StsBadArg, "x0 is empty");
+    RMVL_DbgAssert(x0.size() > 0);
     switch (options.lsq_mode)
     {
     case LsqMode::LM:
@@ -527,7 +512,7 @@ std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double>
 
 #else
 
-std::vector<double> lsqnonlinRKF(const FuncNds &, const std::vector<double> &, RobustMode, const OptimalOptions &)
+std::valarray<double> lsqnonlinRKF(const FuncNds &, const std::valarray<double> &, RobustMode, const OptimalOptions &)
 {
     RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
                                 "RMVL by setting \"WITH_OPENCV=ON\" and \"WITH_EIGEN3=ON\" in CMake");
@@ -536,7 +521,7 @@ std::vector<double> lsqnonlinRKF(const FuncNds &, const std::vector<double> &, R
 
 #endif // HAVE_OPENCV
 
-std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options)
+std::valarray<double> lsqnonlin(const FuncNds &funcs, const std::valarray<double> &x0, const OptimalOptions &options)
 {
     return lsqnonlinRKF(funcs, x0, RobustMode::L2, options);
 }

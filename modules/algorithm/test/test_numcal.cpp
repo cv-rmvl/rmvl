@@ -74,34 +74,34 @@ TEST(NumberCalculation, nonlinear_solver)
 
 TEST(NumberCalculation, runge_kutta_ode)
 {
-    auto f = [](double, const std::vector<double> &xs) { return -2 * xs[0] - 2; }; // e^{-2x} - 1
-    std::vector<rm::Ode> fs = {f};
+    auto f = [](double, const std::valarray<double> &xs) { return -2 * xs[0] - 2; }; // e^{-2x} - 1
+    rm::Odes fs = {f};
 
     rm::RungeKutta rkb(fs, {0.0, 2.0 / 3.0}, {0.25, 0.75}, {{0.0, 0.0}, {2.0 / 3.0, 0.0}});
     rkb.init(0, {0});
     auto resb = rkb.solve(0.01, 100).back();
-    EXPECT_NEAR(resb.front(), std::expm1(-2), 1e-4);
+    EXPECT_NEAR(resb[0], std::expm1(-2), 1e-4);
 
     rm::RungeKutta2 rk2(fs);
     rk2.init(0, {0});
     auto res2 = rk2.solve(0.01, 100).back();
-    EXPECT_NEAR(res2.front(), std::expm1(-2), 1e-4);
+    EXPECT_NEAR(res2[0], std::expm1(-2), 1e-4);
 
     rm::RungeKutta3 rk3(fs);
     rk3.init(0, {0});
     auto res3 = rk3.solve(0.01, 100).back();
-    EXPECT_NEAR(res3.front(), std::expm1(-2), 1e-5);
+    EXPECT_NEAR(res3[0], std::expm1(-2), 1e-5);
 
     rm::RungeKutta4 rk4(fs);
     rk4.init(0, {0});
     auto res4 = rk4.solve(0.01, 100).back();
-    EXPECT_NEAR(res4.front(), std::expm1(-2), 1e-6);
+    EXPECT_NEAR(res4[0], std::expm1(-2), 1e-6);
 }
 
 TEST(NumberCalculation, runge_kutta_odes)
 {
-    rm::Ode dot_x1 = [](double t, const std::vector<double> &x) { return 2 * x[1] + t; };
-    rm::Ode dot_x2 = [](double, const std::vector<double> &x) { return -x[0] - 3 * x[1]; };
+    rm::Ode dot_x1 = [](double t, const std::valarray<double> &x) { return 2 * x[1] + t; };
+    rm::Ode dot_x2 = [](double, const std::valarray<double> &x) { return -x[0] - 3 * x[1]; };
     rm::Odes fs = {dot_x1, dot_x2};
     //     ┌  3/4 ┐          ┌  2 ┐         ┌  3/2 ┐    ┌ -7/4 ┐
     // X = │      │e^{-2t} + │    │e^{-t} + │      │t + │      │
@@ -126,19 +126,19 @@ TEST(NumberCalculation, runge_kutta_odes)
 #if __cpp_lib_generator >= 202207L
 TEST(NumberCalculation, runge_kutta_ode_generator)
 {
-    auto f = [](double, const std::vector<double> &) { return 1; }; // x + 1
-    std::vector<rm::Ode> fs = {f};
+    auto f = [](double, const std::valarray<double> &) { return 1; }; // x + 1
+    rm::Odes fs = {f};
 
     rm::RungeKutta2 rk2(fs);
     rk2.init(0, {1});
-    std::vector<std::vector<double>> all_res;
+    std::vector<std::valarray<double>> all_res;
     all_res.reserve(10);
     all_res.push_back({1}); // 初值
     for (auto res2 : rk2.generate(1, 9))
         all_res.push_back(res2);
 
     for (std::size_t i = 0; i < 10; i++)
-        EXPECT_EQ(all_res[i].front(), i + 1);
+        EXPECT_EQ(all_res[i][0], i + 1);
 }
 #endif
 

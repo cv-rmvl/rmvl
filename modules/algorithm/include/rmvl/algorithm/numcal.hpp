@@ -14,6 +14,7 @@
 #include <bitset>
 #include <cstdint>
 #include <functional>
+#include <valarray>
 #include <vector>
 
 #if __cplusplus >= 202302L
@@ -182,9 +183,9 @@ public:
 ////////////// 常微分方程（组）数值解 //////////////
 
 //! 常微分方程
-using Ode = std::function<double(double, const std::vector<double> &)>;
+using Ode = std::function<double(double, const std::valarray<double> &)>;
 //! 常微分方程组
-using Odes = std::vector<std::function<double(double, const std::vector<double> &)>>;
+using Odes = std::vector<std::function<double(double, const std::valarray<double> &)>>;
 
 /**
  * @brief Butcher 表形式的常微分方程（组）数值求解器
@@ -204,7 +205,7 @@ public:
      * @param[in] lam Butcher 表 \f$\pmb\lambda\f$ 向量
      * @param[in] r Butcher 表 \f$R\f$ 矩阵
      */
-    RMVL_W RungeKutta(const Odes &fs, const std::vector<double> &p, const std::vector<double> &lam, const std::vector<std::vector<double>> &r);
+    RMVL_W RungeKutta(const Odes &fs, const std::valarray<double> &p, const std::valarray<double> &lam, const std::valarray<std::valarray<double>> &r);
 
     /**
      * @brief 设置常微分方程（组）的初值
@@ -212,7 +213,7 @@ public:
      * @param[in] t0 初始位置的自变量 \f$t_0\f$
      * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
      */
-    RMVL_W inline void init(double t0, const std::vector<double> &x0) { _t0 = t0, _x0 = x0; }
+    RMVL_W inline void init(double t0, const std::valarray<double> &x0) { _t0 = t0, _x0 = x0; }
 
     /**
      * @brief 设置常微分方程（组）的初值
@@ -220,7 +221,7 @@ public:
      * @param[in] t0 初始位置的自变量 \f$t_0\f$
      * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
      */
-    inline void init(double t0, std::vector<double> &&x0) { _t0 = t0, _x0 = std::move(x0); }
+    inline void init(double t0, std::valarray<double> &&x0) { _t0 = t0, _x0 = std::move(x0); }
 
     /**
      * @brief 计算常微分方程（组）的数值解
@@ -230,7 +231,7 @@ public:
      *
      * @return 从初始位置开始迭代 \f$n\f$ 次后共 \f$n+1\f$ 个数值解，自变量可通过 \f$t_0+ih\f$ 计算得到
      */
-    RMVL_W std::vector<std::vector<double>> solve(double h, std::size_t n);
+    RMVL_W std::vector<std::valarray<double>> solve(double h, std::size_t n);
 
 #if __cpp_lib_generator >= 202207L
     /**
@@ -240,22 +241,22 @@ public:
      * @param[in] n 迭代次数
      * @return 从初始位置开始迭代计算的生成器，初值不会被 `co_yield`，共生成 \f$n\f$ 个数值解
      */
-    std::generator<std::vector<double>> generate(double h, std::size_t n);
+    std::generator<std::valarray<double>> generate(double h, std::size_t n);
 #endif
 
 private:
     // 加权系数，`k[i][j]`: `i` 表示第 `i` 个加权系数组，`j` 表示来自第 `j` 条方程
-    std::vector<std::vector<double>> _ks;
+    std::vector<std::valarray<double>> _ks;
 
 protected:
     //! 一阶常微分方程组的函数对象 \f$\dot{\pmb x}=\pmb F(t, \pmb x)\f$
     Odes _fs;
-    double _t0;              //!< 初值的自变量 \f$t\f$
-    std::vector<double> _x0; //!< 初值的因变量 \f$\pmb x(t)\f$
+    double _t0;                //!< 初值的自变量 \f$t\f$
+    std::valarray<double> _x0; //!< 初值的因变量 \f$\pmb x(t)\f$
 
-    std::vector<double> _p;              //!< Butcher 表 \f$\pmb p\f$ 向量
-    std::vector<double> _lambda;         //!< Butcher 表 \f$\pmb\lambda\f$ 向量
-    std::vector<std::vector<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
+    std::valarray<double> _p;                //!< Butcher 表 \f$\pmb p\f$ 向量
+    std::valarray<double> _lambda;           //!< Butcher 表 \f$\pmb\lambda\f$ 向量
+    std::valarray<std::valarray<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
 };
 
 //! 2 阶 2 级 Runge-Kutta 求解器
@@ -304,9 +305,9 @@ using Func1d = std::function<double(double)>;
 //! 一元函数组
 using Func1ds = std::vector<std::function<double(double)>>;
 //! 多元函数
-using FuncNd = std::function<double(const std::vector<double> &)>;
+using FuncNd = std::function<double(const std::valarray<double> &)>;
 //! 多元函数组
-using FuncNds = std::vector<std::function<double(const std::vector<double> &)>>;
+using FuncNds = std::vector<std::function<double(const std::valarray<double> &)>>;
 
 //! 梯度/导数计算模式
 enum class DiffMode : uint8_t
@@ -362,7 +363,7 @@ RMVL_EXPORTS_W double derivative(Func1d func, double x, DiffMode mode = DiffMode
  * @param[in] dx 计算偏导数时，坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的梯度向量
  */
-RMVL_EXPORTS_W std::vector<double> grad(FuncNd func, const std::vector<double> &x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
+RMVL_EXPORTS_W std::valarray<double> grad(FuncNd func, const std::valarray<double> &x, DiffMode mode = DiffMode::Central, double dx = 1e-3);
 
 /**
  * @brief 采用进退法确定搜索区间
@@ -392,7 +393,7 @@ RMVL_EXPORTS_W std::pair<double, double> fminbnd(Func1d func, double x1, double 
  * @param[in] options 优化选项，可供设置的有 `fmin_mode`、`max_iter`、`tol` 和 `dx`
  * @return `[x, fval]` 最小值点和最小值
  */
-RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const std::vector<double> &x0, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fminunc(FuncNd func, const std::valarray<double> &x0, const OptimalOptions &options = {});
 
 /**
  * @brief 有约束多维函数的最小值搜索
@@ -404,7 +405,7 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fminunc(FuncNd func, const
  * @param[in] options options 优化选项，可供设置的有 `exterior`、`fmin_mode`、`max_iter`、`tol` 和 `dx`
  * @return `[x, fval]` 最小值点和最小值
  */
-RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const std::vector<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
 
 /**
  * @brief 非线性最小二乘求解，实现与 \cite Agarwal23 类似的算法
@@ -415,7 +416,7 @@ RMVL_EXPORTS_W std::pair<std::vector<double>, double> fmincon(FuncNd func, const
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
  * @return 最小二乘解
  */
-RMVL_EXPORTS_W std::vector<double> lsqnonlin(const FuncNds &funcs, const std::vector<double> &x0, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::valarray<double> lsqnonlin(const FuncNds &funcs, const std::valarray<double> &x0, const OptimalOptions &options = {});
 
 //! Robust 核函数
 enum class RobustMode : uint8_t
@@ -436,7 +437,7 @@ enum class RobustMode : uint8_t
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
  * @return 最小二乘解
  */
-RMVL_EXPORTS_W std::vector<double> lsqnonlinRKF(const FuncNds &funcs, const std::vector<double> &x0, RobustMode rb, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::valarray<double> lsqnonlinRKF(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options = {});
 
 //! @} algorithm_optimal
 

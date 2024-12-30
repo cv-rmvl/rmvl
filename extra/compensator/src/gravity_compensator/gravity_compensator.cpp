@@ -35,10 +35,10 @@ GravityCompensator::Impl::Impl() : _yaw_static_com(para::gravity_compensator_par
     double a42 = -a24, a44 = a22;
 
     Odes fs(4);
-    fs[0] = [](double, const std::vector<double> &x) { return x[1]; };
-    fs[1] = [=](double, const std::vector<double> &x) { return a22 * x[1] + a24 * x[3]; };
-    fs[2] = [](double, const std::vector<double> &x) { return x[3]; };
-    fs[3] = [=](double, const std::vector<double> &x) { return a42 * x[1] + a44 * x[3] - gravity_compensator_param.g; };
+    fs[0] = [](double, const std::valarray<double> &x) { return x[1]; };
+    fs[1] = [=](double, const std::valarray<double> &x) { return a22 * x[1] + a24 * x[3]; };
+    fs[2] = [](double, const std::valarray<double> &x) { return x[3]; };
+    fs[3] = [=](double, const std::valarray<double> &x) { return a42 * x[1] + a44 * x[3] - gravity_compensator_param.g; };
     _rk = std::make_unique<RungeKutta2>(fs);
 }
 
