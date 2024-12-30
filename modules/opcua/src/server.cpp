@@ -508,6 +508,21 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
             return UA_NODEID_NULL;
         }
     }
+    // 添加数据源变量节点作为对象类型节点的子节点
+    for (const auto &[browse_name, val] : otype.getDataSourceVariables())
+    {
+        // 添加至服务器
+        NodeId sub_retval = addDataSourceVariableNode(val, retval);
+        // 设置子变量节点为强制生成
+        status = UA_Server_addReference(
+            _server, sub_retval, nodeHasModellingRule,
+            UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
+        if (status != UA_STATUSCODE_GOOD)
+        {
+            ERROR_("Failed to add reference during adding object type node, browse name: %s, error code: %s", browse_name.c_str(), UA_StatusCode_name(status));
+            return UA_NODEID_NULL;
+        }
+    }
     // 添加方法节点作为对象类型节点的子节点
     for (const auto &val : otype.getMethods())
         addMethodNode(val.second, retval);
@@ -554,20 +569,20 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
     // 添加额外变量节点
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
-        auto sub_nd = retval | node(browse_name);
-        if (!sub_nd.empty())
-            write(sub_nd, variable);
-        else
-            addVariableNode(variable, retval);
+        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        addVariableNode(variable, retval);
+    }
+    // 添加额外数据源变量节点
+    for (const auto &[browse_name, dsv] : obj.getDataSourceVariables())
+    {
+        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        addDataSourceVariableNode(dsv, retval);
     }
     // 添加额外方法节点
     for (const auto &[browse_name, method] : obj.getMethods())
     {
-        auto sub_nd = retval | node(browse_name);
-        if (!sub_nd.empty())
-            setMethodNodeCallBack(sub_nd, method.func);
-        else
-            addMethodNode(method, retval);
+        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        addMethodNode(method, retval);
     }
     return retval;
 }

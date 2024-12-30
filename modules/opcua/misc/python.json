@@ -121,26 +121,6 @@
             "def __setitem__(self, browse_name: str, prop: int) -> None: ..."
         ]
     },
-    "OT_Idx": {
-        "bind": [
-            ".def(\"__getitem__\", [](ObjectType &ot, const std::string &name) -> Variable & { return ot[name]; })",
-            ".def(\"__setitem__\", [](ObjectType &ot, const std::string &name, const Variable &v) { ot[name] = v; })"
-        ],
-        "pyi": [
-            "def __getitem__(self, browse_name: str) -> int: ...",
-            "def __setitem__(self, browse_name: str, v: Variable) -> None: ..."
-        ]
-    },
-    "O_Idx": {
-        "bind": [
-            ".def(\"__getitem__\", [](Object &o, const std::string &name) -> Variable & { return o[name]; })",
-            ".def(\"__setitem__\", [](Object &o, const std::string &name, const Variable &v) { o[name] = v; })"
-        ],
-        "pyi": [
-            "def __getitem__(self, browse_name: str) -> int: ...",
-            "def __setitem__(self, browse_name: str, v: Variable) -> None: ..."
-        ]
-    },
     "View_Add": {
         "bind": [
             ".def(\"add\", [](View& self, py::args args) { for (const auto& arg : args) { self.add(arg.cast<NodeId>()); } })"
