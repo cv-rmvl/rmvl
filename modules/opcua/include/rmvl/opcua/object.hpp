@@ -38,23 +38,21 @@ public:
      *
      * @param[in] variable 变量节点
      */
-    RMVL_W inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
+    RMVL_W void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
 
     /**
-     * @brief 访问指定的变量节点
+     * @brief 添加数据源变量节点至 `rm::Object` 对象中
      *
-     * @param[in] browse_name 变量节点的浏览名 BrowseName
-     * @return 用 `rm::Variable` 表示的变量的左值引用
+     * @param[in] dsv 数据源变量节点
      */
-    RMVL_W_SUBST("OT_Idx")
-    inline Variable &operator[](const std::string &browse_name) { return _variables[browse_name]; }
+    RMVL_W void add(const DataSourceVariable &dsv) { _ds_variables[dsv.browse_name] = dsv; }
 
     /**
      * @brief 添加方法节点至 `rm::ObjectType` 对象类型中
      *
      * @param[in] method 方法节点
      */
-    RMVL_W inline void add(const Method &method) { _methods[method.browse_name] = method; }
+    RMVL_W void add(const Method &method) { _methods[method.browse_name] = method; }
 
     /**
      * @brief 判断对象类型是否为空
@@ -77,14 +75,26 @@ public:
      */
     inline const ObjectType *base() const { return _base; }
 
-    RMVL_W inline const std::unordered_map<std::string, rm::Variable> &getVariables() const { return _variables; }
+    /**
+     * @brief 获取 `rm::Variable` 表示的变量节点的列表
+     * 
+     * @return 变量节点列表
+     */
+    RMVL_W const std::unordered_map<std::string, rm::Variable> &getVariables() const { return _variables; }
+
+    /**
+     * @brief 获取 `rm::DataSourceVariable` 表示的数据源变量节点的列表
+     * 
+     * @return 数据源变量节点列表
+     */
+    RMVL_W const std::unordered_map<std::string, rm::DataSourceVariable> &getDataSourceVariables() const { return _ds_variables; }
 
     /**
      * @brief 获取 `rm::Method` 表示的方法节点的列表
      *
      * @return 方法节点列表
      */
-    RMVL_W inline const std::unordered_map<std::string, rm::Method> &getMethods() const { return _methods; }
+    RMVL_W const std::unordered_map<std::string, rm::Method> &getMethods() const { return _methods; }
 
     //! 命名空间索引，默认为 `1`
     RMVL_W_RW uint16_t ns{1U};
@@ -125,6 +135,15 @@ private:
     std::unordered_map<std::string, Variable> _variables;
 
     /**
+     * @brief 数据源变量节点
+     * @brief
+     * - `Key`: 浏览名 BrowseName
+     * @brief
+     * - `Value`: 用 `rm::DataSourceVariable` 表示的数据源变量
+     */
+    std::unordered_map<std::string, DataSourceVariable> _ds_variables;
+
+    /**
      * @brief 方法节点
      * @brief
      * - `Key`: 浏览名 BrowseName
@@ -156,23 +175,21 @@ public:
      *
      * @param[in] variable 变量节点
      */
-    RMVL_W inline void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
+    RMVL_W void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
+
+    /**
+     * @brief 添加数据源变量节点至 `rm::Object` 对象中
+     *
+     * @param[in] dsv 数据源变量节点
+     */
+    RMVL_W void add(const DataSourceVariable &dsv) { _ds_variables[dsv.browse_name] = dsv; }
 
     /**
      * @brief 添加（额外的）方法节点至 `rm::Object` 对象中
      *
      * @param[in] method 方法节点
      */
-    RMVL_W inline void add(const Method &method) { _methods[method.browse_name] = method; }
-
-    /**
-     * @brief 访问指定的变量节点
-     *
-     * @param[in] browse_name 变量节点的浏览名 BrowseName
-     * @return 用 `rm::Variable` 表示的变量的左值引用
-     */
-    RMVL_W_SUBST("O_Idx")
-    inline Variable &operator[](const std::string &browse_name) { return _variables[browse_name]; }
+    RMVL_W void add(const Method &method) { _methods[method.browse_name] = method; }
 
     /**
      * @brief 判断对象是否为空
@@ -187,6 +204,13 @@ public:
      * @return 变量节点列表
      */
     RMVL_W inline const std::unordered_map<std::string, rm::Variable> &getVariables() const { return _variables; }
+
+    /**
+     * @brief 获取 `rm::DataSourceVariable` 表示的数据源变量节点的列表
+     *
+     * @return 数据源变量节点列表
+     */
+    RMVL_W inline const std::unordered_map<std::string, rm::DataSourceVariable> &getDataSourceVariables() const { return _ds_variables; }
 
     /**
      * @brief 获取 `rm::Method` 表示的方法节点的列表
@@ -232,6 +256,15 @@ private:
      * - `Value`: 用 `rm::Variable` 表示的变量
      */
     std::unordered_map<std::string, Variable> _variables;
+
+    /**
+     * @brief 数据源变量节点
+     * @brief
+     * - `Key`: 浏览名 BrowseName
+     * @brief
+     * - `Value`: 用 `rm::DataSourceVariable` 表示的数据源变量
+     */
+    std::unordered_map<std::string, DataSourceVariable> _ds_variables;
 
     /**
      * @brief 方法节点

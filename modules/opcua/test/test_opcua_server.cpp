@@ -117,6 +117,34 @@ TEST(OPC_UA_Server, add_object_node)
     auto id = srv.addObjectNode(object);
     EXPECT_FALSE(id.empty());
     srv.spinOnce();
+    // 路径搜索变量节点
+    auto val1_id = srv.find("test_object/test_val1");
+    EXPECT_FALSE(val1_id.empty());
+}
+
+// 服务器添加包含数据源变量节点的对象节点
+TEST(OPC_UA_Server, add_object_node_with_dsv)
+{
+    rm::Server srv(4837);
+    rm::Object object;
+    object.browse_name = "test_object";
+    object.description = "this is test object";
+    object.display_name = "测试对象";
+    rm::DataSourceVariable dsv1;
+    dsv1.browse_name = "test_dsv1";
+    dsv1.description = "this is test data source variable";
+    dsv1.display_name = "测试数据源变量 1";
+    dsv1.access_level = rm::VARIABLE_READ | rm::VARIABLE_WRITE;
+    int src_val{};
+    dsv1.on_read = [&](const rm::NodeId &) -> rm::Variable { return src_val; };
+    dsv1.on_write = [&](const rm::NodeId &, const rm::Variable &val) { src_val = val; };
+    object.add(dsv1);
+    auto id = srv.addObjectNode(object);
+    EXPECT_FALSE(id.empty());
+    srv.spinOnce();
+    // 路径搜索数据源变量节点
+    auto dsv_id = srv.find("test_object/test_dsv1");
+    EXPECT_FALSE(dsv_id.empty());
 }
 
 // 服务器添加包含方法节点的对象节点
@@ -141,6 +169,9 @@ TEST(OPC_UA_Server, add_object_node_with_method)
     auto id = srv.addObjectNode(object);
     EXPECT_FALSE(id.empty());
     srv.spinOnce();
+    // 路径搜索方法节点
+    auto method_id = srv.find("test_object/test_method");
+    EXPECT_FALSE(method_id.empty());
 }
 
 // 服务器添加对象类型节点
