@@ -42,6 +42,16 @@ struct CompensateInfo
     std::unordered_map<tracker::ptr, double> tof;
 };
 
+//! 强制补偿类型
+enum class CompensateType : uint8_t
+{
+    UNKNOWN, //!< 未知
+    UP,      //!< 向上强制补偿
+    DOWN,    //!< 向下强制补偿
+    LEFT,    //!< 向左强制补偿
+    RIGHT,   //!< 向右强制补偿
+};
+
 //! 弹道下坠补偿模块
 class compensator
 {

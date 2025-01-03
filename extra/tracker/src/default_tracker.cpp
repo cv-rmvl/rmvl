@@ -22,6 +22,7 @@ void DefaultTracker::updateData(combo::ptr p_combo)
     _corners = p_combo->corners();
     _center = p_combo->center();
     _extrinsic = p_combo->extrinsic();
+    _state = p_combo->state();
 }
 
 DefaultTracker::DefaultTracker(combo::ptr p_combo) : tracker()

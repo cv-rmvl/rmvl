@@ -33,7 +33,7 @@ protected:
     cv::Point2f _center;               //!< 特征中心点
     std::vector<cv::Point2f> _corners; //!< 特征角点
 
-    rm::RMStatus _type; //!< 状态类型信息
+    rm::StateInfo _state; //!< 特征状态
 
 public:
     using ptr = std::shared_ptr<feature>;
@@ -58,8 +58,8 @@ public:
     RMVL_W inline float angle() const { return _angle; }
     //! 获取特征角点
     RMVL_W inline const std::vector<cv::Point2f> &corners() const { return _corners; }
-    //! 获取状态信息
-    RMVL_W inline const RMStatus &type() const { return _type; }
+    //! 获取特征状态
+    RMVL_W inline const StateInfo &state() const { return _state; }
 };
 
 #define RMVL_FEATURE_CAST(name)                                                                           \

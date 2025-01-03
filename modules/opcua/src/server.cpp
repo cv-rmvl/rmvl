@@ -570,19 +570,19 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
     // 添加额外变量节点
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
-        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        RMVL_DbgAssert((retval | node(browse_name)).empty());
         addVariableNode(variable, retval);
     }
     // 添加额外数据源变量节点
     for (const auto &[browse_name, dsv] : obj.getDataSourceVariables())
     {
-        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        RMVL_DbgAssert((retval | node(browse_name)).empty());
         addDataSourceVariableNode(dsv, retval);
     }
     // 添加额外方法节点
     for (const auto &[browse_name, method] : obj.getMethods())
     {
-        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        RMVL_DbgAssert((retval | node(browse_name)).empty());
         addMethodNode(method, retval);
     }
     return retval;

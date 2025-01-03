@@ -57,7 +57,7 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    virtual DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+    virtual DecideInfo decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
                               tracker::ptr last_target, const DetectInfo &detect_info,
                               const CompensateInfo &compensate_info, const PredictInfo &predict_info) = 0;
 };

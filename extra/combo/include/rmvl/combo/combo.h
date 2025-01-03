@@ -31,7 +31,7 @@ protected:
     float _height{};                   //!< 高度
     float _width{};                    //!< 宽度
     float _angle{};                    //!< 角度
-    RMStatus _type{};                  //!< 类型
+    StateInfo _state{};                //!< 状态
     cv::Point2f _center;               //!< 中心点
     cv::Point2f _relative_angle;       //!< 相对目标转角
     ImuData _imu_data;                 //!< 当前 IMU 数据
@@ -71,8 +71,8 @@ public:
     RMVL_W inline cv::Point2f corner(int idx) const { return _corners[idx]; }
     //! 获取组合体相机外参
     RMVL_W inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
-    //! 获取组合体类型
-    RMVL_W inline RMStatus type() const { return _type; }
+    //! 获取组合体状态
+    RMVL_W inline const StateInfo &state() const { return _state; }
     //! 获取捕获该组合体的时间点
     RMVL_W inline double tick() const { return _tick; }
     //! 获取组合体的相对目标转角

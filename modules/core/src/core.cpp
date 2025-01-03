@@ -136,6 +136,29 @@ std::string join(const std::vector<std::string> &strs, std::string_view delim)
     return res;
 }
 
+std::string_view strip(std::string_view str)
+{
+    auto str_begin = str.find_first_not_of(" \t\n\r");
+    auto str_end = str.find_last_not_of(" \t\n\r") + 1;
+    return str.substr(str_begin, str_end - str_begin);
+}
+
+std::string lower(std::string_view str)
+{
+    std::string res(str);
+    for (auto &c : res)
+        c = std::tolower(c);
+    return res;
+}
+
+std::string upper(std::string_view str)
+{
+    std::string res(str);
+    for (auto &c : res)
+        c = std::toupper(c);
+    return res;
+}
+
 } // namespace str
 
 } // namespace rm

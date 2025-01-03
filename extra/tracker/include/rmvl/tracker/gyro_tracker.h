@@ -87,9 +87,9 @@ private:
     /**
      * @brief 更新装甲板类型
      *
-     * @param[in] stat 类型
+     * @param[in] robot_type 机器人类型
      */
-    void updateType(RMStatus stat);
+    void updateType(RobotType robot);
 
     //! 更新位置滤波器
     void updatePositionFilter();

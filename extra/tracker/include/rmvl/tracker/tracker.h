@@ -28,7 +28,7 @@ protected:
     std::deque<combo::ptr> _combo_deque; //!< 组合体时间队列
     uint32_t _vanish_num{};              //!< 消失帧数
 
-    RMStatus _type{};                  //!< 追踪器类型
+    StateInfo _state{};                //!< 追踪器状态
     float _height{};                   //!< 追踪器高度（可表示修正后）
     float _width{};                    //!< 追踪器宽度（可表示修正后）
     float _angle{};                    //!< 追踪器角度（可表示修正后）
@@ -82,8 +82,8 @@ public:
     //! 索引 - 容器仅能通过内部 at 实现访问保证下标安全
     RMVL_W inline combo::ptr at(size_t _n) const { return _combo_deque.at(_n); }
 
-    //! 追踪器类型
-    RMVL_W inline RMStatus type() const { return _type; }
+    //! 追踪器状态
+    RMVL_W inline const StateInfo &state() const { return _state; }
     //! 追踪器修正后的高度
     RMVL_W inline float height() const { return _height; }
     //! 追踪器修正后的宽度
