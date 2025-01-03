@@ -16,8 +16,6 @@
 #include <memory>
 #include <utility>
 
-#include "rmvl/core/util.hpp"
-
 #include "utilities.hpp"
 
 namespace rm

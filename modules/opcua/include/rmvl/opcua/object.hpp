@@ -12,7 +12,6 @@
 #pragma once
 
 #include "method.hpp"
-#include "variable.hpp"
 
 namespace rm
 {

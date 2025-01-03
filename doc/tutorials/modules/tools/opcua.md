@@ -2,8 +2,8 @@
 ============
 
 @author 赵曦
-@date 2023/11/24
-@version 2.0
+@date 2024/12/31
+@version 2.1
 @brief OPC UA 和 open62541 库简介
 
 @prev_tutorial{tutorial_modules_serial}
@@ -66,7 +66,7 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 该节点提供了对变量节点的定义，是设备中各种数据的抽象。常用引用中的 HasTypeDefinition 引用节点连接数据类型节点，对数据类型进行描述（在 RMVL 中表示为 `rm::nodeHasTypeDefinition`）。用 HasProperty 引用节点对数据的语义进行描述（在 RMVL 中表示为 `rm::nodeHasProperty`）。也可以使用自定义的数据类型节点对变量的数据进行描述，具有灵活性。
 
-**变量节点 rm::Variable**
+**变量节点 rm::Variable 及 rm::DataSourceVariable**
 
 该节点是变量类型节点的实例，也是使用的最多的节点。客户端访问设备数据有以下 3 种方式。
 
@@ -79,6 +79,8 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 | 数据源变量节点 | 客户端的读取请求直接重定向到设备的数据源中，即客户端直接从数据源获取数据，变量节点不存储数据 | 缩减了数据先写入变量节点再进行读取的过程，但多个客户端连接访问同一数据时会增大服务器与设备之间的传输负载 |
 
 </div>
+
+@note 前两种访问方式在 @ref opcua 中通过 rm::Variable 实现，第三种数据源变量节点在 @ref opcua 中通过 rm::DataSourceVariable 实现。
 
 **方法节点 rm::Method**
 
@@ -403,13 +405,13 @@ int main()
 
     rm::Server srv(4840);
 
-    // 定义方法，初始化或设置 rm::Method::func 成员必须使用一下兼容形式的可调用对象
-    // std::function<pair<bool, rm::Variables>(rm::ServerView, const rm::NodeId &, const rm::Variables &)>
+    // 定义方法，初始化或设置 rm::Method::func 成员必须使用以下兼容形式的可调用对象
+    // std::function<pair<bool, rm::Variables>(rm::ServerView, const rm::Variables &)>
     // 其中 rm::Variables 是 std::vector<rm::Variable> 的别名
-    rm::Method method = [](rm::ServerView, const rm::NodeId &, const rm::Variables &iargs) {
+    rm::Method method = [](rm::ServerView, const rm::Variables &iargs) {
         int num1 = iargs[0], num2 = iargs[1];
         rm::Variables oargs = {num1 + num2};
-        return std::make_tuple(true, oargs);
+        return std::make_pair(true, oargs);
     };
     method.browse_name = "add";
     method.display_name = "Add";
@@ -456,9 +458,9 @@ signal(SIGINT, onStop)
 svr = rm.Server(4840)
 
 # 定义方法，初始化或设置 rm.Method.func 成员必须使用以下形式的可调用对象
-# Callable[[ServerView, NodeId, Variables, Variables], tuple[bool, Variables]]
+# Callable[[ServerView, Variables], tuple[bool, Variables]]
 # 其中 Variables 是 list[Variable] 的别名
-def add(sv, objnd, iargs):
+def add(sv, iargs):
     num1, num2 = iargs
     oarg = rm.Variable(num1.int() + num2.int())
     return True, [oarg]
@@ -807,7 +809,11 @@ while not stop:
 
 ### 2.6 监视
 
-OPC UA 支持变量节点和事件的监视，下面以监视变量节点为例。首先在服务器中添加待监视的变量节点
+OPC UA 支持变量节点和事件的监视，下面分别以变量节点和事件的监视为例。
+
+#### 2.6.1 变量监视
+
+首先在服务器中添加待监视的变量节点
 
 @add_toggle_cpp
 
@@ -975,6 +981,371 @@ cli.monitor(node, on_change, 5)
 
 while not stop:
     cli.spinOnce()
+```
+
+@end_toggle
+
+#### 2.6.2 事件监视
+
+事件需要服务器自主触发，在实际应用中，事件的触发可以是设备状态的变化、设备的报警等，例如客户端通过调用方法节点，服务端修改自身状态机状态，任务执行完毕，状态再次发生改变后将触发事件，可以实现<span style="color: green">同步非阻塞</span>向<span style="color: green">同步阻塞</span>的转换。例如服务器用于 **异步的控制设备启动、关闭** ，客户端通过调用方法节点控制设备启动。
+
+首先在服务器中添加
+
+- 对应的方法节点用于发出启动、关闭指令；
+- 实际发出启动、关闭指令的<span style="color: red">伪代码</span>。
+
+如下所示。
+
+@add_toggle_cpp
+
+```cpp
+// server.cpp
+#include <csignal>
+
+#include <rmvl/opcua/server.hpp>
+#include <thread>
+
+using namespace std::chrono_literals;
+
+static bool stop = false;
+
+// OPC UA 状态
+enum class OPCUAState
+{
+    NONE,  // 无状态
+    START, // 设备启动中...
+    STOP,  // 设备关闭中...
+};
+
+int main()
+{
+    // OPC UA 状态
+    OPCUAState mode{};
+
+    // 消息事件类型
+    rm::EventType msg_type_info;
+    msg_type_info.browse_name = "msg_type";
+    msg_type_info.display_name = "MsgType";
+    msg_type_info.description = "任务执行完成时触发的事件";
+    msg_type_info.add("Result", 0);
+    auto msg_info = rm::Event::makeFrom(msg_type_info);
+
+    // 启动设备
+    rm::Method start_info = [&](rm::ServerView, const rm::Variables &) -> std::pair<bool, rm::Variables> {
+        if (mode != OPCUAState::NONE)
+            return {false, {}};
+        mode = OPCUAState::START;
+        return {true, {}};
+    };
+    start_info.browse_name = "start";
+    start_info.display_name = "Start";
+    start_info.description = "启动设备";
+
+    // 关闭设备
+    rm::Method stop_info = [&](rm::ServerView, const rm::Variables &) -> std::pair<bool, rm::Variables> {
+        if (mode != OPCUAState::NONE)
+            return {false, {}};
+        mode = OPCUAState::STOP;
+        return {true, {}};
+    };
+    stop_info.browse_name = "stop";
+    stop_info.display_name = "Stop";
+    stop_info.description = "关闭设备";
+
+    // 服务器
+    signal(SIGINT, [](int) { stop = true; });
+    rm::Server srv(4840);
+    srv.addEventTypeNode(msg_type_info);
+    srv.addMethodNode(start_info);
+
+    while (!stop)
+    {
+        srv.spinOnce();
+        if (mode == OPCUAState::START)
+        {
+            // 实际发出 Start 指令
+
+            /* code */
+
+            if (true) // 'true' 应改为状态确定发生变更的判断条件
+            {
+                msg_info.message = "Msg_Start";
+                msg_info["Result"] = 0;
+                srv.triggerEvent(msg_info);
+                mode = OPCUAState::NONE; // 恢复 OPC UA 状态
+            }
+        }
+        else if (mode == OPCUAState::STOP)
+        {
+            // 实际发出 Stop 指令
+
+            /* code */
+
+            if (true) // 'true' 应改为状态确定发生变更的判断条件
+            {
+                msg_info.message = "Msg_Stop";
+                msg_info["Result"] = 0;
+                srv.triggerEvent(msg_info);
+                mode = OPCUAState::NONE; // 恢复 OPC UA 状态
+            }
+        }
+    }
+}
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# server.py
+from signal import signal, SIGINT
+from enum import Enum
+import rm
+
+stop = False
+
+# OPC UA 状态
+class OPCUAState(Enum):
+    NONE = 0  # 无状态
+    START = 1 # 设备启动中...
+    STOP = 2  # 设备关闭中...
+
+mode = OPCUAState.NONE
+
+# 事件类型
+msg_type_info = rm.EventType()
+msg_type_info.browse_name = "msg_type"
+msg_type_info.display_name = "MsgType"
+msg_type_info.description = "任务执行完成时触发的事件"
+msg_type_info.add("Result", 0)
+msg_info = rm.Event.makeFrom(msg_type_info)
+
+# 启动设备
+def start_cb(sv, iargs):
+    global mode
+    if mode != OPCUAState.NONE:
+        return False, {}
+    mode = OPCUAState.START
+    return True, {}
+
+start_info = rm.Method(start_cb)
+start_info.browse_name = "start"
+start_info.display_name = "Start"
+start_info.description = "启动设备"
+
+# 关闭设备
+def stop_cb(sv, iargs):
+    global mode
+    if mode != OPCUAState.NONE:
+        return False, {}
+    mode = OPCUAState.STOP
+    return True, {}
+
+stop_info = rm.Method(stop_cb)
+stop_info.browse_name = "stop"
+stop_info.display_name = "Stop"
+stop_info.description = "关闭设备"
+
+# 服务器
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+svr.addEventTypeNode(msg_type_info)
+svr.addMethodNode(start_info)
+
+while not stop:
+    svr.spinOnce()
+    if mode == OPCUAState.START:
+        # 实际发出 Start 指令
+        """
+        code
+        """
+
+        if True: # 'True' 应改为状态确定发生变更的判断条件
+            msg_info.message = "Msg_Start"
+            msg_info["Result"] = 0
+            svr.triggerEvent(msg_info)
+            mode = OPCUAState.NONE # 恢复 OPC UA 状态
+    elif mode == OPCUAState.STOP:
+        # 实际发出 Stop 指令
+        """
+        code
+        """
+
+        if True: # 'True' 应改为状态确定发生变更的判断条件
+            msg_info.message = "Msg_Stop"
+            msg_info["Result"] = 0
+            svr.triggerEvent(msg_info)
+            mode = OPCUAState.NONE # 恢复 OPC UA 状态
+```
+
+@end_toggle
+
+正常情况下，客户端调用方法节点会立刻返回，如以下代码
+
+@add_toggle_cpp
+
+```cpp
+// client_old.cpp
+#include <rmvl/opcua/client.hpp>
+
+int main()
+{
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
+    auto node = cli.find("start");
+    auto [res, oargs] = cli.call(node, {});
+    if (!res) // res 只表示方法节点是否调用成功，而非任务执行结果
+        ERROR_("Failed to call the method");
+}
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client_old.py
+import rm
+
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+node = cli.find("start")
+res, oargs = cli.call(node, [])
+if not res: # res 只表示方法节点是否调用成功，而非任务执行结果
+    print("Failed to call the method")
+```
+
+@end_toggle
+
+此时返回的结果表示该方法节点是否调用成功，并非任务执行结果，而真实的执行结果在多个事件循环后才能得到。不过服务器在任务执行完成后会触发事件，客户端可以通过监视事件来获取任务执行结果，如以下代码。
+
+@add_toggle_cpp
+
+```cpp
+// client_new.cpp
+#include <rmvl/opcua/client.hpp>
+
+class OpcUaController
+{
+public:
+    OpcUaController(std::string_view addr) : _cli(addr) {
+        // 监视事件
+        _cli.monitor({"Message", "Result"}, [this](rm::ClientView, const rm::Variables &vals) {
+            if (vals[0] == "Msg_Start")
+                _start_res = (vals[1] == 0);
+            else if (vals[0] == "Msg_Stop")
+                _stop_res = (vals[1] == 0);
+        });
+    }
+
+    // 同步阻塞的 start 函数
+    bool start()
+    {
+        auto [res, oargs] = _cli.call("Start", {});
+        if (!res)
+        {
+            printf("Failed to call start\n");
+            return false;
+        }
+        while (!_start_res.has_value())
+            _cli.spinOnce();
+        return _start_res.value();
+    }
+
+    // 同步阻塞的 stop 函数
+    bool stop()
+    {
+        auto [res, oargs] = _cli.call("Stop", {});
+        if (!res)
+        {
+            printf("Failed to call stop\n");
+            return false;
+        }
+        while (!_stop_res.has_value())
+            _cli.spinOnce();
+        return _stop_res.value();
+    }
+
+private:
+    rm::Client _cli;
+
+    std::optional<bool> _start_res{};
+    std::optional<bool> _stop_res{};
+};
+
+int main()
+{
+    OpcUaController uactl("opc.tcp://127.0.0.1:4840");
+    // 启动设备
+    bool val = uactl.start();
+    printf("Start result: %d\n", val);
+
+    /* code */
+
+    // 关闭设备
+    val = uactl.stop();
+    printf("Stop result: %d\n", val);
+}
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client_new.py
+import rm
+
+class OpcUaController:
+    def __init__(self, addr):
+        self.__cli = rm.Client(addr)
+        self.__start_res = None
+        self.__stop_res = None
+        # 监视事件
+        self.__cli.monitor(["Message", "Result"], self.on_event)
+
+    def on_event(self, view, vals):
+        if vals[0] == "Msg_Start":
+            self.__start_res = vals[1] == 0
+        elif vals[0] == "Msg_Stop":
+            self.__stop_res = vals[1] == 0
+
+    # 同步阻塞的 start 函数
+    def start(self):
+        res, oargs = self.__cli.call("Start", [])
+        if not res:
+            print("Failed to call start")
+            return False
+        while self.__start_res is None:
+            self.__cli.spinOnce()
+        return self.__start_res
+
+    # 同步阻塞的 stop 函数
+    def stop(self):
+        res, oargs = self.__cli.call("Stop", [])
+        if not res:
+            print("Failed to call stop")
+            return False
+        while self.__stop_res is None:
+            self.__cli.spinOnce()
+        return self.__stop_res
+
+uactl = OpcUaController("opc.tcp://127.0.0.1:4840")
+# 启动设备
+val = uactl.start()
+print(f"Start result: {val}")
+
+"""
+code
+"""
+
+# 关闭设备
+val = uactl.stop()
+print(f"Stop result: {val}")
 ```
 
 @end_toggle

@@ -12,7 +12,6 @@
 
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/camera/camutils.hpp"
-#include "rmvl/types.hpp"
 
 #include "rmvl/core/io.hpp"
 #include "rmvl/feature/feature.h"
