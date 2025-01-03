@@ -80,7 +80,7 @@ Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &im
     // ---------- 设置组合体特征指针 ----------
     _features = {p_target, p_center};
     // ---------- 更新组合体类型信息 ----------
-    _type.RuneTypeID = _is_active ? RuneType::ACTIVE : RuneType::INACTIVE;
+    _state["rune"] = _is_active ? "active" : "inactive";
     _tick = tick;
 }
 

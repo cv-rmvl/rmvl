@@ -105,7 +105,7 @@ static cv::Point2f calculateHighSpeedBasicResponse(group::ptr target_group, trac
                                                                           pitch_min * (1 - para::gyro_decider_param.PITCH_RESPONSE_AMP))};
 }
 
-DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, RMStatus,
+DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const StateInfo &,
                                tracker::ptr last_target, const DetectInfo &,
                                const CompensateInfo &compensate_info, const PredictInfo &predict_info)
 {
@@ -243,8 +243,8 @@ group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &g
     auto max_group = *max_element(groups.begin(), groups.end(), [&](group::const_ptr g1, group::ptr g2) {
         GyroGroup::const_ptr lhs = GyroGroup::cast(g1);
         GyroGroup::const_ptr rhs = GyroGroup::cast(g2);
-        auto type_lhs = g1->type().RobotTypeID;
-        auto type_rhs = g1->type().RobotTypeID;
+        auto type_lhs = to_robot_type(g1->state().at("robot"));
+        auto type_rhs = to_robot_type(g1->state().at("robot"));
         // 需要满足: 优先级 rhs > lhs
         if (_priority.find(type_lhs) != _priority.end() &&
             _priority.find(type_rhs) != _priority.end() &&
@@ -255,8 +255,8 @@ group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &g
                    getDistance(rhs->getCenter3D(), cv::Vec3f(), CalPlane::xOz);
     });
     // 当前最高优先级
-    if (_priority.find(max_group->type().RobotTypeID) != _priority.end() &&
-        _priority[max_group->type().RobotTypeID] <= 0)
+    auto robot = to_robot_type(max_group->state().at("robot"));
+    if (_priority.find(robot) != _priority.end() && _priority[robot] <= 0)
         return nullptr;
     else
         return max_group;

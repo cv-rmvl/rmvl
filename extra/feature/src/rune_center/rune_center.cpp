@@ -11,6 +11,7 @@
 
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/core/util.hpp"
 #include "rmvl/feature/rune_center.h"
 
 #include "rmvlpara/feature/rune_center.h"

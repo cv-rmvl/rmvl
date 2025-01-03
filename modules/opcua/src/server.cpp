@@ -16,6 +16,7 @@
 #include <open62541/server_config_default.h>
 
 #include "rmvl/core/str.hpp"
+#include "rmvl/core/util.hpp"
 #include "rmvl/opcua/server.hpp"
 #include "rmvlpara/opcua.hpp"
 
@@ -192,7 +193,7 @@ static bool serverTriggerEvent(UA_Server *server, const Event &event)
     }
 
     // 触发事件
-    status = UA_Server_triggerEvent(server, event_id, UA_NODEID_NUMERIC(0, UA_NS0ID_SERVER), nullptr, true);
+    status = UA_Server_triggerEvent(server, event_id, nodeServer, nullptr, true);
     if (status != UA_STATUSCODE_GOOD)
     {
         ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
@@ -569,19 +570,19 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
     // 添加额外变量节点
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
-        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        RMVL_DbgAssert((retval | node(browse_name)).empty());
         addVariableNode(variable, retval);
     }
     // 添加额外数据源变量节点
     for (const auto &[browse_name, dsv] : obj.getDataSourceVariables())
     {
-        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        RMVL_DbgAssert((retval | node(browse_name)).empty());
         addDataSourceVariableNode(dsv, retval);
     }
     // 添加额外方法节点
     for (const auto &[browse_name, method] : obj.getMethods())
     {
-        RMVL_DbgAssert(!(retval | node(browse_name)).empty());
+        RMVL_DbgAssert((retval | node(browse_name)).empty());
         addMethodNode(method, retval);
     }
     return retval;

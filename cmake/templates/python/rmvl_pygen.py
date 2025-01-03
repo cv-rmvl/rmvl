@@ -235,7 +235,7 @@ def type_convert(cpp_type: str) -> str:
 
     def convert_list(match: re.Match) -> str:
         """
-        Convert `vector<...>` to `List[...]`
+        Convert `vector<...>`, `deque<...>` and `valarray<...>` to `List[...]`
         """
         inner: str = match.group(2)
         converted = type_convert(inner)
@@ -280,6 +280,13 @@ def type_convert(cpp_type: str) -> str:
         """
         inner = type_convert(match.group(1))
         return f"List[{inner}]"
+
+    def convert_optional(match: re.Match) -> str:
+        """
+        Convert `optional<...>` to `Union[... | None]`
+        """
+        inner = type_convert(match.group(1))
+        return f"Union[{inner}, None]"
 
     def convert_identifier(match: re.Match) -> str:
         """
@@ -327,8 +334,8 @@ def type_convert(cpp_type: str) -> str:
 
     # bitset<...> -> int
     cpp_type = re.sub(r"^bitset<\d+>", "int", cpp_type)
-    # vector<...> / deque<...> -> List[...]
-    cpp_type = re.sub(r"^(vector|deque)<(.+)>$", convert_list, cpp_type)
+    # vector<...>, deque<...> and valarray<...> -> List[...]
+    cpp_type = re.sub(r"^(vector|deque|valarray)<(.+)>$", convert_list, cpp_type)
     # complex<...> -> complex
     cpp_type = re.sub(r"^complex<(.+)>$", convert_complex, cpp_type)
     # array<..., size> -> List[...]
@@ -337,6 +344,8 @@ def type_convert(cpp_type: str) -> str:
     cpp_type = re.sub(r"^(pair|tuple)<(.+)>$", convert_pair_tuple, cpp_type)
     # unordered_map<...> -> dict[...]
     cpp_type = re.sub(r"^unordered_map<(.+)>$", convert_unordered_map, cpp_type)
+    # optional<...> -> Union[... | None]
+    cpp_type = re.sub(r"^optional<(.+)>$", convert_optional, cpp_type)
     # function<return_type(arg_types)> -> callable[[arg_types], return_type]
     cpp_type = re.sub(r"^function<([^(]+)\(([^)]*)\)>$", convert_function, cpp_type)
     # convert cv types

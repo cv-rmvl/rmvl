@@ -32,8 +32,8 @@ int GyroGroup::calcArmorNum(const std::vector<combo::ptr> &ref_combos)
     std::unordered_set<ArmorSizeType> armor_size_set;
     for (auto ref_combo : ref_combos)
     {
-        robot_set.insert(ref_combo->type().RobotTypeID);
-        armor_size_set.insert(ref_combo->type().ArmorSizeTypeID);
+        robot_set.insert(to_robot_type(ref_combo->state().at("robot")));
+        armor_size_set.insert(to_armor_size_type(ref_combo->state().at("armor_size")));
     }
     // 其中一个是前哨站，则 armor_num = 3
     if (robot_set.find(RobotType::OUTPOST) != robot_set.end())
@@ -80,14 +80,15 @@ combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const ImuData &im
     cv::Vec3f cam_rvec;
     Rodrigues(cam_rmat, cam_rvec);
     std::vector<cv::Point2f> new_corners;
-    projectPoints(p_combo->type().ArmorSizeTypeID == ArmorSizeType::SMALL ? para::armor_param.SMALL_ARMOR : para::armor_param.BIG_ARMOR,
+    auto armor_size = to_armor_size_type(p_combo->state().at("armor_size"));
+    projectPoints(armor_size == ArmorSizeType::SMALL ? para::armor_param.SMALL_ARMOR : para::armor_param.BIG_ARMOR,
                   cam_rvec, cam_tvec, para::camera_param.cameraMatrix, para::camera_param.distCoeffs, new_corners);
     if (new_corners.size() != 4)
         RMVL_Error_(RMVL_StsBadSize, "Size of the \"new_corners\" are not equal to 4. (size = %zu)", new_corners.size());
     // 强制构造灯条与装甲板
     auto left = LightBlob::make_feature(new_corners[1], new_corners[0], p_combo->at(0)->width());
     auto right = LightBlob::make_feature(new_corners[2], new_corners[3], p_combo->at(1)->width());
-    return Armor::make_combo(left, right, imu_data, tick, p_combo->type().ArmorSizeTypeID);
+    return Armor::make_combo(left, right, imu_data, tick, armor_size);
 }
 
 void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std::vector<TrackerState> &state_vec,

@@ -11,8 +11,8 @@
 
 #include <opencv2/calib3d.hpp>
 
-#include "rmvl/combo/armor.h"
 #include "rmvl/algorithm/transform.hpp"
+#include "rmvl/combo/armor.h"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
@@ -110,6 +110,8 @@ static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, cons
     return extrinsic;
 }
 
+void Armor::setType(RobotType stat) { _state["robot"] = to_string(stat); }
+
 Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, double tick,
              float width_r, float length_r, float corner_angle, float match_error,
              float combo_h, float combo_w, float combo_r, ArmorSizeType armor_size_type)
@@ -127,18 +129,19 @@ Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_d
     // 装甲板角度
     _angle = (p_left->angle() + p_right->angle()) / 2.f;
     // 匹配大小装甲板
+    ArmorSizeType armor_size{};
     if (armor_size_type == ArmorSizeType::UNKNOWN)
-        _type.ArmorSizeTypeID = matchArmorType();
+        armor_size = matchArmorType();
     else
-        _type.ArmorSizeTypeID = armor_size_type;
+        armor_size = armor_size_type;
+    _state["armor_size"] = to_string(armor_size);
     // 更新角点
     _corners = {p_left->getBottomPoint(),   // 左下
                 p_left->getTopPoint(),      // 左上
                 p_right->getTopPoint(),     // 右上
                 p_right->getBottomPoint()}; // 右下
     // 计算相机外参
-    _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs,
-                                    imu_data, _type.ArmorSizeTypeID, _corners);
+    _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, imu_data, armor_size, _corners);
     const auto &rmat = _extrinsic.R();
     _pose = cv::normalize(cv::Vec2f(rmat(0, 2), rmat(2, 2)));
     // 设置组合体的特征容器

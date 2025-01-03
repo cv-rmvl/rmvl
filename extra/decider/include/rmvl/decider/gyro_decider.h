@@ -14,6 +14,8 @@
 #include "decider.h"
 #include "rmvl/tracker/tracker.h"
 
+#include "rmvl/combo/armor.h"
+
 namespace rm
 {
 
@@ -44,7 +46,7 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+    DecideInfo decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
                       tracker::ptr last_target, const DetectInfo &detect_info,
                       const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
 

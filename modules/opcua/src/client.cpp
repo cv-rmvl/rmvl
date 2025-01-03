@@ -14,8 +14,9 @@
 #include <open62541/client_highlevel.h>
 #include <open62541/plugin/log_stdout.h>
 
-#include "rmvl/opcua/client.hpp"
 #include "rmvl/core/str.hpp"
+#include "rmvl/core/util.hpp"
+#include "rmvl/opcua/client.hpp"
 #include "rmvlpara/opcua.hpp"
 
 #include "cvt.hpp"

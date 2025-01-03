@@ -18,7 +18,7 @@
 namespace rm
 {
 
-DecideInfo TranslationDecider::decide(const std::vector<group::ptr> &groups, RMStatus, tracker::ptr last_target,
+DecideInfo TranslationDecider::decide(const std::vector<group::ptr> &groups, const StateInfo &, tracker::ptr last_target,
                                       const DetectInfo &detect_info, const CompensateInfo &compensate_info,
                                       const PredictInfo &predict_info)
 {
