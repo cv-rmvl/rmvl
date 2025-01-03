@@ -13,6 +13,7 @@
 #include <open62541/plugin/log_stdout.h>
 #include <open62541/server.h>
 
+#include "rmvl/core/util.hpp"
 #include "rmvl/opcua/utilities.hpp"
 
 #include "cvt.hpp"
