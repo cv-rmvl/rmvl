@@ -25,6 +25,28 @@ namespace rm
 //! @example samples/detector/mv/sample_mv_armor_size_classify.cpp 大小装甲板分类例程
 //! @example samples/detector/hik/sample_hik_armor_size_classify.cpp 大小装甲板分类例程
 
+//! 装甲板大小类型
+enum class ArmorSizeType : uint8_t
+{
+    UNKNOWN, //!< 未知
+    SMALL,   //!< 小装甲板
+    BIG      //!< 大装甲板
+};
+
+//! 机器人类型
+enum class RobotType : uint8_t
+{
+    UNKNOWN,    //!< 未知
+    HERO,       //!< 英雄机器人
+    ENGINEER,   //!< 工程机器人
+    INFANTRY_3, //!< 3 号步兵机器人
+    INFANTRY_4, //!< 4 号步兵机器人
+    INFANTRY_5, //!< 5 号步兵机器人
+    OUTPOST,    //!< 前哨站
+    BASE,       //!< 基地
+    SENTRY      //!< 哨兵机器人
+};
+
 /**
  * @brief 装甲模块组合特征
  * @note
@@ -115,26 +137,22 @@ public:
     static cv::Mat getNumberROI(cv::Mat src, const_ptr p_armor);
 
     //! 获取组合特征宽高比
-    RMVL_W inline float getComboRatio() { return _combo_ratio; }
+    RMVL_W float getComboRatio() { return _combo_ratio; }
     //! 获取左右灯条宽度的比值
-    RMVL_W inline float getWidthRatio() { return _width_ratio; }
+    RMVL_W float getWidthRatio() { return _width_ratio; }
     //! 获取左右灯条长度的比值
-    RMVL_W inline float getLengthRatio() { return _length_ratio; }
+    RMVL_W float getLengthRatio() { return _length_ratio; }
     //! 获取左右灯条错位角
-    RMVL_W inline float getCornerAngle() { return _corner_angle; }
+    RMVL_W float getCornerAngle() { return _corner_angle; }
     //! 获取匹配误差
-    RMVL_W inline float getError() { return _match_error; }
+    RMVL_W float getError() { return _match_error; }
     //! 设置机器人类型 RobotType
-    RMVL_W inline void setType(RobotType stat) { _type.RobotTypeID = stat; }
+    RMVL_W void setType(RobotType stat);
     //! 获取装甲板姿态法向量
-    RMVL_W inline const cv::Vec2f &getPose() const { return _pose; }
+    RMVL_W const cv::Vec2f &getPose() const { return _pose; }
 
 private:
-    /**
-     * @brief 用来确定装甲板的种类 (大装甲或者小装甲)
-     *
-     * @return Armor::ArmorType
-     */
+    //! 用来确定装甲板的种类 (大装甲或者小装甲)
     ArmorSizeType matchArmorType();
 
     float _combo_ratio{};  //!< 组合特征宽高比
@@ -149,6 +167,94 @@ private:
 };
 
 inline cv::Ptr<cv::ml::SVM> Armor::_svm = nullptr;
+
+/**
+ * @brief 装甲板大小类型转为字符串
+ *
+ * @param[in] armor_size_type 装甲板大小类型
+ */
+constexpr const char *to_string(ArmorSizeType armor_size)
+{
+    switch (armor_size)
+    {
+    case ArmorSizeType::SMALL:
+        return "small";
+    case ArmorSizeType::BIG:
+        return "big";
+    default:
+        return "unknown";
+    }
+}
+
+/**
+ * @brief 字符串转为装甲板大小类型
+ *
+ * @param[in] str 字符串
+ */
+constexpr ArmorSizeType to_armor_size_type(std::string_view str)
+{
+    if (str == "small")
+        return ArmorSizeType::SMALL;
+    else if (str == "big")
+        return ArmorSizeType::BIG;
+    return ArmorSizeType::UNKNOWN;
+}
+
+/**
+ * @brief 机器人类型转为字符串
+ *
+ * @param[in] robot 机器人类型
+ */
+constexpr const char *to_string(RobotType robot)
+{
+    switch (robot)
+    {
+    case RobotType::HERO:
+        return "hero";
+    case RobotType::ENGINEER:
+        return "engineer";
+    case RobotType::INFANTRY_3:
+        return "infantry_3";
+    case RobotType::INFANTRY_4:
+        return "infantry_4";
+    case RobotType::INFANTRY_5:
+        return "infantry_5";
+    case RobotType::OUTPOST:
+        return "outpost";
+    case RobotType::BASE:
+        return "base";
+    case RobotType::SENTRY:
+        return "sentry";
+    default:
+        return "unknown";
+    }
+}
+
+/**
+ * @brief 字符串转为机器人类型
+ *
+ * @param[in] str 字符串
+ */
+constexpr RobotType to_robot_type(std::string_view str)
+{
+    if (str == "hero")
+        return RobotType::HERO;
+    else if (str == "engineer")
+        return RobotType::ENGINEER;
+    else if (str == "infantry_3")
+        return RobotType::INFANTRY_3;
+    else if (str == "infantry_4")
+        return RobotType::INFANTRY_4;
+    else if (str == "infantry_5")
+        return RobotType::INFANTRY_5;
+    else if (str == "outpost")
+        return RobotType::OUTPOST;
+    else if (str == "base")
+        return RobotType::BASE;
+    else if (str == "sentry")
+        return RobotType::SENTRY;
+    return RobotType::UNKNOWN;
+}
 
 //! @} combo_armor
 

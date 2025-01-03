@@ -28,7 +28,7 @@ protected:
     cv::Point2f _center;    //!< 序列组中心
     bool _is_tracked{};     //!< 是否为目标序列组
     uint32_t _vanish_num{}; //!< 丢帧数量
-    RMStatus _type{};       //!< 序列组各状态
+    StateInfo _state{};     //!< 序列组各状态信息
 
 public:
     using ptr = std::shared_ptr<group>;
@@ -108,11 +108,11 @@ public:
     RMVL_W inline uint32_t getVanishNumber() const { return _vanish_num; }
 
     /**
-     * @brief 获取该组类型
+     * @brief 获取序列组状态
      *
-     * @return RMStatus 该组类型
+     * @return 序列组状态
      */
-    RMVL_W inline const RMStatus &type() const { return _type; }
+    RMVL_W inline const StateInfo &state() const { return _state; }
 };
 
 #define RMVL_GROUP_CAST(name)                                                                       \
@@ -140,7 +140,7 @@ public:
 
     /**
      * @brief DefaultGroup 同步操作（空实现，不执行任何操作）
-     * 
+     *
      * @param[in] imu 最新 IMU 数据
      * @param[in] tick 最新时间点，可用 `rm::Timer::now()` 获取
      */

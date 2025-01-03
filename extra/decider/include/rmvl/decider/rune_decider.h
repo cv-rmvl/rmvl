@@ -46,7 +46,7 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    DecideInfo decide(const std::vector<group::ptr> &groups, RMStatus flag,
+    DecideInfo decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
                       tracker::ptr last_target, const DetectInfo &detect_info,
                       const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
 
@@ -55,13 +55,13 @@ private:
      * @brief 判断是否具有射击权限
      *
      * @param[in] target_tracker 目标追踪器
-     * @param[in] rune_mode 神符模式
+     * @param[in] is_active 神符是否激活
      * @param[in] comp 补偿增量
      * @param[in] center2d 像素坐标系下的期望目标点
      * @param[out] shoot_center 击打中心
      * @return 能否射击的标志
      */
-    bool judgeShoot(tracker::ptr target_tracker, RuneType rune_mode, const cv::Point2f &comp,
+    bool judgeShoot(tracker::ptr target_tracker, bool is_active, const cv::Point2f &comp,
                     const cv::Point2f &center2d, cv::Point2f &shoot_center);
 
     //! 触发初始化

@@ -156,7 +156,7 @@ void GyroDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
 void GyroDetector::eraseFakeArmors(std::vector<Armor::ptr> &armors)
 {
     armors.erase(std::remove_if(armors.begin(), armors.end(), [](Armor::const_ptr it) {
-                     return it->type().RobotTypeID == RobotType::UNKNOWN;
+                     return it->state().at("robot") == "unknown";
                  }),
                  armors.end());
 }

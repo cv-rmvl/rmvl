@@ -38,11 +38,6 @@ void ArmorDetector::match(std::vector<group::ptr> &groups, const std::vector<com
     auto &trackers = groups.front()->data();
     // combo 匹配 tracker
     matchArmors(trackers, combos);
-    // 删除因数字识别判断出的伪装甲板序列
-    // trackers.erase(std::remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr t1) {
-    //                    return t1->type().RobotTypeID == RobotType::UNKNOWN;
-    //                }),
-    //                trackers.end());
     // 删除失效的 tracker
     trackers.erase(std::remove_if(trackers.begin(), trackers.end(),
                                   [](tracker::const_ptr p_tracker) {

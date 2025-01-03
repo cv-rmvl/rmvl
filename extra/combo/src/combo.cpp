@@ -22,7 +22,7 @@ DefaultCombo::DefaultCombo(feature::ptr p_feature, double tick) : combo()
     _center = p_feature->center();
     _angle = p_feature->angle();
     _corners = p_feature->corners();
-    _type = p_feature->type();
+    _state = p_feature->state();
     _tick = tick;
 }
 

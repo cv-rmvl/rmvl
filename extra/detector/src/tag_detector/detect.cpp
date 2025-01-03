@@ -147,7 +147,7 @@ DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &s
 
     cvtColor(src, info.gray, cv::COLOR_BGR2GRAY);
     std::vector<std::vector<cv::Point2f>> corners;
-    std::vector<TagType> types;
+    std::vector<char> types;
 
     // 格式转换
     image_u8_t apriltag_img = {info.gray.cols,
@@ -169,7 +169,12 @@ DetectInfo TagDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &s
         for (int j = 0; j < 4; j++)
             corners[i][j] = cv::Point2f(static_cast<float>(det->p[j][0]),
                                         static_cast<float>(det->p[j][1]));
-        types[i] = static_cast<TagType>(det->id + 1);
+        if (det->id >= 0 && det->id <= 9)
+            types[i] = '0' + det->id;
+        else if (det->id >= 10 && det->id <= 35)
+            types[i] = 'A' + det->id - 10;
+        else
+            types[i] = '-';
     }
 
     // 释放资源

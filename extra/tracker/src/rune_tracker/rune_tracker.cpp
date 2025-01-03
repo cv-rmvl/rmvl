@@ -22,7 +22,7 @@ void RuneTracker::updateFromRune(combo::ptr p_combo)
     _corners = p_combo->corners();
     _extrinsic = p_combo->extrinsic();
     _center = p_combo->center();
-    _type = p_combo->type();
+    _state = p_combo->state();
     _relative_angle = p_combo->getRelativeAngle();
 }
 

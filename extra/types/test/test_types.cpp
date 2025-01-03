@@ -13,27 +13,15 @@
 
 #include "rmvl/types.hpp"
 
-namespace rm_test
+namespace rm::rm_test
 {
 
-TEST(RMStatus_test, tag_type_to_string)
+TEST(RMStatus_test, add_type)
 {
-    auto str = std::string{};
-    str = rm::RMStatus::to_string(rm::TagType::NUM_0);
-    EXPECT_EQ(str, "0");
-    str = rm::RMStatus::to_string(rm::TagType::CHAR_K);
-    EXPECT_EQ(str, "K");
+    StateInfo state;
+    state.add("robot: hero, armor_size: big");
+    EXPECT_EQ(state.at("robot"), "hero");
+    EXPECT_EQ(state.at("armor_size"), "big");
 }
 
-TEST(RMStatus_test, robot_type_to_string)
-{
-    auto str = std::string{};
-    str = rm::RMStatus::to_string(rm::RobotType{});
-    EXPECT_EQ(str, "UNKNOWN");
-    str = rm::RMStatus::to_string(rm::RobotType::INFANTRY_4);
-    EXPECT_EQ(str, "INFANTRY_4");
-    str = rm::RMStatus::to_string(static_cast<rm::RobotType>(1));
-    EXPECT_EQ(str, "HERO");
-}
-
-} // namespace rm_test
+} // namespace rm::rm_test

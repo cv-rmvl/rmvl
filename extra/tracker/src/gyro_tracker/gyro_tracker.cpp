@@ -34,9 +34,9 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     updateFromCombo(p_armor);
 
     _extrinsic = p_armor->extrinsic();
-    _type = p_armor->type();
+    _state = p_armor->state();
     _combo_deque.push_back(p_armor);
-    _type_deque.push_back(_type.RobotTypeID);
+    _type_deque.push_back(to_robot_type(_state.at("robot")));
     _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
     initFilter();
 }
@@ -58,7 +58,8 @@ void GyroTracker::update(combo::ptr p_armor)
     updateFromCombo(p_armor);
     _combo_deque.emplace_front(p_armor);
     // 更新装甲板类型
-    updateType(p_armor->type());
+    const auto &armor_state = p_armor->state();
+    updateType(to_robot_type(armor_state.at("robot")));
     // 帧差时间计算
     if (_combo_deque.empty())
         RMVL_Error(RMVL_StsBadSize, "\"_combo_deque\" is empty");
@@ -77,14 +78,14 @@ void GyroTracker::update(combo::ptr p_armor)
         _combo_deque.pop_back();
 }
 
-void GyroTracker::updateType(RMStatus stat)
+void GyroTracker::updateType(RobotType robot)
 {
-    if (_type.RobotTypeID == RobotType::UNKNOWN || stat.RobotTypeID != RobotType::UNKNOWN)
-        _type_deque.push_back(stat.RobotTypeID);
+    if (robot == RobotType::UNKNOWN || robot != RobotType::UNKNOWN)
+        _type_deque.push_back(robot);
     if (_type_deque.size() > 32)
         _type_deque.pop_back();
     if (_type_deque.size() < 32)
-        _type.RobotTypeID = calculateModeNum(_type_deque.begin(), _type_deque.end());
+        _state["robot"] = to_string(calculateModeNum(_type_deque.begin(), _type_deque.end()));
 }
 
 /**

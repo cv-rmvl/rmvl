@@ -10,10 +10,10 @@
  */
 
 #include "rmvl/decider/rune_decider.h"
+#include "rmvl/algorithm/math.hpp"
+#include "rmvl/algorithm/transform.hpp"
 #include "rmvl/combo/rune.h"
 #include "rmvl/core/timer.hpp"
-#include "rmvl/algorithm/transform.hpp"
-#include "rmvl/algorithm/math.hpp"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/rune_decider.h"
@@ -47,7 +47,7 @@ static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, c
               ref_tracker->getRelativeAngle();
 }
 
-DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus flag,
+DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
                                tracker::ptr last_target, const DetectInfo &,
                                const CompensateInfo &compensate_info, const PredictInfo &predict_info)
 {
@@ -55,13 +55,15 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     DecideInfo info{};
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
+    RMVL_Assert(flag.contains("rune"));
     // 需要被考虑的真实追踪器
     std::vector<tracker::ptr> true_trackers;
     true_trackers.reserve(5);
 
     for (auto &p_tracker : groups.front()->data())
-        if (p_tracker->type().RuneTypeID == flag.RuneTypeID)
+        if (p_tracker->state().at("rune") == flag.at("rune"))
             true_trackers.emplace_back(p_tracker);
+    bool is_active = flag.at("rune") == "active";
 
     if (last_target != nullptr)
         for (auto &p_tracker : true_trackers)
@@ -74,7 +76,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     else if (!info.target && !true_trackers.empty())
     {
         // 已激活神符决策
-        if (flag.RuneTypeID == RuneType::ACTIVE)
+        if (is_active)
             info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
                 return lhs->center().y < rhs->center().y;
             });
@@ -90,7 +92,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     else
     {
         // 已激活神符决策
-        if (flag.RuneTypeID == RuneType::ACTIVE)
+        if (is_active)
         {
             // 寻找最下方神符
             info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
@@ -125,8 +127,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
 
         _delta_time = Timer::now() - _start_tick;
         // 判断能否射击
-        if (judgeShoot(info.target, flag.RuneTypeID, comp, info.exp_center2d, info.shoot_center) &&
-            _delta_time > _miss_frequency && !_is_changed)
+        if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _miss_frequency && !_is_changed)
         {
             if (_send_times < 5)
             {
@@ -139,8 +140,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
                 _is_changed = false;
             }
         }
-        else if (judgeShoot(info.target, flag.RuneTypeID, comp, info.exp_center2d, info.shoot_center) &&
-                 _delta_time > _initial_frequency && _is_changed)
+        else if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _initial_frequency && _is_changed)
         {
             // 继续追踪 5 帧，作为靠近目标后的保险措施
             if (_send_times < 5)
@@ -162,8 +162,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, RMStatus f
     return info;
 }
 
-bool RuneDecider::judgeShoot(tracker::ptr target_tracker, RuneType rune_mode,
-                             const cv::Point2f &comp, const cv::Point2f &center2d, cv::Point2f &shoot_center)
+bool RuneDecider::judgeShoot(tracker::ptr target_tracker, bool is_active, const cv::Point2f &comp, const cv::Point2f &center2d, cv::Point2f &shoot_center)
 {
     if (!target_tracker)
         return false;
@@ -172,13 +171,10 @@ bool RuneDecider::judgeShoot(tracker::ptr target_tracker, RuneType rune_mode,
     // 中心距离
     float center_dis = getDistance(center2d, shoot_center);
     // 判断
-    switch (rune_mode)
-    {
-    case RuneType::ACTIVE: // 已激活
+    if (is_active)
         return center_dis <= para::rune_decider_param.DISTURB_RADIUS_RATIO * target_tracker->front()->at(1)->width();
-    default: // 默认: 未激活
+    else
         return center_dis <= para::rune_decider_param.NORMAL_RADIUS_RATIO * target_tracker->front()->at(1)->width();
-    }
 }
 
 void RuneDecider::triggerInit()

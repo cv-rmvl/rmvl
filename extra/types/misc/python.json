@@ -1,0 +1,12 @@
+{
+    "At": {
+        "bind": [
+            ".def(\"__getitem__\", [](StateInfo &s, std::string_view key) -> std::string & { return s.at(key); })",
+            ".def(\"__setitem__\", [](StateInfo &s, std::string_view key, const std::string &val) { s[key] = val; })"
+        ],
+        "pyi": [
+            "def __getitem__(self, key: str) -> str: ...",
+            "def __setitem__(self, key: str, val: str) -> None: ..."
+        ]
+    }
+}

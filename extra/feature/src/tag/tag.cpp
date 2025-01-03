@@ -11,19 +11,20 @@
 
 #include "rmvl/feature/tag.h"
 
-#include "rmvl/core/util.hpp"
 #include "rmvl/algorithm/math.hpp"
+#include "rmvl/core/util.hpp"
 
 namespace rm
 {
 
-Tag::Tag(const std::vector<cv::Point2f> &corners, TagType type)
+Tag::Tag(const std::vector<cv::Point2f> &corners, char type)
 {
+    RMVL_DbgAssert((type >= 'A' && type <= 'Z') || (type >= '0' && type <= '9'));
     size_t corners_size = corners.size();
     if (corners_size != 4)
         RMVL_Error_(RMVL_StsBadArg, "the size of the argument \"corners\" should be 4, but now it is %zu.", corners_size);
     _corners = std::vector<cv::Point2f>(corners.begin(), corners.end());
-    _type.TagTypeID = type;
+    _state.at("tag: " + std::string(1, type));
     cv::Point2f center;
     for (const auto &corner : corners)
         center += corner;

@@ -79,13 +79,6 @@ private:
     void initFilter();
 
     /**
-     * @brief 更新状态类型
-     *
-     * @param[in] stat 类型
-     */
-    void updateType(RMStatus stat);
-
-    /**
      * @brief 更新距离滤波器
      */
     void updateDistanceFilter();
@@ -96,10 +89,8 @@ private:
      */
     void updateMotionFilter();
 
-    KF21f _distance_filter;             //!< 距离滤波器
-    KF42f _motion_filter;               //!< 运动滤波器
-    std::deque<float> _relative_speeds; //!< 图像速度的容器
-    std::deque<RMStatus> _type_deque;   //!< 状态队列
+    KF21f _distance_filter; //!< 距离滤波器
+    KF42f _motion_filter;   //!< 运动滤波器
 };
 
 //! @} planar_tracker

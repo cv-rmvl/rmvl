@@ -171,13 +171,15 @@ public:
 
     /**
      * @brief 添加（额外的）变量节点至 `rm::Object` 对象中
+     * - 若设置了对象类型，则此方法只能添加对象类型中不存在的变量节点
      *
      * @param[in] variable 变量节点
      */
     RMVL_W void add(const Variable &variable) { _variables[variable.browse_name] = variable; }
 
     /**
-     * @brief 添加数据源变量节点至 `rm::Object` 对象中
+     * @brief 添加（额外的）数据源变量节点至 `rm::Object` 对象中
+     * - 若设置了对象类型，则此方法只能添加对象类型中不存在的数据源变量节点
      *
      * @param[in] dsv 数据源变量节点
      */
@@ -185,6 +187,7 @@ public:
 
     /**
      * @brief 添加（额外的）方法节点至 `rm::Object` 对象中
+     * - 若设置了对象类型，则此方法只能添加对象类型中不存在的方法节点
      *
      * @param[in] method 方法节点
      */
@@ -242,7 +245,7 @@ public:
     RMVL_W_RW std::string description{};
 
 private:
-    explicit Object(const ObjectType &otype) : _type(otype), _variables(otype.getVariables()), _methods(otype.getMethods()) {}
+    explicit Object(const ObjectType &otype) : _type(otype) {}
 
     //! 对应的用 `rm::ObjectType` 表示的对象类型
     ObjectType _type{};
