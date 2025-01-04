@@ -26,3 +26,11 @@ if(BUILD_TESTS)
     EXTERNAL GTest::gtest_main
   )
 endif()
+
+if(BUILD_PERF_TESTS)
+  rmvl_add_test(
+    types Performance
+    DEPENDS types
+    EXTERNAL benchmark::benchmark_main
+  )
+endif()
