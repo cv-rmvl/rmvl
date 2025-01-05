@@ -57,29 +57,25 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
 
 Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &imu_data, double tick)
 {
+    // 通用信息
     _imu_data = imu_data;
     _width = p_target->width() + p_center->width() + getDistance(p_target->center(), p_center->center());
     _height = p_target->height();
-    // ------------- 获取神符中心 -------------
     _center = p_target->center();
-    // ------------- 获取激活信息 -------------
-    _is_active = p_target->isActive();
-    // ----------- 计算相对目标转角 -----------
     _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, _center);
-    // ------------- 计算直线距离 -------------
     // 计算 pitch 的绝对目标转角
     double absolute_angle = _relative_angle.y + _imu_data.rotation.pitch;
     // 计算距离
     _extrinsic.distance(para::rune_param.RUNE_DISTANCE * sec(deg2rad(absolute_angle)));
-    // ------------- 更新神符角度 -------------
-    auto angle_vec = Rune::cameraConvertToVertical(p_target->center() - p_center->center(),
-                                                   imu_data.rotation.pitch);
+    // 神符角度
+    auto angle_vec = Rune::cameraConvertToVertical(p_target->center() - p_center->center(), imu_data.rotation.pitch);
     _angle = getHAngle(p_center->center(), cv::Point2f(angle_vec) + p_center->center(), DEG);
-    // ----------- 更新神符特征间距 -----------
-    _feature_dis = getDistance(angle_vec, cv::Vec2f{});
-    // ---------- 设置组合体特征指针 ----------
     _features = {p_target, p_center};
-    // ---------- 更新组合体类型信息 ----------
+    _corners = {p_target->center(), p_center->center()};
+
+    // 专属信息
+    _is_active = p_target->isActive();
+    _feature_dis = getDistance(angle_vec, cv::Vec2f{});
     _type.RuneTypeID = _is_active ? RuneType::ACTIVE : RuneType::INACTIVE;
     _tick = tick;
 }

@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - '1.*'
+
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Create Release
@@ -17,19 +21,19 @@ jobs:
         run: |
           version=${GITHUB_REF#refs/tags/}
           version_number=${version//./}
-          echo "::set-output name=version_number::$version_number"
+          echo "version_id=${version_number}" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body: |
-            RMVL ${{ github.ref }} has been released
+            RMVL ${{ github.ref_name }} has been released
 
-            :hammer_and_wrench: ChangeLog is [hear](https://github.com/cv-rmvl/rmvl/wiki/ChangeLog#version-${{ steps.extract_version.outputs.version_number }})
+            :hammer_and_wrench: ChangeLog is [hear](https://github.com/cv-rmvl/rmvl/wiki/ChangeLog#version-${{ steps.extract_version.outputs.version_id }})
           draft: false
           prerelease: false
