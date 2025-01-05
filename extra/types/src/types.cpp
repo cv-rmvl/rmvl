@@ -35,21 +35,16 @@ void StateInfo::add(std::string_view type)
 
 bool StateInfo::remove(std::string_view key) { return _states.erase(std::string(key)) > 0; }
 
-bool StateInfo::contains(std::string_view key) const { return _states.find(std::string(key)) != _states.end(); }
+bool StateInfo::contains(std::string_view key) const noexcept { return _states.find(std::string(key)) != _states.end(); }
 
-void StateInfo::clear() { _states.clear(); }
+void StateInfo::clear() noexcept { _states.clear(); }
 
-bool StateInfo::empty() const { return _states.empty(); }
+bool StateInfo::empty() const noexcept { return _states.empty(); }
 
-std::string_view StateInfo::at(std::string_view key) const
-{
-    if (!contains(key))
-        return "unknown";
-    return _states.at(std::string(key));
-}
+const std::string &StateInfo::at(std::string_view key) const { return _states.at(std::string(key)); }
 
-std::string &StateInfo::at(std::string_view key) { return _states[std::string(key)]; }
+std::string &StateInfo::at(std::string_view key) { return _states.at(std::string(key)); }
 
-std::string &StateInfo::operator[](std::string_view key) { return _states[std::string(key)]; }
+std::string &StateInfo::operator[](std::string_view key) noexcept { return _states[std::string(key)]; }
 
 } // namespace rm

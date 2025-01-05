@@ -9,8 +9,8 @@
  *
  */
 
-#include "rmvl/group/gyro_group.h"
 #include "rmvl/algorithm/transform.hpp"
+#include "rmvl/group/gyro_group.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera/camera.h"
@@ -33,7 +33,11 @@ GyroGroup::GyroGroup(const std::vector<combo::ptr> &first_combos, int armor_num)
     // 获取 RobotType
     std::vector<RobotType> robot_type_vec;
     for_each(first_combos.begin(), first_combos.end(), [&](combo::const_ptr val) {
-        robot_type_vec.push_back(to_robot_type(val->state().at("robot")));
+        const auto &state = val->state();
+        if (state.contains("robot"))
+            robot_type_vec.push_back(to_robot_type(state.at("robot")));
+        else
+            robot_type_vec.push_back(RobotType::UNKNOWN);
     });
     _state["robot"] = to_string(calculateModeNum(robot_type_vec.begin(), robot_type_vec.end()));
     // 获取序列组信息

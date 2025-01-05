@@ -313,7 +313,7 @@ TEST(OPC_UA_Server, timer_test)
 
     int times{};
 
-    auto timer = rm::ServerTimer(srv, 50, [&](rm::ServerView sv) {
+    auto timer = rm::ServerTimer(srv, 10, [&](rm::ServerView sv) {
         int num = sv.read(nd).cast<int>() + 10;
         sv.write(nd, num);
         times++;

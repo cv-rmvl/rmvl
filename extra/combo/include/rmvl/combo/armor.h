@@ -171,7 +171,7 @@ inline cv::Ptr<cv::ml::SVM> Armor::_svm = nullptr;
 /**
  * @brief 装甲板大小类型转为字符串
  *
- * @param[in] armor_size_type 装甲板大小类型
+ * @param[in] armor_size 装甲板大小类型
  */
 constexpr const char *to_string(ArmorSizeType armor_size)
 {

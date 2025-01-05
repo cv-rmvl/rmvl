@@ -42,7 +42,6 @@ public:
      * @endcode
      *
      * @param[in] type 状态类型
-     * @return 是否添加成功
      */
     RMVL_W void add(std::string_view type);
 
@@ -60,13 +59,13 @@ public:
      * @param[in] key 状态类型
      * @return 是否包含
      */
-    RMVL_W bool contains(std::string_view key) const;
+    RMVL_W bool contains(std::string_view key) const noexcept;
 
     //! 清空状态类型
-    RMVL_W void clear();
+    RMVL_W void clear() noexcept;
 
     //! 状态类型是否为空
-    RMVL_W bool empty() const;
+    RMVL_W bool empty() const noexcept;
 
     /**
      * @brief 获取状态类型
@@ -74,7 +73,7 @@ public:
      * @param[in] key 状态类型
      * @return 状态
      */
-    std::string_view at(std::string_view key) const;
+    const std::string &at(std::string_view key) const;
 
     /**
      * @brief 设置状态类型
@@ -90,7 +89,7 @@ public:
      * @param[in] key 状态类型
      * @return 状态
      */
-    std::string &operator[](std::string_view key);
+    std::string &operator[](std::string_view key) noexcept;
 
     RMVL_W_SUBST("At")
 
