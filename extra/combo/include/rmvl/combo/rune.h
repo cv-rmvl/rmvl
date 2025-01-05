@@ -23,17 +23,11 @@ namespace rm
 
 /**
  * @brief 神符（能量机关）
- * @note
- * - `at(0)`: 神符靶心，`at(1)`: 神符旋转中心（R 标）
- * - `angle()` 获取的角度范围是 `[-180,180)`
- * - `corners()`
- *   - `[0]`: 靶心环最靠近神符中心的点
- *   - `[1]`: 靶心环与角点 `[0][2]` 的中垂线的交点（顺时针）
- *   - `[2]`: 靶心环最远离神符中心的点
- *   - `[3]`: 靶心环与角点 `[0][2]` 的中垂线的交点（顺时针）
- *   - `[4]`: 神符中心点
- * - `extrinsics` 数据仅直线距离 `distance` 有效
- * - `center` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征 `at(1)`
+ * - 特征信息 `[0]`: 神符靶心，`[1]`: 神符旋转中心（R 标）
+ * - 角度信息 `angle()` 获取的角度范围是 `[-180,180)`
+ * - 角点信息 `corners()` 获取的内容是 `[0]`: 神符靶心特征中心点，`[1]`: 神符中心特征中心点
+ * - 相机外参 `extrinsic()` 数据仅直线距离 `distance` 有效
+ * - 中心点 `center()` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征，例如使用 `at(1)`
  */
 class RMVL_EXPORTS_W_DES Rune final : public combo
 {
@@ -100,15 +94,6 @@ public:
     RMVL_W inline bool isActive() { return _is_active; }
 
 private:
-    /**
-     * @brief 计算神符装甲板的四个角点
-     *
-     * @param[in] p_target 神符靶心
-     * @param[in] p_center 神符中心
-     * @return 按照左下，左上，右上，右下的顺序排列的角点向量
-     */
-    static std::vector<cv::Point2f> calculatePoints(RuneTarget::ptr p_target, RuneCenter::ptr p_center);
-
     float _feature_dis{}; //!< 特征间距
     bool _is_active{};    //!< 是否激活
 };

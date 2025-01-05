@@ -9,9 +9,6 @@ on:
       - 1.x
 
 jobs:
-  cmake-support-x86_64:
-    name: CMake support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install-u22.yml@main
   minimal-support-x86_64:
     name: Minimal support for x86_64
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main
