@@ -36,7 +36,7 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     _extrinsic = p_armor->extrinsic();
     _state = p_armor->state();
     _combo_deque.push_back(p_armor);
-    _type_deque.push_back(to_robot_type(_state.at("robot")));
+    _type_deque.push_back(to_robot_type(_state["robot"]));
     _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
     initFilter();
 }
@@ -59,7 +59,10 @@ void GyroTracker::update(combo::ptr p_armor)
     _combo_deque.emplace_front(p_armor);
     // 更新装甲板类型
     const auto &armor_state = p_armor->state();
-    updateType(to_robot_type(armor_state.at("robot")));
+    if (armor_state.contains("robot"))
+        updateType(to_robot_type(armor_state.at("robot")));
+    else
+        updateType(RobotType::UNKNOWN);
     // 帧差时间计算
     if (_combo_deque.empty())
         RMVL_Error(RMVL_StsBadSize, "\"_combo_deque\" is empty");
