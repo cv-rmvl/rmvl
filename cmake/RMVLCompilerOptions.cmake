@@ -50,6 +50,7 @@ if(NOT HAVE_CXX17)
 endif()
 
 set(CMAKE_CXX_STANDARD ${max_version})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ----------------------------------------------------------------------------
 #   Detect target platform architecture

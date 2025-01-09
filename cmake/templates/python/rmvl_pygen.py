@@ -174,6 +174,7 @@ types = {
     "float": "float",
     "double": "float",
     "bool": "bool",
+    "char": "str",
     "string": "str",
     "string_view": "str",
     # cv types
@@ -256,6 +257,14 @@ def type_convert(cpp_type: str) -> str:
         inner: str = match.group(2)
         converted = ", ".join(type_convert(x.strip()) for x in inner.split(","))
         return f"tuple[{converted}]"
+
+    def convert_variant(match: re.Match) -> str:
+        """
+        Convert `variant<...>` to `Union[...]`
+        """
+        inner: str = match.group(1)
+        converted = ", ".join(type_convert(x.strip()) for x in inner.split(","))
+        return f"Union[{converted}]"
 
     def convert_unordered_map(match: re.Match) -> str:
         """
@@ -342,6 +351,8 @@ def type_convert(cpp_type: str) -> str:
     cpp_type = re.sub(r"^array<([^,]+),\s*\d+>$", convert_array, cpp_type)
     # pair<...>, tuple<...> -> tuple[...]
     cpp_type = re.sub(r"^(pair|tuple)<(.+)>$", convert_pair_tuple, cpp_type)
+    # variant<...> -> Union[...]
+    cpp_type = re.sub(r"^variant<(.+)>$", convert_variant, cpp_type)
     # unordered_map<...> -> dict[...]
     cpp_type = re.sub(r"^unordered_map<(.+)>$", convert_unordered_map, cpp_type)
     # optional<...> -> Union[... | None]

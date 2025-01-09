@@ -157,7 +157,7 @@ void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
 void ArmorDetector::eraseFakeArmors(std::vector<Armor::ptr> &armors)
 {
     armors.erase(remove_if(armors.begin(), armors.end(), [&](Armor::ptr &it) {
-                     return it->state().at("robot") == "unknown";
+                     return it->state().at_string("robot") == "unknown";
                  }),
                  armors.end());
 }

@@ -20,6 +20,82 @@
 namespace rm
 {
 
+const char *to_string(ArmorSizeType armor_size)
+{
+    switch (armor_size)
+    {
+    case ArmorSizeType::SMALL:
+        return "small";
+    case ArmorSizeType::BIG:
+        return "big";
+    default:
+        return "unknown";
+    }
+}
+
+ArmorSizeType to_armor_size_type(const StateType &tp)
+{
+    if (tp.index() == 0)
+        return ArmorSizeType::UNKNOWN;
+
+    const auto &str = std::get<std::string>(tp);
+    if (str == "small")
+        return ArmorSizeType::SMALL;
+    else if (str == "big")
+        return ArmorSizeType::BIG;
+    return ArmorSizeType::UNKNOWN;
+}
+
+const char *to_string(RobotType robot)
+{
+    switch (robot)
+    {
+    case RobotType::HERO:
+        return "hero";
+    case RobotType::ENGINEER:
+        return "engineer";
+    case RobotType::INFANTRY_3:
+        return "infantry_3";
+    case RobotType::INFANTRY_4:
+        return "infantry_4";
+    case RobotType::INFANTRY_5:
+        return "infantry_5";
+    case RobotType::OUTPOST:
+        return "outpost";
+    case RobotType::BASE:
+        return "base";
+    case RobotType::SENTRY:
+        return "sentry";
+    default:
+        return "unknown";
+    }
+}
+
+RobotType to_robot_type(const StateType &type)
+{
+    if (type.index() == 0)
+        return RobotType::UNKNOWN;
+
+    const auto &str = std::get<std::string>(type);
+    if (str == "hero")
+        return RobotType::HERO;
+    else if (str == "engineer")
+        return RobotType::ENGINEER;
+    else if (str == "infantry_3")
+        return RobotType::INFANTRY_3;
+    else if (str == "infantry_4")
+        return RobotType::INFANTRY_4;
+    else if (str == "infantry_5")
+        return RobotType::INFANTRY_5;
+    else if (str == "outpost")
+        return RobotType::OUTPOST;
+    else if (str == "base")
+        return RobotType::BASE;
+    else if (str == "sentry")
+        return RobotType::SENTRY;
+    return RobotType::UNKNOWN;
+}
+
 std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data,
                                          double tick, ArmorSizeType armor_size_type)
 {

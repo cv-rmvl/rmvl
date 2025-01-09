@@ -197,11 +197,11 @@ public:
      * @return 是否读取成功
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
-    inline bool read(unsigned char head_flag, unsigned char tail_flag, Tp &data)
+    bool read(uint8_t head_flag, uint8_t tail_flag, Tp &data)
     {
         bool retval{};
         constexpr int LENGTH = 512, SIZE = sizeof(Tp);
-        unsigned char buffer[LENGTH]{};
+        uint8_t buffer[LENGTH]{};
         auto len_result = fdread(buffer, LENGTH);
         for (long int i = 0; (i + SIZE + 1) < len_result; i++)
             if (buffer[i] == head_flag && buffer[i + SIZE + 1] == tail_flag)
@@ -221,7 +221,7 @@ public:
      * @return 是否读取成功
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
-    inline bool read(Tp &data)
+    bool read(Tp &data)
     {
         bool retval{};
         constexpr int MAX_LENGTH = 512, MAX_READ_DST = sizeof(Tp);
@@ -245,7 +245,7 @@ public:
     bool read(std::string &data);
 
     template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp> || std::is_same_v<Tp, std::string>>>
-    inline SerialPort &operator>>(Tp &data) { return (this->read(data), *this); }
+    SerialPort &operator>>(Tp &data) { return (this->read(data), *this); }
 
     /**
      * @brief 数据写入串口
@@ -256,7 +256,7 @@ public:
      * @return 是否写入成功
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
-    inline bool write(const Tp &data) { return (sizeof(data) == fdwrite(&data, sizeof(data))); }
+    bool write(const Tp &data) { return (sizeof(data) == fdwrite(&data, sizeof(data))); }
 
     /**
      * @brief 写入字符串到串口
@@ -264,10 +264,10 @@ public:
      * @param[in] data 待写入的字符串
      * @return 是否写入成功
      */
-    inline bool write(std::string_view data) { return fdwrite(data.data(), data.length()) > 0; }
+    bool write(std::string_view data) { return fdwrite(data.data(), data.length()) > 0; }
 
     template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp> || std::is_same_v<Tp, std::string_view>>>
-    inline SerialPort &operator<<(const Tp &data) { return (this->write(data), *this); }
+    SerialPort &operator<<(const Tp &data) { return (this->write(data), *this); }
 
     //! 串口是否打开
     bool isOpened() const;

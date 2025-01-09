@@ -64,7 +64,7 @@ static void types_enum(benchmark::State &state)
     }
 }
 
-static void types_state_info(benchmark::State &state)
+static void str_types_state_info(benchmark::State &state)
 {
     for (auto _ : state)
     {
@@ -84,7 +84,28 @@ static void types_state_info(benchmark::State &state)
     }
 }
 
-BENCHMARK(types_enum)->Name("enum types (init x3, modify x3)")->Iterations(10000);
-BENCHMARK(types_state_info)->Name("string types (init x3, modify x3)")->Iterations(10000);
+static void num_types_state_info(benchmark::State &state)
+{
+    for (auto _ : state)
+    {
+        auto state = StateInfo();
+        state["test1"] = 1.1;
+        benchmark::DoNotOptimize(state);
+        state["test2"] = 2.1;
+        benchmark::DoNotOptimize(state);
+        state["test3"] = 3.1;
+        benchmark::DoNotOptimize(state);
+        state["test1"] = 1.2;
+        benchmark::DoNotOptimize(state);
+        state["test2"] = 2.2;
+        benchmark::DoNotOptimize(state);
+        state["test3"] = 3.2;
+        benchmark::DoNotOptimize(state);
+    }
+}
+
+BENCHMARK(types_enum)->Name("enum types (init x3, modify x3)")->Iterations(50000);
+BENCHMARK(str_types_state_info)->Name("string states (init x3, modify x3)")->Iterations(50000);
+BENCHMARK(num_types_state_info)->Name("numeric states (init x3, modify x3)")->Iterations(50000);
 
 } // namespace rm::rm_test

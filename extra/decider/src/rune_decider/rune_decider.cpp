@@ -63,7 +63,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, const Stat
     for (auto &p_tracker : groups.front()->data())
         if (p_tracker->state().at("rune") == flag.at("rune"))
             true_trackers.emplace_back(p_tracker);
-    bool is_active = flag.at("rune") == "active";
+    bool is_active = flag.at_string("rune") == "active";
 
     if (last_target != nullptr)
         for (auto &p_tracker : true_trackers)
