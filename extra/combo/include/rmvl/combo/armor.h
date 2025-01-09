@@ -173,88 +173,28 @@ inline cv::Ptr<cv::ml::SVM> Armor::_svm = nullptr;
  *
  * @param[in] armor_size 装甲板大小类型
  */
-constexpr const char *to_string(ArmorSizeType armor_size)
-{
-    switch (armor_size)
-    {
-    case ArmorSizeType::SMALL:
-        return "small";
-    case ArmorSizeType::BIG:
-        return "big";
-    default:
-        return "unknown";
-    }
-}
+const char *to_string(ArmorSizeType armor_size);
 
 /**
- * @brief 字符串转为装甲板大小类型
+ * @brief StateType 转为装甲板大小类型
  *
  * @param[in] str 字符串
  */
-constexpr ArmorSizeType to_armor_size_type(std::string_view str)
-{
-    if (str == "small")
-        return ArmorSizeType::SMALL;
-    else if (str == "big")
-        return ArmorSizeType::BIG;
-    return ArmorSizeType::UNKNOWN;
-}
+ArmorSizeType to_armor_size_type(const StateType &tp);
 
 /**
  * @brief 机器人类型转为字符串
  *
  * @param[in] robot 机器人类型
  */
-constexpr const char *to_string(RobotType robot)
-{
-    switch (robot)
-    {
-    case RobotType::HERO:
-        return "hero";
-    case RobotType::ENGINEER:
-        return "engineer";
-    case RobotType::INFANTRY_3:
-        return "infantry_3";
-    case RobotType::INFANTRY_4:
-        return "infantry_4";
-    case RobotType::INFANTRY_5:
-        return "infantry_5";
-    case RobotType::OUTPOST:
-        return "outpost";
-    case RobotType::BASE:
-        return "base";
-    case RobotType::SENTRY:
-        return "sentry";
-    default:
-        return "unknown";
-    }
-}
+const char *to_string(RobotType robot);
 
 /**
- * @brief 字符串转为机器人类型
+ * @brief StateType 转为机器人类型
  *
  * @param[in] str 字符串
  */
-constexpr RobotType to_robot_type(std::string_view str)
-{
-    if (str == "hero")
-        return RobotType::HERO;
-    else if (str == "engineer")
-        return RobotType::ENGINEER;
-    else if (str == "infantry_3")
-        return RobotType::INFANTRY_3;
-    else if (str == "infantry_4")
-        return RobotType::INFANTRY_4;
-    else if (str == "infantry_5")
-        return RobotType::INFANTRY_5;
-    else if (str == "outpost")
-        return RobotType::OUTPOST;
-    else if (str == "base")
-        return RobotType::BASE;
-    else if (str == "sentry")
-        return RobotType::SENTRY;
-    return RobotType::UNKNOWN;
-}
+RobotType to_robot_type(const StateType &type);
 
 //! @} combo_armor
 

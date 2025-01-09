@@ -10,28 +10,13 @@
  */
 
 #include "rmvl/types.hpp"
-#include "rmvl/core/str.hpp"
 
 namespace rm
 {
 
-void StateInfo::add(std::string_view type)
-{
-    auto types = str::split(type, ",");
-    for (const auto &val : types)
-    {
-        auto type = str::strip(val);
-        auto pos = type.find(':');
-        if (pos == std::string::npos)
-            _states.insert_or_assign(std::string(type), "");
-        else
-        {
-            auto key = str::strip(type.substr(0, pos));
-            auto value = str::strip(type.substr(pos + 1));
-            _states.insert_or_assign(std::string(key), std::string(value));
-        }
-    }
-}
+void StateInfo::add(std::string_view type, double val) { _states[std::string(type)] = val; }
+
+void StateInfo::add(std::string_view type, std::string_view str) { _states[std::string(type)] = std::string(str); }
 
 bool StateInfo::remove(std::string_view key) { return _states.erase(std::string(key)) > 0; }
 
@@ -41,10 +26,14 @@ void StateInfo::clear() noexcept { _states.clear(); }
 
 bool StateInfo::empty() const noexcept { return _states.empty(); }
 
-const std::string &StateInfo::at(std::string_view key) const { return _states.at(std::string(key)); }
+const StateType &StateInfo::at(std::string_view key) const { return _states.at(std::string(key)); }
 
-std::string &StateInfo::at(std::string_view key) { return _states.at(std::string(key)); }
+StateType &StateInfo::at(std::string_view key) { return _states.at(std::string(key)); }
 
-std::string &StateInfo::operator[](std::string_view key) noexcept { return _states[std::string(key)]; }
+double StateInfo::at_numeric(std::string_view key) const { return std::get<double>(_states.at(std::string(key))); }
+
+const std::string &StateInfo::at_string(std::string_view key) const { return std::get<std::string>(_states.at(std::string(key))); }
+
+StateType &StateInfo::operator[](std::string_view key) noexcept { return _states[std::string(key)]; }
 
 } // namespace rm

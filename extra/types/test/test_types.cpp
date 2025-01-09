@@ -19,9 +19,14 @@ namespace rm::rm_test
 TEST(RMStatus_test, add_type)
 {
     StateInfo state;
-    state.add("robot: hero, armor_size: big");
-    EXPECT_EQ(state.at("robot"), "hero");
-    EXPECT_EQ(state.at("armor_size"), "big");
+    state.add("robot", "hero");
+    state.add("armor_size", "big");
+    EXPECT_EQ(state.at_string("robot"), "hero");
+    EXPECT_EQ(state.at_string("armor_size"), "big");
+    state.add("value", 1.3);
+    EXPECT_EQ(state.at_numeric("value"), 1.3);
+    state["armor_size"] = 2.5;
+    EXPECT_EQ(state.at_numeric("armor_size"), 2.5);
 }
 
 } // namespace rm::rm_test

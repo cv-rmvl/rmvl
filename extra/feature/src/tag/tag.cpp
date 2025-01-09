@@ -24,7 +24,7 @@ Tag::Tag(const std::vector<cv::Point2f> &corners, char type)
     if (corners_size != 4)
         RMVL_Error_(RMVL_StsBadArg, "the size of the argument \"corners\" should be 4, but now it is %zu.", corners_size);
     _corners = std::vector<cv::Point2f>(corners.begin(), corners.end());
-    _state["tag"] = type;
+    _state["tag"] = std::string(type, 1);
     cv::Point2f center;
     for (const auto &corner : corners)
         center += corner;

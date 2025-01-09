@@ -298,7 +298,7 @@ void GyroDetector::eraseFakeTracker(std::vector<tracker::ptr> &trackers)
 {
     // 删除
     trackers.erase(remove_if(trackers.begin(), trackers.end(), [](tracker::const_ptr p_tracker) {
-                       return p_tracker->state().at("robot") == "unknown";
+                       return p_tracker->state().at_string("robot") == "unknown";
                    }),
                    trackers.end());
 }
