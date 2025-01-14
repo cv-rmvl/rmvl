@@ -68,38 +68,39 @@ public:
     RMVL_W virtual bool invalid() const { return false; }
 
     //! 获取时间队列中最新的组合体
-    RMVL_W inline combo::ptr front() const { return _combo_deque.front(); }
+    RMVL_W combo::ptr front() const { return _combo_deque.front(); }
     //! 获取时间队列中最后的组合体
-    RMVL_W inline combo::ptr back() const { return _combo_deque.back(); }
+    RMVL_W combo::ptr back() const { return _combo_deque.back(); }
     //! 获取掉帧数
-    RMVL_W inline uint32_t getVanishNumber() const { return _vanish_num; }
+    RMVL_W uint32_t getVanishNumber() const { return _vanish_num; }
     //! 获取序列数量信息
-    RMVL_W inline size_t size() const { return _combo_deque.size(); }
+    RMVL_W size_t size() const { return _combo_deque.size(); }
     //! 获取时间序列原始数据
-    RMVL_W inline const std::deque<combo::ptr> &data() const { return _combo_deque; }
+    RMVL_W const std::deque<combo::ptr> &data() const { return _combo_deque; }
     //! 序列是否为空
-    RMVL_W inline bool empty() const { return _combo_deque.empty(); }
+    RMVL_W bool empty() const { return _combo_deque.empty(); }
     //! 索引 - 容器仅能通过内部 at 实现访问保证下标安全
-    RMVL_W inline combo::ptr at(size_t _n) const { return _combo_deque.at(_n); }
-
+    RMVL_W combo::ptr at(size_t _n) const { return _combo_deque.at(_n); }
     //! 追踪器状态
-    RMVL_W inline const StateInfo &state() const { return _state; }
+    RMVL_W const StateInfo &state() const { return _state; }
+    //! 追踪器状态
+    StateInfo &state() { return _state; }
     //! 追踪器修正后的高度
-    RMVL_W inline float height() const { return _height; }
+    RMVL_W float height() const { return _height; }
     //! 追踪器修正后的宽度
-    RMVL_W inline float width() const { return _width; }
+    RMVL_W float width() const { return _width; }
     //! 追踪器修正后的角度
-    RMVL_W inline float angle() const { return _angle; }
+    RMVL_W float angle() const { return _angle; }
     //! 追踪器修正后的中心点
-    RMVL_W inline const cv::Point2f &center() const { return _center; }
+    RMVL_W const cv::Point2f &center() const { return _center; }
     //! 追踪器修正后的角点
-    RMVL_W inline const std::vector<cv::Point2f> &corners() const { return _corners; }
+    RMVL_W const std::vector<cv::Point2f> &corners() const { return _corners; }
     //! 修正后的相对角度（角度制）
-    RMVL_W inline const cv::Point2f &getRelativeAngle() const { return _relative_angle; }
+    RMVL_W const cv::Point2f &getRelativeAngle() const { return _relative_angle; }
     //! 修正后的相机外参
-    RMVL_W inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
+    RMVL_W const CameraExtrinsics &extrinsic() const { return _extrinsic; }
     //! 获取追踪器修正后的目标转角速度（角度制）
-    RMVL_W inline const cv::Point2f &speed() const { return _speed; }
+    RMVL_W const cv::Point2f &speed() const { return _speed; }
 };
 
 #define RMVL_TRACKER_CAST(name)                                                                           \

@@ -115,7 +115,8 @@ int main()
     {
         if (!capture.read(frame))
             continue;
-
+        if (frame.type() == CV_8UC1)
+            cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
         // 图像矫正
         cv::Mat map1, map2;
         initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(), cameraMatrix, frame.size(), CV_32FC1, map1, map2);
@@ -151,11 +152,11 @@ int main()
                    cameraMatrix(0, 0), cameraMatrix(0, 1), cameraMatrix(0, 2),
                    cameraMatrix(1, 0), cameraMatrix(1, 1), cameraMatrix(1, 2),
                    cameraMatrix(2, 0), cameraMatrix(2, 1), cameraMatrix(2, 2));
-            printf("               ┌ %-8.5g ┐\n"
-                   "               │ %-8.5g │\n"
+            printf("                ┌ %-8.5g ┐\n"
+                   "                │ %-8.5g │\n"
                    " -- distCoeffs: │ %-8.5g │\n"
-                   "               │ %-8.5g │\n"
-                   "               └ %-8.5g ┘\n",
+                   "                │ %-8.5g │\n"
+                   "                └ %-8.5g ┘\n",
                    distCoeffs(0), distCoeffs(1), distCoeffs(2), distCoeffs(3), distCoeffs(4));
         }
     }

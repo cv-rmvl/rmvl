@@ -47,19 +47,21 @@ public:
     RMVL_W virtual ptr clone() = 0;
 
     //! 获取特征面积
-    RMVL_W inline float area() const { return _height * _width; }
+    RMVL_W float area() const { return _height * _width; }
     //! 获取特征中心点
-    RMVL_W inline const cv::Point2f &center() const { return _center; }
+    RMVL_W const cv::Point2f &center() const { return _center; }
     //! 获取特征宽度
-    RMVL_W inline float width() const { return _width; }
+    RMVL_W float width() const { return _width; }
     //! 获取特征高度
-    RMVL_W inline float height() const { return _height; }
+    RMVL_W float height() const { return _height; }
     //! 获取特征角度
-    RMVL_W inline float angle() const { return _angle; }
+    RMVL_W float angle() const { return _angle; }
     //! 获取特征角点
-    RMVL_W inline const std::vector<cv::Point2f> &corners() const { return _corners; }
+    RMVL_W const std::vector<cv::Point2f> &corners() const { return _corners; }
     //! 获取特征状态
-    RMVL_W inline const StateInfo &state() const { return _state; }
+    RMVL_W const StateInfo &state() const { return _state; }
+    //! 获取特征状态
+    StateInfo &state() { return _state; }
 };
 
 #define RMVL_FEATURE_CAST(name)                                                                           \
