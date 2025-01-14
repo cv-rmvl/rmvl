@@ -73,6 +73,8 @@ public:
     RMVL_W inline const CameraExtrinsics &extrinsic() const { return _extrinsic; }
     //! 获取组合体状态
     RMVL_W inline const StateInfo &state() const { return _state; }
+    //! 获取组合体状态
+    StateInfo &state() { return _state; }
     //! 获取捕获该组合体的时间点
     RMVL_W inline double tick() const { return _tick; }
     //! 获取组合体的相对目标转角

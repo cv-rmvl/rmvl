@@ -70,49 +70,56 @@ public:
      *
      * @return 同组追踪器
      */
-    RMVL_W inline std::vector<rm::tracker::ptr> &data() { return _trackers; }
+    RMVL_W std::vector<rm::tracker::ptr> &data() { return _trackers; }
 
     /**
      * @brief 获取同组追踪器的数量
      *
      * @return 同组追踪器的数量
      */
-    RMVL_W inline size_t size() const { return _trackers.size(); }
+    RMVL_W size_t size() const { return _trackers.size(); }
 
     /**
      * @brief 判断同组追踪器是否为空
      *
      * @return 同组追踪器是否为空
      */
-    RMVL_W inline bool empty() const { return _trackers.empty(); }
+    RMVL_W bool empty() const { return _trackers.empty(); }
 
     /**
      * @brief 获取指定追踪器
      *
      * @param[in] idx 追踪器下标
      */
-    RMVL_W inline tracker::ptr at(size_t idx) const { return _trackers.at(idx); }
+    RMVL_W tracker::ptr at(size_t idx) const { return _trackers.at(idx); }
 
     /**
      * @brief 获取序列组中心
      *
      * @return 序列组中心
      */
-    RMVL_W inline const cv::Point2f &center() const { return _center; }
+    RMVL_W const cv::Point2f &center() const { return _center; }
 
     /**
      * @brief 获取丢帧数量
      *
      * @return 丢帧数量
      */
-    RMVL_W inline uint32_t getVanishNumber() const { return _vanish_num; }
+    RMVL_W uint32_t getVanishNumber() const { return _vanish_num; }
 
     /**
      * @brief 获取序列组状态
      *
      * @return 序列组状态
      */
-    RMVL_W inline const StateInfo &state() const { return _state; }
+    RMVL_W const StateInfo &state() const { return _state; }
+
+    /**
+     * @brief 获取序列组状态
+     *
+     * @return 序列组状态
+     */
+    StateInfo &state() { return _state; }
 };
 
 #define RMVL_GROUP_CAST(name)                                                                       \

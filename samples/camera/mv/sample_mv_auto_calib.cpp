@@ -356,14 +356,13 @@ int main(int argc, char *argv[])
         switch (pattern)
         {
         case CHESSBOARD:
-            found = findChessboardCorners(viewGray, boardSize, pointbuf,
-                                          cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FAST_CHECK | cv::CALIB_CB_NORMALIZE_IMAGE);
+            found = findChessboardCorners(viewGray, boardSize, pointbuf);
             break;
         case CIRCLES_GRID:
-            found = findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_SYMMETRIC_GRID + cv::CALIB_CB_CLUSTERING);
+            found = findCirclesGrid(viewGray, boardSize, pointbuf);
             break;
         case ASYMMETRIC_CIRCLES_GRID:
-            found = findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID + cv::CALIB_CB_CLUSTERING);
+            found = findCirclesGrid(viewGray, boardSize, pointbuf, cv::CALIB_CB_ASYMMETRIC_GRID);
             break;
         default:
             return fprintf(stderr, "Unknown pattern type\n"), -1;
