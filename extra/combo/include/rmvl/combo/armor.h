@@ -178,7 +178,7 @@ const char *to_string(ArmorSizeType armor_size);
 /**
  * @brief StateType 转为装甲板大小类型
  *
- * @param[in] str 字符串
+ * @param[in] tp StateType 类型
  */
 ArmorSizeType to_armor_size_type(const StateType &tp);
 
@@ -192,9 +192,9 @@ const char *to_string(RobotType robot);
 /**
  * @brief StateType 转为机器人类型
  *
- * @param[in] str 字符串
+ * @param[in] tp StateType 类型
  */
-RobotType to_robot_type(const StateType &type);
+RobotType to_robot_type(const StateType &tp);
 
 //! @} combo_armor
 

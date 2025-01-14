@@ -60,18 +60,9 @@ double derivative(Func1d func, double x, DiffMode mode, double dx)
         return partial(func, x_dx, dx);
 }
 
-/**
- * @brief 计算多元函数的梯度（无返回值）
- *
- * @param[in] func 多元函数
- * @param[in] x 指定位置的自变量
- * @param[out] xgrad 函数在指定点的梯度向量
- * @param[in] mode 梯度计算模式
- * @param[in] dx 计算偏导数时的步长
- * @return 函数在指定点的梯度向量
- */
-static void calcGrad(FuncNd func, const std::valarray<double> &x, std::valarray<double> &xgrad, DiffMode mode, double dx)
+std::valarray<double> grad(FuncNd func, const std::valarray<double> &x, DiffMode mode, double dx)
 {
+    std::valarray<double> ret(x.size());
     auto x_dx{x};
     if (mode == DiffMode::Ridders)
         for (std::size_t i = 0; i < x_dx.size(); ++i)
@@ -81,17 +72,11 @@ static void calcGrad(FuncNd func, const std::valarray<double> &x, std::valarray<
             double T20{partial(func, x_dx, i, dx / 2)};
             double T11{(4. * T10 - T00) / 3.};
             double T21{(4. * T20 - T10) / 3.};
-            xgrad[i] = (16. * T21 - T11) / 15.;
+            ret[i] = (16. * T21 - T11) / 15.;
         }
     else
         for (std::size_t i = 0; i < x_dx.size(); ++i)
-            xgrad[i] = partial(func, x_dx, i, dx);
-}
-
-std::valarray<double> grad(FuncNd func, const std::valarray<double> &x, DiffMode mode, double dx)
-{
-    std::valarray<double> ret(x.size());
-    calcGrad(func, x, ret, mode, dx);
+            ret[i] = partial(func, x_dx, i, dx);
     return ret;
 }
 
@@ -174,7 +159,6 @@ static double fminunc_cg(FuncNd func, std::valarray<double> &xk, const OptimalOp
         for (std::size_t j = 0; j < xk.size(); ++j)
             xk[j] += alpha * s[j];
         retfval = fval;
-        calcGrad(func, xk, xk2_grad, options.diff_mode, options.dx);
         xk2_grad = grad(func, xk, options.diff_mode, options.dx);
         auto nbl_xk2 = normL2(xk2_grad);
         if (nbl_xk2 < options.tol)
@@ -279,16 +263,22 @@ std::pair<std::valarray<double>, double> fminunc(FuncNd func, const std::valarra
 std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options)
 {
     RMVL_DbgAssert(x0.size() > 0);
-    if (c.empty() && ceq.empty())
+    if (c == nullptr && ceq == nullptr)
         return fminunc(func, x0, options);
     // 外罚函数
     const double M{options.exterior};
     FuncNd farg = [&](const std::valarray<double> &xk) -> double {
         double fval = func(xk), ceqval{}, cval{};
-        for (const auto &v : ceq)
-            ceqval += v(xk) * v(xk);
-        for (const auto &v : c)
-            cval += std::pow(std::max(v(xk), 0.0), 2);
+        if (ceq != nullptr)
+        {
+            auto ceq_fval = ceq(xk);
+            ceqval = std::inner_product(std::begin(ceq_fval), std::end(ceq_fval), std::begin(ceq_fval), 0.0);
+        }
+        if (c != nullptr)
+        {
+            auto c_fval = c(xk);
+            std::for_each(std::begin(c_fval), std::end(c_fval), [&](double v) { cval += std::pow(std::max(v, 0.0), 2); });
+        }
         return fval + M * (ceqval + cval);
     };
 
@@ -297,35 +287,27 @@ std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarra
 
 #ifdef HAVE_OPENCV
 
-/**
- * @brief 计算某点处的雅可比矩阵
- *
- * @param[in] funcs 多元函数集合
- * @param[in] xk 指定位置的自变量
- * @param[in] options 优化选项
- * @param[out] jac 雅可比矩阵
- */
-static inline void calcJacobi(const FuncNds &funcs, const std::valarray<double> &xk, const OptimalOptions &options, cv::Mat &jac)
+//! 计算多元函数组的雅可比矩阵
+static cv::Mat jacobian(FuncNds func, const std::valarray<double> &x, DiffMode, double dx)
 {
-    for (std::size_t i = 0; i < funcs.size(); ++i)
-    {
-        auto xgrad = grad(funcs[i], xk, options.diff_mode, options.dx);
-        for (std::size_t j = 0; j < xgrad.size(); ++j)
-            jac.at<double>(static_cast<int>(i), static_cast<int>(j)) = xgrad[j];
-    }
-}
+    const std::size_t n = x.size();     // 自变量个数
+    std::valarray<double> fx = func(x); // 函数值
+    const std::size_t m = fx.size();    // 函数值个数
+    cv::Mat retval(m, n, CV_64FC1);     // 雅可比矩阵
 
-/**
- * @brief 计算函数值
- *
- * @param[in] funcs 多元函数集合
- * @param[in] xk 指定位置的自变量
- * @param[out] phi 函数值
- */
-static inline void calcFs(const FuncNds &funcs, const std::valarray<double> &xk, std::valarray<double> &phi)
-{
-    for (std::size_t i = 0; i < funcs.size(); ++i)
-        phi[i] = funcs[i](xk);
+    std::valarray<double> x_dx = x;
+    for (std::size_t i = 0; i < n; ++i)
+    {
+        x_dx[i] += dx;
+        auto fx_plus = func(x_dx);
+        x_dx[i] -= 2 * dx;
+        auto fx_minus = func(x_dx);
+        for (std::size_t j = 0; j < m; ++j)
+            retval.at<double>(j, i) = (fx_plus[j] - fx_minus[j]) / (2 * dx);
+        x_dx[i] += dx;
+    }
+
+    return retval;
 }
 
 // 获取鲁棒加权
@@ -379,21 +361,19 @@ static std::function<cv::Mat(const cv::Mat &)> robustSelect(RobustMode rb)
 }
 
 // Gauss-Newton 法
-static std::valarray<double> lsqnonlin_gn(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
+static std::valarray<double> lsqnonlin_gn(const FuncNds &func, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
     RMVL_DbgAssert(x0.size() > 0);
     std::valarray<double> xk(x0);
-    cv::Mat J(static_cast<int>(funcs.size()), static_cast<int>(x0.size()), CV_64FC1); // J 矩阵 (M×N)
-    std::valarray<double> phi(funcs.size());                                          // 函数值 (M×1)
 
     auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
     {
         // 计算函数值和搜索方向
-        calcFs(funcs, xk, phi);
+        auto phi = func(xk);
         if (normL2(phi) < options.tol)
             break;
-        calcJacobi(funcs, xk, options, J);
+        auto J = jacobian(func, xk, options.diff_mode, options.dx);
         auto Jt = J.t();
         cv::Mat fvals(phi.size(), 1, CV_64FC1, &phi[0]);
         cv::Mat s;
@@ -408,21 +388,19 @@ static std::valarray<double> lsqnonlin_gn(const FuncNds &funcs, const std::valar
 }
 
 // 改进的 Gauss-Newton 法
-static std::valarray<double> lsqnonlin_sgn(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
+static std::valarray<double> lsqnonlin_sgn(const FuncNds &func, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
     RMVL_DbgAssert(x0.size() > 0);
     std::valarray<double> xk(x0);
-    cv::Mat J(static_cast<int>(funcs.size()), static_cast<int>(x0.size()), CV_64FC1); // J 矩阵 (M×N)
-    std::valarray<double> phi(funcs.size());                                          // 函数值 (M×1)
 
     auto fnW = robustSelect(rb);
     for (int idx = 0; idx < options.max_iter; ++idx)
     {
         // 计算函数值和搜索方向
-        calcFs(funcs, xk, phi);
+        auto phi = func(xk);
         if (normL2(phi) < options.tol)
             break;
-        calcJacobi(funcs, xk, options, J);
+        auto J = jacobian(func, xk, options.diff_mode, options.dx);
         auto Jt = J.t();
         cv::Mat fvals(phi.size(), 1, CV_64FC1, &phi[0]);
         cv::Mat s;
@@ -434,9 +412,7 @@ static std::valarray<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vala
             auto xk2 = xk;
             for (std::size_t i = 0; i < xk.size(); ++i)
                 xk2[i] -= alpha * s.at<double>(static_cast<int>(i), 0);
-            std::valarray<double> fvals2(funcs.size());
-            for (std::size_t i = 0; i < funcs.size(); ++i)
-                fvals2[i] = funcs[i](xk2);
+            auto fvals2 = func(xk2);
             return normL2(fvals2);
         };
         auto [a, b] = region(func_alpha, 1);
@@ -451,42 +427,43 @@ static std::valarray<double> lsqnonlin_sgn(const FuncNds &funcs, const std::vala
 class LMFunctor
 {
 public:
-    LMFunctor(const FuncNds &funcs, const std::valarray<double> &x0, DiffMode diff_mode, double dx)
-        : _funcs(funcs), _x0(x0), _diff_mode(diff_mode), _dx(dx) {}
+    LMFunctor(const FuncNds &func, const std::valarray<double> &x0, DiffMode diff_mode, double dx)
+        : _func(func), _x0(x0), M(func(x0).size()), N(x0.size()), _diff_mode(diff_mode), _dx(dx) {}
 
     int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const
     {
-        for (std::size_t i = 0; i < _funcs.size(); i++)
-            fvec[i] = _funcs[i](std::valarray<double>(x.data(), x.size()));
+        auto fval = _func(std::valarray<double>(x.data(), x.size()));
+        for (std::size_t i = 0; i < fval.size(); i++)
+            fvec(i) = fval[i];
         return 0;
     }
 
     int df(const Eigen::VectorXd &x, Eigen::MatrixXd &fjac) const
     {
         std::valarray<double> xk(x.data(), x.size());
-        for (std::size_t i = 0; i < _funcs.size(); i++)
-        {
-            auto xgrad = grad(_funcs[i], xk, _diff_mode, _dx);
-            for (std::size_t j = 0; j < xgrad.size(); j++)
-                fjac(i, j) = xgrad[j];
-        }
+        auto J = jacobian(_func, xk, _diff_mode, _dx);
+        for (int i = 0; i < J.rows; ++i)
+            for (int j = 0; j < J.cols; ++j)
+                fjac(i, j) = J.at<double>(i, j);
         return 0;
     }
 
-    int inputs() const { return static_cast<int>(_x0.size()); }
-    int values() const { return static_cast<int>(_funcs.size()); }
+    int inputs() const { return N; }
+    int values() const { return M; }
 
 private:
-    const FuncNds &_funcs;
+    const FuncNds &_func;
     const std::valarray<double> &_x0;
+    const int M{};
+    const int N{};
     DiffMode _diff_mode{};
     double _dx{};
 };
 
 // Levenberg-Marquardt 法
-static std::valarray<double> lsqnonlin_lm(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode, const OptimalOptions &options)
+static std::valarray<double> lsqnonlin_lm(const FuncNds &func, const std::valarray<double> &x0, RobustMode, const OptimalOptions &options)
 {
-    LMFunctor functor(funcs, x0, options.diff_mode, options.dx);
+    LMFunctor functor(func, x0, options.diff_mode, options.dx);
     Eigen::LevenbergMarquardt<LMFunctor> lm(functor);
     lm.parameters.maxfev = options.max_iter;
     lm.parameters.xtol = options.tol;
@@ -496,17 +473,17 @@ static std::valarray<double> lsqnonlin_lm(const FuncNds &funcs, const std::valar
     return std::valarray<double>(res.data(), res.size());
 }
 
-std::valarray<double> lsqnonlinRKF(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
+std::valarray<double> lsqnonlinRKF(const FuncNds &func, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options)
 {
     RMVL_DbgAssert(x0.size() > 0);
     switch (options.lsq_mode)
     {
     case LsqMode::LM:
-        return lsqnonlin_lm(funcs, x0, rb, options);
+        return lsqnonlin_lm(func, x0, rb, options);
     case LsqMode::GN:
-        return lsqnonlin_gn(funcs, x0, rb, options);
+        return lsqnonlin_gn(func, x0, rb, options);
     default: // LsqMode::SGN
-        return lsqnonlin_sgn(funcs, x0, rb, options);
+        return lsqnonlin_sgn(func, x0, rb, options);
     };
 }
 
@@ -514,16 +491,21 @@ std::valarray<double> lsqnonlinRKF(const FuncNds &funcs, const std::valarray<dou
 
 std::valarray<double> lsqnonlinRKF(const FuncNds &, const std::valarray<double> &, RobustMode, const OptimalOptions &)
 {
+#if _WIN32
+    RMVL_Error(RMVL_StsBadFunc, "this function must be used with opencv_worldxxx.dll, please recompile "
+                                "RMVL by setting \"WITH_OPENCV=ON\" and \"WITH_EIGEN3=ON\" in CMake");
+#else
     RMVL_Error(RMVL_StsBadFunc, "this function must be used with libopencv_core.so, please recompile "
                                 "RMVL by setting \"WITH_OPENCV=ON\" and \"WITH_EIGEN3=ON\" in CMake");
+#endif
     return {};
 }
 
 #endif // HAVE_OPENCV
 
-std::valarray<double> lsqnonlin(const FuncNds &funcs, const std::valarray<double> &x0, const OptimalOptions &options)
+std::valarray<double> lsqnonlin(const FuncNds &func, const std::valarray<double> &x0, const OptimalOptions &options)
 {
-    return lsqnonlinRKF(funcs, x0, RobustMode::L2, options);
+    return lsqnonlinRKF(func, x0, RobustMode::L2, options);
 }
 
 } // namespace rm

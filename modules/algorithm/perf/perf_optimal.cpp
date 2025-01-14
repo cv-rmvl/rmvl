@@ -64,14 +64,17 @@ static void cg_quadratic_cv(benchmark::State &state)
 BENCHMARK(cg_quadratic_rmvl)->Name("fminunc (conj_grad, quadratic) - by rmvl  ")->Iterations(50);
 BENCHMARK(cg_quadratic_cv)->Name("fminunc (conj_grad, quadratic) - by opencv")->Iterations(50);
 
-static inline double cle1(const std::valarray<double> &x) { return -x[0] - x[1] + 10; }
-static inline double cle2(const std::valarray<double> &x) { return 2 * x[0] + x[1] - 30; }
-static inline double cle3(const std::valarray<double> &x) { return -x[0] + x[1] - 5; }
+static inline std::valarray<double> cle(const std::valarray<double> &x)
+{
+    return {-x[0] - x[1] + 10,
+            2 * x[0] + x[1] - 30,
+            -x[0] + x[1] - 5};
+}
 
 static void com_quadratic_rmvl(benchmark::State &state)
 {
     for (auto _ : state)
-        rm::fmincon(quadraticFunc, {0, 0}, {cle1, cle2, cle3}, {});
+        rm::fmincon(quadraticFunc, {0, 0}, cle, {});
 }
 
 BENCHMARK(com_quadratic_rmvl)->Name("fmincon (conj_grad, quadratic) - by rmvl  ")->Iterations(50);
@@ -135,11 +138,18 @@ void lsqnonlin_rmvl(benchmark::State &state)
 {
     for (auto _ : state)
     {
-        rm::FuncNds lsq_sine(20);
+        std::array<rm::FuncNd, 20> lsq_sine;
         for (std::size_t i = 0; i < lsq_sine.size(); ++i)
             lsq_sine[i] = [=](const std::valarray<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - real_f(i); };
 
-        auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09});
+        rm::FuncNds lsq_sine_f = [&](const std::valarray<double> &x) {
+            std::valarray<double> ret(lsq_sine.size());
+            for (std::size_t i = 0; i < lsq_sine.size(); ++i)
+                ret[i] = lsq_sine[i](x);
+            return ret;
+        };
+
+        auto x = rm::lsqnonlin(lsq_sine_f, {1, 0.02, 0, 1.09});
         benchmark::DoNotOptimize(x);
     }
 }
