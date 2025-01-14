@@ -307,7 +307,7 @@ using Func1ds = std::vector<std::function<double(double)>>;
 //! 多元函数
 using FuncNd = std::function<double(const std::valarray<double> &)>;
 //! 多元函数组
-using FuncNds = std::vector<std::function<double(const std::valarray<double> &)>>;
+using FuncNds = std::function<std::valarray<double>(const std::valarray<double> &)>;
 
 //! 梯度/导数计算模式
 enum class DiffMode : uint8_t
@@ -348,7 +348,7 @@ struct RMVL_EXPORTS_W_AG OptimalOptions
  *
  * @param[in] func 一元函数
  * @param[in] x 指定位置的自变量
- * @param[in] mode 导数计算模式，默认为中心差商 `Diff_Central`
+ * @param[in] mode 导数计算模式，默认为中心差商 `DiffMode::Central`
  * @param[in] dx 坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的导数
  */
@@ -359,7 +359,7 @@ RMVL_EXPORTS_W double derivative(Func1d func, double x, DiffMode mode = DiffMode
  *
  * @param[in] func 多元函数
  * @param[in] x 指定位置的自变量
- * @param[in] mode 梯度计算模式，默认为中心差商 `Diff_Central`
+ * @param[in] mode 梯度计算模式，默认为中心差商 `DiffMode::Central`
  * @param[in] dx 计算偏导数时，坐标的微小增量，默认为 `1e-3`
  * @return 函数在指定点的梯度向量
  */
@@ -410,13 +410,13 @@ RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fmincon(FuncNd func, con
 /**
  * @brief 非线性最小二乘求解，实现与 \cite Agarwal23 类似的算法
  *
- * @param[in] funcs 最小二乘目标函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
- *                  \left(\texttt{funcs}[0]^2+\texttt{funcs}[1]^2+\cdots+\texttt{funcs}[n]^2\right)\f]
+ * @param[in] func 最小二乘目标函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
+ *                  \left(\texttt{func}[0]^2+\texttt{func}[1]^2+\cdots+\texttt{func}[n]^2\right)\f]
  * @param[in] x0 初始点
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
  * @return 最小二乘解
  */
-RMVL_EXPORTS_W std::valarray<double> lsqnonlin(const FuncNds &funcs, const std::valarray<double> &x0, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::valarray<double> lsqnonlin(const FuncNds &func, const std::valarray<double> &x0, const OptimalOptions &options = {});
 
 //! Robust 核函数
 enum class RobustMode : uint8_t
@@ -431,13 +431,13 @@ enum class RobustMode : uint8_t
 /**
  * @brief 带 Robust 核函数的非线性最小二乘求解
  *
- * @param[in] funcs 最小二乘目标函数，参考 rm::lsqnonlin
+ * @param[in] func 最小二乘目标函数，参考 rm::lsqnonlin
  * @param[in] x0 初始点
  * @param[in] rb Robust 核函数模式，参考 rm::RobustMode ，选择 `rm::RobustMode::L2` 时退化为 `rm::lsqnonlin`
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`
  * @return 最小二乘解
  */
-RMVL_EXPORTS_W std::valarray<double> lsqnonlinRKF(const FuncNds &funcs, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options = {});
+RMVL_EXPORTS_W std::valarray<double> lsqnonlinRKF(const FuncNds &func, const std::valarray<double> &x0, RobustMode rb, const OptimalOptions &options = {});
 
 //! @} algorithm_optimal
 
