@@ -64,11 +64,11 @@ public:
 
     /**
      * @brief 通过 BrowseName 的路径搜索命名空间 `ns` 为 `1` 的节点
-     * 
+     *
      * @param[in] browse_path BrowseName 路径，使用 `/` 分隔
      * @param[in] src_nd 源节点 ID，默认为 `rm::nodeObjectsFolder`
      * @return 节点 ID
-     * 
+     *
      * @code{.cpp}
      * auto node = cli.find("person/name", src_nd);
      * // 等效于 auto node = src_nd | cli.node("person") | cli.node("name");
@@ -178,11 +178,11 @@ public:
 
     /**
      * @brief 通过 BrowseName 的路径搜索命名空间 `ns` 为 `1` 的节点
-     * 
+     *
      * @param[in] browse_path BrowseName 路径，使用 `/` 分隔
      * @param[in] src_nd 源节点 ID，默认为 `rm::nodeObjectsFolder`
      * @return 节点 ID
-     * 
+     *
      * @code{.cpp}
      * auto node = cli.find("person/name", src_nd);
      * // 等效于 auto node = src_nd | cli.node("person") | cli.node("name");
@@ -221,6 +221,18 @@ public:
     RMVL_W std::pair<bool, Variables> call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const;
 
     /**
+     * @brief 直接以底层数据调用指定对象节点中的方法
+     * 
+     * @param[in] obj_nd 对象节点
+     * @param[in] name 方法名
+     * @param[in] inputs 输入参数列表
+     * @retval res, oargs
+     * @return 是否成功完成当前操作，以及输出参数列表
+     */
+    template <typename... Args>
+    std::pair<bool, Variables> callx(const NodeId &obj_nd, std::string_view name, Args &&...args) const { return call(obj_nd, name, {std::forward<Args>(args)...}); }
+
+    /**
      * @brief 在客户端调用 ObjectsFolder 中的方法
      *
      * @param[in] name 方法名 `browse_name`
@@ -228,7 +240,18 @@ public:
      * @retval res, oargs
      * @return 是否成功完成当前操作，以及输出参数列表
      */
-    RMVL_W inline std::pair<bool, Variables> call(std::string_view name,  const Variables & inputs) const { return call(nodeObjectsFolder, name, inputs); }
+    RMVL_W std::pair<bool, Variables> call(std::string_view name, const Variables &inputs) const { return call(nodeObjectsFolder, name, inputs); }
+
+    /**
+     * @brief 直接以底层数据调用 ObjectsFolder 中的方法
+     *
+     * @param[in] name 方法名 `browse_name`
+     * @param[in] inputs 输入参数列表
+     * @retval res, oargs
+     * @return 是否成功完成当前操作，以及输出参数列表
+     */
+    template <typename... Args>
+    std::pair<bool, Variables> callx(std::string_view name, Args &&...args) const { return call(name, {std::forward<Args>(args)...}); }
 
     /**
      * @brief 添加 OPC UA 视图节点 ViewNode 至 `ViewsFolder` 中

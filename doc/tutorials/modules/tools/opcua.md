@@ -406,9 +406,9 @@ int main()
     rm::Server srv(4840);
 
     // 定义方法，初始化或设置 rm::Method::func 成员必须使用以下兼容形式的可调用对象
-    // std::function<pair<bool, rm::Variables>(rm::ServerView, const rm::Variables &)>
+    // std::function<pair<bool, rm::Variables>(const rm::NodeId &, const rm::Variables &)>
     // 其中 rm::Variables 是 std::vector<rm::Variable> 的别名
-    rm::Method method = [](rm::ServerView, const rm::Variables &iargs) {
+    rm::Method method = [](const rm::NodeId &, const rm::Variables &iargs) {
         int num1 = iargs[0], num2 = iargs[1];
         rm::Variables oargs = {num1 + num2};
         return std::make_pair(true, oargs);
@@ -417,7 +417,12 @@ int main()
     method.display_name = "Add";
     method.description = "两数之和";
     // 定义函数传入参数 iargs 的类型说明
-    method.iargs = {{"Number 1", rm::tpInt32}, {"Number 2", rm::tpInt32}};
+    method.iargs = {{"Number 1", rm::tpInt32},
+                    {"Number 2", rm::tpInt32}};
+    // 也可以使用 create 工厂函数创建参数，后文不再赘述
+    // method.iargs = {rm::Argument::create("Number 1", rm::tpInt32), 
+    //                 rm::Argument::create("Number 2", rm::tpInt32)};
+
     // 定义函数返回值 oargs 的类型说明
     method.oargs = {{"Sum", rm::tpInt32}};
 
@@ -458,9 +463,9 @@ signal(SIGINT, onStop)
 svr = rm.Server(4840)
 
 # 定义方法，初始化或设置 rm.Method.func 成员必须使用以下形式的可调用对象
-# Callable[[ServerView, Variables], tuple[bool, Variables]]
+# Callable[[NodeId, Variables], tuple[bool, Variables]]
 # 其中 Variables 是 list[Variable] 的别名
-def add(sv, iargs):
+def add(nd, iargs):
     num1, num2 = iargs
     oarg = rm.Variable(num1.int() + num2.int())
     return True, [oarg]
@@ -471,17 +476,11 @@ method.browse_name = "add"
 method.display_name = "Add"
 method.description = "两数之和"
 # 定义函数传入参数 iargs 的类型说明
-iarg1 = rm.Argument()
-iarg1.name = "Number 1"
-iarg1.type = rm.tp_int
-iarg2 = rm.Argument()
-iarg2.name = "Number 2"
-iarg2.type = rm.tp_int
+iarg1 = rm.Argument.create("Number 1", rm.tp_int)
+iarg2 = rm.Argument.create("Number 2", rm.tp_int)
 method.iargs = [iarg1, iarg2]
 # 定义函数返回值 oargs 的类型说明
-oarg = rm.Argument()
-oarg.name = "Sum"
-oarg.type = rm.tp_int
+oarg = rm.Argument.create("Sum", rm.tp_int)
 method.oargs = [oarg]
 
 """
@@ -510,16 +509,31 @@ int main()
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
-    std::vector<rm::Variable> iargs = {1, 2};
+    rm::Variables iargs = {1, 2};
     // 调用方法，判断调用是否成功，并存储结果
     auto [res, oargs] = cli.call("add", iargs);
     if (!res)
-    {
         ERROR_("Failed to call the method");
-        return 0;
-    }
-    // 输出结果
-    printf("retval = %d\n", oargs.front().cast<int>());
+    else
+        printf("retval = %d\n", oargs.front().cast<int>());
+}
+```
+
+此外，还可以使用 `Client::callx` 方法的变参模板直接从底层数据进行调用，例如
+
+```cpp
+// client.cpp
+#include <rmvl/opcua/client.hpp>
+
+int main()
+{
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
+
+    auto [res, oargs] = cli.callx("add", 1, 2);
+    if (!res)
+        ERROR_("Failed to call the method");
+    else
+        printf("retval = %d\n", oargs.front().cast<int>());
 }
 ```
 
@@ -539,9 +553,8 @@ iargs = [rm.Variable(1), rm.Variable(2)]
 res, oargs = cli.call("add", iargs)
 if not res:
     print("Failed to call the method")
-    exit(0)
-# 输出结果
-print(f"retval = {oargs[0].int()}")
+else:
+    print(f"retval = {oargs[0].int()}")
 ```
 
 @end_toggle
@@ -737,8 +750,11 @@ int main()
     // 准备对象节点数据 A
     rm::Object a;
     a.browse_name = a.description = a.display_name = "A";
-    // 这里使用宏来创建 num1
-    uaCreateVariable(num1, 1);
+    // 创建 num1 变量节点
+    rm::Variable num1 = 1;
+    num1.browse_name = "num1";
+    num1.display_name = "num1";
+    num1.description = "num1";
     a.add(num1);
     auto node_a = srv.addObjectNode(a);
     auto node_num1 = srv.find("A/num1");
@@ -1031,7 +1047,7 @@ int main()
     auto msg_info = rm::Event::makeFrom(msg_type_info);
 
     // 启动设备
-    rm::Method start_info = [&](rm::ServerView, const rm::Variables &) -> std::pair<bool, rm::Variables> {
+    rm::Method start_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
         if (mode != OPCUAState::NONE)
             return {false, {}};
         mode = OPCUAState::START;
@@ -1042,7 +1058,7 @@ int main()
     start_info.description = "启动设备";
 
     // 关闭设备
-    rm::Method stop_info = [&](rm::ServerView, const rm::Variables &) -> std::pair<bool, rm::Variables> {
+    rm::Method stop_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
         if (mode != OPCUAState::NONE)
             return {false, {}};
         mode = OPCUAState::STOP;
@@ -1135,7 +1151,7 @@ start_info.display_name = "Start"
 start_info.description = "启动设备"
 
 # 关闭设备
-def stop_cb(sv, iargs):
+def stop_cb(nd, iargs):
     global mode
     if mode != OPCUAState.NONE:
         return False, {}
@@ -1712,22 +1728,44 @@ python3 ./nodeset_compiler.py \
 
 ### 4.3 不占有所有权的 C/S 视图
 
-`rm::Server` 使用 RAII 进行设计，一个对象占有了服务器的所有权和生命周期，当对象析构时，会自动停止并结束服务器。使用 `rm::ServerView` 来获取不占有所有权的服务器视图，并进行变量读写、路径搜索的操作，下面用服务器视图的单元测试作为示例。
+`rm::Server` 使用 RAII 进行设计，一个对象占有了服务器的所有权和生命周期，当对象析构时，会自动停止并结束服务器。使用 `rm::ServerView` 来获取不占有所有权的服务器视图，并进行变量读写、路径搜索的操作。
 
 @add_toggle_cpp
 
 ```cpp
-rm::Method method = [](rm::ServerView sv, const rm::NodeId &, const Variables &iargs) {
-    auto num_node = sv.find("num");
-    int num = sv.read(num_node).cast<int>();
-    sv.write(num_node, iargs[0].cast<int>() + num);
-    return std::make_pair(true, rm::Variables{});
-};
-method.browse_name = "plus";
-method.display_name = "Input + Number";
-method.description = "输入值加数";
-method.iargs = {{"input", rm::tpInt32, 1, "输入值"}};
-srv.addMethodNode(method);
+// server.cpp
+
+#include <csignal>
+#include <rmvl/opcua/server.hpp>
+
+void modify(rm::ServerView sv, int val)
+{
+    auto node = sv.find("num");
+    sv.write(node, val);
+}
+
+int main()
+{
+    signal(SIGINT, [](int) { stop = true; });
+
+    rm::Server srv(4840);
+
+    // 定义 int 型变量
+    rm::Variable num_info = 42;
+    num_info.browse_name = "num";
+    num_info.display_name = "Num";
+    num_info.description = "数字";
+    // 添加到服务器的默认位置
+    srv.addVariableNode(num_info);
+
+    /* code */
+
+    // 修改变量值
+    modify(srv, 100);
+
+    while (!stop)
+        srv.spinOnce();
+}
 ```
 
 @end_toggle
@@ -1735,26 +1773,37 @@ srv.addMethodNode(method);
 @add_toggle_python
 
 ```python
-def plus(sv, objnd, iargs):
-    num_node = sv.find("num")
-    num = sv.read(num_node).int()
-    iarg = iargs[0].int()
-    sv.write(num_node, rm.Variable(iarg + num))
-    return True, []
+# server.py
 
-method = rm.Method(plus)
-method.browse_name = "plus"
-method.display_name = "Input + Number"
-method.description = "输入值加数"
-iarg = rm.Argument()
-iarg.name = "input"
-iarg.type = rm.tp_int
-iarg.dims = 1
-iarg.description = "输入值"
-method.iargs = [iarg]
-srv.addMethodNode(method)
+from signal import signal, SIGINT
+import rm
+
+def modify(sv, val):
+    node = sv.find("num")
+    sv.write(node, val)
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+svr = rm.Server(4840)
+
+# 定义 int 型变量
+num_info = rm.Variable(42)
+num_info.browse_name = "num"
+num_info.display_name = "Num"
+num_info.description = "数字"
+# 添加到服务器的默认位置
+svr.addVariableNode(num_info)
+
+# 修改变量值
+modify(svr, 100)
+
+while not stop:
+    svr.spinOnce()
 ```
-
 @end_toggle
 
 同样的，客户端也可以使用 `rm::ClientView` 来获取不占有所有权的客户端视图，进行变量读写、路径搜索的操作，此处不再赘述。

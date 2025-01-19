@@ -66,7 +66,7 @@ static void configServer(rm::Server &srv)
     dv.on_write = [](const rm::NodeId &, const rm::Variable &val) { dv_src = val; };
     srv.addDataSourceVariableNode(dv);
     // 添加加法方法节点
-    rm::Method method = [](rm::ServerView, const rm::Variables &input) {
+    rm::Method method = [](const rm::NodeId &, const rm::Variables &input) {
         int a = input[0], b = input[1];
         rm::Variables output = {a + b};
         return std::make_pair(true, output);
@@ -127,8 +127,25 @@ TEST(OPC_UA_ClientTest, call)
     std::thread t(&rm::Server::spin, &srv);
     rm::Client cli("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
-    std::vector<rm::Variable> input = {1, 2};
+    rm::Variables input = {1, 2};
     auto [res, output] = cli.call("add", input);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
+}
+
+// 高级方法调用
+TEST(OPC_UA_ClientTest, callx)
+{
+    rm::Server srv(5003);
+    configServer(srv);
+    std::thread t(&rm::Server::spin, &srv);
+    rm::Client cli("opc.tcp://127.0.0.1:5003");
+    // 以 callx 调用测试服务器上的方法
+    auto [res, output] = cli.callx("add", 1, 2);
     EXPECT_TRUE(res);
     EXPECT_EQ(rm::Variable::cast<int>(output[0]), 3);
 
@@ -140,10 +157,10 @@ TEST(OPC_UA_ClientTest, call)
 // 订阅
 TEST(OPC_UA_ClientTest, variable_monitor)
 {
-    rm::Server srv(5003);
+    rm::Server srv(5005);
     configServer(srv);
     std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5003");
+    rm::Client cli("opc.tcp://127.0.0.1:5005");
     // 订阅测试服务器上的变量
     int receive_data{};
     auto node_id = cli.find("single");
@@ -170,7 +187,7 @@ TEST(OPC_UA_ClientTest, variable_monitor)
 
 TEST(OPC_UA_ClientTest, event_monitor)
 {
-    rm::Server srv(5004);
+    rm::Server srv(5010);
     configServer(srv);
     std::thread t(&rm::Server::spin, &srv);
     rm::EventType etype;
@@ -179,7 +196,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     etype.description = "测试事件类型";
     etype.add("aaa", 3);
     srv.addEventTypeNode(etype);
-    rm::Client cli("opc.tcp://127.0.0.1:5004");
+    rm::Client cli("opc.tcp://127.0.0.1:5010");
 
     std::string source_name;
     int aaa{};
@@ -204,11 +221,11 @@ TEST(OPC_UA_ClientTest, event_monitor)
 
 TEST(OPC_UA_Client, timer_test)
 {
-    rm::Server srv(5005);
+    rm::Server srv(5015);
     configServer(srv);
     std::thread t(&rm::Server::spin, &srv);
     std::this_thread::sleep_for(10ms);
-    rm::Client cli("opc.tcp://127.0.0.1:5005");
+    rm::Client cli("opc.tcp://127.0.0.1:5015");
     int times{};
     auto timer = rm::ClientTimer(cli, 10, [&](rm::ClientView) { times++; });
     std::this_thread::sleep_for(60ms);
@@ -225,10 +242,10 @@ TEST(OPC_UA_Client, timer_test)
 // 数据源变量读写
 TEST(OPC_UA_ClientTest, data_source_variable_IO)
 {
-    rm::Server srv(5006);
+    rm::Server srv(5020);
     configServer(srv);
     std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5006");
+    rm::Client cli("opc.tcp://127.0.0.1:5020");
     // 读取测试服务器上的变量值
     auto id = cli.find("data_source");
     EXPECT_TRUE(cli.write(id, 99));

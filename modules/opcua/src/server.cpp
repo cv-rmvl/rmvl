@@ -373,14 +373,14 @@ NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId p
     return retval;
 }
 
-static UA_StatusCode method_cb(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *,
+static UA_StatusCode method_cb(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *object_id,
                                void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
 {
     auto &on_method = *reinterpret_cast<MethodCallback *>(context);
     std::vector<Variable> iargs(input_size);
     for (size_t i = 0; i < input_size; ++i)
         iargs[i] = helper::cvtVariable(input[i]);
-    auto [res, oargs] = on_method(server, iargs);
+    auto [res, oargs] = on_method(*object_id, iargs);
     if (!res)
         return UA_STATUSCODE_BADINTERNALERROR;
     else
@@ -570,19 +570,19 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
     // 添加额外变量节点
     for (const auto &[browse_name, variable] : obj.getVariables())
     {
-        RMVL_DbgAssert((retval | node(browse_name)).empty());
+        RMVL_Assert((retval | node(browse_name)).empty());
         addVariableNode(variable, retval);
     }
     // 添加额外数据源变量节点
     for (const auto &[browse_name, dsv] : obj.getDataSourceVariables())
     {
-        RMVL_DbgAssert((retval | node(browse_name)).empty());
+        RMVL_Assert((retval | node(browse_name)).empty());
         addDataSourceVariableNode(dsv, retval);
     }
     // 添加额外方法节点
     for (const auto &[browse_name, method] : obj.getMethods())
     {
-        RMVL_DbgAssert((retval | node(browse_name)).empty());
+        RMVL_Assert((retval | node(browse_name)).empty());
         addMethodNode(method, retval);
     }
     return retval;
