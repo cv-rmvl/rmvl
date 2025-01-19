@@ -111,11 +111,11 @@ public:
     /**
      * @brief 获取 `int` 整型的非默认属性列表
      * @brief rmvl/opcua 模块支持修改的 **默认属性** 包括：
-     * |  BrowseName  |    类型    |             含义             |
-     * | :----------: | :--------: | :--------------------------: |
-     * | `SourceName` |  `String`  |          事件源名称          |
-     * |  `Message`   |  `String`  | 事件消息，包含关于事件的描述 |
-     * |  `Severity`  |  `UInt16`  |         事件严重程度         |
+     * |  BrowseName  |    类型    |             含义             |        参考        |
+     * | :----------: | :--------: | :--------------------------: | :----------------: |
+     * | `SourceName` |  `String`  |          事件源名称          | Event::source_name |
+     * |  `Message`   |  `String`  | 事件消息，包含关于事件的描述 |   Event::message   |
+     * |  `Severity`  |  `UInt16`  |         事件严重程度         |  Event::severity   |
      *
      * @return 非默认属性列表
      */

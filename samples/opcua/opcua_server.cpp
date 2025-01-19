@@ -88,7 +88,7 @@ int main()
     value_2.browse_name = "value_2";
 
     std::string last_call = "-- None --";
-    Method add = [&](ServerView, const Variables &iargs) -> std::pair<bool, Variables> {
+    Method add = [&](const NodeId &, const Variables &iargs) -> std::pair<bool, Variables> {
         int num1 = iargs[0], num2 = iargs[1];
         int res = num1 + num2;
         last_call = "Result: " + std::to_string(res);
@@ -112,7 +112,7 @@ int main()
     update(3, 2, add.display_name);
     update(3, 3, add.browse_name);
 
-    rm::ServerTimer timer(server, 50, [&](ServerView sv) {
+    ServerTimer timer(server, 50, [&](ServerView sv) {
         auto value_1 = sv.read(sv.find("value_1"));
         update(1, 4, std::to_string(value_1.cast<int>()));
         auto value_2 = sv.read(sv.find("value_2"));

@@ -31,17 +31,28 @@ struct RMVL_EXPORTS_W_AG Argument final
     RMVL_W_RW DataType type{};           //!< 参数数据类型 @see rm::DataType
     RMVL_W_RW uint32_t dims{1U};         //!< 参数维数，单数据则是 `1`，数组则是数组长度 @warning 不能为 `0`
     RMVL_W_RW std::string description{}; //!< 参数描述
+
+    /**
+     * @brief 创建方法参数信息
+     *
+     * @param[in] name 参数名称
+     * @param[in] type 参数数据类型 @see rm::DataType
+     * @param[in] dims 参数维数，单数据则是 `1`，数组则是数组长度 @warning 不能为 `0`
+     * @param[in] desc 参数描述
+     * @return 方法参数信息
+     */
+    RMVL_W static Argument create(const std::string &name, DataType type, uint32_t dims = 1U, const std::string &desc = "") { return {name, type, dims, desc}; }
 };
 
 /**
  * @brief OPC UA 方法回调函数
  *
- * @param[in] sv 服务器视图，指代当前服务器
+ * @param[in] nd 方法节点所在对象的 `NodeId`
  * @param[in] iargs 输入参数列表
  * @retval res, oargs
  * @return 是否成功完成当前操作，以及输出参数列表
  */
-using MethodCallback = std::function<std::pair<bool, std::vector<Variable>>(ServerView, const std::vector<Variable> &)>;
+using MethodCallback = std::function<std::pair<bool, std::vector<Variable>>(const NodeId &, const std::vector<Variable> &)>;
 
 //! OPC UA 方法
 class RMVL_EXPORTS_W Method final
