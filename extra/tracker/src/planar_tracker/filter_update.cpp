@@ -53,7 +53,7 @@ void PlanarTracker::updateMotionFilter()
     if (_combo_deque.size() >= 2)
         t = (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1);
     else
-        t = para::planar_tracker_param.SAMPLE_INTERVAL / 1000.;
+        t = para::planar_tracker_param.SAMPLE_INTERVAL;
     // 设置状态转移矩阵
     _motion_filter.setA({1, 0, t, 0,
                          0, 1, 0, t,

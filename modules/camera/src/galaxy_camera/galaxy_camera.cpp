@@ -9,7 +9,6 @@
  *
  */
 
-#include <thread>
 #include <unordered_set>
 
 #include <DxImageProc.h>
@@ -18,6 +17,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "galaxy_camera_impl.h"
+#include "rmvl/core/timer.hpp"
 
 #include "rmvlpara/camera/galaxy_camera.h"
 
@@ -318,7 +318,7 @@ bool GalaxyCamera::Impl::reconnect() noexcept
     using namespace std::chrono_literals;
     INFO_("(hik) Camera device reconnect");
     release();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    Timer::sleep_for(100);
     return open();
 }
 

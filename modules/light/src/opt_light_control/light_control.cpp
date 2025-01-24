@@ -1,9 +1,8 @@
-#include <thread>
-
 #include <OPTController.h>
 #include <OPTErrorCode.h>
 
 #include "opt_light_impl.hpp"
+#include "rmvl/core/timer.hpp"
 
 namespace rm
 {
@@ -32,7 +31,7 @@ OPTLightController::Impl::Impl(const LightConfig &cfg, std::string_view id)
     case LightHandleMode::Key:
         if (OPTController_CreateEtheConnectionBySN(const_cast<char *>(id.data()), &_handle) == OPT_SUCCEED)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            Timer::sleep_for(1000);
             _init = true;
         }
         break;

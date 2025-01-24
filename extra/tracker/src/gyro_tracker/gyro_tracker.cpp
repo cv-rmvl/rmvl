@@ -37,7 +37,7 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     _state = p_armor->state();
     _combo_deque.push_back(p_armor);
     _type_deque.push_back(to_robot_type(_state["robot"]));
-    _duration = para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
+    _duration = para::gyro_tracker_param.SAMPLE_INTERVAL;
     initFilter();
 }
 
@@ -68,7 +68,7 @@ void GyroTracker::update(combo::ptr p_armor)
         RMVL_Error(RMVL_StsBadSize, "\"_combo_deque\" is empty");
     _duration = (_combo_deque.size() >= 2)
                     ? (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1)
-                    : para::gyro_tracker_param.SAMPLE_INTERVAL / 1000.;
+                    : para::gyro_tracker_param.SAMPLE_INTERVAL;
     if (std::isnan(_duration))
         RMVL_Error(RMVL_StsDivByZero, "\"t\" is nan");
     // 更新滤波器
