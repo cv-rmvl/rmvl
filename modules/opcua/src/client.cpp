@@ -50,7 +50,7 @@ Client::Client(std::string_view address, const UserConfig &usr)
         return;
     }
 
-    // 设置延迟时间
+    // 其余配置
     init_config.timeout = para::opcua_param.CONNECT_TIMEOUT;
 
     _client = UA_Client_newWithConfig(&init_config);
