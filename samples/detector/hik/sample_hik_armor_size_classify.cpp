@@ -1,5 +1,4 @@
 #include <iostream>
-#include <thread>
 
 #include "rmvl/camera/hik_camera.h"
 #include "rmvl/core/timer.hpp"
@@ -139,7 +138,7 @@ int main(int argc, char *argv[])
             return 0;
         collect(color, rm::ArmorSizeType::SMALL, 0);
         cv::destroyAllWindows();
-        std::this_thread::sleep_for(10ms);
+        rm::Timer::sleep_for(10);
 
         // --------------------- 大装甲板收集 ---------------------
         printf("\033[32m大装甲板\033[0m信息收集即将开始...\n");
@@ -149,7 +148,7 @@ int main(int argc, char *argv[])
             return 0;
         collect(color, rm::ArmorSizeType::BIG, collect_num);
         cv::destroyAllWindows();
-        std::this_thread::sleep_for(10ms);
+        rm::Timer::sleep_for(10);
 
         // 训练与分类
         p_svm = cv::ml::SVM::create();

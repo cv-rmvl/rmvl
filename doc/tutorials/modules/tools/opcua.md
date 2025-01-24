@@ -253,8 +253,6 @@ cli = rm.Client("opc.tcp://127.0.0.1:4840")
 #include <thread>
 #include <rmvl/opcua/server.hpp>
 
-using namespace std::chrono_literals;
-
 static bool stop = false;
 
 int main()
@@ -278,7 +276,6 @@ int main()
     while (!stop)
     {
         srv.spinOnce();
-        std::this_thread::sleep_for(10ms); // 这里的延时是为了减少 CPU 占用，当然不加延时也完全可以
     }
     // srv.shutdown(); 可省略，后文不再赘述
 }
@@ -392,7 +389,6 @@ print(target.double())
 ```cpp
 // server.cpp
 #include <csignal>
-#include <thread>
 #include <rmvl/opcua/server.hpp>
 
 using namespace std::chrono_literals;
@@ -438,7 +434,6 @@ int main()
     while (!stop)
     {
         srv.spinOnce();
-        std::this_thread::sleep_for(10ms); // 这里的延时是为了减少 CPU 占用，当然不加延时也完全可以，后文同理
     }
 }
 ```
@@ -577,7 +572,6 @@ A
 ```cpp
 // server.cpp
 #include <csignal>
-#include <thread>
 #include <rmvl/opcua/server.hpp>
 
 using namespace std::chrono_literals;
@@ -618,10 +612,7 @@ int main()
     srv.addObjectNode(b2, node_a);
 
     while (!stop)
-    {
         srv.spinOnce();
-        std::this_thread::sleep_for(10ms);
-    }
 }
 ```
 
@@ -735,7 +726,6 @@ print(c3.str())
 ```cpp
 // server.cpp
 #include <csignal>
-#include <thread>
 #include <rmvl/opcua/server.hpp>
 
 using namespace std::chrono_literals;
@@ -770,10 +760,7 @@ int main()
     srv.addViewNode(num_view);
     
     while (!stop)
-    {
         srv.spinOnce();
-        std::this_thread::sleep_for(10ms);
-    }
 }
 ```
 
@@ -836,7 +823,6 @@ OPC UA 支持变量节点和事件的监视，下面分别以变量节点和事�
 ```cpp
 // server.cpp
 #include <csignal>
-#include <thread>
 #include <rmvl/opcua/server.hpp>
 
 using namespace std::chrono_literals;
@@ -858,10 +844,7 @@ int main()
     srv.addVariableNode(num);
 
     while (!stop)
-    {
         srv.spinOnce();
-        std::this_thread::sleep_for(10ms);
-    }
 }
 ```
 
@@ -904,8 +887,8 @@ while not stop:
 
 ```cpp
 // client_1.cpp
-#include <thread>
 #include <rmvl/opcua/client.hpp>
+#include <rmvl/core/timer.hpp>
 
 using namespace std::chrono_literals;
 
@@ -915,7 +898,7 @@ int main()
     auto node = cli.find("number");
     for (int i = 0; i < 100; ++i)
     {
-        std::this_thread::sleep_for(1s);
+        TImer::sleep_for(1000);
         // 写入数据，i + 200 隐式构造成了 rm::Variable
         bool success = cli.write(node, i + 200);
         if (!success)
@@ -1476,7 +1459,6 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
 ```cpp
 // publisher.cpp
 #include <csignal>
-#include <thread>
 #include <rmvl/opcua/publisher.hpp>
 
 using namespace std::chrono_literals;
@@ -1510,7 +1492,6 @@ int main()
         /* 例如 num_node 所对应的值可以直接在这里修改 */
         
         pub.spinOnce();
-        std::this_thread::sleep_for(10ms);
     }
 }
 ```
@@ -1563,7 +1544,6 @@ while not stop:
 ```cpp
 // subscriber.cpp
 #include <csignal>
-#include <thread>
 #include <rmvl/opcua/subscriber.hpp>
 
 using namespace std::chrono_literals;
@@ -1600,7 +1580,6 @@ int main()
         /* other code */
         
         sub.spinOnce();
-        std::this_thread::sleep_for(10ms);
     }
 }
 ```

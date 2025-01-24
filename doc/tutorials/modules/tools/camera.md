@@ -424,8 +424,7 @@ while True:
 #include <opencv2/highgui.hpp>
 
 #include <rmvl/camera/mv_camera.h>
-
-using namespace std::chrono_literals;
+#include <rmvl/core/timer.hpp>
 
 int main()
 {
@@ -436,7 +435,7 @@ int main()
     std::thread th([&run]() {
         while (run)
         {
-            std::this_thread::sleep_for(10ms);
+            Timer::sleep_for(10);
             capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
         }
     });

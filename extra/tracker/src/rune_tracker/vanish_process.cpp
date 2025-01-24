@@ -67,7 +67,7 @@ void RuneTracker::update(double tick, const ImuData &imu_data)
     if (_combo_deque.size() >= 2)
         t = (_combo_deque.front()->tick() - _combo_deque.back()->tick()) / static_cast<double>(_combo_deque.size() - 1);
     else
-        t = para::rune_tracker_param.SAMPLE_INTERVAL / 1000.;
+        t = para::rune_tracker_param.SAMPLE_INTERVAL;
     _filter.setA({1, t,
                   0, 1});
     // 旋转状态先验估计

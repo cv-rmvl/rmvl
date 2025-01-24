@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <chrono>
-
 #include "rmvldef.hpp"
 
 //! @addtogroup core
@@ -33,23 +31,28 @@ namespace rm
  */
 class RMVL_EXPORTS_W Timer
 {
-    using steady_clock = std::chrono::steady_clock;
-
 public:
     RMVL_W Timer() { reset(); }
-    Timer(const Timer &) = delete;
-    void operator=(const Timer &) = delete;
 
     //! 重置定时器
-    RMVL_W static void reset() { _tick = steady_clock::now(); }
-    //! 返回从构造初期到现在经过的时间（单位：s）
-    RMVL_W static double now() { return std::chrono::duration_cast<std::chrono::duration<double>>(steady_clock::now() - _tick).count(); }
+    RMVL_W static void reset();
+    //! 返回从构造初期到现在经过的时间（单位：ms）
+    RMVL_W static double now();
 
-private:
-    static steady_clock::time_point _tick; //!< 起始时间
+    /**
+     * @brief 当前线程休眠指定时间
+     * 
+     * @param[in] t 时间间隔（单位：ms）
+     */
+    RMVL_W static void sleep_for(double t);
+
+    /**
+     * @brief 当前线程休眠至指定时间
+     * 
+     * @param[in] t 时间点（单位：ms）
+     */
+    RMVL_W static void sleep_until(double t);
 };
-
-inline std::chrono::steady_clock::time_point Timer::_tick = {};
 
 //! @} core_timer
 
