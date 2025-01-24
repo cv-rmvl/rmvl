@@ -22,7 +22,7 @@ namespace rm_test
 TEST(OPC_UA_Server, variable_config)
 {
     // 变量类型节点、字符串
-    rm::VariableType variable_type{"string_test"};
+    rm::VariableType variable_type = "string_test";
     EXPECT_EQ(variable_type.size(), 1);
     EXPECT_EQ(variable_type.getDataType(), UA_TYPES_STRING);
     // 添加变量节点、双精度浮点数

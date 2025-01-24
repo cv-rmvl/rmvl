@@ -303,7 +303,7 @@ Variable cvtVariable(const UA_Variant &p_val) noexcept
         case UA_TYPES_STRING: {
             UA_String *p_uastr = reinterpret_cast<UA_String *>(data);
             const char *str = reinterpret_cast<const char *>(p_uastr->data);
-            return std::string_view(str, p_uastr->length);
+            return std::string(str, p_uastr->length);
         }
         case UA_TYPES_BOOLEAN:
             return *reinterpret_cast<UA_Boolean *>(data);

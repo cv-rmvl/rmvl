@@ -51,7 +51,16 @@ public:
      *
      * @param[in] str 字符串
      */
-    RMVL_W VariableType(std::string_view str) : _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W VariableType(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(1) {}
+
+    /**
+     * @brief 字符串字面量构造
+     *
+     * @tparam N 字符串长度
+     * @param[in] str 字符串
+     */
+    template <std::size_t N>
+    VariableType(const char (&str)[N]) : VariableType(std::string(str, N)) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -148,7 +157,16 @@ public:
      *
      * @param[in] str 字符串
      */
-    RMVL_W Variable(std::string_view str) : access_level(3U), _value(std::string(str)), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W Variable(const std::string &str) : access_level(3U), _value(str), _data_type(DataType(typeid(std::string))), _size(1) {}
+
+    /**
+     * @brief 字符串字面量构造
+     *
+     * @tparam N 字符串长度
+     * @param[in] str 字符串
+     */
+    template <std::size_t N>
+    Variable(const char (&str)[N]) : Variable(std::string(str, N)) {}
 
     /**
      * @brief 列表构造
@@ -184,10 +202,10 @@ public:
      * @param[in] val 另一个变量
      * @return 是否不等
      */
-    RMVL_W inline bool operator!=(const Variable &val) const { return !(*this == val); }
+    RMVL_W bool operator!=(const Variable &val) const { return !(*this == val); }
 
     //! 判断变量节点是否为空
-    RMVL_W constexpr bool empty() const { return _size == 0; }
+    RMVL_W bool empty() const { return _size == 0; }
 
     /**
      * @brief 将变量节点转化为指定类型的数据
