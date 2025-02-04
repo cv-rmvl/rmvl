@@ -6,7 +6,7 @@
  * @date 2023-04-18
  *
  * @copyright Copyright 2023 (c), zhaoxi
- * 
+ *
  */
 
 #pragma once
@@ -42,6 +42,7 @@
 
 // 通用
 #include "core/io.hpp"
+#include "core/str.hpp"
 #include "core/timer.hpp"
 #include "core/util.hpp"
 #include "core/version.hpp"

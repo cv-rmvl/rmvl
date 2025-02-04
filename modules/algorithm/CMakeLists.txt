@@ -3,11 +3,9 @@
 # ----------------------------------------------------------------------------
 rmvl_generate_para(algorithm)
 
+rmvl_add_module(algorithm DEPENDS core)
 if(WITH_OPENCV AND WITH_EIGEN3)
-  rmvl_add_module(algorithm DEPENDS core)
   rmvl_compile_definitions(algorithm PUBLIC HAVE_OPENCV)
-else()
-  rmvl_add_module(algorithm DEPENDS core)
 endif()
 
 # ----------------------------------------------------------------------------

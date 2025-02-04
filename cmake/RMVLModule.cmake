@@ -175,14 +175,12 @@ macro(rmvl_add_module _name)
           CACHE INTERNAL "Source files of RMVL modules"
         )
       else()
+        add_library(${the_module} ${target_src} ${para_src} ${extra_src})
         if(BUILD_SHARED_LIBS)
-          add_library(${the_module} SHARED ${target_src} ${para_src} ${extra_src})
           set_target_properties(
             ${the_module} PROPERTIES
             DEFINE_SYMBOL RMVLAPI_EXPORTS
           )
-        else()
-          add_library(${the_module} STATIC ${target_src} ${para_src} ${extra_src})
         endif()
       endif()
     endif(MD_INTERFACE)
