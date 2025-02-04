@@ -225,7 +225,7 @@ public:
      * 
      * @param[in] obj_nd 对象节点
      * @param[in] name 方法名
-     * @param[in] inputs 输入参数列表
+     * @param[in] args 方法的所有传入参数
      * @retval res, oargs
      * @return 是否成功完成当前操作，以及输出参数列表
      */
@@ -246,7 +246,7 @@ public:
      * @brief 直接以底层数据调用 ObjectsFolder 中的方法
      *
      * @param[in] name 方法名 `browse_name`
-     * @param[in] inputs 输入参数列表
+     * @param[in] args 方法的所有传入参数
      * @retval res, oargs
      * @return 是否成功完成当前操作，以及输出参数列表
      */

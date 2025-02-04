@@ -148,7 +148,7 @@ if(ENABLE_LTO)
   endif()
 endif()
 
-if(WIN32)
+if(RMVL_MSVC)
   # postfix of DLLs
   set(RMVL_LIBVERSION_SUFFIX "${RMVL_VERSION_MAJOR}${RMVL_VERSION_MINOR}${RMVL_VERSION_PATCH}" CACHE INTERNAL "RMVL library version suffix")
   set(RMVL_DEBUG_POSTFIX "d" CACHE INTERNAL "RMVL debug postfix")

@@ -41,7 +41,7 @@ struct RMVL_EXPORTS_W_AG Argument final
      * @param[in] desc 参数描述
      * @return 方法参数信息
      */
-    RMVL_W static Argument create(const std::string &name, DataType type, uint32_t dims = 1U, const std::string &desc = "") { return {name, type, dims, desc}; }
+    RMVL_W static Argument create(const std::string &name, DataType type, uint32_t dims = 1, const std::string &desc = "") { return {name, type, dims, desc}; }
 };
 
 /**

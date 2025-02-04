@@ -12,7 +12,6 @@
 #pragma once
 
 #include <atomic>
-#include <unordered_set>
 
 #include "event.hpp"
 #include "object.hpp"
