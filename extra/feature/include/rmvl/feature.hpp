@@ -26,6 +26,10 @@
 
 #include "feature/feature.h"
 
+#ifdef HAVE_RMVL_ANCHOR
+#include "feature/anchor.h"
+#endif // HAVE_RMVL_ANCHOR
+
 #ifdef HAVE_RMVL_LIGHT_BLOB
 #include "feature/light_blob.h"
 #endif // HAVE_RMVL_LIGHT_BLOB
@@ -45,3 +49,4 @@
 #ifdef HAVE_RMVL_TAG
 #include "feature/tag.h"
 #endif // HAVE_RMVL_TAG
+

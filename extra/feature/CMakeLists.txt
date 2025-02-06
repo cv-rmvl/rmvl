@@ -6,6 +6,16 @@ rmvl_add_module(
   DEPENDS types algorithm
 )
 
+# anchor
+rmvl_generate_para(
+  anchor
+  MODULE feature
+)
+rmvl_add_module(
+  anchor
+  DEPENDS feature
+)
+
 # light_blob
 rmvl_generate_para(
   light_blob
@@ -83,7 +93,7 @@ endif()
 if(BUILD_TESTS)
   rmvl_add_test(
     feature Unit
-    DEPENDS light_blob pilot rune_center rune_target
+    DEPENDS anchor light_blob pilot rune_center rune_target
     EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
