@@ -60,6 +60,21 @@ static std::vector<cv::Point2f> getCrossCorners(const std::vector<cv::Point> &co
     return retval;
 }
 
+/**
+ * @brief 获取十字交叉轮廓特征的中心点
+ *
+ * @param[in] corners 角点
+ * @return 中心点
+ */
+static cv::Point2f getCrossCenter(const std::vector<cv::Point2f> &corners)
+{
+    RMVL_DbgAssert(corners.size() == 4);
+    return ((corners[0].x * corners[2].y - corners[0].y * corners[2].x) * (corners[1] - corners[3]) -
+            (corners[1].x * corners[3].y - corners[1].y * corners[3].x) * (corners[0] - corners[2])) /
+           ((corners[0].x - corners[2].x) * (corners[1].y - corners[3].y) -
+            (corners[1].x - corners[3].x) * (corners[0].y - corners[2].y));
+}
+
 std::optional<CrossInfo> createAnchorFromCrossContour(const std::vector<cv::Point> &contour)
 {
     if (contour.size() < 10)
@@ -75,6 +90,8 @@ std::optional<CrossInfo> createAnchorFromCrossContour(const std::vector<cv::Poin
     info.center = cv::Point2d{m.m10 / m.m00, m.m01 / m.m00};
     // 获取轮廓的角点
     info.corners = rm::getCrossCorners(contour, info.center);
+    // 中心点修正
+    info.center = rm::getCrossCenter(info.corners);
     // 获取轮廓的长度
     info.length = (getDistance(info.corners[0], info.corners[2]) + getDistance(info.corners[1], info.corners[3])) / 2.f;
     // 获取轮廓角度
