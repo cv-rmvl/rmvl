@@ -14,6 +14,7 @@
 /**
  * @defgroup feature 图像轮廓特征（数据组件）
  * @{
+ * @defgroup anchor 定位点特征
  * @defgroup light_blob 装甲模块灯条
  * @defgroup pilot 前哨、基地的引导灯
  * @defgroup rune_center 神符旋转中心特征
