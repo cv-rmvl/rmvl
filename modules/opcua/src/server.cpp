@@ -111,24 +111,6 @@ Server::~Server()
     UA_Server_delete(_server);
 }
 
-static NodeId serverFindNode(UA_Server *p_server, std::string_view browse_path, const NodeId &src_nd)
-{
-    RMVL_DbgAssert(p_server != nullptr);
-
-    auto paths = str::split(browse_path, "/");
-    if (paths.empty())
-        return src_nd;
-    ServerView sv{p_server};
-    NodeId retval = src_nd;
-    for (const auto &path : paths)
-    {
-        retval = retval | sv.node(path);
-        if (retval.empty())
-            break;
-    }
-    return retval;
-}
-
 static Variable serverRead(UA_Server *p_server, const NodeId &nd)
 {
     RMVL_DbgAssert(p_server != nullptr);
@@ -155,56 +137,13 @@ static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &v
     return status == UA_STATUSCODE_GOOD;
 }
 
-static bool serverTriggerEvent(UA_Server *server, const Event &event)
-{
-    RMVL_DbgAssert(server != nullptr);
-
-    ServerView sv{server};
-    NodeId type_id = nodeBaseEventType | sv.node(event.type().browse_name);
-    if (type_id.empty())
-    {
-        ERROR_("Failed to find the event type ID during triggering event");
-        return false;
-    }
-    // 创建事件
-    UA_NodeId event_id;
-    auto status = UA_Server_createEvent(server, type_id, &event_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
-        ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
-        return false;
-    }
-
-    // 设置事件默认属性
-    UA_DateTime time = UA_DateTime_now();
-    UA_String source_name = UA_STRING(helper::to_char(event.source_name));
-    UA_LocalizedText evt_msg = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(event.message));
-    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Time")), &time, &UA_TYPES[UA_TYPES_DATETIME]);
-    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("SourceName")), &source_name, &UA_TYPES[UA_TYPES_STRING]);
-    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
-    UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
-    // 设置事件自定义属性
-    for (const auto &[browse_name, prop] : event.data())
-    {
-        NodeId sub_nd = event_id | sv.node(browse_name);
-        if (!sub_nd.empty())
-            UA_Server_writeObjectProperty_scalar(server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
-                                                 &prop, &UA_TYPES[UA_TYPES_INT32]);
-    }
-
-    // 触发事件
-    status = UA_Server_triggerEvent(server, event_id, nodeServer, nullptr, true);
-    if (status != UA_STATUSCODE_GOOD)
-    {
-        ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
-        return false;
-    }
-    return true;
-}
-
 ///////////////////////// 节点配置 /////////////////////////
 
-NodeId Server::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return serverFindNode(_server, browse_path, src_nd); }
+NodeId Server::find(std::string_view browse_path, const NodeId &src_nd) const noexcept
+{
+    rm::ServerView sv{_server};
+    return sv.find(browse_path, src_nd);
+}
 
 NodeId Server::addVariableTypeNode(const VariableType &vtype)
 {
@@ -672,14 +611,79 @@ NodeId Server::addEventTypeNode(const EventType &etype)
     return retval;
 }
 
-bool Server::triggerEvent(const Event &event) const { return serverTriggerEvent(_server, event); }
+bool Server::triggerEvent(const Event &event) const
+{
+    rm::ServerView sv{_server};
+    return sv.triggerEvent(event);
+}
 
 //////////////////////// 服务端视图 ////////////////////////
 
-NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return serverFindNode(_server, browse_path, src_nd); }
+NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept
+{
+    RMVL_DbgAssert(_server != nullptr);
+
+    auto paths = str::split(browse_path, "/");
+    if (paths.empty())
+        return src_nd;
+    NodeId retval = src_nd;
+    for (const auto &path : paths)
+    {
+        retval = retval | node(path);
+        if (retval.empty())
+            break;
+    }
+    return retval;
+}
+
 Variable ServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
 bool ServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
-bool ServerView::triggerEvent(const Event &event) const { return serverTriggerEvent(_server, event); }
+
+bool ServerView::triggerEvent(const Event &event) const
+{
+    RMVL_DbgAssert(_server != nullptr);
+
+    NodeId type_id = nodeBaseEventType | node(event.type().browse_name);
+    if (type_id.empty())
+    {
+        ERROR_("Failed to find the event type ID during triggering event");
+        return false;
+    }
+    // 创建事件
+    UA_NodeId event_id;
+    auto status = UA_Server_createEvent(_server, type_id, &event_id);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+
+    // 设置事件默认属性
+    UA_DateTime time = UA_DateTime_now();
+    UA_String source_name = UA_STRING(helper::to_char(event.source_name));
+    UA_LocalizedText evt_msg = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(event.message));
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Time")), &time, &UA_TYPES[UA_TYPES_DATETIME]);
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("SourceName")), &source_name, &UA_TYPES[UA_TYPES_STRING]);
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
+    UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+    // 设置事件自定义属性
+    for (const auto &[browse_name, prop] : event.data())
+    {
+        NodeId sub_nd = event_id | node(browse_name);
+        if (!sub_nd.empty())
+            UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
+                                                 &prop, &UA_TYPES[UA_TYPES_INT32]);
+    }
+
+    // 触发事件
+    status = UA_Server_triggerEvent(_server, event_id, nodeServer, nullptr, true);
+    if (status != UA_STATUSCODE_GOOD)
+    {
+        ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+    return true;
+}
 
 /////////////////////// 服务器定时器 ///////////////////////
 

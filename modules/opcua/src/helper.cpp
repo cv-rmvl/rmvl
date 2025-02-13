@@ -300,6 +300,11 @@ Variable cvtVariable(const UA_Variant &p_val) noexcept
     {
         switch (type_flag)
         {
+        case UA_TYPES_LOCALIZEDTEXT: {
+            UA_LocalizedText *p_ualt = reinterpret_cast<UA_LocalizedText *>(data);
+            const char *text = reinterpret_cast<const char *>(p_ualt->text.data);
+            return std::string(text, p_ualt->text.length);
+        }
         case UA_TYPES_STRING: {
             UA_String *p_uastr = reinterpret_cast<UA_String *>(data);
             const char *str = reinterpret_cast<const char *>(p_uastr->data);

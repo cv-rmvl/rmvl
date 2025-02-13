@@ -1244,6 +1244,7 @@ public:
     // 同步阻塞的 start 函数
     bool start()
     {
+        _start_res.reset();
         auto [res, oargs] = _cli.call("Start", {});
         if (!res)
         {
@@ -1258,6 +1259,7 @@ public:
     // 同步阻塞的 stop 函数
     bool stop()
     {
+        _stop_res.reset();
         auto [res, oargs] = _cli.call("Stop", {});
         if (!res)
         {
