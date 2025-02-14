@@ -19,31 +19,20 @@
 namespace rm
 {
 
-RuneCenter::RuneCenter(const cv::Point2f &center)
+RuneCenter::ptr RuneCenter::make_feature(const cv::Point2f &center)
 {
+    auto retval = std::make_shared<RuneCenter>();
     // 初始化构造形状信息
-    _center = center;
-    _width = 20;
-    _height = 20;
-    _ratio = 1;
+    retval->_center = center;
+    retval->_width = 20;
+    retval->_height = 20;
     // 更新角点信息
-    _corners = {center + cv::Point2f(-10, 10), center + cv::Point2f(-10, -10),
-                 center + cv::Point2f(10, -10), center + cv::Point2f(10, 10)};
+    retval->_corners = {center + cv::Point2f(-10, 10), center + cv::Point2f(-10, -10),
+                        center + cv::Point2f(10, -10), center + cv::Point2f(10, 10)};
+    return retval;
 }
 
-RuneCenter::RuneCenter(const std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect) : _rotated_rect(rotated_rect)
-{
-    _contour = contour;
-    _center = _rotated_rect.center;
-    _width = std::max(_rotated_rect.size.width, _rotated_rect.size.height);
-    _height = std::min(_rotated_rect.size.width, _rotated_rect.size.height);
-    _ratio = _width / _height;
-    // 更新角点信息
-    _corners.resize(4);
-    _rotated_rect.points(_corners.data());
-}
-
-std::shared_ptr<RuneCenter> RuneCenter::make_feature(const std::vector<cv::Point> &contour)
+RuneCenter::ptr RuneCenter::make_feature(const std::vector<cv::Point> &contour)
 {
     if (contour.size() < 6)
         return nullptr;
@@ -71,7 +60,15 @@ std::shared_ptr<RuneCenter> RuneCenter::make_feature(const std::vector<cv::Point
     }
     DEBUG_PASS_("center 2.center_ratio : pass");
 
-    return std::make_shared<RuneCenter>(contour, rotated_rect);
+    auto retval = std::make_shared<RuneCenter>();
+
+    retval->_center = rotated_rect.center;
+    retval->_width = std::max(rotated_rect.size.width, rotated_rect.size.height);
+    retval->_height = std::min(rotated_rect.size.width, rotated_rect.size.height);
+    // 更新角点信息
+    retval->_corners.resize(4);
+    rotated_rect.points(retval->_corners.data());
+    return retval;
 }
 
 } // namespace rm

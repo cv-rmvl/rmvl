@@ -96,6 +96,37 @@ RobotType to_robot_type(const StateType &type)
     return RobotType::UNKNOWN;
 }
 
+/**
+ * @brief 获取装甲板的位姿
+ *
+ * @param[in] cam_matrix 相机内参，用于解算相机外参
+ * @param[in] distCoeffs 相机畸变参数，用于解算相机外参
+ * @param[in] imu_data IMU 数据
+ * @param[in] type 装甲板类型
+ * @param[in] corners 装甲板角点
+ * @return CameraExtrinsics - 相机外参
+ */
+static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const ImuData &imu_data,
+                                           ArmorSizeType type, const std::vector<cv::Point2f> &corners)
+{
+    cv::Vec3f rvec;             // 旋转向量
+    cv::Vec3f tvec;             // 平移向量
+    CameraExtrinsics extrinsic; // 存储相机外参
+    type == ArmorSizeType::SMALL
+        ? cv::solvePnP(para::armor_param.SMALL_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE)
+        : cv::solvePnP(para::armor_param.BIG_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE);
+    // 变换为 IMU 坐标系下
+    cv::Matx33f rmat;
+    cv::Rodrigues(rvec, rmat);
+    cv::Matx33f gyro_rmat;
+    cv::Vec3f gyro_tvec;
+    Armor::cameraConvertToImu(rmat, tvec, imu_data, gyro_rmat, gyro_tvec);
+    extrinsic.R(gyro_rmat);
+    extrinsic.tvec(gyro_tvec);
+
+    return extrinsic;
+}
+
 std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data,
                                          double tick, ArmorSizeType armor_size_type)
 {
@@ -150,80 +181,70 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
             return nullptr;
     }
 
-    return std::make_shared<Armor>(p_left, p_right, imu_data, tick,
-                                   width_ratio, length_ratio, corner_angle, match_error,
-                                   combo_height, combo_width, combo_ratio, armor_size_type);
-}
+    auto retval = std::make_shared<Armor>(width_r, length_r, corner_angle, match_error);
 
-/**
- * @brief 获取装甲板的位姿
- *
- * @param[in] cam_matrix 相机内参，用于解算相机外参
- * @param[in] distCoeffs 相机畸变参数，用于解算相机外参
- * @param[in] imu_data IMU 数据
- * @param[in] type 装甲板类型
- * @param[in] corners 装甲板角点
- * @return CameraExtrinsics - 相机外参
- */
-static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const ImuData &imu_data,
-                                           ArmorSizeType type, const std::vector<cv::Point2f> &corners)
-{
-    cv::Vec3f rvec;             // 旋转向量
-    cv::Vec3f tvec;             // 平移向量
-    CameraExtrinsics extrinsic; // 存储相机外参
-    type == ArmorSizeType::SMALL
-        ? cv::solvePnP(para::armor_param.SMALL_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE)
-        : cv::solvePnP(para::armor_param.BIG_ARMOR, corners, cameraMatrix, distCoeffs, rvec, tvec, false, cv::SOLVEPNP_IPPE);
-    // 变换为 IMU 坐标系下
-    cv::Matx33f rmat;
-    cv::Rodrigues(rvec, rmat);
-    cv::Matx33f gyro_rmat;
-    cv::Vec3f gyro_tvec;
-    Armor::cameraConvertToImu(rmat, tvec, imu_data, gyro_rmat, gyro_tvec);
-    extrinsic.R(gyro_rmat);
-    extrinsic.tvec(gyro_tvec);
+    retval->_height = combo_height;
+    retval->_width = combo_width;
+    retval->_combo_ratio = combo_ratio;
+    // 获取装甲板中心
+    retval->_center = (p_left->center() + p_right->center()) / 2.f;
+    // 获取相对角度
+    retval->_relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, retval->_center);
+    // 获取当前装甲板对应的 IMU 位置信息
+    retval->_imu_data = imu_data;
+    // 装甲板角度
+    retval->_angle = (p_left->angle() + p_right->angle()) / 2.f;
+    // 匹配大小装甲板
+    ArmorSizeType armor_size{};
+    if (armor_size_type == ArmorSizeType::UNKNOWN)
+    {
+        if (_svm != nullptr)
+        {
+            cv::Matx15f test_sample = {combo_ratio,   // 装甲板长宽比
+                                       width_ratio,   // 灯条宽度比
+                                       length_ratio}; // 灯条长度比
+            auto res = _svm->predict(test_sample);
+            armor_size = (res == 1) ? ArmorSizeType::SMALL : ArmorSizeType::BIG;
+        }
+        // 装甲板长宽比例符合
+        if (combo_ratio < para::armor_param.MAX_SMALL_COMBO_RATIO)
+            armor_size = ArmorSizeType::SMALL;
+        else if (combo_ratio > para::armor_param.MIN_BIG_COMBO_RATIO)
+            armor_size = ArmorSizeType::BIG;
+        // 错位角判断
+        if (abs(corner_angle) < para::armor_param.MAX_SMALL_CORNER_ANGLE)
+            armor_size = ArmorSizeType::SMALL;
+        else if (abs(corner_angle) > para::armor_param.MIN_BIG_CORNER_ANGLE)
+            armor_size = ArmorSizeType::BIG;
+        // 宽度比例判断
+        if (width_ratio < para::armor_param.BIG_SMALL_WIDTH_RATIO)
+            armor_size = ArmorSizeType::SMALL; // 装甲板长宽比例较小
+        else
+            armor_size = ArmorSizeType::BIG;
+    }
+    else
+        armor_size = armor_size_type;
+    retval->_state["armor_size"] = to_string(armor_size);
+    // 更新角点
+    retval->_corners = {p_left->getBottomPoint(),   // 左下
+                        p_left->getTopPoint(),      // 左上
+                        p_right->getTopPoint(),     // 右上
+                        p_right->getBottomPoint()}; // 右下
+    // 计算相机外参
+    retval->_extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, imu_data, armor_size, retval->_corners);
+    const auto &rmat = retval->_extrinsic.R();
+    retval->_pose = cv::normalize(cv::Vec2f(rmat(0, 2), rmat(2, 2)));
+    // 设置组合体的特征容器
+    retval->_features = {p_left, p_right};
+    retval->_tick = tick;
 
-    return extrinsic;
+    return retval;
 }
 
 void Armor::setType(RobotType stat) { _state["robot"] = to_string(stat); }
 
-Armor::Armor(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, double tick,
-             float width_r, float length_r, float corner_angle, float match_error,
-             float combo_h, float combo_w, float combo_r, ArmorSizeType armor_size_type)
-    : _width_ratio(width_r), _length_ratio(length_r), _corner_angle(corner_angle), _match_error(match_error)
-{
-    _height = combo_h;
-    _width = combo_w;
-    _combo_ratio = combo_r;
-    // 获取装甲板中心
-    _center = (p_left->center() + p_right->center()) / 2.f;
-    // 获取相对角度
-    _relative_angle = calculateRelativeAngle(para::camera_param.cameraMatrix, _center);
-    // 获取当前装甲板对应的 IMU 位置信息
-    _imu_data = imu_data;
-    // 装甲板角度
-    _angle = (p_left->angle() + p_right->angle()) / 2.f;
-    // 匹配大小装甲板
-    ArmorSizeType armor_size{};
-    if (armor_size_type == ArmorSizeType::UNKNOWN)
-        armor_size = matchArmorType();
-    else
-        armor_size = armor_size_type;
-    _state["armor_size"] = to_string(armor_size);
-    // 更新角点
-    _corners = {p_left->getBottomPoint(),   // 左下
-                p_left->getTopPoint(),      // 左上
-                p_right->getTopPoint(),     // 右上
-                p_right->getBottomPoint()}; // 右下
-    // 计算相机外参
-    _extrinsic = calculateExtrinsic(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, imu_data, armor_size, _corners);
-    const auto &rmat = _extrinsic.R();
-    _pose = cv::normalize(cv::Vec2f(rmat(0, 2), rmat(2, 2)));
-    // 设置组合体的特征容器
-    _features = {p_left, p_right};
-    _tick = tick;
-}
+Armor::Armor(float width_r, float length_r, float corner_angle, float match_error)
+    : _width_ratio(width_r), _length_ratio(length_r), _corner_angle(corner_angle), _match_error(match_error) {}
 
 combo::ptr Armor::clone(double tick)
 {

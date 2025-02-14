@@ -19,33 +19,6 @@
 namespace rm
 {
 
-ArmorSizeType Armor::matchArmorType()
-{
-    if (_svm != nullptr)
-    {
-        cv::Matx15f test_sample = {_combo_ratio,   // 装甲板长宽比
-                                   _width_ratio,   // 灯条宽度比
-                                   _length_ratio}; // 灯条长度比
-        auto res = _svm->predict(test_sample);
-        return res == 1 ? ArmorSizeType::SMALL : ArmorSizeType::BIG;
-    }
-    // 装甲板长宽比例符合
-    if (_combo_ratio < para::armor_param.MAX_SMALL_COMBO_RATIO)
-        return ArmorSizeType::SMALL;
-    else if (_combo_ratio > para::armor_param.MIN_BIG_COMBO_RATIO)
-        return ArmorSizeType::BIG;
-    // 错位角判断
-    if (abs(_corner_angle) < para::armor_param.MAX_SMALL_CORNER_ANGLE)
-        return ArmorSizeType::SMALL;
-    else if (abs(_corner_angle) > para::armor_param.MIN_BIG_CORNER_ANGLE)
-        return ArmorSizeType::BIG;
-    // 宽度比例判断
-    if (_width_ratio < para::armor_param.BIG_SMALL_WIDTH_RATIO)
-        return ArmorSizeType::SMALL; // 装甲板长宽比例较小
-    else
-        return ArmorSizeType::BIG;
-}
-
 void Armor::imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec,
                                const ImuData &imu_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec)
 {

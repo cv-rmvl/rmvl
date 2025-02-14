@@ -28,7 +28,6 @@ public:
 
     //! @cond
     RuneTarget() = default;
-    RuneTarget(const std::vector<cv::Point> &, const cv::RotatedRect &, bool is_active);
     RuneTarget(const cv::Point &center, bool is_active);
     //! @endcond
 
@@ -48,7 +47,7 @@ public:
      * @param[in] is_active 是否激活？
      * @return 如果成功，返回 RuneTarget 的共享指针，否则返回 nullptr
      */
-    RMVL_W static ptr make_feature(const cv::Point &center, bool is_active);
+    RMVL_W static ptr make_feature(const cv::Point &center, bool is_active) { return std::make_shared<RuneTarget>(center, is_active); }
 
     /**
      * @brief 从另一个特征进行构造
@@ -65,11 +64,8 @@ public:
     RMVL_W inline float getRadius() const { return _radius; }
 
 private:
-    std::vector<cv::Point> _contour; //!< 轮廓点集
-    cv::RotatedRect _rotated_rect;   //!< 旋转矩形
-    float _ratio{};                  //!< 长宽比
-    bool _is_active{};               //!< 是否处于激活状态
-    float _radius{};                 //!< 半径
+    bool _is_active{}; //!< 是否处于激活状态
+    float _radius{};   //!< 半径
 };
 
 //! @} rune_target

@@ -25,19 +25,9 @@ namespace rm
  */
 class RMVL_EXPORTS_W_DES Pilot : public feature
 {
-private:
-    cv::RotatedRect _rotated_rect; //!< 旋转矩形
-    cv::Point2f _left;             //!< 左顶点
-    cv::Point2f _right;            //!< 右顶点
-
 public:
     using ptr = std::shared_ptr<Pilot>;
     using const_ptr = std::shared_ptr<const Pilot>;
-
-    //! @cond
-    Pilot(const std::vector<cv::Point> &, cv::RotatedRect &, float, float);
-    Pilot(const float &, const float &, const cv::Point2f &, const float &, const std::vector<cv::Point2f> &);
-    //! @endcond
 
     /**
      * @brief 构造接口
@@ -51,17 +41,14 @@ public:
     /**
      * @brief 构造 Pilot
      *
-     * @param[in] ref_width 参考宽度
-     * @param[in] ref_height 参考高度
-     * @param[in] ref_center 参考中心点
-     * @param[in] ref_angle 参考角度
-     * @param[in] ref_corners 参考角点
-     * @return 返回 Pilot 的共享指针
+     * @param[in] w 参考宽度
+     * @param[in] h 参考高度
+     * @param[in] center 参考中心点
+     * @param[in] angle 参考角度
+     * @param[in] corners 参考角点
+     * @return Pilot 的共享指针
      */
-    RMVL_W static inline ptr make_feature(float ref_width, float ref_height, const cv::Point2f &ref_center, float ref_angle, const std::vector<cv::Point2f> &ref_corners)
-    {
-        return std::make_shared<Pilot>(ref_width, ref_height, ref_center, ref_angle, ref_corners);
-    }
+    RMVL_W static ptr make_feature(float w, float h, const cv::Point2f &center, float angle, const std::vector<cv::Point2f> &corners);
 
     /**
      * @brief 从另一个特征进行构造

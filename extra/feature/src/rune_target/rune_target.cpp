@@ -70,12 +70,24 @@ std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point
     }
     DEBUG_PASS_("target 4.contour_area : pass");
 
-    return std::make_shared<RuneTarget>(contour, rotated_rect, is_active);
-}
+    auto retval = std::make_shared<RuneTarget>();
+    retval->_angle = 0.f;
+    retval->_center = rotated_rect.center;
+    retval->_width = std::max(rotated_rect.size.width, rotated_rect.size.height);
+    retval->_height = std::min(rotated_rect.size.width, rotated_rect.size.height);
 
-std::shared_ptr<RuneTarget> RuneTarget::make_feature(const cv::Point &center, bool is_active)
-{
-    return std::make_shared<RuneTarget>(center, is_active);
+    std::vector<cv::Point2f> corners;
+    corners.reserve(4);
+    float radius = (retval->_height + retval->_width) / 4;
+    retval->_radius = radius;
+    corners.emplace_back(rotated_rect.center + cv::Point2f(-radius, radius));
+    corners.emplace_back(rotated_rect.center + cv::Point2f(-radius, -radius));
+    corners.emplace_back(rotated_rect.center + cv::Point2f(radius, -radius));
+    corners.emplace_back(rotated_rect.center + cv::Point2f(radius, radius));
+    retval->_corners = corners;
+    retval->_is_active = is_active;
+
+    return retval;
 }
 
 RuneTarget::RuneTarget(const cv::Point &center, bool is_active) : _is_active(is_active)
@@ -84,28 +96,6 @@ RuneTarget::RuneTarget(const cv::Point &center, bool is_active) : _is_active(is_
     _angle = 0.f;
     _width = 16.f;
     _height = 16.f;
-    _ratio = 1;
-}
-
-RuneTarget::RuneTarget(const std::vector<cv::Point> &contour, const cv::RotatedRect &rotated_rect, bool is_active) : _rotated_rect(rotated_rect)
-{
-    _contour = contour;
-    _angle = 0.f;
-    _center = _rotated_rect.center;
-    _width = std::max(_rotated_rect.size.width, _rotated_rect.size.height);
-    _height = std::min(_rotated_rect.size.width, _rotated_rect.size.height);
-    _ratio = _width / _height;
-
-    std::vector<cv::Point2f> corners;
-    corners.reserve(4);
-    float radius = (_height + _width) / 4;
-    _radius = radius;
-    corners.emplace_back(_center.x - radius, _center.y + radius);
-    corners.emplace_back(_center.x - radius, _center.y - radius);
-    corners.emplace_back(_center.x + radius, _center.y - radius);
-    corners.emplace_back(_center.x + radius, _center.y + radius);
-    _corners = corners;
-    _is_active = is_active;
 }
 
 } // namespace rm
