@@ -50,19 +50,6 @@ struct RMVL_EXPORTS_W_AG PostprocessOptions
 //! ONNX-Runtime (Ort) 部署库基类 \cite microsoft23ort
 class RMVL_EXPORTS_W OnnxNet
 {
-protected:
-    Ort::MemoryInfo _memory_info;           //!< 内存分配信息
-    Ort::Env _env;                          //!< 环境配置
-    Ort::SessionOptions _session_options;   //!< 会话选项
-    std::unique_ptr<Ort::Session> _session; //!< 会话
-#if ORT_API_VERSION < 12
-    std::vector<const char *> _inames; //!< 输入名称
-    std::vector<const char *> _onames; //!< 输出名称
-#else
-    std::vector<Ort::AllocatedStringPtr> _inames; //!< 输入名称
-    std::vector<Ort::AllocatedStringPtr> _onames; //!< 输出名称
-#endif
-
 public:
     /**
      * @brief 创建 OnnxNet 对象
@@ -108,6 +95,19 @@ private:
      * @return 使用 `std::any` 表示的所有推理结果，需要根据具体的网络进行解析
      */
     virtual std::any postProcess(const std::vector<Ort::Value> &output_tensors, const PostprocessOptions &postop);
+
+protected:
+    Ort::MemoryInfo _memory_info;           //!< 内存分配信息
+    Ort::Env _env;                          //!< 环境配置
+    Ort::SessionOptions _session_options;   //!< 会话选项
+    std::unique_ptr<Ort::Session> _session; //!< 会话
+#if ORT_API_VERSION < 12
+    std::vector<const char *> _inames; //!< 输入名称
+    std::vector<const char *> _onames; //!< 输出名称
+#else
+    std::vector<Ort::AllocatedStringPtr> _inames; //!< 输入名称
+    std::vector<Ort::AllocatedStringPtr> _onames; //!< 输出名称
+#endif
 };
 
 /**
@@ -120,8 +120,6 @@ private:
  */
 class RMVL_EXPORTS_W ClassificationNet : public OnnxNet
 {
-    std::vector<std::vector<float>> _iarrays; //!< 输入数组
-
 public:
     /**
      * @brief 推理结果转换
@@ -157,6 +155,8 @@ private:
      * @return 用 `std::any` 表示的分类结果及其置信度，可使用 `rm::ClassificationNet::cast` 函数对返回类型进行转换
      */
     std::any postProcess(const std::vector<Ort::Value> &output_tensors, const PostprocessOptions &postop) override;
+
+    std::vector<std::vector<float>> _iarrays; //!< 输入数组
 };
 
 //! @} ml_ort

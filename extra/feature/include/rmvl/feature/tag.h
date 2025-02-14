@@ -26,10 +26,6 @@ public:
     using ptr = std::shared_ptr<Tag>;
     using const_ptr = std::shared_ptr<const Tag>;
 
-    //! @cond
-    Tag(const std::vector<cv::Point2f> &corners, char type);
-    //! @endcond
-
     /**
      * @brief 构造 Tag 对象
      *
@@ -37,13 +33,7 @@ public:
      * @param[in] type AprilTag 视觉标签类型，包含 `A` 到 `Z` 和 `0` 到 `9`
      * @return 构造成功返回 Tag 共享指针，否则返回 `nullptr`
      */
-    RMVL_W static inline ptr make_feature(const std::vector<cv::Point2f> &corners, char type)
-    {
-        if ((type >= 'A' && type <= 'Z') || (type >= '0' && type <= '9'))
-            return std::make_shared<Tag>(corners, type);
-        else
-            return nullptr;
-    }
+    RMVL_W static ptr make_feature(const std::vector<cv::Point2f> &corners, char type);
 
     /**
      * @brief 从另一个特征进行构造

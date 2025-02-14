@@ -61,7 +61,7 @@ public:
 
     //! @cond
     Armor() = default;
-    Armor(LightBlob::ptr, LightBlob::ptr, const ImuData &, double, float, float, float, float, float, float, float, ArmorSizeType);
+    Armor(float, float, float, float);
     //! @endcond
 
     /**
@@ -152,9 +152,6 @@ public:
     RMVL_W const cv::Vec2f &getPose() const { return _pose; }
 
 private:
-    //! 用来确定装甲板的种类 (大装甲或者小装甲)
-    ArmorSizeType matchArmorType();
-
     float _combo_ratio{};  //!< 组合特征宽高比
     float _width_ratio{};  //!< 左右灯条宽度比
     float _length_ratio{}; //!< 左右灯条长度比

@@ -67,7 +67,11 @@ Pilot::ptr Pilot::make_feature(const std::vector<cv::Point> &contour, cv::Mat &b
         center.y < 0 || center.y > bin.rows)
         return nullptr;
     float width = std::max(rotated_rect.size.width, rotated_rect.size.height);
+    if (std::isnan(width) || width < 0 || width > 100000.f)
+        return nullptr;
     float height = std::min(rotated_rect.size.width, rotated_rect.size.height);
+    if (std::isnan(height) || height < 0 || height > 100000.f)
+        return nullptr;
     // 仅对二值图中绿色部分拟合形状进行筛选
     int row = center.y;
     int col_l = center.x - width / 3;
@@ -85,36 +89,35 @@ Pilot::ptr Pilot::make_feature(const std::vector<cv::Point> &contour, cv::Mat &b
     else
         return nullptr;
 
-    return std::make_shared<Pilot>(contour, rotated_rect, width, height);
+    cv::Point2f left{}, right{};
+    correct(contour, center, width, height, left, right, rotated_rect.angle);
+
+    auto retval = std::make_shared<Pilot>();
+
+    retval->_width = width;
+    retval->_height = height;
+    retval->_center = center;
+    retval->_angle = rotated_rect.angle;
+    retval->_corners = {left, right};
+
+    return retval;
 }
 
-Pilot::Pilot(const std::vector<cv::Point> &contour, cv::RotatedRect &rotated_rect, float width, float height)
-    : _rotated_rect(rotated_rect)
+Pilot::ptr Pilot::make_feature(float w, float h, const cv::Point2f &center, float angle, const std::vector<cv::Point2f> &corners)
 {
-    if (std::isnan(width) || width < 0 || width > 100000.f)
-        RMVL_Error_(RMVL_StsBadArg, "Argument \"width\" is invalid, value is %.5f", width);
-    if (std::isnan(height) || height < 0 || height > 100000.f)
-        RMVL_Error_(RMVL_StsBadArg, "Argument \"height\" is invalid, value is %.5f", height);
-    _width = width;
-    _height = height;
-    _center = _rotated_rect.center;
-    _angle = _rotated_rect.angle;
-    // 获取准确的特征信息
-    correct(contour, _center, _width, _height, _left, _right, _angle);
-    _corners = {_left, _right};
-}
+    if (std::isnan(w) || w < 0 || w > 100000.f)
+        return nullptr;
+    if (std::isnan(h) || h < 0 || h > 100000.f)
+        return nullptr;
 
-Pilot::Pilot(const float &last_width, const float &last_height, const cv::Point2f &last_center, const float &last_angle, const std::vector<cv::Point2f> &last_corners)
-{
-    if (std::isnan(last_width) || last_width < 0 || last_width > 100000.f)
-        RMVL_Error_(RMVL_StsBadArg, "Argument \"width\" is invalid, value is %.5f", last_width);
-    if (std::isnan(last_height) || last_height < 0 || last_height > 100000.f)
-        RMVL_Error_(RMVL_StsBadArg, "Argument \"height\" is invalid, value is %.5f", last_height);
-    _width = last_width;
-    _height = last_height;
-    _center = last_center;
-    _angle = last_angle;
-    _corners = last_corners;
+    auto retval = std::make_shared<Pilot>();
+    retval->_width = w;
+    retval->_height = h;
+    retval->_center = center;
+    retval->_angle = angle;
+    retval->_corners = corners;
+
+    return retval;
 }
 
 } // namespace rm
