@@ -150,14 +150,14 @@ public:
      */
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
     RMVL_W_SUBST("V")
-    Variable(Tp val) : access_level(3U), _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
+    Variable(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
 
     /**
      * @brief 字符串构造
      *
      * @param[in] str 字符串
      */
-    RMVL_W Variable(const std::string &str) : access_level(3U), _value(str), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W Variable(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(1) {}
 
     /**
      * @brief 字符串字面量构造
@@ -176,7 +176,7 @@ public:
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
     RMVL_W_SUBST("V_List")
-    Variable(const std::vector<Tp> &arr) : access_level(3U), _value(arr), _data_type(DataType(typeid(Tp))), _size(static_cast<UA_UInt32>(arr.size())) {}
+    Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(static_cast<UA_UInt32>(arr.size())) {}
 
     /**
      * @brief 从变量类型创建新的变量节点
@@ -257,7 +257,7 @@ public:
     RMVL_W inline uint32_t size() const { return _size; }
 
 private:
-    explicit Variable(const VariableType &vtype) : access_level(3U), _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
+    explicit Variable(const VariableType &vtype) : _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
 
 public:
     //! 命名空间索引，默认为 `1`
@@ -283,7 +283,7 @@ public:
     //! 变量的描述
     RMVL_W_RW std::string description{};
     //! 访问性
-    RMVL_W_RW uint8_t access_level{};
+    RMVL_W_RW uint8_t access_level{3U};
 
 private:
     //! 变量类型

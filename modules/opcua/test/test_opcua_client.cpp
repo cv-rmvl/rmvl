@@ -227,7 +227,7 @@ TEST(OPC_UA_Client, timer_test)
     std::this_thread::sleep_for(10ms);
     rm::Client cli("opc.tcp://127.0.0.1:5015");
     int times{};
-    auto timer = rm::ClientTimer(cli, 10, [&](rm::ClientView) { times++; });
+    auto timer = rm::ClientTimer(cli, 10, [&]() { times++; });
     std::this_thread::sleep_for(60ms);
     cli.spinOnce();
     std::this_thread::sleep_for(60ms);

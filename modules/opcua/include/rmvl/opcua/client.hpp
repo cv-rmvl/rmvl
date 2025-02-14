@@ -222,7 +222,7 @@ public:
 
     /**
      * @brief 直接以底层数据调用指定对象节点中的方法
-     * 
+     *
      * @param[in] obj_nd 对象节点
      * @param[in] name 方法名
      * @param[in] args 方法的所有传入参数
@@ -315,7 +315,7 @@ public:
      * @param[in] period 定时器周期，单位：毫秒 `ms`
      * @param[in] callback 定时器回调函数
      */
-    RMVL_W ClientTimer(ClientView cv, double period, std::function<void(ClientView)> callback);
+    RMVL_W ClientTimer(ClientView cv, double period, std::function<void()> callback);
 
     //! @cond
     ClientTimer(const ClientTimer &) = delete;
@@ -332,9 +332,9 @@ public:
     RMVL_W void cancel();
 
 private:
-    ClientView _cv;                      //!< 客户端视图
-    std::function<void(ClientView)> _cb; //!< 定时器回调函数
-    uint64_t _id{};                      //!< 定时器 ID
+    ClientView _cv;            //!< 客户端视图
+    std::function<void()> _cb; //!< 定时器回调函数
+    uint64_t _id{};            //!< 定时器 ID
 };
 
 //! @} opcua
