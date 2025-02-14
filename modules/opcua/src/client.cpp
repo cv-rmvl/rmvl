@@ -376,13 +376,13 @@ bool ClientView::write(const NodeId &nd, const Variable &val) const { return cli
 
 /////////////////////// 客户端定时器 ///////////////////////
 
-static void timer_cb(UA_Client *p_server, void *data)
+static void timer_cb(UA_Client *, void *data)
 {
-    auto &func = *reinterpret_cast<std::function<void(ClientView)> *>(data);
-    func(p_server);
+    auto &func = *reinterpret_cast<std::function<void()> *>(data);
+    func();
 }
 
-ClientTimer::ClientTimer(ClientView cv, double period, std::function<void(ClientView)> callback) : _cv(cv), _cb(callback)
+ClientTimer::ClientTimer(ClientView cv, double period, std::function<void()> callback) : _cv(cv), _cb(callback)
 {
     auto status = UA_Client_addRepeatedCallback(_cv.get(), timer_cb, &_cb, period, &_id);
     if (status != UA_STATUSCODE_GOOD)
