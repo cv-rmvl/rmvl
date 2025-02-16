@@ -161,7 +161,8 @@ public:
     Server &operator=(Server &&srv) = delete;
     //! @endcond
 
-    RMVL_W operator ServerView() const { return _server; }
+    RMVL_W_SUBST("Srv")
+    operator ServerView() const { return _server; }
 
     /**
      * @brief 启动服务器并阻塞

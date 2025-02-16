@@ -138,7 +138,8 @@ public:
     //! 断开与服务器的连接，并释放资源
     ~Client();
 
-    RMVL_W operator ClientView() const { return _client; }
+    RMVL_W_SUBST("Cli")
+    operator ClientView() const { return _client; }
 
     //! 是否成功创建客户端并成功连接到服务器
     RMVL_W inline bool ok() const { return _client != nullptr; }

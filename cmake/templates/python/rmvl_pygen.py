@@ -25,7 +25,6 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
     - `method`: Match class method definition
     - `static_method`: Match class static method definition
     - `const_method`: Match class const method definition
-    - `convert_method`: Match class user-defined conversion function definition
     - `member`: Match class member variable definition
     - `variable`: Match global variable definition
 
@@ -93,11 +92,6 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
     elif mode == "const_method":
         return re.search(
             r"RMVL_W\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s+(?:&)?(operator\(\)|operator\[\]|operator==|operator!=|operator\+|operator-|\w+)\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*const",
-            line,
-        )
-    elif mode == "convert_method":
-        return re.search(
-            r"RMVL_W\s+operator\s+([\w<>:,\s&]+(?:<[^<>]*>)*)\s*\(\)",
             line,
         )
     # RMVL_W_RW
@@ -549,14 +543,6 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
                         class_content.append(f'             "{id}"_a,')
                 class_content[-1] = class_content[-1][:-1] + ")"
                 continue
-            # Convert method
-            mch = re_match("convert_method", line)
-            if mch:
-                cvt_class = mch.groups()[0]
-                convert_content.append(
-                    f"    py::implicitly_convertible<{cur_class}, {cvt_class}>();"
-                )
-                continue
             # Pure virtual method
             mch = re_match("pure_virtual", line)
             if mch:
@@ -994,10 +980,6 @@ def generate_pyi(
                 class_content.append(
                     f"    @overload\n    def __init__(self, {param_str}) -> {name}:{class_content_cmt}..."
                 )
-                continue
-            # Convert method
-            mch = re_match("convert_method", line)
-            if mch:
                 continue
             # Pure virtual method
             mch = re_match("pure_virtual", line)
