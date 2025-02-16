@@ -198,11 +198,13 @@ TEST(OPC_UA_ClientTest, event_monitor)
     srv.addEventTypeNode(etype);
     rm::Client cli("opc.tcp://127.0.0.1:5010");
 
-    std::string source_name;
+    std::string source_name{};
+    std::string messgae{};
     int aaa{};
-    cli.monitor({"SourceName", "aaa"}, [&](rm::ClientView, const rm::Variables &fields) {
-        source_name = fields[0].cast<std::string>();
-        aaa = fields[1];
+    cli.monitor({"Message", "SourceName", "aaa"}, [&](rm::ClientView, const rm::Variables &fields) {
+        messgae = fields[0].cast<std::string>();
+        source_name = fields[1].cast<std::string>();
+        aaa = fields[2];
     });
     // 触发事件
     auto event = rm::Event::makeFrom(etype);

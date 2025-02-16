@@ -166,7 +166,7 @@ public:
      * @param[in] str 字符串
      */
     template <std::size_t N>
-    Variable(const char (&str)[N]) : Variable(std::string(str, N)) {}
+    Variable(const char (&str)[N]) : Variable(std::string(str)) {}
 
     /**
      * @brief 列表构造
@@ -367,8 +367,8 @@ struct RMVL_EXPORTS_W_AG DataSourceVariable
     RMVL_W_RW std::string display_name{};
     //! 变量的描述
     RMVL_W_RW std::string description{};
-    //! 访问性
-    RMVL_W_RW uint8_t access_level{};
+    //! 访问性，默认为只读
+    RMVL_W_RW uint8_t access_level{1U};
 
     /**
      * @brief 数据源 Read 回调函数
