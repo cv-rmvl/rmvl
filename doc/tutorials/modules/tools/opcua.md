@@ -2,8 +2,8 @@
 ============
 
 @author 赵曦
-@date 2024/12/31
-@version 2.1
+@date 2025/02/16
+@version 3.0
 @brief OPC UA 和 open62541 库简介
 
 @prev_tutorial{tutorial_modules_serial}
@@ -36,7 +36,11 @@ OPC UA 的设计目标是建立一种通用的、独立于厂商和平台的通�
 
 </div>
 
-### 1.2 地址空间 {#tutorial_opcua_intro_address_space}
+### 1.2 open62541 库 {#tutorial_opcua_intro_open62541}
+
+open62541 @cite open62541_library 是一个基于 C 语言的开源 OPC UA 栈，实现了 OPC UA 协议的核心功能和服务。它提供了一套完整的 OPC UA 通信协议栈，包括客户端和服务器端的实现，支持 OPC UA 的各种功能和服务，如数据访问、事件通知、历史数据、安全性等，RMVL 中的 @ref opcua 提供了对 open62541 库的封装，使其更便于使用。
+
+### 1.3 地址空间 {#tutorial_opcua_intro_address_space}
 
 在 OPC UA 中，所有的数据都被组织成一个地址空间，地址空间中的每一个元素都被称为一个节点。每个节点都有一个唯一的节点号，在 @ref opcua 中表示为 rm::NodeId 。
 
@@ -1021,13 +1025,13 @@ int main()
     // OPC UA 状态
     OPCUAState mode{};
 
-    // 消息事件类型
-    rm::EventType msg_type_info;
-    msg_type_info.browse_name = "msg_type";
-    msg_type_info.display_name = "MsgType";
-    msg_type_info.description = "任务执行完成时触发的事件";
-    msg_type_info.add("Result", 0);
-    auto msg_info = rm::Event::makeFrom(msg_type_info);
+    // 完成事件类型
+    rm::EventType finish_type_info;
+    finish_type_info.browse_name = "finish_type";
+    finish_type_info.display_name = "FinishType";
+    finish_type_info.description = "任务执行完成时触发的事件";
+    finish_type_info.add("Result", 0);
+    auto finish_info = rm::Event::makeFrom(finish_type_info);
 
     // 启动设备
     rm::Method start_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
@@ -1068,9 +1072,9 @@ int main()
 
             if (true) // 'true' 应改为状态确定发生变更的判断条件
             {
-                msg_info.message = "Msg_Start";
-                msg_info["Result"] = 0;
-                srv.triggerEvent(msg_info);
+                finish_info.message = "Start";
+                finish_info["Result"] = 0;
+                srv.triggerEvent(finish_info);
                 mode = OPCUAState::NONE; // 恢复 OPC UA 状态
             }
         }
@@ -1082,9 +1086,9 @@ int main()
 
             if (true) // 'true' 应改为状态确定发生变更的判断条件
             {
-                msg_info.message = "Msg_Stop";
-                msg_info["Result"] = 0;
-                srv.triggerEvent(msg_info);
+                finish_info.message = "Stop";
+                finish_info["Result"] = 0;
+                srv.triggerEvent(finish_info);
                 mode = OPCUAState::NONE; // 恢复 OPC UA 状态
             }
         }
@@ -1114,11 +1118,11 @@ mode = OPCUAState.NONE
 
 # 事件类型
 msg_type_info = rm.EventType()
-msg_type_info.browse_name = "msg_type"
-msg_type_info.display_name = "MsgType"
+msg_type_info.browse_name = "finish_type"
+msg_type_info.display_name = "FinishType"
 msg_type_info.description = "任务执行完成时触发的事件"
 msg_type_info.add("Result", 0)
-msg_info = rm.Event.makeFrom(msg_type_info)
+finish_info = rm.Event.makeFrom(msg_type_info)
 
 # 启动设备
 def start_cb(sv, iargs):
@@ -1166,9 +1170,9 @@ while not stop:
         """
 
         if True: # 'True' 应改为状态确定发生变更的判断条件
-            msg_info.message = "Msg_Start"
-            msg_info["Result"] = 0
-            svr.triggerEvent(msg_info)
+            finish_info.message = "Start"
+            finish_info["Result"] = 0
+            svr.triggerEvent(finish_info)
             mode = OPCUAState.NONE # 恢复 OPC UA 状态
     elif mode == OPCUAState.STOP:
         # 实际发出 Stop 指令
@@ -1177,9 +1181,9 @@ while not stop:
         """
 
         if True: # 'True' 应改为状态确定发生变更的判断条件
-            msg_info.message = "Msg_Stop"
-            msg_info["Result"] = 0
-            svr.triggerEvent(msg_info)
+            finish_info.message = "Stop"
+            finish_info["Result"] = 0
+            svr.triggerEvent(finish_info)
             mode = OPCUAState.NONE # 恢复 OPC UA 状态
 ```
 
@@ -1197,7 +1201,7 @@ int main()
 {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
     auto node = cli.find("start");
-    auto [res, oargs] = cli.call(node, {});
+    auto [res, oargs] = cli.callx(node);
     if (!res) // res 只表示方法节点是否调用成功，而非任务执行结果
         ERROR_("Failed to call the method");
 }
@@ -1234,9 +1238,9 @@ public:
     OpcUaController(std::string_view addr) : _cli(addr) {
         // 监视事件
         _cli.monitor({"Message", "Result"}, [this](rm::ClientView, const rm::Variables &vals) {
-            if (vals[0] == "Msg_Start")
+            if (vals[0] == "Start")
                 _start_res = (vals[1] == 0);
-            else if (vals[0] == "Msg_Stop")
+            else if (vals[0] == "Stop")
                 _stop_res = (vals[1] == 0);
         });
     }
@@ -1245,7 +1249,7 @@ public:
     bool start()
     {
         _start_res.reset();
-        auto [res, oargs] = _cli.call("Start", {});
+        auto [res, oargs] = _cli.callx("start");
         if (!res)
         {
             printf("Failed to call start\n");
@@ -1260,7 +1264,7 @@ public:
     bool stop()
     {
         _stop_res.reset();
-        auto [res, oargs] = _cli.call("Stop", {});
+        auto [res, oargs] = _cli.callx("stop");
         if (!res)
         {
             printf("Failed to call stop\n");
@@ -1310,9 +1314,9 @@ class OpcUaController:
         self.__cli.monitor(["Message", "Result"], self.on_event)
 
     def on_event(self, view, vals):
-        if vals[0] == "Msg_Start":
+        if vals[0] == "Start":
             self.__start_res = vals[1] == 0
-        elif vals[0] == "Msg_Stop":
+        elif vals[0] == "Stop":
             self.__stop_res = vals[1] == 0
 
     # 同步阻塞的 start 函数
@@ -1353,7 +1357,11 @@ print(f"Stop result: {val}")
 
 ### 2.7 定时
 
-@ref opcua 为服务器和客户端均提供了循环定时器，用于周期性执行任务。下面的示例演示在 **服务器** 中创建并添加定时器。
+@ref opcua 为服务器和客户端均提供了循环定时器，用于周期性执行任务。
+
+#### 2.7.1 服务器定时
+
+下面的示例在服务器中添加了一个数据源变量节点 `num`，并且创建了一个每 1s 执行一次的定时任务，每次执行时将 `num` 的值加 1。
 
 @add_toggle_cpp
 
@@ -1361,23 +1369,30 @@ print(f"Stop result: {val}")
 // server.cpp
 #include <csignal>
 #include <rmvl/opcua/server.hpp>
-
+ 
 bool stop = false;
-
+ 
 int main()
 {
     signal(SIGINT, [](int) { stop = true; });
-
+ 
     rm::Server srv(4840);
-
-    int times{};
+ 
+    int num{};
+    rm::DataSourceVariable num_info;
+    num_info.browse_name = "num";
+    num_info.display_name = "Num";
+    num_info.description = "数字";
+    num_info.access_level = rm::VARIABLE_READ | rm::VARIABLE_WRITE;
+    num_info.on_read = [&](const rm::NodeId &) -> rm::Variable { return num; };
+    num_info.on_write = [&](const rm::NodeId &, const rm::Variable &val) { num = val; };
+    auto num_nd = srv.addDataSourceVariableNode(num_info);
+ 
     // 创建定时器，每 1s 执行一次
-    rm::ServerTimer timer(srv, 1000, [&](rm::ServerView) {
-        // 定时器回调函数
-        printf("Timer callback, times = %d\n", times);
-        times++;
+    rm::ServerTimer timer(srv, 1000, [&](rm::ServerView sv) {
+        sv.write(num_nd, ++num);
     });
-
+ 
     while (!stop)
         srv.spinOnce();
 }
@@ -1403,20 +1418,134 @@ signal(SIGINT, onStop)
 
 svr = rm.Server(4840)
 
-times = 0
-# 创建定时器，每 1s 执行一次
-def timer_callback(view):
-    global times
-    print(f"Timer callback, times = {times}")
-    times += 1
+num = 0
+num_info = rm.DataSourceVariable()
+num_info.browse_name = "num"
+num_info.display_name = "Num"
+num_info.description = "数字"
+num_info.access_level = rm.VARIABLE_READ | rm.VARIABLE_WRITE
 
-timer = rm.ServerTimer(svr, 1000, timer_callback)
+def num_on_read(nd):
+    global num
+    return rm.Variable(num)
+
+def num_on_write(nd, val: rm.Variable):
+    global num
+    num = val.int()
+
+num_info.on_read = num_on_read
+num_info.on_write = num_on_write
+
+num_nd = svr.addDataSourceVariableNode(num_info)
+
+# 创建定时器，每 1s 执行一次
+def on_timer(sv: rm.ServerView):
+    global num
+    num += 1
+    sv.write(num_nd, rm.Variable(num))
+
+timer = rm.ServerTimer(svr.sv(), 1000, on_timer)
 
 while not stop:
     svr.spinOnce()
 ```
 
 @end_toggle
+
+#### 2.7.2 客户端定时
+
+客户端定时器的使用方式与服务器定时器类似，但定时器的回调函数无传入参数，因为回调函数的触发是通过运行 rm::Client::spinOnce() 来实现的，在回调函数中对客户端进行路径搜索、变量读写、方法调用等操作会造成嵌套处理异步事件的错误，例如出现以下提示
+
+```
+error/eventloop    Cannot run EventLoop from the run method itself
+```
+
+因此，RMVL 的客户端定时器的回调函数不接受参数，从一定程度上避免了这种错误。
+
+下面提供了一个客户端定时器的示例，首先提供了一个 OPC UA 服务器，端口为 `4840`，在其中添加了一个变量节点 `num`，此时客户端定时器每 1s 读取一次 `num` 的值，并打印。
+
+@add_toggle_cpp
+
+```cpp
+// client.cpp
+#include <csignal>
+
+#include <rmvl/opcua/client.hpp>
+
+static bool stop = false;
+
+int main()
+{
+    signal(SIGINT, [](int) { stop = true; });
+
+    rm::Client cli("opc.tcp://127.0.0.1:4840");
+    auto num_nd = cli.find("num");
+
+    // 创建定时器，每 1s 执行一次
+    bool can_read{};
+    rm::ClientTimer timer(cli, 1000, [&] { can_read = true; });
+    auto real_on_timer = [&] {
+        auto num = cli.read(num_nd);
+        printf("num = %d\n", num.cast<int>());
+        can_read = false;
+    };
+
+    while (!stop)
+    {
+        cli.spinOnce();
+        // 保证在 spinOnce() 之后再读取 num 的值
+        if (can_read)
+            real_on_timer();
+    }
+}
+```
+
+@end_toggle
+
+@add_toggle_python
+
+```python
+# client.py
+
+from signal import signal, SIGINT
+import rm
+
+stop = False
+
+def onStop(sig, frame):
+    global stop
+    stop = True
+
+signal(SIGINT, onStop)
+
+cli = rm.Client("opc.tcp://127.0.0.1:4840")
+num_nd = cli.find("num")
+
+# 创建定时器，每 1s 执行一次
+can_read = False
+
+def on_timer():
+    global can_read
+    can_read = True
+
+timer = rm.ClientTimer(cli.cv(), 1000, on_timer)
+
+def real_on_timer():
+    global can_read
+    if can_read:
+        num = cli.read(num_nd)
+        print(f"num = {num.int()}")
+        can_read = False
+
+while not stop:
+    cli.spinOnce()
+    if can_read:
+        real_on_timer()
+```
+
+@end_toggle
+
+可以根据自己的需求对服务器的 `num` 变量节点进行其余操作，例如可以同时运行带有定时器的服务器和客户端，服务器每 1s 将 `num` 的值加 1，客户端每 1s 读取 `num` 的值并打印，有兴趣的读者可以自行尝试。
 
 ## 3. 发布/订阅 {#tutorial_opcua_pub_sub}
 
@@ -1713,6 +1842,8 @@ python3 ./nodeset_compiler.py \
 
 @add_toggle_cpp
 
+RMVL 提供了从 rm::Server 到 rm::ServerView 的用户定义转换函数，可在不添加额外代码的情况下直接使用。
+
 ```cpp
 // server.cpp
 
@@ -1753,6 +1884,8 @@ int main()
 
 @add_toggle_python
 
+RMVL-Python 提供了 rm::Server 到 rm::ServerView 的转换函数 `sv()`，可调用相关函数进行转换。
+
 ```python
 # server.py
 
@@ -1780,7 +1913,7 @@ num_info.description = "数字"
 svr.addVariableNode(num_info)
 
 # 修改变量值
-modify(svr, 100)
+modify(svr.sv(), 100)
 
 while not stop:
     svr.spinOnce()
@@ -1788,6 +1921,18 @@ while not stop:
 @end_toggle
 
 同样的，客户端也可以使用 `rm::ClientView` 来获取不占有所有权的客户端视图，进行变量读写、路径搜索的操作，此处不再赘述。
+
+@add_toggle_cpp
+
+RMVL 也提供了从 rm::Client 到 rm::ClientView 的用户定义转换函数。
+
+@end_toggle
+
+@add_toggle_python
+
+RMVL-Python 也提供了 rm::Client 到 rm::ClientView 的转换函数 `cv()`，可调用相关函数进行转换。
+
+@end_toggle
 
 ## 5. 参考内容
 

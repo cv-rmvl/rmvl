@@ -14,7 +14,7 @@
 /**
  * @defgroup opcua OPC UA 模块
  * @{
- * @brief 本模块基于 `open62541` 开发 @cite Profanter19
+ * @brief 本模块基于 `open62541` 开发 @cite open62541_library @cite Profanter19
  * @details
  * - 提供了 `OPC UA` 服务器、客户端的封装，以及 `OPC UA` 支持的数据类型包括
  *   `Object`、`Variable`、`Method`、`View`、`Event` 的定义。
