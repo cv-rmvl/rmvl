@@ -142,5 +142,21 @@
             "tp_float: DataType = ...",
             "tp_str: DataType = ..."
         ]
+    },
+    "Cli": {
+        "bind": [
+            ".def(\"cv\", [](Client &c) -> ClientView { return c; })"
+        ],
+        "pyi": [
+            "def cv(self) -> ClientView: ..."
+        ]
+    },
+    "Srv": {
+        "bind": [
+            ".def(\"sv\", [](Server &s) -> ServerView { return s; })"
+        ],
+        "pyi": [
+            "def sv(self) -> ServerView: ..."
+        ]
     }
 }
