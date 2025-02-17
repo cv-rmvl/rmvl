@@ -60,7 +60,7 @@ public:
      * @param[in] str 字符串
      */
     template <std::size_t N>
-    VariableType(const char (&str)[N]) : VariableType(std::string(str, N)) {}
+    VariableType(const char (&str)[N]) : VariableType(std::string(str)) {}
 
     /**
      * @brief 列表构造，设置默认值
@@ -71,6 +71,15 @@ public:
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
     RMVL_W_SUBST("VT_List")
     VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(arr.size()) {}
+
+    /**
+     * @brief 初始化列表构造，设置默认值
+     *
+     * @tparam Tp 变量的存储数据类型，必须是基础类型
+     * @param[in] il 初始化列表
+     */
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
+    VariableType(std::initializer_list<Tp> il) : VariableType(std::vector<Tp>(il)) {}
 
     /**
      * @brief 将变量类型节点转化为指定类型的数据
@@ -179,6 +188,15 @@ public:
     Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(static_cast<UA_UInt32>(arr.size())) {}
 
     /**
+     * @brief 初始化列表构造，设置默认值
+     *
+     * @tparam Tp 变量的存储数据类型，必须是基础类型
+     * @param[in] il 初始化列表
+     */
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
+    Variable(std::initializer_list<Tp> il) : Variable(std::vector<Tp>(il)) {}
+
+    /**
      * @brief 从变量类型创建新的变量节点
      *
      * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
@@ -197,7 +215,7 @@ public:
 
     /**
      * @brief 比较两个变量是否不等
-     * @see `rm::Variable::operator==`
+     * @see rm::Variable::operator==()
      *
      * @param[in] val 另一个变量
      * @return 是否不等
@@ -269,6 +287,8 @@ public:
      * - 属于非服务器层面的 ID 号，可用于完成路径搜索
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
+     * @brief
+     * - 仅用于标识服务器上的变量节点，不参与变量的比较
      */
     RMVL_W_RW std::string browse_name{};
 
@@ -278,6 +298,8 @@ public:
      * - 在服务器上对外展示的名字 - `en-US`
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
+     * @brief
+     * - 仅用于标识服务器上的变量节点，不参与变量的比较
      */
     RMVL_W_RW std::string display_name{};
     //! 变量的描述
@@ -302,8 +324,8 @@ private:
  * @param[in] val 变量类型的名称
  * @param[in] ... 构造列表
  */
-#define uaCreateVariableType(val, ...) \
-    rm::VariableType val{__VA_ARGS__}; \
+#define uaCreateVariableType(val, ...)  \
+    rm::VariableType val = __VA_ARGS__; \
     val.browse_name = val.display_name = val.description = #val
 
 /**
@@ -312,8 +334,8 @@ private:
  * @param[in] val 变量的名称
  * @param[in] ... 构造列表
  */
-#define uaCreateVariable(val, ...) \
-    rm::Variable val{__VA_ARGS__}; \
+#define uaCreateVariable(val, ...)  \
+    rm::Variable val = __VA_ARGS__; \
     val.browse_name = val.display_name = val.description = #val
 
 //! 变量列表别名

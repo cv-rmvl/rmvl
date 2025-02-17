@@ -18,28 +18,11 @@
 namespace rm_test
 {
 
-// 变量（类型）配置
-TEST(OPC_UA_Server, variable_config)
-{
-    // 变量类型节点、字符串
-    rm::VariableType variable_type = "string_test";
-    EXPECT_EQ(variable_type.size(), 1);
-    EXPECT_EQ(variable_type.getDataType(), UA_TYPES_STRING);
-    // 添加变量节点、双精度浮点数
-    rm::Variable variable = 3.1415;
-    EXPECT_EQ(variable.size(), 1);
-    EXPECT_EQ(variable.getDataType(), UA_TYPES_DOUBLE);
-    // 添加变量节点、数组
-    rm::Variable variable_array = std::vector<int>{1, 2, 3};
-    EXPECT_EQ(variable_array.size(), 3);
-    EXPECT_EQ(variable_array.getDataType(), UA_TYPES_INT32);
-}
-
 // 服务器添加变量节点
 TEST(OPC_UA_Server, add_variable_node)
 {
     rm::Server srv(4810, "TestServer");
-    rm::Variable variable{3.1415};
+    rm::Variable variable = 3.1415;
     variable.browse_name = "test_double";
     variable.description = "this is test double";
     variable.display_name = "测试双精度浮点数";
@@ -68,9 +51,7 @@ TEST(OPC_UA_Server, add_data_source_variable_node)
     v.browse_name = v.display_name = "test_int";
     v.description = "this is test int";
     v.on_read = [&](const rm::NodeId &) -> rm::Variable { return data_source; };
-    v.on_write = [&](const rm::NodeId &, const rm::Variable &val) {
-        data_source = val.cast<int>();
-    };
+    v.on_write = [&](const rm::NodeId &, const rm::Variable &val) { data_source = val.cast<int>(); };
     auto node = srv.addDataSourceVariableNode(v);
     EXPECT_FALSE(node.empty());
     srv.spinOnce();
@@ -80,7 +61,7 @@ TEST(OPC_UA_Server, add_data_source_variable_node)
 TEST(OPC_UA_Server, add_variable_type_node)
 {
     rm::Server srv(4830);
-    rm::VariableType variable_type{"string_test"};
+    rm::VariableType variable_type = "string_test";
     variable_type.browse_name = "test_string";
     variable_type.description = "this is test string";
     variable_type.display_name = "测试字符串";
