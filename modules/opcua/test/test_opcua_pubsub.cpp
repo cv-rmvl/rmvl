@@ -10,6 +10,7 @@
  */
 
 #include <thread>
+#include <chrono>
 
 #include "rmvl/opcua/publisher.hpp"
 #include "rmvl/opcua/subscriber.hpp"
