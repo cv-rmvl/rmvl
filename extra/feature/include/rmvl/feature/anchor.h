@@ -18,7 +18,7 @@ namespace rm
 
 //! @addtogroup anchor
 //! @{
-//! @brief 包含圆形、方形、十字交叉三种类型的定位点特征
+//! @brief 包含圆形、矩形、十字交叉三种类型的定位点特征
 //! @details ![anchor](extra/anchor.png)
 
 //! 定位点类型
@@ -26,7 +26,7 @@ enum class AnchorType
 {
     Unknown, //!< 未知
     Circle,  //!< 圆形
-    Square,  //!< 方形
+    Square,  //!< 矩形
     Cross,   //!< 十字交叉
 };
 
