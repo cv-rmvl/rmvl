@@ -45,6 +45,7 @@ public:
     //! @cond
     GalaxyCamera(const GalaxyCamera &) = delete;
     GalaxyCamera(GalaxyCamera &&) = default;
+    ~GalaxyCamera();
     //! @endcond
 
     //! 获取相机库版本

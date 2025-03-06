@@ -20,30 +20,29 @@ namespace rm
 
 ////////////////////////////////// EwTopsis //////////////////////////////////
 
-RMVL_IMPL_DEF(EwTopsis)
-
 EwTopsis::EwTopsis(const std::vector<std::vector<double>> &samples) : _impl(new Impl(samples)) {}
+EwTopsis::~EwTopsis() = default;
 std::vector<double> EwTopsis::inference() { return _impl->inference(); }
 
-auto EwTopsis::Impl::inference() -> IndexType
+std::vector<double> EwTopsis::Impl::inference()
 {
-    MatType R;
-    calcR(R_, R);
-    MatType P;
+    std::vector<std::vector<double>> R{};
+    calcR(_R, R);
+    std::vector<std::vector<double>> P{};
     calcP(R, P);
-    IndexType H;
+    std::vector<double> H;
     calcH(P, H);
-    IndexType w;
+    std::vector<double> w;
     calcw(H, w);
-    calcS(w, R_, S);
-    return S;
+    calcS(w, _R, _S);
+    return _S;
 }
 
-void EwTopsis::Impl::calcR(const MatType &_R, MatType &R)
+void EwTopsis::Impl::calcR(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &Rstd)
 {
-    R = _R;
-    IndexType min_indexs(_index_size);
-    IndexType max_indexs(_index_size);
+    Rstd = R;
+    std::vector<double> min_indexs(_index_size);
+    std::vector<double> max_indexs(_index_size);
     for (std::size_t j = 0; j < _index_size; ++j)
     {
         min_indexs[j] = _R[0][j];
@@ -58,15 +57,15 @@ void EwTopsis::Impl::calcR(const MatType &_R, MatType &R)
     }
     for (std::size_t i = 0; i < _sample_size; ++i)
         for (std::size_t j = 0; j < _index_size; ++j)
-            R[i][j] = (R_[i][j] - min_indexs[j]) / (max_indexs[j] - min_indexs[j]);
+            Rstd[i][j] = (_R[i][j] - min_indexs[j]) / (max_indexs[j] - min_indexs[j]);
 }
 
-void EwTopsis::Impl::calcP(const MatType &R, MatType &P)
+void EwTopsis::Impl::calcP(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &P)
 {
     P = R;
-    IndexType sums(_index_size);
+    std::vector<double> sums(_index_size);
     for (std::size_t j = 0; j < _index_size; ++j)
-        sums[j] = std::accumulate(R.begin(), R.end(), 0.0, [&j](double a, const IndexType &b) {
+        sums[j] = std::accumulate(R.begin(), R.end(), 0.0, [&j](double a, const std::vector<double> &b) {
             return a + b[j];
         });
     for (std::size_t i = 0; i < _sample_size; ++i)
@@ -74,7 +73,7 @@ void EwTopsis::Impl::calcP(const MatType &R, MatType &P)
             P[i][j] = R[i][j] / sums[j];
 }
 
-void EwTopsis::Impl::calcH(const MatType &P, IndexType &H)
+void EwTopsis::Impl::calcH(const std::vector<std::vector<double>> &P, std::vector<double> &H)
 {
     H.resize(_index_size);
     for (std::size_t j = 0; j < _index_size; ++j)
@@ -87,7 +86,7 @@ void EwTopsis::Impl::calcH(const MatType &P, IndexType &H)
     }
 }
 
-inline void EwTopsis::Impl::calcw(const IndexType &H, IndexType &w)
+inline void EwTopsis::Impl::calcw(const std::vector<double> &H, std::vector<double> &w)
 {
     w.resize(_index_size);
     double tmp = static_cast<double>(_index_size) - std::accumulate(H.begin(), H.end(), 0.0);
@@ -95,22 +94,21 @@ inline void EwTopsis::Impl::calcw(const IndexType &H, IndexType &w)
         w[j] = (1 - H[j]) / tmp;
 }
 
-inline void EwTopsis::Impl::calcS(const IndexType &w, const MatType &R_, SampleType &S_)
+inline void EwTopsis::Impl::calcS(const std::vector<double> &w, const std::vector<std::vector<double>> &R, std::vector<double> &S)
 {
-    S_.resize(_sample_size);
+    S.resize(_sample_size);
     for (std::size_t i = 0; i < _sample_size; ++i)
     {
-        S_[i] = 0;
+        S[i] = 0;
         for (std::size_t j = 0; j < _index_size; ++j)
-            S_[i] += w[j] * R_[i][j];
+            S[i] += w[j] * R[i][j];
     }
 }
 
 ////////////////////////////////// Munkres //////////////////////////////////
 
-RMVL_IMPL_DEF(Munkres)
-
 Munkres::Munkres(const std::vector<std::vector<double>> &cost_matrix) : _impl(new Impl(cost_matrix)) {}
+Munkres::~Munkres() = default;
 std::vector<std::size_t> Munkres::solve() noexcept { return _impl->solve(); }
 
 Munkres::Impl::Impl(const std::vector<std::vector<double>> &cost_matrix)
@@ -268,9 +266,9 @@ void Munkres::Impl::step4()
             _mask[row][col] = 2;
             if (isStarInRow(row))
             {
-                int star_col = findStarInRow(row);
+                int sta_Rcol = findStarInRow(row);
                 _row_covered[row] = true;
-                _col_covered[star_col] = false;
+                _col_covered[sta_Rcol] = false;
             }
             else
             {

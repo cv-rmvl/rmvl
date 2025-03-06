@@ -321,11 +321,11 @@ P_k^-对称\quad&=P_k^--K_kHP_k^--\left(K_kHP_k^-\right)^T+K_kHP_k^-H^TK_k^T+K_k
 
 因此可以得到
 
-\f[\frac{\mathrm d\tr(AB)}{A}=B^T\tag{1-23a}\f]
+\f[\frac{\mathrm d\tr(AB)}{\mathrm dA}=B^T\tag{1-23a}\f]
 
 同理，我们也能验证如下结论
 
-\f[\begin{align}\frac{\mathrm d\tr(ABA^T)}{A}&=AB+AB^T\\
+\f[\begin{align}\frac{\mathrm d\tr(ABA^T)}{\mathrm dA}&=AB+AB^T\\
 当B对称时\quad&=2AB\end{align}\tag{1-23b}\f]
 
 那么，公式\f$\fml{1-22}\f$可以写为

@@ -24,9 +24,8 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(GalaxyCamera)
-
 GalaxyCamera::GalaxyCamera(CameraConfig cfg, std::string_view id) : _impl(new GalaxyCamera::Impl(cfg, id)) {}
+GalaxyCamera::~GalaxyCamera() = default;
 bool GalaxyCamera::set(int prop_id, double value) const { return _impl->set(prop_id, value); }
 double GalaxyCamera::get(int prop_id) const { return _impl->get(prop_id); }
 bool GalaxyCamera::isOpened() const { return _impl->isOpened(); }

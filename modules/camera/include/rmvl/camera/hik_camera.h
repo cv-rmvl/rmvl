@@ -50,6 +50,7 @@ public:
     //! @cond
     HikCamera(const HikCamera &) = delete;
     HikCamera(HikCamera &&) = default;
+    ~HikCamera();
     //! @endcond
 
     /**

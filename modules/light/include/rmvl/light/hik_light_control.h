@@ -41,6 +41,7 @@ public:
     HikLightController(HikLightController &&) = default;
     HikLightController &operator=(const HikLightController &) = delete;
     HikLightController &operator=(HikLightController &&) = default;
+    ~HikLightController();
     //! @endcond
 
     //! 光源控制器是否打开
