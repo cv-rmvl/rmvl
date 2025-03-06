@@ -181,10 +181,13 @@ public:
      */
     RMVL_W SerialPort(std::string_view device, SerialPortMode mode = {});
 
+    //! @cond
     SerialPort(const SerialPort &) = delete;
     SerialPort(SerialPort &&) = default;
     SerialPort &operator=(const SerialPort &) = delete;
     SerialPort &operator=(SerialPort &&) = default;
+    ~SerialPort();
+    //! @endcond
 
     /**
      * @brief 从串口读取数据到聚合体中
@@ -294,6 +297,7 @@ public:
     PipeServer(PipeServer &&) = default;
     PipeServer &operator=(const PipeServer &) = delete;
     PipeServer &operator=(PipeServer &&) = default;
+    ~PipeServer();
 
     /**
      * @brief 在文件系统中创建新的命名管道并打开，销毁时自动移除该管道
@@ -344,6 +348,7 @@ public:
     PipeClient(PipeClient &&) = default;
     PipeClient &operator=(const PipeClient &) = delete;
     PipeClient &operator=(PipeClient &&) = default;
+    ~PipeClient();
 
     /**
      * @brief 打开存在的命名管道

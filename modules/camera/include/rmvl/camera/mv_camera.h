@@ -50,7 +50,8 @@ public:
 
     //! @cond
     MvCamera(const MvCamera &) = delete;
-    MvCamera(MvCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
+    MvCamera(MvCamera &&val) = default;
+    ~MvCamera();
     //! @endcond
 
     /**

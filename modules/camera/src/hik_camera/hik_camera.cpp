@@ -19,9 +19,8 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(HikCamera)
-
 HikCamera::HikCamera(CameraConfig cfg, std::string_view info) : _impl(new HikCamera::Impl(cfg, info)) {}
+HikCamera::~HikCamera() = default;
 bool HikCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double HikCamera::get(int propId) const { return _impl->get(propId); }
 bool HikCamera::read(cv::OutputArray image) { return _impl->read(image); }

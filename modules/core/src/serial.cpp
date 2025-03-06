@@ -23,7 +23,7 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(SerialPort)
+SerialPort::~SerialPort() = default;
 
 static unsigned int getBaudRate(BaudRate baud_rate)
 {

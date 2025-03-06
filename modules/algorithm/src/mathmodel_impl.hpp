@@ -18,65 +18,35 @@ namespace rm
 
 class EwTopsis::Impl
 {
-    typedef std::vector<double> IndexType;
-    typedef std::vector<double> SampleType;
-    typedef std::vector<std::vector<double>> MatType;
-
 public:
     /**
      * @brief 构造熵权 TOPSIS 算法类
      *
      * @param[in] samples 样本指标
      */
-    Impl(const MatType &samples) : R_(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
+    Impl(const std::vector<std::vector<double>> &samples) : _R(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
 
     //! 基于权熵 TOPSIS 推理出最终的指标
-    IndexType inference();
+    std::vector<double> inference();
 
 private:
-    /**
-     * @brief 获取标准化指标
-     *
-     * @param[in] _R 原始指标矩阵
-     * @param[out] R 标准化指标矩阵
-     */
-    void calcR(const MatType &_R, MatType &R);
+    //! 获取标准化指标
+    void calcR(const std::vector<std::vector<double>> &_R, std::vector<std::vector<double>> &R);
 
-    /**
-     * @brief 获取归一化指标
-     *
-     * @param[in] R 标准化指标矩阵
-     * @param[out] P 归一化指标矩阵
-     */
-    void calcP(const MatType &R, MatType &P);
+    //! 获取归一化指标
+    void calcP(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &P);
 
-    /**
-     * @brief 获取指标熵值向量
-     *
-     * @param[in] P 归一化指标矩阵
-     * @param[out] H 指标熵值向量
-     */
-    void calcH(const MatType &P, IndexType &H);
+    //! 获取指标熵值向量
+    void calcH(const std::vector<std::vector<double>> &P, std::vector<double> &H);
 
-    /**
-     * @brief 获取指标熵权向量
-     *
-     * @param[in] H 指标熵值向量
-     * @param[out] w 指标熵权向量
-     */
-    void calcw(const IndexType &H, IndexType &w);
+    //! 获取指标熵权向量
+    void calcw(const std::vector<double> &H, std::vector<double> &w);
 
-    /**
-     * @brief 获取样本综合指标
-     * @todo Declaration shadows a fileld of EwTopsis<Tp> R_ and S
-     * @param[in] w  指标熵权向量
-     * @param[in] R_ 原始指标矩阵
-     * @param[out] S_ 综合指标
-     */
-    void calcS(const IndexType &w, const MatType &R_, SampleType &S_);
+    //! 获取样本综合指标
+    void calcS(const std::vector<double> &w, const std::vector<std::vector<double>> &R_, std::vector<double> &S_);
 
-    MatType R_;   //!< 指标数据
-    SampleType S; //!< 最终的指标数据
+    std::vector<std::vector<double>> _R; //!< 指标数据
+    std::vector<double> _S;              //!< 最终的指标数据
 
     const std::size_t _sample_size; //!< 行数，样本数
     const std::size_t _index_size;  //!< 列数，指标数

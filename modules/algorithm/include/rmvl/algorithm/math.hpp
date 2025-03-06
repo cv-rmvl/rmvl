@@ -354,6 +354,25 @@ constexpr Tp sgn(Tp x) { return (x > 0) ? 1 : ((x < 0) ? -1 : 0); }
 template <typename Tp>
 constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + std::pow(static_cast<Tp>(e), -k * x + mu)); }
 
+/**
+ * @brief 计算方差
+ *
+ * @tparam ForwardIterator 前向迭代器
+ * @param[in] first 起始迭代器
+ * @param[in] last 终止迭代器
+ * @return 方差
+ */
+template <typename ForwardIterator>
+typename std::iterator_traits<ForwardIterator>::value_type variance(ForwardIterator first, ForwardIterator last)
+{
+    using Tp = typename ForwardIterator::value_type;
+    static_assert(std::is_arithmetic_v<Tp>, "Tp must be arithmetic type");
+    Tp mean = std::accumulate(first, last, 0) / std::distance(first, last);
+    Tp accum{};
+    std::for_each(first, last, [&](const Tp &val) { accum += (val - mean) * (val - mean); });
+    return accum / std::distance(first, last);
+}
+
 #ifdef HAVE_OPENCV
 
 /**
@@ -389,11 +408,11 @@ constexpr Tp cross2D(const cv::Point_<Tp> &a, const cv::Point_<Tp> &b) { return 
  * @return 众数
  */
 template <typename ForwardIterator>
-typename ForwardIterator::value_type calculateModeNum(ForwardIterator first, ForwardIterator last)
+typename std::iterator_traits<ForwardIterator>::value_type calculateModeNum(ForwardIterator first, ForwardIterator last)
 {
     assert(first != last);
-    using value_type = typename ForwardIterator::value_type;
-    std::unordered_map<value_type, std::size_t, typename hash_traits<value_type>::hash_func> hash_map;
+    using Tp = typename ForwardIterator::value_type;
+    std::unordered_map<Tp, std::size_t, typename hash_traits<Tp>::hash_func> hash_map;
     for (ForwardIterator _it = first; _it != last; ++_it)
         ++hash_map[*_it];
     return std::max_element(hash_map.begin(), hash_map.end(), [](const auto &lhs, const auto &rhs) {
@@ -410,6 +429,8 @@ class RMVL_EXPORTS_W EwTopsis
     RMVL_IMPL;
 
 public:
+    ~EwTopsis();
+
     /**
      * @brief 构造熵权 TOPSIS 算法类
      *
@@ -431,6 +452,8 @@ class RMVL_EXPORTS_W Munkres
     RMVL_IMPL;
 
 public:
+    ~Munkres();
+
     /**
      * @brief 创建 KM 算法求解器
      *

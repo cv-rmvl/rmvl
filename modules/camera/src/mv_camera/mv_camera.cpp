@@ -17,9 +17,8 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(MvCamera)
-
 MvCamera::MvCamera(CameraConfig init_mode, std::string_view serial) : _impl(new MvCamera::Impl(init_mode, serial)) {}
+MvCamera::~MvCamera() = default;
 bool MvCamera::set(int propId, double value) { return _impl->set(propId, value); }
 double MvCamera::get(int propId) const { return _impl->get(propId); }
 bool MvCamera::isOpened() const { return _impl->isOpened(); }

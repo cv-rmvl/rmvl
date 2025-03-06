@@ -124,13 +124,14 @@ std::vector<std::string> split(std::string_view str, std::string_view delim)
         start = str.find_first_not_of(delim, index);
         index = str.find(delim, start);
     }
-    res.emplace_back(str.substr(start));
+    if (start != std::string::npos)
+        res.emplace_back(str.substr(start));
     return res;
 }
 
 std::string join(const std::vector<std::string> &strs, std::string_view delim)
 {
-    std::string res;
+    std::string res{};
     if (strs.empty())
         return res;
     for (const auto &str : strs)

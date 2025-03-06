@@ -21,14 +21,13 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(PipeServer)
-RMVL_IMPL_DEF(PipeClient)
-
 PipeServer::PipeServer(std::string_view name) : _impl(new Impl(name)) {}
+PipeServer::~PipeServer() = default;
 bool PipeServer::read(std::string &data) { return _impl->read(data); }
 bool PipeServer::write(std::string_view data) { return _impl->write(data); }
 
 PipeClient::PipeClient(std::string_view name) : _impl(new Impl(name)) {}
+PipeClient::~PipeClient() = default;
 bool PipeClient::read(std::string &data) { return _impl->read(data); }
 bool PipeClient::write(std::string_view data) { return _impl->write(data); }
 

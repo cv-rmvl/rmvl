@@ -6,9 +6,8 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(HikLightController)
-
 HikLightController::HikLightController(const LightConfig &cfg, std::string_view id) : _impl(new Impl(cfg, id)) {}
+HikLightController::~HikLightController() = default;
 bool HikLightController::isOpened() const { return _impl->isOpened(); }
 bool HikLightController::open() { return _impl->open(); }
 bool HikLightController::close() { return _impl->close(); }

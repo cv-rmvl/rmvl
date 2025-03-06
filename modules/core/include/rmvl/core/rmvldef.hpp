@@ -72,14 +72,6 @@
 /*********************************** 代码块 ***********************************/
 
 // 在类中定义 PIMPL 模式的相关代码
-#define RMVL_IMPL                               \
-    class Impl;                                 \
-    struct ImplDeleter                          \
-    {                                           \
-        void operator()(Impl *) const noexcept; \
-    };                                          \
-    std::unique_ptr<Impl, ImplDeleter> _impl
-
-//! PIMPL 模式的删除器的完整定义
-#define RMVL_IMPL_DEF(class_name) \
-    void class_name::ImplDeleter::operator()(class_name::Impl *p) const noexcept { delete p; }
+#define RMVL_IMPL \
+    class Impl;   \
+    std::unique_ptr<Impl> _impl
