@@ -1,12 +1,12 @@
 /**
- * @file test_ew_topsis.cpp
- * @author RoboMaster Vision Community
- * @brief
- * @version 1.0
- * @date 2023-01-13
- *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
- *
+ * @file test_mathmodel.cpp
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 数学模型单元测试
+ * @version 2.0
+ * @date 2025-03-10
+ * 
+ * @copyright Copyright (c) 2025
+ * 
  */
 
 #include <gtest/gtest.h>
@@ -101,6 +101,52 @@ TEST(EwTopsisTest, CustomData)
 
     EXPECT_EQ(target[0], 1);
     EXPECT_EQ(target[1], 3);
+}
+
+TEST(Munkres, test1)
+{
+    std::vector<std::vector<double>> cost = {
+        {1, 2, 3},
+        {3, 2, 1},
+        {2, 1, 3}};
+    rm::Munkres km(cost);
+    auto result = km.solve();
+    EXPECT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0], 0);
+    EXPECT_EQ(result[1], 2);
+    EXPECT_EQ(result[2], 1);
+}
+
+TEST(Munkres, test2)
+{
+    std::vector<std::vector<double>> cost = {
+        {2, 3, 4},
+        {4, 3, 2},
+        {3, 2, 4},
+        {4, 2, 1}};
+    rm::Munkres km(cost);
+    auto result = km.solve();
+    EXPECT_EQ(result.size(), 4);
+    EXPECT_EQ(result[0], 0);
+    EXPECT_EQ(result[1], 2);
+    EXPECT_EQ(result[2], 1);
+    EXPECT_EQ(result[3], 0); // not match
+}
+
+TEST(Munkres, test3)
+{
+    std::vector<std::vector<double>> cost = {
+        {82, 83, 69, 92},
+        {77, 37, 49, 92},
+        {11, 69, 5, 86},
+        {8, 9, 98, 23}};
+    rm::Munkres km(cost);
+    auto result = km.solve();
+    EXPECT_EQ(result.size(), 4);
+    EXPECT_EQ(result[0], 2);
+    EXPECT_EQ(result[1], 1);
+    EXPECT_EQ(result[2], 0);
+    EXPECT_EQ(result[3], 3);
 }
 
 } // namespace rm_test
