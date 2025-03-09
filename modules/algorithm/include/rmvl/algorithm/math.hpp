@@ -355,6 +355,22 @@ template <typename Tp>
 constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + std::pow(static_cast<Tp>(e), -k * x + mu)); }
 
 /**
+ * @brief 计算均值
+ * 
+ * @tparam ForwardIterator 前向迭代器
+ * @param[in] first 起始迭代器
+ * @param[in] last 终止迭代器
+ * @return 均值
+ */
+template <typename ForwardIterator>
+constexpr typename std::iterator_traits<ForwardIterator>::value_type mean(ForwardIterator first, ForwardIterator last)
+{
+    using Tp = typename std::iterator_traits<ForwardIterator>::value_type;
+    static_assert(std::is_arithmetic_v<Tp>, "Tp must be arithmetic type");
+    return std::accumulate(first, last, Tp{}) / std::distance(first, last);
+}
+
+/**
  * @brief 计算方差
  *
  * @tparam ForwardIterator 前向迭代器
@@ -363,13 +379,12 @@ constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + st
  * @return 方差
  */
 template <typename ForwardIterator>
-typename std::iterator_traits<ForwardIterator>::value_type variance(ForwardIterator first, ForwardIterator last)
+constexpr typename std::iterator_traits<ForwardIterator>::value_type variance(ForwardIterator first, ForwardIterator last)
 {
-    using Tp = typename ForwardIterator::value_type;
-    static_assert(std::is_arithmetic_v<Tp>, "Tp must be arithmetic type");
-    Tp mean = std::accumulate(first, last, 0) / std::distance(first, last);
+    using Tp = typename std::iterator_traits<ForwardIterator>::value_type;
+    Tp m = mean(first, last);
     Tp accum{};
-    std::for_each(first, last, [&](const Tp &val) { accum += (val - mean) * (val - mean); });
+    std::for_each(first, last, [&](const Tp &val) { accum += (val - m) * (val - m); });
     return accum / std::distance(first, last);
 }
 
