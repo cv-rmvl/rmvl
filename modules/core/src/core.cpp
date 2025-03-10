@@ -1,11 +1,11 @@
 /**
  * @file core.cpp
- * @author RoboMaster Vision Community
+ * @author zhaoxi (535394140@qq.com)
  * @brief
  * @version 1.0
  * @date 2023-04-21
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 
@@ -76,13 +76,13 @@ Exception::Exception(int _code, std::string_view _err, std::string_view _func, s
     : code(_code), err(_err), func(_func), file(_file), line(_line)
 {
     if (!func.empty())
-        msg = format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
-                     ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                     file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
+        msg = format("RMVL %s:%d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
+                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                         file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
     else
-        msg = format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
-                     ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                     file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
+        msg = format("RMVL %s:%d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
+                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                         file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
 }
 
 void error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
@@ -102,7 +102,7 @@ void error(int _code, std::string_view _err, const char *_func, const char *_fil
 
 const char *getBuildInformation()
 {
-    static const char *build_info =
+    constexpr const char *build_info =
 #include "version_string.inc"
         ;
     return build_info;

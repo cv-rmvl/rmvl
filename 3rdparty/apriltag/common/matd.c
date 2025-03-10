@@ -62,6 +62,8 @@ matd_t *matd_create(int rows, int cols)
 matd_t *matd_create_scalar(TYPE v)
 {
     matd_t *m = calloc(1, sizeof(matd_t));
+    m->nrows = 0;
+    m->ncols = 0;
     m->data = calloc(1, sizeof(double));
     m->data[0] = v;
 
@@ -403,7 +405,7 @@ double matd_det_general(const matd_t *a)
     // The determinant of a can be calculated as
     //     epsilon*det(L)*det(U),
     // where epsilon is just the sign of the corresponding permutation
-    // (which is +1 for an even number of permutations and is −1
+    // (which is +1 for an even number of permutations and is -1
     // for an uneven number of permutations).
     double det = mlu->pivsign * detL * detU;
 
