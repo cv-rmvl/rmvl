@@ -1,11 +1,11 @@
 /**
- * @file core_c.cpp
- * @author RoboMaster Vision Community
+ * @file core.cpp
+ * @author zhaoxi (535394140@qq.com)
  * @brief
  * @version 1.0
  * @date 2023-04-21
  *
- * @copyright Copyright 2023 (c), RoboMaster Vision Community
+ * @copyright Copyright 2023 (c), zhaoxi
  *
  */
 
@@ -13,6 +13,9 @@
 #include <cstring>
 
 #include "rmvl/core/util.hpp"
+
+namespace rm
+{
 
 static constexpr const char *rmvlErrorStr(int status)
 {
@@ -49,9 +52,9 @@ static constexpr const char *rmvlErrorStr(int status)
     }
 }
 
-std::string rm::format(const char *fmt, ...)
+std::string format(const char *fmt, ...)
 {
-    char buf[1024];
+    char buf[1024]{};
     va_list args;
     va_start(args, fmt);
     vsprintf(buf, fmt, args);
@@ -60,22 +63,22 @@ std::string rm::format(const char *fmt, ...)
     return str;
 }
 
-rm::Exception::Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line)
+Exception::Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line)
     : code(_code), err(_err), func(_func), file(_file), line(_line)
 {
     if (!func.empty())
-        msg = rm::format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
+        msg = format("RMVL %s:%d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
                          ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
                          file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
     else
-        msg = rm::format("RMVL %s: %d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
+        msg = format("RMVL %s:%d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
                          ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
                          file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
 }
 
-void rm::error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
+void error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
 {
-    rm::Exception exc(_code, _err, _func, _file, _line);
+    Exception exc(_code, _err, _func, _file, _line);
 
     RMVL_ERRHANDLE(exc);
 
@@ -88,10 +91,12 @@ void rm::error(int _code, std::string_view _err, const char *_func, const char *
 #endif // _GNUC_
 }
 
-const char *rm::getBuildInformation()
+const char *getBuildInformation()
 {
-    static const char *build_info =
+    constexpr const char *build_info =
 #include "version_string.inc"
         ;
     return build_info;
 }
+
+} // namespace rm
