@@ -30,7 +30,7 @@ either expressed or implied, of the Regents of The University of Michigan.
 #include <stdbool.h>
 #include <stdint.h>
 #ifdef _WIN32
-#include <windows.h>
+#include <Winsock2.h>
 typedef long long suseconds_t;
 #endif
 #ifdef _MSC_VER
