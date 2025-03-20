@@ -138,14 +138,19 @@ if len(datas) == 20:
 @add_toggle_cpp
 
 ```cpp
-rm::FuncNds lsq_sine(datas.size());
-for (std::size_t i = 0; i < datas.size(); ++i)
-    lsq_sine.push_back([=](const std::valarray<double> &x) {
-        return x[0] * std::sin(x[1] * i + x[2]) + x[3] - datas[i];
-    });
+std::vector<rm::FuncNd> lsq_sine(datas.size());
+for (std::size_t i = 0; i < lsq_sine.size(); ++i)
+    lsq_sine[i] = [=](const std::valarray<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - datas[i]; };
+
+rm::FuncNds lsq_sine_f = [&](const std::valarray<double> &x) {
+    std::valarray<double> ret(lsq_sine.size());
+    for (std::size_t i = 0; i < lsq_sine.size(); ++i)
+        ret[i] = lsq_sine[i](x);
+    return ret;
+};
 
 // 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
-auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}); // 默认采用 Gauss-Newton 算法
+auto x = rm::lsqnonlin(lsq_sine_f, {1, 0.02, 0, 1.09}); // 默认采用 Gauss-Newton 算法
 ```
 
 @end_toggle
@@ -154,14 +159,18 @@ auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}); // 默认采用 Gauss-Newt
 
 ```python
 lsq_sine = []
-
-for i, data in enumerate(datas):
+for i in range(len(datas)):
     lsq_sine.append(
-        lambda x, i=i, data=data: x[0] * np.sin(x[1] * i + x[2]) + x[3] - data
+        lambda x, i=i: x[0] * np.sin(x[1] * i + x[2]) + x[3] - datas[i]
     )
 
+def lsq_sine_f(x):
+    ret = []
+    for i in range(len(lsq_sine)):
+        ret.append(lsq_sine[i](x))
+
 # 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
-x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算法
+x = rm.lsqnonlin(lsq_sine_f, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算法
 ```
 
 @end_toggle
