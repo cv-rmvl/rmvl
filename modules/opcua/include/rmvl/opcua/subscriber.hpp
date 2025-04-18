@@ -37,7 +37,7 @@ struct RMVL_EXPORTS_W_AG FieldMetaData final
      *
      * @param[in] val 变量，可参考 @ref rm::Variable
      */
-    static FieldMetaData makeFrom(const Variable &val) { return {val.browse_name, val.getDataType(), val.size() == 1 ? -1 : 1, val.ns}; }
+    static FieldMetaData makeFrom(const Variable &val) { return {val.browse_name, val.getDataType(), val.size() == -1 ? -1 : 1, val.ns}; }
 
     //! 字段名称
     RMVL_W_RW std::string name;

@@ -85,7 +85,7 @@ bool Variable::operator==(const Variable &val) const
         return false;
     if (_size != val._size)
         return false;
-    if (_size == 1)
+    if (_size == -1)
     {
         switch (_data_type)
         {
@@ -155,7 +155,7 @@ UA_Variant cvtVariable(const Variable &val) noexcept
     const std::any &data = val.data();
 
     UA_Variant p_val;
-    if (val.size() == 1)
+    if (val.size() == -1)
     {
         switch (val.getDataType())
         {
@@ -372,7 +372,7 @@ UA_Variant cvtVariable(const VariableType &vtype) noexcept
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
-    if (vtype.size() == 1)
+    if (vtype.size() == -1)
     {
         switch (vtype.getDataType())
         {

@@ -44,14 +44,14 @@ public:
      */
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
     RMVL_W_SUBST("VT")
-    VariableType(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
+    VariableType(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(-1) {}
 
     /**
      * @brief 字符串构造，设置默认值
      *
      * @param[in] str 字符串
      */
-    RMVL_W VariableType(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W VariableType(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(-1) {}
 
     /**
      * @brief 字符串字面量构造
@@ -107,11 +107,11 @@ public:
     //! 获取数据类型
     RMVL_W inline DataType getDataType() const { return _data_type; }
 
-    //! 判断变量类型节点是否为空
+    //! 判断变量类型节点是否为空 @note 未初始化、空列表则为空
     RMVL_W constexpr bool empty() const { return _size == 0; }
 
-    //! 获取大小 @note 未初始化则返回 `0`
-    RMVL_W inline uint32_t size() const { return _size; }
+    //! 获取大小 @note 未初始化、空列表则返回 `0`，标量则返回 `-1`
+    RMVL_W inline int size() const { return _size; }
 
     //! 命名空间索引，默认为 `1`
     RMVL_W_RW uint16_t ns{1U};
@@ -142,7 +142,7 @@ private:
     //! 数据类型
     DataType _data_type{};
     //! 数据大小
-    uint32_t _size{};
+    int _size{};
 };
 
 //! OPC UA 变量
@@ -159,14 +159,14 @@ public:
      */
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
     RMVL_W_SUBST("V")
-    Variable(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(1) {}
+    Variable(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(-1) {}
 
     /**
      * @brief 字符串构造
      *
      * @param[in] str 字符串
      */
-    RMVL_W Variable(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(1) {}
+    RMVL_W Variable(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(-1) {}
 
     /**
      * @brief 字符串字面量构造
@@ -222,7 +222,7 @@ public:
      */
     RMVL_W bool operator!=(const Variable &val) const { return !(*this == val); }
 
-    //! 判断变量节点是否为空
+    //! 判断变量节点是否为空 @note 未初始化、空列表则为空
     RMVL_W bool empty() const { return _size == 0; }
 
     /**
@@ -271,8 +271,8 @@ public:
     //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
     RMVL_W inline DataType getDataType() const { return _data_type; }
 
-    //! 获取大小 @note 未初始化则返回 `0`
-    RMVL_W inline uint32_t size() const { return _size; }
+    //! 获取大小 @note 未初始化、空列表则返回 `0`，标量则返回 `-1`
+    RMVL_W inline int size() const { return _size; }
 
 private:
     explicit Variable(const VariableType &vtype) : _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
@@ -315,7 +315,7 @@ private:
     //! 数据类型
     DataType _data_type{};
     //! 数据大小
-    uint32_t _size{};
+    int _size{};
 };
 
 /**
