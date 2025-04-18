@@ -35,15 +35,13 @@
 //! @} algorithm_optimal
 //! @} algorithm
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup algorithm_numcal
 //! @{
 
 //! N 次多项式
-class RMVL_EXPORTS_W Polynomial
-{
+class RMVL_EXPORTS_W Polynomial {
 public:
     /**
      * @brief 创建多项式对象
@@ -73,8 +71,7 @@ private:
  * @brief
  * - 由于插值多项式具有唯一性，为了提高新增节点时算法的简易性，这里使用 Newton 插值多项式
  */
-class RMVL_EXPORTS_W Interpolator
-{
+class RMVL_EXPORTS_W Interpolator {
 public:
     RMVL_W Interpolator() = default;
 
@@ -119,8 +116,7 @@ private:
  * @brief
  * - 使用最小二乘法拟合曲线，详见 @ref tutorial_modules_least_square
  */
-class RMVL_EXPORTS_W CurveFitter
-{
+class RMVL_EXPORTS_W CurveFitter {
 public:
     /**
      * @brief 创建多项式曲线拟合器对象
@@ -153,8 +149,7 @@ private:
  * @brief
  * - 使用离散 Newton 迭代法求解非线性方程，详见 @ref tutorial_modules_func_iteration
  */
-class RMVL_EXPORTS_W NonlinearSolver
-{
+class RMVL_EXPORTS_W NonlinearSolver {
 public:
     RMVL_W NonlinearSolver() = default;
 
@@ -194,8 +189,7 @@ using Odes = std::vector<std::function<double(double, const std::valarray<double
  * @brief
  * - 该 Runge-Kutta 数值求解器为通用求解器，提供了一般的 Runge-Kutta 法求解常微分方程（组）的接口
  */
-class RMVL_EXPORTS_W RungeKutta
-{
+class RMVL_EXPORTS_W RungeKutta {
 public:
     /**
      * @brief 创建一阶常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
@@ -260,8 +254,7 @@ protected:
 };
 
 //! 2 阶 2 级 Runge-Kutta 求解器
-class RMVL_EXPORTS_W RungeKutta2 : public RungeKutta
-{
+class RMVL_EXPORTS_W RungeKutta2 : public RungeKutta {
 public:
     /**
      * @brief 创建 2 阶 2 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
@@ -272,8 +265,7 @@ public:
 };
 
 //! 3 阶 3 级 Runge-Kutta 求解器
-class RMVL_EXPORTS_W RungeKutta3 : public RungeKutta
-{
+class RMVL_EXPORTS_W RungeKutta3 : public RungeKutta {
 public:
     /**
      * @brief 创建 3 阶 3 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
@@ -284,8 +276,7 @@ public:
 };
 
 //! 4 阶 4 级 Runge-Kutta 求解器
-class RMVL_EXPORTS_W RungeKutta4 : public RungeKutta
-{
+class RMVL_EXPORTS_W RungeKutta4 : public RungeKutta {
 public:
     /**
      * @brief 创建 4 阶 4 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
@@ -310,35 +301,37 @@ using FuncNd = std::function<double(const std::valarray<double> &)>;
 using FuncNds = std::function<std::valarray<double>(const std::valarray<double> &)>;
 
 //! 梯度/导数计算模式
-enum class DiffMode : uint8_t
-{
+enum class DiffMode : uint8_t {
     Central, //!< 中心差商
     Ridders, //!< Richardson 外推 \cite Ridders82
 };
 
 //! 多维函数最优化模式
-enum class FminMode : uint8_t
-{
+enum class FminMode : uint8_t {
     ConjGrad, //!< 共轭梯度法 \cite Hestenes52
     Simplex,  //!< 单纯形法 \cite Nelder65
 };
 
+//! 约束求解模式
+enum class ConsMode : uint8_t {
+    Exterior, //!< 外罚函数法
+    Lagrange, //!< 拉格朗日乘子法（仅支持等式约束）
+};
+
 //! 最小二乘求解模式
-enum class LsqMode : uint8_t
-{
+enum class LsqMode : uint8_t {
     SGN, //!< 改进的 Gauss-Newton 法，单次寻找最优步长的 Gauss-Newton 法
     GN,  //!< Gauss-Newton 法
     LM   //!< Levenberg-Marquardt 法 \cite Eade13 \cite Madsen04
 };
 
-//! 无约束多维函数优化选项
-struct RMVL_EXPORTS_W_AG OptimalOptions
-{
+//! 多维函数优化选项
+struct RMVL_EXPORTS_W_AG OptimalOptions {
     RMVL_W_RW DiffMode diff_mode{}; //!< 梯度计算模式，默认为中心差商 `DiffMode::Central`
     RMVL_W_RW FminMode fmin_mode{}; //!< 多维函数最优化模式，默认为共轭梯度法 `FminMode::ConjGrad`
+    RMVL_W_RW ConsMode cons_mode{}; //!< 约束模式，默认为外罚函数法 `ConsMode::Exterior`
     RMVL_W_RW LsqMode lsq_mode{};   //!< 最小二乘求解模式，默认为改进的 Gauss-Newton 法 `LsqMode::SGN`
     RMVL_W_RW int max_iter{1000};   //!< 最大迭代次数
-    RMVL_W_RW double exterior{1e3}; //!< 外罚函数系数
     RMVL_W_RW double dx{1e-2};      //!< 求解步长
     RMVL_W_RW double tol{1e-6};     //!< 误差容限
 };
@@ -402,7 +395,9 @@ RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fminunc(FuncNd func, con
  * @param[in] x0 初始点
  * @param[in] c 不等式约束 \f$f_c(x)\le0\f$
  * @param[in] ceq 等式约束 \f$f_{ceq}(x)=0\f$
- * @param[in] options options 优化选项，可供设置的有 `exterior`、`fmin_mode`、`max_iter`、`tol` 和 `dx`
+ * @param[in] options options 优化选项，可供设置的有 `cons_mode`、`max_iter`、`tol` 和 `dx`，当
+ *                    `cons_mode == ConsMode::Exterior` 时，`fmin_mode` 也可供设置
+ * @note 当 `cons_mode == ConsMode::Lagrange` 时，参数 `c` 被忽略
  * @return `[x, fval]` 最小值点和最小值
  */
 RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
@@ -419,8 +414,7 @@ RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fmincon(FuncNd func, con
 RMVL_EXPORTS_W std::valarray<double> lsqnonlin(const FuncNds &func, const std::valarray<double> &x0, const OptimalOptions &options = {});
 
 //! Robust 核函数
-enum class RobustMode : uint8_t
-{
+enum class RobustMode : uint8_t {
     L2,     //!< `L2` 核函数
     Huber,  //!< `Huber` 核函数 \cite Huber64
     Tukey,  //!< `Tukey` 核函数 \cite Tukey60
