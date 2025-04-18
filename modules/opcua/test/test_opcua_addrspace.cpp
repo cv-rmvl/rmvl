@@ -20,23 +20,23 @@ TEST(OPC_UA_AddressSpace, Variable)
 {
     // 单值构造
     rm::Variable val1 = 42;
-    EXPECT_EQ(val1.size(), 1);
+    EXPECT_EQ(val1.size(), -1);
     EXPECT_EQ(val1.getDataType(), rm::tpInt32);
 
     rm::Variable val2 = 3.1415;
-    EXPECT_EQ(val2.size(), 1);
+    EXPECT_EQ(val2.size(), -1);
     EXPECT_EQ(val2.getDataType(), rm::tpDouble);
 
     rm::Variable val3 = false;
-    EXPECT_EQ(val3.size(), 1);
+    EXPECT_EQ(val3.size(), -1);
     EXPECT_EQ(val3.getDataType(), rm::tpBoolean);
 
     rm::Variable val4 = "test";
-    EXPECT_EQ(val4.size(), 1);
+    EXPECT_EQ(val4.size(), -1);
     EXPECT_EQ(val4.getDataType(), rm::tpString);
 
     rm::Variable val5 = std::string("test");
-    EXPECT_EQ(val5.size(), 1);
+    EXPECT_EQ(val5.size(), -1);
     EXPECT_EQ(val5.getDataType(), rm::tpString);
 
     // 列表构造
@@ -51,6 +51,10 @@ TEST(OPC_UA_AddressSpace, Variable)
     rm::Variable arr3 = std::vector{1, 2, 3};
     EXPECT_EQ(arr3.size(), 3);
     EXPECT_EQ(arr3.getDataType(), rm::tpInt32);
+
+    rm::Variable arr4 = {1};
+    EXPECT_EQ(arr4.size(), 1);
+    EXPECT_EQ(arr4.getDataType(), rm::tpInt32);
 
     // 单值比较
     EXPECT_EQ(val1, 42);
@@ -69,23 +73,23 @@ TEST(OPC_UA_AddressSpace, VariableType)
 {
     // 单值构造
     rm::VariableType vt1 = 42;
-    EXPECT_EQ(vt1.size(), 1);
+    EXPECT_EQ(vt1.size(), -1);
     EXPECT_EQ(vt1.getDataType(), rm::tpInt32);
 
     rm::VariableType vt2 = 3.1415;
-    EXPECT_EQ(vt2.size(), 1);
+    EXPECT_EQ(vt2.size(), -1);
     EXPECT_EQ(vt2.getDataType(), rm::tpDouble);
 
     rm::VariableType vt3 = false;
-    EXPECT_EQ(vt3.size(), 1);
+    EXPECT_EQ(vt3.size(), -1);
     EXPECT_EQ(vt3.getDataType(), rm::tpBoolean);
 
     rm::VariableType vt4 = "test";
-    EXPECT_EQ(vt4.size(), 1);
+    EXPECT_EQ(vt4.size(), -1);
     EXPECT_EQ(vt4.getDataType(), rm::tpString);
 
     rm::VariableType vt5 = std::string("test");
-    EXPECT_EQ(vt5.size(), 1);
+    EXPECT_EQ(vt5.size(), -1);
     EXPECT_EQ(vt5.getDataType(), rm::tpString);
 
     // 列表构造

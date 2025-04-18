@@ -154,7 +154,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype)
     // 设置属性
     attr.value = variant;
     attr.dataType = variant.type->typeId;
-    attr.valueRank = vtype.size() == 1 ? UA_VALUERANK_SCALAR : 1;
+    attr.valueRank = vtype.size() == -1 ? UA_VALUERANK_SCALAR : 1;
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
@@ -187,7 +187,7 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noe
     attr.value = variant;
     attr.dataType = variant.type->typeId;
     attr.accessLevel = val.access_level;
-    attr.valueRank = val.size() == 1 ? UA_VALUERANK_SCALAR : 1;
+    attr.valueRank = val.size() == -1 ? UA_VALUERANK_SCALAR : 1;
     if (attr.valueRank != UA_VALUERANK_SCALAR)
     {
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
