@@ -33,15 +33,15 @@
 \dot x_2&=-\frac kmx_1-\frac cmx_2+\frac1mp(t)
 \end{align}\right.\tag{1-2}\f]
 
-记 \f$\dot{\pmb x}=\begin{bmatrix}\dot x_1\\\dot x_2\end{bmatrix},\quad A=\begin{bmatrix}0&1\\-\frac km&-\frac cm\end{bmatrix},\quad \pmb b(t)=\begin{bmatrix}0\\\frac1mp(t)\end{bmatrix},\quad \pmb x^{(0)}=\begin{bmatrix}x_1(t_0)\\x_2(t_0)\end{bmatrix}\f$，有
+记 \f$\dot{\boldsymbol x}=\begin{bmatrix}\dot x_1\\\dot x_2\end{bmatrix},\quad A=\begin{bmatrix}0&1\\-\frac km&-\frac cm\end{bmatrix},\quad \boldsymbol b(t)=\begin{bmatrix}0\\\frac1mp(t)\end{bmatrix},\quad \boldsymbol x^{(0)}=\begin{bmatrix}x_1(t_0)\\x_2(t_0)\end{bmatrix}\f$，有
 
-\f[\dot{\pmb x}=A\pmb x+\pmb b(t),\quad\pmb x(t_0)=\pmb x^{(0)}\tag{1-3}\f]
+\f[\dot{\boldsymbol x}=A\boldsymbol x+\boldsymbol b(t),\quad\boldsymbol x(t_0)=\boldsymbol x^{(0)}\tag{1-3}\f]
 
 \f$\text{(1-3)}\f$在控制系统中能够经常遇见，这种表示一个在时刻\f$t_0\f$带有初始条件的 2 阶线性系统，对于一般的（非线性）方程组，我们可以表示为
 
 \f[\def\rkf#1{\dot x_{#1}=f_{#1}(t,x_1,x_2,\cdots,x_k),\quad x_{#1}(t_0)=x_{#1}^{(0)}}\rkf1\\\rkf2\\\vdots\\\rkf k\f]
 
-即\f[\dot{\pmb x}=\pmb F(t,\pmb x),\quad\pmb x(t_0)=\pmb x^{(0)}\tag{1-4a}\f]
+即\f[\dot{\boldsymbol x}=\boldsymbol F(t,\boldsymbol x),\quad\boldsymbol x(t_0)=\boldsymbol x^{(0)}\tag{1-4a}\f]
 
 仅有 1 条的常微分方程则表示为\f[\dot x=f(t,x),\quad x(t_0)=x^{(0)}\tag{1-4b}\f]
 
@@ -86,7 +86,7 @@ x_{n+1}\approx x(t_{n+1})&=x(t_n)+x'(t_n)h+x''(t_n)\frac{h^2}2+\cdots\\&=x_n+h\d
 
 同样的，对于一阶方程组，公式\f$\text{(2-2)}\f$可以改写成
 
-\f[\pmb x_{n+1}=\pmb x_n+h\pmb F(t_n,\pmb x_n)\tag{2-4}\f]
+\f[\boldsymbol x_{n+1}=\boldsymbol x_n+h\boldsymbol F(t_n,\boldsymbol x_n)\tag{2-4}\f]
 
 <span style="color: green">**示例**</span>
 
@@ -152,9 +152,9 @@ k_1&=f(t_n,x_n)\\k_2&=f(t_n+h,x_n+hk_1)
 @note 此小节为 2 阶 Runge-Kutta 公式族的推导，涉及到多元函数\f$f(x,y)\f$的全导数
 \f[\begin{align}\frac{\mathrm df}{\mathrm dx}&=\frac{\partial f}{\partial x}+\frac{\partial f}{\partial y}·\frac{\mathrm dy}{\mathrm dx}\\
 f'&=f_x+f_yy'\end{align}\tag{i}\f]
-以及多元函数\f$f(x,y)\f$的 Taylor 展开，令\f$\pmb x=(x-x_0,\ y-y_0)^T\f$，则多元函数 Taylor 展开如下
-\f[\begin{align}f(x,y)&=f(x_0,y_0)+\begin{bmatrix}f_x(x_0,y_0)&f_y(x_0,y_0)\end{bmatrix}\pmb x+\\
-&\transparent=\frac1{2!}\pmb x^T\begin{bmatrix}f_{xx}(x_0,y_0)&f_{xy}(x_0,y_0)\\f_{yx}(x_0,y_0)&f_{yy}(x_0,y_0)\end{bmatrix}\pmb x+o^n\end{align}\tag{ii}\f]
+以及多元函数\f$f(x,y)\f$的 Taylor 展开，令\f$\boldsymbol x=(x-x_0,\ y-y_0)^T\f$，则多元函数 Taylor 展开如下
+\f[\begin{align}f(x,y)&=f(x_0,y_0)+\begin{bmatrix}f_x(x_0,y_0)&f_y(x_0,y_0)\end{bmatrix}\boldsymbol x+\\
+&\transparent=\frac1{2!}\boldsymbol x^T\begin{bmatrix}f_{xx}(x_0,y_0)&f_{xy}(x_0,y_0)\\f_{yx}(x_0,y_0)&f_{yy}(x_0,y_0)\end{bmatrix}\boldsymbol x+o^n\end{align}\tag{ii}\f]
 <span style="color: red">若仅想了解最终结果，请跳过此小节</span>
 
 \f[\left\{\begin{align}
@@ -213,10 +213,10 @@ k_2&=f\left(t_n+\frac h2,x_n+\frac h2k_1\right)\end{align}\tag{3-7}\f]
 \f[\left\{\begin{align}x_{n+1}&=x_n+h(\lambda_1k_1+\lambda_2k_2)\\k_1&=f(t_n+p_1h,x_n+h(a_{11}
 k_1+a_{12}k_2))\\k_2&=f(t_n+p_2h,x_n+h(a_{21}k_1+a_{22}k_2))\end{align}\right.\tag{3-8}\f]
 
-令\f$\pmb p=\mat{p_1}{p_2},\quad\pmb\lambda=(\lambda_1,\lambda_2),\quad
+令\f$\boldsymbol p=\mat{p_1}{p_2},\quad\boldsymbol\lambda=(\lambda_1,\lambda_2),\quad
 R=\begin{bmatrix}a_{11}&a_{12}\\a_{21}&a_{22}\end{bmatrix}\f$，则
 
-\f[\begin{array}{c|c}\pmb p&R\\\hline&\pmb\lambda\end{array}\Rightarrow\begin{array}{c|cc}p_1&
+\f[\begin{array}{c|c}\boldsymbol p&R\\\hline&\boldsymbol\lambda\end{array}\Rightarrow\begin{array}{c|cc}p_1&
 a_{11}&a_{12}\\p_2&a_{21}&a_{22}\\\hline&\lambda_1&\lambda_2\end{array}\tag{3-9}\f]
 
 被称为 Butcher 表，例如，上文的中点公式可以表示为
@@ -257,13 +257,13 @@ p_n&a_{n1}&a_{n2}&\cdots&a_{nn}\\
 
 #### 3.4 方程组的 Runge-Kutta 公式 {#equations_runge_kutta}
 
-对于一阶方程组\f$\pmb x'=\pmb F(t,\pmb x),\ \pmb x(t_0)=\pmb x^{(0)}\f$，公式\f$\text{(3-11)}\f$可以改写为
+对于一阶方程组\f$\boldsymbol x'=\boldsymbol F(t,\boldsymbol x),\ \boldsymbol x(t_0)=\boldsymbol x^{(0)}\f$，公式\f$\text{(3-11)}\f$可以改写为
 
 \f[\left\{\begin{align}
-\pmb x_{n+1}&=\pmb x_n+h(\lambda_1\pmb k_1+\lambda_2\pmb k_2+\cdots+\lambda_n\pmb k_n)\\
-\pmb k_1&=\pmb F(t_n+p_1h,\pmb x_n+h(a_{11}\pmb k_1+a_{12}\pmb k_2+\cdots+a_{1n}\pmb k_n))\\
-\pmb k_2&=\pmb F(t_n+p_2h,\pmb x_n+h(a_{21}\pmb k_1+a_{22}\pmb k_2+\cdots+a_{2n}\pmb k_n))\\&\vdots\\
-\pmb k_n&=\pmb F(t_n+p_nh,\pmb x_n+h(a_{n1}\pmb k_1+a_{n2}\pmb k_2+\cdots+a_{nn}\pmb k_n))\\
+\boldsymbol x_{n+1}&=\boldsymbol x_n+h(\lambda_1\boldsymbol k_1+\lambda_2\boldsymbol k_2+\cdots+\lambda_n\boldsymbol k_n)\\
+\boldsymbol k_1&=\boldsymbol F(t_n+p_1h,\boldsymbol x_n+h(a_{11}\boldsymbol k_1+a_{12}\boldsymbol k_2+\cdots+a_{1n}\boldsymbol k_n))\\
+\boldsymbol k_2&=\boldsymbol F(t_n+p_2h,\boldsymbol x_n+h(a_{21}\boldsymbol k_1+a_{22}\boldsymbol k_2+\cdots+a_{2n}\boldsymbol k_n))\\&\vdots\\
+\boldsymbol k_n&=\boldsymbol F(t_n+p_nh,\boldsymbol x_n+h(a_{n1}\boldsymbol k_1+a_{n2}\boldsymbol k_2+\cdots+a_{nn}\boldsymbol k_n))\\
 \end{align}\right.\tag{3-14}\f]
 
 公式\f$\text{(3-14)}\f$与\f$\text{(3-11)}\f$基本一致，因此同样可以使用 Butcher 表来描述常微分方程组的 Runge-Kutta 公式。
@@ -283,8 +283,8 @@ RMVL 的相关类请参考 rm::RungeKutta
 
 使用中点公式：
 
-\f[\begin{align}\pmb x_{n+1}&=\pmb x_n+h\pmb k_2\\\pmb k_1&=\pmb F(t_n,\pmb x_n)\\
-\pmb k_2&=\pmb F(t_n+\frac h2,\pmb x_n+\frac h2\pmb k_1)\end{align}\f]
+\f[\begin{align}\boldsymbol x_{n+1}&=\boldsymbol x_n+h\boldsymbol k_2\\\boldsymbol k_1&=\boldsymbol F(t_n,\boldsymbol x_n)\\
+\boldsymbol k_2&=\boldsymbol F(t_n+\frac h2,\boldsymbol x_n+\frac h2\boldsymbol k_1)\end{align}\f]
 
 即
 
