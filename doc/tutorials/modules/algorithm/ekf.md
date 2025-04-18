@@ -35,19 +35,19 @@
 
 对于一个线性系统，可以用状态空间方程描述其运动过程
 
-\f[\begin{align}\dot{\pmb x}&=A\pmb x+B\pmb u\\\pmb y&=C\pmb x\end{align}\tag{1-1}\f]
+\f[\begin{align}\dot{\boldsymbol x}&=A\boldsymbol x+B\boldsymbol u\\\boldsymbol y&=C\boldsymbol x\end{align}\tag{1-1}\f]
 
 离散化，并考虑噪声后可以写为
 
-\f[\begin{align}\dot{\pmb x}_k&=A\pmb x_{k-1}+B\pmb u_{k-1}+\pmb w_{k-1}&&\pmb w_{k-1}\sim N(0,Q)\tag{1-2a}\\
-\pmb z_k&=H\pmb x_{k-1}+\pmb v_k&&\pmb v_k\sim N(0,R)\tag{1-2b}\end{align}\f]
+\f[\begin{align}\dot{\boldsymbol x}_k&=A\boldsymbol x_{k-1}+B\boldsymbol u_{k-1}+\boldsymbol w_{k-1}&&\boldsymbol w_{k-1}\sim N(0,Q)\tag{1-2a}\\
+\boldsymbol z_k&=H\boldsymbol x_{k-1}+\boldsymbol v_k&&\boldsymbol v_k\sim N(0,R)\tag{1-2b}\end{align}\f]
 
 但对于一个非线性系统，我们就无法使用矩阵来表示了，我们需要写为
 
-\f[\left\{\begin{align}\dot{\pmb x}_k&=\pmb f_A(\pmb x_{k-1},\pmb u_{k-1},\pmb w_{k-1})\\
-\pmb z_k&=\pmb f_H(\pmb x_{k-1},\pmb v_{k-1})\end{align}\right.\tag{1-3}\f]
+\f[\left\{\begin{align}\dot{\boldsymbol x}_k&=\boldsymbol f_A(\boldsymbol x_{k-1},\boldsymbol u_{k-1},\boldsymbol w_{k-1})\\
+\boldsymbol z_k&=\boldsymbol f_H(\boldsymbol x_{k-1},\boldsymbol v_{k-1})\end{align}\right.\tag{1-3}\f]
 
-其中，\f$\pmb f_A\f$ 和 \f$\pmb f_H\f$ 都为非线性函数。我们在非线性函数中同样考虑了噪声，但是对于状态量以及观测量本身的噪声而言，<span style="color: red">正态分布的随机变量通过非线性系统后就不再服从正态分布了</span>。因此我们可以利用 **泰勒展开** ，将非线性系统线性化，即
+其中，\f$\boldsymbol f_A\f$ 和 \f$\boldsymbol f_H\f$ 都为非线性函数。我们在非线性函数中同样考虑了噪声，但是对于状态量以及观测量本身的噪声而言，<span style="color: red">正态分布的随机变量通过非线性系统后就不再服从正态分布了</span>。因此我们可以利用 **泰勒展开** ，将非线性系统线性化，即
 
 \f[f(x)\approx f(x_0)+\frac{\mathrm df}{\mathrm dx}(x-x_0)\tag{1-4}\f]
 
@@ -57,36 +57,36 @@
 
 即
 
-\f[f(\pmb x)\approx f(\pmb x_0)+\ptl fx(\pmb x-\pmb x_0)=f(\pmb x_0)+\nabla f(\pmb x_0)(\pmb x-\pmb x_0)\tag{1-5b}\f]
+\f[f(\boldsymbol x)\approx f(\boldsymbol x_0)+\ptl fx(\boldsymbol x-\boldsymbol x_0)=f(\boldsymbol x_0)+\nabla f(\boldsymbol x_0)(\boldsymbol x-\boldsymbol x_0)\tag{1-5b}\f]
 
 #### 1.1 状态方程线性化 {#ekf_state_function_linearization}
 
-对公式 \f$\fml{1-2a}\f$ 在 \f$\hat{\pmb x}_{k-1}\f$ 处进行线性化，即选取 \f$\text{k-1}\f$ 时刻的后验状态估计作为展开点，有
+对公式 \f$\fml{1-2a}\f$ 在 \f$\hat{\boldsymbol x}_{k-1}\f$ 处进行线性化，即选取 \f$\text{k-1}\f$ 时刻的后验状态估计作为展开点，有
 
-\f[\pmb x_k=\pmb f_A(\hat{\pmb x}_{k-1},\pmb u_{k-1},\pmb w_{k-1})+J_A(\pmb x_{k-1}-\hat x_{k-1})+W\pmb w_{k-1}\tag{1-6}\f]
+\f[\boldsymbol x_k=\boldsymbol f_A(\hat{\boldsymbol x}_{k-1},\boldsymbol u_{k-1},\boldsymbol w_{k-1})+J_A(\boldsymbol x_{k-1}-\hat x_{k-1})+W\boldsymbol w_{k-1}\tag{1-6}\f]
 
-令 \f$\pmb w_{k-1}=\pmb 0\f$，则 \f$f_A(\hat{\pmb x}_{k-1},\pmb u_{k-1},\pmb w_{k-1})=f_A(\hat{\pmb x}_{k-1},\pmb u_{k-1},\pmb 0)\stackrel{\triangle}=\tilde{\pmb x}_{k-1}\f$，有
+令 \f$\boldsymbol w_{k-1}=\boldsymbol 0\f$，则 \f$f_A(\hat{\boldsymbol x}_{k-1},\boldsymbol u_{k-1},\boldsymbol w_{k-1})=f_A(\hat{\boldsymbol x}_{k-1},\boldsymbol u_{k-1},\boldsymbol 0)\stackrel{\triangle}=\tilde{\boldsymbol x}_{k-1}\f$，有
 
-\f[\red{\pmb x_k=\tilde{\pmb x}_{k-1}+J_A(\pmb x_{k-1}-\hat x_{k-1})+W\pmb w_{k-1}\qquad W\pmb w_{k-1}\sim N(0,WQW^T)\tag{1-7}}\f]
+\f[\red{\boldsymbol x_k=\tilde{\boldsymbol x}_{k-1}+J_A(\boldsymbol x_{k-1}-\hat x_{k-1})+W\boldsymbol w_{k-1}\qquad W\boldsymbol w_{k-1}\sim N(0,WQW^T)\tag{1-7}}\f]
 
 其中
 
-\f[\begin{align}J_A&=\left.\ptl{f_A}{\pmb x}\right|_{(\hat{\pmb x}_{k-1},\pmb u_{k-1})}=\begin{bmatrix}\ptl{{f_A}_1}{x_1}&\ptl{{f_A}_1}{x_2}&\cdots&\ptl{{f_A}_1}{x_n}\\\ptl{{f_A}_2}{x_1}&\ptl{{f_A}_2}{x_2}&\cdots&\ptl{{f_A}_2}{x_n}\\\vdots&\vdots&\ddots&\vdots\\\ptl{{f_A}_n}{x_1}&\ptl{{f_A}_n}{x_2}&\cdots&\ptl{{f_A}_n}{x_n}\end{bmatrix}\\
-W&=\left.\ptl{f_A}{\pmb w}\right|_{(\hat{\pmb w}_{k-1},\pmb u_{k-1})}\end{align}\f]
+\f[\begin{align}J_A&=\left.\ptl{f_A}{\boldsymbol x}\right|_{(\hat{\boldsymbol x}_{k-1},\boldsymbol u_{k-1})}=\begin{bmatrix}\ptl{{f_A}_1}{x_1}&\ptl{{f_A}_1}{x_2}&\cdots&\ptl{{f_A}_1}{x_n}\\\ptl{{f_A}_2}{x_1}&\ptl{{f_A}_2}{x_2}&\cdots&\ptl{{f_A}_2}{x_n}\\\vdots&\vdots&\ddots&\vdots\\\ptl{{f_A}_n}{x_1}&\ptl{{f_A}_n}{x_2}&\cdots&\ptl{{f_A}_n}{x_n}\end{bmatrix}\\
+W&=\left.\ptl{f_A}{\boldsymbol w}\right|_{(\hat{\boldsymbol w}_{k-1},\boldsymbol u_{k-1})}\end{align}\f]
 
 #### 1.2 观测方程线性化 {#ekf_observation_function_linearization}
 
-对公式 \f$\fml{1-2b}\f$ 在 \f$\hat{\pmb x}_k\f$ 处进行线性化，有
+对公式 \f$\fml{1-2b}\f$ 在 \f$\hat{\boldsymbol x}_k\f$ 处进行线性化，有
 
-\f[\pmb z_k=\pmb f_H(\tilde{\pmb x}_k,\pmb v_k)+J_H(\pmb x_k-\tilde x_k)+V\pmb v_k\tag{1-8}\f]
+\f[\boldsymbol z_k=\boldsymbol f_H(\tilde{\boldsymbol x}_k,\boldsymbol v_k)+J_H(\boldsymbol x_k-\tilde x_k)+V\boldsymbol v_k\tag{1-8}\f]
 
-令 \f$\pmb v_k=\pmb 0\f$，则 \f$f_H(\tilde{\pmb x}_k,\pmb v_k)=f_H(\tilde{\pmb x}_k,\pmb 0)\stackrel{\triangle}=\tilde{\pmb z}_k\f$，有
+令 \f$\boldsymbol v_k=\boldsymbol 0\f$，则 \f$f_H(\tilde{\boldsymbol x}_k,\boldsymbol v_k)=f_H(\tilde{\boldsymbol x}_k,\boldsymbol 0)\stackrel{\triangle}=\tilde{\boldsymbol z}_k\f$，有
 
-\f[\red{\pmb z_k=\tilde{\pmb z}_k+J_H(\pmb x_k-\tilde x_k)+V\pmb v_k\qquad V\pmb v_k\sim N(0,VRV^T)\tag{1-9}}\f]
+\f[\red{\boldsymbol z_k=\tilde{\boldsymbol z}_k+J_H(\boldsymbol x_k-\tilde x_k)+V\boldsymbol v_k\qquad V\boldsymbol v_k\sim N(0,VRV^T)\tag{1-9}}\f]
 
 其中
 
-\f[J_H=\left.\ptl{f_H}{\pmb x}\right|_{\tilde{\pmb x}_k},\qquad V=\left.\ptl{f_H}{\pmb v}\right|_{\tilde{\pmb x}_k}\f]
+\f[J_H=\left.\ptl{f_H}{\boldsymbol x}\right|_{\tilde{\boldsymbol x}_k},\qquad V=\left.\ptl{f_H}{\boldsymbol v}\right|_{\tilde{\boldsymbol x}_k}\f]
 
 ### 2. 扩展卡尔曼滤波
 
@@ -97,7 +97,7 @@ W&=\left.\ptl{f_A}{\pmb w}\right|_{(\hat{\pmb w}_{k-1},\pmb u_{k-1})}\end{align}
 **① 预测**
 
 1. <span style="color: teal">先验状态估计</span>
-   \f[\hat{\pmb x}_k^-=\pmb f_A(\pmb x_{k-1},\pmb u_{k-1},\pmb 0)\f]
+   \f[\hat{\boldsymbol x}_k^-=\boldsymbol f_A(\boldsymbol x_{k-1},\boldsymbol u_{k-1},\boldsymbol 0)\f]
 
 2. <span style="color: teal">计算先验误差协方差</span>
    \f[P_k^-=J_AP_{k-1}J_A^T+WQW^T\f]
@@ -108,7 +108,7 @@ W&=\left.\ptl{f_A}{\pmb w}\right|_{(\hat{\pmb w}_{k-1},\pmb u_{k-1})}\end{align}
    \f[K_k=P_k^-J_H^T\left(J_HP_k^-J_H^T+VRV^T\right)^{-1}\f]
 
 2. <span style="color: teal">后验状态估计</span>
-   \f[\hat{\pmb x}_k=\hat{\pmb x}_k^-+K_k\left[\pmb z_k-\pmb f_H(\hat{\pmb x}_k^-,\pmb 0)\right]\f]
+   \f[\hat{\boldsymbol x}_k=\hat{\boldsymbol x}_k^-+K_k\left[\boldsymbol z_k-\boldsymbol f_H(\hat{\boldsymbol x}_k^-,\boldsymbol 0)\right]\f]
 
 3. <span style="color: teal">更新后验误差协方差</span>
    \f[P_k=(I-K_kJ_H)P_k^-\f]

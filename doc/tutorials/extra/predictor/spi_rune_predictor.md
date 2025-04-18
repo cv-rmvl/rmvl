@@ -82,32 +82,32 @@ x_p=k_2y(n_f)+k_1y(n_f+1)\tag{1-4}
 对于一个超定方程组，写为矩阵表达即为
 
 \f[
-A\pmb{x}=\pmb{b}\tag{2-1}
+A\boldsymbol{x}=\boldsymbol{b}\tag{2-1}
 \f]
 
 有如下最小二乘解
 
 \f[
-\hat{x}=\left(A^TA\right)^{-1}A^T\pmb{b}\tag{2-2}
+\hat{x}=\left(A^TA\right)^{-1}A^T\boldsymbol{b}\tag{2-2}
 \f]
 
 #### 2. 递推公式
 
-对上式的\f$\left(A^TA\right)^{-1}\f$部分，现设\f$P_m^{-1}=A_m^TA_m\f$，其中\f$A_m=\left[\pmb{a_1}\quad \pmb{a_2}\quad \dots\quad \pmb{a_m}\right]^T\f$，\f$\pmb{a_i}\f$为上文出现过的行向量：\f$\pmb{a_i}=\left[a_{i1}\quad a_{i2}\quad \dots\quad a_{in}\right]\f$，则有
+对上式的\f$\left(A^TA\right)^{-1}\f$部分，现设\f$P_m^{-1}=A_m^TA_m\f$，其中\f$A_m=\left[\boldsymbol{a_1}\quad \boldsymbol{a_2}\quad \dots\quad \boldsymbol{a_m}\right]^T\f$，\f$\boldsymbol{a_i}\f$为上文出现过的行向量：\f$\boldsymbol{a_i}=\left[a_{i1}\quad a_{i2}\quad \dots\quad a_{in}\right]\f$，则有
 
 \f[
 \begin{align}
-P_m^{-1}&=A_m^TA_m=\sum_{i=1}^{m-1}\pmb{a_i}^T\pmb{a_i}+\pmb{a_m}^T\pmb{a_m}\\
-&=P_{m-1}^{-1}+\pmb{a_m}^T\pmb{a_m}
+P_m^{-1}&=A_m^TA_m=\sum_{i=1}^{m-1}\boldsymbol{a_i}^T\boldsymbol{a_i}+\boldsymbol{a_m}^T\boldsymbol{a_m}\\
+&=P_{m-1}^{-1}+\boldsymbol{a_m}^T\boldsymbol{a_m}
 \end{align}\tag{2-3}
 \f]
 
-同样，对于\f$A^Tb\f$的部分也能用相同的方法，现设\f$Q_m=A_m^T\pmb{b}\f$，其中\f$\pmb{b}=\left[b_1\quad b_2\quad \dots\quad b_m\right]^T\f$，则有
+同样，对于\f$A^Tb\f$的部分也能用相同的方法，现设\f$Q_m=A_m^T\boldsymbol{b}\f$，其中\f$\boldsymbol{b}=\left[b_1\quad b_2\quad \dots\quad b_m\right]^T\f$，则有
 
 \f[
 \begin{align}
-Q_m&=A_m^T\pmb{b}=\sum_{i=1}^{m-1}\pmb{a_i}^Tb_i+\pmb{a_m}^Tb_m\\
-&=Q_{m-1}+\pmb{a_m}^Tb_m
+Q_m&=A_m^T\boldsymbol{b}=\sum_{i=1}^{m-1}\boldsymbol{a_i}^Tb_i+\boldsymbol{a_m}^Tb_m\\
+&=Q_{m-1}+\boldsymbol{a_m}^Tb_m
 \end{align}\tag{2-4}
 \f]
 
@@ -116,14 +116,14 @@ Q_m&=A_m^T\pmb{b}=\sum_{i=1}^{m-1}\pmb{a_i}^Tb_i+\pmb{a_m}^Tb_m\\
 \f[
 \begin{align}
 \hat{x}_m&=P_mQ_m\\
-&=P_m(Q_{m-1}+\pmb{a_m}^Tb_m)\\
-&=P_m(P_{m-1}^{-1}\hat{x}_{m-1}+\pmb{a_m}^Tb_m)\\
-&=P_m(P_m^{-1}\hat{x}_{m-1}-\pmb{a_m}^T\pmb{a_m}\hat{x}_{m-1}+\pmb{a_m}^Tb_m)\\
-&=\hat{x}_{m-1}+P_m\pmb{a_m}^T(b_m-\pmb{a_m}\hat{x}_{m-1})
+&=P_m(Q_{m-1}+\boldsymbol{a_m}^Tb_m)\\
+&=P_m(P_{m-1}^{-1}\hat{x}_{m-1}+\boldsymbol{a_m}^Tb_m)\\
+&=P_m(P_m^{-1}\hat{x}_{m-1}-\boldsymbol{a_m}^T\boldsymbol{a_m}\hat{x}_{m-1}+\boldsymbol{a_m}^Tb_m)\\
+&=\hat{x}_{m-1}+P_m\boldsymbol{a_m}^T(b_m-\boldsymbol{a_m}\hat{x}_{m-1})
 \end{align}\tag{2-5}
 \f]
 
-上式即为递推最小二乘法的公式，但在其中，\f$P_m=\left(P_{m-1}^{-1}+\pmb{a_m}^T\pmb{a_m}\right)^{-1}\f$，求解\f$P_m\f$的递推形式需要进行两次求逆操作，会显著增加时间复杂度，需要对这一部分进行修改，对于形如\f$\left(A^{-1}+BC\right)^{-1}\f$的式子，不妨令
+上式即为递推最小二乘法的公式，但在其中，\f$P_m=\left(P_{m-1}^{-1}+\boldsymbol{a_m}^T\boldsymbol{a_m}\right)^{-1}\f$，求解\f$P_m\f$的递推形式需要进行两次求逆操作，会显著增加时间复杂度，需要对这一部分进行修改，对于形如\f$\left(A^{-1}+BC\right)^{-1}\f$的式子，不妨令
 
 \f[\left(A^{-1}+BC\right)^{-1}=A+X\tag{2-6a}\f]
 
@@ -134,7 +134,7 @@ Q_m&=A_m^T\pmb{b}=\sum_{i=1}^{m-1}\pmb{a_i}^Tb_i+\pmb{a_m}^Tb_m\\
 这是个求解\f$X\f$的过程，详细步骤如下
 
 \f[\begin{align}\left(A^{-1}+BC\right)(A+X)&=I\\
-BCA+A^{-1}X+BCX&=\pmb 0\\\left(A^{-1}+BC\right)X&=-BCA\\
+BCA+A^{-1}X+BCX&=\boldsymbol 0\\\left(A^{-1}+BC\right)X&=-BCA\\
 X&=-\left(A^{-1}+BC\right)^{-1}BCA\\
 &=-\left(BB^{-1}A^{-1}+BC\right)^{-1}BCA\\
 &=-\left[B\left(B^{-1}A^{-1}+C\right)\right]^{-1}BCA\\
@@ -151,17 +151,17 @@ X&=-\left(A^{-1}+BC\right)^{-1}BCA\\
 因此，\f$P_m\f$可以表示为
 
 \f[
-P_m=P_{m-1}-P_{m-1}\pmb{a_m}^T\left(I+\pmb{a_m}P_{m-1}\pmb{a_m}^T\right)^{-1}\pmb{a_m}P_{m-1}\tag{2-7}
+P_m=P_{m-1}-P_{m-1}\boldsymbol{a_m}^T\left(I+\boldsymbol{a_m}P_{m-1}\boldsymbol{a_m}^T\right)^{-1}\boldsymbol{a_m}P_{m-1}\tag{2-7}
 \f]
 
-@note 由于\f$\pmb{a_m}\f$为行向量，因此\f$I\f$为\f$1\times1\f$矩阵，即数字\f$1\f$。
+@note 由于\f$\boldsymbol{a_m}\f$为行向量，因此\f$I\f$为\f$1\times1\f$矩阵，即数字\f$1\f$。
 
 汇总以上结果，最后可以得到
 
 \f[
 \boxed{\left\{\begin{align}
-P_m&=P_{m-1}-\frac{P_{m-1}\pmb{a_m}^T\pmb{a_m}P_{m-1}}{1-\pmb{a_m}P_{m-1}\pmb{a_m}^T}\\
-\hat{x}_m&=\hat{x}_{m-1}+P_m\pmb{a_m}^T\left(b_m-\pmb{a_m}\hat{x}_{m-1}\right)
+P_m&=P_{m-1}-\frac{P_{m-1}\boldsymbol{a_m}^T\boldsymbol{a_m}P_{m-1}}{1-\boldsymbol{a_m}P_{m-1}\boldsymbol{a_m}^T}\\
+\hat{x}_m&=\hat{x}_{m-1}+P_m\boldsymbol{a_m}^T\left(b_m-\boldsymbol{a_m}\hat{x}_{m-1}\right)
 \end{align}\right.}\tag{2-8}
 \f]
 
@@ -177,7 +177,7 @@ c_0+\theta(k-n_f)c_{n_f}+\theta(k-n_f-1)c_{n_f+1}+\dots+\theta(k-n_f-n+1)c_{n_f+
 
 \f[
 \boxed{\left\{\begin{align}
-\pmb{a_m}&=\left[1\quad \theta(k-n_f)\quad \theta(k-n_f-1)\quad \dots\quad \theta(k-n_f-n+1)\right]\\
+\boldsymbol{a_m}&=\left[1\quad \theta(k-n_f)\quad \theta(k-n_f-1)\quad \dots\quad \theta(k-n_f-n+1)\right]\\
 b_m&=\theta(k)\\
 \hat{x}_m&=\left[c_0\quad c_{n_f}\quad c_{n_f+1}\quad \dots\quad c_{n_f+n-1}\right]^T
 \end{align}\right.}\tag{3-2}

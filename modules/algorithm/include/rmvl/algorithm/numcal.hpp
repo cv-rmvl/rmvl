@@ -200,9 +200,9 @@ public:
     /**
      * @brief 创建一阶常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
-     * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
-     * @param[in] p Butcher 表 \f$\pmb p\f$ 向量
-     * @param[in] lam Butcher 表 \f$\pmb\lambda\f$ 向量
+     * @param[in] fs 常微分方程（组）\f$\boldsymbol x'=\boldsymbol F(t,\boldsymbol x)\f$ 的函数对象 \f$\boldsymbol F(t,\boldsymbol x)\f$
+     * @param[in] p Butcher 表 \f$\boldsymbol p\f$ 向量
+     * @param[in] lam Butcher 表 \f$\boldsymbol\lambda\f$ 向量
      * @param[in] r Butcher 表 \f$R\f$ 矩阵
      */
     RMVL_W RungeKutta(const Odes &fs, const std::valarray<double> &p, const std::valarray<double> &lam, const std::valarray<std::valarray<double>> &r);
@@ -211,7 +211,7 @@ public:
      * @brief 设置常微分方程（组）的初值
      *
      * @param[in] t0 初始位置的自变量 \f$t_0\f$
-     * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
+     * @param[in] x0 初始位置的因变量 \f$\boldsymbol x(t_0)\f$
      */
     RMVL_W inline void init(double t0, const std::valarray<double> &x0) { _t0 = t0, _x0 = x0; }
 
@@ -219,7 +219,7 @@ public:
      * @brief 设置常微分方程（组）的初值
      *
      * @param[in] t0 初始位置的自变量 \f$t_0\f$
-     * @param[in] x0 初始位置的因变量 \f$\pmb x(t_0)\f$
+     * @param[in] x0 初始位置的因变量 \f$\boldsymbol x(t_0)\f$
      */
     inline void init(double t0, std::valarray<double> &&x0) { _t0 = t0, _x0 = std::move(x0); }
 
@@ -249,13 +249,13 @@ private:
     std::vector<std::valarray<double>> _ks;
 
 protected:
-    //! 一阶常微分方程组的函数对象 \f$\dot{\pmb x}=\pmb F(t, \pmb x)\f$
+    //! 一阶常微分方程组的函数对象 \f$\dot{\boldsymbol x}=\boldsymbol F(t, \boldsymbol x)\f$
     Odes _fs;
     double _t0;                //!< 初值的自变量 \f$t\f$
-    std::valarray<double> _x0; //!< 初值的因变量 \f$\pmb x(t)\f$
+    std::valarray<double> _x0; //!< 初值的因变量 \f$\boldsymbol x(t)\f$
 
-    std::valarray<double> _p;                //!< Butcher 表 \f$\pmb p\f$ 向量
-    std::valarray<double> _lambda;           //!< Butcher 表 \f$\pmb\lambda\f$ 向量
+    std::valarray<double> _p;                //!< Butcher 表 \f$\boldsymbol p\f$ 向量
+    std::valarray<double> _lambda;           //!< Butcher 表 \f$\boldsymbol\lambda\f$ 向量
     std::valarray<std::valarray<double>> _r; //!< Butcher 表 \f$R\f$ 矩阵
 };
 
@@ -266,7 +266,7 @@ public:
     /**
      * @brief 创建 2 阶 2 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
-     * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
+     * @param[in] fs 常微分方程（组）\f$\boldsymbol x'=\boldsymbol F(t,\boldsymbol x)\f$ 的函数对象 \f$\boldsymbol F(t,\boldsymbol x)\f$
      */
     RMVL_W RungeKutta2(const Odes &fs);
 };
@@ -278,7 +278,7 @@ public:
     /**
      * @brief 创建 3 阶 3 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
-     * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
+     * @param[in] fs 常微分方程（组）\f$\boldsymbol x'=\boldsymbol F(t,\boldsymbol x)\f$ 的函数对象 \f$\boldsymbol F(t,\boldsymbol x)\f$
      */
     RMVL_W RungeKutta3(const Odes &fs);
 };
@@ -290,7 +290,7 @@ public:
     /**
      * @brief 创建 4 阶 4 级 Runge-Kutta 常微分方程（组）数值求解器对象，设置初值请参考 @ref init 方法
      *
-     * @param[in] fs 常微分方程（组）\f$\pmb x'=\pmb F(t,\pmb x)\f$ 的函数对象 \f$\pmb F(t,\pmb x)\f$
+     * @param[in] fs 常微分方程（组）\f$\boldsymbol x'=\boldsymbol F(t,\boldsymbol x)\f$ 的函数对象 \f$\boldsymbol F(t,\boldsymbol x)\f$
      */
     RMVL_W RungeKutta4(const Odes &fs);
 };
@@ -410,7 +410,7 @@ RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fmincon(FuncNd func, con
 /**
  * @brief 非线性最小二乘求解，实现与 \cite Agarwal23 类似的算法
  *
- * @param[in] func 最小二乘目标函数，满足 \f[F(\pmb x_k)=\frac12\|\pmb f(\pmb x_k)\|_2^2=\frac12
+ * @param[in] func 最小二乘目标函数，满足 \f[F(\boldsymbol x_k)=\frac12\|\boldsymbol f(\boldsymbol x_k)\|_2^2=\frac12
  *                  \left(\texttt{func}[0]^2+\texttt{func}[1]^2+\cdots+\texttt{func}[n]^2\right)\f]
  * @param[in] x0 初始点
  * @param[in] options 优化选项，可供设置的有 `lsq_mode`、`max_iter`、`tol` 和 `dx`

@@ -41,11 +41,11 @@ p(x_n)&=a_0+a_1x_n+a_2x_n^2+\cdots+a_{n-1}x_n^{n-1}=f(x_n)=y_n
 
 要求解\f$a_0\f$、\f$a_1\f$、\f$\cdots\f$、\f$a_{n-1}\f$，可以将\f$\text{(1-3a)}\f$改写成
 
-\f[X\pmb a=\begin{bmatrix}1&x_1&\cdots&x_1^{n-1}\\1&x_2&\cdots&x_2^{n-1}\\\vdots&\vdots&\ddots&
+\f[X\boldsymbol a=\begin{bmatrix}1&x_1&\cdots&x_1^{n-1}\\1&x_2&\cdots&x_2^{n-1}\\\vdots&\vdots&\ddots&
 \vdots\\1&x_n&\cdots&x_n^{n-1}\end{bmatrix}\begin{bmatrix}a_0\\a_1\\\vdots\\a_{n-1}\end{bmatrix}=
-\begin{bmatrix}y_1\\y_2\\\vdots\\y_n\end{bmatrix}=\pmb f\tag{1-3b}\f]
+\begin{bmatrix}y_1\\y_2\\\vdots\\y_n\end{bmatrix}=\boldsymbol f\tag{1-3b}\f]
 
-我们选取的一组基是\f$\left(1,x,x^2,\cdots,x^n\right)\f$，在这里系数矩阵\f$X\f$是个 Vandermonde 矩阵，求解起来比较复杂。希望寻找一组合适的基，使得\f$\pmb a\f$的求解比较简单，如果在某组基\f$(l_0(x),l_1(x),l_2(x),\cdots,l_{n-1}(x))\f$下，系数矩阵\f$X\f$变为单位矩阵，即\f$X=I\f$，此时\f$\pmb a=\pmb f\f$，此时插值多项式就可以写为
+我们选取的一组基是\f$\left(1,x,x^2,\cdots,x^n\right)\f$，在这里系数矩阵\f$X\f$是个 Vandermonde 矩阵，求解起来比较复杂。希望寻找一组合适的基，使得\f$\boldsymbol a\f$的求解比较简单，如果在某组基\f$(l_0(x),l_1(x),l_2(x),\cdots,l_{n-1}(x))\f$下，系数矩阵\f$X\f$变为单位矩阵，即\f$X=I\f$，此时\f$\boldsymbol a=\boldsymbol f\f$，此时插值多项式就可以写为
 
 \f[p(x)=y_1l_0(x)+y_2l_1(x)+y_3l_2(x)+\cdots+y_nl_{n-1}(x)\tag{1-4}\f]
 
@@ -82,8 +82,6 @@ l_2(x)&=\prod\limits_{j=0,j\neq2}^2\frac{x-x_j}{x_i-x_j}=\frac{(x-1)(x-2)}{(3-1)
 ### 2. Newton 插值多项式
 
 相关类 rm::Interpolator
-
----
 
 Lagrange 插值基函数存在一些问题，比如当我们需要在原先节点的基础上再次增加若干个节点，这会导致之前计算出的基函数全部失效，需要重新计算。为此我们需要引入新的插值基函数，这里使用 Newton 插值基函数来避免这一问题。
 

@@ -97,9 +97,9 @@ public:
     inline void setP(const cv::Matx<Tp, StateDim, StateDim> &state_err) { P_ = P = state_err; }
 
 protected:
-    cv::Matx<Tp, StateDim, 1> x;            //!< 状态的后验估计 \f$\hat{\pmb x}\f$
-    cv::Matx<Tp, StateDim, 1> x_;           //!< 状态的先验估计 \f$\hat{\pmb x}^-\f$
-    cv::Matx<Tp, MeasureDim, 1> z;          //!< 观测向量 \f$\pmb z\f$
+    cv::Matx<Tp, StateDim, 1> x;            //!< 状态的后验估计 \f$\hat{\boldsymbol x}\f$
+    cv::Matx<Tp, StateDim, 1> x_;           //!< 状态的先验估计 \f$\hat{\boldsymbol x}^-\f$
+    cv::Matx<Tp, MeasureDim, 1> z;          //!< 观测向量 \f$\boldsymbol z\f$
     cv::Matx<Tp, StateDim, StateDim> Q;     //!< 过程噪声协方差矩阵 \f$Q\f$
     cv::Matx<Tp, MeasureDim, MeasureDim> R; //!< 测量噪声协方差矩阵 \f$R\f$
     cv::Matx<Tp, StateDim, StateDim> P;     //!< 后验误差协方差矩阵 \f$P\f$
@@ -137,13 +137,13 @@ public:
      * {v_y}_{n+1}\end{bmatrix}=\begin{bmatrix}1&0&t&0\\0&1&0&t\\0&0&1&0\\0&0&0&1\end{bmatrix}
      * \begin{bmatrix}x_n\\y_n\\{v_x}_n\\{v_y}_n\end{bmatrix}+\begin{bmatrix}\frac12t^2&0\\
      * 0&\frac12t^2\\t&0\\0&t\end{bmatrix}\begin{bmatrix}{a_x}_n\\{a_y}_n\end{bmatrix}\tag2\f]
-     * 即可以写成\f[\pmb{x}_{n+1}=A\pmb{x}_n+B\pmb{u}_n\tag3\f]
+     * 即可以写成\f[\boldsymbol{x}_{n+1}=A\boldsymbol{x}_n+B\boldsymbol{u}_n\tag3\f]
      * 在这条公式中
      * - \f$A\f$ 是状态转移矩阵
-     * - \f$\pmb x\f$ 是状态向量
+     * - \f$\boldsymbol x\f$ 是状态向量
      * - \f$n\f$ 和 \f$n+1\f$ 表示当前帧和上一帧的数据
      * - \f$B\f$ 是控制矩阵
-     * - \f$\pmb u\f$ 是控制向量
+     * - \f$\boldsymbol u\f$ 是控制向量
      *
      * @param[in] state_tf 状态转移矩阵
      */
@@ -162,7 +162,7 @@ public:
 
     /**
      * @brief 卡尔曼滤波的预测部分，包括状态量的先验估计和误差协方差的先验估计
-     * @brief 公式如下 \f[\begin{align}\hat{\pmb x}_k^-&=A\hat{\pmb x}_{k-1}\\P_k^-&=AP_{k-1}A^T+Q\end{align}\f]
+     * @brief 公式如下 \f[\begin{align}\hat{\boldsymbol x}_k^-&=A\hat{\boldsymbol x}_{k-1}\\P_k^-&=AP_{k-1}A^T+Q\end{align}\f]
      *
      * @return 先验状态估计
      */
@@ -177,8 +177,8 @@ public:
 
     /**
      * @brief 卡尔曼滤波器校正部分，包含卡尔曼增益的计算、状态量的后验估计和误差协方差的后验估计
-     * @brief 公式如下 \f[\begin{align}K_k&=P_k^-H^T\left(HP_k^-H^T+R\right)^{-1}\\\hat{\pmb x}_k&=\hat{\pmb
-     *         x}_k^-+K\left(\pmb z_k-H\hat{\pmb x}_k^-\right)\\P_k&=\left(I-K_kH\right)P_k^-\end{align}\f]
+     * @brief 公式如下 \f[\begin{align}K_k&=P_k^-H^T\left(HP_k^-H^T+R\right)^{-1}\\\hat{\boldsymbol x}_k&=\hat{\boldsymbol
+     *         x}_k^-+K\left(\boldsymbol z_k-H\hat{\boldsymbol x}_k^-\right)\\P_k&=\left(I-K_kH\right)P_k^-\end{align}\f]
      *
      * @param[in] zk 观测量
      * @return 后验状态估计
@@ -249,14 +249,14 @@ public:
     inline void setJh(const cv::Matx<Tp, MeasureDim, StateDim> &observe_jac) { Jh = observe_jac, Jht = observe_jac.t(); }
 
     /**
-     * @brief 设置非线性的离散状态方程 \f$\pmb f_A(\pmb x)\f$
+     * @brief 设置非线性的离散状态方程 \f$\boldsymbol f_A(\boldsymbol x)\f$
      *
      * @param[in] state_func 状态方程
      */
     inline void setFa(const std::function<cv::Matx<Tp, StateDim, 1>(const cv::Matx<Tp, StateDim, 1> &)> &state_func) { Fa = state_func; }
 
     /**
-     * @brief 设置非线性的离散观测方程 \f$\pmb f_H(\pmb x)\f$
+     * @brief 设置非线性的离散观测方程 \f$\boldsymbol f_H(\boldsymbol x)\f$
      *
      * @param[in] observe_func 观测方程
      */
@@ -280,7 +280,7 @@ public:
 
     /**
      * @brief 扩展卡尔曼滤波的预测部分，包括状态量的先验估计和误差协方差的先验估计
-     * @brief 公式如下 \f[\begin{align}\hat{\pmb x_k}^-&=\pmb f(\hat{\pmb x}_{k-1})\\
+     * @brief 公式如下 \f[\begin{align}\hat{\boldsymbol x_k}^-&=\boldsymbol f(\hat{\boldsymbol x}_{k-1})\\
      *        P_k^-&=J_AP_{k-1}J_A^T+WQW^T\end{align}\f]
      *
      * @return 先验状态估计
@@ -296,8 +296,8 @@ public:
 
     /**
      * @brief 扩展卡尔曼滤波的校正部分，包含卡尔曼增益的计算、状态量的后验估计和误差协方差的后验估计
-     * @brief 公式如下 \f[\begin{align}K_k&=P_k^-J_H^T\left(J_HP_k^-J_H^T+VRV^T\right)^{-1}\\\hat{\pmb x}
-     *        &=\hat{\pmb x}_k^-+K_k\left[\pmb z_k-\pmb f_H(\hat{\pmb x}_k^-)\right]\\P_k&=\left(I-K_kJ_H
+     * @brief 公式如下 \f[\begin{align}K_k&=P_k^-J_H^T\left(J_HP_k^-J_H^T+VRV^T\right)^{-1}\\\hat{\boldsymbol x}
+     *        &=\hat{\boldsymbol x}_k^-+K_k\left[\boldsymbol z_k-\boldsymbol f_H(\hat{\boldsymbol x}_k^-)\right]\\P_k&=\left(I-K_kJ_H
      *        \right)P_k^-\end{align}\f]
      *
      * @param[in] zk 观测量

@@ -114,9 +114,9 @@ capture = rm.MvCamera(cam_cfg, "0123456789")
     <td class="markdownTableBodyCenter">制造商：序列号 S/N</td>
   </tr>
   <tr class="markdownTableRowEven">
-    <td class="markdownTableBodyCenter">ID</td>
-    <td class="markdownTableBodyCenter"><code>rm::HandleMode::ID</code></td>
-    <td class="markdownTableBodyCenter">手动设置的相机 ID</td>
+    <td class="markdownTableBodyCenter">MAC</td>
+    <td class="markdownTableBodyCenter"><code>rm::HandleMode::MAC</code></td>
+    <td class="markdownTableBodyCenter">相机的 MAC 地址</td>
   </tr>
   <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyCenter">IP 地址</td>
