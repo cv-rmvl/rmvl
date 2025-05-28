@@ -327,7 +327,7 @@ function(rmvl_add_test test_name test_kind)
   # Add arguments variable
   set(multi_args DEPENDS EXTERNAL)
   if(NOT "${test_kind}" MATCHES "^(Unit|Performance)$")
-    message(FATAL_ERROR "Unknown test kind : ${test_kind}")
+    message(FATAL_ERROR "Unknown test kind: ${test_kind}")
   endif()
   cmake_parse_arguments(TS "" "" "${multi_args}" ${ARGN})
   string(TOLOWER "${test_kind}" test_kind_lower)
