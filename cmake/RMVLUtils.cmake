@@ -194,7 +194,7 @@ endfunction()
 #     )
 #   示例 2:
 #     rmvl_download(
-#       benchmark GIT "xxx : master"
+#       benchmark GIT "xxx@master"
 #     )
 # ----------------------------------------------------------------------------
 function(rmvl_download dl_name dl_kind dl_info)
@@ -202,7 +202,7 @@ function(rmvl_download dl_name dl_kind dl_info)
   string(TOLOWER "${dl_kind}" dl_kind_lower)
   # use git
   if("${dl_kind_lower}" STREQUAL "git")
-    string(REGEX MATCH "(.*) : (.*)" RESULT "${dl_info}")
+    string(REGEX MATCH "(.*)@(.*)" RESULT "${dl_info}")
     set(git_url "${CMAKE_MATCH_1}")
     set(git_tag "${CMAKE_MATCH_2}")
     message(STATUS "Download ${dl_name} from \"${git_url}\" (tag: ${git_tag})")
@@ -219,7 +219,7 @@ function(rmvl_download dl_name dl_kind dl_info)
       URL ${dl_info}
     )
   else()
-    message(FATAL_ERROR "Unknown download kind : ${dl_kind}")
+    message(FATAL_ERROR "Unknown download kind: ${dl_kind}")
   endif()
   # make available
   FetchContent_MakeAvailable(${dl_name})
