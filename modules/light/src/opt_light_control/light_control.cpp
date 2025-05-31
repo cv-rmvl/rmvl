@@ -7,8 +7,6 @@
 namespace rm
 {
 
-RMVL_IMPL_DEF(OPTLightController)
-
 OPTLightController::OPTLightController(const LightConfig &cfg, std::string_view id) : _impl(new Impl(cfg, id)) {}
 bool OPTLightController::isOpened() const noexcept { return _impl->isOpened(); }
 bool OPTLightController::open(const std::vector<int> &channels) noexcept { return _impl->open(channels); }

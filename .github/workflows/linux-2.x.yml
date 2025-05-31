@@ -1,4 +1,4 @@
-name: 2.x in Linux
+name: Build 2.x in Linux
 
 on:
   push:
@@ -7,27 +7,21 @@ on:
   pull_request:
     branches:
       - 2.x
+  workflow_dispatch:
 
 jobs:
-  cmake-support-x86_64:
-    name: CMake support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install-u22.yml@main
-  withoutdep-support-x86_64:
-    name: Without dependency support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-withoutdep-u22.yml@main
-  python-support-x86_64:
-    name: Python support for x86_64
-    needs: withoutdep-support-x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-pybind-u22.yml@main
-  minimal-support-x86_64:
-    name: Minimal support for x86_64
-    needs: [cmake-support-x86_64, withoutdep-support-x86_64]
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main
-  generic-support-x86_64:
-    name: Generic support for x86_64
-    needs: [cmake-support-x86_64, withoutdep-support-x86_64]
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-generic-u22.yml@main
-  gcc14-support-x86_64:
-    name: GCC 14 support for x86_64
-    needs: [cmake-support-x86_64, withoutdep-support-x86_64]
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u24.yml@main
+  build-u20:
+    name: Ubuntu 20.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u20.yml@v1
+  build-u22:
+    name: Ubuntu 22.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22.yml@v1
+  build-u22-arm:
+    name: Ubuntu 22.04 support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22arm.yml@v1
+  build-u24:
+    name: Ubuntu 24.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u24.yml@v1
+  build-u24-arm:
+    name: Ubuntu 24.04 support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u24arm.yml@v1

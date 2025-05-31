@@ -1,4 +1,4 @@
-name: 1.x in Linux
+name: Build 1.x in Linux
 
 on:
   push:
@@ -7,14 +7,15 @@ on:
   pull_request:
     branches:
       - 1.x
+  workflow_dispatch:
 
 jobs:
-  minimal-support-x86_64:
-    name: Minimal support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-lowest.yml@main
-  generic-support-x86_64:
-    name: Generic support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-generic-u22.yml@main
-  gcc14-support-x86_64:
-    name: GCC 14 support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-u24.yml@main
+  build-u20:
+    name: Ubuntu 20.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u20.yml@v1
+  build-u22:
+    name: Ubuntu 22.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22.yml@v1
+  build-u22-arm:
+    name: Ubuntu 22.04 support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22arm.yml@v1
