@@ -5,7 +5,7 @@ sys.dont_write_bytecode = True  # Don't generate .pyc files / __pycache__ direct
 import argparse
 import json
 
-py_signatures = dict[str, list[dict[str, str]]]()
+py_signatures: dict[str, list[dict[str, str]]] = {}
 
 
 def add_fn(ns: str, name: str, arg: str, ret: str):

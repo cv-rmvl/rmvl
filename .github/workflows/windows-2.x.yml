@@ -1,4 +1,4 @@
-name: 2.x in Windows
+name: Build 2.x in Windows
 
 on:
   push:
@@ -7,11 +7,12 @@ on:
   pull_request:
     branches:
       - 2.x
+  workflow_dispatch:
 
 jobs:
-  cmake-support-x86_64:
-    name: CMake support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-install-win.yml@main
-  withoutdep-support-x86_64:
-    name: Without dependency support for x86_64
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-withoutdep-win.yml@main
+  windows:
+    name: Windows support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-win.yml@v1
+  windows-arm:
+    name: Windows support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-winarm.yml@v1
