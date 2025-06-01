@@ -1,39 +1,24 @@
-name: CI Create Release
+name: Release in 1.x
 
 on:
   push:
     tags:
       - '1.*'
 
-permissions:
-  contents: write
-
 jobs:
-  build:
+  build-u20:
+    name: Ubuntu 20.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u20.yml@v1
+  build-u22:
+    name: Ubuntu 22.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22.yml@v1
+  build-u22arm:
+    name: Ubuntu 22.04 support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22arm.yml@v1
+  release:
     name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Extract version
-        id: extract_version
-        run: |
-          version=${GITHUB_REF#refs/tags/}
-          version_number=${version//./}
-          echo "version_id=${version_number}" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          body: |
-            RMVL ${{ github.ref_name }} has been released
-
-            :hammer_and_wrench: ChangeLog is [hear](https://github.com/cv-rmvl/rmvl/wiki/ChangeLog#version-${{ steps.extract_version.outputs.version_id }})
-          draft: false
-          prerelease: false
+    needs:
+      - build-u20
+      - build-u22
+      - build-u22arm
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-release.yml@v1
