@@ -1,12 +1,14 @@
-为基于 ARM 的 Linux 系统配置交叉编译{#tutorial_other_arm}
+为基于 ARM 的 Linux 系统手动配置交叉编译{#tutorial_other_arm}
 ============
 
-@prev_tutorial{tutorial_use}
+@prev_tutorial{tutorial_run_in}
 @next_tutorial{tutorial_document}
 
 @tableofcontents
 
 ------
+
+@note 建议使用基于 JSON 文件的 Docker 编译镜像构建方式，详见 @ref tutorial_run_in 。
 
 ### 交叉编译应具备的先决条件
 

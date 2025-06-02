@@ -1,0 +1,6 @@
+# 本文件收录了全功能 RMVL 的编译工具链，欢迎开发者贡献自己的工具链
+
+- name: "u22"
+  image: "registry.cn-hangzhou.aliyuncs.com/cv-rmvl/rmvl-u22:latest"
+- name: "u24"
+  image: "registry.cn-hangzhou.aliyuncs.com/cv-rmvl/rmvl-u24:latest"
