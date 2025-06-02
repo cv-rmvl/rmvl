@@ -46,6 +46,16 @@ project(
   LANGUAGES CXX C
 )
 
+# ----------------------------------------------------------------------------
+#  RMVL docker compiler images
+# ----------------------------------------------------------------------------
+option(ENABLE_RUNIN "Enable RMVL run_in_<xxx> functions" OFF)
+if(ENABLE_RUNIN)
+  message(STATUS "RMVL run_in_<xxx> functions enabled")
+  include(cmake/RMVLCompilerImages.cmake)
+  return()
+endif()
+
 # CMake module named xxx.cmake PATH
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 

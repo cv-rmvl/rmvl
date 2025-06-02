@@ -4,7 +4,7 @@
 @brief RMVL 部署示例（涉及 extra 模块）
 
 @prev_tutorial{tutorial_install}
-@next_tutorial{tutorial_other_arm}
+@next_tutorial{tutorial_run_in}
 
 @tableofcontents
 
