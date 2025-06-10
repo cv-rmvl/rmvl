@@ -41,6 +41,7 @@ public:
     OPTLightController(OPTLightController &&) = default;
     OPTLightController &operator=(const OPTLightController &) = delete;
     OPTLightController &operator=(OPTLightController &&) = default;
+    ~OPTLightController();
     //! @endcond
 
     //! 光源控制器是否打开
