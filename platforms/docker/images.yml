@@ -2,5 +2,9 @@
 
 - name: "u22"
   image: "registry.cn-hangzhou.aliyuncs.com/cv-rmvl/rmvl-u22:latest"
+  options:
+  - "-e LANG=zh_CN.UTF-8"
 - name: "u24"
   image: "registry.cn-hangzhou.aliyuncs.com/cv-rmvl/rmvl-u24:latest"
+  options:
+  - "-e LANG=C.UTF-8"
