@@ -15,7 +15,7 @@
 
 #### 其他平台
 
-- @subpage tutorial_run_in - 介绍了如何通过 YAML 文件解析并运行 Docker 编译镜像
+- @subpage tutorial_run_in - 介绍了 YAML 文件指导的 Docker 编译镜像使用方式
 - @subpage tutorial_other_arm
 
 #### 杂项
