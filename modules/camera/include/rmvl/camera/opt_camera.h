@@ -46,7 +46,7 @@ public:
 
     //! @cond
     OptCamera(const OptCamera &) = delete;
-    OptCamera(OptCamera &&val) : _impl(std::exchange(val._impl, nullptr)) {}
+    OptCamera(OptCamera &&val) = default;
     ~OptCamera();
     //! @endcond
 
