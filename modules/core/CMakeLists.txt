@@ -3,17 +3,20 @@
 # ----------------------------------------------------------------------------
 find_package(Threads REQUIRED)
 
+rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT})
 if(WITH_OPENCV)
   if(WIN32)
-    rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT} opencv_world)
+    rmvl_link_libraries(core PUBLIC opencv_world)
     install(DIRECTORY "${OpenCV_INCLUDE_DIRS}/opencv2" DESTINATION ${RMVL_INCLUDE_INSTALL_PATH})
     install(FILES ${OpenCV_DLL_PATHS} DESTINATION ${RMVL_BIN_INSTALL_PATH})
     install(FILES ${OpenCV_LIB_PATHS} DESTINATION ${RMVL_3P_LIB_INSTALL_PATH})
   else()
-    rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT} ${OpenCV_LIBS})
+    rmvl_link_libraries(core PUBLIC ${OpenCV_LIBS})
   endif()
-else()
-  rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+if(WITH_EIGEN3)
+  rmvl_link_libraries(core PUBLIC Eigen3::Eigen)
 endif()
 
 # ----------------------------------------------------------------------------
