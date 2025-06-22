@@ -107,7 +107,7 @@ function(_parse_assign content_line header_line source_read_line source_write_li
     else()
       set(default_cmt "")
     endif()
-    string(REGEX REPLACE ";" "" default_cmt "${default_cmt}")
+    string(REGEX REPLACE ";" " " default_cmt "${default_cmt}")
     # 分离默认值和注释
     string(FIND "${default_cmt}" "#" cmt_idx)
     if(cmt_idx EQUAL -1)
@@ -118,6 +118,8 @@ function(_parse_assign content_line header_line source_read_line source_write_li
       math(EXPR cmt_idx "${cmt_idx} + 1")
       string(SUBSTRING "${default_cmt}" ${cmt_idx} -1 comment_sym)
     endif()
+    string(STRIP "${default_sym}" default_sym)
+    string(STRIP "${comment_sym}" comment_sym)
     # 添加默认值提示到注释中
     if(NOT default_sym STREQUAL "")
       set(comment_sym "${comment_sym} @note 默认值：`${default_sym}`")
@@ -198,6 +200,8 @@ function(_parse_enumdef content_line enum_name header_enum_line source_enum_s2t_
     math(EXPR cmt_idx "${cmt_idx} + 1")
     string(SUBSTRING "${ref_cmt}" ${cmt_idx} -1 comment_sym)
   endif()
+  string(STRIP "${ref_sym}" ref_sym)
+  string(STRIP "${comment_sym}" comment_sym)
   # 获取 Extra Header 部分的返回值
   set(ret_header_enum_line "    //! ${comment_sym}\n")
   if("${ref_sym}" STREQUAL "")
