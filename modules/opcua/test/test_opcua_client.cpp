@@ -213,6 +213,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     event.message = "this is test event";
     event["aaa"] = 66;
     EXPECT_TRUE(srv.triggerEvent(event));
+    std::this_thread::sleep_for(10ms);
     cli.spinOnce();
     EXPECT_EQ(source_name, "GtestServer");
     EXPECT_EQ(aaa, 66);
