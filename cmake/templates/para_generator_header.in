@@ -57,12 +57,6 @@ public:
      * @return 是否写入成功
      */
     RMVL_W bool write(const std::string &path) const;
-
-    /**
-     * @brief 从指定 `YAML` 文件中加载 `@class_name@`
-     * @deprecated 请使用 `read` 方法
-     */
-    [[deprecated]] bool load(const std::string &path) { return read(path); }
 };
 
 //! @class_name@ 参数模块
