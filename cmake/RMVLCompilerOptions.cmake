@@ -258,6 +258,45 @@ macro(_rmvl_set_target_in_3rd _name)
   set(${_name}_IN_3RD ON CACHE INTERNAL "")
 endmacro()
 
+# Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
+function(rmvl_install_sdk sdk)
+  # Check if the library file exists
+  if(NOT EXISTS "${${sdk}_LIB}")
+    message(WARNING "${sdk}_LIB file does not exist: ${${sdk}_LIB}")
+    continue()
+  endif()
+
+  # Handle the installation of the library file
+  set(lib_files_to_install)
+  if(IS_SYMLINK "${${sdk}_LIB}")
+    get_filename_component(lib_realpath "${${sdk}_LIB}" REALPATH)
+    list(APPEND lib_files_to_install "${lib_realpath}" "${${sdk}_LIB}")
+  else()
+    list(APPEND lib_files_to_install "${${sdk}_LIB}")
+  endif()
+
+  install(
+    FILES ${lib_files_to_install}
+    DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
+  )
+
+  # Handle DLL files (for Windows platform)
+  if(DEFINED ${sdk}_DLL AND EXISTS "${${sdk}_DLL}")
+    set(dll_files_to_install)
+    if(IS_SYMLINK "${${sdk}_DLL}")
+      get_filename_component(dll_realpath "${${sdk}_DLL}" REALPATH)
+      list(APPEND dll_files_to_install "${dll_realpath}" "${${sdk}_DLL}")
+    else()
+      list(APPEND dll_files_to_install "${${sdk}_DLL}")
+    endif()
+
+    install(
+      FILES ${dll_files_to_install}
+      DESTINATION ${RMVL_BIN_INSTALL_PATH}
+    )
+  endif()
+endfunction()
+
 # opencv
 find_package(OpenCV QUIET)
 if(OpenCV_FOUND)

@@ -40,7 +40,7 @@ if(UNIX)
   )
 
   if(NOT TARGET hiksdk)
-    add_library(hiksdk SHARED IMPORTED GLOBAL)
+    add_library(hiksdk SHARED IMPORTED)
     set_target_properties(hiksdk PROPERTIES
       IMPORTED_LOCATION "${HikSDK_LIB}"
       INTERFACE_INCLUDE_DIRECTORIES "${HikSDK_INCLUDE_DIR}"

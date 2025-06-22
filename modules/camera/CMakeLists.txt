@@ -30,7 +30,7 @@ find_package(GalaxySDK QUIET)
 rmvl_update_build(galaxy_camera GalaxySDK_FOUND AND BUILD_rmvl_camera)
 
 # --------------------------------------------------------------------------
-#   Build camera sub-library
+#  Build camera sub-library
 # --------------------------------------------------------------------------
 # mv
 rmvl_generate_para(
@@ -79,45 +79,23 @@ rmvl_add_module(
 rmvl_generate_module_para(camera)
 
 # --------------------------------------------------------------------------
-#   Install the necessary library for OS
+#  Install the necessary library for OS
 # --------------------------------------------------------------------------
-foreach(SDK MvSDK HikSDK OPTCameraSDK GalaxySDK)
-  if(${SDK}_FOUND AND DEFINED ${SDK}_LIB)
-    if(IS_SYMLINK "${${SDK}_LIB}")
-      get_filename_component(lib_realname ${${SDK}_LIB} REALPATH)
-      set(lib_install ${lib_realname} ${${SDK}_LIB})
-    else()
-      set(lib_install ${${SDK}_LIB})
-    endif()
-    install(
-      FILES ${lib_install}
-      DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
-    )
-    if(DEFINED ${SDK}_DLL)
-      if(IS_SYMLINK "${${SDK}_DLL}")
-        get_filename_component(dll_realname ${${SDK}_DLL} REALPATH)
-        set(dll_install ${dll_realname} ${${SDK}_DLL})
-      else()
-        set(dll_install ${${SDK}_DLL})
-      endif()
-      install(
-        FILES ${dll_install}
-        DESTINATION ${RMVL_BIN_INSTALL_PATH}
-      )
-    endif()
+foreach(sdk_name MvSDK HikSDK OPTCameraSDK GalaxySDK)
+  if(${sdk_name}_FOUND AND DEFINED ${sdk_name}_LIB)
+    rmvl_install_sdk(${sdk_name})
   endif()
 endforeach()
 
 # --------------------------------------------------------------------------
-#   Other functions
+#  Build the test program
 # --------------------------------------------------------------------------
-# Build the test program
 if(BUILD_TESTS)
 
 endif(BUILD_TESTS)
 
 # --------------------------------------------------------------------------
-#   Build Python bindings
+#  Build Python bindings
 # --------------------------------------------------------------------------
 if(BUILD_PYTHON)
   if(BUILD_rmvl_camera)

@@ -40,7 +40,7 @@ TEST(OPC_UA_ClientTest, connect)
     cli2.shutdown();
     srv.shutdown();
     t.join();
-};
+}
 
 static void configServer(rm::Server &srv)
 {

@@ -32,7 +32,7 @@ find_library(
 #  create imported target: onnxruntime
 # ------------------------------------------------------------------------------
 if(NOT TARGET onnxruntime)
-  add_library(onnxruntime SHARED IMPORTED GLOBAL)
+  add_library(onnxruntime SHARED IMPORTED)
   set_target_properties(onnxruntime PROPERTIES
     IMPORTED_LOCATION "${Ort_LIB}"
     INTERFACE_INCLUDE_DIRECTORIES "${Ort_INCLUDE_DIR}"
