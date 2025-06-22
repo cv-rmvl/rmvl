@@ -17,7 +17,7 @@ find_library(
 )
 
 if(NOT TARGET optlc)
-  add_library(optlc SHARED IMPORTED GLOBAL)
+  add_library(optlc SHARED IMPORTED)
   set_target_properties(optlc PROPERTIES
     IMPORTED_LOCATION "${OPTLightCtrl_LIB}"
     INTERFACE_INCLUDE_DIRECTORIES "${OPTLightCtrl_INCLUDE_DIR}"

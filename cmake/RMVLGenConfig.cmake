@@ -23,6 +23,8 @@ else()
 endif()
 
 set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "")
+
+# SDK for hardware and software, they are *.so for Linux and *.dll (including import library *.lib) for Windows
 # --------------------------------------------------------------------
 #  Usage:
 #   find the imported modules for RMVLConfig.cmake, including some 3rd-
@@ -64,28 +66,49 @@ function(__find_imported_modules target pkg_name)
   set(RMVL_MODULES_IMPORTED_CONFIGCMAKE "${RMVL_MODULES_IMPORTED_CONFIGCMAKE}${MODULE_CONFIGCMAKE}\n" PARENT_SCOPE)
 endfunction()
 
-# SDK for hardware, they are *.so for Linux and *.dll (including import library *.lib) for Windows
 __find_imported_modules(mvsdk MvSDK)
 __find_imported_modules(hiksdk HikSDK)
 __find_imported_modules(optcamsdk OPTCameraSDK)
 __find_imported_modules(galaxysdk GalaxySDK)
 __find_imported_modules(optlc OPTLightCtrl)
+__find_imported_modules(onnxruntime Ort)
 
 # 3rdparty (local source code)
 # all targets have been configured in the corresponding CMakeLists.txt, no need to configure again
 
 # 3rdparty (download)
-if(WITH_OPEN62541)
-  list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "if(NOT TARGET open62541::open62541)")
-  if(open62541_IN_3RD)
-    list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "  include(\$\{RMVL_INSTALL_PATH\}/lib/cmake/open62541/open62541Config.cmake)")
-  else()
-    list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "  find_package(open62541 REQUIRED)")
+function(__find_3rd_modules pkg_name)
+  cmake_parse_arguments(3RD "" "CFG_SUFFIX" "TARGETS" ${ARGN})
+  # preprocess
+  set(configcmake_str "# 3rdparty: ${pkg_name}")
+  string(TOUPPER "${pkg_name}" pkg_name_upper)
+  string(REPLACE ";" " AND NOT TARGET " judge_statement "NOT TARGET ${3RD_TARGETS}")
+  # update info
+  if(WITH_${pkg_name_upper})
+    list(APPEND configcmake_str "if(${judge_statement})")
+    if(${pkg_name}_IN_3RD)
+      list(APPEND configcmake_str "  include(\$\{RMVL_INSTALL_PATH\}/${3RD_CFG_SUFFIX})")
+    else()
+      list(APPEND configcmake_str "  find_package(${pkg_name} REQUIRED)")
+    endif()
+    list(APPEND configcmake_str "endif()")
   endif()
-  list(APPEND RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "endif()")
-endif()
+  # update 'RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE'
+  string(REPLACE ";" "\n" configcmake_str "${configcmake_str}")
+  set(RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "${RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE}${configcmake_str}\n\n" PARENT_SCOPE)
+endfunction()
 
-string(REPLACE ";" "\n" RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "${RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE}")
+# open62541
+__find_3rd_modules(open62541
+  CFG_SUFFIX "lib/cmake/open62541/open62541Config.cmake"
+  TARGETS open62541::open62541
+)
+
+# Eigen3
+__find_3rd_modules(Eigen3
+  CFG_SUFFIX "share/eigen3/cmake/Eigen3Config.cmake"
+  TARGETS Eigen3::Eigen
+)
 
 # --------------------------------------------------------------------------------------------
 #  Part 2/3: Generate RMVLConfig.cmake
