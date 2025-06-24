@@ -1,3 +1,18 @@
+# --------------------------------------------------------------------------------------------
+#  This file is used to find the OPT Machine Vision camera SDK, which provides the following
+#  variables:
+#
+#  Advanced Variables:
+#  - OPTCameraSDK_INCLUDE_DIR: Directory where SDK header files are located
+#  - OPTCameraSDK_LIB:         Path to the SDK library file (import library on Windows,
+#                              shared library on Linux)
+#  - OPTCameraSDK_DLL:         Path to the SDK dynamic library file (only on Windows)
+#
+#  Local Variables:
+#  - OPTCameraSDK_LIBS:         CMake target name for the SDK, which is "optcamsdk"
+#  - OPTCameraSDK_INCLUDE_DIRS: Directory where SDK header files are located
+# --------------------------------------------------------------------------------------------
+
 set(OPTCameraSDK_Path "/opt/OPT/OPTCameraDemo")
 
 # add the include directories path

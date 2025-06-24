@@ -1,3 +1,18 @@
+# --------------------------------------------------------------------------------------------
+#  This file is used to find the Daheng Galaxy camera SDK, which provides the following
+#  variables:
+#
+#  Advanced Variables:
+#  - GalaxySDK_INCLUDE_DIR: Directory where SDK header files are located
+#  - GalaxySDK_LIB:         Path to the SDK library file (import library on Windows, shared
+#                           library on Linux)
+#  - GalaxySDK_DLL:         Path to the SDK dynamic library file (only on Windows)
+#
+#  Local Variables:
+#  - GalaxySDK_LIBS:         CMake target name for the SDK, which is "galaxysdk"
+#  - GalaxySDK_INCLUDE_DIRS: Directory where SDK header files are located
+# --------------------------------------------------------------------------------------------
+
 if(NOT DEFINED GalaxySDK_Path)
   if(UNIX)
     set(GalaxySDK_Path "/opt/Galaxy_camera")

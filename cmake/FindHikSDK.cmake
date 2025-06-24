@@ -1,3 +1,17 @@
+# --------------------------------------------------------------------------------------------
+#  This file is used to find the HikRobot camera SDK, which provides the following variables:
+#
+#  Advanced Variables:
+#  - HikSDK_INCLUDE_DIR: Directory where SDK header files are located
+#  - HikSDK_LIB:         Path to the SDK library file (import library on Windows, shared
+#                        library on Linux)
+#  - HikSDK_DLL:         Path to the SDK dynamic library file (only on Windows)
+#
+#  Local Variables:
+#  - HikSDK_LIBS:         CMake target name for the SDK, which is "hiksdk"
+#  - HikSDK_INCLUDE_DIRS: Directory where SDK header files are located
+# --------------------------------------------------------------------------------------------
+
 if(WIN32)
   set(HikSDK_Path "$ENV{MVCAM_COMMON_RUNENV}")
 else()

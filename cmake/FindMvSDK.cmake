@@ -1,3 +1,17 @@
+# --------------------------------------------------------------------------------------------
+#  This file is used to find the MindVision camera SDK, which provides the following variables:
+#
+#  Advanced Variables:
+#  - MvSDK_INCLUDE_DIR: Directory where SDK header files are located
+#  - MvSDK_LIB:         Path to the SDK library file (import library on Windows, shared
+#                       library on Linux)
+#  - MvSDK_DLL:         Path to the SDK dynamic library file (only on Windows)
+#
+#  Local Variables:
+#  - MvSDK_LIBS:         CMake target name for the SDK, which is "mvsdk"
+#  - MvSDK_INCLUDE_DIRS: Directory where SDK header files are located
+# --------------------------------------------------------------------------------------------
+
 if(UNIX)
   # add the include directories path
   find_path(
