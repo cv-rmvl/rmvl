@@ -1,3 +1,18 @@
+# --------------------------------------------------------------------------------------------
+#  This file is used to find the OPT Machine Vision light controller SDK, which provides the
+#  following variables:
+#
+#  Advanced Variables:
+#  - OPTLightCtrl_INCLUDE_DIR: Directory where SDK header files are located
+#  - OPTLightCtrl_LIB:         Path to the SDK library file (import library on Windows,
+#                              shared library on Linux)
+#  - OPTLightCtrl_DLL:         Path to the SDK dynamic library file (only on Windows)
+#
+#  Local Variables:
+#  - OPTLightCtrl_LIBS:         CMake target name for the SDK, which is "optlc"
+#  - OPTLightCtrl_INCLUDE_DIRS: Directory where SDK header files are located
+# --------------------------------------------------------------------------------------------
+
 set(OPTLightCtrl_root_path "/opt/OPT/OPTController")
 
 # add the include directories path

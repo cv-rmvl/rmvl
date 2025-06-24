@@ -1,3 +1,20 @@
+# --------------------------------------------------------------------------------------------
+#  This file is used to find the ONNX-Runtime SDK, which provides the following variables:
+#
+#  Cache Variables:
+#  - Ort_HEADER_FILES: Names of SDK header files
+#
+#  Advanced Variables:
+#  - Ort_INCLUDE_DIR: Directory where SDK header files are located
+#  - Ort_LIB:         Path to the SDK library file (import library on Windows, shared library
+#                     on Linux)
+#  - Ort_DLL:         Path to the SDK dynamic library file (only on Windows)
+#
+#  Local Variables:
+#  - Ort_LIBS:         CMake target name for the SDK, which is "onnxruntime"
+#  - Ort_INCLUDE_DIRS: Directory where SDK header files are located
+# --------------------------------------------------------------------------------------------
+
 # ------------------------------------------------------------------------------
 #  find onnxruntime root path
 # ------------------------------------------------------------------------------
@@ -8,13 +25,18 @@ endif()
 # ------------------------------------------------------------------------------
 #  find onnxruntime include directory
 # ------------------------------------------------------------------------------
+set(Ort_HEADER_FILES
+  cpu_provider_factory.h  onnxruntime_run_options_config_keys.h
+  onnxruntime_c_api.h     onnxruntime_session_options_config_keys.h
+  onnxruntime_cxx_api.h   provider_options.h
+  onnxruntime_cxx_inline.h
+  CACHE INTERNAL "ONNX Runtime header files"
+)
+
 find_path(
   Ort_INCLUDE_DIR
   PATHS "${ort_root_path}/include/onnxruntime"
-  NAMES cpu_provider_factory.h  onnxruntime_run_options_config_keys.h
-        onnxruntime_c_api.h     onnxruntime_session_options_config_keys.h
-        onnxruntime_cxx_api.h   provider_options.h
-        onnxruntime_cxx_inline.h
+  NAMES ${Ort_HEADER_FILES}
   NO_DEFAULT_PATH
 )
 

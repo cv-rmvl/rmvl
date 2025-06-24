@@ -260,13 +260,24 @@ endmacro()
 
 # Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
 function(rmvl_install_sdk sdk)
-  # Check if the library file exists
-  if(NOT EXISTS "${${sdk}_LIB}")
-    message(WARNING "${sdk}_LIB file does not exist: ${${sdk}_LIB}")
-    continue()
+  # Handle the installation of the include directory
+  if(DEFINED ${sdk}_INCLUDE_DIR AND EXISTS "${${sdk}_INCLUDE_DIR}" AND DEFINED ${sdk}_HEADER_FILES)
+    set(inc_files_to_install)
+    foreach(f ${${sdk}_HEADER_FILES})
+      list(APPEND inc_files_to_install "${${sdk}_INCLUDE_DIR}/${f}")
+    endforeach()
+    install(
+      FILES ${inc_files_to_install}
+      DESTINATION ${RMVL_INCLUDE_INSTALL_PATH}
+    )
   endif()
 
   # Handle the installation of the library file
+  if(DEFINED ${sdk}_LIB AND NOT EXISTS "${${sdk}_LIB}")
+    message(WARNING "${sdk}_LIB file does not exist: ${${sdk}_LIB}")
+    return()
+  endif()
+
   set(lib_files_to_install)
   if(IS_SYMLINK "${${sdk}_LIB}")
     get_filename_component(lib_realpath "${${sdk}_LIB}" REALPATH)
