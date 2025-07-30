@@ -11,13 +11,32 @@
 
 #include "mv_camera_impl.h"
 
-namespace rm
-{
+#include "rmvlpara/camera/mv_camera.h"
 
-bool MvCamera::Impl::set(int propId, double value) noexcept
-{
-    switch (propId)
-    {
+namespace rm {
+
+void MvCamera::Impl::load(const para::MvCameraParam &param) {
+    if (param.auto_exposure)
+        this->set(CAMERA_AUTO_EXPOSURE, 0);
+    else
+        this->set(CAMERA_MANUAL_EXPOSURE, 0);
+    this->set(CAMERA_EXPOSURE, param.exposure);
+    this->set(CAMERA_GAIN, param.gain);
+    if (param.auto_wb)
+        this->set(CAMERA_AUTO_WB, 0);
+    else
+        this->set(CAMERA_MANUAL_WB, 0);
+    this->set(CAMERA_WB_BGAIN, param.b_gain);
+    this->set(CAMERA_WB_GGAIN, param.g_gain);
+    this->set(CAMERA_WB_RGAIN, param.r_gain);
+    this->set(CAMERA_GAMMA, param.gamma);
+    this->set(CAMERA_CONTRAST, param.contrast);
+    this->set(CAMERA_SATURATION, param.saturation);
+    this->set(CAMERA_SHARPNESS, param.sharpness);
+}
+
+bool MvCamera::Impl::set(int propId, double value) noexcept {
+    switch (propId) {
     // Properties
     case CAMERA_AUTO_EXPOSURE:
         _auto_exposure = true;
@@ -87,10 +106,8 @@ bool MvCamera::Impl::set(int propId, double value) noexcept
     }
 }
 
-double MvCamera::Impl::get(int propId) const noexcept
-{
-    switch (propId)
-    {
+double MvCamera::Impl::get(int propId) const noexcept {
+    switch (propId) {
     case CAMERA_AUTO_EXPOSURE:
         return _auto_exposure;
     case CAMERA_MANUAL_EXPOSURE:

@@ -14,8 +14,11 @@
 #include "camutils.hpp"
 #include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
+
+namespace para {
+class MvCameraParam;
+} // namespace para
 
 //! @addtogroup camera
 //! @{
@@ -32,8 +35,7 @@ namespace rm
 //! @example samples/camera/mv/sample_mv_writer.cpp 迈德威视相机录屏例程
 
 //! 迈德威视相机库
-class RMVL_EXPORTS_W MvCamera final
-{
+class RMVL_EXPORTS_W MvCamera final {
     RMVL_IMPL;
 
 public:
@@ -60,13 +62,19 @@ public:
      * @param[in] init_mode 相机初始化配置模式，需要配置 rm::GrabMode 和 rm::RetrieveMode
      * @param[in] serial 相机唯一序列号
      */
-    static inline std::unique_ptr<MvCamera> make_capture(CameraConfig init_mode, std::string_view serial = "")
-    {
+    static inline std::unique_ptr<MvCamera> make_capture(CameraConfig init_mode, std::string_view serial = "") {
         return std::make_unique<MvCamera>(init_mode, serial);
     }
 
     //! 获取相机库版本
     RMVL_W static std::string version();
+
+    /**
+     * @brief 加载迈德威视相机参数
+     *
+     * @param[in] param 相机参数对象
+     */
+    RMVL_W void load(const para::MvCameraParam &param);
 
     /**
      * @brief 设置相机参数/事件
@@ -103,8 +111,7 @@ public:
      *
      * @return 是否读取成功和读取到的图像
      */
-    RMVL_W inline std::pair<bool, cv::Mat> read()
-    {
+    RMVL_W inline std::pair<bool, cv::Mat> read() {
         cv::Mat img;
         bool res = read(img);
         return {res, img};
@@ -117,8 +124,7 @@ public:
      *
      * @param[out] image 待读入的图像
      */
-    inline MvCamera &operator>>(cv::Mat &image)
-    {
+    inline MvCamera &operator>>(cv::Mat &image) {
         read(image);
         return *this;
     }

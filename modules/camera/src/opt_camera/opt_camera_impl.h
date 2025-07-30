@@ -16,11 +16,9 @@
 
 #include "rmvl/camera/opt_camera.h"
 
-namespace rm
-{
+namespace rm {
 
-class OptCamera::Impl
-{
+class OptCamera::Impl {
     // 设备信息
     CameraConfig _init_mode;       //!< 相机初始化配置模式
     std::string _camera_info;      //!< 相机句柄的字符串信息
@@ -36,6 +34,8 @@ public:
     Impl(CameraConfig init_mode, std::string_view handle_info) noexcept;
     ~Impl() noexcept;
 
+    //! 加载相机参数
+    void load(const para::OptCameraParam &param);
     //! 打开相机
     bool open() noexcept;
     //! 相机重连

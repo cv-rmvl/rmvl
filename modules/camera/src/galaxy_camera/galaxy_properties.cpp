@@ -12,9 +12,19 @@
 #include <GxIAPI.h>
 
 #include "galaxy_camera_impl.h"
+#include "rmvlpara/camera/galaxy_camera.h"
 
 namespace rm
 {
+
+void GalaxyCamera::Impl::load(const para::GalaxyCameraParam &param) {
+    this->set(CAMERA_EXPOSURE, param.exposure);
+    this->set(CAMERA_SATURATION, param.saturation);
+    this->set(CAMERA_GAIN, param.gain);
+    this->set(CAMERA_WB_BGAIN, param.b_gain);
+    this->set(CAMERA_WB_GGAIN, param.g_gain);
+    this->set(CAMERA_WB_RGAIN, param.r_gain);
+}
 
 bool GalaxyCamera::Impl::set(int prop_id, double value) noexcept
 {

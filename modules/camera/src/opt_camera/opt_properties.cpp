@@ -11,13 +11,22 @@
 
 #include "opt_camera_impl.h"
 
-namespace rm
-{
+#include "rmvlpara/camera/opt_camera.h"
 
-bool OptCamera::Impl::set(int propId, double value) noexcept
-{
-    switch (propId)
-    {
+namespace rm {
+
+void OptCamera::Impl::load(const para::OptCameraParam &param) {
+    this->set(CAMERA_EXPOSURE, param.exposure);
+    this->set(CAMERA_GAIN, param.gain);
+    this->set(CAMERA_WB_BGAIN, param.b_gain);
+    this->set(CAMERA_WB_GGAIN, param.g_gain);
+    this->set(CAMERA_WB_RGAIN, param.r_gain);
+    this->set(CAMERA_GAMMA, param.gamma);
+    this->set(CAMERA_CONTRAST, param.contrast);
+}
+
+bool OptCamera::Impl::set(int propId, double value) noexcept {
+    switch (propId) {
     case CAMERA_AUTO_EXPOSURE:
         return OPT_SetEnumFeatureSymbol(_handle, "ExposureAuto", "Off") == OPT_OK;
     case CAMERA_EXPOSURE:
@@ -48,14 +57,12 @@ bool OptCamera::Impl::set(int propId, double value) noexcept
     }
 }
 
-double OptCamera::Impl::get(int propId) const noexcept
-{
+double OptCamera::Impl::get(int propId) const noexcept {
     if (OPT_GetDeviceInfo(_handle, _device_list.pDevInfo) != OPT_OK)
         return -1.0;
     double dretval{};
     int64_t iretval{};
-    switch (propId)
-    {
+    switch (propId) {
     case CAMERA_EXPOSURE:
         return OPT_GetDoubleFeatureValue(_handle, "ExposureTime", &dretval) == OPT_OK ? dretval : -1.0;
     case CAMERA_GAIN:

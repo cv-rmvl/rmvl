@@ -7,6 +7,6 @@ double g_gain = 1      # 相机白平衡绿色增益
 double r_gain = 1      # 相机白平衡红色增益
 
 #################### 设备参数 ####################
-int grab_mode = 1     # 相机 grab 模式
-int retrieve_mode = 1 # 相机 retrieve 模式
-string id             # 相机唯一标识，可以是 IP 地址、序列号等
+int grab_mode = 1     # 相机 grab 模式 @deprecated 不再设置初始化相关参数，请直接使用 rm::GrabMode
+int retrieve_mode = 1 # 相机 retrieve 模式 @deprecated 不再设置初始化相关参数，请直接使用 rm::RetrieveMode
+string id             # 相机唯一标识，可以是 IP 地址、序列号等 @deprecated 不再设置初始化相关参数

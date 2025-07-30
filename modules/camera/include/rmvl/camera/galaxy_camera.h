@@ -4,9 +4,9 @@
  * @brief 大恒图像 Galaxy USB3.0/GigE 系列工业相机库
  * @version 1.0
  * @date 2024-10-27
- * 
+ *
  * @copyright Copyright 2024 (c), zhaoxi
- * 
+ *
  */
 
 #pragma once
@@ -14,8 +14,11 @@
 #include "camutils.hpp"
 #include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
+
+namespace para {
+class GalaxyCameraParam;
+} // namespace para
 
 //! @addtogroup camera
 //! @{
@@ -26,8 +29,7 @@ namespace rm
 //! @{
 
 //! 大恒图像 Galaxy 系列工业相机库
-class RMVL_EXPORTS_W GalaxyCamera final
-{
+class RMVL_EXPORTS_W GalaxyCamera final {
     RMVL_IMPL;
 
 public:
@@ -35,7 +37,7 @@ public:
     using const_ptr = std::unique_ptr<const GalaxyCamera>;
 
     /**
-     * @brief 创建 GalaxyCamera 对象
+     * @brief 创建大恒相机对象
      *
      * @param[in] cfg 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
      * @param[in] id 相机标识，可以是序列号、IP 地址等
@@ -52,11 +54,18 @@ public:
     RMVL_W static std::string version();
 
     /**
-     * @brief 构建 GalaxyCamera 对象
+     * @brief 加载大恒相机参数
+     *
+     * @param[in] param 相机参数对象
+     */
+    RMVL_W void load(const para::GalaxyCameraParam &param);
+
+    /**
+     * @brief 构建大恒相机对象
      *
      * @param[in] cfg 相机初始化配置模式，需要配置 rm::GrabMode 、 rm::RetrieveMode 和 rm::HandleMode
      * @param[in] id 相机标识，可以是序列号、IP 地址等
-     * @return GalaxyCamera 对象独享指针
+     * @return 大恒相机对象独享指针
      */
     static std::unique_ptr<GalaxyCamera> make_capture(CameraConfig cfg, std::string_view id = "") { return std::make_unique<GalaxyCamera>(cfg, id); }
 
@@ -95,8 +104,7 @@ public:
      *
      * @return 是否读取成功和读取到的图像
      */
-    RMVL_W inline std::pair<bool, cv::Mat> read()
-    {
+    RMVL_W inline std::pair<bool, cv::Mat> read() {
         cv::Mat img;
         bool res = read(img);
         return {res, img};
@@ -109,8 +117,7 @@ public:
      *
      * @param[out] image 待读入的图像
      */
-    GalaxyCamera &operator>>(cv::Mat &image)
-    {
+    GalaxyCamera &operator>>(cv::Mat &image) {
         read(image);
         return *this;
     }
