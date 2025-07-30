@@ -42,6 +42,9 @@ public:
     //! 析构函数
     ~Impl() noexcept;
 
+    //! 加载相机参数
+    void load(const para::HikCameraParam &param);
+
     /**
      * @brief 设置相机参数/事件
      *

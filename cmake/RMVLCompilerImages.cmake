@@ -30,10 +30,10 @@ foreach(line ${parse_result})
   )
   add_custom_target(run_in_${name}
     COMMAND ${CMAKE_COMMAND} -E echo "Starting container: ${name} (based on image: ${image})"
-    COMMAND docker run --rm -it
+    COMMAND docker run --rm -it --network host --privileged
       -v ${PROJECT_SOURCE_DIR}:${PROJECT_SOURCE_DIR}
       -v ${PROJECT_SOURCE_DIR}/build/docker_images/${name}:${PROJECT_SOURCE_DIR}/build
-      -w ${PROJECT_SOURCE_DIR} ${options} ${image} ${cmd}
+      -w ${PROJECT_SOURCE_DIR}/build ${options} ${image} ${cmd}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running in ${name} container"
     DEPENDS pull_${name}

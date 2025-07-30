@@ -13,11 +13,9 @@
 
 #include "rmvl/camera/galaxy_camera.h"
 
-namespace rm
-{
+namespace rm {
 
-class GalaxyCamera::Impl
-{
+class GalaxyCamera::Impl {
 public:
     /**
      * @brief 构造函数
@@ -29,6 +27,9 @@ public:
 
     //! 析构函数
     ~Impl() noexcept;
+
+    //! 加载相机参数
+    void load(const para::GalaxyCameraParam &param);
 
     /**
      * @brief 设置相机参数/事件

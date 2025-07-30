@@ -11,13 +11,31 @@
 
 #include "hik_camera_impl.h"
 
-namespace rm
-{
+#include "rmvlpara/camera/hik_camera.h"
 
-bool HikCamera::Impl::set(int propId, double value) noexcept
-{
-    switch (propId)
-    {
+namespace rm {
+
+void HikCamera::Impl::load(const para::HikCameraParam &param) {
+    if (param.auto_exposure == 0)
+        this->set(CAMERA_MANUAL_EXPOSURE, 0);
+    else if (param.auto_exposure == 1)
+        this->set(CAMERA_ONCE_EXPOSURE, 0);
+    else if (param.auto_exposure == 2)
+        this->set(CAMERA_AUTO_EXPOSURE, 0);
+    this->set(CAMERA_EXPOSURE, param.exposure);
+    this->set(CAMERA_SATURATION, param.saturation);
+    this->set(CAMERA_GAIN, param.gain);
+    if (param.auto_wb == 0)
+        this->set(CAMERA_MANUAL_WB, 0);
+    else if (param.auto_wb == 1)
+        this->set(CAMERA_ONCE_WB, 0);
+    this->set(CAMERA_WB_BGAIN, param.b_gain);
+    this->set(CAMERA_WB_GGAIN, param.g_gain);
+    this->set(CAMERA_WB_RGAIN, param.r_gain);
+}
+
+bool HikCamera::Impl::set(int propId, double value) noexcept {
+    switch (propId) {
     // Properties
     case CAMERA_AUTO_EXPOSURE:
         return MV_CC_SetEnumValue(_handle, "ExposureAuto", MV_EXPOSURE_AUTO_MODE_CONTINUOUS) == MV_OK;
@@ -59,12 +77,10 @@ bool HikCamera::Impl::set(int propId, double value) noexcept
     }
 }
 
-double HikCamera::Impl::get(int propId) const noexcept
-{
+double HikCamera::Impl::get(int propId) const noexcept {
     MVCC_FLOATVALUE f_value = {0, 0, 0, {0}};
     MVCC_INTVALUE i_value = {0, 0, 0, 0, {0}};
-    switch (propId)
-    {
+    switch (propId) {
     // Properties
     case CAMERA_EXPOSURE:
         return MV_CC_GetFloatValue(_handle, "ExposureTime", &f_value) == MV_OK ? f_value.fCurValue : -1.0;

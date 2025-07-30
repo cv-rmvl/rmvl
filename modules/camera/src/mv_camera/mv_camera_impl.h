@@ -56,6 +56,9 @@ public:
 
     ~Impl() noexcept;
 
+    //! 加载相机参数
+    void load(const para::MvCameraParam &param);
+
     //! 设置相机参数
     bool set(int propId, double value) noexcept;
 

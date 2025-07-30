@@ -14,8 +14,11 @@
 #include "camutils.hpp"
 #include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
+
+namespace para {
+class HikCameraParam;
+} // namespace para
 
 //! @addtogroup camera
 //! @{
@@ -31,8 +34,7 @@ namespace rm
 //! @example samples/camera/hik/sample_hik_writer.cpp 海康机器人工业相机录屏例程
 
 //! 海康机器人相机库
-class RMVL_EXPORTS_W HikCamera final
-{
+class RMVL_EXPORTS_W HikCamera final {
     RMVL_IMPL;
 
 public:
@@ -65,6 +67,13 @@ public:
 
     //! 获取相机库版本
     RMVL_W static std::string version();
+
+    /**
+     * @brief 加载海康相机参数
+     *
+     * @param[in] param 相机参数对象
+     */
+    RMVL_W void load(const para::HikCameraParam &param);
 
     /**
      * @brief 设置相机参数/事件
@@ -101,8 +110,7 @@ public:
      *
      * @return 是否读取成功和读取到的图像
      */
-    RMVL_W inline std::pair<bool, cv::Mat> read()
-    {
+    RMVL_W inline std::pair<bool, cv::Mat> read() {
         cv::Mat img;
         bool res = read(img);
         return {res, img};
@@ -115,8 +123,7 @@ public:
      *
      * @param[out] image 待读入的图像
      */
-    HikCamera &operator>>(cv::Mat &image)
-    {
+    HikCamera &operator>>(cv::Mat &image) {
         read(image);
         return *this;
     }

@@ -15,8 +15,11 @@
 
 #include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
+
+namespace para {
+class OptCameraParam;
+} // namespace para
 
 //! @addtogroup camera
 //! @{
@@ -27,8 +30,7 @@ namespace rm
 //! @{
 
 //! 奥普特机器视觉相机库
-class RMVL_EXPORTS_W OptCamera final
-{
+class RMVL_EXPORTS_W OptCamera final {
     RMVL_IMPL;
 
 public:
@@ -57,10 +59,16 @@ public:
      *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1`
      * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
      */
-    static std::unique_ptr<OptCamera> make_capture(CameraConfig init_mode, std::string_view handle_info = "")
-    {
+    static std::unique_ptr<OptCamera> make_capture(CameraConfig init_mode, std::string_view handle_info = "") {
         return std::unique_ptr<OptCamera>(new OptCamera(init_mode, handle_info));
     }
+
+    /**
+     * @brief 加载奥普特相机参数
+     *
+     * @param[in] param 相机参数对象
+     */
+    RMVL_W void load(const para::OptCameraParam &param);
 
     /**
      * @brief 设置相机参数、触发相机事件
@@ -97,8 +105,7 @@ public:
      *
      * @return 是否读取成功和读取到的图像
      */
-    RMVL_W inline std::pair<bool, cv::Mat> read()
-    {
+    RMVL_W inline std::pair<bool, cv::Mat> read() {
         cv::Mat img;
         bool res = read(img);
         return {res, img};
