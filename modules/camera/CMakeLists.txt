@@ -115,3 +115,8 @@ if(BUILD_PYTHON)
     USE_PREBIND
   )
 endif()
+
+# ----------------------------------------------------------------------------
+#  Export the camera modules
+# ----------------------------------------------------------------------------
+set(RMVL_CAMERA_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")

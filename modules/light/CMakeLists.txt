@@ -60,3 +60,8 @@ if(BUILD_PYTHON)
     DEPENDS ${light_dep}
   )
 endif()
+
+# ----------------------------------------------------------------------------
+#  Export the light modules
+# ----------------------------------------------------------------------------
+set(RMVL_LIGHT_MODULES_BUILD ${modules_build} CACHE INTERNAL "modules to be built")

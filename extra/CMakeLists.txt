@@ -2,10 +2,9 @@
 set(cur_path "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(RMVL_EXTRA_MODULE "")
-foreach(m types feature combo tracker group detector compensator predictor decider) # The order of addition must be ensured
-  if(IS_DIRECTORY ${cur_path}/${m})
-    list(APPEND RMVL_EXTRA_MODULE "${m}")
-  endif()
+# The order of addition must be ensured because of the documentation and Python bindings.
+foreach(m types feature combo tracker group detector compensator predictor decider)
+  list(APPEND RMVL_EXTRA_MODULE "${m}")
 endforeach()
 
 set(RMVL_EXTRA_MODULE ${RMVL_EXTRA_MODULE} CACHE INTERNAL "List of main modules")
@@ -14,5 +13,3 @@ set(RMVL_EXTRA_MODULE ${RMVL_EXTRA_MODULE} CACHE INTERNAL "List of main modules"
 foreach(m ${RMVL_EXTRA_MODULE})
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/${m})
 endforeach()
-
-unset(module_extra_st)
