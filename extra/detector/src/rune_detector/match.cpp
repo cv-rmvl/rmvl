@@ -11,29 +11,25 @@
 
 #include <unordered_set>
 
+#include "rmvl/algorithm/math.hpp"
 #include "rmvl/detector/rune_detector.h"
-#include "rmvl/group/rune_group.h"
+#include "rmvl/tracker/rune_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos, const ImuData &imu_data, double tick)
-{
+static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos, const ImuData &imu_data, double tick) {
     // 如果 trackers 为空先为每个识别到的 active_rune 开辟序列
-    if (trackers.empty())
-    {
+    if (trackers.empty()) {
         for (const auto &p_combo : combos)
             trackers.emplace_back(RuneTracker::make_tracker(p_combo));
         return;
     }
     // 如果当前帧识别到的神符数量 > 序列数量
-    if (combos.size() > trackers.size())
-    {
+    if (combos.size() > trackers.size()) {
         // 初始化哈希表
         std::unordered_set<combo::ptr> combo_set(combos.begin(), combos.end());
         // 距离最近的神符匹配到相应序列中，并 update
-        for (auto p_tracker : trackers)
-        {
+        for (auto p_tracker : trackers) {
             // 离 p_tracker 最近的 active_rune
             combo::ptr closest_rune = *min_element(combos.begin(), combos.end(), [&p_tracker](combo::ptr lhs, combo::ptr rhs) {
                 return getDeltaAngle(lhs->angle(), p_tracker->front()->angle()) <
@@ -47,12 +43,10 @@ static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<co
             trackers.emplace_back(RuneTracker::make_tracker(p_combo));
     }
     // 如果当前帧识别到的神符数量 < 序列数量
-    else if (combos.size() < trackers.size())
-    {
+    else if (combos.size() < trackers.size()) {
         // 初始化哈希表
         std::unordered_set<tracker::ptr> tracker_set(trackers.begin(), trackers.end());
-        for (auto p_combo : combos)
-        {
+        for (auto p_combo : combos) {
             // 离 active_rune 最近的 tracker
             tracker::ptr closest_tracker = *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
                 return getDeltaAngle(p_combo->angle(), lhs->front()->angle()) <
@@ -66,14 +60,12 @@ static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<co
             p_tracker->update(tick, imu_data);
     }
     // 如果当前帧识别到的装甲板数量 = 序列数量
-    else
-    {
+    else {
         // 初始化哈希表
         std::unordered_set<combo::ptr> combo_set(combos.begin(), combos.end());
         //! @note 防止出现迭代器非法化的情况，此处使用下标访问
         size_t trackers_size = trackers.size();
-        for (size_t i = 0; i < trackers_size; i++)
-        {
+        for (size_t i = 0; i < trackers_size; i++) {
             // 离 tracker 最近的 p_combo
             combo::ptr closest_combo = *min_element(combo_set.begin(), combo_set.end(), [&](combo::const_ptr lhs, combo::const_ptr rhs) {
                 return getDeltaAngle(lhs->angle(), trackers[i]->front()->angle()) <
@@ -84,8 +76,7 @@ static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<co
             // 判断是否角度差过大
             if (min_delta_angle < 50.f)
                 trackers[i]->update(closest_combo);
-            else
-            {
+            else {
                 trackers[i]->update(tick, imu_data);
                 trackers.emplace_back(RuneTracker::make_tracker(closest_combo));
             }
@@ -94,8 +85,7 @@ static void matchRunes(std::vector<tracker::ptr> &trackers, const std::vector<co
     }
 }
 
-void RuneDetector::match(std::vector<tracker::ptr> &rune_trackers, const std::vector<combo::ptr> &combos)
-{
+void RuneDetector::match(std::vector<tracker::ptr> &rune_trackers, const std::vector<combo::ptr> &combos) {
     // 匹配
     matchRunes(rune_trackers, combos, _imu_data, _tick);
     // 删除

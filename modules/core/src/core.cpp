@@ -17,13 +17,10 @@
 #include "rmvl/core/timer.hpp"
 #include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
 
-static constexpr const char *rmvlErrorStr(int status)
-{
-    switch (status)
-    {
+static constexpr const char *rmvlErrorStr(int status) {
+    switch (status) {
     case RMVL_StsOk:
         return "No Error";
     case RMVL_StsBackTrace:
@@ -57,8 +54,7 @@ static constexpr const char *rmvlErrorStr(int status)
     }
 }
 
-std::string format(const char *fmt, ...)
-{
+std::string format(const char *fmt, ...) {
     char buf[1024]{};
     va_list args;
     va_start(args, fmt);
@@ -73,20 +69,18 @@ std::string format(const char *fmt, ...)
 }
 
 Exception::Exception(int _code, std::string_view _err, std::string_view _func, std::string_view _file, int _line)
-    : code(_code), err(_err), func(_func), file(_file), line(_line)
-{
+    : code(_code), err(_err), func(_func), file(_file), line(_line) {
     if (!func.empty())
         msg = format("RMVL %s:%d: \033[31;1merror\033[0m: (%d:%s) in function \"%s\"\n\033[34m"
-                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                         file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
+                     ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                     file.c_str(), line, code, rmvlErrorStr(code), func.c_str(), err.c_str());
     else
         msg = format("RMVL %s:%d: \033[31;1merror\033[0m: (%d:%s)\n\033[34m"
-                         ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
-                         file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
+                     ">>>>>>>> message >>>>>>>>\033[0m\n%s\n\033[34m<<<<<<<< message <<<<<<<<\033[0m\n",
+                     file.c_str(), line, code, rmvlErrorStr(code), err.c_str());
 }
 
-void error(int _code, std::string_view _err, const char *_func, const char *_file, int _line)
-{
+void error(int _code, std::string_view _err, const char *_func, const char *_file, int _line) {
     Exception exc(_code, _err, _func, _file, _line);
 
     RMVL_ERRHANDLE(exc);
@@ -100,26 +94,22 @@ void error(int _code, std::string_view _err, const char *_func, const char *_fil
 #endif // _GNUC_
 }
 
-const char *getBuildInformation()
-{
+const char *getBuildInformation() {
     constexpr const char *build_info =
 #include "version_string.inc"
         ;
     return build_info;
 }
 
-namespace str
-{
+namespace str {
 
-std::vector<std::string> split(std::string_view str, std::string_view delim)
-{
+std::vector<std::string> split(std::string_view str, std::string_view delim) {
     std::vector<std::string> res;
     if (str.empty())
         return res;
     std::string::size_type start = str.find_first_not_of(delim);
     std::string::size_type index = str.find(delim, start);
-    while (index != std::string::npos)
-    {
+    while (index != std::string::npos) {
         res.emplace_back(str.substr(start, index - start));
         start = str.find_first_not_of(delim, index);
         index = str.find(delim, start);
@@ -129,8 +119,7 @@ std::vector<std::string> split(std::string_view str, std::string_view delim)
     return res;
 }
 
-std::string join(const std::vector<std::string> &strs, std::string_view delim)
-{
+std::string join(const std::vector<std::string> &strs, std::string_view delim) {
     std::string res{};
     if (strs.empty())
         return res;
@@ -140,23 +129,20 @@ std::string join(const std::vector<std::string> &strs, std::string_view delim)
     return res;
 }
 
-std::string_view strip(std::string_view str)
-{
+std::string_view strip(std::string_view str) {
     auto str_begin = str.find_first_not_of(" \t\n\r");
     auto str_end = str.find_last_not_of(" \t\n\r") + 1;
     return str.substr(str_begin, str_end - str_begin);
 }
 
-std::string lower(std::string_view str)
-{
+std::string lower(std::string_view str) {
     std::string res(str);
     for (auto &c : res)
         c = std::tolower(c);
     return res;
 }
 
-std::string upper(std::string_view str)
-{
+std::string upper(std::string_view str) {
     std::string res(str);
     for (auto &c : res)
         c = std::toupper(c);
@@ -171,18 +157,15 @@ static std::chrono::steady_clock::time_point g_init_tick = {};
 
 void Timer::reset() { g_init_tick = std::chrono::steady_clock::now(); }
 
-double Timer::now()
-{
+double Timer::now() {
     return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(std::chrono::steady_clock::now() - g_init_tick).count();
 }
 
-void Timer::sleep_for(double t)
-{
+void Timer::sleep_for(double t) {
     std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(t));
 }
 
-void Timer::sleep_until(double t)
-{
+void Timer::sleep_until(double t) {
     auto tick = g_init_tick + std::chrono::duration<double, std::milli>(t);
     std::this_thread::sleep_until(tick);
 }

@@ -11,11 +11,9 @@
 
 #include "rmvl/group/group.h"
 
-namespace rm
-{
+namespace rm {
 
-group::ptr DefaultGroup::clone()
-{
+group::ptr DefaultGroup::clone() {
     auto retval = std::make_shared<DefaultGroup>(*this);
     // 更新内部所有追踪器
     for (auto &p_tracker : retval->_trackers)

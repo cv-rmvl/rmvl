@@ -1,0 +1,40 @@
+# ----------------------------------------------------------------------------
+#  Add module for io
+# ----------------------------------------------------------------------------
+rmvl_generate_para(io)
+rmvl_add_module(
+  io
+  DEPENDS core
+)
+
+# ----------------------------------------------------------------------------
+#  Build Python bindings
+# ----------------------------------------------------------------------------
+if(BUILD_PYTHON)
+  foreach(m util ipc serial)
+    list(APPEND io_inc rmvl/io/${m}.hpp)
+  endforeach()
+  rmvl_generate_python(io
+    FILES ${io_inc}
+    DEPENDS io
+  )
+endif()
+
+# --------------------------------------------------------------------------
+#  Build the test program
+# --------------------------------------------------------------------------
+if(BUILD_TESTS)
+  rmvl_add_test(
+    io Unit
+    DEPENDS io
+    EXTERNAL GTest::gtest_main
+  )
+endif(BUILD_TESTS)
+
+if(BUILD_PERF_TESTS)
+  rmvl_add_test(
+    io Performance
+    DEPENDS io
+    EXTERNAL benchmark::benchmark_main
+  )
+endif(BUILD_PERF_TESTS)

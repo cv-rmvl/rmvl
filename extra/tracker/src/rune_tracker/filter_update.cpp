@@ -11,13 +11,10 @@
  */
 
 #include "rmvl/tracker/rune_tracker.h"
-#include "rmvlpara/tracker/rune_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-void RuneTracker::updateRotateFilter(float t)
-{
+void RuneTracker::updateRotateFilter(float t) {
     _filter.setA({1, t,
                   0, 1});
     // 预测

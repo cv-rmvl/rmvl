@@ -9,14 +9,14 @@
  *
  */
 
+#include "rmvl/algorithm/math.hpp"
+
 #include "rmvl/tracker/gyro_tracker.h"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-void GyroTracker::updateFromCombo(combo::ptr p_combo)
-{
+void GyroTracker::updateFromCombo(combo::ptr p_combo) {
     _height = p_combo->height();
     _width = p_combo->width();
     _angle = p_combo->angle();
@@ -27,8 +27,7 @@ void GyroTracker::updateFromCombo(combo::ptr p_combo)
     _pose = Armor::cast(p_combo)->getPose();
 }
 
-GyroTracker::GyroTracker(combo::ptr p_armor)
-{
+GyroTracker::GyroTracker(combo::ptr p_armor) {
     if (p_armor == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");
     updateFromCombo(p_armor);
@@ -41,8 +40,7 @@ GyroTracker::GyroTracker(combo::ptr p_armor)
     initFilter();
 }
 
-tracker::ptr GyroTracker::clone()
-{
+tracker::ptr GyroTracker::clone() {
     auto retval = std::make_shared<GyroTracker>(*this);
     // 更新内部所有组合体
     for (auto &p_combo : retval->_combo_deque)
@@ -50,8 +48,7 @@ tracker::ptr GyroTracker::clone()
     return retval;
 }
 
-void GyroTracker::update(combo::ptr p_armor)
-{
+void GyroTracker::update(combo::ptr p_armor) {
     if (p_armor == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Input argument \"p_armor\" is nullptr.");
     // Reset the vanish number
@@ -81,9 +78,8 @@ void GyroTracker::update(combo::ptr p_armor)
         _combo_deque.pop_back();
 }
 
-void GyroTracker::updateType(RobotType robot)
-{
-    if (robot == RobotType::UNKNOWN || robot != RobotType::UNKNOWN)
+void GyroTracker::updateType(RobotType robot) {
+    if (robot != RobotType::UNKNOWN)
         _type_deque.push_back(robot);
     if (_type_deque.size() > 32)
         _type_deque.pop_back();
@@ -98,8 +94,7 @@ void GyroTracker::updateType(RobotType robot)
  * @param[in] end 终止向量
  * @return 夹角（按照叉乘方向区分正负，俯视图顺时针为正，弧度）
  */
-static inline float calcAngleFrom2Vec(const cv::Vec2f &start, const cv::Vec2f &end)
-{
+static inline float calcAngleFrom2Vec(const cv::Vec2f &start, const cv::Vec2f &end) {
     if (start == cv::Vec2f{})
         RMVL_Error(RMVL_StsBadArg, "\"start\" is (0, 0)");
     if (end == cv::Vec2f{})
@@ -108,8 +103,7 @@ static inline float calcAngleFrom2Vec(const cv::Vec2f &start, const cv::Vec2f &e
     return asin(start3f.cross(end3f)(1) / (norm(start3f) * norm(end3f)));
 }
 
-float GyroTracker::calcRotationSpeed()
-{
+float GyroTracker::calcRotationSpeed() {
     // 容量判断
     size_t pose_num = size() >= 4 ? 4 : size();
     if (pose_num < 2)

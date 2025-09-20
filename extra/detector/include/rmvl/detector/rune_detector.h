@@ -12,17 +12,14 @@
 #pragma once
 
 #include "detector.h"
-#include "rmvl/tracker/rune_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup rune_detector
 //! @{
 
 //! 能量机关识别模块（包含已激活、未激活）
-class RMVL_EXPORTS_W_DEU RuneDetector final : public detector
-{
+class RMVL_EXPORTS_W_DEU RuneDetector final : public detector {
 public:
     using ptr = std::unique_ptr<RuneDetector>;
 

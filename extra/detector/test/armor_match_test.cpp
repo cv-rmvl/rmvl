@@ -14,15 +14,14 @@
 #ifdef HAVE_RMVL_ARMOR_DETECTOR
 
 #include "armor_detector_test.h"
+#include "rmvl/core/timer.hpp"
 
 using namespace rm;
 
-namespace rm_test
-{
+namespace rm_test {
 
 // 较多追踪器与较少装甲板匹配策略功能验证
-TEST_F(ArmorDetectorTest, more_tracker_match_less_armor)
-{
+TEST_F(ArmorDetectorTest, more_tracker_match_less_armor) {
     buildArmorImg(cv::Point(200, 800), -5.f);
     buildArmorImg(cv::Point(600, 400), 5.f);
     p_detector->detect(groups, src, RED, ImuData(), Timer::now());
@@ -39,8 +38,7 @@ TEST_F(ArmorDetectorTest, more_tracker_match_less_armor)
 }
 
 // 追踪器与同等装甲板匹配策略功能验证
-TEST_F(ArmorDetectorTest, tracker_match_an_equal_number_of_armor)
-{
+TEST_F(ArmorDetectorTest, tracker_match_an_equal_number_of_armor) {
     // 1 追踪器 1 帧间距离较近的装甲板
     buildArmorImg(cv::Point(200, 800), -5.f);
     auto info = p_detector->detect(groups, src, RED, ImuData(), Timer::now());
@@ -69,8 +67,7 @@ TEST_F(ArmorDetectorTest, tracker_match_an_equal_number_of_armor)
 }
 
 // 较少追踪器与较多装甲板匹配策略功能验证
-TEST_F(ArmorDetectorTest, less_tracker_match_more_armor)
-{
+TEST_F(ArmorDetectorTest, less_tracker_match_more_armor) {
     buildArmorImg(cv::Point(600, 400), 5.f);
     auto info = p_detector->detect(groups, src, RED, ImuData(), Timer::now());
     resetImg();

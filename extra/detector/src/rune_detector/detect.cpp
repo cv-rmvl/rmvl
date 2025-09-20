@@ -9,16 +9,15 @@
  *
  */
 
+#include "rmvl/core/util.hpp"
 #include "rmvl/detector/rune_detector.h"
 #include "rmvl/group/rune_group.h"
 
 #include "rmvlpara/detector/rune_detector.h"
 
-namespace rm
-{
+namespace rm {
 
-DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick)
-{
+DetectInfo RuneDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) {
     if (groups.size() > 1)
         RMVL_Error(RMVL_StsBadArg, "Size of the argument \"groups\" is greater than 1");
     DetectInfo info{};

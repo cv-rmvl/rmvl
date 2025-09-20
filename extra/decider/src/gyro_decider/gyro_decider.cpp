@@ -10,18 +10,16 @@
  */
 
 #include "rmvl/decider/gyro_decider.h"
-#include "rmvl/group/gyro_group.h"
 #include "rmvl/algorithm/transform.hpp"
+#include "rmvl/group/gyro_group.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/gyro_decider.h"
 
-namespace rm
-{
+namespace rm {
 
-GyroDecider::GyroDecider()
-{
+GyroDecider::GyroDecider() {
     std::string type_priority = para::gyro_decider_param.TYPE_PRIORITY;
     if (type_priority.length() != 9)
         RMVL_Error_(RMVL_StsBadArg, "The length of the TYPE_PRIORITY is unequal to 9, but %zu", type_priority.length());
@@ -48,8 +46,7 @@ GyroDecider::GyroDecider()
  * @param[out] point_dp 目标转角预测增量
  */
 static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, cv::Vec3f translation_dp, float rotangle,
-                           cv::Point2f &point_p2d, cv::Point3f &point_p3d, cv::Point2f &point_dp)
-{
+                           cv::Point2f &point_p2d, cv::Point3f &point_p3d, cv::Point2f &point_dp) {
     GyroGroup::ptr p_gyro_group = GyroGroup::cast(p_group);
     if (p_gyro_group == nullptr)
         RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"GyroGroup::ptr\"");
@@ -86,8 +83,7 @@ static void calcPrediction(group::ptr p_group, tracker::const_ptr p_tracker, cv:
  * @return 高速状态下的基础响应
  */
 static cv::Point2f calculateHighSpeedBasicResponse(group::ptr target_group, tracker::ptr target_tracker,
-                                                   const cv::Point3f &predict_center3d)
-{
+                                                   const cv::Point3f &predict_center3d) {
     // pitch 最大振幅角度
     float pitch_max = target_tracker->getRelativeAngle().y;
     // pitch 最小振幅角度
@@ -107,8 +103,7 @@ static cv::Point2f calculateHighSpeedBasicResponse(group::ptr target_group, trac
 
 DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const StateInfo &,
                                tracker::ptr last_target, const DetectInfo &,
-                               const CompensateInfo &compensate_info, const PredictInfo &predict_info)
-{
+                               const CompensateInfo &compensate_info, const PredictInfo &predict_info) {
     // 决策信息
     DecideInfo info{};
     // 若没有序列组，则返回
@@ -130,8 +125,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
     // ------------------------【选择目标追踪器】------------------------
     // 目标追踪器
     info.target = getClosestTracker(target_group, predict_info);
-    if (info.target)
-    {
+    if (info.target) {
         // -------------------------【决策数据解算】-------------------------
         RotStatus rot_status = GyroGroup::cast(target_group)->getRotStatus();
         auto p_gyro_tracker = GyroTracker::cast(info.target);
@@ -144,8 +138,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
         auto comp = compensate_info.compensation.at(info.target);
 
         // 低速状态跟随装甲板
-        if (rot_status == RotStatus::LOW_ROT_SPEED)
-        {
+        if (rot_status == RotStatus::LOW_ROT_SPEED) {
             // --------------------【提取用于响应的预测量】--------------------
             cv::Point2f resp_p2d; // 预测值 (2D)
             cv::Point3f resp_p3d; // 预测值 (3D)
@@ -166,8 +159,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
             info.exp_center3d = shoot_p3d;
         }
         // 高速状态瞄准中轴线
-        else
-        {
+        else {
             // --------------------【提取用于响应的预测量】--------------------
             cv::Point2f resp_x_p2d; // yaw 预测值 (2D)
             cv::Point3f resp_x_p3d; // yaw 预测值 (3D)
@@ -194,8 +186,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
         }
 
         // 判断能否进行射击
-        if (info.target != nullptr)
-        {
+        if (info.target != nullptr) {
             // 将补偿的角度换算为坐标点
             info.shoot_center = calculateRelativeCenter(para::camera_param.cameraMatrix, -comp);
             if (getDistance(info.exp_center2d, info.shoot_center) <=
@@ -206,8 +197,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
     return info;
 }
 
-tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInfo &info)
-{
+tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInfo &info) {
     if (p_group == nullptr)
         return nullptr;
     if (p_group->empty())
@@ -235,8 +225,7 @@ tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInf
     });
 }
 
-group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &groups)
-{
+group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &groups) {
     if (groups.empty())
         return nullptr;
     // 获取最优 group

@@ -145,12 +145,7 @@ public:
      * @param[in] p_tracker 追踪器指针
      * @return 追踪器信状态
      */
-    inline TrackerState getTrackerState(tracker::ptr p_tracker)
-    {
-        if (_tracker_state.find(p_tracker) == _tracker_state.end())
-            RMVL_Error(RMVL_StsBadArg, "p_tracker in \"_tracker_state\" is not exist.");
-        return _tracker_state[p_tracker];
-    }
+    TrackerState getTrackerState(tracker::ptr p_tracker);
 
     //! 获取最新的车组旋转中心点
     RMVL_W inline cv::Vec3f getCenter3D() const { return _center3d; }

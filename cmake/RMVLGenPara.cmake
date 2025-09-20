@@ -122,7 +122,7 @@ function(_parse_assign content_line header_line source_read_line source_write_li
     string(STRIP "${comment_sym}" comment_sym)
     # 添加默认值提示到注释中
     if(NOT default_sym STREQUAL "")
-      set(comment_sym "${comment_sym} @note 默认值：`${default_sym}`")
+      set(comment_sym "${comment_sym} @details 默认值：`${default_sym}`")
     endif()
     # 修正非 string 类型的默认值
     if(NOT type_sym STREQUAL "string")

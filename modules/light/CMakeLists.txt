@@ -22,7 +22,7 @@ rmvl_generate_para(
 
 rmvl_add_module(
   hik_light_control
-  DEPENDS core light
+  DEPENDS light core io
 ) 
 
 # ----------------------------------------------------------------------------

@@ -13,11 +13,10 @@
 
 #include "detector.h"
 
+#include "rmvl/combo/armor.h"
 #include "rmvl/ml/ort.h"
-#include "rmvl/tracker/planar_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup armor_detector
 //! @{
@@ -26,8 +25,7 @@ namespace rm
 //! @example samples/detector/hik/sample_hik_armor_collection.cpp 装甲板收集例程 Armor collection demo
 
 //! 装甲板识别模块
-class RMVL_EXPORTS_W_DEU ArmorDetector final : public detector
-{
+class RMVL_EXPORTS_W_DEU ArmorDetector final : public detector {
     std::unique_ptr<OnnxNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
 

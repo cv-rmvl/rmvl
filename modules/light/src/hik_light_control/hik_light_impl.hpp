@@ -13,7 +13,7 @@
 
 #include "rmvl/light/hik_light_control.h"
 
-#include "rmvl/core/io.hpp"
+#include "rmvl/io/serial.hpp"
 
 namespace rm
 {

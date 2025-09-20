@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/algorithm/math.hpp"
 #include "rmvl/core/timer.hpp"
 #include "rmvl/tracker/gyro_tracker.h"
 
@@ -23,19 +24,16 @@
 
 using namespace rm;
 
-namespace rm_test
-{
+namespace rm_test {
 
-class GyroTrackerTest : public testing::Test
-{
+class GyroTrackerTest : public testing::Test {
     cv::Mat src;
 
 public:
     double tick{Timer::now()};
     ImuData imu_data{};
 
-    void SetUp() override
-    {
+    void SetUp() override {
         para::camera_param.cameraMatrix = {1500, 0, 640,
                                            0, 1500, 512,
                                            0, 0, 1};
@@ -55,8 +53,7 @@ public:
      * @param angle 装甲板倾角
      * @return
      */
-    Armor::ptr buildArmor(cv::Point center, float angle)
-    {
+    Armor::ptr buildArmor(cv::Point center, float angle) {
         LightBlob::ptr left_blob = buildBlob(angle, center - cv::Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
         LightBlob::ptr right_blob = buildBlob(angle, center + cv::Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
         return Armor::make_combo(left_blob, right_blob, ImuData(), Timer::now());
@@ -69,8 +66,7 @@ public:
      * @param center 中心点
      * @return
      */
-    LightBlob::ptr buildBlob(float angle, cv::Point center)
-    {
+    LightBlob::ptr buildBlob(float angle, cv::Point center) {
         src = cv::Mat::zeros(cv::Size(1280, 1024), CV_8UC1);
         cv::Point base_bias(static_cast<int>(-110 * sin(deg2rad(angle))),
                             static_cast<int>(110 * cos(deg2rad(angle))));
@@ -82,8 +78,7 @@ public:
 };
 
 // 初始化构建功能验证
-TEST_F(GyroTrackerTest, initial_build_function_test)
-{
+TEST_F(GyroTrackerTest, initial_build_function_test) {
     // 传入真实装甲板
     Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     tracker::ptr p_tracker = GyroTracker::make_tracker(armor);
@@ -92,8 +87,7 @@ TEST_F(GyroTrackerTest, initial_build_function_test)
 }
 
 // 追踪器传入装甲板更新功能验证
-TEST_F(GyroTrackerTest, tracker_update_with_1_armor)
-{
+TEST_F(GyroTrackerTest, tracker_update_with_1_armor) {
     // 连续传入 2 个装甲板
     Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     tracker::ptr p_tracker = GyroTracker::make_tracker(armor);

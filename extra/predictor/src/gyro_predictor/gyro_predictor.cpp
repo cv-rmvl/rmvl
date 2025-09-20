@@ -15,19 +15,15 @@
 
 #include "rmvlpara/predictor/gyro_predictor.h"
 
-namespace rm
-{
+namespace rm {
 
 PredictInfo GyroPredictor::predict(const std::vector<group::ptr> &groups,
-                                   const std::unordered_map<tracker::ptr, double> &tof)
-{
+                                   const std::unordered_map<tracker::ptr, double> &tof) {
     // 预测信息
     PredictInfo info{};
-    for (auto p_group : groups)
-    {
+    for (auto p_group : groups) {
         auto p_gyro_group = GyroGroup::cast(p_group);
-        for (auto p_tracker : p_group->data())
-        {
+        for (auto p_tracker : p_group->data()) {
             double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
             auto p_gyro_tracker = GyroTracker::cast(p_tracker);
             // 平移

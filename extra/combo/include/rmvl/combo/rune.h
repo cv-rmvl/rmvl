@@ -12,11 +12,11 @@
 #pragma once
 
 #include "combo.h"
+
 #include "rmvl/feature/rune_center.h"
 #include "rmvl/feature/rune_target.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup combo_rune
 //! @{
@@ -29,8 +29,7 @@ namespace rm
  * - 相机外参 `extrinsic()` 数据仅直线距离 `distance` 有效
  * - 中心点 `center()` 为神符靶心的中心点，要获取神符旋转中心请访问对应特征，例如使用 `at(1)`
  */
-class RMVL_EXPORTS_W_DES Rune final : public combo
-{
+class RMVL_EXPORTS_W_DES Rune final : public combo {
 public:
     using ptr = std::shared_ptr<Rune>;
     using const_ptr = std::shared_ptr<const Rune>;
@@ -70,10 +69,7 @@ public:
      * @param[in] diff_theta 两个平面之间的夹角（角度制）
      * @return 垂直平面中的角度值
      */
-    static inline cv::Vec2f cameraConvertToVertical(const cv::Vec2f &angle_vec, float diff_theta)
-    {
-        return {angle_vec(0), angle_vec(1) * sec(deg2rad(diff_theta))};
-    }
+    static cv::Vec2f cameraConvertToVertical(const cv::Vec2f &angle_vec, float diff_theta);
 
     /**
      * @brief 垂直平面中将角度值映射至相机平面
@@ -83,10 +79,7 @@ public:
      * @param[in] diff_theta 两个平面之间的夹角（角度制）
      * @return 相机平面中的角度值
      */
-    static inline cv::Vec2f verticalConvertToCamera(const cv::Vec2f &angle_vec, float diff_theta)
-    {
-        return {angle_vec(0), angle_vec(1) * std::cos(deg2rad(diff_theta))};
-    }
+    static cv::Vec2f verticalConvertToCamera(const cv::Vec2f &angle_vec, float diff_theta);
 
     //! 3D 空间下神符特征间距
     RMVL_W inline float getFeatureDis() const { return _feature_dis; }

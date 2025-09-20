@@ -16,8 +16,7 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/compensator/gyro_compensator.h"
 
-namespace rm
-{
+namespace rm {
 
 /**
  * @brief 弹道模型
@@ -28,19 +27,16 @@ namespace rm
  * @return 弹丸飞行至水平距离`x`时，落点的垂直距离
  * @note 返回值为正表示落点在枪口上方，为负表示落点在枪口下方，单位 `m`
  */
-static double bulletModel(double x, double v, double angle)
-{
+static double bulletModel(double x, double v, double angle) {
     // 计算飞行 x 距离的子弹飞行时间
     double t = x / (v * cos(angle));
     // 计算子弹落点高度
     return v * sin(angle) * t - para::gyro_compensator_param.g * t * t / 2.0;
 }
 
-static void updateStaticCom(CompensateType com_flag, float &x_st, float &y_st)
-{
+static void updateStaticCom(CompensateType com_flag, float &x_st, float &y_st) {
     float com_step = para::gyro_compensator_param.MINIMUM_COM;
-    switch (com_flag)
-    {
+    switch (com_flag) {
     case CompensateType::UP:
         y_st += com_step;
         para::gyro_compensator_param.PITCH_COMPENSATE += com_step;
@@ -73,13 +69,11 @@ static void updateStaticCom(CompensateType com_flag, float &x_st, float &y_st)
  *
  * @return 补偿角度
  */
-static double getPitch(double x, double y, double v)
-{
+static double getPitch(double x, double y, double v) {
     double y_temp = y;
     double angle = 0.f;
     // 使用迭代法求得补偿角度
-    for (int i = 0; i < 50; i++)
-    {
+    for (int i = 0; i < 50; i++) {
         angle = atan2(y_temp, x);
         double dy = y - bulletModel(x, v, angle);
         y_temp += dy;
@@ -89,20 +83,17 @@ static double getPitch(double x, double y, double v)
     return angle;
 }
 
-GyroCompensator::GyroCompensator()
-{
+GyroCompensator::GyroCompensator() {
     _pitch_static_com = para::gyro_compensator_param.PITCH_COMPENSATE;
     _yaw_static_com = para::gyro_compensator_param.YAW_COMPENSATE;
 }
 
-CompensateInfo GyroCompensator::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag)
-{
+CompensateInfo GyroCompensator::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) {
     CompensateInfo info;
     // 补偿手动调节
     updateStaticCom(com_flag, _yaw_static_com, _pitch_static_com);
     // 对每个序列组的中心点计算补偿
-    for (auto p_group : groups)
-    {
+    for (auto p_group : groups) {
         auto p_gyro_group = GyroGroup::cast(p_group);
         if (p_gyro_group == nullptr)
             RMVL_Error(RMVL_BadDynamicType, "Fail to cast the type of \"p_group\" to \"GyroGroup::ptr\"");
@@ -122,8 +113,7 @@ CompensateInfo GyroCompensator::compensate(const std::vector<group::ptr> &groups
         // 子弹飞行时间计算
         double tf = dis * cos(deg2rad(-angle)) / (static_cast<double>(shoot_speed) * cos(deg2rad(y_com + angle)));
         // 更新至每个 tracker
-        for (auto p_tracker : p_group->data())
-        {
+        for (auto p_tracker : p_group->data()) {
             info.compensation.emplace(p_tracker, cv::Point2f(x_com, y_com));
             info.tof.emplace(p_tracker, tf);
         }

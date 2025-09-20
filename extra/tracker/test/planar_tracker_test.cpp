@@ -16,24 +16,22 @@
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/algorithm/math.hpp"
 #include "rmvl/core/timer.hpp"
 #include "rmvl/tracker/planar_tracker.h"
 
 #include "rmvlpara/camera/camera.h"
 
-namespace rm_test
-{
+namespace rm_test {
 
-class PlanarTrackerTest : public testing::Test
-{
+class PlanarTrackerTest : public testing::Test {
     cv::Mat src;
 
 public:
     double tick{rm::Timer::now()};
     rm::ImuData imu_data{};
 
-    void SetUp() override
-    {
+    void SetUp() override {
         rm::para::camera_param.cameraMatrix = {1500, 0, 640,
                                                0, 1500, 512,
                                                0, 0, 1};
@@ -53,8 +51,7 @@ public:
      * @param angle 装甲板倾角
      * @return
      */
-    rm::Armor::ptr buildArmor(cv::Point center, float angle)
-    {
+    rm::Armor::ptr buildArmor(cv::Point center, float angle) {
         rm::LightBlob::ptr left_blob = buildBlob(angle, center - cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
         rm::LightBlob::ptr right_blob = buildBlob(angle, center + cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
         return rm::Armor::make_combo(left_blob, right_blob, rm::ImuData(), rm::Timer::now());
@@ -67,8 +64,7 @@ public:
      * @param center 中心点
      * @return
      */
-    rm::LightBlob::ptr buildBlob(float angle, cv::Point center)
-    {
+    rm::LightBlob::ptr buildBlob(float angle, cv::Point center) {
         src = cv::Mat::zeros(cv::Size(1280, 1024), CV_8UC1);
         cv::Point base_bias(static_cast<int>(-110 * sin(rm::deg2rad(angle))),
                             static_cast<int>(110 * cos(rm::deg2rad(angle))));
@@ -80,8 +76,7 @@ public:
 };
 
 // 初始化构建功能验证
-TEST_F(PlanarTrackerTest, initial_build_function_test)
-{
+TEST_F(PlanarTrackerTest, initial_build_function_test) {
     // 传入真实装甲板
     rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
@@ -90,8 +85,7 @@ TEST_F(PlanarTrackerTest, initial_build_function_test)
 }
 
 // 追踪器传入装甲板更新功能验证
-TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
-{
+TEST_F(PlanarTrackerTest, tracker_update_with_1_armor) {
     // 连续传入 2 个装甲板
     rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);
@@ -106,8 +100,7 @@ TEST_F(PlanarTrackerTest, tracker_update_with_1_armor)
 }
 
 // 追踪器掉帧处理功能验证
-TEST_F(PlanarTrackerTest, tracker_update_with_none)
-{
+TEST_F(PlanarTrackerTest, tracker_update_with_none) {
     // 传入装甲板后传入空
     rm::Armor::ptr armor = buildArmor(cv::Point(500, 300), 8);
     rm::tracker::ptr p_tracker = rm::PlanarTracker::make_tracker(armor);

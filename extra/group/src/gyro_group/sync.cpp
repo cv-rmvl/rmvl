@@ -14,7 +14,6 @@
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera/camera.h"
-#include "rmvlpara/tracker/gyro_tracker.h"
 
 namespace rm
 {

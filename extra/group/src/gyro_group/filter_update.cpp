@@ -13,11 +13,9 @@
 
 #include "rmvlpara/group/gyro_group.h"
 
-namespace rm
-{
+namespace rm {
 
-void GyroGroup::updateCenter3DFilter(cv::Vec3f center, float t, cv::Vec3f &update_center, cv::Vec3f &update_speed)
-{
+void GyroGroup::updateCenter3DFilter(cv::Vec3f center, float t, cv::Vec3f &update_center, cv::Vec3f &update_speed) {
     // 设置状态转移矩阵
     _center3d_filter.setA({1, 0, 0, t, 0, 0,
                            0, 1, 0, 0, t, 0,
@@ -33,8 +31,7 @@ void GyroGroup::updateCenter3DFilter(cv::Vec3f center, float t, cv::Vec3f &updat
     update_speed = {correct_val(3), correct_val(4), correct_val(5)};
 }
 
-void GyroGroup::updateRotationFilter(float rotspeed, float &update_rotspeed)
-{
+void GyroGroup::updateRotationFilter(float rotspeed, float &update_rotspeed) {
     // 更新角度信息
     _rotspeed_deq.push_front(rotspeed);
     if (_rotspeed_deq.size() > para::gyro_group_param.ROTSPEED_SIZE)

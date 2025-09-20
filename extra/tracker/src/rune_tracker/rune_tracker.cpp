@@ -9,14 +9,14 @@
  *
  */
 
+#include "rmvl/core/util.hpp"
+
 #include "rmvl/tracker/rune_tracker.h"
 #include "rmvlpara/tracker/rune_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-void RuneTracker::updateFromRune(combo::ptr p_combo)
-{
+void RuneTracker::updateFromRune(combo::ptr p_combo) {
     _width = p_combo->width();
     _height = p_combo->height();
     _corners = p_combo->corners();
@@ -26,8 +26,7 @@ void RuneTracker::updateFromRune(combo::ptr p_combo)
     _relative_angle = p_combo->getRelativeAngle();
 }
 
-RuneTracker::RuneTracker(combo::ptr p_rune)
-{
+RuneTracker::RuneTracker(combo::ptr p_rune) {
     if (p_rune == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is null pointer");
     _combo_deque.emplace_front(p_rune);
@@ -42,8 +41,7 @@ RuneTracker::RuneTracker(combo::ptr p_rune)
 
 bool RuneTracker::invalid() const { return _vanish_num >= para::rune_tracker_param.TRACK_FRAMES; }
 
-tracker::ptr RuneTracker::clone()
-{
+tracker::ptr RuneTracker::clone() {
     auto retval = std::make_shared<RuneTracker>(*this);
     // 更新内部所有组合体
     for (auto &p_combo : retval->_combo_deque)
@@ -51,12 +49,10 @@ tracker::ptr RuneTracker::clone()
     return retval;
 }
 
-void RuneTracker::update(combo::ptr p_rune)
-{
+void RuneTracker::update(combo::ptr p_rune) {
     if (p_rune == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is nullptr");
-    else
-    {
+    else {
         _combo_deque.push_front(p_rune);
         // 数据更新
         updateFromRune(p_rune);
@@ -76,8 +72,7 @@ void RuneTracker::update(combo::ptr p_rune)
         _combo_deque.pop_back();
 }
 
-float RuneTracker::calculateTotalAngle()
-{
+float RuneTracker::calculateTotalAngle() {
     // 若当前容器 size < 2 则圈数为默认0
     if (_combo_deque.size() < 2)
         return front()->angle();

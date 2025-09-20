@@ -10,13 +10,12 @@
  */
 
 #include "rmvl/tracker/planar_tracker.h"
+#include "rmvl/core/util.hpp"
 #include "rmvlpara/tracker/planar_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-void PlanarTracker::updateData(combo::ptr p_combo)
-{
+void PlanarTracker::updateData(combo::ptr p_combo) {
     _height = p_combo->height();
     _width = p_combo->height();
     _angle = p_combo->height();
@@ -26,8 +25,7 @@ void PlanarTracker::updateData(combo::ptr p_combo)
     _state = p_combo->state();
 }
 
-PlanarTracker::PlanarTracker(combo::ptr p_combo)
-{
+PlanarTracker::PlanarTracker(combo::ptr p_combo) {
     if (p_combo == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is null pointer");
     _combo_deque.emplace_front(p_combo);
@@ -38,8 +36,7 @@ PlanarTracker::PlanarTracker(combo::ptr p_combo)
 
 bool PlanarTracker::invalid() const { return _vanish_num >= para::planar_tracker_param.TRACK_FRAMES; }
 
-tracker::ptr PlanarTracker::clone()
-{
+tracker::ptr PlanarTracker::clone() {
     auto retval = std::make_shared<PlanarTracker>(*this);
     // 更新内部所有组合体
     for (auto &p_combo : retval->_combo_deque)
@@ -47,8 +44,7 @@ tracker::ptr PlanarTracker::clone()
     return retval;
 }
 
-void PlanarTracker::update(combo::ptr p_combo)
-{
+void PlanarTracker::update(combo::ptr p_combo) {
     if (p_combo == nullptr)
         RMVL_Error(RMVL_StsBadArg, "Pointer of the input argument combo::ptr is nullptr");
 
@@ -66,8 +62,7 @@ void PlanarTracker::update(combo::ptr p_combo)
         _combo_deque.pop_back();
 }
 
-void PlanarTracker::update(double tick, [[maybe_unused]] const ImuData &imu_data)
-{
+void PlanarTracker::update(double tick, [[maybe_unused]] const ImuData &imu_data) {
     if (_combo_deque.empty())
         return;
     _vanish_num++;

@@ -10,24 +10,22 @@
  */
 
 #include "rmvlpara/compensator/gravity_compensator.h"
+#include "rmvl/algorithm/math.hpp"
 
 #include "gravity_impl.h"
 
-namespace rm
-{
+namespace rm {
 
 GravityCompensator::GravityCompensator() noexcept : _impl(new Impl) {}
 
 GravityCompensator::~GravityCompensator() { delete _impl; }
 
-CompensateInfo GravityCompensator::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag)
-{
+CompensateInfo GravityCompensator::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) {
     return _impl->compensate(groups, shoot_speed, com_flag);
 }
 
 GravityCompensator::Impl::Impl() : _yaw_static_com(para::gravity_compensator_param.PITCH_COMPENSATE),
-                                   _pitch_static_com(para::gravity_compensator_param.YAW_COMPENSATE)
-{
+                                   _pitch_static_com(para::gravity_compensator_param.YAW_COMPENSATE) {
     using para::gravity_compensator_param;
     double tmp = gravity_compensator_param.rho * gravity_compensator_param.A * gravity_compensator_param.V / (2 * gravity_compensator_param.m);
     double a22 = -tmp * gravity_compensator_param.Cd;
@@ -42,8 +40,7 @@ GravityCompensator::Impl::Impl() : _yaw_static_com(para::gravity_compensator_par
     _rk = std::make_unique<RungeKutta2>(fs);
 }
 
-std::pair<double, double> GravityCompensator::Impl::bulletModel(double x, double v, double angle)
-{
+std::pair<double, double> GravityCompensator::Impl::bulletModel(double x, double v, double angle) {
     // 预估子弹飞行时间，并延长 15%
     double t_pre{x / (v * cos(angle)) * 1.15};
     // 使用 RK2 方法计算较长一段时间的弹道轨迹
@@ -51,8 +48,7 @@ std::pair<double, double> GravityCompensator::Impl::bulletModel(double x, double
     auto res = _rk->solve(para::gravity_compensator_param.h, static_cast<size_t>(std::floor(t_pre / para::gravity_compensator_param.h)));
     // 在计算出的结果中根据 res[0] 二分查找最接近 x 的解
     size_t l{res.size() >> 1}, r{res.size() - 1};
-    for (int i = 0; i < 2 * log2(res.size()); i++)
-    {
+    for (int i = 0; i < 2 * log2(res.size()); i++) {
         if (l == r)
             break;
         size_t m = (l + r) >> 1;
@@ -66,14 +62,12 @@ std::pair<double, double> GravityCompensator::Impl::bulletModel(double x, double
     return {retval_y, retval_t};
 }
 
-std::pair<double, double> GravityCompensator::Impl::calc(double x, double y, double velocity)
-{
+std::pair<double, double> GravityCompensator::Impl::calc(double x, double y, double velocity) {
     double y_temp{y};
     double angle{};
     double t{};
     // 使用迭代法求得补偿角度，并获取对应的子弹飞行时间
-    for (int i = 0; i < 50; i++)
-    {
+    for (int i = 0; i < 50; i++) {
         angle = atan2(y_temp, x);
         // 通过子弹模型计算落点以及子弹飞行时间
         auto [cur_y, cur_t] = bulletModel(x, velocity, angle);
@@ -86,11 +80,9 @@ std::pair<double, double> GravityCompensator::Impl::calc(double x, double y, dou
     return {angle, t};
 }
 
-void GravityCompensator::Impl::updateStaticCom(CompensateType com_flag, float &x_st, float &y_st)
-{
+void GravityCompensator::Impl::updateStaticCom(CompensateType com_flag, float &x_st, float &y_st) {
     float com_step = para::gravity_compensator_param.MINIMUM_COM;
-    switch (com_flag)
-    {
+    switch (com_flag) {
     case CompensateType::UP:
         y_st += com_step;
         para::gravity_compensator_param.PITCH_COMPENSATE += com_step;
@@ -112,16 +104,13 @@ void GravityCompensator::Impl::updateStaticCom(CompensateType com_flag, float &x
     }
 }
 
-CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag)
-{
+CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) {
     CompensateInfo info{};
     // 补偿手动调节
     updateStaticCom(com_flag, _yaw_static_com, _pitch_static_com);
     // 对每个序列组的每个追踪器按照一种方式进行补偿计算
-    for (auto &p_group : groups)
-    {
-        for (auto &p_tracker : p_group->data())
-        {
+    for (auto &p_group : groups) {
+        for (auto &p_tracker : p_group->data()) {
             // 单位换算
             double dis = p_tracker->extrinsic().distance() / 1000.;
             // 提取当前 IMU 角度

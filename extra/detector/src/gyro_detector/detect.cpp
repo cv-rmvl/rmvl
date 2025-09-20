@@ -10,22 +10,18 @@
  */
 
 #include "rmvl/detector/gyro_detector.h"
-#include "rmvl/group/gyro_group.h"
 
 #include "rmvlpara/detector/gyro_detector.h"
 
-namespace rm
-{
+namespace rm {
 
-GyroDetector::GyroDetector(std::string_view model, int armor_num) : _armor_num(armor_num)
-{
+GyroDetector::GyroDetector(std::string_view model, int armor_num) : _armor_num(armor_num) {
     _ort = std::make_unique<ClassificationNet>(model);
     for (int i = 0; i < 9; ++i)
         _robot_t[i] = static_cast<RobotType>(i);
 }
 
-DetectInfo GyroDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick)
-{
+DetectInfo GyroDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) {
     // 识别信息
     DetectInfo info{};
     info.src = src;

@@ -10,30 +10,26 @@
  */
 
 #include "rmvl/group/rune_group.h"
-#include "rmvl/tracker/rune_tracker.h"
+#include "rmvl/core/util.hpp"
 
 #include "rmvlpara/group/rune_group.h"
 
-namespace rm
-{
+namespace rm {
 
-void RuneGroup::sync(const ImuData &, double)
-{
+void RuneGroup::sync(const ImuData &, double) {
     if (_trackers.empty())
         RMVL_Error(RMVL_StsBadSize, "trackers of the \"rune_group\" is empty!");
     double raw_data{};
     if (_datas.empty())
         raw_data = static_cast<double>(_trackers[0]->angle());
-    else
-    {
+    else {
         size_t trackers_num = _trackers.size();
         // ----------------- 角度连续化处理 -----------------
         double last_data = _datas.front();
         std::vector<double> cur_angles(trackers_num);
         cur_angles[0] = _trackers[0]->angle();
         // 角度向 cur_angles[0] 对齐
-        for (size_t i = 1; i < trackers_num; ++i)
-        {
+        for (size_t i = 1; i < trackers_num; ++i) {
             double cur_angle = _trackers[i]->angle();
             double n = round((cur_angle - cur_angles[0]) / para::rune_group_param.INTERVAL_ANGLE);
             cur_angles[i] = cur_angle - n * para::rune_group_param.INTERVAL_ANGLE;
@@ -52,8 +48,7 @@ void RuneGroup::sync(const ImuData &, double)
         _datas.pop_back();
 }
 
-group::ptr RuneGroup::clone()
-{
+group::ptr RuneGroup::clone() {
     auto retval = std::make_shared<RuneGroup>(*this);
     // 更新内部所有追踪器
     for (auto &p_tracker : retval->_trackers)
