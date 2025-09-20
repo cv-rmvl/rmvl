@@ -14,15 +14,14 @@
 #ifdef HAVE_RMVL_ARMOR_DETECTOR
 
 #include "armor_detector_test.h"
+#include "rmvl/core/timer.hpp"
 
 using namespace rm;
 
-namespace rm_test
-{
+namespace rm_test {
 
 // 单装甲板独立测试功能
-TEST_F(ArmorDetectorTest, single_armor_function_test)
-{
+TEST_F(ArmorDetectorTest, single_armor_function_test) {
     cv::Point center = cv::Point(300, 300);
     buildArmorImg(center, 5);
     // imshow("src", src);
@@ -37,8 +36,7 @@ TEST_F(ArmorDetectorTest, single_armor_function_test)
 }
 
 // 单装甲板多灯条干扰
-TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
-{
+TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb) {
     cv::Point center(600, 500);
     // 单装甲板区域内有灯条 ( /\/ )
     buildArmorImg(center, 0);
@@ -92,8 +90,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb)
 }
 
 // 多装甲板独立
-TEST_F(ArmorDetectorTest, more_armor_independence)
-{
+TEST_F(ArmorDetectorTest, more_armor_independence) {
     buildArmorImg(cv::Point(200, 100), 5);
     buildArmorImg(cv::Point(500, 300), 0);
     buildArmorImg(cv::Point(800, 500), -7);
@@ -104,8 +101,7 @@ TEST_F(ArmorDetectorTest, more_armor_independence)
         return lhs->center().x < rhs->center().x;
     });
     EXPECT_EQ(info.combos.size(), 3);
-    if (info.combos.size() == 3)
-    {
+    if (info.combos.size() == 3) {
         EXPECT_LE(getDistance(info.combos[0]->center(), cv::Point(200, 100)), 10);
         EXPECT_LE(getDistance(info.combos[1]->center(), cv::Point(500, 300)), 10);
         EXPECT_LE(getDistance(info.combos[2]->center(), cv::Point(800, 500)), 10);
@@ -113,8 +109,7 @@ TEST_F(ArmorDetectorTest, more_armor_independence)
 }
 
 // 多装甲板交错干扰
-TEST_F(ArmorDetectorTest, more_armor_disturb)
-{
+TEST_F(ArmorDetectorTest, more_armor_disturb) {
     auto reset = [this]() {
         src = cv::Mat::zeros(cv::Size(1280, 1024), CV_8UC3);
     };

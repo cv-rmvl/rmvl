@@ -9,15 +9,14 @@
  *
  */
 
+#include "rmvl/algorithm/math.hpp"
 #include "rmvl/group/rune_group.h"
 #include "rmvl/predictor/spi_rune_predictor.h"
 #include "rmvl/tracker/rune_tracker.h"
 
-#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/predictor/spi_rune_predictor.h"
 
-namespace rm
-{
+namespace rm {
 
 /**
  * @brief 重置、初始化 Pm、xm
@@ -26,20 +25,17 @@ namespace rm
  * @param[out] Pm 协方差矩阵
  * @param[out] xm 待求解系数向量
  */
-inline void resetPmxm(size_t n, cv::Mat &Pm, cv::Mat &xm)
-{
+inline void resetPmxm(size_t n, cv::Mat &Pm, cv::Mat &xm) {
     Pm = para::spi_rune_predictor_param.KP * cv::Mat::eye(n + 1, n + 1, CV_64FC1);
     xm = cv::Mat::zeros(n + 1, 1, CV_64FC1);
 }
 
 SpiRunePredictor::SpiRunePredictor() : _n(para::spi_rune_predictor_param.DIFF_ORDER),
-                                       _interval(para::spi_rune_predictor_param.SAMPLE_INTERVAL)
-{
+                                       _interval(para::spi_rune_predictor_param.SAMPLE_INTERVAL) {
     resetPmxm(_n, _pm, _xm);
 }
 
-void SpiRunePredictor::identifier(const std::deque<double> &raw_datas)
-{
+void SpiRunePredictor::identifier(const std::deque<double> &raw_datas) {
     // 允许辨识的最小容量
     if (raw_datas.size() < para::spi_rune_predictor_param.MAX_NF + para::spi_rune_predictor_param.DIFF_ORDER)
         return;
@@ -57,11 +53,9 @@ void SpiRunePredictor::identifier(const std::deque<double> &raw_datas)
     _xm = _xm + _pm * amt * (bm - cv::Mat(am * _xm).at<double>(0));
 }
 
-PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof)
-{
+PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof) {
     PredictInfo info{};
-    if (groups.empty() || groups.front()->data().empty())
-    {
+    if (groups.empty() || groups.front()->data().empty()) {
         resetPmxm(_n, _pm, _xm);
         return info;
     }
@@ -73,8 +67,7 @@ PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, con
     const auto &raw_datas = p_rune_group->getRawDatas();
     identifier(raw_datas);
     // ---------------------- 预测量计算 ----------------------
-    for (auto p_tracker : trackers)
-    {
+    for (auto p_tracker : trackers) {
         // 静态预测角度增量
         auto dB = staticPredict(p_tracker);
         // 动态预测角度增量
@@ -86,16 +79,14 @@ PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, con
     return info;
 }
 
-float SpiRunePredictor::staticPredict(tracker::ptr p_tracker)
-{
+float SpiRunePredictor::staticPredict(tracker::ptr p_tracker) {
     auto p_rune_tracker = RuneTracker::cast(p_tracker);
     if (p_rune_tracker == nullptr)
         RMVL_Error(RMVL_BadDynamicType, "failed to convert the type of \"p_tracker\" to \"RuneTracker\"");
     return p_rune_tracker->getRotatedSpeed() * para::spi_rune_predictor_param.B;
 }
 
-double SpiRunePredictor::anglePredict(const std::deque<double> &raw_datas, double tf)
-{
+double SpiRunePredictor::anglePredict(const std::deque<double> &raw_datas, double tf) {
     if (raw_datas.empty())
         RMVL_Error(RMVL_StsBadSize, "Bad size of the \"_datas\", size = 0");
     if (tf <= 0)

@@ -164,7 +164,7 @@ bool run()
     DetectInfo detect_info{};
     try
     {
-        detect_info = detector_map[detect_flag]->detect(groups, src, color, data, getTickCount());
+        detect_info = detector_map[detect_flag]->detect(groups, src, color, data, Timer::now());
     }
     catch (const rm::Exception &e)
     {

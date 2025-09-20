@@ -17,24 +17,21 @@
 
 #include <opencv2/calib3d.hpp>
 
-#include "rmvl/core/timer.hpp"
 #include "rmvl/algorithm/transform.hpp"
+#include "rmvl/combo/armor.h"
+#include "rmvl/core/timer.hpp"
 #include "rmvl/group/gyro_group.h"
-#include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/combo/armor.h"
 
-namespace rm_test
-{
+namespace rm_test {
 
-class GyroGroupTest : public testing::Test
-{
+class GyroGroupTest : public testing::Test {
     std::vector<cv::Point3f> world_points;
     cv::Matx33f cameraMatrix;
     cv::Matx51f distCoeffs;
 
-    void SetUp() override
-    {
+    void SetUp() override {
         world_points = {{-67, 27, -7},
                         {-67, -27, 7},
                         {67, -27, 7},
@@ -54,8 +51,7 @@ public:
      * @param[in] angle 绕 Y 轴旋转的角度
      * @return combo::ptr
      */
-    rm::combo::ptr createArmor(cv::Vec3f tvec, float angle)
-    {
+    rm::combo::ptr createArmor(cv::Vec3f tvec, float angle) {
         auto rmat = rm::euler2Mat(angle, rm::EulerAxis::Y);
         cv::Vec3f rvec;
         cv::Rodrigues(rmat, rvec);
@@ -67,8 +63,7 @@ public:
     }
 };
 
-TEST_F(GyroGroupTest, build_4_from_1_armor)
-{
+TEST_F(GyroGroupTest, build_4_from_1_armor) {
     auto p_armor = createArmor(cv::Vec3f(-50, -50, 1000), -20);
     auto p_group = rm::GyroGroup::make_group({p_armor}, 4);
     const auto &p_trackers = p_group->data();

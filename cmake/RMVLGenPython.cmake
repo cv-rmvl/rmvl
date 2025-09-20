@@ -45,7 +45,7 @@ endfunction()
 #     )
 #   示例:
 #     rmvl_generate_python(core
-#       FILES core/io.hpp core/timer.hpp
+#       FILES core/version.hpp core/timer.hpp
 #       DEPENDS core
 #       USE_PREBIND
 #     )

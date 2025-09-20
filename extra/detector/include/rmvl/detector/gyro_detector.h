@@ -15,18 +15,16 @@
 
 #include "detector.h"
 
+#include "rmvl/combo/armor.h"
 #include "rmvl/ml/ort.h"
-#include "rmvl/tracker/gyro_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup gyro_detector
 //! @{
 
 //! 整车状态识别模块
-class RMVL_EXPORTS_W_DEU GyroDetector final : public detector
-{
+class RMVL_EXPORTS_W_DEU GyroDetector final : public detector {
     int _armor_num; //!< 默认装甲板数目
 
     std::unique_ptr<OnnxNet> _ort;
@@ -55,7 +53,7 @@ public:
 
     /**
      * @brief 构建 GyroDetector
-     * 
+     *
      * @param[in] armor_num 装甲板数目（默认为`0`，表示自动判断）
      * @return 指向 GyroDetector 的唯一指针
      */

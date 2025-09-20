@@ -18,7 +18,7 @@
  * @details
  * - 异常处理可参考 rm::Exception 类，提供了异常处理的相关函数
  * - 定时器可参考 rm::Timer 类
- * - 编程工具包括了 @ref core_reflect 、 @ref core_meta 、@ref core_str 和 @ref core_io 等
+ * - 编程工具包括了 @ref core_reflect 、 @ref core_meta 、@ref core_str 和 @ref io 等
  * @defgroup core_reflect 聚合体编译期反射
  * @defgroup core_meta 元编程
  * @defgroup core_str Python 风格的字符串处理
@@ -41,7 +41,6 @@
 #include <rmvl/rmvl_modules.hpp>
 
 // 通用
-#include "core/io.hpp"
 #include "core/str.hpp"
 #include "core/timer.hpp"
 #include "core/util.hpp"

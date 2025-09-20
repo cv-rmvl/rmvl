@@ -1,0 +1,12 @@
+{
+  "Serial": {
+    "bind": [
+      ".def(\"read\", [](SerialPort &s) { std::string data; return std::make_tuple(s.read(data), data); })",
+      ".def(\"write\", [](SerialPort &s, std::string_view data) { return s.write(data); })"
+    ],
+    "pyi": [
+      "def read(self) -> Tuple[bool, str]: ...",
+      "def write(self, data: str) -> bool: ..."
+    ]
+  }
+}

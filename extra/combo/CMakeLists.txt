@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 rmvl_add_module(
   combo
-  DEPENDS feature camera
+  DEPENDS feature camera io
 )
 
 # armor

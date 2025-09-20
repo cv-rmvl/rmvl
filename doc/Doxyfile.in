@@ -39,8 +39,8 @@ ALIASES                += end_toggle="@htmlonly[block] </div> @endhtmlonly"
 ALIASES                += add_checkbox_y="@htmlonly[block] <input type='checkbox' checked='checked' disabled>"
 ALIASES                += add_checkbox_n="@htmlonly[block] <input type='checkbox' disabled>"
 ALIASES                += end_checkbox=" </br> @endhtmlonly"
-ALIASES                += prev_tutorial{1}="**上一篇教程：**\ref \1 ↑\n"
-ALIASES                += next_tutorial{1}="**下一篇教程：**\ref \1 ↓\n"
+ALIASES                += prev_tutorial{1}="**上一篇教程：**\ref \1 \n"
+ALIASES                += next_tutorial{1}="**下一篇教程：**\ref \1 \n"
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
 OPTIMIZE_FOR_FORTRAN   = NO

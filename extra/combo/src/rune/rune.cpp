@@ -16,24 +16,20 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/rune.h"
 
-namespace rm
-{
+namespace rm {
 
 Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
-                           const ImuData &imu_data, double tick, bool force)
-{
+                           const ImuData &imu_data, double tick, bool force) {
     // ------------------------------【判空】------------------------------
     if (p_target == nullptr || p_center == nullptr)
         return nullptr;
-    if (!force)
-    {
+    if (!force) {
         // ----------------------【特征面积之比是否合适】----------------------
         float rune_area_ratio = p_target->area() / p_center->area();
         DEBUG_INFO_("rune 1.rune_area_ratio : %f", rune_area_ratio);
         DEBUG_INFO_("rune 1.rune_active : %d", p_target->isActive());
         if (rune_area_ratio < para::rune_param.MIN_AREA_RATIO ||
-            (!p_target->isActive() && rune_area_ratio > para::rune_param.MAX_AREA_RATIO))
-        {
+            (!p_target->isActive() && rune_area_ratio > para::rune_param.MAX_AREA_RATIO)) {
             DEBUG_WARNING_("rune 1.rune_area_ratio : fail");
             return nullptr;
         }
@@ -44,8 +40,7 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
         float radius_ratio = rune_radius / p_center->height();
         DEBUG_INFO_("rune 2.radius_ratio : %f", radius_ratio);
         if (radius_ratio < para::rune_param.MIN_RADIUS_RATIO ||
-            radius_ratio > para::rune_param.MAX_RADIUS_RATIO)
-        {
+            radius_ratio > para::rune_param.MAX_RADIUS_RATIO) {
             DEBUG_WARNING_("rune 2.rune_radius_ratio : fail");
             return nullptr;
         }
@@ -55,8 +50,7 @@ Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
     return std::make_shared<Rune>(p_target, p_center, imu_data, tick);
 }
 
-Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &imu_data, double tick)
-{
+Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &imu_data, double tick) {
     // 通用信息
     _imu_data = imu_data;
     _width = p_target->width() + p_center->width() + getDistance(p_target->center(), p_center->center());
@@ -80,8 +74,7 @@ Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &im
     _tick = tick;
 }
 
-combo::ptr Rune::clone(double tick)
-{
+combo::ptr Rune::clone(double tick) {
     auto retval = std::make_shared<Rune>(*this);
     // 更新内部所有特征
     for (std::size_t i = 0; i < _features.size(); ++i)
@@ -89,6 +82,14 @@ combo::ptr Rune::clone(double tick)
     // 更新时间戳
     retval->_tick = tick;
     return retval;
+}
+
+cv::Vec2f Rune::cameraConvertToVertical(const cv::Vec2f &angle_vec, float diff_theta) {
+    return {angle_vec(0), angle_vec(1) * sec(deg2rad(diff_theta))};
+}
+
+cv::Vec2f Rune::verticalConvertToCamera(const cv::Vec2f &angle_vec, float diff_theta) {
+    return {angle_vec(0), angle_vec(1) * std::cos(deg2rad(diff_theta))};
 }
 
 } // namespace rm

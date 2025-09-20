@@ -2,17 +2,19 @@
 ============
 
 @author 赵曦
-@date 2023/06/22
+@date 2025/09/20
+@version 2.0
+@brief 串口通信模块使用教程
 
-@prev_tutorial{tutorial_modules_aggregate_reflect}
+@prev_tutorial{tutorial_modules_ipc}
 
-@next_tutorial{tutorial_modules_opcua}
+@next_tutorial{tutorial_modules_webapp}
 
 @tableofcontents
 
 ------
 
-相关类 rm::SerialPort
+相关类 rm::SerialPort 及 rm::async::SerialPort
 
 ### 1. 简介
 
@@ -23,22 +25,27 @@
 - 串口：指的是通信中的物理接口，常见的有 `RS-232`、`RS-485`、`UART` 等标准。每个串口都有相应的引脚用于发送和接收数据以及控制信号。
 - 波特率：也称作数据传输速率，指的是每秒钟传输的位数。波特率决定了传输速度的快慢，通常使用常见的波特率如 9600、115200 等。
 
-### 2. 使用{#serialport_how_to_use}
+### 2. 同步模式使用{#sync_serial_usage}
 
-#### 2.1 初始化{#serialport_init}
+#### 2.1 初始化{#serial_init}
 
 rm::SerialPort 的构造函数原型如下
 
 ```cpp
-SerialPort(std::string_view device, SerialPortMode mode = {});
+SerialPort(std::string_view device, BaudRate baud_rate, SerialReadMode read_mode = {});
 ```
 
-|   参数   |                                   含义                                    |
-| :------: | :-----------------------------------------------------------------------: |
-| `device` | 设备名，在 Windows 上一般是 `COMx`，Linux 上一般为 `ttyUSBx` 或 `ttyACMx` |
-|  `mode`  |    串口通信模式，包含波特率 rm::BaudRate 和读取模式 rm::SerialReadMode    |
+<div class="full_width_table">
 
-#### 2.2 数据 I/O {#serialport_io}
+|    参数     |                                   含义                                    |
+| :---------: | :-----------------------------------------------------------------------: |
+|  `device`   | 设备名，在 Windows 上一般是 `COMx`，Linux 上一般为 `ttyUSBx` 或 `ttyACMx` |
+| `baud_rate` |                                  波特率                                   |
+| `read_mode` |      读取模式，表示阻塞与非阻塞， rm::async::SerialPort 不提供该参数      |
+
+</div>
+
+#### 2.2 数据 I/O {#serial_io}
 
 rm::SerialPort 提供了极其方便的串口读取、写入的接口。
 
@@ -87,7 +94,7 @@ SerialPort &operator<<(const AggregateOrStringT &data);  // (7) 串口写入操�
 
 <div style="margin-left: 40px;">(3) 和 (5) 带有 Python 接口</div>
 
-#### 2.3 链路层协议 {#serialport_protocol}
+#### 2.3 链路层协议 {#serial_protocol}
 
 **写数据（视觉端 → 电控端）**
 
@@ -102,3 +109,15 @@ SerialPort 的通信协议一般就是指数据链路层的协议，采用封装
 - 协议（结构体）内容
 - 内存对齐规则，关于内存对齐可使用 `#pragma pack` 宏或使用 C++ 标准的 `alignas` 关键字
 - 头尾帧是否一致
+
+### 3. 异步模式使用{#async_serial_usage}
+
+rm::async::SerialPort 需要配合 rm::async::IOContext 使用，目前，异步串口仅提供了字符串读写的功能
+
+```cpp
+SerialReadAwaiter read();
+
+SerialWriteAwaiter write(std::string_view);
+```
+
+其中 SerialReadAwaiter 为串口读等待器，

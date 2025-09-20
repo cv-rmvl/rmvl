@@ -10,18 +10,15 @@
  */
 
 #include "rmvl/predictor/rune_predictor.h"
+#include "rmvl/core/util.hpp"
 #include "rmvl/group/rune_group.h"
 #include "rmvl/tracker/rune_tracker.h"
 
-#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/predictor/rune_predictor.h"
-#include "rmvlpara/tracker/rune_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-PredictInfo RunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof)
-{
+PredictInfo RunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof) {
     if (groups.size() != 1)
         RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
     auto rune_group = RuneGroup::cast(groups.front()); // 转换为神符 group 子类
@@ -29,8 +26,7 @@ PredictInfo RunePredictor::predict(const std::vector<group::ptr> &groups, const 
         RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the group::ptr is not equal to Runegroup::ptr");
     // 预测信息
     PredictInfo info{};
-    for (auto p_tracker : rune_group->data())
-    {
+    for (auto p_tracker : rune_group->data()) {
         auto p_rune_tracker = RuneTracker::cast(p_tracker);
         double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
         // Kt + B 预测模型

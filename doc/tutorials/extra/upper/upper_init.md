@@ -134,7 +134,7 @@ int main()
 @note
 - 取消内存对齐可参考 [alignas](https://zh.cppreference.com/w/cpp/language/alignas) 和 [pragma pack](https://zh.cppreference.com/w/cpp/preprocessor/impl#.23pragma_pack)
 - 初始化硬件设备同时要定义好串口通信协议
-- 串口通信协议可参考 @ref serialport_protocol 小节
+- 串口通信协议可参考 @ref serial_protocol 小节
 
 @end_toggle
 

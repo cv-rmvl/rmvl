@@ -17,30 +17,28 @@
 
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/algorithm/math.hpp"
+#include "rmvl/combo/rune.h"
 #include "rmvl/core/timer.hpp"
 #include "rmvl/detector/rune_detector.h"
 
 using namespace rm::numeric_literals;
 
-namespace rm_test
-{
+namespace rm_test {
 
-class RuneDetectorTest : public testing::Test
-{
+class RuneDetectorTest : public testing::Test {
 public:
     cv::Mat src;
     std::vector<rm::group::ptr> groups;
     rm::detector::ptr p_detector;
 
-    void SetUp() override
-    {
+    void SetUp() override {
         p_detector = rm::RuneDetector::make_detector();
         src = cv::Mat::zeros(cv::Size(1278, 1024), CV_8UC3);
     }
     void TearDown() override {}
 
-    inline void createRuneCenter(int center_x, int center_y)
-    {
+    inline void createRuneCenter(int center_x, int center_y) {
         putText(src, "R", cv::Point(center_x, center_y), cv::FONT_HERSHEY_COMPLEX, 1., cv::Scalar(0, 0, 255), 4);
     }
 
@@ -53,12 +51,10 @@ public:
      * @param active 神符是否激活
      * @param ring_num 激活神符环数
      */
-    void createRuneTarget(int target_x, int target_y, float theta = 0.f, bool active = false, float ring_num = 9)
-    {
+    void createRuneTarget(int target_x, int target_y, float theta = 0.f, bool active = false, float ring_num = 9) {
         // 在图像上构建神符扇叶
         // 未激活神符
-        if (!active)
-        {
+        if (!active) {
             // 神符靶心
             circle(src, cv::Point(target_x, target_y), 8, cv::Scalar(0, 0, 255), 2);
             // 神符辅助瞄准特征
@@ -78,8 +74,7 @@ public:
                  cv::Point(target_x - 52 * std::cos(theta + 90_to_rad), target_y + 52 * std::sin(theta + 90_to_rad)), cv::Scalar(0, 0, 255), 4);
         }
         // 已激活神符
-        else
-        {
+        else {
             // 神符靶心
             circle(src, cv::Point(target_x, target_y), 5 * (11 - ring_num), cv::Scalar(0, 0, 255), 2);
         }
@@ -119,8 +114,7 @@ public:
         line(src, cv::Point(target_x - 78 * std::cos(theta), target_y + 78 * std::sin(theta)),
              cv::Point(target_x - 162 * std::cos(theta), target_y + 162 * std::sin(theta)), cv::Scalar(0, 0, 255), 16);
         // 未激活神符
-        if (!active)
-        {
+        if (!active) {
             // 间断
             for (int i = 80; i < 190; i += 10)
                 line(src, cv::Point(target_x - i * std::cos(theta) + 25 * std::cos(theta + 90_to_rad), target_y + i * std::sin(theta) - 25 * std::sin(theta + 90_to_rad)),
@@ -129,8 +123,7 @@ public:
         }
 
         // 已激活神符
-        else
-        {
+        else {
             // 左
             line(src, cv::Point(target_x - 70 * std::cos(theta) + 62 * std::cos(theta + 90_to_rad), target_y + 70 * std::sin(theta) - 62 * std::sin(theta + 90_to_rad)),
                  cv::Point(target_x - 120 * std::cos(theta) + 62 * std::cos(theta + 90_to_rad), target_y + 120 * std::sin(theta) - 62 * std::sin(theta + 90_to_rad)),
@@ -152,23 +145,20 @@ public:
         }
     }
 
-    std::vector<rm::combo::ptr> detect()
-    {
+    std::vector<rm::combo::ptr> detect() {
         auto info = p_detector->detect(groups, src, rm::RED, rm::ImuData(), rm::Timer::now());
         return info.combos;
     }
 };
 
-TEST_F(RuneDetectorTest, target1_center0)
-{
+TEST_F(RuneDetectorTest, target1_center0) {
     SetUp();
     createRuneTarget(600, 370, 90_to_rad, false);
     auto combos = detect();
     EXPECT_TRUE(combos.empty());
 }
 
-TEST_F(RuneDetectorTest, target1_center1)
-{
+TEST_F(RuneDetectorTest, target1_center1) {
     SetUp();
     createRuneTarget(600, 370, 90_to_rad, false);
     createRuneCenter(590, 610);
@@ -180,8 +170,7 @@ TEST_F(RuneDetectorTest, target1_center1)
     EXPECT_FALSE(p_rune->isActive());
 }
 
-TEST_F(RuneDetectorTest, target1_centerTilt)
-{
+TEST_F(RuneDetectorTest, target1_centerTilt) {
     SetUp();
     createRuneTarget(800, 200, 90_to_rad, false);
     createRuneCenter(590, 610);
@@ -191,8 +180,7 @@ TEST_F(RuneDetectorTest, target1_centerTilt)
     EXPECT_EQ(combos.size(), 0);
 }
 
-TEST_F(RuneDetectorTest, target1_center2)
-{
+TEST_F(RuneDetectorTest, target1_center2) {
     SetUp();
     createRuneTarget(600, 370, 90_to_rad, false);
     createRuneCenter(590, 610);
@@ -203,8 +191,7 @@ TEST_F(RuneDetectorTest, target1_center2)
     EXPECT_LE(combos.front()->center().x, 700);
 }
 
-TEST_F(RuneDetectorTest, 1_active_rune)
-{
+TEST_F(RuneDetectorTest, 1_active_rune) {
     SetUp();
     createRuneTarget(600, 370, 90_to_rad, true);
     createRuneCenter(590, 610);
@@ -216,8 +203,7 @@ TEST_F(RuneDetectorTest, 1_active_rune)
     EXPECT_TRUE(rune->isActive());
 }
 
-TEST_F(RuneDetectorTest, 1_inactive_1_active)
-{
+TEST_F(RuneDetectorTest, 1_inactive_1_active) {
     SetUp();
     createRuneTarget(600, 370, 90_to_rad, false);
     createRuneTarget(600 + 230 * std::cos(18_to_rad), 600 - 230 * std::sin(18_to_rad), 18_to_rad, true);

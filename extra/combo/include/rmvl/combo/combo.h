@@ -10,21 +10,18 @@
  */
 #pragma once
 
-#include "rmvl/algorithm/math.hpp"
 #include "rmvl/camera/camutils.hpp"
 
-#include "rmvl/core/io.hpp"
+#include "rmvl/io/util.hpp"
 #include "rmvl/feature/feature.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup combo
 //! @{
 
 //! 特征组合体
-class RMVL_EXPORTS_W_ABS combo
-{
+class RMVL_EXPORTS_W_ABS combo {
 protected:
     std::vector<feature::ptr> _features; //!< 特征列表
 
@@ -111,8 +108,7 @@ public:
     static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const name>(p_combo); }
 
 //! 默认组合体，包含一个固定的特征，退化为 `feature` 使用
-class RMVL_EXPORTS_W_DES DefaultCombo final : public combo
-{
+class RMVL_EXPORTS_W_DES DefaultCombo final : public combo {
 public:
     using ptr = std::shared_ptr<DefaultCombo>;
     using const_ptr = std::shared_ptr<const DefaultCombo>;

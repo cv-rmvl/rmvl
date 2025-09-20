@@ -33,30 +33,30 @@ def re_match(mode: str, line: str) -> Union[re.Match, None]:
     `Union[re.Match, None]`: Match result, return `None` if no match
     """
     if mode == "normal_class":
-        return re.search(r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?$", line)
+        return re.search(r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final)?(?:\s*\{)?$", line)
     elif mode == "aggregate_class":
-        return re.search(r"struct\s+RMVL_EXPORTS_W_AG\s+(\w+)\s*(?:final)?$", line)
+        return re.search(r"struct\s+RMVL_EXPORTS_W_AG\s+(\w+)\s*(?:final)?(?:\s*\{)?$", line)
     elif mode == "normal_aggregate_class":
         return re.search(
-            r"(class|struct)\s+RMVL_EXPORTS_(?:W|W_AG)\s+(\w+)\s*(?:final)?$", line
+            r"(class|struct)\s+RMVL_EXPORTS_(?:W|W_AG)\s+(\w+)\s*(?:final)?(?:\s*\{)?$", line
         )
     elif mode == "abs_class":
-        return re.search(r"class\s+RMVL_EXPORTS_W_ABS\s+(\w+)\s*$", line)
+        return re.search(r"class\s+RMVL_EXPORTS_W_ABS\s+(\w+)\s*(?:\s*\{)?$", line)
     elif mode == "abu_class":
-        return re.search(r"class\s+RMVL_EXPORTS_W_ABU\s+(\w+)\s*$", line)
+        return re.search(r"class\s+RMVL_EXPORTS_W_ABU\s+(\w+)\s*(?:\s*\{)?$", line)
     elif mode == "inherited_class":
         return re.search(
-            r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*$",
+            r"class\s+RMVL_EXPORTS_W\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*(?:\s*\{)?$",
             line,
         )
     elif mode == "des_class":
         return re.search(
-            r"class\s+RMVL_EXPORTS_W_DES\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*$",
+            r"class\s+RMVL_EXPORTS_W_DES\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*(?:\s*\{)?$",
             line,
         )
     elif mode == "deu_class":
         return re.search(
-            r"class\s+RMVL_EXPORTS_W_DEU\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*$",
+            r"class\s+RMVL_EXPORTS_W_DEU\s+(\w+)\s*(?:final\s*)?:\s+(public)?\s+(\w+)\s*(?:\s*\{)?$",
             line,
         )
     elif mode == "global_function":

@@ -15,14 +15,12 @@
 
 #include "rmvl/algorithm/numcal.hpp"
 
-namespace rm
-{
+namespace rm {
 
-class GravityCompensator::Impl
-{
+class GravityCompensator::Impl {
     float _yaw_static_com;   //!< yaw 轴静态补偿，方向与 yaw 一致
     float _pitch_static_com; //!< pitch 轴静态补偿，方向与 pitch 一致
-    
+
 public:
     Impl();
 

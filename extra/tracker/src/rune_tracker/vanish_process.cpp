@@ -15,8 +15,7 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/tracker/rune_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
 /**
  * @brief 强制构造神符
@@ -27,8 +26,7 @@ namespace rm
  * @param[in] imu_data 最新 IMU 数据
  * @return 构造出的神符
  */
-static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const ImuData &imu_data)
-{
+static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, double tick, const ImuData &imu_data) {
     auto p_rune_target = RuneTarget::cast(ref_rune->at(0));
     auto p_rune_center = RuneCenter::cast(ref_rune->at(1));
     // 获取中心点
@@ -56,8 +54,7 @@ static Rune::ptr runeConstructForced(Rune::ptr ref_rune, float delta_angle, doub
     return Rune::make_combo(p_new_rune_target, p_new_rune_center, imu_data, tick, true);
 }
 
-void RuneTracker::update(double tick, const ImuData &imu_data)
-{
+void RuneTracker::update(double tick, const ImuData &imu_data) {
     // 判空
     if (_combo_deque.empty())
         return;

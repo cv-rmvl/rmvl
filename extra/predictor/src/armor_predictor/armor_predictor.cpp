@@ -11,20 +11,15 @@
 
 #include "rmvl/predictor/armor_predictor.h"
 
-#include "rmvlpara/camera/camera.h"
 #include "rmvlpara/predictor/armor_predictor.h"
 
-namespace rm
-{
+namespace rm {
 
-PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof)
-{
+PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof) {
     // 预测信息
     PredictInfo info{};
-    for (auto p_group : groups)
-    {
-        for (auto p_tracker : p_group->data())
-        {
+    for (auto p_group : groups) {
+        for (auto p_tracker : p_group->data()) {
             double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
             // 获取 IMU 角速度
             cv::Point2f gyro_speed = {p_tracker->front()->imu().rotation.yaw_speed,

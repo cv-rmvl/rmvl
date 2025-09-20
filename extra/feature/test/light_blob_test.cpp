@@ -17,15 +17,12 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/feature/light_blob.h"
-#include "rmvlpara/feature/light_blob.h"
 
 using namespace rm;
 
-namespace rm_test
-{
+namespace rm_test {
 
-TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
-{
+TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable) {
     // 数据准备
     std::vector<cv::Point> contour;
     // 轮廓点数为 6，小倾角
@@ -62,17 +59,15 @@ TEST(BuildLightBlobTest, fitEllipse_angle_contourSize_judgeTable)
     EXPECT_FALSE(blob4 != nullptr);
 }
 
-TEST(BuildLightBlobTest, fitEllipse_few_contourSize)
-{
+TEST(BuildLightBlobTest, fitEllipse_few_contourSize) {
     // 轮廓点数为 5
     std::vector<cv::Point> contour = {cv::Point(100, 100), cv::Point(105, 105), cv::Point(95, 105),
-                             cv::Point(100, 200), cv::Point(105, 195)};
+                                      cv::Point(100, 200), cv::Point(105, 195)};
     LightBlob::ptr blob = LightBlob::make_feature(contour);
     EXPECT_FALSE(blob != nullptr);
 }
 
-TEST(BuildLightBlobTest, fitEllipse_width_contourSize_judgeTable)
-{
+TEST(BuildLightBlobTest, fitEllipse_width_contourSize_judgeTable) {
     // 数据准备
     std::vector<cv::Point> contour;
 

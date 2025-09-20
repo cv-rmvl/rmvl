@@ -16,16 +16,15 @@
 #include <gtest/gtest.h>
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/algorithm/math.hpp"
 #include "rmvl/combo/armor.h"
 #include "rmvl/core/timer.hpp"
 
 using namespace rm;
 
-namespace rm_test
-{
+namespace rm_test {
 
-class BuildArmorTest : public testing::Test
-{
+class BuildArmorTest : public testing::Test {
 public:
     // x = 15 左灯条
     LightBlob::ptr left_blob;
@@ -40,8 +39,7 @@ public:
      * @param bias 偏置
      * @return LightBlob::ptr
      */
-    LightBlob::ptr buildBlob(float angle, cv::Point bias = cv::Point())
-    {
+    LightBlob::ptr buildBlob(float angle, cv::Point bias = cv::Point()) {
         cv::Point base(500, 500);
         cv::Point base_bias(static_cast<int>(110 * sin(deg2rad(angle))),
                             static_cast<int>(110 * -cos(deg2rad(angle))));
@@ -53,8 +51,7 @@ public:
     }
 };
 
-TEST_F(BuildArmorTest, incorrect_blob)
-{
+TEST_F(BuildArmorTest, incorrect_blob) {
     LightBlob::ptr right_blob = nullptr;
     // 一个灯条为空
     Armor::ptr armor = Armor::make_combo(left_blob, right_blob, ImuData(), Timer::now());
@@ -67,8 +64,7 @@ TEST_F(BuildArmorTest, incorrect_blob)
     EXPECT_FALSE(armor != nullptr);
 }
 
-TEST_F(BuildArmorTest, different_blob_distance)
-{
+TEST_F(BuildArmorTest, different_blob_distance) {
     LightBlob::ptr right_blob;
     // 小间距
     right_blob = buildBlob(0, cv::Point2f(30, 0));
@@ -84,8 +80,7 @@ TEST_F(BuildArmorTest, different_blob_distance)
     EXPECT_EQ(armor3, nullptr);
 }
 
-TEST_F(BuildArmorTest, different_blob_tiltAngle)
-{
+TEST_F(BuildArmorTest, different_blob_tiltAngle) {
     left_blob.reset();
     LightBlob::ptr right_blob;
     // 小倾角
@@ -100,8 +95,7 @@ TEST_F(BuildArmorTest, different_blob_tiltAngle)
     EXPECT_EQ(armor2, nullptr);
 }
 
-TEST_F(BuildArmorTest, different_blob_angle)
-{
+TEST_F(BuildArmorTest, different_blob_angle) {
     LightBlob::ptr right_blob;
     // 小夹角
     right_blob = buildBlob(5, cv::Point(200, 0));

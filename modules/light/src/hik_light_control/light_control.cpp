@@ -3,8 +3,7 @@
 
 #include "rmvlpara/light/hik_light_control.h"
 
-namespace rm
-{
+namespace rm {
 
 HikLightController::HikLightController(const LightConfig &cfg, std::string_view id) : _impl(new Impl(cfg, id)) {}
 HikLightController::~HikLightController() = default;
@@ -17,23 +16,15 @@ bool HikLightController::set(int chn, int val) { return _impl->set(chn, val); }
 using namespace std::string_literals;
 constexpr const char HIK_CHN_STR[] = "ABCDEF";
 
-HikLightController::Impl::Impl(const LightConfig &cfg, std::string_view id)
-{
-    if (cfg.handle_mode == LightHandleMode::Serial)
-    {
-        SerialPortMode mode{};
-        mode.baud_rate = BaudRate::BR_19200;
-        mode.read_mode = SerialReadMode::NONBLOCK;
-        _sp = std::make_unique<SerialPort>(id, mode);
-    }
-    else
-    {
+HikLightController::Impl::Impl(const LightConfig &cfg, std::string_view id) {
+    if (cfg.handle_mode == LightHandleMode::Serial) {
+        _sp = std::make_unique<SerialPort>(id, BaudRate::BR_19200, SerialReadMode::NONBLOCK);
+    } else {
         RMVL_Error(RMVL_StsBadArg, "Unsupported handle mode");
     }
 }
 
-bool HikLightController::Impl::open()
-{
+bool HikLightController::Impl::open() {
     RMVL_DbgAssert(isOpened());
     if (!_sp->write("SH#"))
         return false;
@@ -44,8 +35,7 @@ bool HikLightController::Impl::open()
     return buf == "H";
 }
 
-bool HikLightController::Impl::close()
-{
+bool HikLightController::Impl::close() {
     RMVL_DbgAssert(isOpened());
     if (!_sp->write("SL#"))
         return false;
@@ -56,8 +46,7 @@ bool HikLightController::Impl::close()
     return buf == "L";
 }
 
-int HikLightController::Impl::get(int chn) const
-{
+int HikLightController::Impl::get(int chn) const {
     RMVL_DbgAssert(isOpened());
     RMVL_Assert(chn > 0 && chn <= 6);
     if (!_sp->write("S"s + HIK_CHN_STR[chn - 1] + "#"))
@@ -68,19 +57,15 @@ int HikLightController::Impl::get(int chn) const
         return -1;
     if (buf == "NG")
         return -1;
-    try
-    {
+    try {
         return std::stoi(std::string(buf.begin() + 1, buf.end()));
-    }
-    catch (const std::exception &)
-    {
+    } catch (const std::exception &) {
         ERROR_("Failed to obtain brightness, try to increase the 'DELAY_AFTER_WRITE' parameter");
         return -1;
     }
 }
 
-bool HikLightController::Impl::set(int chn, int val)
-{
+bool HikLightController::Impl::set(int chn, int val) {
     RMVL_DbgAssert(isOpened());
     RMVL_Assert(chn > 0 && chn <= 6 && val >= 0 && val <= 255);
     char ch = HIK_CHN_STR[chn - 1];

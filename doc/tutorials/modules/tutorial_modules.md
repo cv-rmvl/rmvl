@@ -11,14 +11,28 @@
 
 ### 1. 工具类
 
-#### 通用工具
+#### 开发工具
 
 - @subpage tutorial_modules_aggregate_reflect
 
-#### 通信
+#### 基础通信设施
 
+- @subpage tutorial_modules_coro
+- @subpage tutorial_modules_ipc
 - @subpage tutorial_modules_serial
+- @subpage tutorial_modules_webapp
+
+#### 通信中间件
+
+这是在分布式系统中，位于操作系统和应用程序之间的软件层，主要用于
+
+1. 抽象化通信复杂性：隐藏底层网络通信细节，提供统一的 API 接口，处理网络连接、断线重连等
+2. 标准化数据交换：定义统一的数据格式，处理数据序列化 / 反序列化，支持不同系统间的互操作
+3. 增强系统可靠性：提供消息队列、持久化，支持事务处理，错误处理和恢复机制
+4. 简化开发工作：提供高级编程接口，减少网络编程复杂度，支持多种编程语言和平台
+
 - @subpage tutorial_modules_opcua
+- @subpage tutorial_modules_mqtt
 
 #### 硬件设备支持库
 

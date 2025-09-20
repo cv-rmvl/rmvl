@@ -11,14 +11,11 @@
 
 #include "rmvl/tracker/gyro_tracker.h"
 
-#include "rmvlpara/combo/armor.h"
 #include "rmvlpara/tracker/gyro_tracker.h"
 
-namespace rm
-{
+namespace rm {
 
-void GyroTracker::initFilter()
-{
+void GyroTracker::initFilter() {
     auto first_combo = _combo_deque.front();
     // 初始化位置滤波器
     _center3d_filter.setR(para::gyro_tracker_param.POSITION_R);
@@ -34,8 +31,7 @@ void GyroTracker::initFilter()
     _pose_filter.init(init_pose_vec, 1e5f);
 }
 
-void GyroTracker::updatePositionFilter()
-{
+void GyroTracker::updatePositionFilter() {
     float t{_duration};
     // 设置状态转移矩阵
     _center3d_filter.setA({1, 0, 0, t, 0, 0,
@@ -52,8 +48,7 @@ void GyroTracker::updatePositionFilter()
     _extrinsic.tvec({correct_position(0), correct_position(1), correct_position(2)});
 }
 
-void GyroTracker::updatePoseFilter()
-{
+void GyroTracker::updatePoseFilter() {
     float t{_duration};
     // 设置状态转移矩阵
     _pose_filter.setA({1, 0, t, 0,

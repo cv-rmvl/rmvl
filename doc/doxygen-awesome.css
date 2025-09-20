@@ -32,6 +32,7 @@ html {
     --primary-color: #1779c4;
     --primary-dark-color: #335c80;
     --primary-light-color: #70b1e9;
+    --on-primary-color: #ffffff;
 
     /* page base colors */
     --page-background-color: #ffffff;
@@ -113,7 +114,7 @@ html {
      */
     --menu-display: block;
 
-    --menu-focus-foreground: var(--page-background-color);
+    --menu-focus-foreground: var(--on-primary-color);
     --menu-focus-background: var(--primary-color);
     --menu-selected-background: rgba(0,0,0,.05);
 
@@ -805,6 +806,8 @@ html.dark-mode iframe#MSearchResults {
 #nav-tree .item {
     height: var(--tree-item-height);
     line-height: var(--tree-item-height);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #nav-tree .item > a:focus {
@@ -823,6 +826,8 @@ html.dark-mode iframe#MSearchResults {
     background-image: none;
     background-color: transparent;
     position: relative;
+    color: var(--primary-color) !important;
+    font-weight: 500;
 }
 
 #nav-tree .selected::after {
@@ -940,6 +945,7 @@ td.memSeparator {
 
 span.mlabel {
     background: var(--primary-color);
+    color: var(--on-primary-color);
     border: none;
     padding: 4px 9px;
     border-radius: 12px;
@@ -1467,8 +1473,7 @@ div.memitem {
 }
 
 div.memproto, h2.memtitle {
-    background: var(--code-background);
-    text-shadow: none;
+    background: var(--fragment-background);
 }
 
 h2.memtitle {
@@ -1750,7 +1755,7 @@ table.fieldtable th {
     color: var(--tablehead-foreground);
 }
 
-table.fieldtable td.fieldtype, .fieldtable td.fieldname, .fieldtable td.fielddoc, .fieldtable th {
+table.fieldtable td.fieldtype, .fieldtable td.fieldname, .fieldtable td.fieldinit, .fieldtable td.fielddoc, .fieldtable th {
     border-bottom: 1px solid var(--separator-color);
     border-right: 1px solid var(--separator-color);
 }
@@ -1791,6 +1796,10 @@ table.memberdecls .memTemplItemLeft,
 table.memberdecls .memTemplItemRight,
 table.memberdecls .memTemplParams {
     transition: none;
+    padding-top: var(--spacing-small);
+    padding-bottom: var(--spacing-small);
+    border-top: 1px solid var(--separator-color);
+    border-bottom: 1px solid var(--separator-color);
     background-color: var(--fragment-background);
 }
 
@@ -1807,6 +1816,34 @@ table.memberdecls .memTemplParams {
     padding-bottom: var(--spacing-small);
 }
 
+table.memberdecls .memTemplItemLeft {
+    border-radius: 0 0 0 var(--border-radius-small);
+    border-left: 1px solid var(--separator-color);
+    border-top: 0;
+}
+
+table.memberdecls .memTemplItemRight {
+    border-radius: 0 0 var(--border-radius-small) 0;
+    border-right: 1px solid var(--separator-color);
+    padding-left: 0;
+    border-top: 0;
+}
+
+table.memberdecls .memItemLeft {
+    border-radius: var(--border-radius-small) 0 0 var(--border-radius-small);
+    border-left: 1px solid var(--separator-color);
+    padding-left: var(--spacing-medium);
+    padding-right: 0;
+}
+
+table.memberdecls .memItemRight  {
+    border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
+    border-right: 1px solid var(--separator-color);
+    padding-right: var(--spacing-medium);
+    padding-left: 0;
+
+}
+
 table.memberdecls .mdescLeft, table.memberdecls .mdescRight {
     background: none;
     color: var(--page-foreground-color);
@@ -1816,6 +1853,13 @@ table.memberdecls .mdescLeft, table.memberdecls .mdescRight {
 table.memberdecls .memItemLeft,
 table.memberdecls .memTemplItemLeft {
     padding-right: var(--spacing-medium);
+}
+
+table.memberdecls .memSeparator {
+    background: var(--page-background-color);
+    height: var(--spacing-large);
+    border: 0;
+    transition: none;
 }
 
 table.memberdecls .groupheader {
@@ -1950,14 +1994,16 @@ hr {
 }
 
 .contents hr {
-    box-shadow: 100px 0 0 var(--separator-color),
-                -100px 0 0 var(--separator-color),
-                500px 0 0 var(--separator-color),
-                -500px 0 0 var(--separator-color),
-                1500px 0 0 var(--separator-color),
-                -1500px 0 0 var(--separator-color),
-                2000px 0 0 var(--separator-color),
-                -2000px 0 0 var(--separator-color);
+    box-shadow: 100px 0 var(--separator-color),
+                -100px 0 var(--separator-color),
+                500px 0 var(--separator-color),
+                -500px 0 var(--separator-color),
+                900px 0 var(--separator-color),
+                -900px 0 var(--separator-color),
+                1400px 0 var(--separator-color),
+                -1400px 0 var(--separator-color),
+                1900px 0 var(--separator-color),
+                -1900px 0 var(--separator-color);       
 }
 
 .contents img, .contents .center, .contents center, .contents div.image object {

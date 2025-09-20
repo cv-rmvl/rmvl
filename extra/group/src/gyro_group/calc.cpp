@@ -11,27 +11,30 @@
 
 #include <opencv2/calib3d.hpp>
 
-#include "rmvl/group/gyro_group.h"
 #include "rmvl/algorithm/transform.hpp"
-#include "rmvl/tracker/gyro_tracker.h"
+#include "rmvl/combo/armor.h"
+#include "rmvl/group/gyro_group.h"
 
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
 #include "rmvlpara/group/gyro_group.h"
 
-namespace rm
-{
+namespace rm {
 
 using namespace numeric_literals;
 
-int GyroGroup::calcArmorNum(const std::vector<combo::ptr> &ref_combos)
-{
+TrackerState GyroGroup::getTrackerState(tracker::ptr p_tracker) {
+    if (_tracker_state.find(p_tracker) == _tracker_state.end())
+        RMVL_Error(RMVL_StsBadArg, "p_tracker in \"_tracker_state\" is not exist.");
+    return _tracker_state[p_tracker];
+}
+
+int GyroGroup::calcArmorNum(const std::vector<combo::ptr> &ref_combos) {
     // 机器人类型集合
     std::unordered_set<RobotType> robot_set;
     // 装甲板大小集合
     std::unordered_set<ArmorSizeType> armor_size_set;
-    for (auto ref_combo : ref_combos)
-    {
+    for (auto ref_combo : ref_combos) {
         robot_set.insert(to_robot_type(ref_combo->state().at("robot")));
         armor_size_set.insert(to_armor_size_type(ref_combo->state().at("armor_size")));
     }
@@ -48,8 +51,7 @@ int GyroGroup::calcArmorNum(const std::vector<combo::ptr> &ref_combos)
 }
 
 void GyroGroup::calcGroupFrom3DMessage(const std::vector<cv::Vec2f> &gyro_poses, const std::vector<cv::Vec3f> &gyro_ts,
-                                       const std::vector<float> &rs, cv::Vec3f &gyro_center)
-{
+                                       const std::vector<float> &rs, cv::Vec3f &gyro_center) {
     // --------------------- 保证三个集合元素个数相同 ---------------------
     if (gyro_ts.size() != gyro_poses.size() || gyro_ts.size() != rs.size())
         RMVL_Error(RMVL_StsBadArg, "Size of the arguments are not equal.");
@@ -67,8 +69,7 @@ void GyroGroup::calcGroupFrom3DMessage(const std::vector<cv::Vec2f> &gyro_poses,
     }
 }
 
-combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const ImuData &imu_data, const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick)
-{
+combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const ImuData &imu_data, const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, double tick) {
     // IMU 坐标系转化为相机坐标系
     cv::Matx33f cam_rmat;
     cv::Vec3f cam_tvec;
@@ -92,8 +93,7 @@ combo::ptr GyroGroup::constructComboForced(combo::ptr p_combo, const ImuData &im
 }
 
 void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std::vector<TrackerState> &state_vec,
-                             std::vector<combo::ptr> &combo_vec, cv::Vec3f &group_center3d, cv::Point2f &group_center2d)
-{
+                             std::vector<combo::ptr> &combo_vec, cv::Vec3f &group_center3d, cv::Point2f &group_center2d) {
     size_t visible_num = visible_combos.size();
     if (visible_num != 1 && visible_num != 2)
         RMVL_Error_(RMVL_StsBadArg, "Bad size of the \"visible_combos\". (size = %zu)", visible_num);
@@ -109,16 +109,14 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
     sort(operate_combos.begin(), operate_combos.end(), [](combo::const_ptr lhs, combo::const_ptr rhs) {
         return lhs->center().x > rhs->center().x;
     });
-    for (size_t i = 0; i < visible_num; ++i)
-    {
+    for (size_t i = 0; i < visible_num; ++i) {
         Rs[i] = operate_combos[i]->extrinsic().R();
         Ps[i] = Armor::cast(operate_combos[i])->getPose();
         ts[i] = operate_combos[i]->extrinsic().tvec();
         rs[i] = para::gyro_group_param.INIT_RADIUS;
     }
 
-    if (visible_num == 1)
-    {
+    if (visible_num == 1) {
         // 唯一一个追踪器
         auto p_combo = operate_combos.front();
         calcGroupFrom3DMessage(Ps, ts, rs, group_center3d);
@@ -134,8 +132,7 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
         group_center2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, cam_tvec);
 
         // 2、3、4 号追踪器
-        for (int i = 0; i < _armor_num - 1; i++)
-        {
+        for (int i = 0; i < _armor_num - 1; i++) {
             // 绕 y 轴旋转 90 * (i + 1) 度 (俯视图顺时针)
             auto y_rotate = euler2Mat(static_cast<float>(2_PI / _armor_num) * (i + 1), EulerAxis::Y);
             cv::Matx33f new_R = y_rotate * Rs.front(); // IMU 坐标系下的新旋转矩阵
@@ -147,12 +144,9 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
             combo_vec[i + 1] = armor;
             state_vec[i + 1] = TrackerState(i + 1, r, 0.f);
         }
-    }
-    else
-    {
+    } else {
         calcGroupFrom3DMessage(Ps, ts, rs, group_center3d);
-        for (size_t i = 0; i < 2; i++)
-        {
+        for (size_t i = 0; i < 2; i++) {
             // 计算高度差：当前与下一块装甲板 y 轴高度差
             float delta_y = ts[i](1) - group_center3d(1);
             // 中心点的 y 定义为 2 个 combos 中间
@@ -166,8 +160,7 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
         Armor::imuConvertToCamera(I, center_tvec, _imu_data, I, cam_tvec);
         group_center2d = cameraConvertToPixel(para::camera_param.cameraMatrix, para::camera_param.distCoeffs, center_tvec);
         // 第三、四块装甲板
-        for (int i = 0; i < _armor_num - 2; i++)
-        {
+        for (int i = 0; i < _armor_num - 2; i++) {
             // 绕 y 轴旋转 180 * (i + 1) 度 (俯视图顺时针)
             cv::Matx33f y_rotate = cv::Matx33f::diag({-1, 0, -1});
             cv::Matx33f new_R = y_rotate * Rs[i];
@@ -182,17 +175,14 @@ void GyroGroup::getGroupInfo(const std::vector<combo::ptr> &visible_combos, std:
     }
 }
 
-void GyroGroup::updateRotStatus()
-{
+void GyroGroup::updateRotStatus() {
     // 当前为低速状态
-    if (_rot_status == RotStatus::LOW_ROT_SPEED)
-    {
+    if (_rot_status == RotStatus::LOW_ROT_SPEED) {
         if (abs(_rotspeed) > para::gyro_group_param.MIN_HIGH_ROT_SPEED)
             _rot_status = RotStatus::HIGH_ROT_SPEED;
     }
     // 当前为高速状态
-    else
-    {
+    else {
         if (abs(_rotspeed) < para::gyro_group_param.MAX_LOW_ROT_SPEED)
             _rot_status = RotStatus::LOW_ROT_SPEED;
     }

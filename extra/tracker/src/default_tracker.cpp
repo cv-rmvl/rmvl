@@ -9,6 +9,7 @@
  *
  */
 
+#include "rmvl/core/util.hpp"
 #include "rmvl/tracker/tracker.h"
 
 namespace rm
