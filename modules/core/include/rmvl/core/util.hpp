@@ -206,7 +206,7 @@ const char *getBuildInformation();
  * @param[in] code 一种 RMVLErrorCode 错误码
  * @param[in] msg 错误信息
  */
-#define RMVL_Error(code, msg) rm::error(code, msg, RMVL_Func, __FILE__, __LINE__)
+#define RMVL_Error(code, msg) ::rm::error(code, msg, RMVL_Func, __FILE__, __LINE__)
 
 /**
  * @brief 调用错误处理程序
@@ -219,7 +219,7 @@ const char *getBuildInformation();
  * @param[in] fmt 格式化字符串
  * @param[in] ... 括号中带有类似 printf 格式的错误信息
  */
-#define RMVL_Error_(code, fmt, ...) rm::error(code, rm::format(fmt, __VA_ARGS__), RMVL_Func, __FILE__, __LINE__)
+#define RMVL_Error_(code, fmt, ...) ::rm::error(code, ::rm::format(fmt, __VA_ARGS__), RMVL_Func, __FILE__, __LINE__)
 
 /**
  * @brief 在运行时检查条件，如果失败则抛出异常
@@ -228,7 +228,7 @@ const char *getBuildInformation();
  *       的配置下生效。
  * @see RMVLErrorCode
  */
-#define RMVL_Assert(expr) (!!(expr)) ? (void(0)) : rm::error(RMVL_StsAssert, #expr, RMVL_Func, __FILE__, __LINE__)
+#define RMVL_Assert(expr) (!!(expr)) ? (void(0)) : ::rm::error(RMVL_StsAssert, #expr, RMVL_Func, __FILE__, __LINE__)
 
 //! 在 Debug 条件下或启用静态分析工具的情况下，在运行时检查条件，如果失败则抛出异常
 #if defined NDEBUG || defined RMVL_STATIC_ANALYSIS

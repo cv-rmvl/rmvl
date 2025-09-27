@@ -28,6 +28,8 @@
 #include <chrono>
 #include <coroutine>
 
+#endif
+
 namespace rm {
 
 //! @addtogroup io
@@ -43,6 +45,8 @@ constexpr FileDescriptor INVALID_FD = -1;
 #endif
 
 //! @} io
+
+#if __cplusplus >= 202002L
 
 namespace async {
 
@@ -247,13 +251,14 @@ private:
 using IOContextRef = std::reference_wrapper<IOContext>;
 
 /**
- * @brief 在指定的异步 I/O 执行上下文中生成并调度一个协程任务
+ * @brief 在指定的执行上下文中生成并调度一个协程任务
  *
- * @param[in] ctx 异步 I/O 执行上下文
+ * @param[in] ctx 执行上下文
  * @param[in] fn 协程函数
  * @param[in] args 协程函数参数
  *
- * @see IOContext::spawn
+ * @see
+ * - 异步 I/O 执行上下文 IOContext::spawn
  */
 template <typename Callable, typename... Args>
     requires InvokableTask<Callable, Args...>
@@ -445,6 +450,6 @@ private:
 
 } // namespace async
 
-} // namespace rm
-
 #endif // __cplusplus >= 202002L
+
+} // namespace rm

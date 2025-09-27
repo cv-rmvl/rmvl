@@ -11,7 +11,10 @@
 
 #pragma once
 
+#if __cplusplus >= 202002L
 #include <regex>
+#endif
+
 #include <unordered_map>
 #include <vector>
 
@@ -313,7 +316,12 @@ inline Task<Response> del(IOContext &io_context, std::string_view url, const std
 //! @addtogroup io_net
 //! @{
 
-//! Web 应用程序框架
+/**
+ * @brief Web 应用程序框架
+ * 1. 轻量级的异步 Web 应用程序框架，支持路由、中间件，支持路径参数和查询参数
+ * 2. 所有设计均参考 Express.js，具体的 Express.js 教程请参考 https://expressjs.com/
+ * 3. 目前支持的 HTTP 方法包括 GET、POST、DELETE
+ */
 class Webapp final {
 public:
     //! 路由处理器类型
@@ -432,7 +440,7 @@ public:
 private:
     std::atomic_bool _running{false}; //!< 运行标志位
 
-    IOContextRef _ctx;                //!< 异步 I/O 执行上下文
+    IOContextRef _ctx;                       //!< 异步 I/O 执行上下文
     uint16_t _port{};                        //!< 监听端口
     std::function<void()> _listen{};         //!< 启动后调用的回调函数
     std::vector<ResponseMiddleware> _mwfs{}; //!< 响应中间件列表
@@ -447,6 +455,7 @@ private:
 
 } // namespace async
 
+#endif // __cplusplus >= 202002L
+
 } // namespace rm
 
-#endif // __cplusplus >= 202002L

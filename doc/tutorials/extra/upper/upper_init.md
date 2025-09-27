@@ -99,8 +99,7 @@ auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMo
 
 #pragma pack(1)
 // 发送协议
-struct SendStruct
-{
+struct SendStruct {
     uint8_t test;
     /* code */
 };
@@ -112,18 +111,16 @@ struct SendStruct
 */
 
 // 接收协议
-struct alignas(1) ReceiveStruct
-{
+struct alignas(1) ReceiveStruct {
     uint8_t test;
     /* code */
 };
 
 /* code */
 
-int main()
-{
+int main() {
     // 创建并初始化串口通信
-    auto port = rm::SerialPort("ttyACM1", B115200);
+    auto port = rm::SerialPort("/dev/ttyACM0", BaudRate::BR_115200, SerialReadMode::NONBLOCK);
 
     /* code */
 }

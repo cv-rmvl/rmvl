@@ -7,6 +7,11 @@ rmvl_add_module(
   DEPENDS core
 )
 
+# for glibc < 2.34
+if(UNIX)
+  rmvl_link_libraries(io PRIVATE rt)
+endif()
+
 # ----------------------------------------------------------------------------
 #  Build Python bindings
 # ----------------------------------------------------------------------------

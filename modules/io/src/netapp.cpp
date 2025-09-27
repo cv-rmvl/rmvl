@@ -231,7 +231,7 @@ std::string Response::generate() {
     str.append("HTTP/1.1 ").append(std::to_string(status)).append(" ").append(message).append("\r\n");
 
     // 生成响应头
-    str.append("Server: RMVL/").append(rm::version()).append("\r\n");
+    str.append("Server: RMVL/").append(version()).append("\r\n");
     str.append("Date: ").append(get_date_str(std::chrono::system_clock::now())).append("\r\n");
     for (const auto &[key, value] : heads)
         str.append(key).append(": ").append(value).append("\r\n");
@@ -282,7 +282,7 @@ void Response::redirect(uint16_t code, std::string_view url) {
     status = code;
     static const std::unordered_map<uint16_t, std::string_view> redirect_map =
         {{301, "Moved Permanently"}, {302, "Found"}, {303, "See Other"}, {307, "Temporary Redirect"}, {308, "Permanent Redirect"}};
-    message = redirect_map.contains(code) ? redirect_map.at(code) : "Redirect";
+    message = redirect_map.find(code) != redirect_map.end() ? redirect_map.at(code) : "Redirect";
     heads["Location"] = url;
     heads["Content-Length"] = "0";
     heads["Content-Type"] = "text/html; charset=utf-8";
@@ -442,6 +442,8 @@ Response requests::request(HTTPMethod method, std::string_view url, const std::v
     // 解析响应
     return Response::parse(response_str);
 }
+
+#if __cplusplus >= 202002L
 
 namespace async {
 
@@ -606,5 +608,7 @@ bool Webapp::RoutePattern::match(std::string_view path, std::unordered_map<std::
 }
 
 } // namespace async
+
+#endif
 
 } // namespace rm

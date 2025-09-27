@@ -9,8 +9,6 @@
  *
  */
 
-#if __cplusplus >= 202002L
-
 #include <unordered_map>
 
 #ifndef _WIN32
@@ -22,6 +20,8 @@
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/io/async.hpp"
+
+#if __cplusplus >= 202002L
 
 namespace rm::async {
 
@@ -36,7 +36,7 @@ IOContext::~IOContext() {
 
 void IOContext::run() {
     _running = true;
-    std::unordered_map<std::coroutine_handle<>, BasicTask::ptr> unfinish;
+    std::unordered_map<void *, BasicTask::ptr> unfinish;
     while (_running) {
         // 优先处理就绪队列
         while (!_ready.empty()) {
@@ -44,7 +44,7 @@ void IOContext::run() {
             _ready.pop();
             task->handle().resume();
             if (!task->handle().done())
-                unfinish.insert({task->handle(), std::move(task)});
+                unfinish.insert({task->handle().address(), std::move(task)});
         }
         // 处理 IO 事件
         constexpr std::size_t MAX_EVENTS = 256;
@@ -66,11 +66,11 @@ void IOContext::run() {
                 continue;
             // 处理其他 IO 事件
             auto handle = CONTAINING_RECORD(events[i].lpOverlapped, IocpOverlapped, ov)->handle;
-            if (unfinish.contains(handle)) {
+            if (unfinish.contains(handle.address())) {
                 // IO 事件就绪，加入就绪队列可被唤醒
-                _ready.emplace(std::move(unfinish.at(handle)));
+                _ready.emplace(std::move(unfinish.at(handle.address())));
                 // Task 已被移动，直接删除
-                unfinish.erase(handle);
+                unfinish.erase(handle.address());
             } else {
                 // 未在 unfinish 中的协程，说明是 unfinish 中协程的子协程，直接唤醒
                 handle.resume();
@@ -164,7 +164,7 @@ IOContext::~IOContext() {
 
 void IOContext::run() {
     _running = true;
-    std::unordered_map<std::coroutine_handle<>, BasicTask::ptr> unfinish;
+    std::unordered_map<void *, BasicTask::ptr> unfinish;
     while (_running) {
         // 优先处理就绪队列
         while (!_ready.empty()) {
@@ -172,7 +172,7 @@ void IOContext::run() {
             _ready.pop();
             task->handle().resume();
             if (!task->handle().done())
-                unfinish.insert({task->handle(), std::move(task)});
+                unfinish.insert({task->handle().address(), std::move(task)});
         }
         // 处理 IO 事件
         constexpr std::size_t MAX_EVENTS = 256;
@@ -188,11 +188,11 @@ void IOContext::run() {
             }
             // 处理其他 IO 事件
             auto handle = std::coroutine_handle<>::from_address(events[i].data.ptr);
-            if (unfinish.contains(handle)) {
+            if (unfinish.contains(handle.address())) {
                 // IO 事件就绪，加入就绪队列可被唤醒
-                _ready.emplace(std::move(unfinish.at(handle)));
+                _ready.emplace(std::move(unfinish.at(handle.address())));
                 // Task 已被移动，直接删除
-                unfinish.erase(handle);
+                unfinish.erase(handle.address());
             } else {
                 // 未在 unfinish 中的协程，说明是 unfinish 中协程的子协程，直接唤醒
                 handle.resume();

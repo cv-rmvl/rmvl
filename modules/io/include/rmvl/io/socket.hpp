@@ -69,6 +69,8 @@ struct ip {
     };
 };
 
+#if __cplusplus >= 202002L
+
 /**
  * @brief IP 协议
  * @details 必须为 rm::ip::tcp 或 rm::ip::udp
@@ -83,6 +85,8 @@ concept IpProtocol = std::same_as<Tp, ip::tcp> || std::same_as<Tp, ip::udp>;
 template <typename Tp>
 concept LocalProtocol = std::same_as<Tp, ipc>;
 
+#endif
+
 //! 端点
 class Endpoint {
 public:
@@ -95,7 +99,12 @@ public:
      * Endpoint ep(ip::tcp::v4(), 8080);
      * @endcode
      */
+#if __cplusplus >= 202002L
     Endpoint(IpProtocol auto ip, uint16_t port) : _family(ip.family), _type(ip.type), _port(port) {}
+#else
+    template <typename Tp>
+    Endpoint(const Tp &ip, uint16_t port) : _family(ip.family), _type(ip.type), _port(port) {}
+#endif
 
     /**
      * @brief 构造本地 Socket 端点
@@ -106,7 +115,12 @@ public:
      * Endpoint ep(ipc::stream(), "/tmp/socket");
      * @endcode
      */
+#if __cplusplus >= 202002L
     Endpoint(LocalProtocol auto lp, std::string_view path) : _family(lp.family), _type(lp.type), _path(path) {}
+#else
+    template <typename Tp>
+    Endpoint(const Tp &lp, std::string_view path) : _family(lp.family), _type(lp.type), _path(path) {}
+#endif
 
     //! 获取协议族
     int family() const { return _family; }
@@ -397,8 +411,8 @@ public:
         Socket await_resume() noexcept;
         //! @endcond
     private:
-        IOContextRef _ctx; //!< 异步 I/O 执行上下文
-        Endpoint _endpoint;       //!< 端点
+        IOContextRef _ctx;  //!< 异步 I/O 执行上下文
+        Endpoint _endpoint; //!< 端点
     };
 
     /**
@@ -450,8 +464,8 @@ public:
         //! @endcond
 
     private:
-        IOContextRef _ctx; //!< 异步 I/O 执行上下文
-        Endpoint _endpoint;       //!< 端点
+        IOContextRef _ctx;  //!< 异步 I/O 执行上下文
+        Endpoint _endpoint; //!< 端点
     };
 
     /**

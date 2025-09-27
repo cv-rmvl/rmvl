@@ -9,9 +9,7 @@
  *
  */
 
-#ifdef _WIN32
-
-#else
+#ifndef _WIN32
 #include <fcntl.h>
 #include <mqueue.h>
 #include <sys/stat.h>

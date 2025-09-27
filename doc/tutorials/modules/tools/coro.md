@@ -2,7 +2,7 @@
 ============
 
 @author 赵曦
-@date 2025/09/20
+@date 2025/09/25
 @version 1.0
 @brief Epoll / IOCP 基本介绍与协程设施
 
@@ -13,11 +13,6 @@
 @tableofcontents
 
 ------
-
-相关类：
-- 以系统异步 I/O 为内核的调度器： rm::async::IOContext
-- 通用等待器： rm::async::AsyncIOAwaiter, rm::async::AsyncReadAwaiter 及 rm::async::AsyncWriteAwaiter
-- 可等待的协程任务： rm::async::Task
 
 ## 1. 异步 I/O
 
@@ -65,6 +60,10 @@ RMVL 目前提供了跨平台的异步 I/O 协程设施
 
 ### 2.1 协程调度器
 
+相关类：
+- rm::async::IOContext —— 以系统异步 I/O 为内核的调度器
+- rm::async::Task - 可等待的协程任务
+
 rm::async::IOContext 是基于异步 I/O 的协程调度器，负责管理和调度协程的执行。内部维护了 BasicTask 任务基类，由维护了 rm::async::Task 模板的 TaskWrapper 派生类实现类型擦除的功能。部分成员变量的细节如下：
 
 - `ready` 就绪队列，存储所有可以执行的协程任务；
@@ -80,6 +79,55 @@ rm::async::IOContext 是基于异步 I/O 的协程调度器，负责管理和调
 需要注意的是，由于 C++ Coroutine 是无栈协程，所有协程任务都要求是可重入的，因此，协程任务要么具有静态存储期，要么由 `ready` 与 `unfinish` 进行生命周期管理（多次在二者之间移动），使用 `co_spawn` 函数或者 `spawn` 成员函数创建的协程，均会被 `ready` 与 `unfinish` 进行管理，而使用 `co_await` 直接等待的协程，一般具有静态存储期，可以无需特殊管理。<span style="color: red">当然，生命周期的管理对于用户是无感的。</span>
 
 一个基本的使用示例如下：
+
+```cpp
+#include <cstdio>
+
+#include <rmvl/io/async.hpp>
+
+using namespace rm;
+
+int main() {
+    async::IOContext io_context{};
+
+    co_spawn(io_context, []() -> async::Task<> {
+        printf("Test\n");
+        co_return;
+    });
+
+    io_context.run();
+}
+```
+
+### 2.2 通用等待器
+
+相关类：
+- rm::async::AsyncIOAwaiter —— 异步等待器基类
+- rm::async::AsyncReadAwaiter, rm::async::AsyncWriteAwaiter —— 通用读写等待器
+
+@ref io 提供了两种通用等待器，分别是 rm::async::AsyncReadAwaiter 和 rm::async::AsyncWriteAwaiter 。它们的主要作用是将 I/O 操作封装成协程的挂起、恢复操作，使得用户可以使用 `co_await` 关键字来异步的等待 I/O 操作的完成。
+
+例如 rm::async::PipeServer 和 rm::async::PipeClient 均提供了异步 `read` 和 `write` 方法，返回对应的等待器实例，可以直接使用 `co_await` 关键字等待 I/O 操作的完成。在协程任务中，可以使用如下代码完成异步的读写操作：
+
+```cpp
+async::Task<> session(async::PipeClient cli) {
+    bool success = co_await cli.write(data); // 异步写数据
+    std::string data = co_await cli.read();  // 异步读数据
+}
+```
+
+而此处的 `session` 协程函数则可以通过 `co_spawn` 来生成协程任务。
+
+### 2.3 异步定时器
+
+相关类： rm::async::Timer
+
+@ref io 在
+
+- Linux 平台下，提供了 `timerfd` 即基于文件描述符的异步定时器，配合 epoll 实现异步定时
+- Windows 平台下，提供了 `ThreadpoolTimer` 即 Windows 线程池提供的异步定时器。它通过定时回调，间接与 IOCP 结合，以实现基于事件触发的异步定时。
+
+一个简易的使用示例如下：
 
 ```cpp
 #include <csignal>
@@ -139,13 +187,45 @@ Task 1: 1s
 Task 1: 1s
 ```
 
-### 2.2 通用等待器
-
-@ref io 提供了两种通用等待器，分别是 rm::async::AsyncReadAwaiter 和 rm::async::AsyncWriteAwaiter 。它们的主要作用是将 I/O 操作封装成协程的挂起、恢复操作，使得用户可以使用 `co_await` 关键字来异步的等待 I/O 操作的完成。
-
-rm::async::PipeServer 和 rm::async::PipeClient 均提供了异步 `read` 和 `write` 方法，返回对应的等待器实例，可以直接使用 `co_await` 关键字等待 I/O 操作的完成。在协程任务中，可以使用如下代码完成异步的读写操作：
+## 3. Echo Server 示例 {#echo_server}
 
 ```cpp
-bool success = co_await cli.write(data); // 异步写数据
-std::string data = co_await cli.read();  // 异步读数据
+#include <rmvl/io/socket.hpp>
+
+using namespace rm;
+
+async::Task<> session(async::Socket socket) {
+    std::string str = co_await socket.read();
+    if (str.empty()) {
+        printf("Read failed\n");
+        co_return;
+    }
+    bool success = co_await socket.write(str);
+    if (!success) {
+        printf("Write failed\n");
+        co_return;
+    }
+}
+
+int main() {
+    async::IOContext io_context{};
+    async::Acceptor acceptor(io_context, Endpoint(ip::tcp::v4(), 8080));
+
+    // 异步等待客户端连接
+    co_spawn(io_context, [&]() -> async::Task<> {
+        while (true) {
+            async::Socket socket = co_await acceptor.accept();
+            co_spawn(io_context, session, std::move(socket));
+        }
+    });
+
+    io_context.run();
+    return 0;
+}
+```
+
+可以使用 TCP 连接工具（如 `netcat`）进行测试：
+
+```bash
+nc localhost 8080
 ```
