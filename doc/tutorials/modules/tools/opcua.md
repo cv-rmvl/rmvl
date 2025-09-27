@@ -1,4 +1,4 @@
-工业自动化通信协议 OPC UA {#tutorial_modules_opcua}
+工业自动化通信协议 —— OPC UA {#tutorial_modules_opcua}
 ============
 
 @author 赵曦
@@ -6,7 +6,7 @@
 @version 3.0
 @brief OPC UA 和 open62541 库简介
 
-@prev_tutorial{tutorial_modules_serial}
+@prev_tutorial{tutorial_modules_netapp}
 
 @next_tutorial{tutorial_modules_mqtt}
 
@@ -100,7 +100,7 @@ open62541 @cite open62541_library 是一个基于 C 语言的开源 OPC UA 栈�
 
 ### 2.1 初始化
 
-**服务器**
+#### 2.1.1 服务器
 
 @add_toggle_cpp
 
@@ -209,7 +209,7 @@ while not stop:
 
 @end_toggle
 
-**客户端**
+#### 2.2.2 客户端
 
 @add_toggle_cpp
 

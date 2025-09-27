@@ -2,13 +2,13 @@
 ============
 
 @author 赵曦
-@date 2025/09/20
+@date 2025/09/25
 @version 2.0
 @brief 串口通信模块使用教程
 
 @prev_tutorial{tutorial_modules_ipc}
 
-@next_tutorial{tutorial_modules_webapp}
+@next_tutorial{tutorial_modules_socket}
 
 @tableofcontents
 
@@ -25,9 +25,9 @@
 - 串口：指的是通信中的物理接口，常见的有 `RS-232`、`RS-485`、`UART` 等标准。每个串口都有相应的引脚用于发送和接收数据以及控制信号。
 - 波特率：也称作数据传输速率，指的是每秒钟传输的位数。波特率决定了传输速度的快慢，通常使用常见的波特率如 9600、115200 等。
 
-### 2. 同步模式使用{#sync_serial_usage}
+### 2. 同步模式使用
 
-#### 2.1 初始化{#serial_init}
+#### 2.1 初始化
 
 rm::SerialPort 的构造函数原型如下
 
@@ -45,7 +45,7 @@ SerialPort(std::string_view device, BaudRate baud_rate, SerialReadMode read_mode
 
 </div>
 
-#### 2.2 数据 I/O {#serial_io}
+#### 2.2 数据 I/O
 
 rm::SerialPort 提供了极其方便的串口读取、写入的接口。
 
@@ -110,7 +110,41 @@ SerialPort 的通信协议一般就是指数据链路层的协议，采用封装
 - 内存对齐规则，关于内存对齐可使用 `#pragma pack` 宏或使用 C++ 标准的 `alignas` 关键字
 - 头尾帧是否一致
 
-### 3. 异步模式使用{#async_serial_usage}
+#### 2.4 用法
+
+```cpp
+#include <rmvl/io/serial.hpp>
+
+using namespace rm;
+
+struct Data {
+    uint8_t head[4]{};
+    float x{};
+    float y{};
+};
+
+int main() {
+    // 创建串口对象，以非阻塞模式打开 /dev/ttyUSB0，设置波特率为 115200
+    auto serial = SerialPort("/dev/ttyUSB0", BaudRate::BR_115200, SerialReadMode::NONBLOCK);
+
+    // 1. 字符串读写
+    std::string str{};
+    bool success = serial.read(str);
+    success = serial.write("test string");
+
+    // 2. 聚合体读写
+    Data data{};
+    success = serial.read(data);
+    Data send_data = {1, 2, 3, 4, 1.1f, 2.2f};
+    success = serial.write(send_data);
+
+    // 3. 带帧头帧尾的聚合体读取
+    // 适合于同步非阻塞模式下大量数据的读取处理
+    success = serial.read(0x44, 0x55, data);
+}
+```
+
+### 3. 异步模式使用
 
 rm::async::SerialPort 需要配合 rm::async::IOContext 使用，目前，异步串口仅提供了字符串读写的功能
 
@@ -120,4 +154,25 @@ SerialReadAwaiter read();
 SerialWriteAwaiter write(std::string_view);
 ```
 
-其中 SerialReadAwaiter 为串口读等待器，
+其中 SerialReadAwaiter 为串口读等待器，相比于 rm::async::AsyncReadAwaiter 增加了读缓冲区清理的功能。同理，SerialWriteAwaiter 增加了写缓冲区清理的功能。用法如下：
+
+```cpp
+#include <rmvl/io/serial.hpp>
+
+using namespace rm;
+
+async::Task<> session(async::SerialPort serial) {
+    // 仅支持字符串读写
+    std::string str = co_await serial.read();
+    bool success = co_await serial.write("test string");
+}
+
+int main() {
+    async::IOContext io_context{};
+    async::SerialPort serial(io_context, "/dev/ttyUSB0", BaudRate::BR_115200);
+
+    co_spawn(io_context, session, std::move(serial));
+
+    io_context.run();
+}
+```

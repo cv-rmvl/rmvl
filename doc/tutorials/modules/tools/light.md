@@ -68,8 +68,7 @@ rmvl_hik_lightctl /dev/ttyUSB0
 ```cpp
 #include <rmvl/light/opt_light_control.h>
 
-int main()
-{
+int main() {
     // 创建光源控制器对象
     auto light_controller = rm::OPTLightController();
     // 连接光源控制器
