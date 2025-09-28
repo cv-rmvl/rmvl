@@ -5,6 +5,9 @@ on:
     tags:
       - '2.*'
 
+permissions:
+  contents: write
+
 jobs:
   build-u20:
     name: Ubuntu 20.04 support for amd64

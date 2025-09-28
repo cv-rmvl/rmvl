@@ -22,6 +22,10 @@
 #include "rmvl/algorithm.hpp"
 #endif // HAVE_RMVL_ALGORITHM
 
+#ifdef HAVE_RMVL_IO
+#include "rmvl/io.hpp"
+#endif // HAVE_RMVL_IO
+
 #ifdef HAVE_RMVL_ML
 #include "rmvl/ml.hpp"
 #endif // HAVE_RMVL_ML

@@ -23,6 +23,10 @@
 #include "rmvlpara/algorithm.hpp"
 #endif // HAVE_RMVL_ALGORITHM
 
+#ifdef HAVE_RMVL_IO
+#include "rmvlpara/io.hpp"
+#endif // HAVE_RMVL_IO
+
 #ifdef HAVE_RMVL_OPCUA
 #include "rmvlpara/opcua.hpp"
 #endif // HAVE_RMVL_OPCUA
