@@ -68,4 +68,4 @@ jobs:
       - package-u24-arm
       - package-win
       - package-win-arm
-    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-release-asset.yml@v1
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-release-assets.yml@v1
