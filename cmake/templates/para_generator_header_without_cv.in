@@ -15,8 +15,7 @@
 #include "rmvl/core/rmvldef.hpp"
 
 @def_new_group@
-namespace rm::para
-{
+namespace rm::para {
 
 //! @addtogroup para_@module_name@
 //! @{
@@ -39,8 +38,7 @@ namespace rm::para
  * @note
  * - 无法包含 OpenCV 中有关矩阵、向量、点等数据结构
  */
-class RMVL_EXPORTS_W @class_name@
-{
+class RMVL_EXPORTS_W @class_name@ {
 public:
     RMVL_W @class_name@() = default;
 

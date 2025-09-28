@@ -44,19 +44,19 @@ rmvl_hik_lightctl /dev/ttyUSB0
 在建立连接之后，可以输入 `help`、`h`、`usage` 或 `?` 来查看帮助信息，可以输入 `exit`、`quit` 或 `q` 来退出程序，具体的帮助信息如下：
 
 <div class="fragment">
-<div class="line"><span style="color: #569CD6">Common functions usage:</span></div>
-<div class="line">&nbsp;&nbsp;h, help, ?, usage <span style="color: #6A9955"># show this help message</span></div>
-<div class="line">&nbsp;&nbsp;exit, quit, q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6A9955"># exit the program</span></div>
+<div class="line"><span class="keyword">Common functions usage:</span></div>
+<div class="line">&nbsp;&nbsp;h, help, ?, usage <span class="comment"># show this help message</span></div>
+<div class="line">&nbsp;&nbsp;exit, quit, q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># exit the program</span></div>
 <div class="line"> </div>
-<div class="line"><span style="color: #569CD6">Parameters control usage:</span></div>
-<div class="line">&nbsp;&nbsp;ctl get delay&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6A9955"># get the delay time after writing</span></div>
-<div class="line">&nbsp;&nbsp;ctl set delay &lt;val&gt; <span style="color: #6A9955"># set the delay time after writing</span></div>
+<div class="line"><span class="keyword">Parameters control usage:</span></div>
+<div class="line">&nbsp;&nbsp;ctl get delay&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># get the delay time after writing</span></div>
+<div class="line">&nbsp;&nbsp;ctl set delay &lt;val&gt; <span class="comment"># set the delay time after writing</span></div>
 <div class="line"> </div>
-<div class="line"><span style="color: #569CD6">Commands usage:</span></div>
-<div class="line">&nbsp;&nbsp;open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6A9955"># open all the channels</span></div>
-<div class="line">&nbsp;&nbsp;close&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6A9955"># close all the channels</span></div>
-<div class="line">&nbsp;&nbsp;get &lt;chn&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6A9955"># get the brightness of the specified channel</span></div>
-<div class="line">&nbsp;&nbsp;set &lt;chn&gt; &lt;val&gt; <span style="color: #6A9955"># set the brightness of the specified channel</span></div>
+<div class="line"><span class="keyword">Commands usage:</span></div>
+<div class="line">&nbsp;&nbsp;open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># open all the channels</span></div>
+<div class="line">&nbsp;&nbsp;close&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># close all the channels</span></div>
+<div class="line">&nbsp;&nbsp;get &lt;chn&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># get the brightness of the specified channel</span></div>
+<div class="line">&nbsp;&nbsp;set &lt;chn&gt; &lt;val&gt; <span class="comment"># set the brightness of the specified channel</span></div>
 </div>
 
 #### OPT 光源控制器示例代码

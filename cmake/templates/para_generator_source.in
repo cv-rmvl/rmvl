@@ -15,15 +15,13 @@
 
 #include "@para_include_path@"
 
-namespace rm::para
-{
+namespace rm::para {
 
 static std::shared_mutex g_paramtx{};
 
 @para_source_enum_s2t@
 @para_source_enum_t2s@
-bool @class_name@::read(const std::string &path)
-{
+bool @class_name@::read(const std::string &path) {
     std::shared_lock lk(g_paramtx);
     cv::FileStorage fs(path, cv::FileStorage::READ);
     if (!fs.isOpened())
@@ -34,8 +32,7 @@ bool @class_name@::read(const std::string &path)
     return true;
 }
 
-bool @class_name@::write(const std::string &path) const
-{
+bool @class_name@::write(const std::string &path) const {
     std::unique_lock lk(g_paramtx);
     cv::FileStorage fs(path, cv::FileStorage::WRITE);
     if (!fs.isOpened())

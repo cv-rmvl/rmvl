@@ -19,15 +19,13 @@
 数组类型同样属于聚合体，这里仅探究符合聚合体定义的类类型，我们称其为聚合类，聚合类允许聚合初始化，即从初始化列表初始化聚合类，例如
 
 ```cpp
-struct Person
-{
+struct Person {
     int age;
     double height;
     std::string name;
 };
 
-void init()
-{
+void init() {
     Person p3{18, 1.78, "zhaoxi"};
 }
 ```
@@ -43,8 +41,7 @@ cppreference 给出聚合初始化的一个效果是
 根据 **性质 2** ，聚合初始化的代码写成如下形式
 
 ```cpp
-void init()
-{
+void init() {
     Person p1{18};                 // OK
     Person p2{18, 1.78};           // OK
     Person p3{18, 1.78, "zhaoxi"}; // OK
@@ -54,8 +51,7 @@ void init()
 这三种都是正确的，但是初始化列表中的元素个数不能超过聚合体的元素个数。
 
 ```cpp
-void init()
-{
+void init() {
     Person p4{18, 1.78, "zhaoxi", 'a'}; // 非良构
 }
 ```
@@ -91,8 +87,7 @@ constexpr auto size() -> decltype(T{/* exp */, /* exp */}, 0u) { return 2; }
 其中 `/* exp */` 暂时理解为可转化为任意类型的表达式。当 \f$m>2\f$ 时，会发生替换失败，当 \f$m=2\f$ 时可以正常返回 `2`，我们可以定义一个包含任意类型的[用户定义转换函数](https://zh.cppreference.com/w/cpp/language/cast_operator)的辅助类来完成 `/* exp */` 所代表的功能。
 
 ```cpp
-struct init
-{
+struct init {
     template <typename Tp>
     operator Tp();
 };
@@ -103,12 +98,10 @@ struct init
 为此，汇总所有信息，可以得到以下代码。
 
 ```cpp
-namespace helper
-{
+namespace helper {
 
 // Constructor helper
-struct init
-{
+struct init {
     template <typename Tp>
     operator Tp(); // No need to define
 };
@@ -132,8 +125,7 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 } // namespace helper
 
 template <typename Tp>
-constexpr std::size_t size()
-{
+constexpr std::size_t size() {
     static_assert(std::is_aggregate_v<Tp>);
     return helper::size<Tp>(helper::size_tag<3>{});
 }
@@ -144,14 +136,12 @@ constexpr std::size_t size()
 ```cpp
 #include <rmvl/core/util.hpp>
 
-struct T
-{
+struct T {
     int a{};
     std::string b{};
 };
 
-int main()
-{
+int main() {
     std::cout << rm::size<T>() << std::endl; // 输出 2
 }
 ```
@@ -164,8 +154,7 @@ C++20 有了概念的机制，可以不通过 SFINAE 机制完成。我们直接
 
 ```cpp
 template <typename Tp>
-consteval std::size_t size(auto &&...args)
-{
+consteval std::size_t size(auto &&...args) {
     static_assert(std::is_aggregate_v<Tp>);
     if constexpr (!requires { Tp{args...}; })
         return sizeof...(args) - 1;
@@ -181,13 +170,11 @@ consteval std::size_t size(auto &&...args)
 我们通过一个例子来说明，并给出详细的运行步骤。
 
 ```cpp
-struct X
-{
+struct X {
     int a{}, b{};
 };
 
-int main()
-{
+int main() {
     std::cout << rm::size<X>() << std::endl; // 输出 2
 }
 ```
@@ -230,22 +217,20 @@ void for_each(const Tp &val, Callable &&f);
 ```cpp
 #include <rmvl/core/util.hpp>
 
-struct X
-{
+struct X {
     int a{};
     double bb{};
     std::string str{};
 };
 
-int main()
-{
+int main() {
     auto f = [](auto &&val) {
         std::cout << "val = " << val << std::endl;
     };
 
     X x{1, 3.1, "abc"};
     rm::for_each(x, f);
-};
+}
 ```
 
 编译后运行结果为
@@ -285,15 +270,13 @@ bool equal(const Tp &lhs, const Tp &rhs);
 ```cpp
 #include <rmvl/core/util.hpp>
 
-struct X
-{
+struct X {
     int a{};
     double bb{};
     std::string str{};
 };
 
-int main()
-{
+int main() {
     X x1{1, 3.1, "abc"};
     X x2{2, 4.1, "abc"};
     X x3{1, 3.1, "abc"};
@@ -322,24 +305,20 @@ return l0 == r0 && l1 == r1 && l2 == r2;
 cppreference 中给出了有关自定义散列函数的例子
 
 ```cpp
-struct S
-{
+struct S {
     std::string first_name;
     std::string last_name;
     bool operator==(const S&) const = default; // C++20 起
 };
  
 // C++20 前
-// bool operator==(const S& lhs, const S& rhs)
-// {
+// bool operator==(const S& lhs, const S& rhs) {
 //     return lhs.first_name == rhs.first_name && lhs.last_name == rhs.last_name;
 // }
  
 // 自定义散列函数可以是独立函数对象：
-struct MyHash
-{
-    std::size_t operator()(S const& s) const 
-    {
+struct MyHash {
+    std::size_t operator()(S const& s) const {
         std::size_t h1 = std::hash<std::string>{}(s.first_name);
         std::size_t h2 = std::hash<std::string>{}(s.last_name);
         return h1 ^ (h2 << 1); // 或者使用 boost::hash_combine
@@ -350,8 +329,7 @@ struct MyHash
 RMVL 提供了聚合类一般化的接口，即任意聚合类的自定义散列函数 `rm::hash_aggregate`，基本用法如下
 
 ```cpp
-struct X
-{
+struct X {
     int a{};
     double bb{};
     std::string str{};
@@ -363,8 +341,7 @@ struct X
 #endif
 };
 
-void f()
-{
+void f() {
     // 定义 Key = X，Val = int 的散列表
     std::unordered_map<X, int, rm::hash_aggregate<X>> hashmap;
 }
@@ -374,8 +351,7 @@ void f()
 
 ```cpp
 template <typename T>
-void f()
-{
+void f() {
     std::unordered_map<T, int, rm::hash_traits<T>::hash_func> hashmap;
 }
 ```

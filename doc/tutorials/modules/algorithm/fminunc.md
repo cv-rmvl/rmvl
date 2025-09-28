@@ -100,8 +100,7 @@
 首先定义一个目标函数，例如：
 
 ```cpp
-static inline double quadratic(const std::valarray<double> &x)
-{
+static inline double quadratic(const std::valarray<double> &x) {
     const auto &x1 = x[0], &x2 = x[1];
     return 60 - 10 * x1 - 4 * x2 + x1 * x1 + x2 * x2 - x1 * x2;
 }
@@ -120,8 +119,7 @@ auto [x, fval] = rm::fminunc(quadratic, {0, 0});
 
 #include <rmvl/algorithm/numcal.hpp>
 
-int main()
-{
+int main() {
     // 定义二次函数
     auto quadratic = [](const std::valarray<double> &x) {
         const auto &x1 = x[0], &x2 = x[1];

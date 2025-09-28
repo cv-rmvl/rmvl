@@ -24,22 +24,22 @@ RMVL 中，一部分模块（涉及主要模块和扩展模块）的功能在不
 
 这里举一个 `*.para` 文件的示例，写法与 ROS Message 的 `*.msg` 文件类似，不过参数的类型均使用 C/C++ 中的类型，并且添加了注释功能。
 
-```
-#################### 光学参数 ####################
-float exposure = 1500  # 相机曝光
-float saturation = 100 # 相机饱和度
-float gain = 64        # 相机数字增益
-uint32_t b_gain = 1500 # 相机蓝色增益
-uint32_t g_gain = 1500 # 相机绿色增益
-uint32_t r_gain = 1500 # 相机红色增益
-int auto_exposure = 0  # 相机自动曝光模式
-int auto_wb = 0        # 相机自动白平衡模式
-
-#################### 设备参数 ####################
-int grab_mode = 1     # 相机 grab 模式
-int retrieve_mode = 1 # 相机 retrieve 模式
-string serial_number  # 相机序列号
-```
+<div class="fragment">
+<div class="line"><span class="comment">#################### 光学参数 ####################</span></div>
+<div class="line"><span class="keywordtype">float</span> exposure = 1500&nbsp;&nbsp;<span class="comment"># 相机曝光</span></div>
+<div class="line"><span class="keywordtype">float</span> saturation = 100&nbsp;<span class="comment"># 相机饱和度</span></div>
+<div class="line"><span class="keywordtype">float</span> gain = 64&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 相机数字增益</span></div>
+<div class="line"><span class="keywordtype">uint32_t</span> b_gain = 1500&nbsp;<span class="comment"># 相机蓝色增益</span></div>
+<div class="line"><span class="keywordtype">uint32_t</span> g_gain = 1500&nbsp;<span class="comment"># 相机绿色增益</span></div>
+<div class="line"><span class="keywordtype">uint32_t</span> r_gain = 1500&nbsp;<span class="comment"># 相机红色增益</span></div>
+<div class="line"><span class="keywordtype">int</span> auto_exposure = 0&nbsp;&nbsp;<span class="comment"># 相机自动曝光模式</span></div>
+<div class="line"><span class="keywordtype">int</span> auto_wb = 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 相机自动白平衡模式</span></div>
+<div class="line"></div>
+<div class="line"><span class="comment">#################### 设备参数 ####################</span></div>
+<div class="line"><span class="keywordtype">int</span> grab_mode = 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 相机 grab 模式</span></div>
+<div class="line"><span class="keywordtype">int</span> retrieve_mode = 1&nbsp;<span class="comment"># 相机 retrieve 模式</span></div>
+<div class="line"><span class="keywordtype">string</span> serial_number&nbsp;&nbsp;<span class="comment"># 相机序列号</span></div>
+</div>
 
 这里列出参数规范文件的参数类型表
 
@@ -62,33 +62,33 @@ string serial_number  # 相机序列号
 
 如果要给某一条参数设置默认值，需要使用 `=` 完成，不需要默认参数（仅由运行时加载设置）则不需要使用 `=` 进行赋值，例如
 
-```
-int grab_mode = 1
-string serial_number
-```
+<div class="fragment">
+<div class="line"><span class="keywordtype">int</span> grab_mode = 1</div>
+<div class="line"><span class="keywordtype">string</span> serial_number</div>
+</div>
 
 如果要给某一参数设置注释信息，请<span style="color: red">尾置</span> `#` 并输入相应注释信息，例如
 
-```
-float exposure = 1500 # 相机曝光
-float gain = 64       # 相机数字增益
-```
+<div class="fragment">
+<div class="line"><span class="keywordtype">float</span> exposure = 1500&nbsp;<span class="comment"># 相机曝光</span></div>
+<div class="line"><span class="keywordtype">float</span> gain = 64&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 相机数字增益</span></div>
+</div>
 
 @note
 - `#` 和注释信息之间<u>**不必**</u>使用空格分隔，例如 `#相机曝光`
 
 枚举类型可在每个枚举项后加上具体的值，也能使用 `#` 为枚举项添加注释，例如
 
-```
-enum ColorMode # 颜色类型
-  RED          # 红色
-  GREEN        # 绿色
-  BLUE = 4     # 蓝色
-  GRAY = 5
-endenum
-
-ColorMode COLOR = ColorMode::RED # 颜色信息
-```
+<div class="fragment">
+<div class="line"><span class="keyword">enum</span>&nbsp;<span class="keywordtype">ColorMode</span>&nbsp;<span class="comment"># 颜色类型</span></div>
+<div class="line">&nbsp;&nbsp;RED&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 红色</span></div>
+<div class="line">&nbsp;&nbsp;GREEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 绿色</span></div>
+<div class="line">&nbsp;&nbsp;BLUE = 4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 蓝色</span></div>
+<div class="line">&nbsp;&nbsp;GRAY = 5</div>
+<div class="line"><span class="keyword">endenum</span></div>
+<div class="line"></div>
+<div class="line"><span class="keywordtype">ColorMode</span> COLOR = ColorMode::RED&nbsp;<span class="comment"># 颜色信息</span></div>
+</div>
 
 ### 3. C++ 代码生成
 
@@ -103,21 +103,21 @@ ColorMode COLOR = ColorMode::RED # 颜色信息
 
 **用法**
 
-```cmake
-rmvl_generate_para(
-  <target_name>
-  [MODULE module_name]
-)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">rmvl_generate_para</span>(</div>
+<div class="line">&nbsp;&nbsp;&lt;target_name&gt;</div>
+<div class="line">&nbsp;&nbsp;[<span class="keyword">MODULE</span> module_name]</div>
+<div class="line">)</div>
+</div>
 
 **示例**
 
-```cmake
-rmvl_generate_para(
-  mytarget        # 目标名称
-  MODULE mymodule # 模块名称为 mymodule
-)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">rmvl_generate_para</span>(</div>
+<div class="line">&nbsp;&nbsp;mytarget&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 目标名称</span></div>
+<div class="line">&nbsp;&nbsp;<span class="keyword">MODULE</span> mymodule&nbsp;<span class="comment"># 模块名称为 mymodule</span></div>
+<div class="line">)</div>
+</div>
 
 表示解析当前目录下的 `param/mytarget.para` 文件，并作为模块 `mymodule` 的子模块。最终生成的文件是
 
@@ -132,9 +132,9 @@ rmvl_generate_para(
 
 如果 `mytarget` 需要自成一个模块的话，那么在调用 `rmvl_generate_para` 函数的时候应该写为
 
-```cmake
-rmvl_generate_para(mytarget)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">rmvl_generate_para</span>(mytarget)</div>
+</div>
 
 这样就会生成一个名为 `mytarget` 的参数模块了，最终生成的文件是
 
@@ -147,25 +147,25 @@ rmvl_generate_para(mytarget)
 
 **用法**
 
-```cmake
-rmvl_generate_module_para(<module_name>)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">rmvl_generate_module_para</span>(\<module_name\>)</div>
+</div>
 
 **示例**
 
-```cmake
-rmvl_generate_module_para(mymodule)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">rmvl_generate_module_para</span>(mymodule)</div>
+</div>
 
 表示将模块 `mymodule` 中的所有子模块打包至参数模块汇总头文件 `<prefix>/mymodule.hpp` ，例如，如果在 `CMakeLists.txt` 中写入
 
-```cmake
-rmvl_generate_para(a1 MODULE m)
-rmvl_generate_para(a2 MODULE m)
-rmvl_generate_para(a3 MODULE m)
-
-rmvl_generate_module_para(m)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">rmvl_generate_para</span>(a1&nbsp;<span class="keyword">MODULE</span>&nbsp;m)</div>
+<div class="line"><span class="keyword">rmvl_generate_para</span>(a2&nbsp;<span class="keyword">MODULE</span>&nbsp;m)</div>
+<div class="line"><span class="keyword">rmvl_generate_para</span>(a3&nbsp;<span class="keyword">MODULE</span>&nbsp;m)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">rmvl_generate_module_para</span>(m)</div>
+</div>
 
 最后生成的 `<prefix>/m.hpp` 中就会包含
 
@@ -183,32 +183,44 @@ rmvl_generate_module_para(m)
 
 例如，对于以下的 `test.para` 文件
 
-```
-int abc = 10 # 测试数
-```
+<div class="fragment">
+<div class="line"><span class="keywordtype">int</span> abc = 10&nbsp;<span class="comment"># 测试数</span></div>
+</div>
 
 在使用 `rmvl_generate_para(test)` 之后，生成的头文件代码中，类相关的代码如下
 
-```
-//! TestParam 参数模块
-struct TestParam
-{
-    //! 测试数 @note 默认值：`10`
-    int abc = 10;
-
-    /**
-     * @brief 从指定 `YAML` 文件中加载 `TestParam`
-     *
-     * @note `YAML` 文件的后缀允许是 `*.yml` 和 `*.yaml`
-     * @param[in] path 参数路径
-     * @return 是否加载成功
-     */
-    bool load(const std::string &path);
-};
-
-//! TestParam 参数模块
-inline TestParam test_param;
-```
+<div class="fragment">
+<div class="line"><span class="comment">//! TestParam 参数模块</span></div>
+<div class="line"><span class="keyword">class</span>&nbsp;RMVL_EXPORTS_W TestParam {</div>
+<div class="line"><span class="keyword">public</span>:</div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//! 测试数 \@note 默认值：\`10\`</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordtype">int</span> abc = 10;</div>
+<div class="line"></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//! 创建 TestParam 参数对象 \@warning 不建议手动创建对象</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;RMVL_W TestParam() = <span class="keywordflow">default</span>;</div>
+<div class="line"></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/**</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@brief 从指定 \`YAML\` 文件中加载 \`TestParam\`</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> *</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@note \`YAML\` 文件的后缀允许是 \`*.yml\` 和 \`*.yaml\`</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@param[in] path 参数路径</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@return 是否加载成功</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> */</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;RMVL_W&nbsp;<span class="keywordtype">bool</span> read(<span class="keyword">const</span> std::string &path);</div>
+<div class="line"></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/**</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@brief 将 \`TestParam\` 的数据写入指定的 \`YAML\` 文件中</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> *</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@note \`YAML\` 文件的后缀允许是 \`*.yml\` 和 \`*.yaml\`</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@param[in] path 参数路径</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> * \@return 是否写入成功</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"> */</span></div>
+<div class="line">&nbsp;&nbsp;&nbsp;&nbsp;RMVL_W&nbsp;<span class="keywordtype">bool</span> write(<span class="keyword">const</span> std::string &path) <span class="keyword">const</span>;</div>
+<div class="line">};</div>
+<div class="line"></div>
+<div class="line"><span class="comment">//! TestParam 参数模块</span></div>
+<div class="line"><span class="keyword">inline</span>&nbsp;TestParam test_param;</div>
+</div>
 
 其中包含了运行时参数导入和导出的接口 `read` 和 `write`，以 @ref para_algorithm 为例，`rm::para::AlgorithmParam::read` 用于运行时读取 YAML 文件并配置 algorithm 模块的参数，`rm::para::AlgorithmParam::write` 用于将当前 algorithm 模块的参数写入到 YAML 文件中。
 
@@ -224,22 +236,22 @@ rm::para::algorithm_param.read(prefix_path + "algorithm.yml");
 
 对于某个 `*.para` 文件中的参数，可以通过 YAML 文件进行运行时配置，例如
 
-```para
-int num = 10      # Test number
-float value = 4.2 # Test value
-string name       # Test name
-```
+<div class="fragment">
+<div class="line"><span class="keywordtype">int</span> num = 10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Test number</span></div>
+<div class="line"><span class="keywordtype">float</span> value = 4.2&nbsp;<span class="comment"># Test value</span></div>
+<div class="line"><span class="keywordtype">string</span> name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Test name</span></div>
+</div>
 
 对应的 YAML 文件可以写为
 
-```yaml
-# test.yml
-%YAML:1.0
----
-
-num: 20
-name: "Hello, RMVL"
-```
+<div class="fragment">
+<div class="line"><span class="comment"># test.yml</span></div>
+<div class="line">%YAML:1.0</div>
+<div class="line">\-\-\-</div>
+<div class="line"></div>
+<div class="line"><span class="keywordtype">num</span>: 20</div>
+<div class="line"><span class="keywordtype">name</span>: <span class="stringliteral">"Hello, RMVL"</span></div>
+</div>
 
 在程序调用
 

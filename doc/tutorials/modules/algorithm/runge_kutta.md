@@ -461,8 +461,7 @@ l_2&=f_2(t_n+\frac h2,x_{1_n}+\frac h2k_1,x_{2_n}+\frac h2l_1)\end{align}\f]
 
 #include <cstdio>
 
-int main()
-{
+int main() {
     rm::Ode dot_x1 = [](double t, const std::valarray<double> &x) { return 2 * x[1] + t; };
     rm::Ode dot_x2 = [](double, const std::valarray<double> &x) { return -x[0] - 3 * x[1]; };
     rm::Odes fs = {dot_x1, dot_x2};

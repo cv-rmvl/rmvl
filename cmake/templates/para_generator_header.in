@@ -14,8 +14,7 @@
 #include "rmvl/core/rmvldef.hpp"
 
 @def_new_group@
-namespace rm::para
-{
+namespace rm::para {
 
 //! @addtogroup para_@module_name@
 //! @{
@@ -32,8 +31,7 @@ namespace rm::para
 ////////////////////// 参数部分 //////////////////////
 
 //! @class_name@ 参数模块
-class RMVL_EXPORTS_W @class_name@
-{
+class RMVL_EXPORTS_W @class_name@ {
 public:
 @para_header_details@
 
