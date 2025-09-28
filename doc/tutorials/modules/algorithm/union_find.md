@@ -83,11 +83,9 @@ rm::UnionFind 支持集合的快速合并、查找的结构，提供三种典型
 使用 UnionFind 进行解答：
 
 ```cpp
-class Solution
-{
+class Solution {
 public:
-    int numIslands(vector<vector<char>>& grid)
-    {
+    int numIslands(vector<vector<char>>& grid) {
         const int rows = grid.size();
         if (!rows)
             return 0;
@@ -101,10 +99,9 @@ public:
                     data.emplace_back(i * cols + j);
         UnionFind<char> uf(data.begin(), data.end());
 
-        for (int r = 0; r < rows; ++r)
-            for (int c = 0; c < cols; ++c)
-                if (grid[r][c] == '1')
-                {
+        for (int r = 0; r < rows; ++r) {
+            for (int c = 0; c < cols; ++c) {
+                if (grid[r][c] == '1') {
                     grid[r][c] = '0';
                     if (r - 1 >= 0 && grid[r - 1][c] == '1')
                         uf.merge(r * cols + c, (r - 1) * cols + c);
@@ -115,6 +112,8 @@ public:
                     if (c + 1 < cols && grid[r][c + 1] == '1')
                         uf.merge(r * cols + c, r * cols + c + 1);
                 }
+            }
+        }
         return uf.components();
     }
 };

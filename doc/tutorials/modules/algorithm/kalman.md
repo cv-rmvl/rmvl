@@ -417,12 +417,12 @@ P_k^-H^T&=K_k\left(HP_k^-H^T+R\right)
 
 首先必须要寻找 RMVL 包，即 `find_package(RMVL REQUIRED)`，之后可直接在 CMakeLists.txt 中链接库
 
-```cmake
-target_link_libraries(
-  xxx
-  PUBLIC rmvl_algorithm
-)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">target_link_libraries</span>(</div>
+<div class="line">&nbsp;&nbsp;xxx</div>
+<div class="line">&nbsp;&nbsp;<span class="keyword">PUBLIC</span> rmvl_algorithm</div>
+<div class="line">)</div>
+</div>
 
 这里的 `xxx` 为需要链接到 algorithm 模块的目标
 

@@ -59,34 +59,26 @@ rm::RaHeap 的基本用法与标准库中 `std::priority_queue` 的用法基本�
 ```cpp
 using Pair = pair<Node *, int>;
 
-struct Comp
-{
-    bool operator()(const Pair &p1, const Pair &p2)
-    {
+struct Comp {
+    bool operator()(const Pair &p1, const Pair &p2) {
         return p1.second > p2.second;
     }
 };
 
-unordered_map<Node *, int> dijkstra(Node *head)
-{
+unordered_map<Node *, int> dijkstra(Node *head) {
     RaHeap<Pair, vector<Pair>, Comp> node_heap;
     node_heap.push({head, 0});
     unordered_map<Node *, int> distanceMap;
     distanceMap[head] = 0;
 
-    while (!node_heap.empty())
-    {
+    while (!node_heap.empty()) {
         auto &[node, distance] = node_heap.top();
         node_heap.pop();
-        for (auto edg : node->edges)
-        {
-            if (distanceMap.find(edg->to) == distanceMap.end())
-            {
+        for (auto edg : node->edges) {
+            if (distanceMap.find(edg->to) == distanceMap.end()) {
                 node_heap.push({edg->to, edg.weight + distance});
                 distanceMap[edg->to] = edg.weight + distance;
-            }
-            else if (edg.weight + distance < distanceMap[edg->to])
-            {
+            } else if (edg.weight + distance < distanceMap[edg->to]) {
                 node_heap.update({edg->to, distanceMap[edg->to]},
                                  {edg->to, edg.weight + distance});
                 distanceMap[edg->to] = edg.weight + distance;

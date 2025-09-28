@@ -379,12 +379,10 @@ bin/rmvl_mv_manual_calib
 
 #include <rmvl/camera/mv_camera.h>
 
-int main()
-{
+int main() {
     rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
     cv::Mat frame;
-    while(capture.read(frame))
-    {
+    while(capture.read(frame)) {
         cv::imshow("frame", frame);
         if (cv::waitKey(1) == 27)
             break;
@@ -426,26 +424,22 @@ while True:
 #include <rmvl/camera/mv_camera.h>
 #include <rmvl/core/timer.hpp>
 
-int main()
-{
+int main() {
     auto camera_config = rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV)
     rm::MvCamera capture(camera_config);
 
     bool run = true;
     std::thread th([&run]() {
-        while (run)
-        {
+        while (run) {
             Timer::sleep_for(10);
             capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
         }
     });
 
     cv::Mat frame;
-    while (capture.read(frame))
-    {
+    while (capture.read(frame)) {
         cv::imshow("frame", frame);
-        if (cv::waitKey(1) == 27)
-        {
+        if (cv::waitKey(1) == 27) {
             run = false;
             break;
         }

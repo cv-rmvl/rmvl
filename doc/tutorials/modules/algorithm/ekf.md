@@ -122,8 +122,7 @@ W&=\left.\ptl{f_A}{\boldsymbol w}\right|_{(\hat{\boldsymbol w}_{k-1},\boldsymbol
 #include <random>
 #include <rmvl/algorithm/kalman.hpp>
 
-int main()
-{
+int main() {
     // 状态量 x = [ cx, cy, θ, ω, r ]ᵀ
     //
     // 状态方程
@@ -165,8 +164,7 @@ int main()
                 x(2)};
     });
 
-    while (true)
-    {
+    while (true) {
         // 预测部分，设置状态方程 Jacobi 矩阵，获取先验状态估计
         ekf.setJa({1, 0, 0, 0, 0,
                    0, 1, 0, 0, 0,

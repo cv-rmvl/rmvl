@@ -82,8 +82,7 @@ x^*&=x_k-\frac{f(x_k)}{f'(x_k)}-\frac{f''(x_k)}{2f'(x_k)}(x^*-x_k)^2-\cdots\\
 
 #include <cstdio>
 
-int main()
-{
+int main() {
     auto foo = rm::NonlinearSolver([](double x) { return x * x - 4; });
     printf("x1 = %.2f, x2 = %.2f\n", foo(-5), foo(5));
     // x1 = -2.00, x2 = 2.00

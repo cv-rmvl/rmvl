@@ -115,14 +115,12 @@ open62541 @cite open62541_library 是一个基于 C 语言的开源 OPC UA 栈�
 
 rm::Server *p_server{nullptr};
 
-void onStop(int)
-{
+void onStop(int) {
     if (p_server)
         p_server->shutdown();
 }
 
-int main()
-{
+int main() {
     // 注册信号处理函数
     signal(SIGINT, onStop);
 
@@ -143,8 +141,7 @@ int main()
 #include <thread>
 #include <rmvl/opcua/server.hpp>
 
-int main()
-{
+int main() {
     // 创建 OPC UA 服务器，端口为 4840
     rm::Server srv(4840);
     // 服务器运行
@@ -168,15 +165,13 @@ int main()
 
 bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     // 创建 OPC UA 服务器，端口为 4840
     rm::Server srv(4840);
     // 服务器运行
-    while (!stop)
-    {
+    while (!stop) {
         /* other code */
         srv.spinOnce();
     }
@@ -222,8 +217,7 @@ while not stop:
 // client.cpp
 #include <rmvl/opcua/client>
 
-int main()
-{
+int main() {
     // 创建 OPC UA 客户端，连接到 127.0.0.1:4840
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
@@ -259,8 +253,7 @@ cli = rm.Client("opc.tcp://127.0.0.1:4840")
 
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);
@@ -277,8 +270,7 @@ int main()
     // 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
     srv.addVariableNode(num);
 
-    while (!stop)
-    {
+    while (!stop) {
         srv.spinOnce();
     }
     // srv.shutdown(); 可省略，后文不再赘述
@@ -338,8 +330,7 @@ while not stop:
 // client.cpp
 #include <rmvl/opcua/client.hpp>
 
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
@@ -349,8 +340,7 @@ int main()
     // 读取变量
     rm::Variable target = cli.read(node);
     // 判断是否为空
-    if (target.empty())
-    {
+    if (target.empty()) {
         ERROR_("Failed to read the variable.");
         return 0;
     }
@@ -395,12 +385,9 @@ print(target.double())
 #include <csignal>
 #include <rmvl/opcua/server.hpp>
 
-using namespace std::chrono_literals;
-
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);
@@ -435,8 +422,7 @@ int main()
     // 方法节点添加至服务器
     srv.addMethodNode(method);
     
-    while (!stop)
-    {
+    while (!stop) {
         srv.spinOnce();
     }
 }
@@ -503,8 +489,7 @@ while not stop:
 // client.cpp
 #include <rmvl/opcua/client.hpp>
 
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
@@ -524,8 +509,7 @@ int main()
 // client.cpp
 #include <rmvl/opcua/client.hpp>
 
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     auto [res, oargs] = cli.callx("add", 1, 2);
@@ -578,12 +562,9 @@ A
 #include <csignal>
 #include <rmvl/opcua/server.hpp>
 
-using namespace std::chrono_literals;
-
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);
@@ -682,8 +663,7 @@ while not stop:
 #include <iostream>
 #include <rmvl/opcua/client.hpp>
 
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
 
     // 路径搜索寻找 C2
@@ -732,12 +712,9 @@ print(c3.str())
 #include <csignal>
 #include <rmvl/opcua/server.hpp>
 
-using namespace std::chrono_literals;
-
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);
@@ -829,12 +806,9 @@ OPC UA 支持变量节点和事件的监视，下面分别以变量节点和事�
 #include <csignal>
 #include <rmvl/opcua/server.hpp>
 
-using namespace std::chrono_literals;
-
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);
@@ -894,15 +868,11 @@ while not stop:
 #include <rmvl/opcua/client.hpp>
 #include <rmvl/core/timer.hpp>
 
-using namespace std::chrono_literals;
-
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
     auto node = cli.find("number");
-    for (int i = 0; i < 100; ++i)
-    {
-        TImer::sleep_for(1000);
+    for (int i = 0; i < 100; ++i) {
+        Timer::sleep_for(1000);
         // 写入数据，i + 200 隐式构造成了 rm::Variable
         bool success = cli.write(node, i + 200);
         if (!success)
@@ -941,8 +911,7 @@ for i in range(100):
 // client_2.cpp
 #include <rmvl/opcua/client.hpp>
 
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
     auto node = cli.find("number");
     // 监视变量
@@ -1013,15 +982,13 @@ using namespace std::chrono_literals;
 static bool stop = false;
 
 // OPC UA 状态
-enum class OPCUAState
-{
+enum class OPCUAState {
     NONE,  // 无状态
     START, // 设备启动中...
     STOP,  // 设备关闭中...
 };
 
-int main()
-{
+int main() {
     // OPC UA 状态
     OPCUAState mode{};
 
@@ -1061,31 +1028,27 @@ int main()
     srv.addEventTypeNode(msg_type_info);
     srv.addMethodNode(start_info);
 
-    while (!stop)
-    {
+    while (!stop) {
         srv.spinOnce();
-        if (mode == OPCUAState::START)
-        {
+        if (mode == OPCUAState::START) {
             // 实际发出 Start 指令
 
             /* code */
 
-            if (true) // 'true' 应改为状态确定发生变更的判断条件
-            {
+            // 'true' 应改为状态确定发生变更的判断条件
+            if (true) {
                 finish_info.message = "Start";
                 finish_info["Result"] = 0;
                 srv.triggerEvent(finish_info);
                 mode = OPCUAState::NONE; // 恢复 OPC UA 状态
             }
-        }
-        else if (mode == OPCUAState::STOP)
-        {
+        } else if (mode == OPCUAState::STOP) {
             // 实际发出 Stop 指令
 
             /* code */
 
-            if (true) // 'true' 应改为状态确定发生变更的判断条件
-            {
+            // 'true' 应改为状态确定发生变更的判断条件
+            if (true) {
                 finish_info.message = "Stop";
                 finish_info["Result"] = 0;
                 srv.triggerEvent(finish_info);
@@ -1197,8 +1160,7 @@ while not stop:
 // client_old.cpp
 #include <rmvl/opcua/client.hpp>
 
-int main()
-{
+int main() {
     rm::Client cli("opc.tcp://127.0.0.1:4840");
     auto node = cli.find("start");
     auto [res, oargs] = cli.callx(node);
@@ -1232,8 +1194,7 @@ if not res: # res 只表示方法节点是否调用成功，而非任务执行�
 // client_new.cpp
 #include <rmvl/opcua/client.hpp>
 
-class OpcUaController
-{
+class OpcUaController {
 public:
     OpcUaController(std::string_view addr) : _cli(addr) {
         // 监视事件
@@ -1246,12 +1207,10 @@ public:
     }
 
     // 同步阻塞的 start 函数
-    bool start()
-    {
+    bool start() {
         _start_res.reset();
         auto [res, oargs] = _cli.callx("start");
-        if (!res)
-        {
+        if (!res) {
             printf("Failed to call start\n");
             return false;
         }
@@ -1261,12 +1220,10 @@ public:
     }
 
     // 同步阻塞的 stop 函数
-    bool stop()
-    {
+    bool stop() {
         _stop_res.reset();
         auto [res, oargs] = _cli.callx("stop");
-        if (!res)
-        {
+        if (!res) {
             printf("Failed to call stop\n");
             return false;
         }
@@ -1282,8 +1239,7 @@ private:
     std::optional<bool> _stop_res{};
 };
 
-int main()
-{
+int main() {
     OpcUaController uactl("opc.tcp://127.0.0.1:4840");
     // 启动设备
     bool val = uactl.start();
@@ -1372,8 +1328,7 @@ print(f"Stop result: {val}")
  
 bool stop = false;
  
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
  
     rm::Server srv(4840);
@@ -1474,8 +1429,7 @@ error/eventloop    Cannot run EventLoop from the run method itself
 
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Client cli("opc.tcp://127.0.0.1:4840");
@@ -1490,8 +1444,7 @@ int main()
         can_read = false;
     };
 
-    while (!stop)
-    {
+    while (!stop) {
         cli.spinOnce();
         // 保证在 spinOnce() 之后再读取 num 的值
         if (can_read)
@@ -1596,8 +1549,7 @@ using namespace std::chrono_literals;
 
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     // 创建 OPC UA 发布者，端口为 4840
@@ -1616,8 +1568,7 @@ int main()
     // 发布数据
     pub.publish(pds_list, 50);
 
-    while (!stop)
-    {
+    while (!stop) {
         /* other code */
         
         /* 例如 num_node 所对应的值可以直接在这里修改 */
@@ -1681,8 +1632,7 @@ using namespace std::chrono_literals;
 
 static bool stop = false;
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     // 创建 OPC UA 订阅者
@@ -1702,8 +1652,7 @@ int main()
     // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
     // 订阅返回值是一个 NodeId 列表，存放订阅接收的数据的 NodeId
     
-    while (!stop)
-    {
+    while (!stop) {
         // 读取订阅的已更新的数据
         auto sub_val = sub.read(nodes.front());
         std::printf("Sub value [1] = %f\n", sub_val.cast<double>());
@@ -1800,12 +1749,13 @@ while not stop:
 **Python**
 
 - 如果有 Python 环境，也可以使用开源的 UaModeler 库，功能与官方软件基本一致。使用之前需要安装 `pip3` Python 包管理工具，安装好包管理工具后，可使用以下命令行安装 UaModeler
-  ```bash
-  pip3 install opcua-modeler
 
-  # Linux 下可以执行以下命令行运行 UaModeler
-  opcua-modeler
-  ```
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">pip3</span> install opcua-modeler</div>
+  <div class="line"></div>
+  <div class="line"><span class="comment"># Linux 下可以执行以下命令行运行 UaModeler</span></div>
+  <div class="line"><span class="keywordflow">opcua-modeler</span></div>
+  </div>
 
 具体安装细节可参考 [opcua-modeler on Github](https://github.com/FreeOpcUa/opcua-modeler) 的 README。
 
@@ -1823,18 +1773,18 @@ while not stop:
 
 进入 `<path-to-open62541>/tools/nodeset_compiler` 文件夹，执行以下命令行
 
-```bash
-# 获取 Opc.Ua.NodeSet2.xml 文件
-wget https://files.opcfoundation.org/schemas/UA/1.05/Opc.Ua.NodeSet2.xml
-# 将刚刚生成的 XML 文件移动至当前文件夹中，并重命名为 xxx.xml
-mv <path-to-xml> ./xxx.xml
-# 执行 nodeset_compiler
-python3 ./nodeset_compiler.py \
-  --types-array=UA_TYPES \
-  --existing Opc.Ua.NodeSet2.xml \
-  --xml xxx.xml \
-  myNodeSet # myNodeSet 是要生成的文件名，包含 myNodeSet.h 和 myNodeSet.c，请自行设置
-```
+<div class="fragment">
+<div class="line"><span class="comment"># 获取 Opc.Ua.NodeSet2.xml 文件</span></div>
+<div class="line"><span class="keywordflow">wget</span> <span class="stringliteral">"https://files.opcfoundation.org/schemas/UA/1.05/Opc.Ua.NodeSet2.xml"</span></div>
+<div class="line"><span class="comment"># 将刚刚生成的 XML 文件移动至当前文件夹中，并重命名为 xxx.xml</span></div>
+<div class="line"><span class="keywordflow">mv</span> \<path\-to-xml\> ./xxx.xml</div>
+<div class="line"><span class="comment"># 执行 nodeset_compiler</span></div>
+<div class="line"><span class="keywordflow">python3</span> ./nodeset_compiler.py \\</div>
+<div class="line">&nbsp;&nbsp;--types-array=UA_TYPES \\</div>
+<div class="line">&nbsp;&nbsp;--existing Opc.Ua.NodeSet2.xml \\</div>
+<div class="line">&nbsp;&nbsp;--xml xxx.xml \\</div>
+<div class="line">&nbsp;&nbsp;myNodeSet <span class="comment"># myNodeSet 是要生成的文件名，包含 myNodeSet.h 和 myNodeSet.c，请自行设置</span></div>
+</div>
 
 ### 4.3 不占有所有权的 C/S 视图
 
@@ -1850,14 +1800,12 @@ RMVL 提供了从 rm::Server 到 rm::ServerView 的用户定义转换函数，�
 #include <csignal>
 #include <rmvl/opcua/server.hpp>
 
-void modify(rm::ServerView sv, int val)
-{
+void modify(rm::ServerView sv, int val) {
     auto node = sv.find("num");
     sv.write(node, val);
 }
 
-int main()
-{
+int main() {
     signal(SIGINT, [](int) { stop = true; });
 
     rm::Server srv(4840);

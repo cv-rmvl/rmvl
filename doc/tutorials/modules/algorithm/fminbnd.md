@@ -112,8 +112,7 @@ RMVL 中提供了一维寻优的函数 rm::fminbnd ，以下展示了一维寻�
 // 自定义函数 f(x)=x²+4x-3
 inline double quadratic(double x) { return x * x + 4 * x - 3; }
 
-int main()
-{
+int main() {
     // 确定搜索区间
     auto [x1, x2] = rm::region(quadratic, 0);
     // 添加优化选项（容许误差和最大迭代次数）
@@ -129,23 +128,23 @@ int main()
 
 添加 `CMakeLists.txt`
 
-```cmake
-cmake_minimum_required(VERSION 3.10)
-project(FminbndDemo)
-find_package(RMVL COMPONENTS algorithm REQUIRED)
-add_executable(demo main.cpp)
-target_link_libraries(demo PRIVATE ${RMVL_LIBS})
-```
+<div class="fragment">
+<div class="line"><span class="keyword">cmake_minimum_required</span>(<span class="keyword">VERSION</span> 3.10)</div>
+<div class="line"><span class="keyword">project</span>(FminbndDemo)</div>
+<div class="line"><span class="keyword">find_package</span>(RMVL <span class="keyword">COMPONENTS</span> algorithm <span class="keyword">REQUIRED</span>)</div>
+<div class="line"><span class="keyword">add_executable</span>(demo main.cpp)</div>
+<div class="line"><span class="keyword">target_link_libraries</span>(demo <span class="keyword">PRIVATE</span> ${RMVL_LIBS})</div>
+</div>
 
 在项目根目录打开终端，输入以下命令以构建、运行
 
-```bash
-mkdir build
-cd build
-cmake ..
-cmake --build . --parallel 4
-./demo
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">mkdir</span> build</div>
+<div class="line"><span class="keywordflow">cd</span> build</div>
+<div class="line"><span class="keywordflow">cmake</span> ..</div>
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">--build</span> . <span class="comment">--parallel</span> 4</div>
+<div class="line"><span class="keywordflow">./demo</span></div>
+</div>
 
 可以看到运行结果
 

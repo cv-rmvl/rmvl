@@ -134,8 +134,7 @@ RMVL 中提供了一元函数以及多元函数的微分工具，求解一元函
 // 自定义函数 f(x) = x²+4x-3
 inline double quadratic(double x) { return x * x + 4 * x - 3; }
 
-int main()
-{
+int main() {
     // 使用外推原理计算 f'(1)
     double dydx = rm::derivative(quadratic, 1, rm::DiffMode::Ridders);
     printf("f'(1) = %f\n", dydx);
@@ -170,8 +169,7 @@ print("f'(1) = {:.2f}".format(dydx))
 #include <cstdio>
 #include <rmvl/algorithm/numcal.hpp>
 
-int main()
-{
+int main() {
     // 自定义函数 f(x,y) = x²+y²+4x-3y
     rm::FuncNd func([](const std::valarray<double> &x) { return x[0] * x[0] + x[1] * x[1] + 4 * x[0] - 3 * x[1]; });
 
