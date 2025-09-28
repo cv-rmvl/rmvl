@@ -41,6 +41,7 @@ endfunction()
 
 __find_imported_modules(mvsdk MvSDK)
 __find_imported_modules(hiksdk HikSDK)
+__find_imported_modules(onnxruntime Ort)
 __find_imported_modules(optcamsdk OPTCameraSDK)
 __find_imported_modules(optlc OPTLightCtrl)
 
