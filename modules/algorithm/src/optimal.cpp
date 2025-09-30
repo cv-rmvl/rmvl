@@ -333,7 +333,6 @@ static std::pair<std::valarray<double>, double> fmincon_exterior(FuncNd func, co
 
 std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options) {
     RMVL_DbgAssert(x0.size() > 0);
-    RMVL_DbgAssert(c.size() > 0 || ceq.size() > 0);
 
     if (options.cons_mode == ConsMode::Lagrange)
         return fmincon_lagrange(func, x0, ceq, options);

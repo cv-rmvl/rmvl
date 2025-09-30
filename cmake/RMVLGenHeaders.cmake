@@ -1,7 +1,11 @@
 # ----------------------------------------------------------------------------
 #  rmvl_modules.hpp based on actual modules list
 # ----------------------------------------------------------------------------
-set(RMVL_MODULE_DEFINITIONS_CONFIGMAKE "")
+if(WITH_OPENCV AND WITH_EIGEN3)
+  set(RMVL_MODULE_DEFINITIONS_CONFIGMAKE "#ifndef HAVE_OPENCV\n#define HAVE_OPENCV\n#endif\n\n")
+else()
+  set(RMVL_MODULE_DEFINITIONS_CONFIGMAKE "")
+endif()
 
 set(RMVL_MOD_LIST ${RMVL_MODULES_BUILD})
 foreach(m ${RMVL_MOD_LIST})
