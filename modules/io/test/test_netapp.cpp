@@ -93,7 +93,7 @@ TEST(IO_netapp, webapp) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
 
-    app.use(cors);
+    app.use(cors());
     app.get("/", [](const Request &, Response &res) {
         res.send("<html><body><h1>Hello, World!</h1></body></html>");
     });

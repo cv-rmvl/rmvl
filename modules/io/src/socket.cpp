@@ -196,7 +196,7 @@ SocketEnv::SocketEnv() {
 SocketEnv::~SocketEnv() { WSACleanup(); }
 
 std::string Socket::read() noexcept {
-    char buf[1024]{};
+    char buf[2048]{};
     int n = ::recv(_fd, buf, sizeof(buf), 0);
     if (n == SOCKET_ERROR) {
         int error = WSAGetLastError();
@@ -225,7 +225,7 @@ Connector::~Connector() { valid(_fd) ? ::closesocket(_fd) : 0; }
 #else
 
 std::string Socket::read() noexcept {
-    char buf[1024]{};
+    char buf[2048]{};
     ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
     return n > 0 ? std::string(buf, n) : std::string{};
 }
@@ -421,7 +421,7 @@ Socket::Socket(IOContext &io_context, SocketFd fd) : ::rm::Socket(fd), _ctx(io_c
 std::string Socket::SocketReadAwaiter::await_resume() {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    char buf[1024]{};
+    char buf[2048]{};
     ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
     return n > 0 ? std::string(buf, n) : std::string{};
 }

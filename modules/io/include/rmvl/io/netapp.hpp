@@ -165,19 +165,32 @@ struct Response {
 };
 
 //! 响应中间件类型
-using ResponseMiddleware = std::function<void(Response &)>;
+using ResponseMiddleware = std::function<void(const Request &, Response &)>;
+
+/**
+ * @brief 静态路由中间件，处理对指定 URL 路径的静态文件请求
+ *
+ * @param[in] url URL 路径前缀，例如 `/static`
+ * @param[in] root 静态文件根目录，例如 `./public`
+ * @code {.cpp}
+ * // 在 Web 应用程序框架中使用
+ * auto app = async::Webapp(io_context);
+ * app.use(statics("/static", "./public"));
+ * @endcode
+ * @note 静态路由仅在未处理请求时有效，若有对应的路由表达成匹配，则静态路由中间件不会被调用
+ */
+ResponseMiddleware statics(std::string_view url, std::string_view root);
 
 /**
  * @brief 跨域资源共享 CORS 中间件，为响应添加 CORS 头部信息
+ *
  * @code {.cpp}
- * // 直接操作 Response 对象
- * cors(res);
- * // 或在 Web 应用程序框架中使用
+ * // 在 Web 应用程序框架中使用
  * auto app = async::Webapp(io_context);
- * app.use(cors);
+ * app.use(cors());
  * @endcode
  */
-void cors(Response &res);
+ResponseMiddleware cors();
 
 //! @} io_net
 
@@ -458,4 +471,3 @@ private:
 #endif // __cplusplus >= 202002L
 
 } // namespace rm
-

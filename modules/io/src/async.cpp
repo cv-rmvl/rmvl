@@ -219,7 +219,7 @@ void AsyncReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
 std::string AsyncReadAwaiter::await_resume() {
     RMVL_DbgAssert(_fd >= 0);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    char buf[1024]{};
+    char buf[2048]{};
     ssize_t n = ::read(_fd, buf, sizeof(buf));
     return n > 0 ? std::string(buf, n) : std::string{};
 }

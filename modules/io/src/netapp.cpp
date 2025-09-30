@@ -264,7 +264,21 @@ void Response::sendFile(std::string_view file) {
     body.resize(file_size);
     ifs.read(body.data(), file_size);
     heads["Content-Length"] = std::to_string(body.size());
-    heads["Content-Type"] = "text/html; charset=utf-8";
+    auto ext = file.substr(file.find_last_of('.') + 1);
+    if (ext == "js")
+        heads["Content-Type"] = "application/javascript; charset=utf-8";
+    else if (ext == "css")
+        heads["Content-Type"] = "text/css; charset=utf-8";
+    else if (ext == "html" || ext == "htm")
+        heads["Content-Type"] = "text/html; charset=utf-8";
+    else if (ext == "json")
+        heads["Content-Type"] = "application/json; charset=utf-8";
+    else if (ext == "png")
+        heads["Content-Type"] = "image/png";
+    else if (ext == "jpg" || ext == "jpeg")
+        heads["Content-Type"] = "image/jpeg";
+    else
+        heads["Content-Type"] = "application/octet-stream";
     status = 200;
     message = "OK";
 }
@@ -289,11 +303,35 @@ void Response::redirect(uint16_t code, std::string_view url) {
     heads["Connection"] = "close";
 }
 
-void cors(Response &res) {
-    res.heads["Access-Control-Allow-Origin"] = "*";
-    res.heads["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
-    res.heads["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
-    res.heads["Access-Control-Max-Age"] = "86400";
+ResponseMiddleware statics(std::string_view url_path, std::string_view root) {
+    return [url_path = std::string(url_path), root = std::string(root)](const Request &req, Response &res) {
+        if (res.status != 0)
+            return;
+        // 检查请求 URI 是否以指定的 url_path 开头
+        if (req.uri.find(url_path) == 0) {
+            std::string relative_path = std::string(req.uri.substr(url_path.size()));
+            if (relative_path.empty())
+                relative_path = "index.html";
+            std::string file_path = root + relative_path;
+
+            if (file_path.find("..") != std::string::npos) {
+                res.status = 403;
+                res.message = "Forbidden";
+                return;
+            }
+            DEBUG_INFO_("GET \033[36m%s\033[0m --> %s", req.uri.c_str(), file_path.c_str());
+            res.sendFile(file_path);
+        }
+    };
+}
+
+ResponseMiddleware cors() {
+    return [](const Request &, Response &res) {
+        res.heads["Access-Control-Allow-Origin"] = "*";
+        res.heads["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+        res.heads["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
+        res.heads["Access-Control-Max-Age"] = "86400";
+    };
 }
 
 URLParseInfo parseURL(std::string_view url) {
@@ -507,8 +545,6 @@ static void _handle(const std::vector<rm::async::Webapp::RouteEntry> &entries, R
             return;
         }
     }
-    DEBUG_ERROR_("%s %s failed, execute bad_request", get_str_from(req.method), req.uri.c_str());
-    bad_request(req, res);
 }
 
 Task<> Webapp::spin() {
@@ -530,6 +566,7 @@ Task<> Webapp::spin() {
         auto req = Request::parse(co_await socket.read());
         auto res = Response{};
 
+        // 路由处理
         if (req.method == HTTPMethod::Get)
             _handle(_gets, req, res);
         else if (req.method == HTTPMethod::Post)
@@ -538,13 +575,14 @@ Task<> Webapp::spin() {
             _handle(_deletes, req, res);
         else if (req.method == HTTPMethod::Head)
             _handle(_heads, req, res);
-        else
-            res.json("{ \"code\": 500, \"message\": \"unknown error\" }");
-
-        // 响应中间件处理
+        // 中间件处理
         for (const auto &mwf : _mwfs)
-            mwf(res);
-
+            mwf(req, res);
+        // 异常处理
+        if (res.status == 0) {
+            DEBUG_ERROR_("%s %s failed, execute bad_request", get_str_from(req.method), req.uri.c_str());
+            bad_request(req, res);
+        }
         auto res_str = res.generate();
         bool send_status = co_await socket.write(res_str);
         if (!send_status)

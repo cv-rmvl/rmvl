@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
 
-    app.use(cors);
+    app.use(cors());
 
     app.get("/", [](const Request &req, Response &res) {
         res.send("<html><body><h1>Hello, World!</h1></body></html>");
