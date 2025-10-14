@@ -15,8 +15,7 @@
 
 #ifdef UA_ENABLE_PUBSUB
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
@@ -26,25 +25,23 @@ namespace rm
  * @brief
  * - 包含变量节点发布的字段名称及其对应的 ID
  */
-struct RMVL_EXPORTS_W_AG PublishedDataSet
-{
+struct RMVL_EXPORTS_W_AG PublishedDataSet {
     RMVL_W_RW std::string name; //!< 变量节点发布的字段名称
     RMVL_W_RW NodeId node_id;   //!< 变量节点 ID
 };
 
 //! OPC UA 发布者
-class Publisher : public Server
-{
+class OpcuaPublisher : public OpcuaServer {
 public:
     /**
      * @brief 创建 OPC UA 发布者
      *
      * @param[in] pub_name 发布者名称
      * @param[in] addr 不加端口的网络多播 IP 地址，形如 `opc.udp://224.0.1.22`
-     * @param[in] port 端口号，并且作为多播 IP 地址的端口号，与 @ref Server::Server 的端口号概念一致，默认为 `4840U`
+     * @param[in] port 端口号，并且作为多播 IP 地址的端口号，与 @ref OpcuaServer::OpcuaServer 的端口号概念一致，默认为 `4840U`
      * @param[in] users 用户列表，默认为空，可参考 @ref UserConfig
      */
-    RMVL_W_RW Publisher(std::string_view pub_name, const std::string &addr, uint16_t port = 4840U, const std::vector<UserConfig> &users = {});
+    RMVL_W_RW OpcuaPublisher(std::string_view pub_name, const std::string &addr, uint16_t port = 4840U, const std::vector<UserConfig> &users = {});
 
     /**
      * @brief 发布数据集

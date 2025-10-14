@@ -27,13 +27,13 @@ using namespace std::chrono_literals;
 TEST(OPC_UA_ClientTest, connect)
 {
     rm::UserConfig config;
-    rm::Server srv(4999, "Test Server", {{"admin", "admin"}});
-    std::thread t(&rm::Server::spin, &srv);
+    rm::OpcuaServer srv(4999, "Test OpcuaServer", {{"admin", "admin"}});
+    std::thread t(&rm::OpcuaServer::spin, &srv);
     std::this_thread::sleep_for(50ms);
 
-    rm::Client cli1("opc.tcp://127.0.0.1:4999", {"admin", "admin"});
+    rm::OpcuaClient cli1("opc.tcp://127.0.0.1:4999", {"admin", "admin"});
     EXPECT_TRUE(cli1.ok());
-    rm::Client cli2("opc.tcp://127.0.0.1:4999", {"admin", "123456"});
+    rm::OpcuaClient cli2("opc.tcp://127.0.0.1:4999", {"admin", "123456"});
     EXPECT_FALSE(cli2.ok());
 
     cli1.shutdown();
@@ -42,7 +42,7 @@ TEST(OPC_UA_ClientTest, connect)
     t.join();
 }
 
-static void configServer(rm::Server &srv)
+static void configServer(rm::OpcuaServer &srv)
 {
     // 添加单变量节点
     rm::Variable single_value = 42;
@@ -83,10 +83,10 @@ static void configServer(rm::Server &srv)
 // 路径搜索
 TEST(OPC_UA_ClientTest, path_search)
 {
-    rm::Server srv(5000);
+    rm::OpcuaServer srv(5000);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5000");
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5000");
     // 读取测试服务器上的变量值
     auto id = cli.find("array");
     rm::Variable variable = cli.read(id);
@@ -103,10 +103,10 @@ TEST(OPC_UA_ClientTest, path_search)
 // 变量读写
 TEST(OPC_UA_ClientTest, variable_IO)
 {
-    rm::Server srv(5001);
+    rm::OpcuaServer srv(5001);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5001");
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5001");
     // 读取测试服务器上的变量值
     auto id = cli.find("single");
     EXPECT_TRUE(cli.write(id, 99));
@@ -123,10 +123,10 @@ TEST(OPC_UA_ClientTest, variable_IO)
 // 方法调用
 TEST(OPC_UA_ClientTest, call)
 {
-    rm::Server srv(5002);
+    rm::OpcuaServer srv(5002);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5002");
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
     rm::Variables input = {1, 2};
     auto [res, output] = cli.call("add", input);
@@ -141,10 +141,10 @@ TEST(OPC_UA_ClientTest, call)
 // 高级方法调用
 TEST(OPC_UA_ClientTest, callx)
 {
-    rm::Server srv(5003);
+    rm::OpcuaServer srv(5003);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5003");
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5003");
     // 以 callx 调用测试服务器上的方法
     auto [res, output] = cli.callx("add", 1, 2);
     EXPECT_TRUE(res);
@@ -158,14 +158,14 @@ TEST(OPC_UA_ClientTest, callx)
 // 订阅
 TEST(OPC_UA_ClientTest, variable_monitor)
 {
-    rm::Server srv(5005);
+    rm::OpcuaServer srv(5005);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5005");
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5005");
     // 订阅测试服务器上的变量
     int receive_data{};
     auto node_id = cli.find("single");
-    auto on_change = [&](rm::ClientView, const rm::Variable &value) {
+    auto on_change = [&](rm::OpcuaClientView, const rm::Variable &value) {
         receive_data = value;
     };
     EXPECT_TRUE(cli.monitor(node_id, on_change, 5));
@@ -188,21 +188,21 @@ TEST(OPC_UA_ClientTest, variable_monitor)
 
 TEST(OPC_UA_ClientTest, event_monitor)
 {
-    rm::Server srv(5010);
+    rm::OpcuaServer srv(5010);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
+    std::thread t(&rm::OpcuaServer::spin, &srv);
     rm::EventType etype;
     etype.browse_name = "TestEventType";
     etype.display_name = "测试事件类型";
     etype.description = "测试事件类型";
     etype.add("aaa", 3);
     srv.addEventTypeNode(etype);
-    rm::Client cli("opc.tcp://127.0.0.1:5010");
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5010");
 
     std::string source_name{};
     std::string messgae{};
     int aaa{};
-    cli.monitor({"Message", "SourceName", "aaa"}, [&](rm::ClientView, const rm::Variables &fields) {
+    cli.monitor({"Message", "SourceName", "aaa"}, [&](rm::OpcuaClientView, const rm::Variables &fields) {
         messgae = fields[0].cast<std::string>();
         source_name = fields[1].cast<std::string>();
         aaa = fields[2];
@@ -225,13 +225,13 @@ TEST(OPC_UA_ClientTest, event_monitor)
 
 TEST(OPC_UA_Client, timer_test)
 {
-    rm::Server srv(5015);
+    rm::OpcuaServer srv(5015);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
+    std::thread t(&rm::OpcuaServer::spin, &srv);
     std::this_thread::sleep_for(10ms);
-    rm::Client cli("opc.tcp://127.0.0.1:5015");
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5015");
     int times{};
-    auto timer = rm::ClientTimer(cli, 10, [&]() { times++; });
+    auto timer = rm::OpcuaClientTimer(cli, 10, [&]() { times++; });
     std::this_thread::sleep_for(60ms);
     cli.spinOnce();
     std::this_thread::sleep_for(60ms);
@@ -246,10 +246,10 @@ TEST(OPC_UA_Client, timer_test)
 // 数据源变量读写
 TEST(OPC_UA_ClientTest, data_source_variable_IO)
 {
-    rm::Server srv(5020);
+    rm::OpcuaServer srv(5020);
     configServer(srv);
-    std::thread t(&rm::Server::spin, &srv);
-    rm::Client cli("opc.tcp://127.0.0.1:5020");
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5020");
     // 读取测试服务器上的变量值
     auto id = cli.find("data_source");
     EXPECT_TRUE(cli.write(id, 99));

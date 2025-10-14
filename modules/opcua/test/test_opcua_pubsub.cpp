@@ -27,15 +27,15 @@ using namespace std::chrono_literals;
 TEST(OPC_UA_PubSub, pubsub_config)
 {
     // 创建发布者
-    rm::Publisher pub("NumberPub", "opc.udp://224.0.1.22", 8000);
+    rm::OpcuaPublisher pub("NumberPub", "opc.udp://224.0.1.22", 8000);
     uaCreateVariable(test_double, 3.1);
     auto node_id = pub.addVariableNode(test_double);
-    std::thread t1(&rm::Publisher::spin, &pub);
+    std::thread t1(&rm::OpcuaPublisher::spin, &pub);
     EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 50));
 
     // 创建订阅者
-    rm::Subscriber sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
-    std::thread t2(&rm::Subscriber::spin, &sub);
+    rm::OpcuaSubscriber sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
+    std::thread t2(&rm::OpcuaSubscriber::spin, &sub);
     rm::Variable double_demo_var = 0.0;
     double_demo_var.browse_name = "DoubleDemo";
     auto meta_data = rm::FieldMetaData::makeFrom(double_demo_var);

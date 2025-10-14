@@ -25,8 +25,7 @@
 struct UA_Server;
 struct UA_Client;
 
-namespace rm
-{
+namespace rm {
 
 #define OPCUA_VERSION UA_OPEN62541_VER_MAJOR * 10000 +   \
                           UA_OPEN62541_VER_MINOR * 100 + \
@@ -38,8 +37,7 @@ static_assert(OPCUA_VERSION >= 10400, "The version of open62541 must be greater 
 //! @{
 
 //! OPC UA 节点 ID
-class RMVL_EXPORTS_W NodeId final
-{
+class RMVL_EXPORTS_W NodeId final {
 public:
     //! 默认构造节点 ID
     RMVL_W NodeId() = default;
@@ -69,10 +67,10 @@ public:
     RMVL_W inline bool operator!=(const NodeId &nd) const { return !(*this == nd); }
 
     //! 到 `UA_NodeId` 的转换
-    constexpr operator UA_NodeId() const { return UA_NodeId{ns, UA_NODEIDTYPE_NUMERIC, id}; }
+    constexpr operator UA_NodeId() const { return UA_NodeId{ns, UA_NODEIDTYPE_NUMERIC, {id}}; }
 
     //! 获取节点 ID
-    inline UA_NodeId data() const { return UA_NodeId{ns, UA_NODEIDTYPE_NUMERIC, id}; }
+    inline UA_NodeId data() const { return UA_NodeId{ns, UA_NODEIDTYPE_NUMERIC, {id}}; }
 
     /**
      * @brief 判断节点 ID 是否为空
@@ -89,8 +87,7 @@ public:
 };
 
 //! OPC UA 数据类型
-class RMVL_EXPORTS_W DataType
-{
+class RMVL_EXPORTS_W DataType {
 public:
     RMVL_W DataType() = default;
 
@@ -124,15 +121,13 @@ private:
  * @brief
  * - 用于给 OPC UA 服务器、客户端注册和配置用户信息
  */
-struct RMVL_EXPORTS_W_AG UserConfig final
-{
+struct RMVL_EXPORTS_W_AG UserConfig final {
     RMVL_W_RW std::string id;     //!< 用户名
     RMVL_W_RW std::string passwd; //!< 密码
 };
 
 //! 传输协议
-enum class TransportID : uint8_t
-{
+enum class TransportID : uint8_t {
     UDP_UADP = 1U,  //!< 使用 `UDP` 传输协议映射和 `UADP` 消息映射的组合，此协议用于 **无代理** 的消息传递
     MQTT_UADP = 2U, //!< 使用 `MQTT` 传输协议映射和 `UADP` 消息映射的组合，此协议用于 **基于代理** 的消息传递
     MQTT_JSON = 3U, //!< 使用 `MQTT` 传输协议映射和 `JSON` 消息映射的组合，此协议用于 **基于代理** 的消息传递
@@ -176,7 +171,7 @@ RMVL_W_RW constexpr NodeId nodeTypesFolder{0, UA_NS0ID_TYPESFOLDER};            
 RMVL_W_RW constexpr NodeId nodeViewsFolder{0, UA_NS0ID_VIEWSFOLDER};                 //!< 对象节点：`ViewsFolder` 节点 ID
 RMVL_W_RW constexpr NodeId nodeObjectTypesFolder{0, UA_NS0ID_OBJECTTYPESFOLDER};     //!< 对象节点：`ObjectTypesFolder` 节点 ID
 RMVL_W_RW constexpr NodeId nodeVariableTypesFolder{0, UA_NS0ID_VARIABLETYPESFOLDER}; //!< 对象节点：`VariableTypesFolder` 节点 ID
-RMVL_W_RW constexpr NodeId nodeServer{0, UA_NS0ID_SERVER};                           //!< 对象节点：`Server` 节点 ID
+RMVL_W_RW constexpr NodeId nodeServer{0, UA_NS0ID_SERVER};                           //!< 对象节点：`OpcuaServer` 节点 ID
 
 /////// ObjectType NodeId ///////
 RMVL_W_RW constexpr NodeId nodeFolderType{0, UA_NS0ID_FOLDERTYPE};         //!< 对象类型节点：`FolderType` 节点 ID
@@ -196,14 +191,13 @@ RMVL_W_RW constexpr NodeId nodeHasSubtype{0, UA_NS0ID_HASSUBTYPE};              
 RMVL_W_RW constexpr NodeId nodeHasModellingRule{0, UA_NS0ID_HASMODELLINGRULE};   //!< 引用类型节点：`HasModellingRule` 节点 ID
 
 //! 目标节点信息（服务端指针、浏览名、命名空间索引）
-typedef std::tuple<UA_Server *, std::string_view, uint16_t> FindNodeInServer;
+using FindNodeInServer = std::tuple<UA_Server *, std::string_view, uint16_t>;
 //! 目标节点信息（客户端指针、浏览名、命名空间索引）
-typedef std::tuple<UA_Client *, std::string_view, uint16_t> FindNodeInClient;
+using FindNodeInClient = std::tuple<UA_Client *, std::string_view, uint16_t>;
 
 //! @} opcua
 
-namespace helper
-{
+namespace helper {
 
 //! 获取编译期常量 `zh-CN`
 inline constexpr char *zh_CN() { return const_cast<char *>("zh-CN"); }

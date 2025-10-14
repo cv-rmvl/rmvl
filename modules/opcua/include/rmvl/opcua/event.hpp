@@ -11,17 +11,18 @@
 
 #pragma once
 
-#include "variable.hpp"
+#include <string>
+#include <unordered_map>
 
-namespace rm
-{
+#include "rmvl/core/rmvldef.hpp"
+
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
 
 //! OPC UA 事件类型
-class RMVL_EXPORTS_W EventType
-{
+class RMVL_EXPORTS_W EventType {
 public:
     //! 构造 `rm::EventType` 对象类型
     RMVL_W EventType() = default;
@@ -40,7 +41,8 @@ public:
      * @param[in] browse_name 非默认属性的浏览名 BrowseName
      * @return `int` 整型非默认属性的左值引用
      */
-    RMVL_W_SUBST("ET_Idx") int &operator[](const std::string &browse_name) { return _properties[browse_name]; }
+    RMVL_W_SUBST("ET_Idx")
+    int &operator[](const std::string &browse_name) { return _properties[browse_name]; }
 
     /**
      * @brief 获取 `int` 整型的非默认属性列表
@@ -78,8 +80,7 @@ private:
 };
 
 //! OPC UA 事件
-class RMVL_EXPORTS_W Event
-{
+class RMVL_EXPORTS_W Event {
 public:
     //! 构造 `rm::Event` 对象类型
     RMVL_W Event() = default;
@@ -106,7 +107,8 @@ public:
      * @param[in] browse_name 非默认属性的浏览名 BrowseName
      * @return `int` 整型非默认属性的左值引用
      */
-    RMVL_W_SUBST("E_Idx") inline int &operator[](const std::string &browse_name) { return _properties[browse_name]; }
+    RMVL_W_SUBST("E_Idx")
+    inline int &operator[](const std::string &browse_name) { return _properties[browse_name]; }
 
     /**
      * @brief 获取 `int` 整型的非默认属性列表

@@ -35,7 +35,7 @@ static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_cli{
 
 ////////////////////////// 通用配置 //////////////////////////
 
-Client::Client(std::string_view address, const UserConfig &usr)
+OpcuaClient::OpcuaClient(std::string_view address, const UserConfig &usr)
 {
     UA_ClientConfig init_config{};
     // 修改日志
@@ -67,7 +67,7 @@ Client::Client(std::string_view address, const UserConfig &usr)
     }
 }
 
-bool Client::shutdown()
+bool OpcuaClient::shutdown()
 {
     if (_client == nullptr)
         return false;
@@ -82,13 +82,13 @@ bool Client::shutdown()
     return true;
 }
 
-Client::~Client()
+OpcuaClient::~OpcuaClient()
 {
     if (_client != nullptr)
         shutdown();
 }
 
-void Client::spin() const
+void OpcuaClient::spin() const
 {
     bool warning{};
     while (true)
@@ -103,7 +103,7 @@ void Client::spin() const
     }
 }
 
-void Client::spinOnce() const
+void OpcuaClient::spinOnce() const
 {
     UA_Client_run_iterate(_client, para::opcua_param.CLIENT_WAIT_TIMEOUT);
 }
@@ -117,7 +117,7 @@ static NodeId clientFindNode(UA_Client *p_cli, std::string_view browse_path, con
     auto paths = str::split(browse_path, "/");
     if (paths.empty())
         return src_nd;
-    ClientView cv{p_cli};
+    OpcuaClientView cv{p_cli};
     NodeId retval = src_nd;
     for (const auto &path : paths)
     {
@@ -157,13 +157,13 @@ static bool clientWrite(UA_Client *p_client, const NodeId &node, const Variable 
     return true;
 }
 
-NodeId Client::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return clientFindNode(_client, browse_path, src_nd); }
+NodeId OpcuaClient::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return clientFindNode(_client, browse_path, src_nd); }
 
-Variable Client::read(const NodeId &nd) const { return clientRead(_client, nd); }
+Variable OpcuaClient::read(const NodeId &nd) const { return clientRead(_client, nd); }
 
-bool Client::write(const NodeId &nd, const Variable &val) const { return clientWrite(_client, nd, val); }
+bool OpcuaClient::write(const NodeId &nd, const Variable &val) const { return clientWrite(_client, nd, val); }
 
-std::pair<bool, Variables> Client::call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const
+std::pair<bool, Variables> OpcuaClient::call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -201,7 +201,7 @@ std::pair<bool, Variables> Client::call(const NodeId &obj_nd, std::string_view n
     return {true, outputs};
 }
 
-NodeId Client::addViewNode(const View &view) const
+NodeId OpcuaClient::addViewNode(const View &view) const
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -262,7 +262,7 @@ static void data_change_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt3
     on_change(client, helper::cvtVariable(value->value));
 }
 
-bool Client::monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32_t q_size)
+bool OpcuaClient::monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32_t q_size)
 {
     RMVL_DbgAssert(_client != nullptr);
 
@@ -298,7 +298,7 @@ static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, voi
     on_event(client, datas);
 }
 
-bool Client::monitor(const std::vector<std::string> &names, EventNotificationCallback on_event)
+bool OpcuaClient::monitor(const std::vector<std::string> &names, EventNotificationCallback on_event)
 {
     RMVL_DbgAssert(_client != nullptr);
     // 创建订阅
@@ -350,7 +350,7 @@ bool Client::monitor(const std::vector<std::string> &names, EventNotificationCal
     return true;
 }
 
-bool Client::remove(NodeId nd)
+bool OpcuaClient::remove(NodeId nd)
 {
     if (_monitor_map.find(nd.data().identifier.numeric) == _monitor_map.end())
     {
@@ -370,9 +370,9 @@ bool Client::remove(NodeId nd)
 
 //////////////////////// 客户端视图 ////////////////////////
 
-NodeId ClientView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return clientFindNode(_client, browse_path, src_nd); }
-Variable ClientView::read(const NodeId &nd) const { return clientRead(_client, nd); }
-bool ClientView::write(const NodeId &nd, const Variable &val) const { return clientWrite(_client, nd, val); }
+NodeId OpcuaClientView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept { return clientFindNode(_client, browse_path, src_nd); }
+Variable OpcuaClientView::read(const NodeId &nd) const { return clientRead(_client, nd); }
+bool OpcuaClientView::write(const NodeId &nd, const Variable &val) const { return clientWrite(_client, nd, val); }
 
 /////////////////////// 客户端定时器 ///////////////////////
 
@@ -382,7 +382,7 @@ static void timer_cb(UA_Client *, void *data)
     func();
 }
 
-ClientTimer::ClientTimer(ClientView cv, double period, std::function<void()> callback) : _cv(cv), _cb(callback)
+OpcuaClientTimer::OpcuaClientTimer(OpcuaClientView cv, double period, std::function<void()> callback) : _cv(cv), _cb(callback)
 {
     auto status = UA_Client_addRepeatedCallback(_cv.get(), timer_cb, &_cb, period, &_id);
     if (status != UA_STATUSCODE_GOOD)
@@ -392,7 +392,7 @@ ClientTimer::ClientTimer(ClientView cv, double period, std::function<void()> cal
     }
 }
 
-void ClientTimer::cancel()
+void OpcuaClientTimer::cancel()
 {
     if (_id != 0)
     {

@@ -18,21 +18,18 @@
 
 #include "utilities.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
 
-enum AccessLevel : uint8_t
-{
+enum AccessLevel : uint8_t {
     VARIABLE_READ = 1U,  //!< 读权限
     VARIABLE_WRITE = 2U, //!< 写权限
 };
 
 //! OPC UA 变量类型
-class RMVL_EXPORTS_W VariableType final
-{
+class RMVL_EXPORTS_W VariableType final {
 public:
     RMVL_W VariableType() = default;
 
@@ -43,7 +40,6 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
-    RMVL_W_SUBST("VT")
     VariableType(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(-1) {}
 
     /**
@@ -69,7 +65,6 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    RMVL_W_SUBST("VT_List")
     VariableType(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(arr.size()) {}
 
     /**
@@ -80,6 +75,9 @@ public:
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
     VariableType(std::initializer_list<Tp> il) : VariableType(std::vector<Tp>(il)) {}
+
+    //! 获取默认数据
+    inline const auto &data() const { return _value; }
 
     /**
      * @brief 将变量类型节点转化为指定类型的数据
@@ -98,11 +96,7 @@ public:
      * @return 该数据类型的数据
      */
     template <typename Tp>
-    RMVL_W_SUBST("VT_cast")
     inline Tp cast() const { return std::any_cast<Tp>(this->data()); }
-
-    //! 获取默认数据
-    inline const auto &data() const { return _value; }
 
     //! 获取数据类型
     RMVL_W inline DataType getDataType() const { return _data_type; }
@@ -112,6 +106,10 @@ public:
 
     //! 获取大小 @note 未初始化、空列表则返回 `0`，标量则返回 `-1`
     RMVL_W inline int size() const { return _size; }
+
+    RMVL_W_SUBST("VT")
+    RMVL_W_SUBST("VT_List")
+    RMVL_W_SUBST("VT_cast")
 
     //! 命名空间索引，默认为 `1`
     RMVL_W_RW uint16_t ns{1U};
@@ -146,8 +144,7 @@ private:
 };
 
 //! OPC UA 变量
-class RMVL_EXPORTS_W Variable final
-{
+class RMVL_EXPORTS_W Variable final {
 public:
     RMVL_W Variable() = default;
 
@@ -158,7 +155,6 @@ public:
      * @param[in] val 标量、数量值
      */
     template <typename Tp, typename DecayT = typename std::decay_t<Tp>, typename = std::enable_if_t<std::is_fundamental_v<DecayT>>>
-    RMVL_W_SUBST("V")
     Variable(Tp val) : _value(val), _data_type(DataType(typeid(DecayT))), _size(-1) {}
 
     /**
@@ -184,7 +180,6 @@ public:
      * @param[in] arr 列表、数组
      */
     template <typename Tp, typename Enable = std::enable_if_t<std::is_fundamental_v<Tp> && !std::is_same_v<bool, Tp>>>
-    RMVL_W_SUBST("V_List")
     Variable(const std::vector<Tp> &arr) : _value(arr), _data_type(DataType(typeid(Tp))), _size(static_cast<UA_UInt32>(arr.size())) {}
 
     /**
@@ -225,6 +220,9 @@ public:
     //! 判断变量节点是否为空 @note 未初始化、空列表则为空
     RMVL_W bool empty() const { return _size == 0; }
 
+    //! 获取数据
+    inline const auto &data() const { return _value; }
+
     /**
      * @brief 将变量节点转化为指定类型的数据
      *
@@ -242,7 +240,6 @@ public:
      * @return 该数据类型的数据
      */
     template <typename Tp>
-    RMVL_W_SUBST("V_cast")
     inline Tp cast() const { return std::any_cast<Tp>(this->data()); }
 
     //! 基本数据类型转换函数
@@ -258,21 +255,22 @@ public:
 
     /**
      * @brief 获取用 `rm::VariableType` 表示的变量类型
-     * - 添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
+     * - 添加至 `rm::OpcuaServer` 时表示采用 `BaseDataVariableType` 作为其变量类型
      * - 作为变量类型节点、变量节点之间链接的依据
      *
      * @return 变量类型
      */
     RMVL_W inline const VariableType type() const { return _type; }
 
-    //! 获取数据
-    inline const auto &data() const { return _value; }
-
     //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
     RMVL_W inline DataType getDataType() const { return _data_type; }
 
     //! 获取大小 @note 未初始化、空列表则返回 `0`，标量则返回 `-1`
     RMVL_W inline int size() const { return _size; }
+
+    RMVL_W_SUBST("V")
+    RMVL_W_SUBST("V_List")
+    RMVL_W_SUBST("V_cast")
 
 private:
     explicit Variable(const VariableType &vtype) : _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
@@ -365,8 +363,7 @@ using DataSourceWrite = std::function<void(const NodeId &, const Variable &)>;
  * @note
  * - 数据源变量节点会把每次 IO 都绑定到各自的回调函数中，即可以重定向到一个实际的物理过程中，从而跟服务器本身的数据读写脱离关系
  */
-struct RMVL_EXPORTS_W_AG DataSourceVariable
-{
+struct RMVL_EXPORTS_W_AG DataSourceVariable {
     //! 命名空间索引，默认为 `1`
     RMVL_W_RW uint16_t ns{1U};
 

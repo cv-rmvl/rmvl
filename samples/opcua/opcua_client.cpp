@@ -125,7 +125,7 @@ static void clear_mark()
 }
 
 //! 查找节点，并标记
-static rm::NodeId find_node_and_mark(Client &cli, int id)
+static rm::NodeId find_node_and_mark(OpcuaClient &cli, int id)
 {
     constexpr const char *names[] = {"value_1", "value_2", "add"};
     std::cout << "\033[" << id + 1 << ";14H\033[1;5;33m<--\033[0m" << std::flush;
@@ -266,7 +266,7 @@ static bool ask_exit()
 
 int main()
 {
-    Client cli("opc.tcp://127.0.0.1:4840");
+    OpcuaClient cli("opc.tcp://127.0.0.1:4840");
     if (!cli.ok())
         return -1;
     clear_sreen();

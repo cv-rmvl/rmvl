@@ -13,8 +13,7 @@
 
 #include "method.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
@@ -26,8 +25,7 @@ namespace rm
  * @brief
  * - 数据包含变量节点列表、方法节点列表
  */
-class RMVL_EXPORTS_W ObjectType final
-{
+class RMVL_EXPORTS_W ObjectType final {
 public:
     //! 构造 `rm::ObjectType` 对象类型
     RMVL_W ObjectType() = default;
@@ -76,14 +74,14 @@ public:
 
     /**
      * @brief 获取 `rm::Variable` 表示的变量节点的列表
-     * 
+     *
      * @return 变量节点列表
      */
     RMVL_W const std::unordered_map<std::string, rm::Variable> &getVariables() const { return _variables; }
 
     /**
      * @brief 获取 `rm::DataSourceVariable` 表示的数据源变量节点的列表
-     * 
+     *
      * @return 数据源变量节点列表
      */
     RMVL_W const std::unordered_map<std::string, rm::DataSourceVariable> &getDataSourceVariables() const { return _ds_variables; }
@@ -153,8 +151,7 @@ private:
 };
 
 //! OPC UA 对象
-class RMVL_EXPORTS_W Object final
-{
+class RMVL_EXPORTS_W Object final {
 public:
     RMVL_W Object() = default;
 

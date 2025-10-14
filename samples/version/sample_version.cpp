@@ -12,17 +12,15 @@
 #include "rmvl/core/util.hpp"
 #include "rmvl/core/version.hpp"
 
-const char *help = "\t-?, -h, -help, -usage\n\t\t帮助信息\n"
-                   "\t-v, -verbose\n\t\t编译配置信息";
+constexpr const char help[] = "\t-?, -h, -help, -usage\n\t\t帮助信息\n"
+                              "\t-v, -verbose\n\t\t编译配置信息";
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     if (argc == 1)
         printf("%s\n", RMVL_VERSION);
     if (argc > 2)
         printf("Bad arguments, please run: \033[33mrmvl_version -h\033[0m first!\n");
-    if (argc == 2)
-    {
+    if (argc == 2) {
         std::string argv_1 = argv[1];
         if (argv_1 == "-h" || argv_1 == "-?" || argv_1 == "-help" || argv_1 == "-usage")
             printf("Usage of \033[33m%s\033[0m:\n%s\n", argv[0], help);

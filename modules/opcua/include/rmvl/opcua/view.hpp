@@ -11,17 +11,15 @@
 
 #pragma once
 
-#include "variable.hpp"
+#include "utilities.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
 
 //! OPC UA 视图
-class RMVL_EXPORTS_W View final
-{
+class RMVL_EXPORTS_W View final {
 public:
     RMVL_W View() = default;
 

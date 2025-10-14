@@ -268,7 +268,7 @@ function(_para_parser file_name header_details source_read source_write header_e
         math(EXPR cmt_idx "${cmt_idx} + 1")
         string(SUBSTRING "${enum_cmt}" ${cmt_idx} -1 enum_cmt)
       endif()
-      set(ret_header_enum "${ret_header_enum}//! ${enum_cmt}\nenum class ${enum_name}\n{\n")
+      set(ret_header_enum "${ret_header_enum}//! ${enum_cmt}\nenum class ${enum_name} {\n")
       set(ret_source_enum_s2t "${ret_source_enum_s2t}static const std::unordered_map<std::string, ${enum_name}> s2t_${enum_name} = {\n")
       set(ret_source_enum_t2s "${ret_source_enum_t2s}static const std::unordered_map<${enum_name}, std::string> t2s_${enum_name} = {\n")
       set(parse_mode "enum")

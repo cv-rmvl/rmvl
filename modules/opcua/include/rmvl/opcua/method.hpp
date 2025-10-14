@@ -13,10 +13,7 @@
 
 #include "variable.hpp"
 
-namespace rm
-{
-
-class ServerView;
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
@@ -25,8 +22,7 @@ class ServerView;
  * @brief OPC UA 方法参数信息
  * @note 不储备任何调用时数据，仅用于描述方法参数
  */
-struct RMVL_EXPORTS_W_AG Argument final
-{
+struct RMVL_EXPORTS_W_AG Argument final {
     RMVL_W_RW std::string name;          //!< 参数名称
     RMVL_W_RW DataType type{};           //!< 参数数据类型 @see rm::DataType
     RMVL_W_RW uint32_t dims{1U};         //!< 参数维数，单数据则是 `1`，数组则是数组长度 @warning 不能为 `0`
@@ -55,8 +51,7 @@ struct RMVL_EXPORTS_W_AG Argument final
 using MethodCallback = std::function<std::pair<bool, std::vector<Variable>>(const NodeId &, const std::vector<Variable> &)>;
 
 //! OPC UA 方法
-class RMVL_EXPORTS_W Method final
-{
+class RMVL_EXPORTS_W Method final {
 public:
     RMVL_W Method() = default;
 

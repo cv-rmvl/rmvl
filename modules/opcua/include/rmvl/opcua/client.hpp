@@ -18,8 +18,7 @@
 #include "object.hpp"
 #include "view.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
@@ -27,20 +26,18 @@ namespace rm
 //! @example samples/opcua/opcua_client.cpp OPC UA 客户端例程
 
 //! OPC UA 客户端视图
-class RMVL_EXPORTS_W ClientView
-{
+class RMVL_EXPORTS_W OpcuaClientView {
 public:
-    RMVL_W ClientView() = default;
+    RMVL_W OpcuaClientView() = default;
 
     /**
      * @brief 创建不占有生命周期的 OPC UA 客户端视图，在 OPC UA 方法节点中使用特别有效
      *
      * @param[in] client OPC UA 客户端指针
      */
-    ClientView(UA_Client *client) : _client(client) {}
+    OpcuaClientView(UA_Client *client) : _client(client) {}
 
-    ClientView &operator=(UA_Client *const client)
-    {
+    OpcuaClientView &operator=(UA_Client *const client) {
         _client = client;
         return *this;
     }
@@ -103,7 +100,7 @@ private:
  * @param[in] client_view 客户端视图，指代当前客户端
  * @param[in] value 数据发生变更后的变量
  */
-using DataChangeNotificationCallback = std::function<void(ClientView, const Variable &)>;
+using DataChangeNotificationCallback = std::function<void(OpcuaClientView, const Variable &)>;
 
 /**
  * @brief 事件通知回调函数
@@ -111,11 +108,10 @@ using DataChangeNotificationCallback = std::function<void(ClientView, const Vari
  * @param[in] client_view 客户端视图，指代当前客户端
  * @param[in] event_fields 事件数据
  */
-using EventNotificationCallback = std::function<void(ClientView, const std::vector<Variable> &)>;
+using EventNotificationCallback = std::function<void(OpcuaClientView, const std::vector<Variable> &)>;
 
 //! OPC UA 客户端
-class RMVL_EXPORTS_W Client
-{
+class RMVL_EXPORTS_W OpcuaClient {
 public:
     /****************************** 通用配置 ******************************/
 
@@ -125,21 +121,21 @@ public:
      * @param[in] address 连接地址，形如 `opc.tcp://127.0.0.1:4840`
      * @param[in] user 用户信息
      */
-    RMVL_W Client(std::string_view address, const UserConfig &user = {});
+    RMVL_W OpcuaClient(std::string_view address, const UserConfig &user = {});
 
     //! @cond
-    Client(const Client &) = delete;
-    Client(Client &&) = default;
+    OpcuaClient(const OpcuaClient &) = delete;
+    OpcuaClient(OpcuaClient &&) = default;
 
-    Client &operator=(const Client &) = delete;
-    Client &operator=(Client &&) = default;
+    OpcuaClient &operator=(const OpcuaClient &) = delete;
+    OpcuaClient &operator=(OpcuaClient &&) = default;
     //! @endcond
 
     //! 断开与服务器的连接，并释放资源
-    ~Client();
+    ~OpcuaClient();
 
     RMVL_W_SUBST("Cli")
-    operator ClientView() const { return _client; }
+    operator OpcuaClientView() const { return _client; }
 
     //! 是否成功创建客户端并成功连接到服务器
     RMVL_W inline bool ok() const { return _client != nullptr; }
@@ -306,8 +302,7 @@ private:
 };
 
 //! OPC UA 客户端定时器
-class RMVL_EXPORTS_W ClientTimer final
-{
+class RMVL_EXPORTS_W OpcuaClientTimer final {
 public:
     /**
      * @brief 创建 OPC UA 客户端定时器
@@ -316,24 +311,24 @@ public:
      * @param[in] period 定时器周期，单位：毫秒 `ms`
      * @param[in] callback 定时器回调函数
      */
-    RMVL_W ClientTimer(ClientView cv, double period, std::function<void()> callback);
+    RMVL_W OpcuaClientTimer(OpcuaClientView cv, double period, std::function<void()> callback);
 
     //! @cond
-    ClientTimer(const ClientTimer &) = delete;
-    ClientTimer(ClientTimer &&) = default;
+    OpcuaClientTimer(const OpcuaClientTimer &) = delete;
+    OpcuaClientTimer(OpcuaClientTimer &&) = default;
 
-    ClientTimer &operator=(const ClientTimer &) = delete;
-    ClientTimer &operator=(ClientTimer &&) = default;
+    OpcuaClientTimer &operator=(const OpcuaClientTimer &) = delete;
+    OpcuaClientTimer &operator=(OpcuaClientTimer &&) = default;
     //! @endcond
 
     //! 释放资源，并取消定时器
-    ~ClientTimer() { cancel(); }
+    ~OpcuaClientTimer() { cancel(); }
 
     //! 取消定时器
     RMVL_W void cancel();
 
 private:
-    ClientView _cv;            //!< 客户端视图
+    OpcuaClientView _cv;       //!< 客户端视图
     std::function<void()> _cb; //!< 定时器回调函数
     uint64_t _id{};            //!< 定时器 ID
 };
