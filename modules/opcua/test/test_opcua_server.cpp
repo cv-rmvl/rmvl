@@ -21,7 +21,7 @@ namespace rm_test
 // 服务器添加变量节点
 TEST(OPC_UA_Server, add_variable_node)
 {
-    rm::Server srv(4810, "TestServer");
+    rm::OpcuaServer srv(4810, "TestServer");
     rm::Variable variable = 3.1415;
     variable.browse_name = "test_double";
     variable.description = "this is test double";
@@ -33,7 +33,7 @@ TEST(OPC_UA_Server, add_variable_node)
 
 TEST(OPC_UA_Server, variable_node_io)
 {
-    rm::Server srv(4820, "TestServer");
+    rm::OpcuaServer srv(4820, "TestServer");
     uaCreateVariable(variable, 1);
     auto node = srv.addVariableNode(variable);
     srv.spinOnce();
@@ -46,7 +46,7 @@ TEST(OPC_UA_Server, variable_node_io)
 TEST(OPC_UA_Server, add_data_source_variable_node)
 {
     int data_source{};
-    rm::Server srv(4825, "TestServer");
+    rm::OpcuaServer srv(4825, "TestServer");
     rm::DataSourceVariable v;
     v.browse_name = v.display_name = "test_int";
     v.description = "this is test int";
@@ -60,7 +60,7 @@ TEST(OPC_UA_Server, add_data_source_variable_node)
 // 服务器添加变量类型节点
 TEST(OPC_UA_Server, add_variable_type_node)
 {
-    rm::Server srv(4830);
+    rm::OpcuaServer srv(4830);
     rm::VariableType variable_type = "string_test";
     variable_type.browse_name = "test_string";
     variable_type.description = "this is test string";
@@ -73,7 +73,7 @@ TEST(OPC_UA_Server, add_variable_type_node)
 // 服务器添加方法节点
 TEST(OPC_UA_Server, add_method_node)
 {
-    rm::Server srv(4832);
+    rm::OpcuaServer srv(4832);
     rm::Method method = [](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> { return {true, {}}; };
     method.browse_name = "test_method";
     method.description = "this is test method";
@@ -85,7 +85,7 @@ TEST(OPC_UA_Server, add_method_node)
 // 服务器添加对象节点
 TEST(OPC_UA_Server, add_object_node)
 {
-    rm::Server srv(4835);
+    rm::OpcuaServer srv(4835);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -106,7 +106,7 @@ TEST(OPC_UA_Server, add_object_node)
 // 服务器添加包含数据源变量节点的对象节点
 TEST(OPC_UA_Server, add_object_node_with_dsv)
 {
-    rm::Server srv(4837);
+    rm::OpcuaServer srv(4837);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -131,7 +131,7 @@ TEST(OPC_UA_Server, add_object_node_with_dsv)
 // 服务器添加包含方法节点的对象节点
 TEST(OPC_UA_Server, add_object_node_with_method)
 {
-    rm::Server srv(4840);
+    rm::OpcuaServer srv(4840);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -158,7 +158,7 @@ TEST(OPC_UA_Server, add_object_node_with_method)
 // 服务器添加对象类型节点
 TEST(OPC_UA_Server, add_object_type_node)
 {
-    rm::Server srv(4845);
+    rm::OpcuaServer srv(4845);
     rm::ObjectType object_type;
     object_type.browse_name = "test_object_type";
     object_type.description = "this is test object type";
@@ -176,7 +176,7 @@ TEST(OPC_UA_Server, add_object_type_node)
 // 从对象类型节点派生对象节点，并添加到服务器
 TEST(OPC_UA_Server, create_object_by_object_type)
 {
-    rm::Server srv(4846);
+    rm::OpcuaServer srv(4846);
     rm::ObjectType object_type;
     object_type.browse_name = "test_object_type";
     object_type.description = "this is test object type";
@@ -199,7 +199,7 @@ TEST(OPC_UA_Server, create_object_by_object_type)
 // 服务器节点服务端路径搜索
 TEST(OPC_UA_Server, find_node)
 {
-    rm::Server srv(4850);
+    rm::OpcuaServer srv(4850);
     rm::Object object;
     object.browse_name = "test_object";
     object.description = "this is test object";
@@ -218,7 +218,7 @@ TEST(OPC_UA_Server, find_node)
 // 添加自定义事件类型节点
 TEST(OPC_UA_Server, add_event_type_node)
 {
-    rm::Server srv(4855);
+    rm::OpcuaServer srv(4855);
     rm::EventType event_type;
     event_type.browse_name = "test_event_type";
     event_type.description = "this is test event type";
@@ -234,7 +234,7 @@ TEST(OPC_UA_Server, add_event_type_node)
 // 手动触发事件
 TEST(OPC_UA_Server, trigger_event)
 {
-    rm::Server srv(4860);
+    rm::OpcuaServer srv(4860);
     // 添加事件类型
     rm::EventType event_type;
     event_type.browse_name = "test_event_type";
@@ -257,7 +257,7 @@ TEST(OPC_UA_Server, trigger_event)
 // 从函数指针配置服务器
 TEST(OPC_UA_Server, function_ptr)
 {
-    rm::Server srv(testnum, 4865);
+    rm::OpcuaServer srv(testnum, 4865);
     srv.spinOnce();
     auto id = srv.find("TestNumber");
     EXPECT_FALSE(id.empty());
@@ -266,7 +266,7 @@ TEST(OPC_UA_Server, function_ptr)
 // 视图节点
 TEST(OPC_UA_Server, view_node)
 {
-    rm::Server srv(4870);
+    rm::OpcuaServer srv(4870);
     uaCreateVariable(demo1, 3.14);
     auto node1 = srv.addVariableNode(demo1);
     uaCreateVariable(demo2, 1);
@@ -288,14 +288,14 @@ TEST(OPC_UA_Server, view_node)
 // 定时器
 TEST(OPC_UA_Server, timer_test)
 {
-    rm::Server srv(4875);
+    rm::OpcuaServer srv(4875);
     uaCreateVariable(val, 0);
     auto nd = srv.addVariableNode(val);
     srv.spinOnce();
 
     int times{};
 
-    auto timer = rm::ServerTimer(srv, 10, [&](rm::ServerView sv) {
+    auto timer = rm::OpcuaServerTimer(srv, 10, [&](rm::OpcuaServerView sv) {
         int num = sv.read(nd).cast<int>() + 10;
         sv.write(nd, num);
         times++;

@@ -17,8 +17,7 @@
 #include "object.hpp"
 #include "view.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
@@ -26,20 +25,18 @@ namespace rm
 //! @example samples/opcua/opcua_server.cpp OPC UA 服务器例程
 
 //! OPC UA 服务器视图
-class RMVL_EXPORTS_W ServerView final
-{
+class RMVL_EXPORTS_W OpcuaServerView final {
 public:
-    RMVL_W ServerView() = default;
+    RMVL_W OpcuaServerView() = default;
 
     /**
      * @brief 创建不占有生命周期的 OPC UA 服务器视图，在 OPC UA 方法节点中使用特别有效
      *
      * @param[in] server OPC UA 服务器指针
      */
-    ServerView(UA_Server *server) : _server(server) {}
+    OpcuaServerView(UA_Server *server) : _server(server) {}
 
-    ServerView &operator=(UA_Server *const server)
-    {
+    OpcuaServerView &operator=(UA_Server *const server) {
         _server = server;
         return *this;
     }
@@ -111,7 +108,7 @@ private:
  * @param[in] nd 待读取的变量节点的 `NodeId`
  * @param[in] value 服务器读取到的变量
  */
-using ValueCallbackBeforeRead = std::function<void(ServerView, const NodeId &, const Variable &)>;
+using ValueCallbackBeforeRead = std::function<void(OpcuaServerView, const NodeId &, const Variable &)>;
 
 /**
  * @brief 值回调函数，Write 可调用对象定义
@@ -120,11 +117,10 @@ using ValueCallbackBeforeRead = std::function<void(ServerView, const NodeId &, c
  * @param[in] nd 待写入的变量节点的 `NodeId`
  * @param[in] data 服务器写入的变量
  */
-using ValueCallbackAfterWrite = std::function<void(ServerView, const NodeId &, const Variable &)>;
+using ValueCallbackAfterWrite = std::function<void(OpcuaServerView, const NodeId &, const Variable &)>;
 
 //! OPC UA 服务器
-class RMVL_EXPORTS_W Server
-{
+class RMVL_EXPORTS_W OpcuaServer {
 public:
     using ValueCallbackWrapper = std::pair<ValueCallbackBeforeRead, ValueCallbackAfterWrite>;
     using DataSourceCallbackWrapper = std::pair<DataSourceRead, DataSourceWrite>;
@@ -138,7 +134,7 @@ public:
      * @param[in] name OPC UA 服务器名称，为空则采用默认值 `open62541-based OPC UA Application`
      * @param[in] users 用户列表 @see UserConfig
      */
-    RMVL_W Server(uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
+    RMVL_W OpcuaServer(uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     /**
      * @brief 从服务器配置函数指针创建 OPC UA 服务器
@@ -151,18 +147,18 @@ public:
      * @param[in] name OPC UA 服务器名称，为空则采用默认值 `open62541-based OPC UA Application`
      * @param[in] users 用户列表 @see UserConfig
      */
-    Server(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
+    OpcuaServer(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name = {}, const std::vector<UserConfig> &users = {});
 
     //! @cond
-    Server(const Server &) = delete;
-    Server(Server &&srv) = delete;
+    OpcuaServer(const OpcuaServer &) = delete;
+    OpcuaServer(OpcuaServer &&srv) = delete;
 
-    Server &operator=(const Server &) = delete;
-    Server &operator=(Server &&srv) = delete;
+    OpcuaServer &operator=(const OpcuaServer &) = delete;
+    OpcuaServer &operator=(OpcuaServer &&srv) = delete;
     //! @endcond
 
     RMVL_W_SUBST("Srv")
-    operator ServerView() const { return _server; }
+    operator OpcuaServerView() const { return _server; }
 
     /**
      * @brief 启动服务器并阻塞
@@ -186,7 +182,7 @@ public:
     RMVL_W inline void shutdown() { _running = false; }
 
     // 完成所有回调，停止网络层，进行清理并释放资源
-    ~Server();
+    ~OpcuaServer();
 
     /****************************** 路径搜索 ******************************/
 
@@ -345,8 +341,7 @@ private:
 };
 
 //! OPC UA 服务器定时器
-class RMVL_EXPORTS_W ServerTimer final
-{
+class RMVL_EXPORTS_W OpcuaServerTimer final {
 public:
     /**
      * @brief 创建 OPC UA 服务器定时器
@@ -355,26 +350,26 @@ public:
      * @param[in] period 定时器周期，单位：毫秒 `ms`
      * @param[in] callback 定时器回调函数
      */
-    RMVL_W ServerTimer(ServerView sv, double period, std::function<void(ServerView)> callback);
+    RMVL_W OpcuaServerTimer(OpcuaServerView sv, double period, std::function<void(OpcuaServerView)> callback);
 
     //! @cond
-    ServerTimer(const ServerTimer &) = delete;
-    ServerTimer(ServerTimer &&) = default;
+    OpcuaServerTimer(const OpcuaServerTimer &) = delete;
+    OpcuaServerTimer(OpcuaServerTimer &&) = default;
 
-    ServerTimer &operator=(const ServerTimer &) = delete;
-    ServerTimer &operator=(ServerTimer &&) = default;
+    OpcuaServerTimer &operator=(const OpcuaServerTimer &) = delete;
+    OpcuaServerTimer &operator=(OpcuaServerTimer &&) = default;
     //! @endcond
 
     //! 释放资源，并取消定时器
-    ~ServerTimer() { cancel(); }
+    ~OpcuaServerTimer() { cancel(); }
 
     //! 取消定时器
     RMVL_W void cancel();
 
 private:
-    ServerView _sv;                      //!< 服务器视图
-    std::function<void(ServerView)> _cb; //!< 定时器回调函数
-    uint64_t _id{};                      //!< 定时器 ID
+    OpcuaServerView _sv;                      //!< 服务器视图
+    std::function<void(OpcuaServerView)> _cb; //!< 定时器回调函数
+    uint64_t _id{};                           //!< 定时器 ID
 };
 
 //! @} opcua

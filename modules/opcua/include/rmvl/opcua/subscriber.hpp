@@ -15,15 +15,13 @@
 
 #ifdef UA_ENABLE_PUBSUB
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup opcua
 //! @{
 
 //! 数据集字段元数据
-struct RMVL_EXPORTS_W_AG FieldMetaData final
-{
+struct RMVL_EXPORTS_W_AG FieldMetaData final {
     /**
      * @brief 从变量创建字段元数据
      * @brief
@@ -56,18 +54,17 @@ struct RMVL_EXPORTS_W_AG FieldMetaData final
 };
 
 //! OPC UA 订阅者
-class RMVL_EXPORTS_W Subscriber : public Server
-{
+class RMVL_EXPORTS_W OpcuaSubscriber : public OpcuaServer {
 public:
     /**
      * @brief 创建 OPC UA 订阅者
      *
      * @param[in] sub_name 订阅者名称
      * @param[in] addr 订阅地址，形如 `opc.udp://224.0.0.22:4840`
-     * @param[in] port 端口号，与 @ref Server::Server 的端口号概念一致，默认为 4850
+     * @param[in] port 端口号，与 @ref OpcuaServer::OpcuaServer 的端口号概念一致，默认为 4850
      * @param[in] users 用户列表，默认为空，可参考 @ref UserConfig
      */
-    RMVL_W Subscriber(std::string_view sub_name, const std::string &addr, uint16_t port = 4850U, const std::vector<UserConfig> &users = {});
+    RMVL_W OpcuaSubscriber(std::string_view sub_name, const std::string &addr, uint16_t port = 4850U, const std::vector<UserConfig> &users = {});
 
     /**
      * @brief 订阅数据集

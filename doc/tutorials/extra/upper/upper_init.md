@@ -16,7 +16,7 @@
 
 软件模块一般在使用时仅涉及到 4 个功能模块，即 @ref detector ， @ref compensator ， @ref predictor ，和 @ref decider 。此外，用户仍然可以基于 RMVL 提供的抽象类数据组件（如 rm::feature ）完成适用于个人项目中派生数据组件的接口设计，在这种情况下，初始化的内容可能需要考虑到这些数据组件，在本文中不多介绍。
 
-而硬件设备主要有感知设备和通信设备，目前 RMVL 包含的感知设备涉及到
+而硬件设备主要有感知设备 SDK 和通信设备相关层级支持（及相关通信中间件），目前 RMVL 包含的感知设备 SDK 涉及到
 
 @add_checkbox_y
 相机设备
@@ -28,13 +28,28 @@
 激光雷达
 @end_checkbox
 
-通信设备涉及到
+通信设备相关层级支持涉及到
 
 @add_checkbox_y
-数据链路层
+进程间通信
 @end_checkbox
 @add_checkbox_y
-运输层/应用层
+串口通信
+@end_checkbox
+@add_checkbox_y
+以 Socket 为核心的传输层
+@end_checkbox
+@add_checkbox_y
+以 HTTP 为核心的应用层及后端框架
+@end_checkbox
+
+通信中间件涉及到
+
+@add_checkbox_y
+OPC UA
+@end_checkbox
+@add_checkbox_n
+MQTT
 @end_checkbox
 
 ### 软件模块 {#init_software}
@@ -86,9 +101,9 @@ auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMo
 
 @end_toggle
 
-### 通信设备 {#init_communication}
+### 通信设备 {#init_communication} 
 
-@add_toggle{数据链路层}
+@add_toggle{串口通信}
 
 串行接口通信，使用方法见 @ref tutorial_modules_serial
 
@@ -135,9 +150,18 @@ int main() {
 
 @end_toggle
 
-@add_toggle{运输层/应用层}
+@add_toggle{其余层级支持}
 
-目前基于运输层的设备属于 Ethernet 设备，目前有支持 OPC UA 通信协议的 @ref opcua ，可以查阅对应的说明文档 @ref tutorial_modules_opcua 。
+- 进程间通信，使用方法见 @ref tutorial_modules_ipc
+- 以 Socket 为核心的传输层支持，使用方法见 @ref tutorial_modules_socket
+- 以 HTTP 为核心的应用层及后端框架支持，使用方法见 @ref tutorial_modules_netapp
+
+@end_toggle
+
+@add_toggle{通信中间件}
+
+- OPC UA，使用方法见 @ref tutorial_modules_opcua
+- MQTT，使用方法见 @ref tutorial_modules_mqtt
 
 @end_toggle
 

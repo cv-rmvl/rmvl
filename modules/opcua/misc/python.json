@@ -98,7 +98,7 @@
         ],
         "pyi": [
             "@overload",
-            "def __init__(self, cb: Callable[[ServerView, NodeId, list[Variable], list[Variable]], bool]) -> Method: ..."
+            "def __init__(self, cb: Callable[[OpcuaServerView, NodeId, list[Variable], list[Variable]], bool]) -> Method: ..."
         ]
     },
     "ET_Idx": {
@@ -145,18 +145,18 @@
     },
     "Cli": {
         "bind": [
-            ".def(\"cv\", [](Client &c) -> ClientView { return c; })"
+            ".def(\"cv\", [](OpcuaClient &c) -> OpcuaClientView { return c; })"
         ],
         "pyi": [
-            "def cv(self) -> ClientView: ..."
+            "def cv(self) -> OpcuaClientView: ..."
         ]
     },
     "Srv": {
         "bind": [
-            ".def(\"sv\", [](Server &s) -> ServerView { return s; })"
+            ".def(\"sv\", [](OpcuaServer &s) -> OpcuaServerView { return s; })"
         ],
         "pyi": [
-            "def sv(self) -> ServerView: ..."
+            "def sv(self) -> OpcuaServerView: ..."
         ]
     }
 }

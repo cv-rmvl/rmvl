@@ -25,15 +25,13 @@
 
 #include "rmvlpara/opcua.hpp"
 
-namespace rm
-{
+namespace rm {
 
 /************************************************************************************/
 /************************************** 发布者 **************************************/
 
-Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_t port,
-                     const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name)
-{
+OpcuaPublisher::OpcuaPublisher(std::string_view pub_name, const std::string &addr, uint16_t port,
+                               const std::vector<UserConfig> &users) : OpcuaServer(port, pub_name, users), _name(pub_name) {
     //////////////////// 添加连接配置 ////////////////////
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
@@ -47,8 +45,7 @@ Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_
     connect_config.publisherIdType = UA_PUBLISHERIDTYPE_UINT16;
     connect_config.publisherId.uint16 = _strhash(_name + "Connection") % 0x4000u;
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add connection, \"%s\"", UA_StatusCode_name(status));
         return;
     }
@@ -58,16 +55,14 @@ Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_
     std::string pds_name_str = _name + "PublishedDataSet";
     pds_config.name = UA_STRING(helper::to_char(pds_name_str));
     auto pds_status = UA_Server_addPublishedDataSet(_server, &pds_config, &_pds_id);
-    if (pds_status.addResult != UA_STATUSCODE_GOOD)
-    {
+    if (pds_status.addResult != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add published dataset, \"%s\"",
                UA_StatusCode_name(pds_status.addResult));
         return;
     }
 }
 
-static inline UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd)
-{
+static inline UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd) {
     UA_DataSetFieldConfig dsf_config{};
     dsf_config.dataSetFieldType = UA_PUBSUB_DATASETFIELD_VARIABLE;
     dsf_config.field.variable.fieldNameAlias = UA_STRING(helper::to_char(pd.name));
@@ -77,22 +72,19 @@ static inline UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd)
     return dsf_config;
 }
 
-bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double duration)
-{
+bool OpcuaPublisher::publish(const std::vector<PublishedDataSet> &datas, double duration) {
     ////////////////////// 前置条件 //////////////////////
     if (_server == nullptr)
-        RMVL_Error(RMVL_StsNullPtr, "Server is nullptr.");
+        RMVL_Error(RMVL_StsNullPtr, "OpcuaServer is nullptr.");
     if (UA_NodeId_isNull(&_connection_id))
         return false;
 
     ////////////// 添加 DataSetField (DSF) ///////////////
-    for (const auto &pds : datas)
-    {
+    for (const auto &pds : datas) {
         auto dsf_config = getPDS(pds);
         UA_NodeId dsf_node_id;
         auto result = UA_Server_addDataSetField(_server, _pds_id, &dsf_config, &dsf_node_id);
-        if (result.result != UA_STATUSCODE_GOOD)
-        {
+        if (result.result != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add dataset field, name: \"%s\", status code: \"%s\"",
                    pds.name.c_str(), UA_StatusCode_name(result.result));
             return false;
@@ -117,14 +109,12 @@ bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double durat
                                        UA_UADPNETWORKMESSAGECONTENTMASK_PAYLOADHEADER;
     wg_config.messageSettings.content.decoded.data = &wg_msg;
     auto status = UA_Server_addWriterGroup(_server, _connection_id, &wg_config, &_wg_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add writer group, \"%s\"", UA_StatusCode_name(status));
         return false;
     }
     status = UA_Server_setWriterGroupOperational(_server, _wg_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to set writer group operational, \"%s\"",
                UA_StatusCode_name(status));
         return false;
@@ -136,8 +126,7 @@ bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double durat
     dsw_config.dataSetWriterId = 0x8000u + _strhash(_name + "DataSetWriter") % 0x4000u;
     dsw_config.keyFrameCount = para::opcua_param.KEY_FRAME_COUNT;
     status = UA_Server_addDataSetWriter(_server, _wg_id, _pds_id, &dsw_config, &_dsw_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add dataset writer, \"%s\"", UA_StatusCode_name(status));
         return false;
     }

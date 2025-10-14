@@ -18,8 +18,7 @@
 
 #include "cvt.hpp"
 
-namespace rm
-{
+namespace rm {
 
 const std::unordered_map<std::type_index, UA_UInt32> DataType::_map =
     {{std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
@@ -36,8 +35,7 @@ const std::unordered_map<std::type_index, UA_UInt32> DataType::_map =
      {std::type_index(typeid(const char *)), UA_TYPES_STRING},
      {std::type_index(typeid(std::string)), UA_TYPES_STRING}};
 
-NodeId operator|(NodeId origin, FindNodeInServer &&fnis)
-{
+NodeId operator|(NodeId origin, FindNodeInServer &&fnis) {
     if (origin.empty())
         return origin;
     const auto &[p_server, browse_name, ns] = fnis;
@@ -49,8 +47,7 @@ NodeId operator|(NodeId origin, FindNodeInServer &&fnis)
     return retval;
 }
 
-NodeId operator|(NodeId origin, FindNodeInClient &&fnic)
-{
+NodeId operator|(NodeId origin, FindNodeInClient &&fnic) {
     if (origin.empty())
         return origin;
     UA_BrowsePath browse_path;
@@ -79,16 +76,13 @@ NodeId operator|(NodeId origin, FindNodeInClient &&fnic)
     return {};
 }
 
-bool Variable::operator==(const Variable &val) const
-{
+bool Variable::operator==(const Variable &val) const {
     if (_data_type != val._data_type)
         return false;
     if (_size != val._size)
         return false;
-    if (_size == -1)
-    {
-        switch (_data_type)
-        {
+    if (_size == -1) {
+        switch (_data_type) {
         case UA_TYPES_BOOLEAN:
             return std::any_cast<bool>(_value) == std::any_cast<bool>(val._value);
         case UA_TYPES_SBYTE:
@@ -116,11 +110,8 @@ bool Variable::operator==(const Variable &val) const
         default:
             return false;
         }
-    }
-    else
-    {
-        switch (_data_type)
-        {
+    } else {
+        switch (_data_type) {
         case UA_TYPES_SBYTE:
             return std::any_cast<std::vector<int8_t>>(_value) == std::any_cast<std::vector<int8_t>>(val._value);
         case UA_TYPES_BYTE:
@@ -147,18 +138,14 @@ bool Variable::operator==(const Variable &val) const
     }
 }
 
-namespace helper
-{
+namespace helper {
 
-UA_Variant cvtVariable(const Variable &val) noexcept
-{
+UA_Variant cvtVariable(const Variable &val) noexcept {
     const std::any &data = val.data();
 
     UA_Variant p_val;
-    if (val.size() == -1)
-    {
-        switch (val.getDataType())
-        {
+    if (val.size() == -1) {
+        switch (val.getDataType()) {
         case UA_TYPES_STRING: {
             UA_String str = UA_STRING(to_char(std::any_cast<std::string>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
@@ -225,11 +212,8 @@ UA_Variant cvtVariable(const Variable &val) noexcept
         p_val.arrayLength = 0;
         p_val.arrayDimensionsSize = 0;
         p_val.arrayDimensions = nullptr;
-    }
-    else
-    {
-        switch (val.getDataType())
-        {
+    } else {
+        switch (val.getDataType()) {
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<std::vector<UA_SByte>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
@@ -291,15 +275,12 @@ UA_Variant cvtVariable(const Variable &val) noexcept
     return p_val;
 }
 
-Variable cvtVariable(const UA_Variant &p_val) noexcept
-{
+Variable cvtVariable(const UA_Variant &p_val) noexcept {
     UA_UInt32 dims = (p_val.arrayLength == 0 ? 1 : static_cast<UA_UInt32>(p_val.arrayLength));
     DataType type_flag = p_val.type->typeKind;
     void *data = p_val.data;
-    if (dims == 1)
-    {
-        switch (type_flag)
-        {
+    if (dims == 1) {
+        switch (type_flag) {
         case UA_TYPES_LOCALIZEDTEXT: {
             UA_LocalizedText *p_ualt = reinterpret_cast<UA_LocalizedText *>(data);
             const char *text = reinterpret_cast<const char *>(p_ualt->text.data);
@@ -335,11 +316,8 @@ Variable cvtVariable(const UA_Variant &p_val) noexcept
         default:
             return {};
         }
-    }
-    else
-    {
-        switch (type_flag)
-        {
+    } else {
+        switch (type_flag) {
         case UA_TYPES_SBYTE:
             return std::vector<UA_SByte>(reinterpret_cast<UA_SByte *>(data), reinterpret_cast<UA_SByte *>(data) + dims);
         case UA_TYPES_BYTE:
@@ -366,16 +344,13 @@ Variable cvtVariable(const UA_Variant &p_val) noexcept
     }
 }
 
-UA_Variant cvtVariable(const VariableType &vtype) noexcept
-{
+UA_Variant cvtVariable(const VariableType &vtype) noexcept {
     const std::any &data = vtype.data();
 
     UA_Variant p_val;
     UA_Variant_init(&p_val);
-    if (vtype.size() == -1)
-    {
-        switch (vtype.getDataType())
-        {
+    if (vtype.size() == -1) {
+        switch (vtype.getDataType()) {
         case UA_TYPES_STRING: {
             UA_String str = UA_STRING(to_char(std::any_cast<std::string>(data)));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
@@ -443,11 +418,8 @@ UA_Variant cvtVariable(const VariableType &vtype) noexcept
         p_val.arrayLength = 0;
         p_val.arrayDimensionsSize = 0;
         p_val.arrayDimensions = nullptr;
-    }
-    else
-    {
-        switch (vtype.getDataType())
-        {
+    } else {
+        switch (vtype.getDataType()) {
         case UA_TYPES_SBYTE: {
             auto rawval = std::any_cast<std::vector<UA_SByte>>(data);
             UA_Variant_setArrayCopy(&p_val, rawval.data(), rawval.size(), &UA_TYPES[UA_TYPES_SBYTE]);
@@ -509,22 +481,18 @@ UA_Variant cvtVariable(const VariableType &vtype) noexcept
     return p_val;
 }
 
-UA_Argument cvtArgument(const Argument &arg) noexcept
-{
+UA_Argument cvtArgument(const Argument &arg) noexcept {
     UA_Argument argument;
     UA_Argument_init(&argument);
     argument.name = UA_STRING(to_char(arg.name));
     argument.description = UA_LOCALIZEDTEXT(zh_CN(), to_char(arg.description));
     argument.dataType = UA_TYPES[arg.type].typeId;
     RMVL_Assert(arg.dims);
-    if (arg.dims == 1)
-    {
+    if (arg.dims == 1) {
         argument.valueRank = UA_VALUERANK_SCALAR;
         argument.arrayDimensionsSize = 0;
         argument.arrayDimensions = nullptr;
-    }
-    else
-    {
+    } else {
         argument.valueRank = 1;
         argument.arrayDimensionsSize = 1;
         argument.arrayDimensions = &const_cast<Argument &>(arg).dims;

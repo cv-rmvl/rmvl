@@ -22,13 +22,11 @@
 
 #include "cvt.hpp"
 
-namespace rm
-{
+namespace rm {
 
 ///////////////////////// 基本配置 /////////////////////////
 
-Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users)
-{
+OpcuaServer::OpcuaServer(uint16_t port, std::string_view name, const std::vector<UserConfig> &users) {
     UA_ServerConfig init_config{};
     // 修改日志
     static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_srv{
@@ -47,12 +45,10 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     _server = UA_Server_newWithConfig(&init_config);
     UA_ServerConfig *config = UA_Server_getConfig(_server);
     // 修改名字
-    if (!name.empty())
-    {
+    if (!name.empty()) {
         UA_LocalizedText_clear(&config->applicationDescription.applicationName);
         config->applicationDescription.applicationName = UA_LOCALIZEDTEXT_ALLOC("en-US", name.data());
-        for (size_t i = 0; i < config->endpointsSize; ++i)
-        {
+        for (size_t i = 0; i < config->endpointsSize; ++i) {
             UA_LocalizedText *ptr = &config->endpoints[i].server.applicationName;
             UA_LocalizedText_clear(ptr);
             *ptr = UA_LOCALIZEDTEXT_ALLOC("en-US", name.data());
@@ -62,12 +58,10 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     config->samplingIntervalLimits.min = 2.0;
     config->publishingIntervalLimits.min = 2.0;
 
-    if (!users.empty())
-    {
+    if (!users.empty()) {
         std::vector<UA_UsernamePasswordLogin> usr_passwd;
         usr_passwd.reserve(users.size());
-        for (const auto &[id, passwd] : users)
-        {
+        for (const auto &[id, passwd] : users) {
             UA_UsernamePasswordLogin each;
             each.username = UA_STRING(helper::to_char(id));
             each.password = UA_STRING(helper::to_char(passwd));
@@ -89,30 +83,26 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
         ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
 }
 
-Server::Server(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users)
-{
+OpcuaServer::OpcuaServer(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : OpcuaServer(port, name, users) {
     if (on_config != nullptr)
         on_config(_server);
 }
 
-void Server::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
+void OpcuaServer::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
 
-void Server::spin()
-{
+void OpcuaServer::spin() {
     _running = true;
     while (_running)
         UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT);
 }
 
-Server::~Server()
-{
+OpcuaServer::~OpcuaServer() {
     shutdown();
     UA_Server_run_shutdown(_server);
     UA_Server_delete(_server);
 }
 
-static Variable serverRead(UA_Server *p_server, const NodeId &nd)
-{
+static Variable serverRead(UA_Server *p_server, const NodeId &nd) {
     RMVL_DbgAssert(p_server != nullptr);
 
     UA_Variant p_val;
@@ -125,8 +115,7 @@ static Variable serverRead(UA_Server *p_server, const NodeId &nd)
     return retval;
 }
 
-static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &val)
-{
+static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &val) {
     RMVL_DbgAssert(p_server != nullptr);
 
     auto variant = helper::cvtVariable(val);
@@ -139,14 +128,12 @@ static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &v
 
 ///////////////////////// 节点配置 /////////////////////////
 
-NodeId Server::find(std::string_view browse_path, const NodeId &src_nd) const noexcept
-{
-    rm::ServerView sv{_server};
+NodeId OpcuaServer::find(std::string_view browse_path, const NodeId &src_nd) const noexcept {
+    rm::OpcuaServerView sv{_server};
     return sv.find(browse_path, src_nd);
 }
 
-NodeId Server::addVariableTypeNode(const VariableType &vtype)
-{
+NodeId OpcuaServer::addVariableTypeNode(const VariableType &vtype) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_VariableTypeAttributes attr = UA_VariableTypeAttributes_default;
@@ -155,8 +142,7 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype)
     attr.value = variant;
     attr.dataType = variant.type->typeId;
     attr.valueRank = vtype.size() == -1 ? UA_VALUERANK_SCALAR : 1;
-    if (attr.valueRank != UA_VALUERANK_SCALAR)
-    {
+    if (attr.valueRank != UA_VALUERANK_SCALAR) {
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
         attr.arrayDimensions = variant.arrayDimensions;
     }
@@ -168,16 +154,14 @@ NodeId Server::addVariableTypeNode(const VariableType &vtype)
         UA_QUALIFIEDNAME(vtype.ns, helper::to_char(vtype.browse_name)),
         UA_NODEID_NULL, attr, nullptr, &retval);
     UA_Variant_clear(&variant);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add variable type node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     return retval;
 }
 
-NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noexcept
-{
+NodeId OpcuaServer::addVariableNode(const Variable &val, const NodeId &parent_nd) noexcept {
     RMVL_DbgAssert(_server != nullptr);
 
     // 变量节点属性 `UA_VariableAttributes`
@@ -188,8 +172,7 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noe
     attr.dataType = variant.type->typeId;
     attr.accessLevel = val.access_level;
     attr.valueRank = val.size() == -1 ? UA_VALUERANK_SCALAR : 1;
-    if (attr.valueRank != UA_VALUERANK_SCALAR)
-    {
+    if (attr.valueRank != UA_VALUERANK_SCALAR) {
         attr.arrayDimensionsSize = variant.arrayDimensionsSize;
         attr.arrayDimensions = variant.arrayDimensions;
     }
@@ -198,11 +181,9 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noe
     // 获取变量节点的变量类型节点
     NodeId type_id{nodeBaseDataVariableType};
     const auto variable_type = val.type();
-    if (!variable_type.empty())
-    {
+    if (!variable_type.empty()) {
         type_id = type_id | node(variable_type.browse_name);
-        if (type_id.empty())
-        {
+        if (type_id.empty()) {
             ERROR_("Failed to find the variable type ID during adding variable node");
             type_id = nodeBaseDataVariableType;
         }
@@ -214,8 +195,7 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noe
     auto status = UA_Server_addVariableNode(
         _server, UA_NODEID_NULL, parent_nd, ref_id, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
         type_id, attr, nullptr, &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add variable node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
@@ -223,32 +203,28 @@ NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noe
     return retval;
 }
 
-Variable Server::read(const NodeId &node) const { return serverRead(_server, node); }
-bool Server::write(const NodeId &node, const Variable &val) { return serverWrite(_server, node, val); }
+Variable OpcuaServer::read(const NodeId &node) const { return serverRead(_server, node); }
+bool OpcuaServer::write(const NodeId &node, const Variable &val) { return serverWrite(_server, node, val); }
 
 static void value_cb_before_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid,
-                                 void *context, const UA_NumericRange *, const UA_DataValue *value)
-{
-    auto &on_read = reinterpret_cast<Server::ValueCallbackWrapper *>(context)->first;
+                                 void *context, const UA_NumericRange *, const UA_DataValue *value) {
+    auto &on_read = reinterpret_cast<OpcuaServer::ValueCallbackWrapper *>(context)->first;
     on_read(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
 }
 
 static void value_cb_after_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeId,
-                                 void *context, const UA_NumericRange *, const UA_DataValue *data)
-{
-    auto &on_write = reinterpret_cast<Server::ValueCallbackWrapper *>(context)->second;
+                                 void *context, const UA_NumericRange *, const UA_DataValue *data) {
+    auto &on_write = reinterpret_cast<OpcuaServer::ValueCallbackWrapper *>(context)->second;
     on_write(server, *nodeId, data->hasValue ? helper::cvtVariable(data->value) : Variable{});
 }
 
-bool Server::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) noexcept
-{
+bool OpcuaServer::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) noexcept {
     RMVL_DbgAssert(_server != nullptr);
     // 设置节点上下文
     auto context = std::make_unique<ValueCallbackWrapper>(std::forward<ValueCallbackBeforeRead>(before_read),
                                                           std::forward<ValueCallbackAfterWrite>(after_write));
     auto status = UA_Server_setNodeContext(_server, nd, context.get());
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to set node context: %s", UA_StatusCode_name(status));
         return false;
     }
@@ -262,9 +238,8 @@ bool Server::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead bef
 }
 
 static UA_StatusCode datasource_cb_on_read(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
-                                           UA_Boolean, const UA_NumericRange *, UA_DataValue *value)
-{
-    auto on_read = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->first;
+                                           UA_Boolean, const UA_NumericRange *, UA_DataValue *value) {
+    auto on_read = reinterpret_cast<OpcuaServer::DataSourceCallbackWrapper *>(context)->first;
     if (on_read == nullptr)
         return UA_STATUSCODE_BADNOTSUPPORTED;
     auto retval = on_read(*nodeid);
@@ -276,17 +251,15 @@ static UA_StatusCode datasource_cb_on_read(UA_Server *, const UA_NodeId *, void 
 }
 
 static UA_StatusCode datasource_cb_on_write(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
-                                            const UA_NumericRange *, const UA_DataValue *value)
-{
-    auto on_write = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->second;
+                                            const UA_NumericRange *, const UA_DataValue *value) {
+    auto on_write = reinterpret_cast<OpcuaServer::DataSourceCallbackWrapper *>(context)->second;
     if (on_write == nullptr)
         return UA_STATUSCODE_BADNOTSUPPORTED;
     on_write(*nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
     return value->hasValue ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADNOTFOUND;
 }
 
-NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId parent_nd) noexcept
-{
+NodeId OpcuaServer::addDataSourceVariableNode(const DataSourceVariable &val, NodeId parent_nd) noexcept {
     RMVL_DbgAssert(_server != nullptr);
 
     // 设置变量节点属性
@@ -302,8 +275,7 @@ NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId p
     auto status = UA_Server_addDataSourceVariableNode(
         _server, UA_NODEID_NULL, parent_nd, nodeOrganizes, UA_QUALIFIEDNAME(val.ns, helper::to_char(val.browse_name)),
         UA_NODEID_NULL, attr, data_source, context.get(), &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add data source variable node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
@@ -313,8 +285,7 @@ NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId p
 }
 
 static UA_StatusCode method_cb(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *, void *context, const UA_NodeId *object_id,
-                               void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output)
-{
+                               void *, size_t input_size, const UA_Variant *input, size_t output_size, UA_Variant *output) {
     auto &on_method = *reinterpret_cast<MethodCallback *>(context);
     std::vector<Variable> iargs(input_size);
     for (size_t i = 0; i < input_size; ++i)
@@ -322,10 +293,8 @@ static UA_StatusCode method_cb(UA_Server *, const UA_NodeId *, void *, const UA_
     auto [res, oargs] = on_method(*object_id, iargs);
     if (!res)
         return UA_STATUSCODE_BADINTERNALERROR;
-    else
-    {
-        if (oargs.size() != output_size)
-        {
+    else {
+        if (oargs.size() != output_size) {
             ERROR_("The number of output arguments does not match the number of input arguments");
             return UA_STATUSCODE_BADINVALIDARGUMENT;
         }
@@ -335,8 +304,7 @@ static UA_StatusCode method_cb(UA_Server *, const UA_NodeId *, void *, const UA_
     }
 }
 
-NodeId Server::addMethodNode(const Method &method, const NodeId &parent_nd)
-{
+NodeId OpcuaServer::addMethodNode(const Method &method, const NodeId &parent_nd) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_MethodAttributes attr = UA_MethodAttributes_default;
@@ -359,8 +327,7 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_nd)
     auto status = UA_Server_addMethodNode(
         _server, UA_NODEID_NULL, parent_nd, nodeHasComponent, UA_QUALIFIEDNAME(method.ns, helper::to_char(method.browse_name)),
         attr, method_cb, inputs.size(), inputs.data(), outputs.size(), outputs.data(), context.get(), &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add method node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
@@ -368,26 +335,22 @@ NodeId Server::addMethodNode(const Method &method, const NodeId &parent_nd)
     // 添加 Mandatory 属性
     status = UA_Server_addReference(_server, retval, nodeHasModellingRule,
                                     UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add the \"Mandatory\" reference node: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     return retval;
 }
 
-bool Server::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_method)
-{
+bool OpcuaServer::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_method) {
     RMVL_DbgAssert(_server != nullptr);
     auto context = std::make_unique<MethodCallback>(on_method);
-    if (UA_Server_setNodeContext(_server, nd, context.get()))
-    {
+    if (UA_Server_setNodeContext(_server, nd, context.get())) {
         ERROR_("Failed to set node context");
         return false;
     }
     auto ret = UA_Server_setMethodNodeCallback(_server, nd, method_cb);
-    if (ret != UA_STATUSCODE_GOOD)
-    {
+    if (ret != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to set method node callback: %s", UA_StatusCode_name(ret));
         return false;
     }
@@ -395,8 +358,7 @@ bool Server::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_method)
     return true;
 }
 
-NodeId Server::addObjectTypeNode(const ObjectType &otype)
-{
+NodeId OpcuaServer::addObjectTypeNode(const ObjectType &otype) {
     RMVL_DbgAssert(_server != nullptr);
 
     // 定义对象类型节点
@@ -407,18 +369,15 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
     NodeId parent_nd{nodeBaseObjectType};
     const ObjectType *current = otype.base();
     std::stack<std::string> base_stack;
-    while (current != nullptr)
-    {
+    while (current != nullptr) {
         base_stack.push(current->browse_name);
         current = current->base();
     }
-    while (!base_stack.empty())
-    {
+    while (!base_stack.empty()) {
         parent_nd = parent_nd | node(base_stack.top());
         base_stack.pop();
     }
-    if (parent_nd.empty())
-    {
+    if (parent_nd.empty()) {
         ERROR_("Failed to find the base object type ID during adding object type node");
         parent_nd = nodeBaseObjectType;
     }
@@ -428,37 +387,32 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
         nodeHasSubtype,
         UA_QUALIFIEDNAME(otype.ns, helper::to_char(otype.browse_name)),
         attr, nullptr, &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add object type: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加变量节点作为对象类型节点的子节点
-    for (const auto &[browse_name, val] : otype.getVariables())
-    {
+    for (const auto &[browse_name, val] : otype.getVariables()) {
         // 添加至服务器
         NodeId sub_retval = addVariableNode(val, retval);
         // 设置子变量节点为强制生成
         status = UA_Server_addReference(
             _server, sub_retval, nodeHasModellingRule,
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
-        if (status != UA_STATUSCODE_GOOD)
-        {
+        if (status != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add reference during adding object type node, browse name: %s, error code: %s", browse_name.c_str(), UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
     }
     // 添加数据源变量节点作为对象类型节点的子节点
-    for (const auto &[browse_name, val] : otype.getDataSourceVariables())
-    {
+    for (const auto &[browse_name, val] : otype.getDataSourceVariables()) {
         // 添加至服务器
         NodeId sub_retval = addDataSourceVariableNode(val, retval);
         // 设置子变量节点为强制生成
         status = UA_Server_addReference(
             _server, sub_retval, nodeHasModellingRule,
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
-        if (status != UA_STATUSCODE_GOOD)
-        {
+        if (status != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add reference during adding object type node, browse name: %s, error code: %s", browse_name.c_str(), UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
@@ -469,8 +423,7 @@ NodeId Server::addObjectTypeNode(const ObjectType &otype)
     return retval;
 }
 
-NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
-{
+NodeId OpcuaServer::addObjectNode(const Object &obj, NodeId parent_nd) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_ObjectAttributes attr{UA_ObjectAttributes_default};
@@ -481,18 +434,15 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
     const rm::ObjectType *current = &obj_type;
     NodeId type_id{nodeBaseObjectType};
     std::stack<std::string> base_stack;
-    while (current != nullptr && !current->empty())
-    {
+    while (current != nullptr && !current->empty()) {
         base_stack.push(current->browse_name);
         current = current->base();
     }
-    while (!base_stack.empty())
-    {
+    while (!base_stack.empty()) {
         type_id = type_id | node(base_stack.top());
         base_stack.pop();
     }
-    if (type_id.empty())
-    {
+    if (type_id.empty()) {
         WARNING_("The object node \"%s\" does not belong to any object type node", obj.browse_name.c_str());
         type_id = nodeBaseObjectType;
     }
@@ -501,34 +451,29 @@ NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd)
     auto status = UA_Server_addObjectNode(
         _server, UA_NODEID_NULL, parent_nd, nodeOrganizes, UA_QUALIFIEDNAME(obj.ns, helper::to_char(obj.browse_name)),
         type_id, attr, nullptr, &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add object node to server, error code: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加额外变量节点
-    for (const auto &[browse_name, variable] : obj.getVariables())
-    {
+    for (const auto &[browse_name, variable] : obj.getVariables()) {
         RMVL_Assert((retval | node(browse_name)).empty());
         addVariableNode(variable, retval);
     }
     // 添加额外数据源变量节点
-    for (const auto &[browse_name, dsv] : obj.getDataSourceVariables())
-    {
+    for (const auto &[browse_name, dsv] : obj.getDataSourceVariables()) {
         RMVL_Assert((retval | node(browse_name)).empty());
         addDataSourceVariableNode(dsv, retval);
     }
     // 添加额外方法节点
-    for (const auto &[browse_name, method] : obj.getMethods())
-    {
+    for (const auto &[browse_name, method] : obj.getMethods()) {
         RMVL_Assert((retval | node(browse_name)).empty());
         addMethodNode(method, retval);
     }
     return retval;
 }
 
-NodeId Server::addViewNode(const View &view)
-{
+NodeId OpcuaServer::addViewNode(const View &view) {
     RMVL_DbgAssert(_server != nullptr);
 
     // 准备数据
@@ -540,19 +485,16 @@ NodeId Server::addViewNode(const View &view)
     auto status = UA_Server_addViewNode(
         _server, UA_NODEID_NULL, nodeViewsFolder, nodeOrganizes,
         UA_QUALIFIEDNAME(view.ns, helper::to_char(view.browse_name)), attr, nullptr, &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add view node, error: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加引用
-    for (const auto &node : view.data())
-    {
+    for (const auto &node : view.data()) {
         UA_ExpandedNodeId exp = UA_EXPANDEDNODEID_NULL;
         exp.nodeId = node;
         status = UA_Server_addReference(_server, retval, nodeOrganizes, exp, true);
-        if (status != UA_STATUSCODE_GOOD)
-        {
+        if (status != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add reference, error: %s", UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
@@ -561,8 +503,7 @@ NodeId Server::addViewNode(const View &view)
     return retval;
 }
 
-NodeId Server::addEventTypeNode(const EventType &etype)
-{
+NodeId OpcuaServer::addEventTypeNode(const EventType &etype) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_NodeId retval;
@@ -575,14 +516,12 @@ NodeId Server::addEventTypeNode(const EventType &etype)
         nodeHasSubtype,
         UA_QUALIFIEDNAME(etype.ns, helper::to_char(etype.browse_name)),
         attr, nullptr, &retval);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add event type: %s", UA_StatusCode_name(status));
         return UA_NODEID_NULL;
     }
     // 添加自定义数据（非默认属性）
-    for (const auto &[browse_name, val] : etype.data())
-    {
+    for (const auto &[browse_name, val] : etype.data()) {
         UA_VariableAttributes val_attr = UA_VariableAttributes_default;
         val_attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(browse_name));
         val_attr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
@@ -592,8 +531,7 @@ NodeId Server::addEventTypeNode(const EventType &etype)
             _server, UA_NODEID_NULL, retval, nodeHasProperty,
             UA_QUALIFIEDNAME(etype.ns, helper::to_char(browse_name)), nodePropertyType,
             val_attr, nullptr, &sub_id);
-        if (status != UA_STATUSCODE_GOOD)
-        {
+        if (status != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add event type property: %s", UA_StatusCode_name(status));
             return UA_NODEID_NULL;
         }
@@ -601,8 +539,7 @@ NodeId Server::addEventTypeNode(const EventType &etype)
         status = UA_Server_addReference(
             _server, sub_id, nodeHasModellingRule,
             UA_EXPANDEDNODEID_NUMERIC(0, UA_NS0ID_MODELLINGRULE_MANDATORY), true);
-        if (status != UA_STATUSCODE_GOOD)
-        {
+        if (status != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add reference during adding event type node, browse name: %s, error code: %s",
                    browse_name.c_str(), UA_StatusCode_name(status));
             return UA_NODEID_NULL;
@@ -611,24 +548,21 @@ NodeId Server::addEventTypeNode(const EventType &etype)
     return retval;
 }
 
-bool Server::triggerEvent(const Event &event) const
-{
-    rm::ServerView sv{_server};
+bool OpcuaServer::triggerEvent(const Event &event) const {
+    rm::OpcuaServerView sv{_server};
     return sv.triggerEvent(event);
 }
 
 //////////////////////// 服务端视图 ////////////////////////
 
-NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept
-{
+NodeId OpcuaServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept {
     RMVL_DbgAssert(_server != nullptr);
 
     auto paths = str::split(browse_path, "/");
     if (paths.empty())
         return src_nd;
     NodeId retval = src_nd;
-    for (const auto &path : paths)
-    {
+    for (const auto &path : paths) {
         retval = retval | node(path);
         if (retval.empty())
             break;
@@ -636,24 +570,21 @@ NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) cons
     return retval;
 }
 
-Variable ServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
-bool ServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
+Variable OpcuaServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
+bool OpcuaServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
 
-bool ServerView::triggerEvent(const Event &event) const
-{
+bool OpcuaServerView::triggerEvent(const Event &event) const {
     RMVL_DbgAssert(_server != nullptr);
 
     NodeId type_id = nodeBaseEventType | node(event.type().browse_name);
-    if (type_id.empty())
-    {
+    if (type_id.empty()) {
         ERROR_("Failed to find the event type ID during triggering event");
         return false;
     }
     // 创建事件
     UA_NodeId event_id;
     auto status = UA_Server_createEvent(_server, type_id, &event_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
         return false;
     }
@@ -667,8 +598,7 @@ bool ServerView::triggerEvent(const Event &event) const
     UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Severity")), &event.severity, &UA_TYPES[UA_TYPES_UINT16]);
     UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(0, const_cast<char *>("Message")), &evt_msg, &UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
     // 设置事件自定义属性
-    for (const auto &[browse_name, prop] : event.data())
-    {
+    for (const auto &[browse_name, prop] : event.data()) {
         NodeId sub_nd = event_id | node(browse_name);
         if (!sub_nd.empty())
             UA_Server_writeObjectProperty_scalar(_server, event_id, UA_QUALIFIEDNAME(event.ns, helper::to_char(browse_name)),
@@ -677,8 +607,7 @@ bool ServerView::triggerEvent(const Event &event) const
 
     // 触发事件
     status = UA_Server_triggerEvent(_server, event_id, nodeServer, nullptr, true);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
         return false;
     }
@@ -687,26 +616,21 @@ bool ServerView::triggerEvent(const Event &event) const
 
 /////////////////////// 服务器定时器 ///////////////////////
 
-static void timer_cb(UA_Server *p_server, void *data)
-{
-    auto &func = *reinterpret_cast<std::function<void(ServerView)> *>(data);
+static void timer_cb(UA_Server *p_server, void *data) {
+    auto &func = *reinterpret_cast<std::function<void(OpcuaServerView)> *>(data);
     func(p_server);
 }
 
-ServerTimer::ServerTimer(ServerView sv, double period, std::function<void(ServerView)> callback) : _sv(sv), _cb(callback)
-{
+OpcuaServerTimer::OpcuaServerTimer(OpcuaServerView sv, double period, std::function<void(OpcuaServerView)> callback) : _sv(sv), _cb(callback) {
     auto status = UA_Server_addRepeatedCallback(_sv.get(), timer_cb, &_cb, period, &_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add repeated callback: %s", UA_StatusCode_name(status));
         _id = 0;
     }
 }
 
-void ServerTimer::cancel()
-{
-    if (_id != 0)
-    {
+void OpcuaServerTimer::cancel() {
+    if (_id != 0) {
         UA_Server_removeCallback(_sv.get(), _id);
         _id = 0;
     }

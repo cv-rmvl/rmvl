@@ -179,6 +179,7 @@ using ResponseMiddleware = std::function<void(const Request &, Response &)>;
  *
  * @param[in] url URL 路径前缀，例如 `/static`
  * @param[in] root 静态文件根目录，例如 `./public`
+ *
  * @code {.cpp}
  * // 在 Web 应用程序框架中使用
  * auto app = async::Webapp(io_context);

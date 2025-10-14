@@ -23,14 +23,10 @@
 #include "rmvl/core/util.hpp"
 #include "rmvl/opcua/utilities.hpp"
 
-#include "rmvlpara/opcua.hpp"
+namespace rm {
 
-namespace rm
-{
-
-Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint16_t port,
-                       const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name)
-{
+OpcuaSubscriber::OpcuaSubscriber(std::string_view sub_name, const std::string &addr, uint16_t port,
+                                 const std::vector<UserConfig> &users) : OpcuaServer(port, sub_name, users), _name(sub_name) {
     //////////////////// 添加连接配置 ////////////////////
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
@@ -41,28 +37,24 @@ Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint1
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     connect_config.publisherId.uint32 = UA_UInt32_random();
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add connection, \"%s\"", UA_StatusCode_name(status));
         return;
     }
 }
 
-std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields)
-{
+std::vector<NodeId> OpcuaSubscriber::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields) {
     //////////////// 添加 ReaderGroup (RG) ///////////////
     UA_ReaderGroupConfig rg_config{};
     std::string pub_name_str = pub_name + "ReaderGroup";
     rg_config.name = UA_STRING(helper::to_char(pub_name_str));
     auto status = UA_Server_addReaderGroup(_server, _connection_id, &rg_config, &_rg_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add reader group, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
     status = UA_Server_setReaderGroupOperational(_server, _rg_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to set reader group operational, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
@@ -86,8 +78,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
     std::string dataset_name = _name + "DataSetMetaData";
     dsr_config.dataSetMetaData.name = UA_STRING(helper::to_char(dataset_name));
     std::vector<UA_FieldMetaData> raw_fields(fields.size());
-    for (size_t i = 0; i < fields.size(); i++)
-    {
+    for (size_t i = 0; i < fields.size(); i++) {
         UA_NodeId_copy(&UA_TYPES[fields[i].type].typeId, &raw_fields[i].dataType);
         raw_fields[i].builtInType = typeflag_ns0[fields[i].type];
         raw_fields[i].name = UA_STRING(helper::to_char(fields[i].name));
@@ -98,8 +89,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
     dsr_config.dataSetMetaData.fields = raw_fields.data();
 
     status = UA_Server_addDataSetReader(_server, _rg_id, &dsr_config, &_dsr_id);
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add data set reader, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
@@ -108,8 +98,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
     Object sub_obj;
     sub_obj.browse_name = sub_obj.description = sub_obj.display_name = dataset_name;
     auto obj_id = addObjectNode(sub_obj);
-    if (obj_id.empty())
-    {
+    if (obj_id.empty()) {
         ERROR_("Failed to add object node, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
@@ -117,8 +106,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
     std::vector<UA_FieldTargetVariable> target_vars(fields.size());
     std::vector<NodeId> retval;
     retval.reserve(fields.size());
-    for (size_t i = 0; i < fields.size(); i++)
-    {
+    for (size_t i = 0; i < fields.size(); i++) {
         UA_VariableAttributes attr = UA_VariableAttributes_default;
         attr.displayName = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(fields[i].name));
         attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(fields[i].name));
@@ -130,8 +118,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
             _server, UA_NODEID_NULL, obj_id, nodeHasComponent,
             UA_QUALIFIEDNAME(fields[i].ns, helper::to_char(fields[i].name)),
             nodeBaseDataVariableType, attr, nullptr, &node_id);
-        if (status != UA_STATUSCODE_GOOD)
-        {
+        if (status != UA_STATUSCODE_GOOD) {
             ERROR_("Failed to add variable node, \"%s\"", UA_StatusCode_name(status));
             continue;
         }
@@ -141,8 +128,7 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
         retval.push_back(node_id);
     }
     status = UA_Server_DataSetReader_createTargetVariables(_server, _dsr_id, target_vars.size(), target_vars.data());
-    if (status != UA_STATUSCODE_GOOD)
-    {
+    if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to create target variables, \"%s\"", UA_StatusCode_name(status));
         return {};
     }

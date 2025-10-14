@@ -4,7 +4,7 @@
 
 using namespace rm;
 
-Server server(4840);
+OpcuaServer server(4840);
 
 static void onHandle(int) { server.shutdown(); }
 
@@ -112,7 +112,7 @@ int main()
     update(3, 2, add.display_name);
     update(3, 3, add.browse_name);
 
-    ServerTimer timer(server, 50, [&](ServerView sv) {
+    OpcuaServerTimer timer(server, 50, [&](OpcuaServerView sv) {
         auto value_1 = sv.read(sv.find("value_1"));
         update(1, 4, std::to_string(value_1.cast<int>()));
         auto value_2 = sv.read(sv.find("value_2"));
