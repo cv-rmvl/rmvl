@@ -283,8 +283,8 @@ void Response::sendFile(std::string_view file) {
     message = "OK";
 }
 
-void Response::json(std::string_view str) {
-    body = str;
+void Response::json(const ::rm::json &j) {
+    body = j.dump();
     heads["Content-Length"] = std::to_string(body.size());
     heads["Content-Type"] = "application/json; charset=utf-8";
     status = 200;

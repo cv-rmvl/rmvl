@@ -73,14 +73,11 @@ __find_imported_modules(galaxysdk GalaxySDK)
 __find_imported_modules(optlc OPTLightCtrl)
 __find_imported_modules(onnxruntime Ort)
 
-# 3rdparty (local source code)
-# all targets have been configured in the corresponding CMakeLists.txt, no need to configure again
-
-# 3rdparty (download)
+# 3rdparty
 function(__find_3rd_modules pkg_name)
   cmake_parse_arguments(3RD "" "CFG_SUFFIX" "TARGETS" ${ARGN})
   # preprocess
-  set(configcmake_str "# 3rdparty: ${pkg_name}")
+  set(configcmake_str "# ${pkg_name}")
   string(TOUPPER "${pkg_name}" pkg_name_upper)
   string(REPLACE ";" " AND NOT TARGET " judge_statement "NOT TARGET ${3RD_TARGETS}")
   # update info
@@ -93,11 +90,27 @@ function(__find_3rd_modules pkg_name)
     endif()
     list(APPEND configcmake_str "endif()")
   endif()
-  # update 'RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE'
+  # update 'RMVL_MODULES_3RD_CONFIGCMAKE'
   string(REPLACE ";" "\n" configcmake_str "${configcmake_str}")
-  set(RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE "${RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE}${configcmake_str}\n\n" PARENT_SCOPE)
+  set(RMVL_MODULES_3RD_CONFIGCMAKE "${RMVL_MODULES_3RD_CONFIGCMAKE}${configcmake_str}\n\n" PARENT_SCOPE)
 endfunction()
 
+# ------ local 3rdparty ------
+set(RMVL_MODULES_3RD_CONFIGCMAKE "# ------ 3rdparty local -------\n")
+# apriltag
+__find_3rd_modules(apriltag
+  CFG_SUFFIX "${RMVL_CONFIG_INSTALL_PATH}/apriltagTargets.cmake"
+  TARGETS apriltag
+)
+
+# nlohmann_json
+__find_3rd_modules(nlohmann_json
+  CFG_SUFFIX "${RMVL_CONFIG_INSTALL_PATH}/nlohmann_jsonTargets.cmake"
+  TARGETS nlohmann_json::nlohmann_json
+)
+
+# --------- download ---------
+set(RMVL_MODULES_3RD_CONFIGCMAKE "${RMVL_MODULES_3RD_CONFIGCMAKE}# ----- 3rdparty download -----\n")
 # open62541
 __find_3rd_modules(open62541
   CFG_SUFFIX "lib/cmake/open62541/open62541Config.cmake"

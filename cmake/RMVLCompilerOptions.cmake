@@ -254,10 +254,6 @@ endif()
 # ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
-macro(_rmvl_set_target_in_3rd _name)
-  set(${_name}_IN_3RD ON CACHE INTERNAL "")
-endmacro()
-
 # Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
 function(rmvl_install_sdk sdk)
   # Handle the installation of the include directory
@@ -354,6 +350,7 @@ macro(_rmvl_set_build_with_3rdparty _name build_default_status)
   option(BUILD_${upper_name} "Build the 3rd party: ${_name}" ${build_default_status})
   if(BUILD_${upper_name})
     add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/${lower_name})
+    set(${_name}_IN_3RD ON CACHE INTERNAL "${_name} is built in 3rdparty")
   endif()
   # "with" 3rdparty option
   if(BUILD_${upper_name})
@@ -378,6 +375,9 @@ _rmvl_set_build_with_3rdparty(apriltag ON)
 
 # open62541
 _rmvl_set_build_with_3rdparty(open62541 OFF)
+
+# nlohmann_json
+_rmvl_set_build_with_3rdparty(nlohmann_json ON)
 
 # ----------------------------------------------------------------------------
 #   Module and other options

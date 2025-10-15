@@ -15,7 +15,7 @@ aux_source_directory(common common_dir)
 
 add_library(
   apriltag
-  STATIC ${main_dir} ${common_dir}
+  ${main_dir} ${common_dir}
 )
 
 if(RMVL_GNU OR RMVL_CLANG OR RMVL_APPLECLANG)
@@ -38,7 +38,13 @@ set_target_properties(
 
 install(
   TARGETS apriltag
-  EXPORT RMVLModules
+  EXPORT apriltagTargets
   ARCHIVE DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
   OPTIONAL
+)
+
+install(
+  EXPORT apriltagTargets
+  FILE apriltagTargets.cmake
+  DESTINATION ${RMVL_CONFIG_INSTALL_PATH}
 )

@@ -1,10 +1,13 @@
 # ----------------------------------------------------------------------------
 #  Add module for io
 # ----------------------------------------------------------------------------
+rmvl_update_build(io WITH_NLOHMANN_JSON)
+
 rmvl_generate_para(io)
-rmvl_add_module(
-  io
+
+rmvl_add_module(io
   DEPENDS core
+  EXTERNAL nlohmann_json::nlohmann_json
 )
 
 # for glibc < 2.34

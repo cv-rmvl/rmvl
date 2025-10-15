@@ -172,8 +172,9 @@ status("     ccache:"              ENABLE_CCACHE AND CCACHE_FOUND THEN YES ELSE 
 # =================== Other third-party libraries ===================
 status("")
 status("  Other third-party libraries:")
+status("     Nlohmann JSON:"        WITH_NLOHMANN_JSON THEN YES ELSE NO)
 status("     OpenCV:"               WITH_OPENCV THEN "YES (ver ${OpenCV_VERSION})" ELSE NO)
-status("     Eigen library:"        WITH_EIGEN3 THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
+status("     Eigen3:"               WITH_EIGEN3 THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
 status("     onnxruntime:"          WITH_ONNXRUNTIME THEN "YES (ver ${Ort_VERSION})" ELSE NO)
 status("     apriltag:"             WITH_APRILTAG THEN YES ELSE NO)
 status("     open62541:"            WITH_OPEN62541 THEN "YES (ver ${open62541_VERSION})" ELSE NO)

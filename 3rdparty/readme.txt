@@ -33,3 +33,10 @@ eigen3         Description    A C++ template library for linear algebra
                Homepage       http://eigen.tuxfamily.org
                CMake options  1. BUILD_EIGEN3 to download and build this module (diabled by default)
                               2. WITH_EIGEN3 to enable eigen3 support for the core module
+
+nlohmann_json  Description    JSON for modern C++
+               License        nlohmann_json is covered by the MIT License, see nlohmann_json/LICENSE
+               Homepage       https://github.com/nlohmann/json
+               CMake options  1. BUILD_NLOHMANN_JSON to download and build this module (enabled by
+                                 default)
+                              2. WITH_NLOHMANN_JSON to enable nlohmann_json support for the core module
