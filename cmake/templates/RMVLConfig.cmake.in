@@ -71,7 +71,8 @@ unset(__d)
 # =============================================================
 # Get imported targets found in Module mode
 @RMVL_MODULES_IMPORTED_CONFIGCMAKE@
-# 3rdparty (download)
+# ------ 3rdparty common ------
+# 3rdparty: opencv
 option(WITH_OPENCV "Enable opencv support" @WITH_OPENCV@)
 
 if(WITH_OPENCV)
@@ -91,8 +92,7 @@ if(WITH_OPENCV)
   endif()
 endif()
 
-@RMVL_MODULES_3RD_DOWNLOAD_CONFIGCMAKE@
-
+@RMVL_MODULES_3RD_CONFIGCMAKE@
 # Export configuration
 if(NOT TARGET rmvl_core)
   include(${CMAKE_CURRENT_LIST_DIR}/RMVLModules.cmake)

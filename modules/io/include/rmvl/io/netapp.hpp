@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "async.hpp"
 
 namespace rm {
@@ -69,7 +71,7 @@ enum class HTTPMethod : uint8_t {
     Unknown  //!< 未知方法
 };
 
-//! HTTP 请求
+//! HTTP 请求结构
 struct Request {
     /**
      * @brief 解析 HTTP 请求
@@ -101,7 +103,7 @@ struct Request {
     std::string body{}; //!< 请求数据
 };
 
-//! HTTP 响应
+//! HTTP 响应结构
 struct Response {
     /**
      * @brief 解析 HTTP 响应
@@ -120,6 +122,7 @@ struct Response {
 
     /**
      * @brief 发送响应数据
+     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
      * @param[in] str 响应数据
      */
@@ -127,6 +130,7 @@ struct Response {
 
     /**
      * @brief 发送文件内容作为响应
+     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
      * @param[in] file 文件名
      */
@@ -134,13 +138,15 @@ struct Response {
 
     /**
      * @brief 发送 JSON 格式的响应数据
+     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
-     * @param[in] str JSON 字符串
+     * @param[in] j JSON 对象
      */
-    void json(std::string_view str);
+    void json(const ::rm::json &j);
 
     /**
      * @brief 发送重定向响应
+     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
      * @param[in] url 重定向的 URL
      */
@@ -148,6 +154,7 @@ struct Response {
 
     /**
      * @brief 重定向响应
+     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
      * @param[in] code 状态码
      * @param[in] url 重定向的 URL

@@ -101,11 +101,16 @@ TEST(IO_netapp, webapp) {
         res.redirect("/");
     });
     app.get("/api", [](const Request &, Response &res) {
-        res.json("{ \"key\": \"value\", \"message\": \"This is a test API.\" }");
+        res.json({
+            {"key", "value"},
+            {"message", "This is a test API."},
+        });
     });
     app.get("/api/name/:name", [](const Request &req, Response &res) {
         auto name = req.params.at("name");
-        res.json("{ \"greeting\": \"Hello, " + name + "!\" }");
+        res.json({
+            {"greeting", "Hello, " + name + "!"},
+        });
     });
     app.get("/str", [](const Request &, Response &res) {
         res.send("only string");
@@ -140,7 +145,8 @@ TEST(IO_netapp, webapp) {
         // Get /api/name/rmvl
         res = requests::get("http://127.0.0.1:10802/api/name/rmvl");
         EXPECT_EQ(res.status, 200);
-        EXPECT_EQ(res.body, "{ \"greeting\": \"Hello, rmvl!\" }");
+        auto j = json::parse(res.body);
+        EXPECT_EQ(j["greeting"], "Hello, rmvl!");
         // Post /pstr
         res = requests::post("http://127.0.0.1:10802/pstr", "bonjour");
         EXPECT_EQ(res.status, 200);
