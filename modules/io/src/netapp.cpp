@@ -9,6 +9,7 @@
  *
  */
 
+#include <string>
 #ifdef _WIN32
 #include <WS2tcpip.h>
 #include <afunix.h>
@@ -191,13 +192,13 @@ Response Response::parse(std::string_view response_str) {
     auto version_end = line.find(' ');
     if (version_end == std::string_view::npos)
         return res;
-    // Status Code
+    // state Code
     auto code_start = version_end + 1;
     auto code_end = line.find(' ', code_start);
     if (code_end == std::string_view::npos)
         return res;
     auto code_str = line.substr(code_start, code_end - code_start);
-    res.status = std::stoi(std::string(code_str));
+    res.state = std::stoi(std::string(code_str));
     // Message
     res.message = line.substr(code_end + 1);
 
@@ -228,7 +229,7 @@ std::string Response::generate() {
     str.reserve(body.size() + 1024); // 1024: Extra space for heads
 
     // 生成响应行
-    str.append("HTTP/1.1 ").append(std::to_string(status)).append(" ").append(message).append("\r\n");
+    str.append("HTTP/1.1 ").append(std::to_string(state)).append(" ").append(message).append("\r\n");
 
     // 生成响应头
     str.append("Server: RMVL/").append(version()).append("\r\n");
@@ -243,20 +244,66 @@ std::string Response::generate() {
     return str;
 }
 
-void Response::send(std::string_view str) {
+Response &Response::attachment(std::string_view filename) {
+    heads["Content-Disposition"] = "attachment; filename=\""s + (filename.empty() ? "download" : filename.data()) + "\"";
+    return *this;
+}
+
+Response &Response::download(std::string_view path, std::string_view filename, std::function<void(bool)> fn) {
+    attachment(filename).sendFile(path);
+    if (fn)
+        fn(state == 200);
+    return *this;
+}
+
+Response &Response::get(std::string_view head) {
+    if (heads.find(head.data()) != heads.end())
+        body = heads[head.data()];
+    else
+        body.clear();
+    return *this;
+}
+
+Response &Response::json(const ::rm::json &j) {
+    body = j.dump();
+    heads["Content-Length"] = std::to_string(body.size());
+    heads["Content-Type"] = "application/json; charset=utf-8";
+    state = 200;
+    message = "OK";
+    return *this;
+}
+
+Response &Response::redirect(uint16_t code, std::string_view url) {
+    RMVL_DbgAssert(code >= 300 && code < 400);
+    state = code;
+    static const std::unordered_map<uint16_t, std::string_view> redirect_map =
+        {{301, "Moved Permanently"}, {302, "Found"}, {303, "See Other"}, {307, "Temporary Redirect"}, {308, "Permanent Redirect"}};
+    message = redirect_map.find(code) != redirect_map.end() ? redirect_map.at(code) : "Redirect";
+    heads["Location"] = url;
+    heads["Content-Length"] = "0";
+    heads["Content-Type"] = "text/html; charset=utf-8";
+    heads["Connection"] = "close";
+    body.clear();
+    return *this;
+}
+
+Response &Response::send(std::string_view str) {
     body = str;
     heads["Content-Length"] = std::to_string(body.size());
     heads["Content-Type"] = "text/html; charset=utf-8";
-    status = 200;
-    message = "OK";
+    if (state == 0) {
+        state = 200;
+        message = "OK";
+    }
+    return *this;
 }
 
-void Response::sendFile(std::string_view file) {
-    std::ifstream ifs(file.data());
+Response &Response::sendFile(std::string_view file) {
+    std::ifstream ifs(file.data(), std::ios::binary);
     if (!ifs) {
-        status = 404;
+        state = 404;
         message = "Not Found";
-        return;
+        return *this;
     }
     ifs.seekg(0, std::ios::end);
     auto file_size = ifs.tellg();
@@ -279,33 +326,26 @@ void Response::sendFile(std::string_view file) {
         heads["Content-Type"] = "image/jpeg";
     else
         heads["Content-Type"] = "application/octet-stream";
-    status = 200;
-    message = "OK";
+    if (state == 0) {
+        state = 200;
+        message = "OK";
+    }
+    return *this;
 }
 
-void Response::json(const ::rm::json &j) {
-    body = j.dump();
-    heads["Content-Length"] = std::to_string(body.size());
-    heads["Content-Type"] = "application/json; charset=utf-8";
-    status = 200;
-    message = "OK";
+Response &Response::set(std::string_view key, std::string_view value) {
+    heads[std::string(key)] = value;
+    return *this;
 }
 
-void Response::redirect(uint16_t code, std::string_view url) {
-    RMVL_DbgAssert(code >= 300 && code < 400);
-    status = code;
-    static const std::unordered_map<uint16_t, std::string_view> redirect_map =
-        {{301, "Moved Permanently"}, {302, "Found"}, {303, "See Other"}, {307, "Temporary Redirect"}, {308, "Permanent Redirect"}};
-    message = redirect_map.find(code) != redirect_map.end() ? redirect_map.at(code) : "Redirect";
-    heads["Location"] = url;
-    heads["Content-Length"] = "0";
-    heads["Content-Type"] = "text/html; charset=utf-8";
-    heads["Connection"] = "close";
+Response &Response::status(uint16_t code) {
+    state = code;
+    return *this;
 }
 
 ResponseMiddleware statics(std::string_view url_path, std::string_view root) {
     return [url_path = std::string(url_path), root = std::string(root)](const Request &req, Response &res) {
-        if (res.status != 0)
+        if (res.state != 0)
             return;
         // 检查请求 URI 是否以指定的 url_path 开头
         if (req.uri.find(url_path) == 0) {
@@ -315,7 +355,7 @@ ResponseMiddleware statics(std::string_view url_path, std::string_view root) {
             std::string file_path = root + relative_path;
 
             if (file_path.find("..") != std::string::npos) {
-                res.status = 403;
+                res.state = 403;
                 res.message = "Forbidden";
                 return;
             }
@@ -391,9 +431,9 @@ std::tuple<std::string, bool> parseDNS(std::string_view hostname) {
     hints.ai_family = AF_UNSPEC; // 允许 IPv4 或 IPv6
     hints.ai_socktype = SOCK_STREAM;
 
-    int status = getaddrinfo(hostname.data(), nullptr, &hints, &result);
-    if (status != 0)
-        RMVL_Error_(RMVL_StsError, "getaddrinfo failed: %s", gai_strerror(status));
+    int state = getaddrinfo(hostname.data(), nullptr, &hints, &result);
+    if (state != 0)
+        RMVL_Error_(RMVL_StsError, "getaddrinfo failed: %s", gai_strerror(state));
 
     std::string ip_str;
     bool is_ipv6 = false;
@@ -466,14 +506,14 @@ Response requests::request(HTTPMethod method, std::string_view url, const std::v
     auto req_str = _generate(method, full_path, port, hostname, heads, body);
     // 发送 HTTP 请求
     if (!socket.write(req_str)) {
-        response.status = 0;
+        response.state = 0;
         response.message = "Connection Error";
         return response;
     }
     // 读取 HTTP 响应
     std::string response_str = socket.read();
     if (response_str.empty()) {
-        response.status = 0;
+        response.state = 0;
         response.message = "No Response";
         return response;
     }
@@ -504,14 +544,14 @@ Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::
     auto req_str = _generate(method, full_path, port, hostname, heads, body);
     // 发送 HTTP 请求
     if (!co_await socket.write(req_str)) {
-        response.status = 0;
+        response.state = 0;
         response.message = "Connection Error";
         co_return response;
     }
     // 读取 HTTP 响应
     std::string response_str = co_await socket.read();
     if (response_str.empty()) {
-        response.status = 0;
+        response.state = 0;
         response.message = "No Response";
         co_return response;
     }
@@ -522,6 +562,17 @@ Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::
 Webapp::~Webapp() {
     if (_running)
         stop();
+}
+
+void Webapp::use(std::string_view url, const Router &router) {
+    for (const auto &[pattern, handler] : router._gets)
+        _router._gets.emplace_back(std::string(url) + pattern.pattern(), handler);
+    for (const auto &[pattern, handler] : router._posts)
+        _router._posts.emplace_back(std::string(url) + pattern.pattern(), handler);
+    for (const auto &[pattern, handler] : router._deletes)
+        _router._deletes.emplace_back(std::string(url) + pattern.pattern(), handler);
+    for (const auto &[pattern, handler] : router._heads)
+        _router._heads.emplace_back(std::string(url) + pattern.pattern(), handler);
 }
 
 void Webapp::use(ResponseMiddleware mwf) {
@@ -537,7 +588,7 @@ static void bad_request(const Request &req, Response &res) {
     res.body = bad_request_body;
 }
 
-static void _handle(const std::vector<rm::async::Webapp::RouteEntry> &entries, Request &req, Response &res) {
+static void _handle(const std::vector<rm::async::Router::RouteEntry> &entries, Request &req, Response &res) {
     for (const auto &entry : entries) {
         if (entry.pattern.match(req.uri, req.params)) {
             entry.handler(req, res);
@@ -568,24 +619,24 @@ Task<> Webapp::spin() {
 
         // 路由处理
         if (req.method == HTTPMethod::Get)
-            _handle(_gets, req, res);
+            _handle(_router._gets, req, res);
         else if (req.method == HTTPMethod::Post)
-            _handle(_posts, req, res);
+            _handle(_router._posts, req, res);
         else if (req.method == HTTPMethod::Delete)
-            _handle(_deletes, req, res);
+            _handle(_router._deletes, req, res);
         else if (req.method == HTTPMethod::Head)
-            _handle(_heads, req, res);
+            _handle(_router._heads, req, res);
         // 中间件处理
         for (const auto &mwf : _mwfs)
             mwf(req, res);
         // 异常处理
-        if (res.status == 0) {
+        if (res.state == 0) {
             DEBUG_ERROR_("%s %s failed, execute bad_request", get_str_from(req.method), req.uri.c_str());
             bad_request(req, res);
         }
         auto res_str = res.generate();
-        bool send_status = co_await socket.write(res_str);
-        if (!send_status)
+        bool send_stat = co_await socket.write(res_str);
+        if (!send_stat)
             printf("Failed to send response\n");
     }
 }
@@ -600,7 +651,7 @@ static void _updateRegexPattern(std::string &regex, std::string_view literal) {
     }
 }
 
-Webapp::RoutePattern::RoutePattern(std::string_view pattern_str) : _pattern(pattern_str) {
+Router::RoutePattern::RoutePattern(std::string_view pattern_str) : _pattern(pattern_str) {
     std::string regex_pattern = "^";
     size_t pos = 0;
 
@@ -633,7 +684,7 @@ Webapp::RoutePattern::RoutePattern(std::string_view pattern_str) : _pattern(patt
     _matcher = std::regex(regex_pattern);
 }
 
-bool Webapp::RoutePattern::match(std::string_view path, std::unordered_map<std::string, std::string> &params) const {
+bool Router::RoutePattern::match(std::string_view path, std::unordered_map<std::string, std::string> &params) const {
     std::smatch matches{};
     std::string path_str(path);
 

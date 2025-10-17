@@ -121,49 +121,96 @@ struct Response {
     std::string generate();
 
     /**
-     * @brief 发送响应数据
-     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     * @brief 设置附件响应头 `Content-Disposition`，一般需要配合 `send()` 或 `sendFile()` 使用
+     * @note 一般用于 Webapp 中，直接使用仅设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
-     * @param[in] str 响应数据
+     * @param[in] filename 附件文件名
+     *
+     * @see `download()`
      */
-    void send(std::string_view str);
+    Response &attachment(std::string_view filename);
 
     /**
-     * @brief 发送文件内容作为响应
-     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     * @brief 设置附件响应头 `Content-Disposition` 并发送文件内容作为响应
+     * @note 一般用于 Webapp 中，直接使用仅设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
-     * @param[in] file 文件名
+     * @param[in] path 路径
+     * @param[in] filename 附件文件名
+     * @param[in] fn 发送完成后的回调函数，参数表示是否发送成功
+     *
+     * @see `attachment()`
      */
-    void sendFile(std::string_view file);
+    Response &download(std::string_view path, std::string_view filename = "", std::function<void(bool)> fn = nullptr);
+
+    /**
+     * @brief 返回指定的 HTTP 响应头
+     * @note 一般用于 Webapp 中，直接使用仅设置响应头，实际生成响应报文需调用 `generate()` 方法
+     *
+     * @param[in] head 响应头字段名
+     */
+    Response &get(std::string_view head);
 
     /**
      * @brief 发送 JSON 格式的响应数据
-     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     * @note 一般在仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法，在 Webapp 中会自动进行调用
      *
      * @param[in] j JSON 对象
      */
-    void json(const ::rm::json &j);
+    Response &json(const ::rm::json &j);
 
     /**
      * @brief 发送重定向响应
-     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     * @note 一般用于 Webapp 中，直接使用仅设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
-     * @param[in] url 重定向的 URL
+     * @param[in] url 重定向的 URL，支持相对路径
      */
-    void redirect(std::string_view url) { redirect(302, url); }
+    Response &redirect(std::string_view url) { return redirect(302, url); }
 
     /**
      * @brief 重定向响应
-     * @note 仅用于设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     * @note 一般用于 Webapp 中，直接使用仅设置响应内容，实际生成响应报文需调用 `generate()` 方法
      *
      * @param[in] code 状态码
-     * @param[in] url 重定向的 URL
+     * @param[in] url 重定向的 URL，支持相对路径
      */
-    void redirect(uint16_t code, std::string_view url);
+    Response &redirect(uint16_t code, std::string_view url);
 
-    operator bool() const noexcept { return status != 0 && !message.empty(); }
+    /**
+     * @brief 发送响应数据
+     * @note 一般用于 Webapp 中，直接使用仅设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     *
+     * @param[in] str 响应数据
+     */
+    Response &send(std::string_view str);
 
-    uint16_t status{};     //!< 响应行：状态码
+    /**
+     * @brief 发送文件内容作为响应
+     * @note 一般用于 Webapp 中，直接使用仅设置响应内容，实际生成响应报文需调用 `generate()` 方法
+     *
+     * @param[in] file 文件名
+     */
+    Response &sendFile(std::string_view file);
+
+    /**
+     * @brief 设置响应头
+     * @note 一般用于 Webapp 中，直接使用仅设置响应头，实际生成响应报文需调用 `generate()` 方法
+     *
+     * @param[in] key 响应头字段名
+     * @param[in] value 响应头字段值
+     */
+    Response &set(std::string_view key, std::string_view value);
+
+    /**
+     * @brief 设置响应的 HTTP 状态，注意此方法会覆盖原有状态
+     * @note 一般用于 Webapp 中，直接使用仅设置响应状态，实际生成响应报文需调用 `generate()` 方法
+     *
+     * @param[in] code 状态码
+     */
+    Response &status(uint16_t code);
+
+    operator bool() const noexcept { return state != 0 && !message.empty(); }
+
+    uint16_t state{};      //!< 响应行：状态码
     std::string message{}; //!< 响应行：状态消息
 
     std::unordered_map<std::string, std::string> heads{}; //!< 响应头
@@ -337,17 +384,14 @@ inline Task<Response> del(IOContext &io_context, std::string_view url, const std
 //! @addtogroup io_net
 //! @{
 
-/**
- * @brief Web 应用程序框架
- * 1. 轻量级的异步 Web 应用程序框架，支持路由、中间件，支持路径参数和查询参数
- * 2. 所有设计均参考 Express.js，具体的 Express.js 教程请参考 https://expressjs.com/
- * 3. 目前支持的 HTTP 方法包括 GET、POST、DELETE
- */
-class Webapp final {
-public:
-    //! 路由处理器类型
-    using RouteHandler = std::function<void(const Request &, Response &)>;
+//! 路由类型
+using RouteHandler = std::function<void(const Request &, Response &)>;
 
+//! HTTP 路由器
+class Router final {
+    friend class Webapp;
+
+public:
     //! 路由模式匹配器
     class RoutePattern {
     public:
@@ -365,6 +409,9 @@ public:
          */
         bool match(std::string_view path, std::unordered_map<std::string, std::string> &params) const;
 
+        //! 获取原始路由模式字符串
+        [[nodiscard]] const std::string &pattern() const noexcept { return _pattern; }
+
     private:
         std::string _pattern{};                  //!< 原始模式字符串
         std::vector<std::string> _param_names{}; //!< 参数名列表
@@ -379,39 +426,6 @@ public:
         RouteEntry(std::string_view pattern_str, RouteHandler h)
             : pattern(pattern_str), handler(std::move(h)) {}
     };
-
-    /**
-     * @brief 创建 Web 应用程序实例
-     *
-     * @param[in] io_context 异步 I/O 执行上下文
-     */
-    Webapp(IOContext &io_context) : _ctx(io_context){};
-
-    //! @cond
-    Webapp(const Webapp &) = delete;
-    Webapp &operator=(const Webapp &) = delete;
-    Webapp(Webapp &&) noexcept = delete;
-    Webapp &operator=(Webapp &&) noexcept = delete;
-    ~Webapp();
-    //! @endcond
-
-    /**
-     * @brief 使用中间件
-     *
-     * @param[in] mwf 中间件函数
-     */
-    void use(ResponseMiddleware mwf);
-
-    /**
-     * @brief 监听指定端口
-     *
-     * @param[in] port 监听的端口号
-     * @param[in] callback 启动后调用的回调函数
-     */
-    void listen(uint16_t port, std::function<void()> callback = nullptr) {
-        _port = port;
-        _listen = std::move(callback);
-    }
 
     /**
      * @brief Get 请求路由
@@ -445,6 +459,94 @@ public:
      */
     void del(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _deletes.emplace_back(uri, std::move(callback)); }
 
+private:
+    std::vector<RouteEntry> _gets{};    //!< GET 请求路由列表
+    std::vector<RouteEntry> _posts{};   //!< POST 请求路由列表
+    std::vector<RouteEntry> _heads{};   //!< HEAD 请求路由列表
+    std::vector<RouteEntry> _deletes{}; //!< DELETE 请求路由列表
+};
+
+/**
+ * @brief Web 应用程序框架
+ * 1. 轻量级的异步 Web 应用程序框架，支持路由、中间件，支持路径参数和查询参数
+ * 2. 所有设计均参考 Express.js，具体的 Express.js 教程请参考 https://expressjs.com/
+ * 3. 目前支持的 HTTP 方法包括 GET、POST、DELETE
+ */
+class Webapp final {
+public:
+    /**
+     * @brief 创建 Web 应用程序实例
+     *
+     * @param[in] io_context 异步 I/O 执行上下文
+     */
+    Webapp(IOContext &io_context) : _ctx(io_context){};
+
+    //! @cond
+    Webapp(const Webapp &) = delete;
+    Webapp &operator=(const Webapp &) = delete;
+    Webapp(Webapp &&) noexcept = delete;
+    Webapp &operator=(Webapp &&) noexcept = delete;
+    ~Webapp();
+    //! @endcond
+
+    /**
+     * @brief 使用路由
+     *
+     * @param[in] url 路由前缀，如 `"/api"`
+     * @param[in] router 路由器，支持路径参数，如 `"/user/:id/info"` 在实际请求的 URL 中为 `"<url>/user/123/info"`
+     */
+    void use(std::string_view url, const Router &router);
+
+    /**
+     * @brief 使用中间件
+     *
+     * @param[in] mwf 中间件函数
+     */
+    void use(ResponseMiddleware mwf);
+
+    /**
+     * @brief 监听指定端口
+     *
+     * @param[in] port 监听的端口号
+     * @param[in] callback 启动后调用的回调函数
+     */
+    void listen(uint16_t port, std::function<void()> callback = nullptr) {
+        _port = port;
+        _listen = std::move(callback);
+    }
+
+    /**
+     * @brief Get 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Get 响应回调
+     */
+    void get(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._gets.emplace_back(uri, callback); }
+
+    /**
+     * @brief Post 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Post 响应回调
+     */
+    void post(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._posts.emplace_back(uri, callback); }
+
+    /**
+     * @brief Head 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Head 响应回调
+     */
+    void head(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._heads.emplace_back(uri, callback); }
+
+    /**
+     * @brief Delete 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Delete 响应回调
+     */
+    void del(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._deletes.emplace_back(uri, callback); }
+
     /**
      * @brief 启动事件循环
      *
@@ -465,11 +567,7 @@ private:
     uint16_t _port{};                        //!< 监听端口
     std::function<void()> _listen{};         //!< 启动后调用的回调函数
     std::vector<ResponseMiddleware> _mwfs{}; //!< 响应中间件列表
-
-    std::vector<RouteEntry> _gets{};    //!< GET 请求路由列表
-    std::vector<RouteEntry> _posts{};   //!< POST 请求路由列表
-    std::vector<RouteEntry> _heads{};   //!< HEAD 请求路由列表
-    std::vector<RouteEntry> _deletes{}; //!< DELETE 请求路由列表
+    Router _router{};                        //!< 路由器
 };
 
 //! @} io_net
