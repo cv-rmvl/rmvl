@@ -64,7 +64,7 @@ TEST(IO_netapp, basic_http) {
 
 TEST(IO_netapp, sync_request) {
     auto res = requests::get("http://www.example.com");
-    EXPECT_EQ(res.status, 200);
+    EXPECT_EQ(res.state, 200);
     EXPECT_EQ(res.message, "OK");
     EXPECT_NE(res.body.find("<title>Example Domain</title>"), std::string::npos);
 }
@@ -76,7 +76,7 @@ TEST(IO_netapp, async_request) {
 
     auto task = [&]() -> async::Task<> {
         auto res = co_await async::requests::get(io_context, "http://www.example.com");
-        EXPECT_EQ(res.status, 200);
+        EXPECT_EQ(res.state, 200);
         EXPECT_EQ(res.message, "OK");
         EXPECT_NE(res.body.find("<title>Example Domain</title>"), std::string::npos);
 
@@ -89,7 +89,7 @@ TEST(IO_netapp, async_request) {
 
 using namespace std::literals::chrono_literals;
 
-TEST(IO_netapp, webapp) {
+TEST(IO_netapp, webapp_basic) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
 
@@ -127,34 +127,65 @@ TEST(IO_netapp, webapp) {
         res.send("Deleted item with id " + id);
     });
     app.listen(10802);
-    co_spawn(
-        io_context, [](async::Webapp &app) -> async::Task<> {
-            co_await app.spin();
-        },
-        std::ref(app));
+    co_spawn(io_context, &async::Webapp::spin, &app);
 
     auto thrd = std::jthread([&]() {
         // Get /str
         auto res = requests::get("http://127.0.0.1:10802/str");
-        EXPECT_EQ(res.status, 200);
+        EXPECT_EQ(res.state, 200);
         EXPECT_EQ(res.body, "only string");
         // Get /test 重定向至 /
         res = requests::get("http://127.0.0.1:10802/test");
-        EXPECT_EQ(res.status, 302);
+        EXPECT_EQ(res.state, 302);
         EXPECT_EQ(res.heads["Location"], "/");
         // Get /api/name/rmvl
         res = requests::get("http://127.0.0.1:10802/api/name/rmvl");
-        EXPECT_EQ(res.status, 200);
+        EXPECT_EQ(res.state, 200);
         auto j = json::parse(res.body);
         EXPECT_EQ(j["greeting"], "Hello, rmvl!");
         // Post /pstr
         res = requests::post("http://127.0.0.1:10802/pstr", "bonjour");
-        EXPECT_EQ(res.status, 200);
+        EXPECT_EQ(res.state, 200);
         EXPECT_EQ(res.body, "pstr bonjour");
         // Delete /del/123
         res = requests::del("http://127.0.0.1:10802/del/123");
-        EXPECT_EQ(res.status, 200);
+        EXPECT_EQ(res.state, 200);
         EXPECT_EQ(res.body, "Deleted item with id 123");
+
+        app.stop();
+        io_context.stop();
+    });
+    io_context.run();
+}
+
+TEST(IO_netapp, webapp_router) {
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+
+    auto api_router = async::Router{};
+    api_router.get("/status", [](const Request &, Response &res) {
+        res.json({
+            {"status", "ok"},
+        });
+    });
+    api_router.post("/echo", [](const Request &req, Response &res) {
+        res.send(req.body);
+    });
+
+    app.use("/api", api_router);
+    app.listen(10803);
+    co_spawn(io_context, &async::Webapp::spin, &app);
+
+    auto thrd = std::jthread([&]() {
+        // Get /api/status
+        auto res = requests::get("http://127.0.0.1:10803/api/status");
+        EXPECT_EQ(res.state, 200);
+        auto j = json::parse(res.body);
+        EXPECT_EQ(j["status"], "ok");
+        // Post /api/echo
+        res = requests::post("http://127.0.0.1:10803/api/echo", "hello");
+        EXPECT_EQ(res.state, 200);
+        EXPECT_EQ(res.body, "hello");
 
         app.stop();
         io_context.stop();
