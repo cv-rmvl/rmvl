@@ -8,7 +8,7 @@ RMVL 的编译、配置选项 {#tutorial_configuration_options}
 
 ------
 
-## 1. 介绍
+## 1 介绍
 
 配置选项可以通过几种不同的方式设置：
 
@@ -34,7 +34,7 @@ cmake -LA ..
 
 最常见以及最有用的选项一般均以 `BUILD_`、`WITH_`、`RMVL_`、`ENABLE_` 开头。
 
-## 2. 通用选项
+## 2 通用选项
 
 ### 2.1 调试构建
 
@@ -97,7 +97,7 @@ cmake \
 cmake -DBUILD_rmvl_armor_detector=OFF ..
 ```
 
-## 3. 功能特性
+## 3 功能特性
 
 有许多可选的依赖关系和特性可以打开或关闭，CMake 有一个特殊的选项，允许打印所有可用的配置参数：
 

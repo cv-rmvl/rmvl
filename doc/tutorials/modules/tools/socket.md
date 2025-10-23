@@ -13,13 +13,13 @@
 
 ------
 
-## 1. Socket 基础
+## 1 Socket 基础
 
 Socket 是网络通信的基本操作单元，提供了应用层与传输层之间的接口。Socket 可以分为多种类型，最常见的有流式套接字（TCP）和数据报套接字（UDP）。RMVL 提供了跨平台的 Socket 实现，并提供了协程支持，Windows 下基于 Winsock2 实现，Linux 下基于 BSD Socket 实现。
 
 除此之外，Socket 还提供了 Unix Domain Socket（Unix 域套接字）支持，允许在同一台机器上的不同进程之间进行高效的通信，使用方法可参考 @ref tutorial_modules_ipc 。
 
-## 2. 用法
+## 2 用法
 
 相关类：
 

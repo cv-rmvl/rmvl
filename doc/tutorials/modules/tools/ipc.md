@@ -13,7 +13,7 @@
 
 ------
 
-## 1. 命名管道
+## 1 命名管道
 
 相关类：
 
@@ -201,7 +201,7 @@ int main() {
 }
 ```
 
-## 2. 消息队列（仅 Linux 可用）
+## 2 消息队列（仅 Linux 可用）
 
 相关类： rm::MqServer 及 rm::MqClient
 
@@ -257,7 +257,7 @@ int main() {
 }
 ```
 
-## 3. Unix Domain Socket
+## 3 Unix Domain Socket
 
 相关类：
 

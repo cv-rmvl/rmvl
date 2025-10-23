@@ -27,7 +27,7 @@
 \def\ptl#1#2{\frac{\partial#1}{\partial#2}}
 \f]
 
-### 1. Gauss-Newton 迭代
+### 1 Gauss-Newton 迭代
 
 #### 1.1 算法原理
 
@@ -175,7 +175,7 @@ x = rm.lsqnonlin(lsq_sine_f, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算
 
 @end_toggle
 
-### 2. Levenberg–Marquardt 算法
+### 2 Levenberg–Marquardt 算法
 
 #### 2.1 算法原理
 
@@ -232,7 +232,7 @@ x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09], options)
 
 @end_toggle
 
-### 3. Robust 核函数
+### 3 Robust 核函数
 
 #### 3.1 加权与核函数
 

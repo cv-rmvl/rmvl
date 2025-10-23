@@ -94,7 +94,7 @@ sudo apt install doxygen doxygen-gui graphviz
 cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f center);
 @endverbatim
 
-### 1. 基本命令
+### 1 基本命令
 
 - __brief__ - 表示一段函数、类、枚举、结构的简要信息
 
@@ -147,7 +147,7 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
 
 - __defgroup__ 与 __addtogroup__ - 
 
-### 2. 页面相关
+### 2 页面相关
 
 #### 2.1 Markdown 支持
 
@@ -175,7 +175,7 @@ Doxygen 支持部分 Markdown 语法与扩展，本篇教程页面同样使用�
 @ref xxx
 @endverbatim
 
-### 3. 代码块
+### 3 代码块
 
 使用以下命令创建代码块
 
@@ -191,7 +191,7 @@ std::cout << "Hello World" << std::endl;
 std::cout << "Hello World" << std::endl;
 @endcode
 
-### 4. 按钮
+### 4 按钮
 
 使用以下命令创建按钮
 

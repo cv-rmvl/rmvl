@@ -14,7 +14,7 @@
 
 ------
 
-### 1. Lagrange 插值多项式
+### 1 Lagrange 插值多项式
 
 一般对于一个未知函数，若能从已知的一系列点<span style="color: red">近似</span>地使用多项式函数\f$p(x)\f$代替原函数\f$f(x)\f$，并且满足
 
@@ -79,7 +79,7 @@ l_2(x)&=\prod\limits_{j=0,j\neq2}^2\frac{x-x_j}{x_i-x_j}=\frac{(x-1)(x-2)}{(3-1)
 
 @note 一般的，\f$n\f$点\f$n\f$次插值得到的插值多项式是<span style="color: red">**唯一**</span>的，读者可以自行使用待定系数法验证
 
-### 2. Newton 插值多项式
+### 2 Newton 插值多项式
 
 相关类 rm::Interpolator
 

@@ -18,7 +18,7 @@
 \def\transparent#1{\color{transparent}{#1}}
 \f]
 
-### 1. 常微分方程（组）
+### 1 常微分方程（组）
 
 一个质量-弹簧-阻尼系统的运动微分方程可以表示为
 
@@ -51,7 +51,7 @@
 &t_0<t_1<\cdots<t_n<t_{n+1}<\cdots\\&h=t_{n+1}-t_n\quad或\quad t_{n+1}=t_n+h\quad(h=0,1,\cdots)
 \end{align}\f]
 
-### 2. 求解常微分方程的 Euler 方法
+### 2 求解常微分方程的 Euler 方法
 
 #### 2.1 显式 Euler 单步法
 
@@ -136,7 +136,7 @@ T_{n+1}&=x(t_{n+1})-x(t_n)-\frac12hf(t_n,x(t_n))-\frac12hf(t_{n+1},x(t_{n+1}))\\
 
 <b>局部截断误差的主项</b>为\f$-\frac1{12}x'''(t_n)h^3\f$，我们称梯形公式具有 2 阶精度。
 
-### 3. Runge-Kutta 方法
+### 3 Runge-Kutta 方法
 
 对于\f$\text{(2-3c)}\f$的改进 Euler 公式，可以改写成
 

@@ -12,7 +12,7 @@
 
 ------
 
-### 1. 何为责任链模式
+### 1 何为责任链模式
 
 #### 1.1 常规用法 {#process_common}
 
@@ -135,7 +135,7 @@ FeatureHandler: Handling the feature request.
 
 程序处理III（预测）的入参包含了补偿模块的返回值信息 `rm::CompensateInfo`，程序处理IV（决策）的入参包含了前 3 个模块的返回值 `rm::DetectInfo`、`rm::CompensateInfo`、`rm::PredictInfo`。
 
-### 2. 具体使用方法
+### 2 具体使用方法
 
 下面给出一个简单的例子
 

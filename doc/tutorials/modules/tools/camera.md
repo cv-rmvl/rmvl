@@ -21,7 +21,7 @@
 - 奥普特机器视觉 USB3.0/GigE 工业相机 rm::OptCamera
 - 大恒图像 Galaxy USB3.0/GigE 工业相机 rm::GalaxyCamera
 
-## 1. 如何使用
+## 1 如何使用
 
 使用前需安装相机驱动，详情参考：@ref tutorial_install ，下面以 MvCamera 为例介绍如何使用相机模块，其余相机操作完全一致。
 
@@ -294,11 +294,11 @@ capture.set(rm.CAMERA_TRIGGER_SOFT)
 
 @end_toggle
 
-## 2. para 参数加载
+## 2 para 参数加载
 
 RMVL 提供了全局的相机参数对象: para::camera_param ，详情可参考类 para::CameraParam
 
-## 3. 示例程序
+## 3 示例程序
 
 在构建 RMVL 时，需开启 `BUILD_EXAMPLES` 选项（默认开启）
 
@@ -370,7 +370,7 @@ bin/rmvl_mv_calibration -help
 bin/rmvl_mv_manual_calib
 ```
 
-## 4. 使用 Demo
+## 4 使用 Demo
 
 ### 4.1 连续采样
 

@@ -10,7 +10,7 @@
 
 ------
 
-### 1. 安装依赖（非必需）
+### 1 安装依赖（非必需）
 
 #### 1.1 OpenCV
 
@@ -148,7 +148,7 @@ sudo apt install libeigen3-dev
 
 至此 onnxruntime 安装完成。
 
-### 2. 配置 RMVL 项目
+### 2 配置 RMVL 项目
 
 进入编译空间，没有 `build` 文件夹请先创建
 
@@ -176,7 +176,7 @@ cmake-gui ..
 cmake -D BUILD_TESTS=ON ..
 ```
 
-### 3. 构建 RMVL 并进行单元测试
+### 3 构建 RMVL 并进行单元测试
 
 #### 3.1 编译安装
 

@@ -16,7 +16,7 @@
 
 相关模块： @ref opcua
 
-## 1. 简介 {#tutorial_opcua_intro}
+## 1 简介 {#tutorial_opcua_intro}
 
 ### 1.1 OPC UA 是什么 {#tutorial_opcua_intro_what}
 
@@ -94,7 +94,7 @@ open62541 @cite open62541_library 是一个基于 C 语言的开源 OPC UA 栈�
 
 视图节点可将地址空间中感兴趣的节点提取出来，作为一个子集，视图节点作为该子集的入口，方便客户端浏览。
 
-## 2. 服务器/客户端 {#tutorial_opcua_server_client}
+## 2 服务器/客户端 {#tutorial_opcua_server_client}
 
 基于服务器/客户端的方式是 OPC UA 最基本的一种通信方式，上文的地址空间在服务器/客户端通信的过程中完全展现出来。下面列举一些 opcua 模块中常用的服务器与客户端通信的内容。
 
@@ -1500,7 +1500,7 @@ while not stop:
 
 可以根据自己的需求对服务器的 `num` 变量节点进行其余操作，例如可以同时运行带有定时器的服务器和客户端，服务器每 1s 将 `num` 的值加 1，客户端每 1s 读取 `num` 的值并打印，有兴趣的读者可以自行尝试。
 
-## 3. 发布/订阅 {#tutorial_opcua_pub_sub}
+## 3 发布/订阅 {#tutorial_opcua_pub_sub}
 
 这是一段来自 [open62541 手册](https://www.open62541.org)中有关 PubSub 的介绍。
 
@@ -1714,7 +1714,7 @@ while not stop:
 
 @warning RMVL 目前暂不支持有代理的发布订阅机制。
 
-## 4. 使用技巧
+## 4 使用技巧
 
 以下是 @ref opcua 的使用技巧。
 
@@ -1882,6 +1882,6 @@ RMVL-Python 也提供了 rm::OpcuaClient 到 rm::OpcuaClientView 的转换函数
 
 @end_toggle
 
-## 5. 参考内容
+## 5 参考内容
 
 @cite FreeOpcUa22 UaModeler · FreeOpcUa/opcua-modeler · Github

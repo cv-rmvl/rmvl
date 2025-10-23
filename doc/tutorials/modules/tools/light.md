@@ -17,13 +17,13 @@
 - 奥普特 GigE 光源控制器 rm::OPTLightController
 - 海康机器人 RS-232 光源控制器 rm::HikLightController
 
-### 1. 如何使用
+### 1 如何使用
 
 海康机器人光源控制器使用 RS-232 串口进行数据传输，RMVL 在 Windows 和 Linux 平台上分别做了设计，可以很方便的开发，并且随附了 `rmvl_hik_lightctl` 命令行可执行程序。
 
 奥普特 GigE 光源控制器在使用前需安装驱动，详情参考：@ref tutorial_install
 
-### 2. 调试与开发
+### 2 调试与开发
 
 #### HikRobot 光源控制器可执行程序
 

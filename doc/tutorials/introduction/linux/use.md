@@ -17,7 +17,7 @@
 
 ### 详细步骤
 
-#### 1. 创建项目
+#### 1 创建项目
 
 创建新的文件夹：`rmvl_deploy_test`，将其链接至 RMVL
 
@@ -27,7 +27,7 @@ cd rmvl_deploy_test
 touch main.cpp CMakeLists.txt
 ```
 
-#### 2. 编写测试文件
+#### 2 编写测试文件
 
 **编写 main.cpp**
 
@@ -90,7 +90,7 @@ target_link_libraries(
 )
 ```
 
-#### 3. 构建项目
+#### 3 构建项目
 
 在 `rmvl_deploy_test` 的顶层文件夹中打开终端，输入以下命令
 
@@ -100,7 +100,7 @@ cmake ..
 make
 ```
 
-#### 4. 运行
+#### 4 运行
 
 继续输入以下命令
 

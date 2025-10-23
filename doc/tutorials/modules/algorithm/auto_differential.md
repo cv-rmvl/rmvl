@@ -23,7 +23,7 @@
 \def\fml#1{\text{(#1)}}
 \f]
 
-### 1. 基于 Taylor 公式的数值微分
+### 1 基于 Taylor 公式的数值微分
 
 利用以下两个 2 阶 Taylor 公式：
 
@@ -45,7 +45,7 @@ f'(x)&\approx\frac{f(x)-f(x-h)}h,\qquad R=\frac{f''(\eta)}2h+o(h^2)\tag{1-2b}\en
 
 如果导数\f$f'(x)\f$用\f$\fml{1-3b}\f$计算，那么截断误差为\f$o(h^2)\f$，比\f$\fml{1-2a}\f$和\f$\fml{1-2b}\f$的截断误差\f$O(h)\f$更小。这种方法称为<span style="color: red">中心差商</span>。
 
-### 2. Richardson 外推原理
+### 2 Richardson 外推原理
 
 #### 2.1 公式推导
 
@@ -117,7 +117,7 @@ k&=1,2,\cdots,M\\n&=k,k+1,\cdots,M
 
 即\f$T(n,k)\f$具备\f$2k+2\f$阶的精度。
 
-### 3. 如何使用
+### 3 如何使用
 
 RMVL 中提供了一元函数以及多元函数的微分工具，求解一元函数导数时可使用 rm::derivative ，求解多元函数梯度是需要使用 rm::grad 。
 

@@ -14,7 +14,7 @@
 
 相关类 rm::RaHeap
 
-## 1. 基本用法
+## 1 基本用法
 
 rm::RaHeap 的基本用法与标准库中 `std::priority_queue` 的用法基本一致，都具有以下操作：
 
@@ -36,7 +36,7 @@ rm::RaHeap 的基本用法与标准库中 `std::priority_queue` 的用法基本�
       C++ 标准库——优先队列
   </a>
 
-## 2. 扩展用法
+## 2 扩展用法
 
 除此之外，RaHeap 还提供了以下扩展用法：
 
@@ -50,7 +50,7 @@ rm::RaHeap 的基本用法与标准库中 `std::priority_queue` 的用法基本�
 
 </div>
 
-## 3. 例题
+## 3 例题
 
 **Dijkstra + 堆优化**
 

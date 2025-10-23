@@ -14,7 +14,7 @@
 
 ------
 
-## 1. 异步 I/O
+## 1 异步 I/O
 
 ### 1.1 Reactor 模式
 
@@ -49,7 +49,7 @@ Proactor 模式则是通过操作系统提供的异步 I/O 接口来实现，即
 
 Proactor 模式常见的实现有 Linux 下的 io_uring 以及 Windows 下的 IOCP
 
-## 2. 用法
+## 2 用法
 
 RMVL 目前提供了跨平台的异步 I/O 协程设施
 
@@ -187,7 +187,7 @@ Task 1: 1s
 Task 1: 1s
 ```
 
-## 3. Echo Server 示例 {#echo_server}
+## 3 Echo Server 示例 {#echo_server}
 
 ```cpp
 #include <rmvl/io/socket.hpp>

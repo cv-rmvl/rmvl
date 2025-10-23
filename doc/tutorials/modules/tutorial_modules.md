@@ -9,7 +9,7 @@
 
 ------
 
-### 1. 工具类
+### 1 工具类
 
 #### 开发工具
 
@@ -40,7 +40,7 @@
 - @subpage tutorial_modules_camera
 - @subpage tutorial_modules_light
 
-### 2. 算法类
+### 2 算法类
 
 #### 数值计算
 

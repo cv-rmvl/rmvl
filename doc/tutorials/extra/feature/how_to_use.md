@@ -13,7 +13,7 @@
 
 基类 rm::feature
 
-## 1. 如何使用
+## 1 如何使用
 
 ### 1.1 有关构造与创建
 
@@ -70,7 +70,7 @@ auto p_light_blob = rm::LightBlob::cast(p_feature);
 auto top_point = p_light_blob->getTopPoint();
 ```
 
-## 2. 如何开发
+## 2 如何开发
 
 ### 2.1 基本准则
 

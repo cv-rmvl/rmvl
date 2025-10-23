@@ -75,7 +75,7 @@ x_p=k_2y(n_f)+k_1y(n_f+1)\tag{1-4}
 
 ### 最小二乘递推算法
 
-#### 1. 最小二乘
+#### 1 最小二乘
 
 @note 此部分详细介绍请参考 @ref tutorial_modules_least_square 一文。
 
@@ -91,7 +91,7 @@ A\boldsymbol{x}=\boldsymbol{b}\tag{2-1}
 \hat{x}=\left(A^TA\right)^{-1}A^T\boldsymbol{b}\tag{2-2}
 \f]
 
-#### 2. 递推公式
+#### 2 递推公式
 
 对上式的\f$\left(A^TA\right)^{-1}\f$部分，现设\f$P_m^{-1}=A_m^TA_m\f$，其中\f$A_m=\left[\boldsymbol{a_1}\quad \boldsymbol{a_2}\quad \dots\quad \boldsymbol{a_m}\right]^T\f$，\f$\boldsymbol{a_i}\f$为上文出现过的行向量：\f$\boldsymbol{a_i}=\left[a_{i1}\quad a_{i2}\quad \dots\quad a_{in}\right]\f$，则有
 

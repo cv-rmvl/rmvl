@@ -113,7 +113,7 @@ namespace rm
  * |`const char*`|`%s`|
  * |`char`|`%c`|
  * |`float` or `double`|`%f`,`%g`|
- * |`int`, `long`, `long long`|`%d`, `%ld`, ``%lld`|
+ * |`int`, `long`, `long long`|`%d`, `%ld`, `%lld`|
  * |`unsigned`, `unsigned long`, `unsigned long long`|`%u`, `%lu`, `%llu`|
  * |`uint64_t` \f$\to\f$ `uintmax_t`, `int64_t` \f$\to\f$ `intmax_t`|`%ju`, `%jd`|
  * |`size_t`|`%zu`|

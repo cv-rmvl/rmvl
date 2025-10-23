@@ -31,7 +31,7 @@
 
 在阅读本教程前，请确保已经熟悉标准的 @ref tutorial_modules_kalman ，因为核心公式不变，只是在原来的基础上增加了非线性函数线性化的部分。
 
-### 1. 非线性函数的线性化
+### 1 非线性函数的线性化
 
 对于一个线性系统，可以用状态空间方程描述其运动过程
 
@@ -88,7 +88,7 @@ W&=\left.\ptl{f_A}{\boldsymbol w}\right|_{(\hat{\boldsymbol w}_{k-1},\boldsymbol
 
 \f[J_H=\left.\ptl{f_H}{\boldsymbol x}\right|_{\tilde{\boldsymbol x}_k},\qquad V=\left.\ptl{f_H}{\boldsymbol v}\right|_{\tilde{\boldsymbol x}_k}\f]
 
-### 2. 扩展卡尔曼滤波
+### 2 扩展卡尔曼滤波
 
 #### 2.1 公式汇总
 

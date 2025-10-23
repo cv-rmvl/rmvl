@@ -7,7 +7,7 @@
 
 ------
 
-### 1. 数据组件
+### 1 数据组件
 
 #### 1.1 特征
 
@@ -26,7 +26,7 @@
 
 - @subpage tutorial_extra_how_to_use_group
 
-### 2. 功能模块
+### 2 功能模块
 
 #### 2.1 识别模块
 
@@ -46,7 +46,7 @@
 
 - @subpage tutorial_extra_how_to_use_decider
 
-### 3. 顶层模块
+### 3 顶层模块
 
 <span style="color: red">此部分由用户自行实现</span>
 

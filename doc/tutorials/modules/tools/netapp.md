@@ -18,7 +18,7 @@
 - 请求工具： rm::requests::request 及 rm::async::requests::request
 - 后端框架： rm::async::Webapp
 
-### 1. HTTP 数据结构
+### 1 HTTP 数据结构
 
 相关类： rm::Request 及 rm::Response
 
@@ -29,7 +29,7 @@
 
 rm::Response 还提供了多种简化生成响应的成员函数，如 `send`、`json`、`redirect` 等。
 
-### 2. HTTP 请求工具
+### 2 HTTP 请求工具
 
 相关函数：
 
@@ -54,7 +54,7 @@ int main() {
 
 异步请求的使用方法类似，只需将 `requests` 替换为 `async::requests`，并在协程中使用 `co_await` 关键字等待结果，这里不再赘述。
 
-### 3. Web 后端框架
+### 3 Web 后端框架
 
 RMVL 提供了 HTTP 的后端应用框架 rm::async::Webapp 。这是 @ref io 的集大成者，设计理念参考 JavaScript 的 Express 框架，这里给出一个简单的 Web 服务器示例：
 
