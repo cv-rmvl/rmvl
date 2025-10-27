@@ -87,93 +87,93 @@
 
 RMVL 提供了改进的 Gauss-Newton 迭代算法，可参考 `rm::lsqnonlin` 函数。例如，我们需要拟合一个正弦函数\f[y=A\sin(\omega t+\varphi_0)+b\f]其中，\f$A,\omega,\varphi_0,b\f$ 是待拟合的参数，不妨统一写为 \f$\boldsymbol x=(A,\omega,\varphi_0,b)\f$，也就是说我们需要拟合的函数是\f[\green y=x_1\sin(x_2\green t+x_3)+x_4\f]其中 \f$t\f$ 和 \f$y\f$ 是可以观测到的数据，我们需要通过观测的数据来拟合 \f$\boldsymbol x\f$ 的值。比方说，下面的 `obtain` 函数就可以观测每一帧的数据。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-double obtain();
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  double obtain();
+  ```
 
-@add_toggle_python
-    
-```python
-def obtain(): ...
-```
+- <b class="tab-title">Python</b>
 
-@end_toggle
+  ```python
+  def obtain(): ...
+  ```
+
+</div>
 
 例如经过了 20 帧的数据采集，我们得到了一个长度为 `20` 的队列，即
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-std::deque<double> datas;
+- <b class="tab-title">C++</b>
 
-/* code */
-datas.push_front(obtain());
-if (datas.size() == 20)
-    datas.pop_back();
-/* code */
-```
+  ```cpp
+  std::deque<double> datas;
 
-@end_toggle
+  /* code */
+  datas.push_front(obtain());
+  if (datas.size() == 20)
+      datas.pop_back();
+  /* code */
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-datas = []
+  ```python
+  datas = []
 
-# code
-datas.insert(0, obtain())
-if len(datas) == 20:
-    datas.pop()
-# code
-```
+  # code
+  datas.insert(0, obtain())
+  if len(datas) == 20:
+      datas.pop()
+  # code
+  ```
 
-@end_toggle
+</div>
 
 准备好数据后，可以使用下面的代码来拟合正弦函数。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-std::vector<rm::FuncNd> lsq_sine(datas.size());
-for (std::size_t i = 0; i < lsq_sine.size(); ++i)
-    lsq_sine[i] = [=](const std::valarray<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - datas[i]; };
+- <b class="tab-title">C++</b>
 
-rm::FuncNds lsq_sine_f = [&](const std::valarray<double> &x) {
-    std::valarray<double> ret(lsq_sine.size());
-    for (std::size_t i = 0; i < lsq_sine.size(); ++i)
-        ret[i] = lsq_sine[i](x);
-    return ret;
-};
+  ```cpp
+  std::vector<rm::FuncNd> lsq_sine(datas.size());
+  for (std::size_t i = 0; i < lsq_sine.size(); ++i)
+      lsq_sine[i] = [=](const std::valarray<double> &x) { return x[0] * std::sin(x[1] * i + x[2]) + x[3] - datas[i]; };
 
-// 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
-auto x = rm::lsqnonlin(lsq_sine_f, {1, 0.02, 0, 1.09}); // 默认采用 Gauss-Newton 算法
-```
+  rm::FuncNds lsq_sine_f = [&](const std::valarray<double> &x) {
+      std::valarray<double> ret(lsq_sine.size());
+      for (std::size_t i = 0; i < lsq_sine.size(); ++i)
+          ret[i] = lsq_sine[i](x);
+      return ret;
+  };
 
-@end_toggle
+  // 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+  auto x = rm::lsqnonlin(lsq_sine_f, {1, 0.02, 0, 1.09}); // 默认采用 Gauss-Newton 算法
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-lsq_sine = []
-for i in range(len(datas)):
-    lsq_sine.append(
-        lambda x, i=i: x[0] * np.sin(x[1] * i + x[2]) + x[3] - datas[i]
-    )
+  ```python
+  lsq_sine = []
+  for i in range(len(datas)):
+      lsq_sine.append(
+          lambda x, i=i: x[0] * np.sin(x[1] * i + x[2]) + x[3] - datas[i]
+      )
 
-def lsq_sine_f(x):
-    ret = []
-    for i in range(len(lsq_sine)):
-        ret.append(lsq_sine[i](x))
+  def lsq_sine_f(x):
+      ret = []
+      for i in range(len(lsq_sine)):
+          ret.append(lsq_sine[i](x))
 
-# 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
-x = rm.lsqnonlin(lsq_sine_f, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算法
-```
+  # 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+  x = rm.lsqnonlin(lsq_sine_f, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算法
+  ```
 
-@end_toggle
+</div>
 
 ### 2 Levenberg–Marquardt 算法
 
@@ -206,31 +206,31 @@ x = rm.lsqnonlin(lsq_sine_f, [1, 0.02, 0, 1.09]) # 默认采用 Gauss-Newton 算
 
 还是上面的例子，我们可以使用下面的代码来拟合正弦函数。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+- <b class="tab-title">C++</b>
 
-rm::OptimalOptions options;
-options.lsq_mode = rm::LsqMode::LM; // 使用 LM 算法
-options.max_iter = 2000;            // 最大迭代次数可以设置高一点，以保证收敛
-auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}, options);
-```
+  ```cpp
+  // 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
 
-@end_toggle
+  rm::OptimalOptions options;
+  options.lsq_mode = rm::LsqMode::LM; // 使用 LM 算法
+  options.max_iter = 2000;            // 最大迭代次数可以设置高一点，以保证收敛
+  auto x = rm::lsqnonlin(lsq_sine, {1, 0.02, 0, 1.09}, options);
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
+  ```python
+  # 拟合正弦函数，初始值为 (1, 0.02, 0, 1.09)
 
-options = rm.OptimalOptions()
-options.lsq_mode = rm.LsqMode.LM # 使用 LM 算法
-options.max_iter = 2000          # 最大迭代次数可以设置高一点，以保证收敛
-x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09], options)
-```
+  options = rm.OptimalOptions()
+  options.lsq_mode = rm.LsqMode.LM # 使用 LM 算法
+  options.max_iter = 2000          # 最大迭代次数可以设置高一点，以保证收敛
+  x = rm.lsqnonlin(lsq_sine, [1, 0.02, 0, 1.09], options)
+  ```
 
-@end_toggle
+</div>
 
 ### 3 Robust 核函数
 
@@ -316,18 +316,18 @@ Huber 核函数是一个连续可导的函数，它的优点是它在 \f$s=0\f$ 
 
 RMVL 提供了带有 Robust 核函数的最小二乘法，可参考 rm::lsqnonlinRKF ，对于上面示例中的正弦函数拟合，可以使用下面的代码。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber);
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  auto x = rm::lsqnonlinRKF(lsq_sine, {1, 0.02, 0, 1.09}, rm::RobustMode::Huber);
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-x = rm.lsqnonlinRKF(lsq_sine, [1, 0.02, 0, 1.09], rm.RobustMode.Huber)
-```
+  ```python
+  x = rm.lsqnonlinRKF(lsq_sine, [1, 0.02, 0, 1.09], rm.RobustMode.Huber)
+  ```
 
-@end_toggle
+</div>

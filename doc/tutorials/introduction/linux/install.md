@@ -16,63 +16,57 @@
 
 RMVL 2.x 起，OpenCV @cite opencv_library 不再是 RMVL 必需的依赖库，但缺少 OpenCV 库，将有大量 RMVL 模块无法构建，下面介绍 OpenCV 的 2 种安装方法。
  
-@add_toggle{快速安装}
+<div class="tabbed">
 
-Linux 发行版常用的镜像站中一般都添加了 OpenCV 的软件源，可以很方便的通过 `apt` 包管理工具安装，例如 Ubuntu
+- <b class="tab-title">快速安装</b>
 
-- `18.04` 对应的 OpenCV 版本是 `3.2.0`
+  Linux 发行版常用的镜像站中一般都添加了 OpenCV 的软件源，可以很方便的通过 `apt` 包管理工具安装，例如 Ubuntu
+
+  - `18.04` 对应的 OpenCV 版本是 `3.2.0`
   
-  <span style="color: red">此版本过低</span>，无法通过 CMake 的 `find_package` 方式找到 OpenCV，若是在这个 Ubuntu 的发行版，请手动编译安装 4.0 或以上版本的 OpenCV
+    <span style="color: red">此版本过低</span>，无法通过 CMake 的 `find_package` 方式找到 OpenCV，若是在这个 Ubuntu 的发行版，请手动编译安装 4.0 或以上版本的 OpenCV
 
-- `20.04` 对应的 OpenCV 版本是 `4.2.0`
+  - `20.04` 对应的 OpenCV 版本是 `4.2.0`
 
-- `22.04` 对应的 OpenCV 版本是 `4.5.4`
+  - `22.04` 对应的 OpenCV 版本是 `4.5.4`
 
-可以输入以下命令行进行安装
+  可以输入以下命令行进行安装
 
-```shell
-sudo apt install libopencv-dev
-```
+  <div class="fragment">
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install libopencv-dev</div>
+  </div>
 
-@end_toggle
+  该方法无法启用 OpenCV 的扩展功能，如果需要使用扩展功能或者是需要安装特定版本的 OpenCV，请参考 **编译安装** 方法。
 
-@add_toggle{编译安装}
+- <b class="tab-title">编译安装</b>
 
-**安装 OpenCV 依赖**
+  **安装 OpenCV 依赖**
 
-```shell
-# 建议安装的依赖
-sudo apt install build-essential libgtk2.0-dev pkg-config
-# 可选安装的依赖
-sudo apt install libavcodec-dev libavformat-dev libjpeg-dev libswscale-dev libtiff5-dev
-```
+  <div class="fragment">
+  <div class="line"><span class="comment"># 建议安装的依赖</span></div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install build-essential libgtk2.0-dev pkg-config</div>
+  <div class="line"><span class="comment"># 可选安装的依赖</span></div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install libavcodec-dev libavformat-dev libjpeg-dev libswscale-dev libtiff5-dev</div>
+  </div>
 
-**下载并解压缩 OpenCV**
+  **下载并解压缩 OpenCV**
 
-```shell
-wget https://codeload.github.com/opencv/opencv/tar.gz/refs/tags/4.7.0
-tar -xf 4.7.0
-```
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">wget</span> https://codeload.github.com/opencv/opencv/tar.gz/refs/tags/4.10.0</div>
+  <div class="line"><span class="keywordflow">tar</span> <span class="comment">-xf</span> 4.10.0</div>
+  </div>
 
-**构建 OpenCV**
+  **构建 OpenCV**
 
-```shell
-cd opencv-4.7.0
-mkdir build && cd build
-cmake \
-  -DBUILD_EXAMPLES=OFF \
-  -DBUILD_PERF_TESTS=OFF \
-  -DBUILD_TESTS=OFF \
-  -DBUILD_JAVA=OFF \
-  -DWITH_GSTREAMER=ON \
-  -DCMAKE_BUILD_TYPE=Release \
-  ..
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">cd</span> opencv-4.10.0</div>
+  <div class="line"><span class="keywordflow">mkdir</span> build && <span class="keywordflow">cd</span> build</div>
+  <div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> BUILD_EXAMPLES=OFF <span class="comment">-D</span> BUILD_PERF_TESTS=OFF <span class="comment">-D</span> BUILD_TESTS=OFF <span class="comment">-D</span> BUILD_JAVA=OFF ..</div>
+  <div class="line"><span class="keywordflow">cmake</span> <span class="comment">\-\-build</span> . <span class="comment">\-\-parallel</span> 8</div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cmake</span> <span class="comment">\-\-install</span> .</div>
+  </div>
 
-cmake --build . --parallel 8
-sudo cmake --install .
-```
-
-@end_toggle
+</div>
 
 @see
 - [OpenCV documents](https://docs.opencv.org/4.x/)
@@ -81,9 +75,9 @@ sudo cmake --install .
 
 使用 `apt` 包管理工具进行安装
 
-```shell
-sudo apt install libeigen3-dev
-```
+<div class="fragment">
+<div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install libeigen3-dev</div>
+</div>
 
 #### 1.3 硬件设备 SDK{#install_hardware_sdk}
 
@@ -131,20 +125,20 @@ sudo apt install libeigen3-dev
 #### 1.4 onnxruntime{#install_onnxruntime}
 
 - 获取压缩包，可选择对应的发行版，也可以是 gpu、cuda12 或 cpu 版本，下面以 1.12.0 的 cpu 版本为例
-  ```shell
-  curl -SL https://github.com/microsoft/onnxruntime/releases/download/v1.12.0/onnxruntime-linux-x64-1.12.0.tgz -o onnxruntime-linux-x64-1.12.0.tgz
-  ```
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">curl</span> -SL https://github.com/microsoft/onnxruntime/releases/download/v1.12.0/onnxruntime-linux-x64-1.12.0.tgz -o onnxruntime-linux-x64-1.12.0.tgz</div>
+  </div>
 - 解压
-  ```shell
-  tar -xf onnxruntime-linux-x64-1.12.0.tgz
-  ```
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">tar</span> -xf onnxruntime-linux-x64-1.12.0.tgz</div>
+  </div>
 - 安装（复制头文件与库文件）
-  ```shell
-  sudo mkdir /usr/local/include/onnxruntime
-  cd onnxruntime-linux-x64-1.12.0
-  sudo cp -r include/* /usr/local/include/onnxruntime
-  sudo cp -r lib /usr/local
-  ```
+  <div class="fragment">
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">mkdir</span> /usr/local/include/onnxruntime</div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cd</span> onnxruntime-linux-x64-1.12.0</div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cp</span> <span class="comment">-r</span> include/* /usr/local/include/onnxruntime</div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cp</span> <span class="comment">-r</span> lib /usr/local</div>
+  </div>
 
 至此 onnxruntime 安装完成。
 
@@ -152,29 +146,29 @@ sudo apt install libeigen3-dev
 
 进入编译空间，没有 `build` 文件夹请先创建
 
-```shell
-cd build
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cd</span> build</div>
+</div>
 
 请继续在终端中输入以下内容
 
-```shell
-cmake ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> ..</div>
+</div>
 
 或者使用图形用户界面（GUI）来配置 RMVL
 
-```shell
-cmake-gui ..
-# 或者使用 cmake-curses-gui 终端界面
-# ccmake ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake-gui</span> ..</div>
+<div class="line"><span class="comment"># 或者使用 cmake-curses-gui 终端界面</span></div>
+<div class="line"><span class="comment"># ccmake ..</span></div>
+</div>
 
 @note
 若需要启用单元测试，请输入
-```shell
-cmake -D BUILD_TESTS=ON ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> BUILD_TESTS=ON ..</div>
+</div>
 
 ### 3 构建 RMVL 并进行单元测试
 
@@ -182,9 +176,9 @@ cmake -D BUILD_TESTS=ON ..
 
 编译 RMVL（这里开启 8 个线程进行编译，可灵活设置）
 
-```shell
-cmake --build . --parallel 8
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">\-\-build</span> . <span class="comment">\-\-parallel</span> 8</div>
+</div>
 
 此外，如果你使用的是
 
@@ -196,35 +190,35 @@ cmake --build . --parallel 8
 来代替上述命令，但是太麻烦，不够通用，因此推荐使用第一个通用命令，让 CMake 自动选择构建系统
 
 @note 若启用了单元测试，可以运行 RMVL 单元测试的测试用例
-```shell
-ctest
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">ctest</span></div>
+</div>
 
 在构建完成之后，可以通过 CMake 来安装 RMVL 的头文件、库文件、和 CMake 配置文件
 
-```shell
-cmake --install .
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">\-\-install</span> .</div>
+</div>
 
 同样可以选择线程数来加速安装过程
 
-```shell
-cmake --install . --parallel 8
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">\-\-install</span> . <span class="comment">\-\-parallel</span> 8</div>
+</div>
 
 #### 3.2 检查安装结果
 
 在任意一个地方打开终端，输入
 
-```shell
-rmvl_version
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_version</span></div>
+</div>
 
 如果显示了对应的版本号，则安装成功。同时，也可查看构建时的配置情况
 
-```shell
-rmvl_version -v
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_version</span> <span class="comment">-v</span></div>
+</div>
 
 ------
 

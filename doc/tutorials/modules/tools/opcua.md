@@ -102,445 +102,434 @@ open62541 @cite open62541_library 是一个基于 C 语言的开源 OPC UA 栈�
 
 #### 2.1.1 服务器
 
-@add_toggle_cpp
+<div class="tabbed">
 
-**方案一**
+- <b class="tab-title">C++</b>
 
-使用 `spin` 作为事件循环，并提供全局变量 `p_server` 用于在信号处理函数中关闭服务器。
+  **方案一**
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+  使用 `spin` 作为事件循环，并提供全局变量 `p_server` 用于在信号处理函数中关闭服务器。
 
-rm::OpcuaServer *p_server{nullptr};
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-void onStop(int) {
-    if (p_server)
-        p_server->shutdown();
-}
+  rm::OpcuaServer *p_server{nullptr};
 
-int main() {
-    // 注册信号处理函数
-    signal(SIGINT, onStop);
+  void onStop(int) {
+      if (p_server)
+          p_server->shutdown();
+  }
 
-    // 创建 OPC UA 服务器，端口为 4840
-    rm::OpcuaServer srv(4840);
-    p_server = &srv;
-    // 服务器运行
-    srv.spin();
-}
-```
+  int main() {
+      // 注册信号处理函数
+      signal(SIGINT, onStop);
 
-**方案二**
+      // 创建 OPC UA 服务器，端口为 4840
+      rm::OpcuaServer srv(4840);
+      p_server = &srv;
+      // 服务器运行
+      srv.spin();
+  }
+  ```
 
-使用多线程，主线程负责关闭服务器。
+  还可以使用形如
 
-```cpp
-// server.cpp
-#include <thread>
-#include <rmvl/opcua/server.hpp>
+  ```cpp
+  std::thread t(&rm::OpcuaServer::spin, &srv);
+  ```
 
-int main() {
-    // 创建 OPC UA 服务器，端口为 4840
-    rm::OpcuaServer srv(4840);
-    // 服务器运行
-    std::thread t(&rm::OpcuaServer::spin, &srv);
+  的方式在单独的线程中运行 `spin`，此处不再赘述。
 
-    /* other code */
+  **方案二**
 
-    srv.shutdown();
-    t.join();
-}
-```
+  使用 `spinOnce` 执行单次事件循环，需要自定义主循环，在某个条件下退出循环，并关闭服务器（此时可不必显式调用 `shutdown`）
 
-**方案三**
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-使用 `spinOnce` 执行单次事件循环，需要自定义主循环，在某个条件下退出循环，并关闭服务器（此时可不必显式调用 `shutdown`）
+  bool stop = false;
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-bool stop = false;
+      rm::OpcuaServer srv(4840);
+      while (!stop) {
+          /* other code */
+          srv.spinOnce();
+      }
+      srv.shutdown(); // 可省略，因为在 rm::OpcuaServer::~OpcuaServer 析构函数中将自动调用 shutdown
+                      // 但是上文的方案一中需要手动将循环标志 _running 设置为 false，这一步是在 shutdown 中完成的，因此需要显式调用 shutdown
+  }
+  ```
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+- <b class="tab-title">Python</b>
 
-    // 创建 OPC UA 服务器，端口为 4840
-    rm::OpcuaServer srv(4840);
-    // 服务器运行
-    while (!stop) {
-        /* other code */
-        srv.spinOnce();
-    }
-    srv.shutdown(); // 可省略，因为在 rm::OpcuaServer::~OpcuaServer 析构函数中将自动调用 shutdown
-                    // 但是上文的方案一和方案二中需要手动将循环标志 _running 设置为 false，这一步是在 shutdown 中完成的，因此需要显式调用 shutdown
-}
-```
+  Python 的信号处理机制依赖于 Python 解释器的 GIL，因此在 Python 中无法通过常规方式结束 `spin`（除非直接结束进程），但是可以使用 `spinOnce` 执行单次事件循环，因此需要自定义主循环。
 
-@end_toggle
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-@add_toggle_python
+  stop = False
 
-Python 的信号处理机制依赖于 Python 解释器的 GIL，因此在 Python 中无法通过常规方式结束 `spin`（除非直接结束进程），但是可以使用 `spinOnce` 执行单次事件循环，因此需要自定义主循环。
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-```python
-# server.py
-from signal import signal, SIGINT
-import rm
+  signal(SIGINT, onStop)
 
-stop = False
+  # 创建 OPC UA 服务器，端口为 4840
+  srv = rm.OpcuaServer(4840)
+  # 服务器运行
+  while not stop:
+      # other code
+      srv.spinOnce()
+  ```
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  RMVL 没有为服务端提供 `spin` 方法的 Python 绑定，与此同时，也不会提供 `shutdown` 方法的绑定。因为显式调用 `shutdown` 方法用于结束 `spin` 循环，而 Python 中无法使用 `spin` 循环。
 
-signal(SIGINT, onStop)
-
-# 创建 OPC UA 服务器，端口为 4840
-srv = rm.OpcuaServer(4840)
-# 服务器运行
-while not stop:
-    # other code
-    srv.spinOnce()
-```
-
-@end_toggle
+</div>
 
 #### 2.2.2 客户端
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client.cpp
-#include <rmvl/opcua/client>
+- <b class="tab-title">C++</b>
 
-int main() {
-    // 创建 OPC UA 客户端，连接到 127.0.0.1:4840
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+  ```cpp
+  // client.cpp
+  #include <rmvl/opcua/client.hpp>
 
-    /* other code */
-}
-```
+  int main() {
+      // 创建 OPC UA 客户端，连接到 127.0.0.1:4840
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
 
-@end_toggle
+      /* other code */
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client.py
-import rm
+  ```python
+  # client.py
+  import rm
 
-# 创建 OPC UA 客户端，连接到
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
-```
+  # 创建 OPC UA 客户端，连接到
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
 
-@end_toggle
+  """
+  other code
+  """
+  ```
+
+</div>
 
 ### 2.2 变量
 
 在上文 @ref tutorial_opcua_intro_address_space 中介绍了变量的 3 种访问方式，这里使用最简单的直接读写的方式。首先在服务器中添加变量节点，后文均采用 `while + spinOnce` 的方式处理异步事件。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <thread>
-#include <rmvl/opcua/server.hpp>
+- <b class="tab-title">C++</b>
 
-static bool stop = false;
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <thread>
+  #include <rmvl/opcua/server.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    rm::OpcuaServer srv(4840);
+  int main() {
+      signal(SIGINT, [](int) {
+          stop = true;
+      });
 
-    // 定义 double 型变量，如果要强制使用 3.14 定义 float 型变量，
-    // 可以使用 rm::Variable num = float(3.14);
-    rm::Variable num = 3.14;
-    // 浏览名 BrowseName
-    num.browse_name = "number";
-    // 显示名 DisplayName
-    num.display_name = "Number";
-    // 描述
-    num.description = "数字";
-    // 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
-    srv.addVariableNode(num);
+      rm::OpcuaServer srv(4840);
 
-    while (!stop) {
-        srv.spinOnce();
-    }
-    // srv.shutdown(); 可省略，后文不再赘述
-}
-```
+      // 定义 double 型变量，如果要强制使用 3.14 定义 float 型变量，
+      // 可以使用 rm::Variable num = float(3.14);
+      rm::Variable num = 3.14;
+      // 浏览名 BrowseName
+      num.browse_name = "number";
+      // 显示名 DisplayName
+      num.display_name = "Number";
+      // 描述
+      num.description = "数字";
+      // 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
+      srv.addVariableNode(num);
 
-@end_toggle
+      while (!stop) {
+          srv.spinOnce();
+      }
+      // srv.shutdown(); 可省略，后文不再赘述
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# server.py
-from signal import signal, SIGINT
-import rm
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-stop = False
+  stop = False
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-signal(SIGINT, onStop)
+  signal(SIGINT, onStop)
 
-"""
-RMVL-Python 的 opcua 模块仅支持
+  """
+  RMVL-Python 的 opcua 模块仅支持
+  
+  - int, float, str, bool
+  - list[int], list[float]
+  
+  类型的变量
+  """
 
-- int, float, str, bool
-- list[int], list[float]
+  svr = rm.OpcuaServer(4840)
+  # 定义 float 型变量
+  num = rm.Variable(3.14)
+  # 浏览名 BrowseName
+  num.browse_name = "number"
+  # 显示名 DisplayName
+  num.display_name = "Number"
+  # 描述
+  num.description = "数字"
+  # 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
+  svr.addVariableNode(num)
 
-类型的变量
-"""
+  while not stop:
+      svr.spinOnce()
+  # srv.shutdown() 可省略，后文不再赘述
+  ```
 
-svr = rm.OpcuaServer(4840)
-# 定义 float 型变量
-num = rm.Variable(3.14)
-# 浏览名 BrowseName
-num.browse_name = "number"
-# 显示名 DisplayName
-num.display_name = "Number"
-# 描述
-num.description = "数字"
-# 添加到服务器的默认位置（默认被添加至 ObjectsFolder 下）
-svr.addVariableNode(num)
-
-while not stop:
-    svr.spinOnce()
-# srv.shutdown() 可省略，后文不再赘述
-```
-
-@end_toggle
+</div>
 
 然后在客户端中直接读取变量节点。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client.cpp
-#include <rmvl/opcua/client.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+  ```cpp
+  // client.cpp
+  #include <rmvl/opcua/client.hpp>
 
-    // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
-    auto node = rm::nodeObjectsFolder | cli.node("number");
-    // 或者可以直接使用 find 方法，寻找 rm::nodeObjectsFolder 下命名空间为 1 的节点（更推荐！）
-    // auto node = cli.find("number");
-    // 读取变量
-    rm::Variable target = cli.read(node);
-    // 判断是否为空
-    if (target.empty()) {
-        ERROR_("Failed to read the variable.");
-        return 0;
-    }
-    // 使用静态成员函数将 target 转化为目标格式，并打印
-    printf("%f\n", rm::Variable::cast<double>(target));
-    // 或者直接使用 target 的成员函数进行转化
-    // printf("%f\n", target.cast<double>());
-}
-```
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+      // 使用管道运算符 "|" 进行路径搜索，寻找待读取的变量
+      auto node = rm::nodeObjectsFolder | cli.node("number");
+      // 或者可以直接使用 find 方法，寻找 rm::nodeObjectsFolder 下命名空间为 1 的节点（更推荐！）
+      // auto node = cli.find("number");
+      // 读取变量
+      rm::Variable target = cli.read(node);
+      // 判断是否为空
+      if (target.empty()) {
+          ERROR_("Failed to read the variable.");
+          return 0;
+      }
+      // 使用成员函数将 target 转化为目标格式，并打印
+      printf("%f\n", target.cast<double>());
+  }
+  ```
 
-@end_toggle
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # client.py
+  import rm
 
-```python
-# client.py
-import rm
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
+  # 路径搜索，寻找待读取的变量
+  node = cli.find("number")
+  # 读取变量
+  target = cli.read(node)
+  # 判断是否为空
+  if target.empty():
+      print("Failed to read the variable.")
+      exit(0)
+  # 使用成员函数将 target 转化为目标格式，并打印
+  print(target.double())
+  ```
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
-# 路径搜索，寻找待读取的变量
-node = cli.find("number")
-# 读取变量
-target = cli.read(node)
-# 判断是否为空
-if target.empty():
-    print("Failed to read the variable.")
-    exit(0)
-# 使用静态成员函数将 target 转化为目标格式，并打印
-print(target.double())
-```
-
-@end_toggle
+</div>
 
 ### 2.3 方法
 
 在服务器中添加两数之和的方法节点，供客户端调用。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+- <b class="tab-title">C++</b>
 
-static bool stop = false;
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    rm::OpcuaServer srv(4840);
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    // 定义方法，初始化或设置 rm::Method::func 成员必须使用以下兼容形式的可调用对象
-    // std::function<pair<bool, rm::Variables>(const rm::NodeId &, const rm::Variables &)>
-    // 其中 rm::Variables 是 std::vector<rm::Variable> 的别名
-    rm::Method method = [](const rm::NodeId &, const rm::Variables &iargs) {
-        int num1 = iargs[0], num2 = iargs[1];
-        rm::Variables oargs = {num1 + num2};
-        return std::make_pair(true, oargs);
-    };
-    method.browse_name = "add";
-    method.display_name = "Add";
-    method.description = "两数之和";
-    // 定义函数传入参数 iargs 的类型说明
-    method.iargs = {{"Number 1", rm::tpInt32},
-                    {"Number 2", rm::tpInt32}};
-    // 也可以使用 create 工厂函数创建参数，后文不再赘述
-    // method.iargs = {rm::Argument::create("Number 1", rm::tpInt32), 
-    //                 rm::Argument::create("Number 2", rm::tpInt32)};
+      rm::OpcuaServer srv(4840);
 
-    // 定义函数返回值 oargs 的类型说明
-    method.oargs = {{"Sum", rm::tpInt32}};
+      // 定义方法，初始化或设置 rm::Method::func 成员必须使用以下兼容形式的可调用对象
+      // std::function<pair<bool, rm::Variables>(const rm::NodeId &, const rm::Variables &)>
+      // 其中 rm::Variables 是 std::vector<rm::Variable> 的别名
+      rm::Method method = [](const rm::NodeId &, const rm::Variables &iargs) {
+          int num1 = iargs[0], num2 = iargs[1];
+          rm::Variables oargs = {num1 + num2};
+          return std::make_pair(true, oargs);
+      };
+      method.browse_name = "add";
+      method.display_name = "Add";
+      method.description = "两数之和";
+      // 定义函数传入参数 iargs 的类型说明
+      method.iargs = {{"Number 1", rm::tpInt32},
+                      {"Number 2", rm::tpInt32}};
+      // 也可以使用 create 工厂函数创建参数，后文不再赘述
+      // method.iargs = {rm::Argument::create("Number 1", rm::tpInt32), 
+      //                 rm::Argument::create("Number 2", rm::tpInt32)};
 
-    /*
-        1. 数据类型也可使用在 open62541 中定义的 UA_TYPES_ 作为前缀的宏，如 rm::tpInt32 可使用 UA_TYPES_INT32 宏
-        2. {"Number 1", rm::tpInt32} 的部分是 rm::Argument 的聚合类，表示方法的参数
-        3. 允许有多个返回值，即 oargs 的长度允许 > 1
-    */
+      // 定义函数返回值 oargs 的类型说明
+      method.oargs = {{"Sum", rm::tpInt32}};
 
-    // 方法节点添加至服务器
-    srv.addMethodNode(method);
+      /*
+          1. 数据类型也可使用在 open62541 中定义的 UA_TYPES_ 作为前缀的宏，如 rm::tpInt32 可使用 UA_TYPES_INT32 宏
+          2. {"Number 1", rm::tpInt32} 的部分是 rm::Argument 的聚合类，表示方法的参数
+          3. 允许有多个返回值，即 oargs 的长度允许 > 1
+      */
+
+      // 方法节点添加至服务器
+      srv.addMethodNode(method);
     
-    while (!stop) {
-        srv.spinOnce();
-    }
-}
-```
+      while (!stop) {
+          srv.spinOnce();
+      }
+  }
+  ```
 
-@end_toggle
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-```python
-# server.py
-from signal import signal, SIGINT
-import rm
+  stop = False
 
-stop = False
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  svr = rm.OpcuaServer(4840)
 
-svr = rm.OpcuaServer(4840)
-
-# 定义方法，初始化或设置 rm.Method.func 成员必须使用以下形式的可调用对象
-# Callable[[NodeId, Variables], tuple[bool, Variables]]
-# 其中 Variables 是 list[Variable] 的别名
-def add(nd, iargs):
-    num1, num2 = iargs
-    oarg = rm.Variable(num1.int() + num2.int())
-    return True, [oarg]
+  # 定义方法，初始化或设置 rm.Method.func 成员必须使用以下形式的可调用对象
+  # Callable[[NodeId, Variables], tuple[bool, Variables]]
+  # 其中 Variables 是 list[Variable] 的别名
+  def add(nd, iargs):
+      num1, num2 = iargs
+      oarg = rm.Variable(num1.int() + num2.int())
+      return True, [oarg]
 
 
-method = rm.Method(add)
-method.browse_name = "add"
-method.display_name = "Add"
-method.description = "两数之和"
-# 定义函数传入参数 iargs 的类型说明
-iarg1 = rm.Argument.create("Number 1", rm.tp_int)
-iarg2 = rm.Argument.create("Number 2", rm.tp_int)
-method.iargs = [iarg1, iarg2]
-# 定义函数返回值 oargs 的类型说明
-oarg = rm.Argument.create("Sum", rm.tp_int)
-method.oargs = [oarg]
+  method = rm.Method(add)
+  method.browse_name = "add"
+  method.display_name = "Add"
+  method.description = "两数之和"
+  # 定义函数传入参数 iargs 的类型说明
+  iarg1 = rm.Argument.create("Number 1", rm.tp_int)
+  iarg2 = rm.Argument.create("Number 2", rm.tp_int)
+  method.iargs = [iarg1, iarg2]
+  # 定义函数返回值 oargs 的类型说明
+  oarg = rm.Argument.create("Sum", rm.tp_int)
+  method.oargs = [oarg]
 
-"""
-允许有多个返回值，即 oargs 的长度允许 > 1
-"""
+  """
+  允许有多个返回值，即 oargs 的长度允许 > 1
+  """
 
-# 方法节点添加至服务器
-svr.addMethodNode(method)
+  # 方法节点添加至服务器
+  svr.addMethodNode(method)
 
-while not stop:
-    svr.spinOnce()
-```
+  while not stop:
+      svr.spinOnce()
+  ```
 
-@end_toggle
+</div>
 
 在客户端调用指定方法。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client.cpp
-#include <rmvl/opcua/client.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+  ```cpp
+  // client.cpp
+  #include <rmvl/opcua/client.hpp>
 
-    // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
-    rm::Variables iargs = {1, 2};
-    // 调用方法，判断调用是否成功，并存储结果
-    auto [res, oargs] = cli.call("add", iargs);
-    if (!res)
-        ERROR_("Failed to call the method");
-    else
-        printf("retval = %d\n", oargs.front().cast<int>());
-}
-```
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
 
-此外，还可以使用 `OpcuaClient::callx` 方法的变参模板直接从底层数据进行调用，例如
+      // 设置输入参数，1 和 2 是 Int32 类型的，因此可以直接隐式构造
+      rm::Variables iargs = {1, 2};
+      // 调用方法，判断调用是否成功，并存储结果
+      auto [res, oargs] = cli.call("add", iargs);
+      if (!res)
+          ERROR_("Failed to call the method");
+      else
+          printf("retval = %d\n", oargs.front().cast<int>());
+  }
+  ```
 
-```cpp
-// client.cpp
-#include <rmvl/opcua/client.hpp>
+  此外，还可以使用 `OpcuaClient::callx` 方法的变参模板直接从底层数据进行调用，例如
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+  ```cpp
+  // client.cpp
+  #include <rmvl/opcua/client.hpp>
 
-    auto [res, oargs] = cli.callx("add", 1, 2);
-    if (!res)
-        ERROR_("Failed to call the method");
-    else
-        printf("retval = %d\n", oargs.front().cast<int>());
-}
-```
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
 
-@end_toggle
+      auto [res, oargs] = cli.callx("add", 1, 2);
+      if (!res)
+          ERROR_("Failed to call the method");
+      else
+          printf("retval = %d\n", oargs.front().cast<int>());
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client.py
-import rm
+  ```python
+  # client.py
+  import rm
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.0:4840")
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.0:4840")
 
-# 设置输入参数
-iargs = [rm.Variable(1), rm.Variable(2)]
-# 调用方法，判断调用是否成功，并存储结果
-res, oargs = cli.call("add", iargs)
-if not res:
-    print("Failed to call the method")
-else:
-    print(f"retval = {oargs[0].int()}")
-```
+  # 设置输入参数
+  iargs = [rm.Variable(1), rm.Variable(2)]
+  # 调用方法，判断调用是否成功，并存储结果
+  res, oargs = cli.call("add", iargs)
+  if not res:
+      print("Failed to call the method")
+  else:
+      print(f"retval = {oargs[0].int()}")
+  ```
 
-@end_toggle
+</div>
 
 ### 2.4 对象
 
@@ -555,241 +544,239 @@ A
     └── C3: "xyz"
 ```
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+- <b class="tab-title">C++</b>
 
-static bool stop = false;
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    rm::OpcuaServer srv(4840);
-    // 准备对象节点数据 A
-    rm::Object a;
-    a.browse_name = a.description = a.display_name = "A";
-    // 添加对象节点 A 至服务器
-    auto node_a = srv.addObjectNode(a);
-    // 准备对象节点数据 B1
-    rm::Object b1;
-    b1.browse_name = b1.description = b1.display_name = "B1";
-    // 准备 B1 的变量节点 C1
-    rm::Variable c1 = 3.14;
-    c1.browse_name = c1.description = c1.display_name = "C1";
-    b1.add(c1);
-    // 准备 B1 的变量节点 C2
-    rm::Variable c2 = 666;
-    c2.browse_name = c2.description = c2.display_name = "C2";
-    b1.add(c2);
-    // 添加对象节点 B1 至服务器
-    srv.addObjectNode(b1, node_a);
-    // 准备对象节点数据 B2
-    rm::Object b2;
-    b2.browse_name = b2.description = b2.display_name = "B2";
-    // 准备 B2 的变量节点 C3
-    rm::Variable c3 = "xyz";
-    c3.browse_name = c3.description = c3.display_name = "C3";
-    b2.add(c3);
-    // 添加对象节点 B2 至服务器
-    srv.addObjectNode(b2, node_a);
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    while (!stop)
-        srv.spinOnce();
-}
-```
+      rm::OpcuaServer srv(4840);
+      // 准备对象节点数据 A
+      rm::Object a;
+      a.browse_name = a.description = a.display_name = "A";
+      // 添加对象节点 A 至服务器
+      auto node_a = srv.addObjectNode(a);
+      // 准备对象节点数据 B1
+      rm::Object b1;
+      b1.browse_name = b1.description = b1.display_name = "B1";
+      // 准备 B1 的变量节点 C1
+      rm::Variable c1 = 3.14;
+      c1.browse_name = c1.description = c1.display_name = "C1";
+      b1.add(c1);
+      // 准备 B1 的变量节点 C2
+      rm::Variable c2 = 666;
+      c2.browse_name = c2.description = c2.display_name = "C2";
+      b1.add(c2);
+      // 添加对象节点 B1 至服务器
+      srv.addObjectNode(b1, node_a);
+      // 准备对象节点数据 B2
+      rm::Object b2;
+      b2.browse_name = b2.description = b2.display_name = "B2";
+      // 准备 B2 的变量节点 C3
+      rm::Variable c3 = "xyz";
+      c3.browse_name = c3.description = c3.display_name = "C3";
+      b2.add(c3);
+      // 添加对象节点 B2 至服务器
+      srv.addObjectNode(b2, node_a);
 
-@end_toggle
+      while (!stop)
+          srv.spinOnce();
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# server.py
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-from signal import signal, SIGINT
-import rm
+  stop = False
 
-stop = False
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  svr = rm.OpcuaServer(4840)
+  # 准备对象节点数据 A
+  a = rm.Object()
+  a.browse_name = a.description = a.display_name = "A"
+  # 添加对象节点 A 至服务器
+  node_a = svr.addObjectNode(a)
+  # 准备对象节点数据 B1
+  b1 = rm.Object()
+  b1.browse_name = b1.description = b1.display_name = "B1"
+  # 准备 B1 的变量节点 C1
+  c1 = rm.Variable(3.14)
+  c1.browse_name = c1.description = c1.display_name = "C1"
+  b1.add(c1)
+  # 准备 B1 的变量节点 C2
+  c2 = rm.Variable(666)
+  c2.browse_name = c2.description = c2.display_name = "C2"
+  b1.add(c2)
+  # 添加对象节点 B1 至服务器
+  svr.addObjectNode(b1, node_a)
+  # 准备对象节点数据 B2
+  b2 = rm.Object()
+  b2.browse_name = b2.description = b2.display_name = "B2"
+  # 准备 B2 的变量节点 C3
+  c3 = rm.Variable("xyz")
+  c3.browse_name = c3.description = c3.display_name = "C3"
+  b2.add(c3)
+  # 添加对象节点 B2 至服务器
+  svr.addObjectNode(b2, node_a)
 
-svr = rm.OpcuaServer(4840)
-# 准备对象节点数据 A
-a = rm.Object()
-a.browse_name = a.description = a.display_name = "A"
-# 添加对象节点 A 至服务器
-node_a = svr.addObjectNode(a)
-# 准备对象节点数据 B1
-b1 = rm.Object()
-b1.browse_name = b1.description = b1.display_name = "B1"
-# 准备 B1 的变量节点 C1
-c1 = rm.Variable(3.14)
-c1.browse_name = c1.description = c1.display_name = "C1"
-b1.add(c1)
-# 准备 B1 的变量节点 C2
-c2 = rm.Variable(666)
-c2.browse_name = c2.description = c2.display_name = "C2"
-b1.add(c2)
-# 添加对象节点 B1 至服务器
-svr.addObjectNode(b1, node_a)
-# 准备对象节点数据 B2
-b2 = rm.Object()
-b2.browse_name = b2.description = b2.display_name = "B2"
-# 准备 B2 的变量节点 C3
-c3 = rm.Variable("xyz")
-c3.browse_name = c3.description = c3.display_name = "C3"
-b2.add(c3)
-# 添加对象节点 B2 至服务器
-svr.addObjectNode(b2, node_a)
+  while not stop:
+      svr.spinOnce()
+  ```
 
-while not stop:
-    svr.spinOnce()
-```
-
-@end_toggle
+</div>
 
 在客户端寻找 `C2` 和 `C3` 并打印。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client.cpp
-#include <iostream>
-#include <rmvl/opcua/client.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+  ```cpp
+  // client.cpp
+  #include <iostream>
+  #include <rmvl/opcua/client.hpp>
 
-    // 路径搜索寻找 C2
-    auto node_c2 = rm::nodeObjectsFolder | cli.node("A") | cli.node("B1") | cli.node("C2");
-    // 也可以直接使用 find 方法，寻找 rm::nodeObjectsFolder 下的节点（更推荐！）
-    // auto node_c2 = cli.find("A/B1/C2");
-    rm::Variable c2 = cli.read(node_c2);
-    std::cout << c2.cast<int>() << std::endl;
-    // 路径搜索寻找 C3
-    auto node_c3 = cli.find("A/B2/C3");
-    rm::Variable c3 = cli.read(node_c3);
-    std::cout << c3.cast<std::string>() << std::endl;
-}
-```
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
 
-@end_toggle
+      // 路径搜索寻找 C2
+      auto node_c2 = rm::nodeObjectsFolder | cli.node("A") | cli.node("B1") | cli.node("C2");
+      // 也可以直接使用 find 方法，寻找 rm::nodeObjectsFolder 下的节点（更推荐！）
+      // auto node_c2 = cli.find("A/B1/C2");
+      rm::Variable c2 = cli.read(node_c2);
+      std::cout << c2.cast<int>() << std::endl;
+      // 路径搜索寻找 C3
+      auto node_c3 = cli.find("A/B2/C3");
+      rm::Variable c3 = cli.read(node_c3);
+      std::cout << c3.cast<std::string>() << std::endl;
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client.py
-import rm
+  ```python
+  # client.py
+  import rm
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
 
-# 路径搜索寻找 C2
-node_c2 = cli.find("A/B1/C2")
-c2 = cli.read(node_c2)
-print(c2.int())
-# 路径搜索寻找 C3
-node_c3 = cli.find("A/B2/C3")
-c3 = cli.read(node_c3)
-print(c3.str())
-```
+  # 路径搜索寻找 C2
+  node_c2 = cli.find("A/B1/C2")
+  c2 = cli.read(node_c2)
+  print(c2.int())
+  # 路径搜索寻找 C3
+  node_c3 = cli.find("A/B2/C3")
+  c3 = cli.read(node_c3)
+  print(c3.str())
+  ```
 
-@end_toggle
+</div>
 
 ### 2.5 视图
 
 在 `nodeObjectsFolder` 中先添加 `A/num1`、`num2` 2 个变量节点，并将 `num1` 和 `num2` 加入视图，下面的示例演示在 **服务器** 中创建并添加视图节点。若要在客户端中进行此操作，创建并添加视图节点的步骤基本一致，这里不做展示。需要注意的是，在客户端中创建并添加视图节点，需要提前在服务器中加入对应的（变量、方法、对象……）节点
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+- <b class="tab-title">C++</b>
 
-static bool stop = false;
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    rm::OpcuaServer srv(4840);
-    // 准备对象节点数据 A
-    rm::Object a;
-    a.browse_name = a.description = a.display_name = "A";
-    // 创建 num1 变量节点
-    rm::Variable num1 = 1;
-    num1.browse_name = "num1";
-    num1.display_name = "num1";
-    num1.description = "num1";
-    a.add(num1);
-    auto node_a = srv.addObjectNode(a);
-    auto node_num1 = srv.find("A/num1");
-    // 这里稍微展示一下，使用宏来创建 num2，这里也可以使用上文的方式创建 :)
-    uaCreateVariable(num2, 2);
-    auto node_num2 = srv.addVariableNode(num2);
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    // 创建视图
-    rm::View num_view;
-    // 添加节点至视图（这里使用的是变量节点的 NodeId，实际上其他节点也是允许的）
-    num_view.add(node_num1, node_num2);
-    // 添加至服务器
-    srv.addViewNode(num_view);
+      rm::OpcuaServer srv(4840);
+      // 准备对象节点数据 A
+      rm::Object a;
+      a.browse_name = a.description = a.display_name = "A";
+      // 创建 num1 变量节点
+      rm::Variable num1 = 1;
+      num1.browse_name = "num1";
+      num1.display_name = "num1";
+      num1.description = "num1";
+      a.add(num1);
+      auto node_a = srv.addObjectNode(a);
+      auto node_num1 = srv.find("A/num1");
+      // 这里稍微展示一下，使用宏来创建 num2，这里也可以使用上文的方式创建 :)
+      uaCreateVariable(num2, 2);
+      auto node_num2 = srv.addVariableNode(num2);
+
+      // 创建视图
+      rm::View num_view;
+      // 添加节点至视图（这里使用的是变量节点的 NodeId，实际上其他节点也是允许的）
+      num_view.add(node_num1, node_num2);
+      // 添加至服务器
+      srv.addViewNode(num_view);
     
-    while (!stop)
-        srv.spinOnce();
-}
-```
+      while (!stop)
+          srv.spinOnce();
+  }
+  ```
 
-@end_toggle
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-```python
-# server.py
+  stop = False
 
-from signal import signal, SIGINT
-import rm
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-stop = False
+  signal(SIGINT, onStop)
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  svr = rm.OpcuaServer(4840)
+  # 准备对象节点数据 A
+  a = rm.Object()
+  a.browse_name = a.description = a.display_name = "A"
+  # 创建 num1
+  num1 = rm.Variable(1)
+  num1.browse_name = num1.description = num1.display_name = "num1"
+  a.add(num1)
+  node_a = svr.addObjectNode(a)
+  node_num1 = svr.find("A/num1")
+  # 创建 num2
+  num2 = rm.Variable(2)
+  num2.browse_name = num2.description = num2.display_name = "num2"
+  node_num2 = svr.addVariableNode(num2)
 
-signal(SIGINT, onStop)
+  # 创建视图
+  num_view = rm.View()
+  # 添加节点至视图
+  num_view.add(node_num1, node_num2)
+  # 添加至服务器
+  svr.addViewNode(num_view)
 
-svr = rm.OpcuaServer(4840)
-# 准备对象节点数据 A
-a = rm.Object()
-a.browse_name = a.description = a.display_name = "A"
-# 创建 num1
-num1 = rm.Variable(1)
-num1.browse_name = num1.description = num1.display_name = "num1"
-a.add(num1)
-node_a = svr.addObjectNode(a)
-node_num1 = svr.find("A/num1")
-# 创建 num2
-num2 = rm.Variable(2)
-num2.browse_name = num2.description = num2.display_name = "num2"
-node_num2 = svr.addVariableNode(num2)
+  while not stop:
+      svr.spinOnce()
+  ```
 
-# 创建视图
-num_view = rm.View()
-# 添加节点至视图
-num_view.add(node_num1, node_num2)
-# 添加至服务器
-svr.addViewNode(num_view)
-
-while not stop:
-    svr.spinOnce()
-```
-
-@end_toggle
+</div>
 
 ### 2.6 监视
 
@@ -799,163 +786,164 @@ OPC UA 支持变量节点和事件的监视，下面分别以变量节点和事�
 
 首先在服务器中添加待监视的变量节点
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+- <b class="tab-title">C++</b>
 
-static bool stop = false;
+  ```cpp
+  // server.cpp
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    rm::OpcuaServer srv(4840);
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    // 定义 int 型变量
-    rm::Variable num = 100;
-    num.browse_name = "number";
-    num.display_name = "Number";
-    num.description = "数字";
-    // 添加到服务器的默认位置
-    srv.addVariableNode(num);
+      rm::OpcuaServer srv(4840);
 
-    while (!stop)
-        srv.spinOnce();
-}
-```
+      // 定义 int 型变量
+      rm::Variable num = 100;
+      num.browse_name = "number";
+      num.display_name = "Number";
+      num.description = "数字";
+      // 添加到服务器的默认位置
+      srv.addVariableNode(num);
 
-@end_toggle
+      while (!stop)
+          srv.spinOnce();
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# server.py
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-from signal import signal, SIGINT
-import rm
+  stop = False
 
-stop = False
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  svr = rm.OpcuaServer(4840)
+  # 定义 int 型变量
+  num = rm.Variable(100)
+  num.browse_name = "number"
+  num.display_name = "Number"
+  num.description = "数字"
+  # 添加到服务器的默认位置
+  svr.addVariableNode(num)
 
-svr = rm.OpcuaServer(4840)
-# 定义 int 型变量
-num = rm.Variable(100)
-num.browse_name = "number"
-num.display_name = "Number"
-num.description = "数字"
-# 添加到服务器的默认位置
-svr.addVariableNode(num)
+  while not stop:
+      svr.spinOnce()
+  ```
 
-while not stop:
-    svr.spinOnce()
-```
-
-@end_toggle
+</div>
 
 在客户端 1 中修改变量节点的数据
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client_1.cpp
-#include <rmvl/opcua/client.hpp>
-#include <rmvl/core/timer.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
-    auto node = cli.find("number");
-    for (int i = 0; i < 100; ++i) {
-        Timer::sleep_for(1000);
-        // 写入数据，i + 200 隐式构造成了 rm::Variable
-        bool success = cli.write(node, i + 200);
-        if (!success)
-            ERROR_("Failed to write data to the variable.");
-    }
-}
-```
+  ```cpp
+  // client_1.cpp
+  #include <rmvl/opcua/client.hpp>
+  #include <rmvl/core/timer.hpp>
 
-@end_toggle
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+      auto node = cli.find("number");
+      for (int i = 0; i < 100; ++i) {
+          Timer::sleep_for(1000);
+          // 写入数据，i + 200 隐式构造成了 rm::Variable
+          bool success = cli.write(node, i + 200);
+          if (!success)
+              ERROR_("Failed to write data to the variable.");
+      }
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client_1.py
+  ```python
+  # client_1.py
 
-import rm
-import time
+  import rm
+  import time
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
-node = cli.find("number")
-for i in range(100):
-    time.sleep(1)
-    # 写入数据
-    success = cli.write(node, rm.Variable(i + 200))
-    if not success:
-        print("Failed to write data to the variable.")
-```
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
+  node = cli.find("number")
+  for i in range(100):
+      time.sleep(1)
+      # 写入数据
+      success = cli.write(node, rm.Variable(i + 200))
+      if not success:
+          print("Failed to write data to the variable.")
+  ```
 
-@end_toggle
+</div>
 
 然后，在客户端 2 中监视变量节点
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client_2.cpp
-#include <rmvl/opcua/client.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
-    auto node = cli.find("number");
-    // 监视变量
-    auto on_change = [](rm::OpcuaClientView, const rm::Variable &value) {
-        int receive_data = value;
-        printf("Data (n=number) was changed to: %d\n", receive_data);
-    };
-    cli.monitor(node, on_change, 5);
-    // 线程阻塞
-    cli.spin();
-}
-```
+  ```cpp
+  // client_2.cpp
+  #include <rmvl/opcua/client.hpp>
 
-@end_toggle
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+      auto node = cli.find("number");
 
-@add_toggle_python
+      // 监视变量
+      auto on_change = [](rm::OpcuaClientView, const rm::Variable &value) {
+          int receive_data = value;
+          printf("Data (n=number) was changed to: %d\n", receive_data);
+      };
+      cli.monitor(node, on_change, 5);
 
-```python
-# client_2.py
+      // 线程阻塞
+      cli.spin();
+  }
+  ```
 
-from signal import signal, SIGINT
-import rm
+- <b class="tab-title">Python</b>
 
-stop = False
+  ```python
+  # client_2.py
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  from signal import signal, SIGINT
+  import rm
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
-node = cli.find("number")
+  stop = False
 
-# 监视变量
-def on_change(view, value):
-    receive_data = value.int()
-    print(f"Data (n=number) was changed to: {receive_data}")
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-cli.monitor(node, on_change, 5)
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
+  node = cli.find("number")
 
-while not stop:
-    cli.spinOnce()
-```
+  # 监视变量
+  def on_change(view, value):
+      receive_data = value.int()
+      print(f"Data (n=number) was changed to: {receive_data}")
 
-@end_toggle
+  cli.monitor(node, on_change, 5)
+
+  while not stop:
+      cli.spinOnce()
+  ```
+
+</div>
 
 #### 2.6.2 事件监视
 
@@ -968,348 +956,350 @@ while not stop:
 
 如下所示。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
+- <b class="tab-title">C++</b>
 
-#include <rmvl/opcua/server.hpp>
-#include <thread>
+  ```cpp
+  // server.cpp
+  #include <csignal>
 
-using namespace std::chrono_literals;
+  #include <rmvl/opcua/server.hpp>
+  #include <thread>
 
-static bool stop = false;
+  using namespace std::chrono_literals;
 
-// OPC UA 状态
-enum class OPCUAState {
-    NONE,  // 无状态
-    START, // 设备启动中...
-    STOP,  // 设备关闭中...
-};
+  static bool stop = false;
 
-int main() {
-    // OPC UA 状态
-    OPCUAState mode{};
+  // OPC UA 状态
+  enum class OPCUAState {
+      NONE,  // 无状态
+      START, // 设备启动中...
+      STOP,  // 设备关闭中...
+  };
 
-    // 完成事件类型
-    rm::EventType finish_type_info;
-    finish_type_info.browse_name = "finish_type";
-    finish_type_info.display_name = "FinishType";
-    finish_type_info.description = "任务执行完成时触发的事件";
-    finish_type_info.add("Result", 0);
-    auto finish_info = rm::Event::makeFrom(finish_type_info);
+  int main() {
+      // OPC UA 状态
+      OPCUAState mode{};
 
-    // 启动设备
-    rm::Method start_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
-        if (mode != OPCUAState::NONE)
-            return {false, {}};
-        mode = OPCUAState::START;
-        return {true, {}};
-    };
-    start_info.browse_name = "start";
-    start_info.display_name = "Start";
-    start_info.description = "启动设备";
+      // 完成事件类型
+      rm::EventType finish_type_info;
+      finish_type_info.browse_name = "finish_type";
+      finish_type_info.display_name = "FinishType";
+      finish_type_info.description = "任务执行完成时触发的事件";
+      finish_type_info.add("Result", 0);
+      auto finish_info = rm::Event::makeFrom(finish_type_info);
 
-    // 关闭设备
-    rm::Method stop_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
-        if (mode != OPCUAState::NONE)
-            return {false, {}};
-        mode = OPCUAState::STOP;
-        return {true, {}};
-    };
-    stop_info.browse_name = "stop";
-    stop_info.display_name = "Stop";
-    stop_info.description = "关闭设备";
+      // 启动设备
+      rm::Method start_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
+          if (mode != OPCUAState::NONE)
+              return {false, {}};
+          mode = OPCUAState::START;
+          return {true, {}};
+      };
+      start_info.browse_name = "start";
+      start_info.display_name = "Start";
+      start_info.description = "启动设备";
 
-    // 服务器
-    signal(SIGINT, [](int) { stop = true; });
-    rm::OpcuaServer srv(4840);
-    srv.addEventTypeNode(msg_type_info);
-    srv.addMethodNode(start_info);
+      // 关闭设备
+      rm::Method stop_info = [&](const rm::NodeId &, const rm::Variables &) -> std::pair<bool, rm::Variables> {
+          if (mode != OPCUAState::NONE)
+              return {false, {}};
+          mode = OPCUAState::STOP;
+          return {true, {}};
+      };
+      stop_info.browse_name = "stop";
+      stop_info.display_name = "Stop";
+      stop_info.description = "关闭设备";
 
-    while (!stop) {
-        srv.spinOnce();
-        if (mode == OPCUAState::START) {
-            // 实际发出 Start 指令
+      // 服务器
+      signal(SIGINT, [](int) { stop = true; });
+      rm::OpcuaServer srv(4840);
+      srv.addEventTypeNode(msg_type_info);
+      srv.addMethodNode(start_info);
 
-            /* code */
+      while (!stop) {
+          srv.spinOnce();
+          if (mode == OPCUAState::START) {
+              // 实际发出 Start 指令
 
-            // 'true' 应改为状态确定发生变更的判断条件
-            if (true) {
-                finish_info.message = "Start";
-                finish_info["Result"] = 0;
-                srv.triggerEvent(finish_info);
-                mode = OPCUAState::NONE; // 恢复 OPC UA 状态
-            }
-        } else if (mode == OPCUAState::STOP) {
-            // 实际发出 Stop 指令
+              /* code */
 
-            /* code */
+              // 'true' 应改为状态确定发生变更的判断条件
+              if (true) {
+                  finish_info.message = "Start";
+                  finish_info["Result"] = 0;
+                  srv.triggerEvent(finish_info);
+                  mode = OPCUAState::NONE; // 恢复 OPC UA 状态
+              }
+          } else if (mode == OPCUAState::STOP) {
+              // 实际发出 Stop 指令
 
-            // 'true' 应改为状态确定发生变更的判断条件
-            if (true) {
-                finish_info.message = "Stop";
-                finish_info["Result"] = 0;
-                srv.triggerEvent(finish_info);
-                mode = OPCUAState::NONE; // 恢复 OPC UA 状态
-            }
-        }
-    }
-}
-```
+              /* code */
 
-@end_toggle
+              // 'true' 应改为状态确定发生变更的判断条件
+              if (true) {
+                  finish_info.message = "Stop";
+                  finish_info["Result"] = 0;
+                  srv.triggerEvent(finish_info);
+                  mode = OPCUAState::NONE; // 恢复 OPC UA 状态
+              }
+          }
+      }
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# server.py
-from signal import signal, SIGINT
-from enum import Enum
-import rm
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  from enum import Enum
+  import rm
 
-stop = False
+  stop = False
 
-# OPC UA 状态
-class OPCUAState(Enum):
-    NONE = 0  # 无状态
-    START = 1 # 设备启动中...
-    STOP = 2  # 设备关闭中...
+  # OPC UA 状态
+  class OPCUAState(Enum):
+      NONE = 0  # 无状态
+      START = 1 # 设备启动中...
+      STOP = 2  # 设备关闭中...
 
-mode = OPCUAState.NONE
+  mode = OPCUAState.NONE
 
-# 事件类型
-msg_type_info = rm.EventType()
-msg_type_info.browse_name = "finish_type"
-msg_type_info.display_name = "FinishType"
-msg_type_info.description = "任务执行完成时触发的事件"
-msg_type_info.add("Result", 0)
-finish_info = rm.Event.makeFrom(msg_type_info)
+  # 事件类型
+  msg_type_info = rm.EventType()
+  msg_type_info.browse_name = "finish_type"
+  msg_type_info.display_name = "FinishType"
+  msg_type_info.description = "任务执行完成时触发的事件"
+  msg_type_info.add("Result", 0)
+  finish_info = rm.Event.makeFrom(msg_type_info)
 
-# 启动设备
-def start_cb(sv, iargs):
-    global mode
-    if mode != OPCUAState.NONE:
-        return False, {}
-    mode = OPCUAState.START
-    return True, {}
+  # 启动设备
+  def start_cb(sv, iargs):
+      global mode
+      if mode != OPCUAState.NONE:
+          return False, {}
+      mode = OPCUAState.START
+      return True, {}
 
-start_info = rm.Method(start_cb)
-start_info.browse_name = "start"
-start_info.display_name = "Start"
-start_info.description = "启动设备"
+  start_info = rm.Method(start_cb)
+  start_info.browse_name = "start"
+  start_info.display_name = "Start"
+  start_info.description = "启动设备"
 
-# 关闭设备
-def stop_cb(nd, iargs):
-    global mode
-    if mode != OPCUAState.NONE:
-        return False, {}
-    mode = OPCUAState.STOP
-    return True, {}
+  # 关闭设备
+  def stop_cb(nd, iargs):
+      global mode
+      if mode != OPCUAState.NONE:
+          return False, {}
+      mode = OPCUAState.STOP
+      return True, {}
 
-stop_info = rm.Method(stop_cb)
-stop_info.browse_name = "stop"
-stop_info.display_name = "Stop"
-stop_info.description = "关闭设备"
+  stop_info = rm.Method(stop_cb)
+  stop_info.browse_name = "stop"
+  stop_info.display_name = "Stop"
+  stop_info.description = "关闭设备"
 
-# 服务器
-def onStop(sig, frame):
-    global stop
-    stop = True
+  # 服务器
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-signal(SIGINT, onStop)
+  signal(SIGINT, onStop)
 
-svr = rm.OpcuaServer(4840)
-svr.addEventTypeNode(msg_type_info)
-svr.addMethodNode(start_info)
+  svr = rm.OpcuaServer(4840)
+  svr.addEventTypeNode(msg_type_info)
+  svr.addMethodNode(start_info)
 
-while not stop:
-    svr.spinOnce()
-    if mode == OPCUAState.START:
-        # 实际发出 Start 指令
-        """
-        code
-        """
+  while not stop:
+      svr.spinOnce()
+      if mode == OPCUAState.START:
+          # 实际发出 Start 指令
+          """
+          code
+          """
 
-        if True: # 'True' 应改为状态确定发生变更的判断条件
-            finish_info.message = "Start"
-            finish_info["Result"] = 0
-            svr.triggerEvent(finish_info)
-            mode = OPCUAState.NONE # 恢复 OPC UA 状态
-    elif mode == OPCUAState.STOP:
-        # 实际发出 Stop 指令
-        """
-        code
-        """
+          if True: # 'True' 应改为状态确定发生变更的判断条件
+              finish_info.message = "Start"
+              finish_info["Result"] = 0
+              svr.triggerEvent(finish_info)
+              mode = OPCUAState.NONE # 恢复 OPC UA 状态
+      elif mode == OPCUAState.STOP:
+          # 实际发出 Stop 指令
+          """
+          code
+          """
 
-        if True: # 'True' 应改为状态确定发生变更的判断条件
-            finish_info.message = "Stop"
-            finish_info["Result"] = 0
-            svr.triggerEvent(finish_info)
-            mode = OPCUAState.NONE # 恢复 OPC UA 状态
-```
+          if True: # 'True' 应改为状态确定发生变更的判断条件
+              finish_info.message = "Stop"
+              finish_info["Result"] = 0
+              svr.triggerEvent(finish_info)
+              mode = OPCUAState.NONE # 恢复 OPC UA 状态
+  ```
 
-@end_toggle
+</div>
 
 正常情况下，客户端调用方法节点会立刻返回，如以下代码
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client_old.cpp
-#include <rmvl/opcua/client.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
-    auto node = cli.find("start");
-    auto [res, oargs] = cli.callx(node);
-    if (!res) // res 只表示方法节点是否调用成功，而非任务执行结果
-        ERROR_("Failed to call the method");
-}
-```
+  ```cpp
+  // client_old.cpp
+  #include <rmvl/opcua/client.hpp>
 
-@end_toggle
+  int main() {
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+      auto node = cli.find("start");
+      auto [res, oargs] = cli.callx(node);
+      if (!res) // res 只表示方法节点是否调用成功，而非任务执行结果
+          ERROR_("Failed to call the method");
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client_old.py
-import rm
+  ```python
+  # client_old.py
+  import rm
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
-node = cli.find("start")
-res, oargs = cli.call(node, [])
-if not res: # res 只表示方法节点是否调用成功，而非任务执行结果
-    print("Failed to call the method")
-```
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
+  node = cli.find("start")
+  res, oargs = cli.call(node, [])
 
-@end_toggle
+  # res 只表示方法节点是否调用成功，而非任务执行结果
+  if not res:
+      print("Failed to call the method")
+  ```
+
+</div>
 
 此时返回的结果表示该方法节点是否调用成功，并非任务执行结果，而真实的执行结果在多个事件循环后才能得到。不过服务器在任务执行完成后会触发事件，客户端可以通过监视事件来获取任务执行结果，如以下代码。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client_new.cpp
-#include <rmvl/opcua/client.hpp>
+- <b class="tab-title">C++</b>
 
-class OpcUaController {
-public:
-    OpcUaController(std::string_view addr) : _cli(addr) {
-        // 监视事件
-        _cli.monitor({"Message", "Result"}, [this](rm::OpcuaClientView, const rm::Variables &vals) {
-            if (vals[0] == "Start")
-                _start_res = (vals[1] == 0);
-            else if (vals[0] == "Stop")
-                _stop_res = (vals[1] == 0);
-        });
-    }
+  ```cpp
+  // client_new.cpp
+  #include <rmvl/opcua/client.hpp>
 
-    // 同步阻塞的 start 函数
-    bool start() {
-        _start_res.reset();
-        auto [res, oargs] = _cli.callx("start");
-        if (!res) {
-            printf("Failed to call start\n");
-            return false;
-        }
-        while (!_start_res.has_value())
-            _cli.spinOnce();
-        return _start_res.value();
-    }
+  class OpcUaController {
+  public:
+      OpcUaController(std::string_view addr) : _cli(addr) {
+          // 监视事件
+          _cli.monitor({"Message", "Result"}, [this](rm::OpcuaClientView, const rm::Variables &vals) {
+              if (vals[0] == "Start")
+                  _start_res = (vals[1] == 0);
+              else if (vals[0] == "Stop")
+                  _stop_res = (vals[1] == 0);
+          });
+      }
 
-    // 同步阻塞的 stop 函数
-    bool stop() {
-        _stop_res.reset();
-        auto [res, oargs] = _cli.callx("stop");
-        if (!res) {
-            printf("Failed to call stop\n");
-            return false;
-        }
-        while (!_stop_res.has_value())
-            _cli.spinOnce();
-        return _stop_res.value();
-    }
+      // 同步阻塞的 start 函数
+      bool start() {
+          _start_res.reset();
+          auto [res, oargs] = _cli.callx("start");
+          if (!res) {
+              printf("Failed to call start\n");
+              return false;
+          }
+          while (!_start_res.has_value())
+              _cli.spinOnce();
+          return _start_res.value();
+      }
 
-private:
-    rm::OpcuaClient _cli;
+      // 同步阻塞的 stop 函数
+      bool stop() {
+          _stop_res.reset();
+          auto [res, oargs] = _cli.callx("stop");
+          if (!res) {
+              printf("Failed to call stop\n");
+              return false;
+          }
+          while (!_stop_res.has_value())
+              _cli.spinOnce();
+          return _stop_res.value();
+      }
 
-    std::optional<bool> _start_res{};
-    std::optional<bool> _stop_res{};
-};
+  private:
+      rm::OpcuaClient _cli;
 
-int main() {
-    OpcUaController uactl("opc.tcp://127.0.0.1:4840");
-    // 启动设备
-    bool val = uactl.start();
-    printf("Start result: %d\n", val);
+      std::optional<bool> _start_res{};
+      std::optional<bool> _stop_res{};
+  };
 
-    /* code */
+  int main() {
+      OpcUaController uactl("opc.tcp://127.0.0.1:4840");
+      // 启动设备
+      bool val = uactl.start();
+      printf("Start result: %d\n", val);
 
-    // 关闭设备
-    val = uactl.stop();
-    printf("Stop result: %d\n", val);
-}
-```
+      /* code */
 
-@end_toggle
+      // 关闭设备
+      val = uactl.stop();
+      printf("Stop result: %d\n", val);
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client_new.py
-import rm
+  ```python
+  # client_new.py
+  import rm
 
-class OpcUaController:
-    def __init__(self, addr):
-        self.__cli = rm.OpcuaClient(addr)
-        self.__start_res = None
-        self.__stop_res = None
-        # 监视事件
-        self.__cli.monitor(["Message", "Result"], self.on_event)
+  class OpcUaController:
+      def __init__(self, addr):
+          self.__cli = rm.OpcuaClient(addr)
+          self.__start_res = None
+          self.__stop_res = None
+          # 监视事件
+          self.__cli.monitor(["Message", "Result"], self.on_event)
 
-    def on_event(self, view, vals):
-        if vals[0] == "Start":
-            self.__start_res = vals[1] == 0
-        elif vals[0] == "Stop":
-            self.__stop_res = vals[1] == 0
+      def on_event(self, view, vals):
+          if vals[0] == "Start":
+              self.__start_res = vals[1] == 0
+          elif vals[0] == "Stop":
+              self.__stop_res = vals[1] == 0
 
-    # 同步阻塞的 start 函数
-    def start(self):
-        res, oargs = self.__cli.call("Start", [])
-        if not res:
-            print("Failed to call start")
-            return False
-        while self.__start_res is None:
-            self.__cli.spinOnce()
-        return self.__start_res
+      # 同步阻塞的 start 函数
+      def start(self):
+          res, oargs = self.__cli.call("Start", [])
+          if not res:
+              print("Failed to call start")
+              return False
+          while self.__start_res is None:
+              self.__cli.spinOnce()
+          return self.__start_res
 
-    # 同步阻塞的 stop 函数
-    def stop(self):
-        res, oargs = self.__cli.call("Stop", [])
-        if not res:
-            print("Failed to call stop")
-            return False
-        while self.__stop_res is None:
-            self.__cli.spinOnce()
-        return self.__stop_res
+      # 同步阻塞的 stop 函数
+      def stop(self):
+          res, oargs = self.__cli.call("Stop", [])
+          if not res:
+              print("Failed to call stop")
+              return False
+          while self.__stop_res is None:
+              self.__cli.spinOnce()
+          return self.__stop_res
 
-uactl = OpcUaController("opc.tcp://127.0.0.1:4840")
-# 启动设备
-val = uactl.start()
-print(f"Start result: {val}")
+  uactl = OpcUaController("opc.tcp://127.0.0.1:4840")
+  # 启动设备
+  val = uactl.start()
+  print(f"Start result: {val}")
 
-"""
-code
-"""
+  """
+  code
+  """
 
-# 关闭设备
-val = uactl.stop()
-print(f"Stop result: {val}")
-```
+  # 关闭设备
+  val = uactl.stop()
+  print(f"Stop result: {val}")
+  ```
 
-@end_toggle
+</div>
 
 ### 2.7 定时
 
@@ -1319,93 +1309,101 @@ print(f"Stop result: {val}")
 
 下面的示例在服务器中添加了一个数据源变量节点 `num`，并且创建了一个每 1s 执行一次的定时任务，每次执行时将 `num` 的值加 1。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// server.cpp
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+- <b class="tab-title">C++</b>
+
+  ```cpp
+  // server.cpp
+  #include <csignal>
+
+  #include <rmvl/opcua/server.hpp>
  
-bool stop = false;
+  bool stop = false;
  
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  int main() {
+      signal(SIGINT, [](int) {
+          stop = true;
+      });
  
-    rm::OpcuaServer srv(4840);
+      rm::OpcuaServer srv(4840);
  
-    int num{};
-    rm::DataSourceVariable num_info;
-    num_info.browse_name = "num";
-    num_info.display_name = "Num";
-    num_info.description = "数字";
-    num_info.access_level = rm::VARIABLE_READ | rm::VARIABLE_WRITE;
-    num_info.on_read = [&](const rm::NodeId &) -> rm::Variable { return num; };
-    num_info.on_write = [&](const rm::NodeId &, const rm::Variable &val) { num = val; };
-    auto num_nd = srv.addDataSourceVariableNode(num_info);
+      int num{};
+      rm::DataSourceVariable num_info;
+      num_info.browse_name = "num";
+      num_info.display_name = "Num";
+      num_info.description = "数字";
+      num_info.access_level = rm::VARIABLE_READ | rm::VARIABLE_WRITE;
+      num_info.on_read = [&](const rm::NodeId &) -> rm::Variable {
+          return num;
+      };
+      num_info.on_write = [&](const rm::NodeId &, const rm::Variable &val) {
+          num = val;
+      };
+
+      auto num_nd = srv.addDataSourceVariableNode(num_info);
  
-    // 创建定时器，每 1s 执行一次
-    rm::OpcuaServerTimer timer(srv, 1000, [&](rm::OpcuaServerView sv) {
-        sv.write(num_nd, ++num);
-    });
+      // 创建定时器，每 1s 执行一次
+      rm::OpcuaServerTimer timer(srv, 1000, [&](rm::OpcuaServerView sv) {
+          sv.write(num_nd, ++num);
+      });
  
-    while (!stop)
-        srv.spinOnce();
-}
-```
+      while (!stop) {
+          srv.spinOnce();
+      }
+  }
+  ```
 
-@end_toggle
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-```python
-# server.py
+  stop = False
 
-from signal import signal, SIGINT
-import rm
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-stop = False
+  signal(SIGINT, onStop)
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  svr = rm.OpcuaServer(4840)
 
-signal(SIGINT, onStop)
+  num = 0
+  num_info = rm.DataSourceVariable()
+  num_info.browse_name = "num"
+  num_info.display_name = "Num"
+  num_info.description = "数字"
+  num_info.access_level = rm.VARIABLE_READ | rm.VARIABLE_WRITE
 
-svr = rm.OpcuaServer(4840)
+  def num_on_read(nd):
+      global num
+      return rm.Variable(num)
 
-num = 0
-num_info = rm.DataSourceVariable()
-num_info.browse_name = "num"
-num_info.display_name = "Num"
-num_info.description = "数字"
-num_info.access_level = rm.VARIABLE_READ | rm.VARIABLE_WRITE
+  def num_on_write(nd, val: rm.Variable):
+      global num
+      num = val.int()
 
-def num_on_read(nd):
-    global num
-    return rm.Variable(num)
+  num_info.on_read = num_on_read
+  num_info.on_write = num_on_write
 
-def num_on_write(nd, val: rm.Variable):
-    global num
-    num = val.int()
+  num_nd = svr.addDataSourceVariableNode(num_info)
 
-num_info.on_read = num_on_read
-num_info.on_write = num_on_write
+  # 创建定时器，每 1s 执行一次
+  def on_timer(sv: rm.OpcuaServerView):
+      global num
+      num += 1
+      sv.write(num_nd, rm.Variable(num))
 
-num_nd = svr.addDataSourceVariableNode(num_info)
+  timer = rm.OpcuaServerTimer(svr.sv(), 1000, on_timer)
 
-# 创建定时器，每 1s 执行一次
-def on_timer(sv: rm.OpcuaServerView):
-    global num
-    num += 1
-    sv.write(num_nd, rm.Variable(num))
+  while not stop:
+      svr.spinOnce()
+  ```
 
-timer = rm.OpcuaServerTimer(svr.sv(), 1000, on_timer)
-
-while not stop:
-    svr.spinOnce()
-```
-
-@end_toggle
+</div>
 
 #### 2.7.2 客户端定时
 
@@ -1419,84 +1417,85 @@ error/eventloop    Cannot run EventLoop from the run method itself
 
 下面提供了一个客户端定时器的示例，首先提供了一个 OPC UA 服务器，端口为 `4840`，在其中添加了一个变量节点 `num`，此时客户端定时器每 1s 读取一次 `num` 的值，并打印。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// client.cpp
-#include <csignal>
+- <b class="tab-title">C++</b>
 
-#include <rmvl/opcua/client.hpp>
+  ```cpp
+  // client.cpp
+  #include <csignal>
 
-static bool stop = false;
+  #include <rmvl/opcua/client.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
-    auto num_nd = cli.find("num");
+  int main() {
+      signal(SIGINT, [](int) {
+          stop = true;
+      });
 
-    // 创建定时器，每 1s 执行一次
-    bool can_read{};
-    rm::OpcuaClientTimer timer(cli, 1000, [&] { can_read = true; });
-    auto real_on_timer = [&] {
-        auto num = cli.read(num_nd);
-        printf("num = %d\n", num.cast<int>());
-        can_read = false;
-    };
+      rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
+      auto num_nd = cli.find("num");
 
-    while (!stop) {
-        cli.spinOnce();
-        // 保证在 spinOnce() 之后再读取 num 的值
-        if (can_read)
-            real_on_timer();
-    }
-}
-```
+      // 创建定时器，每 1s 执行一次
+      bool can_read{};
+      rm::OpcuaClientTimer timer(cli, 1000, [&] { can_read = true; });
+      auto real_on_timer = [&] {
+          auto num = cli.read(num_nd);
+          printf("num = %d\n", num.cast<int>());
+          can_read = false;
+      };
 
-@end_toggle
+      while (!stop) {
+          cli.spinOnce();
+          // 保证在 spinOnce() 之后再读取 num 的值
+          if (can_read)
+              real_on_timer();
+      }
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-# client.py
+  ```python
+  # client.py
+  from signal import signal, SIGINT
+  import rm
 
-from signal import signal, SIGINT
-import rm
+  stop = False
 
-stop = False
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
+  num_nd = cli.find("num")
 
-cli = rm.OpcuaClient("opc.tcp://127.0.0.1:4840")
-num_nd = cli.find("num")
+  # 创建定时器，每 1s 执行一次
+  can_read = False
 
-# 创建定时器，每 1s 执行一次
-can_read = False
+  def on_timer():
+      global can_read
+      can_read = True
 
-def on_timer():
-    global can_read
-    can_read = True
+  timer = rm.OpcuaClientTimer(cli.cv(), 1000, on_timer)
 
-timer = rm.OpcuaClientTimer(cli.cv(), 1000, on_timer)
+  def real_on_timer():
+      global can_read
+      if can_read:
+          num = cli.read(num_nd)
+          print(f"num = {num.int()}")
+          can_read = False
 
-def real_on_timer():
-    global can_read
-    if can_read:
-        num = cli.read(num_nd)
-        print(f"num = {num.int()}")
-        can_read = False
+  while not stop:
+      cli.spinOnce()
+      if can_read:
+          real_on_timer()
+  ```
 
-while not stop:
-    cli.spinOnce()
-    if can_read:
-        real_on_timer()
-```
-
-@end_toggle
+</div>
 
 可以根据自己的需求对服务器的 `num` 变量节点进行其余操作，例如可以同时运行带有定时器的服务器和客户端，服务器每 1s 将 `num` 的值加 1，客户端每 1s 读取 `num` 的值并打印，有兴趣的读者可以自行尝试。
 
@@ -1538,177 +1537,177 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
 
 **创建发布者**
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// publisher.cpp
-#include <csignal>
-#include <rmvl/opcua/publisher.hpp>
+- <b class="tab-title">C++</b>
 
-using namespace std::chrono_literals;
+  ```cpp
+  // publisher.cpp
+  #include <csignal>
+  #include <rmvl/opcua/publisher.hpp>
 
-static bool stop = false;
+  using namespace std::chrono_literals;
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    // 创建 OPC UA 发布者，端口为 4840
-    rm::OpcuaPublisher<rm::TransportID::UDP_UADP> pub("DemoNumberPub", "opc.udp://224.0.0.22:4840");
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    // 添加变量节点至发布者自身的服务器中
-    rm::Variable num = 3.14;
-    num.browse_name = "number";
-    num.display_name = "Number";
-    num.description = "数字";
-    auto num_node = pub.addVariableNode(num);
-    // 准备待发布的数据
-    std::vector<rm::PublishedDataSet> pds_list;
-    pds_list.emplace_back("Number 1", num_node);
+      // 创建 OPC UA 发布者，端口为 4840
+      rm::OpcuaPublisher<rm::TransportID::UDP_UADP> pub("DemoNumberPub", "opc.udp://224.0.0.22:4840");
 
-    // 发布数据
-    pub.publish(pds_list, 50);
+      // 添加变量节点至发布者自身的服务器中
+      rm::Variable num = 3.14;
+      num.browse_name = "number";
+      num.display_name = "Number";
+      num.description = "数字";
+      auto num_node = pub.addVariableNode(num);
+      // 准备待发布的数据
+      std::vector<rm::PublishedDataSet> pds_list;
+      pds_list.emplace_back("Number 1", num_node);
 
-    while (!stop) {
-        /* other code */
+      // 发布数据
+      pub.publish(pds_list, 50);
+
+      while (!stop) {
+          /* other code */
         
-        /* 例如 num_node 所对应的值可以直接在这里修改 */
+          /* 例如 num_node 所对应的值可以直接在这里修改 */
         
-        pub.spinOnce();
-    }
-}
-```
+          pub.spinOnce();
+      }
+  }
+  ```
 
-@end_toggle
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # publisher.py
 
-```python
-# publisher.py
+  from signal import signal, SIGINT
+  import rm
 
-from signal import signal, SIGINT
-import rm
+  stop = False
 
-stop = False
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  # 创建 OPC UA 发布者，端口为 4840
+  pub = rm.OpcuaPublisher(rm.TransportID.UDP_UADP, "DemoNumberPub", "opc.udp://224.0.0.22:4840")
 
-# 创建 OPC UA 发布者，端口为 4840
-pub = rm.OpcuaPublisher(rm.TransportID.UDP_UADP, "DemoNumberPub", "opc.udp://224.0.0.22:4840")
+  # 添加变量节点至发布者自身的服务器中
+  num = rm.Variable(3.14)
+  num.browse_name = "number"
+  num.display_name = "Number"
+  num.description = "数字"
+  num_node = pub.addVariableNode(num)
+  # 准备待发布的数据
+  pds_list = [rm.PublishedDataSet("Number 1", num_node)]
 
-# 添加变量节点至发布者自身的服务器中
-num = rm.Variable(3.14)
-num.browse_name = "number"
-num.display_name = "Number"
-num.description = "数字"
-num_node = pub.addVariableNode(num)
-# 准备待发布的数据
-pds_list = [rm.PublishedDataSet("Number 1", num_node)]
+  # 发布数据
+  pub.publish(pds_list, 50)
 
-# 发布数据
-pub.publish(pds_list, 50)
+  while not stop:
+      # other code
+      # 例如 num_node 所对应的值可以直接在这里修改
+      pub.spinOnce()
+  ```
 
-while not stop:
-    # other code
-    # 例如 num_node 所对应的值可以直接在这里修改
-    pub.spinOnce()
-```
-
-@end_toggle
+</div>
 
 **创建订阅者**
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// subscriber.cpp
-#include <csignal>
-#include <rmvl/opcua/subscriber.hpp>
+- <b class="tab-title">C++</b>
 
-using namespace std::chrono_literals;
+  ```cpp
+  // subscriber.cpp
+  #include <csignal>
+  #include <rmvl/opcua/subscriber.hpp>
 
-static bool stop = false;
+  using namespace std::chrono_literals;
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  static bool stop = false;
 
-    // 创建 OPC UA 订阅者
-    rm::OpcuaSubscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    // 准备需要订阅的数据
-    rm::FieldMetaData meta_data{"Number 1", rm::tpDouble, -1};
+      // 创建 OPC UA 订阅者
+      rm::OpcuaSubscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
 
-    /* 也可以通过创建变量对 meta_data 进行初始化，例如以下代码
-    rm::Variable num = 1.0; // 这个 1.0 只是代表是个 Double 类型的数据 
-    num.browse_name = "Number 1";
-    auto meta_data = rm::FieldMetaData::makeFrom(num);
-    */
+      // 准备需要订阅的数据
+      rm::FieldMetaData meta_data{"Number 1", rm::tpDouble, -1};
+
+      /* 也可以通过创建变量对 meta_data 进行初始化，例如以下代码
+      rm::Variable num = 1.0; // 这个 1.0 只是代表是个 Double 类型的数据 
+      num.browse_name = "Number 1";
+      auto meta_data = rm::FieldMetaData::makeFrom(num);
+      */
     
-    // 订阅数据，第 2 个参数传入的是 std::vector 类型的数据，单个数据请使用初始化列表
-    auto nodes = sub.subscribe("DemoNumberPub", {meta_data});
-    // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
-    // 订阅返回值是一个 NodeId 列表，存放订阅接收的数据的 NodeId
+      // 订阅数据，第 2 个参数传入的是 std::vector 类型的数据，单个数据请使用初始化列表
+      auto nodes = sub.subscribe("DemoNumberPub", {meta_data});
+      // 订阅接收的数据均存放在订阅者自身的服务器中，请使用服务器端变量的写操作进行访问
+      // 订阅返回值是一个 NodeId 列表，存放订阅接收的数据的 NodeId
     
-    while (!stop) {
-        // 读取订阅的已更新的数据
-        auto sub_val = sub.read(nodes.front());
-        std::printf("Sub value [1] = %f\n", sub_val.cast<double>());
+      while (!stop) {
+          // 读取订阅的已更新的数据
+          auto sub_val = sub.read(nodes.front());
+          std::printf("Sub value [1] = %f\n", sub_val.cast<double>());
         
-        /* other code */
+          /* other code */
         
-        sub.spinOnce();
-    }
-}
-```
+          sub.spinOnce();
+      }
+  }
+  ```
 
-@end_toggle
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # subscriber.py
 
-```python
-# subscriber.py
+  from signal import signal, SIGINT
+  import rm
 
-from signal import signal, SIGINT
-import rm
+  stop = False
 
-stop = False
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  # 创建 OPC UA 订阅者
+  sub = rm.OpcuaSubscriber(rm.TransportID.UDP_UADP, "DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841)
 
-# 创建 OPC UA 订阅者
-sub = rm.OpcuaSubscriber(rm.TransportID.UDP_UADP, "DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841)
+  # 准备需要订阅的数据
+  meta_data = rm.FieldMetaData("Number 1", rm.tp_float, -1)
 
-# 准备需要订阅的数据
-meta_data = rm.FieldMetaData("Number 1", rm.tp_float, -1)
+  """
+  也可以通过创建变量对 meta_data 进行初始化，例如以下代码
+  num = rm.Variable(1.0) # 这个 1.0 只是代表是个 Double 类型的数据
+  num.browse_name = "Number 1"
+  meta_data = rm.FieldMetaData.makeFrom(num)
+  """
 
-"""
-也可以通过创建变量对 meta_data 进行初始化，例如以下代码
-num = rm.Variable(1.0) # 这个 1.0 只是代表是个 Double 类型的数据
-num.browse_name = "Number 1"
-meta_data = rm.FieldMetaData.makeFrom(num)
-"""
+  # 订阅数据，第 2 个参数传入的是 list 类型的数据，单个数据请使用列表
+  nodes = sub.subscribe("DemoNumberPub", [meta_data])
 
-# 订阅数据，第 2 个参数传入的是 list 类型的数据，单个数据请使用列表
-nodes = sub.subscribe("DemoNumberPub", [meta_data])
-
-while not stop:
-    # 读取订阅的已更新的数据
-    sub_val = sub.read(nodes[0])
-    print(f"Sub value [1] = {sub_val.float()}")
+  while not stop:
+      # 读取订阅的已更新的数据
+      sub_val = sub.read(nodes[0])
+      print(f"Sub value [1] = {sub_val.float()}")
     
-    # other code
+      # other code
     
-    sub.spinOnce()
-```
+      sub.spinOnce()
+  ```
 
-@end_toggle
+</div>
 
 ### 3.2 有代理 Pub/Sub
 
@@ -1790,97 +1789,97 @@ while not stop:
 
 `rm::OpcuaServer` 使用 RAII 进行设计，一个对象占有了服务器的所有权和生命周期，当对象析构时，会自动停止并结束服务器。使用 `rm::OpcuaServerView` 来获取不占有所有权的服务器视图，并进行变量读写、路径搜索的操作。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-RMVL 提供了从 rm::OpcuaServer 到 rm::OpcuaServerView 的用户定义转换函数，可在不添加额外代码的情况下直接使用。
+- <b class="tab-title">C++</b>
 
-```cpp
-// server.cpp
+  RMVL 提供了从 rm::OpcuaServer 到 rm::OpcuaServerView 的用户定义转换函数，可在不添加额外代码的情况下直接使用。
 
-#include <csignal>
-#include <rmvl/opcua/server.hpp>
+  ```cpp
+  // server.cpp
 
-void modify(rm::OpcuaServerView sv, int val) {
-    auto node = sv.find("num");
-    sv.write(node, val);
-}
+  #include <csignal>
+  #include <rmvl/opcua/server.hpp>
 
-int main() {
-    signal(SIGINT, [](int) { stop = true; });
+  void modify(rm::OpcuaServerView sv, int val) {
+      auto node = sv.find("num");
+      sv.write(node, val);
+  }
 
-    rm::OpcuaServer srv(4840);
+  int main() {
+      signal(SIGINT, [](int) { stop = true; });
 
-    // 定义 int 型变量
-    rm::Variable num_info = 42;
-    num_info.browse_name = "num";
-    num_info.display_name = "Num";
-    num_info.description = "数字";
-    // 添加到服务器的默认位置
-    srv.addVariableNode(num_info);
+      rm::OpcuaServer srv(4840);
 
-    /* code */
+      // 定义 int 型变量
+      rm::Variable num_info = 42;
+      num_info.browse_name = "num";
+      num_info.display_name = "Num";
+      num_info.description = "数字";
+      // 添加到服务器的默认位置
+      srv.addVariableNode(num_info);
 
-    // 修改变量值
-    modify(srv, 100);
+      /* code */
 
-    while (!stop)
-        srv.spinOnce();
-}
-```
+      // 修改变量值
+      modify(srv, 100);
 
-@end_toggle
+      while (!stop)
+          srv.spinOnce();
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-RMVL-Python 提供了 rm::OpcuaServer 到 rm::OpcuaServerView 的转换函数 `sv()`，可调用相关函数进行转换。
+  RMVL-Python 提供了 rm::OpcuaServer 到 rm::OpcuaServerView 的转换函数 `sv()`，可调用相关函数进行转换。
 
-```python
-# server.py
+  ```python
+  # server.py
+  from signal import signal, SIGINT
+  import rm
 
-from signal import signal, SIGINT
-import rm
+  def modify(sv, val):
+      node = sv.find("num")
+      sv.write(node, val)
 
-def modify(sv, val):
-    node = sv.find("num")
-    sv.write(node, val)
+  def onStop(sig, frame):
+      global stop
+      stop = True
 
-def onStop(sig, frame):
-    global stop
-    stop = True
+  signal(SIGINT, onStop)
 
-signal(SIGINT, onStop)
+  svr = rm.OpcuaServer(4840)
 
-svr = rm.OpcuaServer(4840)
+  # 定义 int 型变量
+  num_info = rm.Variable(42)
+  num_info.browse_name = "num"
+  num_info.display_name = "Num"
+  num_info.description = "数字"
+  # 添加到服务器的默认位置
+  svr.addVariableNode(num_info)
 
-# 定义 int 型变量
-num_info = rm.Variable(42)
-num_info.browse_name = "num"
-num_info.display_name = "Num"
-num_info.description = "数字"
-# 添加到服务器的默认位置
-svr.addVariableNode(num_info)
+  # 修改变量值
+  modify(svr.sv(), 100)
 
-# 修改变量值
-modify(svr.sv(), 100)
+  while not stop:
+      svr.spinOnce()
+  ```
 
-while not stop:
-    svr.spinOnce()
-```
-@end_toggle
+</div>
 
 同样的，客户端也可以使用 `rm::OpcuaClientView` 来获取不占有所有权的客户端视图，进行变量读写、路径搜索的操作，此处不再赘述。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-RMVL 也提供了从 rm::OpcuaClient 到 rm::OpcuaClientView 的用户定义转换函数。
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  RMVL 也提供了从 rm::OpcuaClient 到 rm::OpcuaClientView 的用户定义转换函数。
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-RMVL-Python 也提供了 rm::OpcuaClient 到 rm::OpcuaClientView 的转换函数 `cv()`，可调用相关函数进行转换。
+  RMVL-Python 也提供了 rm::OpcuaClient 到 rm::OpcuaClientView 的转换函数 `cv()`，可调用相关函数进行转换。
 
-@end_toggle
+</div>
 
 ## 5 参考内容
 

@@ -36,7 +36,6 @@ set(CMAKE_DOXYGEN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 set(CMAKE_EXTRA_BIB_FILES "${bibfile}")
 
 list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/rmvl-logo-small.png")
-list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/tutorial-utils.js")
 foreach(m darkmode-toggle fragment-copy-button interactive-toc paragraph-link tabs)
   list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/doxygen-awesome-${m}.js")
 endforeach()

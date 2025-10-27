@@ -111,11 +111,9 @@ int main(int argc, char *argv[]) {
 
 可以简单使用以下命令行进行编译
 
-```bash
-g++ demo.cpp -std=c++20 -I /usr/local/include/RMVL -l rmvl_io -l rmvl_core -o demo
-```
-
 <div class="fragment">
+<div class="line"><span class="keywordflow">g++</span> demo.cpp <span class="comment">-std=c++20</span> <span class="comment">-I</span> /usr/local/include/RMVL <span class="comment">-l</span> rmvl_io <span class="comment">-l</span> rmvl_core <span class="comment">-o</span> demo
+</div>
 <div class="line"><span class="comment"># 如果使用的是 Windows 系统，可能需要额外链接 ws2_32 库</span></div>
 </div>
 

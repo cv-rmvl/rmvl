@@ -29,25 +29,26 @@
 
 创建 MvCamera 对象即可初始化相机：
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-auto cam_cfg = rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::SDK);
-rm::MvCamera capture(cam_cfg, "0123456789");
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  auto cam_cfg = rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::SDK);
+  rm::MvCamera capture(cam_cfg, "0123456789");
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-cam_cfg = rm.CameraConfig()
-cam_cfg.grab_mode = rm.GrabMode.Continuous
-cam_cfg.retrieve_mode = rm.RetrieveMode.SDK
+  ```python
+  cam_cfg = rm.CameraConfig()
+  cam_cfg.grab_mode = rm.GrabMode.Continuous
+  cam_cfg.retrieve_mode = rm.RetrieveMode.SDK
 
-capture = rm.MvCamera(cam_cfg, "0123456789")
-```
-@end_toggle
+  capture = rm.MvCamera(cam_cfg, "0123456789")
+  ```
+
+</div>
 
 第 1 个参数为 **相机初始化模式** ，包含
 
@@ -150,153 +151,152 @@ capture = rm.MvCamera(cam_cfg, "0123456789")
 
 手动/自动设置曝光
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-capture.set(rm::CAMERA_MANUAL_EXPOSURE); // 手动曝光
-capture.set(rm::CAMERA_AUTO_EXPOSURE);   // 自动曝光
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  capture.set(rm::CAMERA_MANUAL_EXPOSURE); // 手动曝光
+  capture.set(rm::CAMERA_AUTO_EXPOSURE);   // 自动曝光
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-capture.set(rm.CAMERA_MANUAL_EXPOSURE) # 手动曝光
-capture.set(rm.CAMERA_AUTO_EXPOSURE)   # 自动曝光
-```
+  ```python
+  capture.set(rm.CAMERA_MANUAL_EXPOSURE) # 手动曝光
+  capture.set(rm.CAMERA_AUTO_EXPOSURE)   # 自动曝光
+  ```
 
-@end_toggle
+</div>
 
 设置曝光值
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-capture.set(rm::CAMERA_EXPOSURE, 600); // 设置曝光值为 600
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  capture.set(rm::CAMERA_EXPOSURE, 600); // 设置曝光值为 600
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-capture.set(rm.CAMERA_EXPOSURE, 600) # 设置曝光值为 600
-```
+  ```python
+  capture.set(rm.CAMERA_EXPOSURE, 600) # 设置曝光值为 600
+  ```
 
-@end_toggle
+</div>
 
 #### 1.2.2 白平衡设置
 
 手动/自动设置白平衡
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-capture.set(rm::CAMERA_MANUAL_WB); // 手动白平衡
-capture.set(rm::CAMERA_AUTO_WB);   // 自动白平衡
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  capture.set(rm::CAMERA_MANUAL_WB); // 手动白平衡
+  capture.set(rm::CAMERA_AUTO_WB);   // 自动白平衡
+  ```
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  capture.set(rm.CAMERA_MANUAL_WB) # 手动白平衡
+  capture.set(rm.CAMERA_AUTO_WB)   # 自动白平衡
+  ```
 
-```python
-capture.set(rm.CAMERA_MANUAL_WB) # 手动白平衡
-capture.set(rm.CAMERA_AUTO_WB)   # 自动白平衡
-```
-
-@end_toggle
+</div>
 
 设置各通道增益，并生效（在手动设置白平衡模式下有效）
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-capture.set(rm::CAMERA_WB_RGAIN, 102); // 红色通道增益设置为 102
-capture.set(rm::CAMERA_WB_GGAIN, 101); // 绿色通道增益设置为 101
-capture.set(rm::CAMERA_WB_BGAIN, 100); // 蓝色通道增益设置为 100
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  capture.set(rm::CAMERA_WB_RGAIN, 102); // 红色通道增益设置为 102
+  capture.set(rm::CAMERA_WB_GGAIN, 101); // 绿色通道增益设置为 101
+  capture.set(rm::CAMERA_WB_BGAIN, 100); // 蓝色通道增益设置为 100
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-capture.set(rm.CAMERA_WB_RGAIN, 102) # 红色通道增益设置为 102
-capture.set(rm.CAMERA_WB_GGAIN, 101) # 绿色通道增益设置为 101
-capture.set(rm.CAMERA_WB_BGAIN, 100) # 蓝色通道增益设置为 100
-```
+  ```python
+  capture.set(rm.CAMERA_WB_RGAIN, 102) # 红色通道增益设置为 102
+  capture.set(rm.CAMERA_WB_GGAIN, 101) # 绿色通道增益设置为 101
+  capture.set(rm.CAMERA_WB_BGAIN, 100) # 蓝色通道增益设置为 100
+  ```
 
-@end_toggle
+</div>
 
 #### 1.2.3 其余光学参数设置
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-capture.set(rm::CAMERA_GAIN, 64);        // 设置模拟增益为 64
-capture.set(rm::CAMERA_GAMMA, 80);       // 设置 Gamma 为 80
-capture.set(rm::CAMERA_CONTRAST, 120);   // 设置对比度为 120
-capture.set(rm::CAMERA_SATURATION, 100); // 设置饱和度为 100
-capture.set(rm::CAMERA_SHARPNESS, 100);  // 设置锐度为 100
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  capture.set(rm::CAMERA_GAIN, 64);        // 设置模拟增益为 64
+  capture.set(rm::CAMERA_GAMMA, 80);       // 设置 Gamma 为 80
+  capture.set(rm::CAMERA_CONTRAST, 120);   // 设置对比度为 120
+  capture.set(rm::CAMERA_SATURATION, 100); // 设置饱和度为 100
+  capture.set(rm::CAMERA_SHARPNESS, 100);  // 设置锐度为 100
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-capture.set(rm.CAMERA_GAIN, 64)        # 设置模拟增益为 64
-capture.set(rm.CAMERA_GAMMA, 80)       # 设置 Gamma 为 80
-capture.set(rm.CAMERA_CONTRAST, 120)   # 设置对比度为 120
-capture.set(rm.CAMERA_SATURATION, 100) # 设置饱和度为 100
-capture.set(rm.CAMERA_SHARPNESS, 100)  # 设置锐度为 100
-```
+  ```python
+  capture.set(rm.CAMERA_GAIN, 64)        # 设置模拟增益为 64
+  capture.set(rm.CAMERA_GAMMA, 80)       # 设置 Gamma 为 80
+  capture.set(rm.CAMERA_CONTRAST, 120)   # 设置对比度为 120
+  capture.set(rm.CAMERA_SATURATION, 100) # 设置饱和度为 100
+  capture.set(rm.CAMERA_SHARPNESS, 100)  # 设置锐度为 100
+  ```
 
-@end_toggle
+</div>
+
 
 @note Hik 工业相机暂不支持修改 Gamma
 
 ### 1.3 触发属性设置
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-// 设置硬触发采集延迟为 1000 μs，仅在硬触发模式下有效
-capture.set(rm::CAMERA_TRIGGER_DELAY, 1000);
-// 设置单次触发时的触发帧数为 5 帧，即一次触发能触发 5 帧画面，仅在触发模式下有效
-capture.set(rm::CAMERA_TRIGGER_COUNT, 5);
-// 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
-capture.set(rm::CAMERA_TRIGGER_PERIOD, 100);
-// 执行一次白平衡操作，仅在手动白平衡模式下有效
-capture.set(rm::CAMERA_ONCE_WB);
-// 执行一次软触发，仅在软触发模式下有效
-capture.set(rm::CAMERA_TRIGGER_SOFT);
-```
+- <b class="tab-title">C++</b>
 
-@end_toggle
+  ```cpp
+  // 设置硬触发采集延迟为 1000 μs，仅在硬触发模式下有效
+  capture.set(rm::CAMERA_TRIGGER_DELAY, 1000);
+  // 设置单次触发时的触发帧数为 5 帧，即一次触发能触发 5 帧画面，仅在触发模式下有效
+  capture.set(rm::CAMERA_TRIGGER_COUNT, 5);
+  // 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
+  capture.set(rm::CAMERA_TRIGGER_PERIOD, 100);
+  // 执行一次白平衡操作，仅在手动白平衡模式下有效
+  capture.set(rm::CAMERA_ONCE_WB);
+  // 执行一次软触发，仅在软触发模式下有效
+  capture.set(rm::CAMERA_TRIGGER_SOFT);
+  ```
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  # 设置硬触发采集延迟为 1000 μs，仅在硬触发模式下有效
+  capture.set(rm.CAMERA_TRIGGER_DELAY, 1000)
+  # 设置单次触发时的触发帧数为 5 帧，即一次触发能触发 5 帧画面，仅在触发模式下有效
+  capture.set(rm.CAMERA_TRIGGER_COUNT, 5)
+  # 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
+  capture.set(rm.CAMERA_TRIGGER_PERIOD, 100)
+  # 执行一次白平衡操作，仅在手动白平衡模式下有效
+  capture.set(rm.CAMERA_ONCE_WB)
+  # 执行一次软触发，仅在软触发模式下有效
+  capture.set(rm.CAMERA_TRIGGER_SOFT)
+  ```
 
-```python
-# 设置硬触发采集延迟为 1000 μs，仅在硬触发模式下有效
-capture.set(rm.CAMERA_TRIGGER_DELAY, 1000)
-# 设置单次触发时的触发帧数为 5 帧，即一次触发能触发 5 帧画面，仅在触发模式下有效
-capture.set(rm.CAMERA_TRIGGER_COUNT, 5)
-# 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
-capture.set(rm.CAMERA_TRIGGER_PERIOD, 100)
-# 执行一次白平衡操作，仅在手动白平衡模式下有效
-capture.set(rm.CAMERA_ONCE_WB)
-# 执行一次软触发，仅在软触发模式下有效
-capture.set(rm.CAMERA_TRIGGER_SOFT)
-```
-
-@end_toggle
+</div>
 
 ## 2 para 参数加载
 
-RMVL 提供了全局的相机参数对象: para::camera_param ，详情可参考类 para::CameraParam
+RMVL 提供了全局的相机参数对象： rm::para::camera_param ，详情可参考类 rm::para::CameraParam
 
 ## 3 示例程序
 
@@ -374,87 +374,86 @@ bin/rmvl_mv_manual_calib
 
 ### 4.1 连续采样
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <opencv2/highgui.hpp>
+- <b class="tab-title">C++</b>
 
-#include <rmvl/camera/mv_camera.h>
+  ```cpp
+  #include <opencv2/highgui.hpp>
 
-int main() {
-    rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
-    cv::Mat frame;
-    while(capture.read(frame)) {
-        cv::imshow("frame", frame);
-        if (cv::waitKey(1) == 27)
-            break;
-    }
-}
-```
+  #include <rmvl/camera/mv_camera.h>
 
-@end_toggle
+  int main() {
+      rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
+      cv::Mat frame;
+      while(capture.read(frame)) {
+          cv::imshow("frame", frame);
+          if (cv::waitKey(1) == 27)
+              break;
+      }
+  }
+  ```
+- <b class="tab-title">Python</b>
 
-@add_toggle_python
+  ```python
+  import rm
+  import cv2
 
-```python
-import rm
-import cv2
+  cam_cfg = rm.CameraConfig()
+  cam_cfg.grab_mode = rm.GrabMode.Continuous
+  cam_cfg.retrieve_mode = rm.RetrieveMode.OpenCV
 
-cam_cfg = rm.CameraConfig()
-cam_cfg.grab_mode = rm.GrabMode.Continuous
-cam_cfg.retrieve_mode = rm.RetrieveMode.OpenCV
+  capture = rm.MvCamera(cam_cfg)
+  while True:
+      res, frame = capture.read()
+      if not res:
+          break
+      cv2.imshow("frame", frame)
+      if cv2.waitKey(1) == 27:
+          break
+  ```
 
-capture = rm.MvCamera(cam_cfg)
-while True:
-    res, frame = capture.read()
-    if not res:
-        break
-    cv2.imshow("frame", frame)
-    if cv2.waitKey(1) == 27:
-        break
-```
-
-@end_toggle
+</div>
 
 ### 4.2 软触发
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <opencv2/highgui.hpp>
+- <b class="tab-title">C++</b>
 
-#include <rmvl/camera/mv_camera.h>
-#include <rmvl/core/timer.hpp>
+  ```cpp
+  #include <opencv2/highgui.hpp>
 
-int main() {
-    auto camera_config = rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV)
-    rm::MvCamera capture(camera_config);
+  #include <rmvl/camera/mv_camera.h>
+  #include <rmvl/core/timer.hpp>
 
-    bool run = true;
-    std::thread th([&run]() {
-        while (run) {
-            Timer::sleep_for(10);
-            capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
-        }
-    });
+  int main() {
+      auto camera_config = rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV)
+      rm::MvCamera capture(camera_config);
 
-    cv::Mat frame;
-    while (capture.read(frame)) {
-        cv::imshow("frame", frame);
-        if (cv::waitKey(1) == 27) {
-            run = false;
-            break;
-        }
-    }
-    th.join();
-}
-```
+      bool run = true;
+      std::thread th([&run]() {
+          while (run) {
+              Timer::sleep_for(10);
+              capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
+          }
+      });
 
-@end_toggle
+      cv::Mat frame;
+      while (capture.read(frame)) {
+          cv::imshow("frame", frame);
+          if (cv::waitKey(1) == 27) {
+              run = false;
+              break;
+          }
+      }
+      th.join();
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-@todo
-Python 软触发示例暂无
+  @todo
+  Python 软触发示例暂无
 
-@end_toggle
+</div>

@@ -125,73 +125,73 @@ RMVL 中提供了一元函数以及多元函数的微分工具，求解一元函
 
 #### 3.1 一元函数导数示例代码
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <cstdio>
-#include <rmvl/algorithm/numcal.hpp>
+- <b class="tab-title">C++</b>
 
-// 自定义函数 f(x) = x²+4x-3
-inline double quadratic(double x) { return x * x + 4 * x - 3; }
+  ```cpp
+  #include <cstdio>
+  #include <rmvl/algorithm/numcal.hpp>
 
-int main() {
-    // 使用外推原理计算 f'(1)
-    double dydx = rm::derivative(quadratic, 1, rm::DiffMode::Ridders);
-    printf("f'(1) = %f\n", dydx);
-    //  f'(1) = 6
-}
-```
+  // 自定义函数 f(x) = x²+4x-3
+  inline double quadratic(double x) { return x * x + 4 * x - 3; }
 
-@end_toggle
+  int main() {
+      // 使用外推原理计算 f'(1)
+      double dydx = rm::derivative(quadratic, 1, rm::DiffMode::Ridders);
+      printf("f'(1) = %f\n", dydx);
+      //  f'(1) = 6
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-import rm
+  ```python
+  import rm
 
-# 自定义函数 f(x) = x²+4x-3
-def quadratic(x):
-    return x ** 2 + 4 * x - 3
+  # 自定义函数 f(x) = x²+4x-3
+  def quadratic(x):
+      return x ** 2 + 4 * x - 3
 
-# 使用外推原理计算 f'(1)
-dydx = rm.derivative(quadratic, 1, mode=rm.DiffMode.Ridders)
-print("f'(1) = {:.2f}".format(dydx))
-# f'(1) = 6.00
-```
+  # 使用外推原理计算 f'(1)
+  dydx = rm.derivative(quadratic, 1, mode=rm.DiffMode.Ridders)
+  print("f'(1) = {:.2f}".format(dydx))
+  # f'(1) = 6.00
+  ```
 
-@end_toggle
+</div>
 
 #### 3.2 多元函数梯度示例代码
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <cstdio>
-#include <rmvl/algorithm/numcal.hpp>
+- <b class="tab-title">C++</b>
 
-int main() {
-    // 自定义函数 f(x,y) = x²+y²+4x-3y
-    rm::FuncNd func([](const std::valarray<double> &x) { return x[0] * x[0] + x[1] * x[1] + 4 * x[0] - 3 * x[1]; });
+  ```cpp
+  #include <cstdio>
+  #include <rmvl/algorithm/numcal.hpp>
 
-    // 计算 f'(1, 2)
-    auto dydx = rm::grad(func, {1, 2});
-    printf("f'(1, 2) = (%f, %f)\n", dydx[0], dydx[1]);
-    // f'(1, 2) = (6, 1)
-}
-```
+  int main() {
+      // 自定义函数 f(x,y) = x²+y²+4x-3y
+      rm::FuncNd func([](const std::valarray<double> &x) { return x[0] * x[0] + x[1] * x[1] + 4 * x[0] - 3 * x[1]; });
 
-@end_toggle
+      // 计算 f'(1, 2)
+      auto dydx = rm::grad(func, {1, 2});
+      printf("f'(1, 2) = (%f, %f)\n", dydx[0], dydx[1]);
+      // f'(1, 2) = (6, 1)
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-import rm
+  ```python
+  import rm
 
-# 自定义函数 f(x,y) = x²+y²+4x-3y
-func = lambda x: x[0] ** 2 + x[1] ** 2 + 4 * x[0] - 3 * x[1]
-dydx = rm.grad(func, [1, 2])
-print("f'(1, 2) = ({:.2f}, {:.2f})".format(dydx[0], dydx[1]))
-# f'(1, 2) = (6.00, 1.00)
-```
+  # 自定义函数 f(x,y) = x²+y²+4x-3y
+  func = lambda x: x[0] ** 2 + x[1] ** 2 + 4 * x[0] - 3 * x[1]
+  dydx = rm.grad(func, [1, 2])
+  print("f'(1, 2) = ({:.2f}, {:.2f})".format(dydx[0], dydx[1]))
+  # f'(1, 2) = (6.00, 1.00)
+  ```
 
-@end_toggle
+</div>

@@ -24,9 +24,10 @@ Doxygen 概述 {#tutorial_documentation_overview}
 -----
 
 可在官方网站的[下载][Doxygen download]和[安装][Doxygen installation]页面进行查看，一些 Linux 发行版也提供了有关 Doxygen 的包，例如 Ubuntu 可通过以下命令进行安装。
-```shell
-sudo apt install doxygen doxygen-gui graphviz
-```
+
+<div class="fragment">
+<div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install doxygen doxygen-gui graphviz</div>
+</div>
 
 生成文档 {#tutorial_documentation_generate}
 -----
@@ -34,19 +35,19 @@ sudo apt install doxygen doxygen-gui graphviz
 - 获取 RMVL 源码
 - 在项目文件夹顶层创建 `build` 文件夹，并 `cd build`
 - 运行 `cmake`，或使用 `cmake-gui`
-  @code{.sh}
-  cmake -DBUILD_DOCS=ON ..
-  @endcode
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> BUILD_DOCS=ON ..</div>
+  </div>
 - 运行 `make`
-  @code{.sh}
-  make doxygen
-  @endcode
+  <div class="fragment">
+  <div class="line"><span class="keywordflow">make</span> doxygen</div>
+  </div>
 - 在你的浏览器中打开 <i>'doc/doxygen/html/index.html'</i> 文件
 
 快速开始 {#tutorial_documentation_quick_start}
 ============
 
-@note 以下内容为 RMVL 特有的文档，若是自己书写的其他项目，文档的布局、协议都可以视需求情况而定。
+以下内容为 RMVL 特有的文档，若是自己书写的其他项目，文档的布局、协议都可以视需求情况而定。
 
 文档布局 {#tutorial_documentation_layout}
 -----
@@ -96,56 +97,91 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
 
 ### 1 基本命令
 
-- __brief__ - 表示一段函数、类、枚举、结构的简要信息
+#### 1.1 brief
 
-- __param__ - 通常表示函数的参数，包含传入、传出、传入兼传出参数 3 种，可分别用 `[in]`、`[out]` 和 `[in out]` 做区分，例如
-  @verbatim
-  @param[in] cameraMatrix 相机内参矩阵
-  @endverbatim
-  <span style="color: red">**结果如下**</span>
-    @param[in] cameraMatrix 相机内参矩阵
+表示一段函数、类、枚举、结构的简要信息
 
-- __note__ - 注解，可包含对类、函数的详细介绍或者使用注意事项，也可包含一些公式信息，具体的公式写法在后续的 __f__ 会进行介绍，note 的使用如下
-  @verbatim
-  @note 公式推导参考函数 @ref rm::calculateRelativeCenter
-  @endverbatim
+#### 1.2 param
+
+通常表示函数的参数，包含传入、传出、传入兼传出参数 3 种，可分别用 `[in]`、`[out]` 和 `[in out]` 做区分，例如
+
+@verbatim
+@param[in] cameraMatrix 相机内参矩阵
+@endverbatim
+
+<span style="color: red">**结果如下**</span>
+
+@param[in] cameraMatrix 相机内参矩阵
+
+#### 1.3 note
+
+注解，可包含对类、函数的详细介绍或者使用注意事项，也可包含一些公式信息，具体的公式写法在后续的 __f__ 会进行介绍，note 的使用如下
+
+@verbatim
+@note 公式推导参考函数 @ref rm::calculateRelativeCenter
+@endverbatim
   
-  <span style="color: red">**结果如下**</span>
-    @note 公式推导参考函数 @ref rm::calculateRelativeCenter
+<span style="color: red">**结果如下**</span>
 
-- __return__ - 表示返回值
-  @verbatim
-  @return 相对角度
-  @endverbatim
+@note 公式推导参考函数 @ref rm::calculateRelativeCenter
+
+#### 1.4 warning
+
+警告，可包含对类、函数的潜在问题或使用注意事项
+
+@verbatim
+@warning 不建议手动创建对象
+@endverbatim
   
-  <span style="color: red">**结果如下**</span>
-    @return 相对角度
+<span style="color: red">**结果如下**</span>
 
-- __f__ - 公式
-  内联公式使用 `f$` 命令开始
-  @verbatim
-  \f$ ... \f$
-  @endverbatim
-  块公式使用 `f[` 和 `f]` 命令
-  @verbatim
-  \f[ ... \f]
-  @endverbatim
-  示例
-  @verbatim
-  若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
-  在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
-  \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
-  \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
-  @endverbatim
+@warning 不建议手动创建对象
+
+#### 1.5 return
+
+表示返回值
+
+@verbatim
+@return 相对角度
+@endverbatim
   
-  <span style="color: red">**结果如下**</span>
-    
-  若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
-  在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
-  \f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
-  \begin{bmatrix}p\\v\\a\end{bmatrix}\f]
+<span style="color: red">**结果如下**</span>
 
-- __defgroup__ 与 __addtogroup__ - 
+@return 相对角度
+
+#### 1.6 f 公式
+
+内联公式使用 `f$` 命令开始
+
+@verbatim
+\f$ ... \f$
+@endverbatim
+
+块公式使用 `f[` 和 `f]` 命令
+
+@verbatim
+\f[ ... \f]
+@endverbatim
+
+示例
+
+@verbatim
+若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
+在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
+\f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
+\begin{bmatrix}p\\v\\a\end{bmatrix}\f]
+@endverbatim
+  
+<span style="color: red">**结果如下**</span>
+
+若状态向量包含以下内容：\f$[p, v, a]\f$ ，然而观测向量仅包含 \f$[p, v]\f$，
+在这种情况下，需要使用一个观测转换矩阵 \f$H_{2\times3}\f$。在上述例子中可表示为
+\f[\begin{bmatrix}p\\v\end{bmatrix}=\begin{bmatrix}1&0&0\\0&1&0\end{bmatrix}
+\begin{bmatrix}p\\v\\a\end{bmatrix}\f]
+
+#### 1.7 defgroup 与 addtogroup
+
+用于创建模块组，方便对类、函数进行分类管理，具体的使用方法可参考 RMVL 源码中的 `include/rmvl/` 目录下的各个模块
 
 ### 2 页面相关
 
@@ -197,51 +233,45 @@ std::cout << "Hello World" << std::endl;
 
 @verbatim
 
-### 按钮示例
+<div class="tabbed">
 
-@add_toggle_cpp
-
-    This is C++.
-
-    @code{.cpp}
-    std::cout << "Hello World" << std::endl;
-    @endcode
-
-@end_toggle
-
-@add_toggle_python
-
-    This is Python.
-
-    @code{.py}
-    print("Hello World")
-    @endcode
-
-@end_toggle
-
-@endverbatim
-
-渲染结果如下
-
-### 按钮示例
-
-@add_toggle_cpp
+- <b class="tab-title">C++</b>
 
   This is C++.
   ```cpp
   std::cout << "Hello World" << std::endl;
   ```
 
-@end_toggle
-
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
   This is Python.
-  ```py
+  ```python
   print("Hello World")
   ```
 
-@end_toggle
+</div>
+
+@endverbatim
+
+渲染结果如下
+
+<div class="tabbed">
+
+- <b class="tab-title">C++</b>
+
+  This is C++.
+  ```cpp
+  std::cout << "Hello World" << std::endl;
+  ```
+
+- <b class="tab-title">Python</b>
+
+  This is Python.
+  ```python
+  print("Hello World")
+  ```
+
+</div>
 
 参考 {#tutorial_documentation_refs}
 ==========

@@ -63,47 +63,47 @@ rmvl_hik_lightctl /dev/ttyUSB0
 
 不同的光源控制器有不同的使用方法，由于奥普特 GigE 光源控制器使用较复杂，这里以奥普特 GigE 光源控制器为例。
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <rmvl/light/opt_light_control.h>
+- <b class="tab-title">C++</b>
 
-int main() {
-    // 创建光源控制器对象
-    auto light_controller = rm::OPTLightController();
-    // 连接光源控制器
-    auto lipc = rm::OPTLightIpConfig{"192.168.1.100", "192.168.1.1", "255.255.255.0"};
-    light_controller.connect(lipc);
-    // 打开指定的通道
-    light_controller.openChannels({1});
-    // 设置光源强度
-    light_controller.setIntensity(1, 100);
-    // 触发光源 50×10ms = 500ms
-    light_controller.trigger(1, 50);
-}
-```
+  ```cpp
+  #include <rmvl/light/opt_light_control.h>
 
-@end_toggle
+  int main() {
+      // 创建光源控制器对象
+      auto light_controller = rm::OPTLightController();
+      // 连接光源控制器
+      auto lipc = rm::OPTLightIpConfig{"192.168.1.100", "192.168.1.1", "255.255.255.0"};
+      light_controller.connect(lipc);
+      // 打开指定的通道
+      light_controller.openChannels({1});
+      // 设置光源强度
+      light_controller.setIntensity(1, 100);
+      // 触发光源 50×10ms = 500ms
+      light_controller.trigger(1, 50);
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-import rm
+  ```python
+  import rm
 
-# 创建光源控制器对象
-light_controller = rm.OPTLightController()
-# 连接光源控制器
-cfg = rm.OPTLightIpConfig()
-cfg.ip = "192.168.1.100"
-cfg.gateway = "192.168.1.1"
-cfg.netmask = "255.255.255.0"
-light_controller.connect(cfg)
-# 打开指定的通道
-light_controller.openChannels([1])
-# 设置光源强度
-light_controller.setIntensity(1, 100)
-# 触发光源 50×10ms = 500ms
-light_controller.trigger(1, 50)
-```
+  # 创建光源控制器对象
+  light_controller = rm.OPTLightController()
+  # 连接光源控制器
+  cfg = rm.OPTLightIpConfig()
+  cfg.ip = "192.168.1.100"
+  cfg.gateway = "192.168.1.1"
+  cfg.netmask = "255.255.255.0"
+  light_controller.connect(cfg)
+  # 打开指定的通道
+  light_controller.openChannels([1])
+  # 设置光源强度
+  light_controller.setIntensity(1, 100)
+  # 触发光源 50×10ms = 500ms
+  light_controller.trigger(1, 50)
+  ```
 
-@end_toggle
+</div>
