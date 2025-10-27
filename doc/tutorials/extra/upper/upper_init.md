@@ -75,95 +75,97 @@ std::vector<rm::group::ptr> groups;
 
 ### 感知设备 {#init_perception}
 
-@add_toggle{相机设备}
+<div class="tabbed">
 
-相机模块可参考手册 @ref tutorial_modules_camera ，此处不多赘述，以 rm::HikCamera 为例，直接使用
+- <b class="tab-title">相机设备</b>
 
-```cpp
-// 创建并初始化相机
-auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
-```
+  相机模块可参考手册 @ref tutorial_modules_camera ，此处不多赘述，以 rm::HikCamera 为例，直接使用
 
-即可完成相机的初始化。
+  ```cpp
+  // 创建并初始化相机
+  auto p_capture = rm::HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
+  ```
 
-@end_toggle
+  即可完成相机的初始化。
 
-@add_toggle{光源控制器}
+- <b class="tab-title">光源控制器</b>
 
-@ref tutorial_modules_light 一文中指引了有关 SDK 的安装，可参考其相关类完成开发工作。
+  @ref tutorial_modules_light 一文中指引了有关 SDK 的安装，可参考其相关类完成开发工作。
 
-@end_toggle
+- <b class="tab-title">激光雷达</b>
 
-@add_toggle{激光雷达}
+  @todo
+  本小节暂无
 
-@todo
-本小节暂无
-
-@end_toggle
+</div>
 
 ### 通信设备 {#init_communication} 
 
-@add_toggle{串口通信}
+<div class="tabbed">
 
-串行接口通信，使用方法见 @ref tutorial_modules_serial
+- <b class="tab-title">串口通信</b>
 
-**示例**
+  串行接口通信，使用方法见 @ref tutorial_modules_serial
 
-```cpp
-/* code */
+  **示例**
 
-#pragma pack(1)
-// 发送协议
-struct SendStruct {
-    uint8_t test;
-    /* code */
-};
-#pragma pack()
+  ```cpp
+  /* code */
 
-/*
-    不使用 #pragma pack 预处理器宏实现取消内存对齐，也可以使用
-    C++11 提供的关键字 alignas，例如下面的接收协议
-*/
+  #pragma pack(1)
+  // 发送协议
+  struct SendStruct {
+      uint8_t test;
+      /* code */
+  };
+  #pragma pack()
 
-// 接收协议
-struct alignas(1) ReceiveStruct {
-    uint8_t test;
-    /* code */
-};
+  /*
+      不使用 #pragma pack 预处理器宏实现取消内存对齐，也可以使用
+      C++11 提供的关键字 alignas，例如下面的接收协议
+  */
 
-/* code */
+  // 接收协议
+  struct alignas(1) ReceiveStruct {
+      uint8_t test;
+      /* code */
+  };
 
-int main() {
-    // 创建并初始化串口通信
-    auto port = rm::SerialPort("/dev/ttyACM0", BaudRate::BR_115200, SerialReadMode::NONBLOCK);
+  /* code */
 
-    /* code */
-}
+  int main() {
+      // 创建并初始化串口通信
+      auto port = rm::SerialPort("/dev/ttyACM0", BaudRate::BR_115200, SerialReadMode::NONBLOCK);
 
-/* code */
-```
+      /* code */
+  }
 
-@note
-- 取消内存对齐可参考 [alignas](https://zh.cppreference.com/w/cpp/language/alignas) 和 [pragma pack](https://zh.cppreference.com/w/cpp/preprocessor/impl#.23pragma_pack)
-- 初始化硬件设备同时要定义好串口通信协议
-- 串口通信协议可参考 @ref serial_protocol 小节
+  /* code */
+  ```
 
-@end_toggle
+  @note
+  - 取消内存对齐可参考 [alignas](https://zh.cppreference.com/w/cpp/language/alignas) 和 [pragma pack](https://zh.cppreference.com/w/cpp/preprocessor/impl#.23pragma_pack)
+  - 初始化硬件设备同时要定义好串口通信协议
+  - 串口通信协议可参考 @ref serial_protocol 小节
 
-@add_toggle{其余层级支持}
+- <b class="tab-title">其余层级支持</b>
 
-- 进程间通信，使用方法见 @ref tutorial_modules_ipc
-- 以 Socket 为核心的传输层支持，使用方法见 @ref tutorial_modules_socket
-- 以 HTTP 为核心的应用层及后端框架支持，使用方法见 @ref tutorial_modules_netapp
+  - 进程间通信，使用方法见 @ref tutorial_modules_ipc
+    - 跨平台的同步支持包括 rm::PipeServer 和 rm::PipeClient ，对应的异步协程支持包括 rm::async::PipeServer 和 rm::async::PipeClient
+    - Linux 下基于 Unix FIFO 实现的 rm::MqServer 和 rm::MqClient
+    - Unix Domain Socket 的同步支持包括 rm::Socket 和对应的提供者 rm::Acceptor 和 rm::Connector ，对应的异步协程支持包括 rm::async::Socket 和对应的提供者 rm::async::Acceptor 和 rm::async::Connector
+  - 以 Socket 为核心的传输层支持，使用方法见 @ref tutorial_modules_socket
+  - 以 HTTP 为核心的应用层及后端框架支持，使用方法见 @ref tutorial_modules_netapp
+    - 基础工具包括 rm::Request 和 rm::Response
+    - 同步请求工具包括 rm::requests::get 和 rm::requests::post 等，对应的异步请求工具包括 rm::async::requests::get 和 rm::async::requests::post 等
+    - 后端框架包括 rm::async::Webapp
 
-@end_toggle
+- <b class="tab-title">通信中间件</b>
 
-@add_toggle{通信中间件}
+  - OPC UA，使用方法见 @ref tutorial_modules_opcua
+  - MQTT，使用方法见 @ref tutorial_modules_mqtt
 
-- OPC UA，使用方法见 @ref tutorial_modules_opcua
-- MQTT，使用方法见 @ref tutorial_modules_mqtt
-
-@end_toggle
+</div>
 
 ------
 

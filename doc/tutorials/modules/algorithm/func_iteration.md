@@ -75,30 +75,30 @@ x^*&=x_k-\frac{f(x_k)}{f'(x_k)}-\frac{f''(x_k)}{2f'(x_k)}(x^*-x_k)^2-\cdots\\
 
 ### 4 使用示例
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <rmvl/algorithm.hpp>
+- <b class="tab-title">C++</b>
 
-#include <cstdio>
+  ```cpp
+  #include <rmvl/algorithm.hpp>
 
-int main() {
-    auto foo = rm::NonlinearSolver([](double x) { return x * x - 4; });
-    printf("x1 = %.2f, x2 = %.2f\n", foo(-5), foo(5));
-    // x1 = -2.00, x2 = 2.00
-}
-```
+  #include <cstdio>
 
-@end_toggle
+  int main() {
+      auto foo = rm::NonlinearSolver([](double x) { return x * x - 4; });
+      printf("x1 = %.2f, x2 = %.2f\n", foo(-5), foo(5));
+      // x1 = -2.00, x2 = 2.00
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-import rm
+  ```python
+  import rm
 
-foo = rm.NonlinearSolver(lambda x: x * x - 4)
-print("x1 = {:.2f}, x2 = {:.2f}".format(foo(-5), foo(5)))
-# x1 = -2.00, x2 = 2.00
-```
+  foo = rm.NonlinearSolver(lambda x: x * x - 4)
+  print("x1 = {:.2f}, x2 = {:.2f}".format(foo(-5), foo(5)))
+  # x1 = -2.00, x2 = 2.00
+  ```
 
-@end_toggle
+</div>

@@ -26,7 +26,7 @@
  */
 
 /**
- * @defgroup para 参数模块
+ * @defgroup rmvlpara 参数模块
  * @{
  * @brief RMVL 参数模块
  * @details
@@ -35,7 +35,7 @@
  * - 每个参数模块均提供了一个运行时参数加载的函数，用于从 `YAML` 文件中加载参数
  *
  * @see 在引言中提及了有关 @ref intro_parameters_manager 的内容可供参考
- * @}
+ * @} rmvlpara
  */
 
 #include <rmvl/rmvl_modules.hpp>

@@ -454,63 +454,63 @@ l_2&=f_2(t_n+\frac h2,x_{1_n}+\frac h2k_1,x_{2_n}+\frac h2l_1)\end{align}\f]
 
 现给出上文使用 2 阶 2 级中点公式求解常微分方程组的示例代码
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <rmvl/algorithm.hpp>
+- <b class="tab-title">C++</b>
 
-#include <cstdio>
+  ```cpp
+  #include <rmvl/algorithm.hpp>
 
-int main() {
-    rm::Ode dot_x1 = [](double t, const std::valarray<double> &x) { return 2 * x[1] + t; };
-    rm::Ode dot_x2 = [](double, const std::valarray<double> &x) { return -x[0] - 3 * x[1]; };
-    rm::Odes fs = {dot_x1, dot_x2};
+  #include <cstdio>
 
-    // 计算精确解
-    double real_x1 = 0.75 * std::exp(-2) + 2 * std::exp(-1) - 0.25;
-    double real_x2 = -0.75 * std::exp(-2) - std::exp(-1) + 0.25;
-    // 2 阶 2 级中点公式
-    rm::RungeKutta2 rk2(fs);
-    // 设置初值
-    rk2.init(0, {1, -1});
-    // 计算数值解
-    auto res2 = rk2.solve(0.01, 100).back();
+  int main() {
+      rm::Ode dot_x1 = [](double t, const std::valarray<double> &x) { return 2 * x[1] + t; };
+      rm::Ode dot_x2 = [](double, const std::valarray<double> &x) { return -x[0] - 3 * x[1]; };
+      rm::Odes fs = {dot_x1, dot_x2};
 
-    printf("x* = (%f, %f)\n", real_x1, real_x2);
-    printf("x  = (%f, %f)\n", res2[0], res2[1]);
-    // 输出结果为
-    // x* = (0.587260, -0.219381)
-    // x  = (0.587286, -0.219401)
-}
-```
+      // 计算精确解
+      double real_x1 = 0.75 * std::exp(-2) + 2 * std::exp(-1) - 0.25;
+      double real_x2 = -0.75 * std::exp(-2) - std::exp(-1) + 0.25;
+      // 2 阶 2 级中点公式
+      rm::RungeKutta2 rk2(fs);
+      // 设置初值
+      rk2.init(0, {1, -1});
+      // 计算数值解
+      auto res2 = rk2.solve(0.01, 100).back();
 
-@end_toggle
+      printf("x* = (%f, %f)\n", real_x1, real_x2);
+      printf("x  = (%f, %f)\n", res2[0], res2[1]);
+      // 输出结果为
+      // x* = (0.587260, -0.219381)
+      // x  = (0.587286, -0.219401)
+  }
+  ```
 
-@add_toggle_python
-  
-```python
-import rm
-import numpy as np
+- <b class="tab-title">Python</b>
 
-fs = []
-fs.append(lambda t, x: 2 * x[1] + t)
-fs.append(lambda t, x: -x[0] - 3 * x[1])
+  ```python
+  import rm
+  import numpy as np
 
-# 计算精确解
-real_x1 = 0.75 * np.exp(-2) + 2 * np.exp(-1) - 0.25
-real_x2 = -0.75 * np.exp(-2) - np.exp(-1) + 0.25
-# 2 阶 2 级中点公式
-rk2 = rm.RungeKutta2(fs)
-# 设置初值
-rk2.init(0, [1, -1])
-# 计算数值解
-res2 = rk2.solve(0.01, 100)[-1]
+  fs = []
+  fs.append(lambda t, x: 2 * x[1] + t)
+  fs.append(lambda t, x: -x[0] - 3 * x[1])
 
-print("x* = {:.6f}, {:.6f}".format(real_x1, real_x2))
-print("x  = {:.6f}, {:.6f}".format(res2[0], res2[1]))
-# 输出结果为
-# x* = 0.587260, -0.219381
-# x  = 0.587286, -0.219401
-```
+  # 计算精确解
+  real_x1 = 0.75 * np.exp(-2) + 2 * np.exp(-1) - 0.25
+  real_x2 = -0.75 * np.exp(-2) - np.exp(-1) + 0.25
+  # 2 阶 2 级中点公式
+  rk2 = rm.RungeKutta2(fs)
+  # 设置初值
+  rk2.init(0, [1, -1])
+  # 计算数值解
+  res2 = rk2.solve(0.01, 100)[-1]
 
-@end_toggle
+  print("x* = {:.6f}, {:.6f}".format(real_x1, real_x2))
+  print("x  = {:.6f}, {:.6f}".format(res2[0], res2[1]))
+  # 输出结果为
+  # x* = 0.587260, -0.219381
+  # x  = 0.587286, -0.219401
+  ```
+
+</div>

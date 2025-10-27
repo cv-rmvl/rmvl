@@ -32,10 +32,6 @@ MULTILINE_CPP_IS_BRIEF = NO
 INHERIT_DOCS           = YES
 SEPARATE_MEMBER_PAGES  = NO
 TAB_SIZE               = 4
-ALIASES                += add_toggle{1}="@htmlonly[block] <div class='newInnerHTML'>\1</div><div> <script type='text/javascript'> addToggle(); </script>@endhtmlonly"
-ALIASES                += add_toggle_cpp="@htmlonly[block] <div class='newInnerHTML' title='cpp' style='display: none;'>C++</div><div class='toggleable_div label_cpp' style='display: none;'>@endhtmlonly"
-ALIASES                += add_toggle_python="@htmlonly[block] <div class='newInnerHTML' title='python' style='display: none;'>Python</div><div class='toggleable_div label_python' style='display: none;'>@endhtmlonly"
-ALIASES                += end_toggle="@htmlonly[block] </div> @endhtmlonly"
 ALIASES                += add_checkbox_y="@htmlonly[block] <input type='checkbox' checked='checked' disabled>"
 ALIASES                += add_checkbox_n="@htmlonly[block] <input type='checkbox' disabled>"
 ALIASES                += end_checkbox=" </br> @endhtmlonly"
@@ -299,3 +295,4 @@ MAX_DOT_GRAPH_DEPTH    = 0
 DOT_MULTI_TARGETS      = NO
 GENERATE_LEGEND        = YES
 DOT_CLEANUP            = YES
+PAGE_OUTLINE_PANEL     = NO

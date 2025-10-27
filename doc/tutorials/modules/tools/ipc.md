@@ -28,105 +28,105 @@ RMVL 提供了跨平台的命名管道实现，并提供了协程支持，Window
 
 **服务端**
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <rmvl/io/ipc.hpp>
+- <b class="tab-title">C++</b>
 
-using namespace rm;
+  ```cpp
+  #include <rmvl/io/ipc.hpp>
 
-int main() {
-    PipeServer server("mypipe");
+  using namespace rm;
 
-    bool success = server.write("message");
-    if (!success) {
-        printf("Write failed\n");
-        return -1;
-    }
+  int main() {
+      PipeServer server("mypipe");
 
-    std::string msg = server.read();
-    if (msg.empty()) {
-        printf("Read failed\n");
-        return -1;
-    }
+      bool success = server.write("message");
+      if (!success) {
+          printf("Write failed\n");
+          return -1;
+      }
 
-    printf("Received: %s\n", msg.c_str());
-}
-```
+      std::string msg = server.read();
+      if (msg.empty()) {
+          printf("Read failed\n");
+          return -1;
+      }
 
-@end_toggle
+      printf("Received: %s\n", msg.c_str());
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-import rm
+  ```python
+  import rm
 
-server = rm.PipeServer("mypipe")
+  server = rm.PipeServer("mypipe")
 
-success = server.write("message")
-if not success:
-    print("Write failed")
-    return -1
+  success = server.write("message")
+  if not success:
+      print("Write failed")
+      return -1
 
-msg = server.read()
-if not msg:
-    print("Read failed")
-    return -1
+  msg = server.read()
+  if not msg:
+      print("Read failed")
+      return -1
 
-print(f"Received: {msg}")
-```
+  print(f"Received: {msg}")
+  ```
 
-@end_toggle
+</div>
 
 **客户端**
 
-@add_toggle_cpp
+<div class="tabbed">
 
-```cpp
-#include <rmvl/io/ipc.hpp>
+- <b class="tab-title">C++</b>
 
-using namespace rm;
+  ```cpp
+  #include <rmvl/io/ipc.hpp>
 
-int main() {
-    PipeClient client("mypipe");
+  using namespace rm;
 
-    std::string msg = client.read();
-    if (msg.empty()) {
-        printf("Read failed\n");
-        return -1;
-    }
-    printf("Received: %s\n", msg.c_str());
+  int main() {
+      PipeClient client("mypipe");
 
-    bool success = client.write("received: " + msg);
-    if (!success) {
-        printf("Write failed\n");
-        return -1;
-    }
-}
-```
+      std::string msg = client.read();
+      if (msg.empty()) {
+          printf("Read failed\n");
+          return -1;
+      }
+      printf("Received: %s\n", msg.c_str());
 
-@end_toggle
+      bool success = client.write("received: " + msg);
+      if (!success) {
+          printf("Write failed\n");
+          return -1;
+      }
+  }
+  ```
 
-@add_toggle_python
+- <b class="tab-title">Python</b>
 
-```python
-import rm
+  ```python
+  import rm
 
-client = rm.PipeClient("mypipe")
+  client = rm.PipeClient("mypipe")
 
-msg = client.read()
-if not msg:
-    print("Read failed")
-    return -1
-print(f"Received: {msg}")
+  msg = client.read()
+  if not msg:
+      print("Read failed")
+      return -1
+  print(f"Received: {msg}")
 
-success = client.write("received: " + msg)
-if not success:
-    print("Write failed")
-    return -1
-```
+  success = client.write("received: " + msg)
+  if not success:
+      print("Write failed")
+      return -1
+  ```
 
-@end_toggle
+</div>
 
 ### 1.2 异步非阻塞
 

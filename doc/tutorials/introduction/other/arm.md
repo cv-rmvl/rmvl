@@ -8,7 +8,7 @@
 
 ------
 
-@note 建议使用基于 JSON 文件的 Docker 编译镜像构建方式，详见 @ref tutorial_run_in 。
+@note 建议使用基于 YAML 文件的 Docker 编译镜像构建方式，详见 @ref tutorial_run_in 。
 
 ### 交叉编译应具备的先决条件
 
@@ -22,36 +22,37 @@
 
 `gneabi` 安装命令如下
 
-```bash
-sudo apt install gcc-arm-linux-gneabi
-```
+<div class="fragment">
+<div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install gcc-arm-linux-gneabi</div>
+</div>
 
 `gneabihf` 安装命令如下
 
-```bash
-sudo apt install gcc-arm-linux-gneabihf
-```
+<div class="fragment">
+<div class="line"><span class="keyword">sudo</span> <span class="keywordflow">apt</span> install gcc-arm-linux-gneabihf</div>
+</div>
 
 ### 使用提供的工具链构建 RMVL
 
 在 RMVL 目录下创建 `build` 文件夹，运行以下命令
 
-```bash
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">mkdir</span> build</div>
+<div class="line"><span class="keywordflow">cd</span> build</div>
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> CMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake ..</div>
+</div>
 
 上文代码中的 CMake 配置也可使用 `cmake-gui` 或者 `ccmake` 工具，例如使用 `ccmake` 则需要改写为
 
-```bash
-ccmake -DCMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">ccmake</span> <span class="comment">-D</span> CMAKE_TOOLCHAIN_FILE=../platforms/linux/arm-gnueabi.toolchain.cmake ..</div>
+</div>
 
 运行构建命令
 
-```bash
-cmake --build . --parallel 4
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">--build</span> . <span class="comment">--parallel</span> 4</div>
+</div>
 
 ### 自定义工具链构建 RMVL
 
@@ -59,25 +60,25 @@ cmake --build . --parallel 4
 
 工具链文件的一般写法如下
 
-```cmake
-# toolchain.cmake
-
-set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR aarch64)
-
-set(CMAKE_C_COMPILER "/path/to/xxx-gcc")
-set(CMAKE_CXX_COMPILER "/path/to/xxx-g++")
-
-set(CMAKE_FIND_ROOT_PATH "/path/to/")
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-```
+<div class="fragment">
+<div class="line"><span class="comment"># toolchain.cmake</span></div>
+<div class="line"></div>
+<div class="line"><span class="keyword">set</span>(CMAKE_SYSTEM_NAME Linux)</div>
+<div class="line"><span class="keyword">set</span>(CMAKE_SYSTEM_PROCESSOR aarch64)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">set</span>(CMAKE_C_COMPILER <span class="stringliteral">"/path/to/xxx-gcc"</span>)</div>
+<div class="line"><span class="keyword">set</span>(CMAKE_CXX_COMPILER <span class="stringliteral">"/path/to/xxx-g++"</span>)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH <span class="stringliteral">"/path/to/"</span>)</div>
+<div class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM <span class="keyword">NEVER</span>)</div>
+<div class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY <span class="keyword">ONLY</span>)</div>
+<div class="line"><span class="keyword">set</span>(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE <span class="keyword">ONLY</span>)</div>
+</div>
 
 然后进入 RMVL 项目根目录，在终端中输入
 
-```bash
-cmake -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> CMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake ..</div>
+</div>
 
 同样，CMake 配置也可使用 `cmake-gui` 或者 `ccmake` 工具。

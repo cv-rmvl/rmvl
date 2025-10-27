@@ -391,16 +391,16 @@ function(rmvl_generate_para target_name)
         @ONLY
       )
     endif()
-    set(def_new_group "${def_new_group}//! @addtogroup para\n//! @{\n")
+    set(def_new_group "${def_new_group}//! @addtogroup rmvlpara\n//! @{\n")
     set(def_new_group "${def_new_group}//! @defgroup para_${module_name} ${module_name} 的参数模块\n")
     set(def_new_group "${def_new_group}//! @addtogroup para_${module_name}\n//! @{\n")
     set(def_new_group "${def_new_group}//! @brief 与 @ref ${module_name} 相关的参数模块，包含...\n")
-    set(def_new_group "${def_new_group}//! @} para_${module_name}\n//! @} para\n")
+    set(def_new_group "${def_new_group}//! @} para_${module_name}\n//! @} rmvlpara\n")
   endif()
   if(WITH_OPENCV)
     configure_file(
       ${para_template_path}/para_generator_header.in
-      ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path}
+      ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path} 
       @ONLY
     )
   else()

@@ -10,7 +10,7 @@ RMVL 说明文档 {#mainpage}
 - @ref tutorials_python
 @refs_modules@
 @refs_extra@
-- Parameter modules. @ref para
+- Parameter modules. @ref rmvlpara
 - @ref citelist
 
 #### 快速开始
