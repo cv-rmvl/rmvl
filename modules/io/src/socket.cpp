@@ -11,6 +11,7 @@
 
 #include "rmvl/io/socket.hpp"
 #include "rmvl/core/util.hpp"
+#include <cstddef>
 
 #ifdef _WIN32
 #include <MSWSock.h>
@@ -44,14 +45,152 @@ inline static int error_code() {
 #endif
 }
 
-ipc ipc::stream() { return {AF_UNIX, SOCK_STREAM}; }
-ipc ipc::packet() { return {AF_UNIX, SOCK_DGRAM}; }
 ip::tcp ip::tcp::v4() { return {AF_INET, SOCK_STREAM}; }
 ip::tcp ip::tcp::v6() { return {AF_INET6, SOCK_STREAM}; }
 ip::udp ip::udp::v4() { return {AF_INET, SOCK_DGRAM}; }
 ip::udp ip::udp::v6() { return {AF_INET6, SOCK_DGRAM}; }
 
-Socket &Socket::operator=(Socket &&other) noexcept {
+static void fdbind(SocketFd fd, const Endpoint &ep) {
+    RMVL_Assert(fd != INVALID_SOCKET_FD);
+
+    // 设置允许重用处于 TIME_WAIT 状态的地址
+    int opt = 1;
+#ifdef _WIN32
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char *>(&opt), sizeof(opt)) < 0)
+#else
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+#endif
+        WARNING_("setsockopt SO_REUSEADDR failed, error code: %d", error_code());
+    // 空端口不进行绑定
+    if (ep.port() == 0)
+        return;
+    // IPv4 Socket
+    if (ep.family() == AF_INET) {
+        sockaddr_in addr{};
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_port = htons(ep.port());
+        if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
+            RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
+    }
+    // IPv6 Socket
+    else if (ep.family() == AF_INET6) {
+        sockaddr_in6 addr{};
+        addr.sin6_family = AF_INET6;
+        addr.sin6_addr = in6addr_any;
+        addr.sin6_port = htons(ep.port());
+        if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
+            RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
+    } else
+        RMVL_Error(RMVL_StsError, "Unsupported socket family");
+}
+
+struct _dgram_recvfrom_res {
+    char ip_str[INET6_ADDRSTRLEN]{};
+    uint16_t port{};
+};
+
+static _dgram_recvfrom_res parse_recvfrom(const sockaddr_storage &sender_addr) {
+    _dgram_recvfrom_res res{};
+    if (sender_addr.ss_family == AF_INET) {
+        const auto *addr_v4 = reinterpret_cast<const sockaddr_in *>(&sender_addr);
+        inet_ntop(AF_INET, &addr_v4->sin_addr, res.ip_str, sizeof(res.ip_str));
+        res.port = ntohs(addr_v4->sin_port);
+    } else if (sender_addr.ss_family == AF_INET6) {
+        const auto *addr_v6 = reinterpret_cast<const sockaddr_in6 *>(&sender_addr);
+        inet_ntop(AF_INET6, &addr_v6->sin6_addr, res.ip_str, sizeof(res.ip_str));
+        res.port = ntohs(addr_v6->sin6_port);
+    }
+    return res;
+}
+
+struct _dgram_sendto_res {
+    sockaddr_storage dst_storage{};
+    socklen_t addr_len{};
+};
+
+static _dgram_sendto_res parse_sendto(const std::string_view &addr, const Endpoint &endpoint) noexcept {
+    _dgram_sendto_res res{};
+    if (endpoint.family() == AF_INET) {
+        auto *dst_addr = reinterpret_cast<sockaddr_in *>(&res.dst_storage);
+        dst_addr->sin_family = AF_INET;
+        dst_addr->sin_port = htons(endpoint.port());
+        inet_pton(AF_INET, addr.data(), &dst_addr->sin_addr);
+        res.addr_len = sizeof(sockaddr_in);
+    } else if (endpoint.family() == AF_INET6) {
+        auto *dst_addr = reinterpret_cast<sockaddr_in6 *>(&res.dst_storage);
+        dst_addr->sin6_family = AF_INET6;
+        dst_addr->sin6_port = htons(endpoint.port());
+        inet_pton(AF_INET6, addr.data(), &dst_addr->sin6_addr);
+        res.addr_len = sizeof(sockaddr_in6);
+    }
+    return res;
+}
+
+static std::tuple<std::string, std::string, uint16_t> fdrecvfrom(SocketFd fd) {
+    char buf[2048]{};
+    sockaddr_storage sender_addr{};
+    socklen_t addr_len = sizeof(sender_addr);
+    auto n = ::recvfrom(fd, buf, sizeof(buf), 0, reinterpret_cast<sockaddr *>(&sender_addr), &addr_len);
+    if (n > 0) {
+        std::string data(buf, n);
+        auto [sender_ip_str, sender_port] = parse_recvfrom(sender_addr);
+        return {data, sender_ip_str, sender_port};
+    }
+    return {};
+}
+
+static bool fdsendto(SocketFd fd, std::string_view addr, const Endpoint &endpoint, std::string_view data) {
+    auto [dst_storage, addr_len] = parse_sendto(addr, endpoint);
+#ifdef _WIN32
+    auto n = ::sendto(fd, data.data(), static_cast<int>(data.size()), 0, reinterpret_cast<sockaddr *>(&dst_storage), addr_len);
+#else
+    auto n = ::sendto(fd, data.data(), data.size(), 0, reinterpret_cast<sockaddr *>(&dst_storage), addr_len);
+#endif
+    return n == static_cast<decltype(n)>(data.size());
+}
+
+std::tuple<std::string, std::string, uint16_t> DgramSocket::read() noexcept {
+    RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
+    return fdrecvfrom(_fd);
+}
+
+bool DgramSocket::write(std::string_view addr, const Endpoint &endpoint, std::string_view data) noexcept {
+    RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
+    return fdsendto(_fd, addr, endpoint, data);
+}
+
+std::string StreamSocket::read() noexcept {
+    char buf[2048]{};
+#if _WIN32
+    auto n = ::recv(_fd, buf, static_cast<int>(sizeof(buf)), 0);
+#else
+    auto n = ::recv(_fd, buf, sizeof(buf), 0);
+#endif
+    return n > 0 ? std::string(buf, n) : std::string{};
+}
+
+bool StreamSocket::write(std::string_view data) noexcept {
+    auto n = ::send(_fd, data.data(), data.size(), 0);
+    return n == static_cast<decltype(n)>(data.size());
+}
+
+#ifdef _WIN32
+DgramListener::DgramListener(const Endpoint &ep, bool ov) : _endpoint(ep), _fd(INVALID_SOCKET_FD) {
+    SocketEnv::ensure_init();
+    _fd = ov ? WSASocket(ep.family(), ep.type(), 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(ep.family(), ep.type(), 0);
+#else
+DgramListener::DgramListener(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
+#endif
+    fdbind(_fd, ep);
+}
+
+DgramSocket DgramListener::create() {
+    RMVL_Assert(_fd != INVALID_SOCKET_FD);
+    return DgramSocket(_fd);
+}
+
+StreamSocket &StreamSocket::operator=(StreamSocket &&other) noexcept {
     _fd = std::exchange(other._fd, INVALID_SOCKET_FD);
     return *this;
 }
@@ -63,83 +202,24 @@ Acceptor::Acceptor(const Endpoint &ep, bool ov) : _endpoint(ep) {
 #else
 Acceptor::Acceptor(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
 #endif
-    RMVL_Assert(_fd != INVALID_SOCKET_FD);
-
-    // 本地 Socket
-    if (ep.family() == AF_UNIX) {
-        sockaddr_un addr{};
-        addr.sun_family = AF_UNIX;
-        strcpy(addr.sun_path, ep.path().c_str());
-        unlink(addr.sun_path);
-        if (bind(_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-            RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
-    }
-    // 网络 Socket
-    else {
-        // 设置允许重用处于 TIME_WAIT 状态的地址
-        int opt = 1;
-#ifdef _WIN32
-        if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char *>(&opt), sizeof(opt)) < 0)
-#else
-        if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-#endif
-            WARNING_("setsockopt SO_REUSEADDR failed, error code: %d", error_code());
-        // IPv4 Socket
-        if (ep.family() == AF_INET) {
-            sockaddr_in addr{};
-            addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = INADDR_ANY;
-            addr.sin_port = htons(ep.port());
-            if (bind(_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-                RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
-        }
-        // IPv6 Socket
-        else if (ep.family() == AF_INET6) {
-            sockaddr_in6 addr{};
-            addr.sin6_family = AF_INET6;
-            addr.sin6_addr = in6addr_any;
-            addr.sin6_port = htons(ep.port());
-            if (bind(_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-                RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
-        } else
-            RMVL_Error(RMVL_StsError, "Unsupported socket family");
-    }
-
-    if (_endpoint.type() == SOCK_STREAM) // 流式 Socket 需要监听
-        if (listen(_fd, SOMAXCONN) < 0)
-            RMVL_Error_(RMVL_StsError, "listen failed, error code: %d", error_code());
+    fdbind(_fd, ep);
+    if (listen(_fd, SOMAXCONN) < 0)
+        RMVL_Error_(RMVL_StsError, "listen failed, error code: %d", error_code());
 }
 
-Socket Acceptor::accept() {
-    // 流式 Socket 需要接受连接
-    int sfd = _endpoint.type() == SOCK_STREAM ? ::accept(_fd, nullptr, nullptr) : _fd;
-    return Socket(sfd);
-}
+StreamSocket Acceptor::accept() { return StreamSocket(::accept(_fd, nullptr, nullptr)); }
 
 static int fdconnect(int fd, const Endpoint &ep, std::string_view url) {
-    // 本地 Socket
-    if (ep.family() == AF_UNIX) {
-        sockaddr_un addr{};
-        addr.sun_family = ep.family();
-#ifdef _WIN32
-        strcpy_s(addr.sun_path, ep.path().c_str());
-#else
-        strcpy(addr.sun_path, ep.path().c_str());
-#endif
-        // 统一使用 connect 使包 Socket 可以使用 send
-        if (connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-            RMVL_Error_(RMVL_StsError, "Connection failed, error code: %d", error_code());
-    }
     // IPv4 Socket
-    else if (ep.family() == AF_INET) {
+    if (ep.family() == AF_INET) {
         sockaddr_in addr{};
         addr.sin_family = ep.family();
         addr.sin_port = htons(ep.port());
         if (inet_pton(AF_INET, url.data(), &addr.sin_addr) != 1)
             RMVL_Error(RMVL_StsError, "Invalid IPv4 address");
-        // 统一使用 connect 使 UDP 可以使用 send
-        if (connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-            RMVL_Error_(RMVL_StsError, "Connection failed, error code: %d", error_code());
+        if (ep.type() == SOCK_STREAM)
+            if (connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
+                RMVL_Error_(RMVL_StsError, "Connection failed, error code: %d", error_code());
     }
     // IPv6 Socket
     else if (ep.family() == AF_INET6) {
@@ -148,9 +228,9 @@ static int fdconnect(int fd, const Endpoint &ep, std::string_view url) {
         addr.sin6_port = htons(ep.port());
         if (inet_pton(AF_INET6, url.data(), &addr.sin6_addr) != 1)
             RMVL_Error(RMVL_StsError, "Invalid IPv6 address");
-        // 统一使用 connect 使 UDP 可以使用 send
-        if (connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-            RMVL_Error_(RMVL_StsError, "Connection failed, error code: %d", error_code());
+        if (ep.type() == SOCK_STREAM)
+            if (connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
+                RMVL_Error_(RMVL_StsError, "Connection failed, error code: %d", error_code());
     } else
         RMVL_Error(RMVL_StsError, "Unsupported socket family");
     return fd;
@@ -166,9 +246,9 @@ Connector::Connector(const Endpoint &ep, std::string_view url, bool) : _url(url)
     RMVL_Assert(_fd != INVALID_SOCKET_FD);
 }
 
-Socket Connector::connect() {
+StreamSocket Connector::connect() {
     int sfd = fdconnect(_fd, _endpoint, _url);
-    return Socket(sfd);
+    return StreamSocket(sfd);
 }
 
 static bool valid(SocketFd fd) {
@@ -195,47 +275,15 @@ SocketEnv::SocketEnv() {
 
 SocketEnv::~SocketEnv() { WSACleanup(); }
 
-std::string Socket::read() noexcept {
-    char buf[2048]{};
-    int n = ::recv(_fd, buf, sizeof(buf), 0);
-    if (n == SOCKET_ERROR) {
-        int error = WSAGetLastError();
-        if (error != WSAEWOULDBLOCK)
-            WARNING_("Socket read failed, error: %d", error);
-        return "";
-    }
-    return n > 0 ? std::string(buf, n) : std::string{};
-}
-
-bool Socket::write(std::string_view data) noexcept {
-    int n = ::send(_fd, data.data(), data.size(), 0);
-    if (n == SOCKET_ERROR) {
-        int error = WSAGetLastError();
-        if (error != WSAEWOULDBLOCK)
-            WARNING_("Socket write failed, error: %d", error);
-        return false;
-    }
-    return n == static_cast<int>(data.size());
-}
-
-Socket::~Socket() { valid(_fd) ? ::closesocket(_fd) : 0; }
+DgramSocket::~DgramSocket() { valid(_fd) ? ::closesocket(_fd) : 0; }
+StreamSocket::~StreamSocket() { valid(_fd) ? ::closesocket(_fd) : 0; }
 Acceptor::~Acceptor() { valid(_fd) ? ::closesocket(_fd) : 0; }
 Connector::~Connector() { valid(_fd) ? ::closesocket(_fd) : 0; }
 
 #else
 
-std::string Socket::read() noexcept {
-    char buf[2048]{};
-    ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
-    return n > 0 ? std::string(buf, n) : std::string{};
-}
-
-bool Socket::write(std::string_view data) noexcept {
-    ssize_t n = ::send(_fd, data.data(), data.size(), 0);
-    return n == static_cast<ssize_t>(data.size());
-}
-
-Socket::~Socket() { valid(_fd) ? ::close(_fd) : 0; }
+DgramSocket::~DgramSocket() { valid(_fd) ? ::close(_fd) : 0; }
+StreamSocket::~StreamSocket() { valid(_fd) ? ::close(_fd) : 0; }
 Acceptor::~Acceptor() { valid(_fd) ? ::close(_fd) : 0; }
 Connector::~Connector() { valid(_fd) ? ::close(_fd) : 0; }
 
@@ -245,9 +293,14 @@ Connector::~Connector() { valid(_fd) ? ::close(_fd) : 0; }
 
 namespace async {
 
+DgramSocket DgramListener::create() {
+    RMVL_Assert(_fd != INVALID_SOCKET_FD);
+    return DgramSocket(_ctx, _fd);
+}
+
 #ifdef _WIN32
 
-Socket::Socket(IOContext &io_context, SocketFd fd) : ::rm::Socket(fd), _ctx(io_context) {
+DgramSocket::DgramSocket(IOContext &io_context, SocketFd fd) : ::rm::DgramSocket(fd), _ctx(io_context) {
     if (CreateIoCompletionPort((HANDLE)_fd, _ctx.get().handle(), 0, 0) == nullptr) {
         auto err = GetLastError();
         if (err != ERROR_INVALID_PARAMETER)
@@ -255,7 +308,77 @@ Socket::Socket(IOContext &io_context, SocketFd fd) : ::rm::Socket(fd), _ctx(io_c
     }
 }
 
-void Socket::SocketReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
+void DgramSocket::SocketReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+
+    auto *p_addr = new (_ovl->info) sockaddr_storage{};
+    auto *p_addr_len = new (p_addr + 1) socklen_t{sizeof(sockaddr_storage)};
+
+    WSABUF buf{};
+    buf.buf = _ovl->buf;
+    buf.len = static_cast<ULONG>(sizeof(_ovl->buf));
+    DWORD flags = 0;
+
+    if (WSARecvFrom(reinterpret_cast<SOCKET>(_fd), &buf, 1, nullptr, &flags, reinterpret_cast<sockaddr *>(p_addr),
+                    p_addr_len, &_ovl->ov, nullptr) == SOCKET_ERROR) {
+        DWORD error = WSAGetLastError();
+        if (error != ERROR_IO_PENDING)
+            ERROR_("WSARecvFrom failed with error: %lu", error);
+    }
+}
+
+std::tuple<std::string, std::string, uint16_t> DgramSocket::SocketReadAwaiter::await_resume() noexcept {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
+        WARNING_("GetOverlappedResult failed with error: %lu", GetLastError());
+        return {};
+    }
+    if (bytes_transferred > 0) {
+        auto *p_addr = reinterpret_cast<sockaddr_storage *>(_ovl->info);
+        std::string data(_ovl->buf, bytes_transferred);
+        auto [sender_ip_str, sender_port] = parse_recvfrom(*p_addr);
+        return {data, sender_ip_str, sender_port};
+    }
+    return {};
+}
+
+void DgramSocket::SocketWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+
+    WSABUF buf{};
+    buf.buf = const_cast<char *>(_data.data());
+    buf.len = static_cast<ULONG>(_data.size());
+
+    // 准备目标地址
+    auto [dst_storage, addr_len] = parse_sendto(_addr, _endpoint);
+    if (WSASendTo(reinterpret_cast<SOCKET>(_fd), &buf, 1, nullptr, 0, reinterpret_cast<const sockaddr *>(&dst_storage),
+                  addr_len, &_ovl->ov, nullptr) == SOCKET_ERROR) {
+        DWORD error = WSAGetLastError();
+        if (error != ERROR_IO_PENDING)
+            RMVL_Error_(RMVL_StsBadArg, "WSASendTo failed with error: %lu", error);
+    }
+}
+
+DgramListener::DgramListener(IOContext &io_context, const Endpoint &endpoint) : ::rm::DgramListener(endpoint, true), _ctx(io_context) {
+    if (CreateIoCompletionPort((HANDLE)_fd, _ctx.get().handle(), 0, 0) == nullptr) {
+        auto err = GetLastError();
+        if (err != ERROR_INVALID_PARAMETER)
+            RMVL_Error_(RMVL_StsError, "Associate fd with IOCP failed: %lu", err);
+    }
+}
+
+StreamSocket::StreamSocket(IOContext &io_context, SocketFd fd) : ::rm::StreamSocket(fd), _ctx(io_context) {
+    if (CreateIoCompletionPort((HANDLE)_fd, _ctx.get().handle(), 0, 0) == nullptr) {
+        auto err = GetLastError();
+        if (err != ERROR_INVALID_PARAMETER)
+            RMVL_Error_(RMVL_StsError, "Associate fd with IOCP failed: %lu", err);
+    }
+}
+
+void StreamSocket::SocketReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
     RMVL_DbgAssert(_fd != INVALID_FD);
     _ovl = std::make_unique<IocpOverlapped>(handle);
 
@@ -271,7 +394,7 @@ void Socket::SocketReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
     }
 }
 
-void Socket::SocketWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
+void StreamSocket::SocketWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
     RMVL_DbgAssert(_fd != INVALID_FD);
     _ovl = std::make_unique<IocpOverlapped>(handle);
 
@@ -299,11 +422,11 @@ void Acceptor::AcceptAwaiter::await_suspend(std::coroutine_handle<> handle) {
     RMVL_DbgAssert(_fd != INVALID_FD);
     _ovl = std::make_unique<IocpOverlapped>(handle);
 
-    // 创建新 socket 并存储至重叠 I/O 的 buf 中
+    // 创建新 socket 并存储至重叠 I/O 的 info 中
     auto sfd = WSASocket(_endpoint.family(), _endpoint.type(), 0, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (sfd == INVALID_SOCKET)
         RMVL_Error_(RMVL_StsBadArg, "Create accept socket failed: %d", WSAGetLastError());
-    new (_ovl->buf) SOCKET{sfd};
+    new (_ovl->info) SOCKET{sfd};
 
     // 获取 AcceptEx
     LPFN_ACCEPTEX acceptEx{nullptr};
@@ -315,8 +438,7 @@ void Acceptor::AcceptAwaiter::await_suspend(std::coroutine_handle<> handle) {
 
     // 异步 accept 提交至 IOCP
     DWORD received{};
-    if (!acceptEx((SOCKET)_fd, sfd,
-                  _ovl->buf + sizeof(SOCKET), 0, sizeof(sockaddr_storage) + 16,
+    if (!acceptEx((SOCKET)_fd, sfd, _ovl->buf, 0, sizeof(sockaddr_storage) + 16,
                   sizeof(sockaddr_storage) + 16, &received, &_ovl->ov)) {
         DWORD error = WSAGetLastError();
         if (error != ERROR_IO_PENDING) {
@@ -326,14 +448,14 @@ void Acceptor::AcceptAwaiter::await_suspend(std::coroutine_handle<> handle) {
     }
 }
 
-Socket Acceptor::AcceptAwaiter::await_resume() noexcept {
+StreamSocket Acceptor::AcceptAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
-    SOCKET sfd = *reinterpret_cast<SOCKET *>(_ovl->buf);
+    SOCKET sfd = *reinterpret_cast<SOCKET *>(_ovl->info);
 
     // 更新 socket 上下文
     if (setsockopt(sfd, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, (char *)&_fd, sizeof(_fd)) == SOCKET_ERROR)
         WARNING_("setsockopt SO_UPDATE_ACCEPT_CONTEXT failed: %d", WSAGetLastError());
-    return async::Socket(_ctx, sfd);
+    return StreamSocket(_ctx, sfd);
 }
 
 Connector::Connector(IOContext &io_context, const Endpoint &endpoint, std::string_view url) : ::rm::Connector(endpoint, url, true), _ctx(io_context) {
@@ -359,17 +481,7 @@ void Connector::ConnectAwaiter::await_suspend(std::coroutine_handle<> handle) {
     // 为 ConnectEx 绑定一个本地地址，并准备远程地址
     sockaddr_storage remote{};
     int addr_len{};
-    if (_endpoint.family() == AF_UNIX) {
-        sockaddr_un local{}, *addr{reinterpret_cast<sockaddr_un *>(&remote)};
-        local.sun_family = AF_UNIX;
-        local.sun_path[0] = '\0';
-        if (bind((SOCKET)_fd, reinterpret_cast<sockaddr *>(&local), sizeof(local)) == SOCKET_ERROR)
-            RMVL_Error_(RMVL_StsBadArg, "Bind for ConnectEx failed: %d", WSAGetLastError());
-
-        addr->sun_family = AF_UNIX;
-        strcpy_s(addr->sun_path, _endpoint.path().c_str());
-        addr_len = sizeof(sockaddr_un);
-    } else if (_endpoint.family() == AF_INET) {
+    if (_endpoint.family() == AF_INET) {
         sockaddr_in local{}, *addr{reinterpret_cast<sockaddr_in *>(&remote)};
         local.sin_family = AF_INET;
         local.sin_port = 0;
@@ -405,20 +517,36 @@ void Connector::ConnectAwaiter::await_suspend(std::coroutine_handle<> handle) {
     }
 }
 
-Socket Connector::ConnectAwaiter::await_resume() noexcept {
+StreamSocket Connector::ConnectAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     SOCKET sfd = (SOCKET)_fd;
     // 更新 socket 上下文
     if (setsockopt(sfd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0) == SOCKET_ERROR)
         WARNING_("setsockopt SO_UPDATE_CONNECT_CONTEXT failed: %d", WSAGetLastError());
-    return async::Socket(_ctx, sfd);
+    return StreamSocket(_ctx, sfd);
 }
 
 #else
 
-Socket::Socket(IOContext &io_context, SocketFd fd) : ::rm::Socket(fd), _ctx(io_context) {}
+DgramSocket::DgramSocket(IOContext &io_context, SocketFd fd) : ::rm::DgramSocket(fd), _ctx(io_context) {}
 
-std::string Socket::SocketReadAwaiter::await_resume() {
+std::tuple<std::string, std::string, uint16_t> DgramSocket::SocketReadAwaiter::await_resume() noexcept {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+    return fdrecvfrom(_fd);
+}
+
+bool DgramSocket::SocketWriteAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+    return fdsendto(_fd, _addr, _endpoint, _data);
+}
+
+DgramListener::DgramListener(IOContext &io_context, const Endpoint &endpoint) : ::rm::DgramListener(endpoint, true), _ctx(io_context) {}
+
+StreamSocket::StreamSocket(IOContext &io_context, SocketFd fd) : ::rm::StreamSocket(fd), _ctx(io_context) {}
+
+std::string StreamSocket::SocketReadAwaiter::await_resume() {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     char buf[2048]{};
@@ -426,7 +554,7 @@ std::string Socket::SocketReadAwaiter::await_resume() {
     return n > 0 ? std::string(buf, n) : std::string{};
 }
 
-bool Socket::SocketWriteAwaiter::await_resume() {
+bool StreamSocket::SocketWriteAwaiter::await_resume() {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     return ::send(_fd, _data.data(), _data.size(), 0) == static_cast<ssize_t>(_data.size());
@@ -434,20 +562,20 @@ bool Socket::SocketWriteAwaiter::await_resume() {
 
 Acceptor::Acceptor(IOContext &io_context, const Endpoint &endpoint) : ::rm::Acceptor(endpoint, true), _ctx(io_context) {}
 
-Socket Acceptor::AcceptAwaiter::await_resume() noexcept {
+StreamSocket Acceptor::AcceptAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     int sfd = _endpoint.type() == SOCK_STREAM ? ::accept(_fd, nullptr, nullptr) : _fd;
-    return async::Socket(_ctx, sfd);
+    return StreamSocket(_ctx, sfd);
 }
 
 Connector::Connector(IOContext &io_context, const Endpoint &endpoint, std::string_view url) : ::rm::Connector(endpoint, url, true), _ctx(io_context) {}
 
-Socket Connector::ConnectAwaiter::await_resume() noexcept {
+StreamSocket Connector::ConnectAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     int sfd = fdconnect(_fd, _endpoint, _data);
-    return Socket(_ctx, sfd);
+    return StreamSocket(_ctx, sfd);
 }
 
 #endif

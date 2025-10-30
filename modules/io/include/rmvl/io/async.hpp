@@ -272,7 +272,8 @@ inline void co_spawn(IOContext &ctx, Callable &&fn, Args &&...args) {
 struct IocpOverlapped {
     OVERLAPPED ov{};
     std::coroutine_handle<> handle{};
-    char buf[2048]{};
+    char info[256]{}; //! 附加信息存储区
+    char buf[2048]{}; //! 实际发生传输的数据
 
     IocpOverlapped(std::coroutine_handle<> h) : handle(h) {}
 };

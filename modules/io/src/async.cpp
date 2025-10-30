@@ -95,7 +95,15 @@ void AsyncReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
     }
 }
 
-std::string AsyncReadAwaiter::await_resume() { return _ovl ? _ovl->buf : std::string{}; }
+std::string AsyncReadAwaiter::await_resume() {
+    RMVL_DbgAssert(_ovl != nullptr);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult(_fd, &_ovl->ov, &bytes_transferred, false)) {
+        WARNING_("AsyncRead: GetOverlappedResult failed with error: %lu", GetLastError());
+        return {};
+    }
+    return std::string(_ovl->buf, bytes_transferred);
+}
 
 void AsyncWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
     RMVL_DbgAssert(_fd != INVALID_FD);
@@ -107,7 +115,15 @@ void AsyncWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
     }
 }
 
-bool AsyncWriteAwaiter::await_resume() { return _ovl != nullptr; }
+bool AsyncWriteAwaiter::await_resume() {
+    RMVL_DbgAssert(_ovl != nullptr);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult(_fd, &_ovl->ov, &bytes_transferred, false)) {
+        WARNING_("AsyncWrite: GetOverlappedResult failed with error: %lu", GetLastError());
+        return false;
+    }
+    return bytes_transferred == _data.size();
+}
 
 Timer::Timer(IOContext &io_context) : _ctx(io_context) {}
 
@@ -127,8 +143,8 @@ void CALLBACK timer_callback(PTP_CALLBACK_INSTANCE, PVOID context, PTP_TIMER tim
 
 void Timer::TimerAwaiter::await_suspend(std::coroutine_handle<> handle) {
     _ovl = std::make_unique<IocpOverlapped>(handle);
-    static_assert(sizeof(TimerContext) <= sizeof(_ovl->buf), "TimerContext size exceeds buffer size");
-    auto timer_ctx = new (_ovl->buf) TimerContext{_aioh, _ovl.get()};
+    static_assert(sizeof(TimerContext) <= sizeof(_ovl->info), "TimerContext size exceeds buffer size");
+    auto timer_ctx = new (_ovl->info) TimerContext{_aioh, _ovl.get()};
     _fd = CreateThreadpoolTimer(timer_callback, timer_ctx, nullptr);
     if (_fd == nullptr) {
         handle.resume();

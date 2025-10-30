@@ -75,35 +75,49 @@ int main(int argc, char *argv[]) {
     uint16_t port = static_cast<uint16_t>(std::atoi(argv[1]));
 
     async::IOContext io_context{};
+
+    // 创建后端应用
     async::Webapp app(io_context);
 
-    app.use(cors());
-
+    // 定义路由：以 GET 方法响应根路径请求
     app.get("/", [](const Request &req, Response &res) {
         res.send("<html><body><h1>Hello, World!</h1></body></html>");
     });
-
+    // 定义路由：重定向示例
     app.get("/test", [](const Request &req, Response &res) {
         res.redirect("/");
     });
 
-    app.get("/str", [](const Request &req, Response &res) {
-        res.send("only string");
-    });
+    // 创建子路由
+    auto api_router = Router{};
 
-    app.get("/api", [](const Request &req, Response &res) {
-        res.json("{ \"key\": \"value\", \"message\": \"This is a test API.\" }");
+    // 定义子路由：以 GET 方法响应根路径请求
+    api_router.get("/", [](const Request &req, Response &res) {
+        res.json({
+            {"key", "value"},
+            {"message", "This is a test API."},
+        });
     });
-
-    app.get("/api/name/:name", [](const Request &req, Response &res) {
+    // 定义子路由：以 GET 方法响应 /name/:name 路径请求
+    api_router.get("/name/:name", [](const Request &req, Response &res) {
         auto name = req.params.at("name");
-        res.json("{ \"greeting\": \"Hello, " + name + "!\" }");
+        res.json({
+            {"greeting", "Hello, " + name + "!"},
+        });
     });
 
+    // 使用 CORS 中间件允许跨域请求
+    app.use(cors());
+
+    // 挂载路由至 /api 路径
+    app.use("/api", api_router);
+
+    // 监听指定端口
     app.listen(port, [&]() {
         std::cout << "Server is running on port " << port << std::endl;
     });
 
+    // 生成协程任务并执行
     co_spawn(io_context, &async::Webapp::spin, &app);
     io_context.run();
 }
@@ -112,8 +126,7 @@ int main(int argc, char *argv[]) {
 可以简单使用以下命令行进行编译
 
 <div class="fragment">
-<div class="line"><span class="keywordflow">g++</span> demo.cpp <span class="comment">-std=c++20</span> <span class="comment">-I</span> /usr/local/include/RMVL <span class="comment">-l</span> rmvl_io <span class="comment">-l</span> rmvl_core <span class="comment">-o</span> demo
-</div>
+<div class="line"><span class="keywordflow">g++</span> demo.cpp <span class="comment">-std=c++20</span> <span class="comment">-I</span> /usr/local/include/RMVL <span class="comment">-l</span> rmvl_io <span class="comment">-l</span> rmvl_core <span class="comment">-o</span> demo</div>
 <div class="line"><span class="comment"># 如果使用的是 Windows 系统，可能需要额外链接 ws2_32 库</span></div>
 </div>
 
@@ -126,10 +139,7 @@ int main(int argc, char *argv[]) {
 即可创建 Web 后端服务，并且监听 8080 端口，可以使用 `curl` 工具或浏览器访问 `http://localhost:8080/` 来测试服务器。
 
 <div class="fragment">
-<div class="line"><span class="keywordflow">curl</span>
-    <span class="comment">-s</span>
-    <span class="stringliteral">"http://localhost:8080"</span>
-</div>
+<div class="line"><span class="keywordflow">curl</span> <span class="comment">-s</span> <span class="stringliteral">"http://localhost:8080"</span></div>
 </div>
 
 会得到如下输出：
@@ -141,10 +151,7 @@ int main(int argc, char *argv[]) {
 同时，可以配合 `jq` 工具测试 JSON API：
 
 <div class="fragment">
-<div class="line"><span class="keywordflow">curl</span>
-    <span class="comment">-s</span>
-    <span class="stringliteral">"http://localhost:8080/api"</span> |
-    <span class="keywordflow">jq</span>
+<div class="line"><span class="keywordflow">curl</span> <span class="comment">-s</span> <span class="stringliteral">"http://localhost:8080/api"</span> | <span class="keywordflow">jq</span>
 </div>
 </div>
 
@@ -152,11 +159,7 @@ int main(int argc, char *argv[]) {
 
 <div class="fragment">
 <div class="line">{</div>
-<div class="line">&nbsp;&nbsp;<span class="keywordtype">"key"</span>:
-    <span class="stringliteral">"value"</span>
-</div>
-<div class="line">&nbsp;&nbsp;<span class="keywordtype">"message"</span>:
-    <span class="stringliteral">"This is a test API."</span>
-</div>
+<div class="line">&nbsp;&nbsp;<span class="keywordtype">"key"</span>: <span class="stringliteral">"value"</span>,</div>
+<div class="line">&nbsp;&nbsp;<span class="keywordtype">"message"</span>: <span class="stringliteral">"This is a test API."</span></div>
 <div class="line">}</div>
 </div>
