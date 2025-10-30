@@ -2,6 +2,7 @@
 
 #include "rmvl/camera/hik_camera.h"
 #include "rmvl/core/timer.hpp"
+#include "rmvl/core/util.hpp"
 #include "rmvl/detector/armor_detector.h"
 
 #include <opencv2/highgui.hpp>
@@ -20,23 +21,18 @@ static std::vector<rm::group::ptr> groups;                   // 序列组列表
 static cv::Mat armor_samples;                                // 装甲板信息样本
 static cv::Mat armor_responses;                              // 装甲板响应/标签
 
-void collect(rm::PixChannel color, rm::ArmorSizeType type, int begin_idx)
-{
-    for (int idx = 0; idx < collect_num; ++idx)
-    {
+void collect(rm::PixChannel color, rm::ArmorSizeType type, int begin_idx) {
+    for (int idx = 0; idx < collect_num; ++idx) {
         capture->read(frame);
         if (frame.empty())
             RMVL_Error(RMVL_StsBadSize, "frame is empty, something wrong with the camera.");
         auto info = p_detector->detect(groups, frame, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
-        if (combos.size() != 1)
-        {
+        if (combos.size() != 1) {
             if (combos.size() > 1)
                 WARNING_("Size of the combos is greater than 1, size = %zu", combos.size());
             idx--;
-        }
-        else
-        {
+        } else {
             auto p_armor = rm::Armor::cast(combos.front());
             // 收集数据
             armor_samples.at<float>(begin_idx + idx, 0) = p_armor->getComboRatio();  // 装甲板长宽比
@@ -71,12 +67,10 @@ constexpr const char *help = "                      \033[34;1m使用说明\033[0
                              "length_ratio\n5) 共 3 个指标特征，进行 SVM 二分类，分类后的结果将自"
                              "动\n导出至 \033[33mout_armor_size.xml\033[0m 中";
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // 命令行参数初始化
     cv::CommandLineParser parser(argc, argv, keys);
-    if (parser.has("help"))
-    {
+    if (parser.has("help")) {
         parser.printMessage();
         printf("%s\n", help);
         exit(0);
@@ -95,8 +89,7 @@ int main(int argc, char *argv[])
 
     // 设置相机参数
     capture = rm::HikCamera::make_capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
-    if (!capture->isOpened())
-    {
+    if (!capture->isOpened()) {
         printf("相机打开失败\n");
         return -1;
     }
@@ -107,8 +100,7 @@ int main(int argc, char *argv[])
     int b_gain = 1500;
 
     cv::FileStorage fs_mv_set("out_para.yml", cv::FileStorage::READ);
-    if (fs_mv_set.isOpened())
-    {
+    if (fs_mv_set.isOpened()) {
         fs_mv_set["exposure"].isNone() ? void(0) : (fs_mv_set["exposure"] >> exposure);
         fs_mv_set["gain"].isNone() ? void(0) : (fs_mv_set["gain"] >> gain);
         fs_mv_set["r_gain"].isNone() ? void(0) : (fs_mv_set["r_gain"] >> r_gain);
@@ -126,8 +118,7 @@ int main(int argc, char *argv[])
 
     cv::Ptr<cv::ml::SVM> p_svm = nullptr;
 
-    if (model.empty())
-    {
+    if (model.empty()) {
         printf("=======================================\n");
         // --------------------- 小装甲板收集 ---------------------
         std::string key_str;
@@ -165,18 +156,14 @@ int main(int argc, char *argv[])
         std::cin >> key_str;
         if (key_str != "ok")
             return 0;
-    }
-    else
-    {
+    } else {
         p_svm = cv::ml::SVM::load(model);
     }
     printf("在键盘上按下一次 \033[33mEsc\033[0m 来暂停，按下两次 \033[33mEsc\033[0m 来退出测试\n");
-    while (capture->read(frame))
-    {
+    while (capture->read(frame)) {
         auto info = p_detector->detect(groups, frame, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
-        if (!combos.empty())
-        {
+        if (!combos.empty()) {
             if (combos.size() > 1)
                 WARNING_("Size of the combos is greater than 1, size = %zu", combos.size());
             auto p_armor = rm::Armor::cast(combos.front());

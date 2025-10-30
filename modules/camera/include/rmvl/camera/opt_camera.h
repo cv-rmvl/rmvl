@@ -13,8 +13,6 @@
 
 #include "camutils.hpp"
 
-#include "rmvl/core/util.hpp"
-
 namespace rm {
 
 namespace para {

@@ -15,7 +15,9 @@
 #include <opencv2/imgproc.hpp>
 
 #include "hik_camera_impl.h"
+
 #include "rmvl/core/timer.hpp"
+#include "rmvl/core/util.hpp"
 
 namespace rm {
 

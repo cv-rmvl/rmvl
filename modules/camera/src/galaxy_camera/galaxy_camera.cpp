@@ -11,13 +11,14 @@
 
 #include <unordered_set>
 
-#include <DxImageProc.h>
-#include <GxIAPI.h>
-
 #include <opencv2/imgproc.hpp>
 
+#include <DxImageProc.h>
+
 #include "galaxy_camera_impl.h"
+
 #include "rmvl/core/timer.hpp"
+#include "rmvl/core/util.hpp"
 
 #include "rmvlpara/camera/galaxy_camera.h"
 

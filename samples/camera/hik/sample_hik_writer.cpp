@@ -2,10 +2,9 @@
 #include <opencv2/videoio.hpp>
 
 #include "rmvl/camera/hik_camera.h"
+#include "rmvl/core/util.hpp"
 
-
-int main()
-{
+int main() {
     rm::HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
     cv::Mat tmp;
@@ -21,8 +20,7 @@ int main()
 
     // Load the last parameters
     cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
-    if (fs.isOpened())
-    {
+    if (fs.isOpened()) {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
         fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
         fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
@@ -39,8 +37,7 @@ int main()
     capture.set(rm::CAMERA_WB_BGAIN, b_gain);
 
     cv::Mat frame;
-    while (capture.read(frame))
-    {
+    while (capture.read(frame)) {
         imshow("frame", frame);
         writer.write(frame);
         if (cv::waitKey(1) == 27)

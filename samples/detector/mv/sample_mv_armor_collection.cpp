@@ -6,6 +6,7 @@
 
 #include "rmvl/camera/mv_camera.h"
 #include "rmvl/core/timer.hpp"
+#include "rmvl/core/util.hpp"
 #include "rmvl/detector/armor_detector.h"
 
 namespace fs = std::filesystem;
@@ -16,8 +17,7 @@ namespace fs = std::filesystem;
  * @param[in] src 原图像
  * @param[in] p_combo 指定装甲板
  */
-static inline void draw(cv::Mat src, rm::combo::ptr p_combo)
-{
+static inline void draw(cv::Mat src, rm::combo::ptr p_combo) {
     // 角点
     const auto &corners = p_combo->corners();
     for (int i = 0; i < 4; ++i)
@@ -39,12 +39,10 @@ const char *help = "                      \033[34;1m使用说明\033[0m\n"
                    "形窗口一个是标记出装甲板的相机捕获的画面，另一个是 ROI 原图\n"
                    "与便于观察的 ROI 二值图";
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // 命令行参数初始化
     cv::CommandLineParser parser(argc, argv, keys);
-    if (parser.has("help"))
-    {
+    if (parser.has("help")) {
         parser.printMessage();
         printf("%s\n", help);
         exit(0);
@@ -57,23 +55,19 @@ int main(int argc, char *argv[])
     auto color = parser.get<int>("color") == 0 ? rm::PixChannel::BLUE : rm::PixChannel::RED;
     auto waitkey = parser.get<int>("waitkey");
 
-    if (!fs::exists(path))
-    {
+    if (!fs::exists(path)) {
         if (fs::create_directories(path))
             printf("创建新文件夹 \033[33m\"%s\"\033[0m...\n", path.c_str());
-        else
-        {
+        else {
             printf("\033[33m\"%s\"\033[0m 文件夹不存在，重新创建失败...\n", path.c_str());
             return -1;
         }
-    }
-    else
+    } else
         printf("已发现 \033[33m\"%s\"\033[0m 文件夹\n", path.c_str());
 
     // 相机初始化
     rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
-    if (!capture.isOpened())
-    {
+    if (!capture.isOpened()) {
         printf("相机打开失败\n");
         return -1;
     }
@@ -87,8 +81,7 @@ int main(int argc, char *argv[])
 
     // 设置相机参数
     cv::FileStorage fs_mv_set("out_para.yml", cv::FileStorage::READ);
-    if (fs_mv_set.isOpened())
-    {
+    if (fs_mv_set.isOpened()) {
         fs_mv_set["exposure"].isNone() ? void(0) : (fs_mv_set["exposure"] >> exposure);
         fs_mv_set["gain"].isNone() ? void(0) : (fs_mv_set["gain"] >> gain);
         fs_mv_set["r_gain"].isNone() ? void(0) : (fs_mv_set["r_gain"] >> r_gain);
@@ -114,8 +107,7 @@ int main(int argc, char *argv[])
 
     cv::Mat src;
     int index = 0;
-    while (index < num)
-    {
+    while (index < num) {
         if (!capture.read(src))
             RMVL_Error(RMVL_StsError, "Fail to read the image.");
         // 识别
@@ -125,15 +117,13 @@ int main(int argc, char *argv[])
             WARNING_("当前识别到多于 1 个装甲板：识别到 %zu 个", combos.size());
         // ROI截取图像
         cv::Mat roi_img;
-        if (!combos.empty())
-        {
+        if (!combos.empty()) {
             roi_img = rm::Armor::getNumberROI(src, rm::Armor::cast(combos.front()));
             // 显示效果
             draw(src, combos.front());
         }
         // 保存图像
-        if (!roi_img.empty())
-        {
+        if (!roi_img.empty()) {
             std::string file_name = path + "/" + std::to_string(index + first_idx) + ".png";
             INFO_("保存图像至 %s", file_name.c_str());
             if (!imwrite(file_name, roi_img))

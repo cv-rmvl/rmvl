@@ -1,13 +1,13 @@
 #include <iostream>
 
+#include <MvCameraControl.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <MvCameraControl.h>
 
 #include "rmvl/camera/hik_camera.h"
+#include "rmvl/core/util.hpp"
 
-int main()
-{
+int main() {
     int ret = MV_OK;
     MV_CC_DEVICE_INFO_LIST camera_list;
     ret = MV_CC_EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &camera_list);
@@ -26,8 +26,7 @@ int main()
     layer_type_t[MV_1394_DEVICE] = "1394 device";
     layer_type_t[MV_USB_DEVICE] = "USB device";
     layer_type_t[MV_CAMERALINK_DEVICE] = "CameraLink device";
-    for (unsigned int i = 0; i < nums; ++i)
-    {
+    for (unsigned int i = 0; i < nums; ++i) {
         const auto &usb_info = info[i]->SpecialInfo.stUsb3VInfo;
         printf("│  %02d  │ %-12.12s │ %-14.14s │ %-19.19s │ %-14.14s │\n",
                i, usb_info.chSerialNumber, usb_info.chModelName, usb_info.chDeviceVersion,
@@ -50,8 +49,7 @@ int main()
 
     // Load the last parameters
     cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
-    if (fs.isOpened())
-    {
+    if (fs.isOpened()) {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
         fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
         fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
@@ -71,8 +69,7 @@ int main()
     resizeWindow("图像画面", cv::Size(640, 480));
 
     cv::Mat frame;
-    while (capture.read(frame))
-    {
+    while (capture.read(frame)) {
         imshow("图像画面", frame);
         if (cv::waitKey(1) == 27)
             if (cv::waitKey(0) == 27)
