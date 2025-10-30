@@ -12,10 +12,11 @@
 #include <opencv2/imgproc.hpp>
 
 #include "mv_camera_impl.h"
-#include "rmvl/core/timer.hpp"
 
-namespace rm
-{
+#include "rmvl/core/timer.hpp"
+#include "rmvl/core/util.hpp"
+
+namespace rm {
 
 MvCamera::MvCamera(CameraConfig init_mode, std::string_view serial) : _impl(new MvCamera::Impl(init_mode, serial)) {}
 MvCamera::~MvCamera() = default;
@@ -26,8 +27,7 @@ bool MvCamera::isOpened() const { return _impl->isOpened(); }
 bool MvCamera::read(cv::OutputArray image) { return _impl->read(image); }
 bool MvCamera::reconnect() { return _impl->reconnect(); }
 
-std::string MvCamera::version()
-{
+std::string MvCamera::version() {
     char vstr[128]{};
     auto status = CameraSdkGetVersionString(vstr);
     return status == CAMERA_STATUS_SUCCESS ? vstr : "unknown";
@@ -37,8 +37,7 @@ MvCamera::Impl::Impl(CameraConfig init_mode, std::string_view serial) noexcept
     : _camera_id(serial), _camera_list(new tSdkCameraDevInfo[_camera_counts]),
       _grab_mode(init_mode.grab_mode), _retrieve_mode(init_mode.retrieve_mode) { open(); }
 
-MvCamera::Impl::~Impl() noexcept
-{
+MvCamera::Impl::~Impl() noexcept {
     delete[] _camera_list;
     _camera_list = nullptr;
     delete[] _pbyOut;
@@ -46,8 +45,7 @@ MvCamera::Impl::~Impl() noexcept
     release();
 }
 
-bool MvCamera::Impl::open() noexcept
-{
+bool MvCamera::Impl::open() noexcept {
     CameraSdkInit(1);
     // ----------------------- 设备枚举 -----------------------
     _status = CameraEnumerateDevice(_camera_list, &_camera_counts);
@@ -57,8 +55,7 @@ bool MvCamera::Impl::open() noexcept
         INFO_("(mv) Camera enum status: %s", CameraGetErrorString(_status));
     INFO_("(mv) Camera quantity: %d", _camera_counts);
     // 无设备连接
-    if (_camera_counts == 0)
-    {
+    if (_camera_counts == 0) {
         ERROR_("(mv) Could not find the camera devise.");
         return false;
     }
@@ -73,16 +70,14 @@ bool MvCamera::Impl::open() noexcept
         _status = CameraInit(_camera_list, -1, -1, &_handle);
     else if (id_info.find(_camera_id) != id_info.end())
         _status = CameraInit(id_info[_camera_id], -1, -1, &_handle);
-    else
-    {
+    else {
         ERROR_("(mv) Could not find the camera according to the specific S/N");
         return false;
     }
     // 初始化失败
     if (_status == CAMERA_STATUS_SUCCESS)
         PASS_("(mv) Camera initial status: %s", CameraGetErrorString(_status));
-    else
-    {
+    else {
         ERROR_("(mv) Failed to initial the camera device: %s", CameraGetErrorString(_status));
         return false;
     }
@@ -94,13 +89,10 @@ bool MvCamera::Impl::open() noexcept
     CameraGetCapability(_handle, &capability);
     // 让SDK进入工作模式
     CameraPlay(_handle);
-    if (capability.sIspCapacity.bMonoSensor)
-    {
+    if (capability.sIspCapacity.bMonoSensor) {
         _channel = 1;
         CameraSetIspOutFormat(_handle, CAMERA_MEDIA_TYPE_MONO8);
-    }
-    else
-    {
+    } else {
         _channel = 3;
         CameraSetIspOutFormat(_handle, CAMERA_MEDIA_TYPE_BGR8);
     }
@@ -118,8 +110,7 @@ bool MvCamera::Impl::open() noexcept
  * @param[in] media_type
  * @return ColorConversionCodes
  */
-static inline cv::ColorConversionCodes mediaType2CVType(UINT media_type)
-{
+static inline cv::ColorConversionCodes mediaType2CVType(UINT media_type) {
     static std::unordered_map<UINT, cv::ColorConversionCodes> convertion =
         {{CAMERA_MEDIA_TYPE_BAYGR8, cv::COLOR_BayerGR2RGB},
          {CAMERA_MEDIA_TYPE_BAYRG8, cv::COLOR_BayerRG2RGB},
@@ -128,29 +119,23 @@ static inline cv::ColorConversionCodes mediaType2CVType(UINT media_type)
     return convertion[media_type];
 }
 
-bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
-{
-    if (_channel != 1 && _channel != 3)
-    {
+bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept {
+    if (_channel != 1 && _channel != 3) {
         ERROR_("(mv) Camera image channel: %d.", _channel);
         image.assign(cv::Mat());
         CameraReleaseImageBuffer(_handle, _pbyBuffer);
         return false;
     }
     // SDK
-    if (_retrieve_mode == RetrieveMode::SDK)
-    {
+    if (_retrieve_mode == RetrieveMode::SDK) {
         CameraImageProcess(_handle, _pbyBuffer, _pbyOut, &_frame_info);
         bool retflag = false;
-        if (_pbyOut != nullptr)
-        {
+        if (_pbyOut != nullptr) {
             image.assign(
                 cv::Mat(cv::Size(_frame_info.iWidth, _frame_info.iHeight), _frame_info.uiMediaType == CAMERA_MEDIA_TYPE_MONO8 ? CV_8UC1 : CV_8UC3, _pbyOut));
             CameraReleaseImageBuffer(_handle, _pbyBuffer);
             retflag = true;
-        }
-        else
-        {
+        } else {
             image.assign(cv::Mat());
             ERROR_("(mv) Failed to retrieve, retrieve mode: %d.", static_cast<int>(_retrieve_mode));
             retflag = false;
@@ -158,16 +143,12 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
         return retflag;
     }
     // CV
-    else if (_retrieve_mode == RetrieveMode::OpenCV)
-    {
+    else if (_retrieve_mode == RetrieveMode::OpenCV) {
         cv::Mat bayerImg(cv::Size(_frame_info.iWidth, _frame_info.iHeight), CV_8U, _pbyBuffer);
-        if (_channel == 1)
-        {
+        if (_channel == 1) {
             cv::flip(bayerImg, bayerImg, 0);
             image.assign(bayerImg);
-        }
-        else if (_channel == 3)
-        {
+        } else if (_channel == 3) {
             cv::Mat bgrImg;
             // cvtColor has a good effect processed by multy-thread，which is
             // suitable for the device with weak single core performance
@@ -183,9 +164,8 @@ bool MvCamera::Impl::retrieve(cv::OutputArray image) noexcept
     return false;
 }
 
-bool MvCamera::Impl::reconnect() noexcept
-{
-    using namespace std::chrono_literals;    
+bool MvCamera::Impl::reconnect() noexcept {
+    using namespace std::chrono_literals;
     INFO_("(mv) Camera device reconnect");
     release();
     Timer::sleep_for(100);

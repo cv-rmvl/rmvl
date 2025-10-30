@@ -11,6 +11,8 @@
 
 #include "hik_camera_impl.h"
 
+#include "rmvl/core/util.hpp"
+
 #include "rmvlpara/camera/hik_camera.h"
 
 namespace rm {

@@ -11,6 +11,8 @@
 
 #include "mv_camera_impl.h"
 
+#include "rmvl/core/util.hpp"
+
 #include "rmvlpara/camera/mv_camera.h"
 
 namespace rm {

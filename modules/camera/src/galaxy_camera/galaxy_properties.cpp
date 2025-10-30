@@ -12,10 +12,12 @@
 #include <GxIAPI.h>
 
 #include "galaxy_camera_impl.h"
+
+#include "rmvl/core/util.hpp"
+
 #include "rmvlpara/camera/galaxy_camera.h"
 
-namespace rm
-{
+namespace rm {
 
 void GalaxyCamera::Impl::load(const para::GalaxyCameraParam &param) {
     this->set(CAMERA_EXPOSURE, param.exposure);
@@ -26,10 +28,8 @@ void GalaxyCamera::Impl::load(const para::GalaxyCameraParam &param) {
     this->set(CAMERA_WB_RGAIN, param.r_gain);
 }
 
-bool GalaxyCamera::Impl::set(int prop_id, double value) noexcept
-{
-    switch (prop_id)
-    {
+bool GalaxyCamera::Impl::set(int prop_id, double value) noexcept {
+    switch (prop_id) {
     // Properties
     case CAMERA_AUTO_EXPOSURE:
         return GXSetEnum(_handle, GX_ENUM_EXPOSURE_AUTO, GX_EXPOSURE_AUTO_CONTINUOUS) == GX_STATUS_SUCCESS;
@@ -62,8 +62,7 @@ bool GalaxyCamera::Impl::set(int prop_id, double value) noexcept
         else if (static_cast<int64_t>(value) > 1)
             return GXSetEnum(_handle, GX_ENUM_ACQUISITION_MODE, GX_ACQ_MODE_MULITI_FRAME) == GX_STATUS_SUCCESS &&
                    GXSetInt(_handle, GX_INT_ACQUISITION_FRAME_COUNT, static_cast<int64_t>(value)) == GX_STATUS_SUCCESS;
-        else
-        {
+        else {
             ERROR_("(galaxy) Invalid trigger count, please use a positive integer.");
             return false;
         }
@@ -84,12 +83,10 @@ bool GalaxyCamera::Impl::set(int prop_id, double value) noexcept
     return false;
 }
 
-double GalaxyCamera::Impl::get(int prop_id) const noexcept
-{
+double GalaxyCamera::Impl::get(int prop_id) const noexcept {
     double f_value{};
     int64_t i_value{};
-    switch (prop_id)
-    {
+    switch (prop_id) {
     // Properties
     case CAMERA_EXPOSURE:
         return GXGetFloat(_handle, GX_FLOAT_EXPOSURE_TIME, &f_value) == GX_STATUS_SUCCESS ? f_value : -1.0;

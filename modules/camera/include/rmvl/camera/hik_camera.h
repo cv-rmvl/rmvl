@@ -12,7 +12,6 @@
 #pragma once
 
 #include "camutils.hpp"
-#include "rmvl/core/util.hpp"
 
 namespace rm {
 

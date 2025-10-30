@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <GxIAPI.h>
+
 #include "rmvl/camera/galaxy_camera.h"
 
 namespace rm {
