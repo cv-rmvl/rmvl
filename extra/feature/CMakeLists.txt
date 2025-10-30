@@ -83,7 +83,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(feature
     FILES ${feature_inc}
     DEPENDS ${feature_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 

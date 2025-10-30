@@ -1,16 +1,13 @@
 #include <opencv2/core.hpp>
 
-namespace pybind11::detail
-{
+namespace pybind11::detail {
 
 template <>
-struct type_caster<cv::Mat>
-{
+struct type_caster<cv::Mat> {
     PYBIND11_TYPE_CASTER(cv::Mat, _("numpy.ndarray"));
 
 public:
-    bool load(handle src, bool)
-    {
+    bool load(handle src, bool) {
         value = cv::Mat();
         if (!isinstance<array>(src))
             return true;
@@ -49,8 +46,7 @@ public:
         return true;
     }
 
-    static handle cast(const cv::Mat &m, return_value_policy, handle)
-    {
+    static handle cast(const cv::Mat &m, return_value_policy, handle) {
         if (m.empty())
             return none().release();
 
@@ -59,8 +55,7 @@ public:
         int dim = m.channels();
         std::vector<size_t> shape = {static_cast<size_t>(m.rows), static_cast<size_t>(m.cols)};
         std::vector<size_t> strides = {static_cast<size_t>(m.step[0]), static_cast<size_t>(m.step[1])};
-        if (dim > 1)
-        {
+        if (dim > 1) {
             shape.push_back(dim);
             strides.push_back(elemsize);
         }
@@ -69,14 +64,12 @@ public:
 };
 
 template <typename Tp>
-struct type_caster<cv::Point_<Tp>>
-{
+struct type_caster<cv::Point_<Tp>> {
     using PointType = cv::Point_<Tp>;
     PYBIND11_TYPE_CASTER(PointType, _("tuple"));
 
 public:
-    bool load(handle src, bool)
-    {
+    bool load(handle src, bool) {
         if (!isinstance<tuple>(src))
             return false;
         auto t = reinterpret_borrow<tuple>(src);
@@ -90,14 +83,12 @@ public:
 };
 
 template <typename Tp, int m, int n>
-struct type_caster<cv::Matx<Tp, m, n>>
-{
+struct type_caster<cv::Matx<Tp, m, n>> {
     using MatxType = cv::Matx<Tp, m, n>;
     PYBIND11_TYPE_CASTER(MatxType, _("tuple"));
 
 public:
-    bool load(handle src, bool)
-    {
+    bool load(handle src, bool) {
         if (!isinstance<tuple>(src))
             return false;
         auto t = reinterpret_borrow<tuple>(src);
@@ -108,8 +99,7 @@ public:
         return true;
     }
 
-    static handle cast(const MatxType &matx, return_value_policy, handle)
-    {
+    static handle cast(const MatxType &matx, return_value_policy, handle) {
         tuple t(m * n);
         for (int i = 0; i < m * n; ++i)
             t[i] = matx.val[i];
@@ -118,14 +108,12 @@ public:
 };
 
 template <typename Tp, int n>
-struct type_caster<cv::Vec<Tp, n>>
-{
+struct type_caster<cv::Vec<Tp, n>> {
     using VecType = cv::Vec<Tp, n>;
     PYBIND11_TYPE_CASTER(VecType, _("tuple"));
 
 public:
-    bool load(handle src, bool)
-    {
+    bool load(handle src, bool) {
         if (!isinstance<tuple>(src))
             return false;
         auto t = reinterpret_borrow<tuple>(src);
@@ -136,8 +124,7 @@ public:
         return true;
     }
 
-    static handle cast(const cv::Vec<Tp, n> &vec, return_value_policy, handle)
-    {
+    static handle cast(const cv::Vec<Tp, n> &vec, return_value_policy, handle) {
         tuple t(n);
         for (int i = 0; i < n; ++i)
             t[i] = vec[i];

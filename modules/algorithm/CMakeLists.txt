@@ -19,7 +19,7 @@ if(BUILD_PYTHON)
     rmvl_generate_python(algorithm
       FILES ${alg_inc} rmvlpara/algorithm.hpp
       DEPENDS algorithm
-      USE_PREBIND
+      PREBIND cv
     )
   else()
     foreach(m numcal)

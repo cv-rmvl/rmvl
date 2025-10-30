@@ -37,7 +37,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(ml
     FILES ${ml_inc}
     DEPENDS ${ml_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 

@@ -112,7 +112,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(camera
     FILES ${cam_inc}
     DEPENDS ${cam_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 

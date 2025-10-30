@@ -46,7 +46,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(combo
     FILES ${combo_inc}
     DEPENDS ${combo_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 
