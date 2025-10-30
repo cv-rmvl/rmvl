@@ -15,7 +15,7 @@
 
 #include <open62541/client_subscriptions.h>
 
-#include "object.hpp"
+#include "variable.hpp"
 #include "view.hpp"
 
 namespace rm {
