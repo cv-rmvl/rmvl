@@ -179,7 +179,7 @@ public:
     RMVL_W void spinOnce();
 
     //! 停止服务器
-    RMVL_W inline void shutdown() { _running = false; }
+    inline void shutdown() { _running.store(false, std::memory_order_release); }
 
     // 完成所有回调，停止网络层，进行清理并释放资源
     ~OpcuaServer();

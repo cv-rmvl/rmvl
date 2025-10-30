@@ -9,6 +9,7 @@
  *
  */
 
+#include <atomic>
 #include <stack>
 
 #include <open62541/plugin/accesscontrol_default.h>
@@ -91,8 +92,8 @@ OpcuaServer::OpcuaServer(UA_StatusCode (*on_config)(UA_Server *), uint16_t port,
 void OpcuaServer::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
 
 void OpcuaServer::spin() {
-    _running = true;
-    while (_running)
+    _running.store(true, std::memory_order_release);
+    while (_running.load(std::memory_order_acquire))
         UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT);
 }
 

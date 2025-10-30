@@ -126,13 +126,6 @@ struct RMVL_EXPORTS_W_AG UserConfig final {
     RMVL_W_RW std::string passwd; //!< 密码
 };
 
-//! 传输协议
-enum class TransportID : uint8_t {
-    UDP_UADP = 1U,  //!< 使用 `UDP` 传输协议映射和 `UADP` 消息映射的组合，此协议用于 **无代理** 的消息传递
-    MQTT_UADP = 2U, //!< 使用 `MQTT` 传输协议映射和 `UADP` 消息映射的组合，此协议用于 **基于代理** 的消息传递
-    MQTT_JSON = 3U, //!< 使用 `MQTT` 传输协议映射和 `JSON` 消息映射的组合，此协议用于 **基于代理** 的消息传递
-};
-
 /////////////////////////// 数据类型 ///////////////////////////
 RMVL_W_SUBST("DT_RW")
 constexpr DataType tpBoolean{UA_TYPES_BOOLEAN}; //!< 数据类型：`Boolean`
@@ -191,9 +184,11 @@ RMVL_W_RW constexpr NodeId nodeHasSubtype{0, UA_NS0ID_HASSUBTYPE};              
 RMVL_W_RW constexpr NodeId nodeHasModellingRule{0, UA_NS0ID_HASMODELLINGRULE};   //!< 引用类型节点：`HasModellingRule` 节点 ID
 
 //! 目标节点信息（服务端指针、浏览名、命名空间索引）
-using FindNodeInServer = std::tuple<UA_Server *, std::string_view, uint16_t>;
+typedef std::tuple<UA_Server *, std::string_view, uint16_t> FindNodeInServer;
 //! 目标节点信息（客户端指针、浏览名、命名空间索引）
-using FindNodeInClient = std::tuple<UA_Client *, std::string_view, uint16_t>;
+typedef std::tuple<UA_Client *, std::string_view, uint16_t> FindNodeInClient;
+
+// 使用 typedef 避免生成冗余的 pybind 包装代码
 
 //! @} opcua
 
