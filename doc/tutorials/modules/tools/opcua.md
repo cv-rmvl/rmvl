@@ -1531,7 +1531,7 @@ error/eventloop    Cannot run EventLoop from the run method itself
 
 ### 3.1 无代理 Pub/Sub
 
-RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订阅机制，目前支持 `UADP` 的消息映射方式，对应的枚举类型是 `TransportID::UDP_UADP`。
+RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订阅机制，目前支持 `UADP` 的消息映射方式。
 
 需要留意的是，OPC UA 的发布订阅模型仍然是建立在 @ref tutorial_opcua_server_client 模型之上的，此外 @ref opcua 的 PubSub 在实现上是继承于 rm::OpcuaServer 的，因此，RMVL 的发布订阅模型在使用时具备服务器的所有功能，初始化、释放资源等操作与服务器完全一致。
 
@@ -1554,7 +1554,7 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
       signal(SIGINT, [](int) { stop = true; });
 
       // 创建 OPC UA 发布者，端口为 4840
-      rm::OpcuaPublisher<rm::TransportID::UDP_UADP> pub("DemoNumberPub", "opc.udp://224.0.0.22:4840");
+      rm::OpcuaPublisher pub("DemoNumberPub", "opc.udp://224.0.0.22:4840");
 
       // 添加变量节点至发布者自身的服务器中
       rm::Variable num = 3.14;
@@ -1596,7 +1596,7 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
   signal(SIGINT, onStop)
 
   # 创建 OPC UA 发布者，端口为 4840
-  pub = rm.OpcuaPublisher(rm.TransportID.UDP_UADP, "DemoNumberPub", "opc.udp://224.0.0.22:4840")
+  pub = rm.OpcuaPublisher("DemoNumberPub", "opc.udp://224.0.0.22:4840")
 
   # 添加变量节点至发布者自身的服务器中
   num = rm.Variable(3.14)
@@ -1637,7 +1637,7 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
       signal(SIGINT, [](int) { stop = true; });
 
       // 创建 OPC UA 订阅者
-      rm::OpcuaSubscriber<rm::TransportID::UDP_UADP> sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
+      rm::OpcuaSubscriber sub("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841);
 
       // 准备需要订阅的数据
       rm::FieldMetaData meta_data{"Number 1", rm::tpDouble, -1};
@@ -1682,7 +1682,7 @@ RMVL 提供了基于 `UDP` 传输协议的 Broker-less 即无代理的发布订�
   signal(SIGINT, onStop)
 
   # 创建 OPC UA 订阅者
-  sub = rm.OpcuaSubscriber(rm.TransportID.UDP_UADP, "DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841)
+  sub = rm.OpcuaSubscriber("DemoNumberSub", "opc.udp://224.0.0.22:4840", 4841)
 
   # 准备需要订阅的数据
   meta_data = rm.FieldMetaData("Number 1", rm.tp_float, -1)
