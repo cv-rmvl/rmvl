@@ -523,6 +523,62 @@ Response requests::request(HTTPMethod method, std::string_view url, const std::v
 
 #if __cplusplus >= 202002L
 
+//////////////////////////////// 路由匹配器 //////////////////////////////////
+
+static void _updateRegexPattern(std::string &regex, std::string_view literal) {
+    for (auto c : literal) {
+        if (c == '/' || c == '.' || c == '*' || c == '+' || c == '?' || c == '{' || c == '}' ||
+            c == '[' || c == ']' || c == '\\' || c == '|' || c == '(' || c == ')' || c == '^' || c == '$')
+            regex += '\\';
+        regex += c;
+    }
+}
+
+Router::RoutePattern::RoutePattern(std::string_view pattern_str) : _pattern(pattern_str) {
+    std::string regex_pattern = "^";
+    size_t pos = 0;
+
+    while (pos < pattern_str.size()) {
+        size_t param_start = pattern_str.find(':', pos);
+
+        if (param_start == std::string_view::npos) {
+            _updateRegexPattern(regex_pattern, pattern_str.substr(pos));
+            break;
+        }
+
+        // 添加参数前的字面量部分
+        if (param_start > pos)
+            _updateRegexPattern(regex_pattern, pattern_str.substr(pos, param_start - pos));
+
+        // 找到参数名结束位置（遇到 '/' 或字符串结束）
+        size_t param_end = param_start + 1;
+        while (param_end < pattern_str.size() && pattern_str[param_end] != '/' && std::isalnum(pattern_str[param_end]))
+            param_end++;
+
+        // 提取参数名
+        _param_names.emplace_back(pattern_str.substr(param_start + 1, param_end - param_start - 1));
+
+        // 添加捕获组（匹配除 '/' 外的任意字符）
+        regex_pattern += "([^/]+)";
+        pos = param_end;
+    }
+
+    regex_pattern += "$";
+    _matcher = std::regex(regex_pattern);
+}
+
+bool Router::RoutePattern::match(std::string_view path, std::unordered_map<std::string, std::string> &params) const {
+    std::smatch matches{};
+    std::string path_str(path);
+
+    if (!std::regex_match(path_str, matches, _matcher))
+        return false;
+    for (size_t i = 0; i < _param_names.size() && i + 1 < matches.size(); ++i)
+        params[_param_names[i]] = matches[i + 1].str();
+
+    return true;
+}
+
 namespace async {
 
 Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::string_view url, const std::vector<std::string> &querys,
@@ -588,7 +644,7 @@ static void bad_request(const Request &req, Response &res) {
     res.body = bad_request_body;
 }
 
-static void _handle(const std::vector<rm::async::Router::RouteEntry> &entries, Request &req, Response &res) {
+static void _handle(const std::vector<rm::Router::RouteEntry> &entries, Request &req, Response &res) {
     for (const auto &entry : entries) {
         if (entry.pattern.match(req.uri, req.params)) {
             entry.handler(req, res);
@@ -639,61 +695,6 @@ Task<> Webapp::spin() {
         if (!send_stat)
             printf("Failed to send response\n");
     }
-}
-
-//////////////////////////////// 路由匹配器 //////////////////////////////////
-static void _updateRegexPattern(std::string &regex, std::string_view literal) {
-    for (auto c : literal) {
-        if (c == '/' || c == '.' || c == '*' || c == '+' || c == '?' || c == '{' || c == '}' ||
-            c == '[' || c == ']' || c == '\\' || c == '|' || c == '(' || c == ')' || c == '^' || c == '$')
-            regex += '\\';
-        regex += c;
-    }
-}
-
-Router::RoutePattern::RoutePattern(std::string_view pattern_str) : _pattern(pattern_str) {
-    std::string regex_pattern = "^";
-    size_t pos = 0;
-
-    while (pos < pattern_str.size()) {
-        size_t param_start = pattern_str.find(':', pos);
-
-        if (param_start == std::string_view::npos) {
-            _updateRegexPattern(regex_pattern, pattern_str.substr(pos));
-            break;
-        }
-
-        // 添加参数前的字面量部分
-        if (param_start > pos)
-            _updateRegexPattern(regex_pattern, pattern_str.substr(pos, param_start - pos));
-
-        // 找到参数名结束位置（遇到 '/' 或字符串结束）
-        size_t param_end = param_start + 1;
-        while (param_end < pattern_str.size() && pattern_str[param_end] != '/' && std::isalnum(pattern_str[param_end]))
-            param_end++;
-
-        // 提取参数名
-        _param_names.emplace_back(pattern_str.substr(param_start + 1, param_end - param_start - 1));
-
-        // 添加捕获组（匹配除 '/' 外的任意字符）
-        regex_pattern += "([^/]+)";
-        pos = param_end;
-    }
-
-    regex_pattern += "$";
-    _matcher = std::regex(regex_pattern);
-}
-
-bool Router::RoutePattern::match(std::string_view path, std::unordered_map<std::string, std::string> &params) const {
-    std::smatch matches{};
-    std::string path_str(path);
-
-    if (!std::regex_match(path_str, matches, _matcher))
-        return false;
-    for (size_t i = 0; i < _param_names.size() && i + 1 < matches.size(); ++i)
-        params[_param_names[i]] = matches[i + 1].str();
-
-    return true;
 }
 
 } // namespace async

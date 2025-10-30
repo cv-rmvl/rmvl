@@ -21,6 +21,7 @@
 #include <nlohmann/json.hpp>
 
 #include "async.hpp"
+#include "rmvl/core/rmvldef.hpp"
 
 namespace rm {
 
@@ -28,12 +29,12 @@ namespace rm {
 //! @{
 
 //! URL 解析结果
-struct URLParseInfo {
-    std::string scheme;              //!< 协议部分，例如 `http` 或 `https`
-    std::string hostname;            //!< 域名部分，例如 `example.com`
-    uint16_t port{};                 //!< 端口号，默认为 80 (HTTP) 或 443 (HTTPS)
-    std::string path;                //!< 路径部分，例如 `/path/to/resource`
-    std::vector<std::string> querys; //!< 以 `std::vector` 存储的查询参数部分，例如 `[key=value, key2=value2]`
+struct RMVL_EXPORTS_W_AG URLParseInfo {
+    RMVL_W_RW std::string scheme;              //!< 协议部分，例如 `http` 或 `https`
+    RMVL_W_RW std::string hostname;            //!< 域名部分，例如 `example.com`
+    RMVL_W_RW uint16_t port{};                 //!< 端口号，默认为 80 (HTTP) 或 443 (HTTPS)
+    RMVL_W_RW std::string path;                //!< 路径部分，例如 `/path/to/resource`
+    RMVL_W_RW std::vector<std::string> querys; //!< 以 `std::vector` 存储的查询参数部分，例如 `[key=value, key2=value2]`
 };
 
 /**
@@ -46,7 +47,7 @@ struct URLParseInfo {
  * @retval path 路径部分，例如 `/path/to/resource`
  * @retval querys 以 `std::vector` 存储的查询参数部分，例如 `[key=value, key2=value2]`
  */
-URLParseInfo parseURL(std::string_view url);
+RMVL_EXPORTS_W URLParseInfo parseURL(std::string_view url);
 
 /**
  * @brief 域名解析
@@ -55,7 +56,7 @@ URLParseInfo parseURL(std::string_view url);
  * @retval ip IP 地址
  * @retval isv6 是否为 IPv6 地址
  */
-std::tuple<std::string, bool> parseDNS(std::string_view hostname);
+RMVL_EXPORTS_W std::tuple<std::string, bool> parseDNS(std::string_view hostname);
 
 //! HTTP 请求方法
 enum class HTTPMethod : uint8_t {
@@ -72,53 +73,53 @@ enum class HTTPMethod : uint8_t {
 };
 
 //! HTTP 请求结构
-struct Request {
+struct RMVL_EXPORTS_W_AG Request {
     /**
      * @brief 解析 HTTP 请求
      *
      * @param[in] str HTTP 请求报文
      * @return 解析后的请求对象
      */
-    static Request parse(std::string_view str);
+    RMVL_W static Request parse(std::string_view str);
 
     /**
      * @brief 生成 HTTP 请求报文
      *
      * @return 请求报文
      */
-    std::string generate() const;
+    RMVL_W std::string generate() const;
 
-    HTTPMethod method{}; //!< 请求行：请求方法
-    std::string uri{};   //!< 请求行：请求的路径
+    RMVL_W_RW HTTPMethod method{}; //!< 请求行：请求方法
+    RMVL_W_RW std::string uri{};   //!< 请求行：请求的路径
 
-    std::unordered_map<std::string, std::string> params{}; //!< 路径参数 @note 仅在解析请求时访问有效
-    std::unordered_map<std::string, std::string> query{};  //!< 查询参数
+    RMVL_W_RW std::unordered_map<std::string, std::string> params{}; //!< 路径参数 @note 仅在解析请求时访问有效
+    RMVL_W_RW std::unordered_map<std::string, std::string> query{};  //!< 查询参数
 
-    std::string host{};            //!< 请求头：主机名
-    std::string content_type{};    //!< 请求头：内容类型
-    std::string accept{"*/*"};     //!< 请求头：可接受的内容类型
-    std::string accept_language{}; //!< 请求头：可接受的语言
-    std::string connection{};      //!< 请求头：连接类型
+    RMVL_W_RW std::string host{};            //!< 请求头：主机名
+    RMVL_W_RW std::string content_type{};    //!< 请求头：内容类型
+    RMVL_W_RW std::string accept{"*/*"};     //!< 请求头：可接受的内容类型
+    RMVL_W_RW std::string accept_language{}; //!< 请求头：可接受的语言
+    RMVL_W_RW std::string connection{};      //!< 请求头：连接类型
 
-    std::string body{}; //!< 请求数据
+    RMVL_W_RW std::string body{}; //!< 请求数据
 };
 
 //! HTTP 响应结构
-struct Response {
+struct RMVL_EXPORTS_W_AG Response {
     /**
      * @brief 解析 HTTP 响应
      *
      * @param[in] str HTTP 响应报文
      * @return 解析后的响应对象
      */
-    static Response parse(std::string_view str);
+    RMVL_W static Response parse(std::string_view str);
 
     /**
      * @brief 生成 HTTP 响应报文
      *
      * @return 响应报文
      */
-    std::string generate();
+    RMVL_W std::string generate();
 
     /**
      * @brief 设置附件响应头 `Content-Disposition`，一般需要配合 `send()` 或 `sendFile()` 使用
@@ -128,7 +129,7 @@ struct Response {
      *
      * @see `download()`
      */
-    Response &attachment(std::string_view filename);
+    RMVL_W Response &attachment(std::string_view filename);
 
     /**
      * @brief 设置附件响应头 `Content-Disposition` 并发送文件内容作为响应
@@ -140,7 +141,7 @@ struct Response {
      *
      * @see `attachment()`
      */
-    Response &download(std::string_view path, std::string_view filename = "", std::function<void(bool)> fn = nullptr);
+    RMVL_W Response &download(std::string_view path, std::string_view filename = "", std::function<void(bool)> fn = nullptr);
 
     /**
      * @brief 返回指定的 HTTP 响应头
@@ -148,7 +149,7 @@ struct Response {
      *
      * @param[in] head 响应头字段名
      */
-    Response &get(std::string_view head);
+    RMVL_W Response &get(std::string_view head);
 
     /**
      * @brief 发送 JSON 格式的响应数据
@@ -164,7 +165,7 @@ struct Response {
      *
      * @param[in] url 重定向的 URL，支持相对路径
      */
-    Response &redirect(std::string_view url) { return redirect(302, url); }
+    RMVL_W Response &redirect(std::string_view url) { return redirect(302, url); }
 
     /**
      * @brief 重定向响应
@@ -173,7 +174,7 @@ struct Response {
      * @param[in] code 状态码
      * @param[in] url 重定向的 URL，支持相对路径
      */
-    Response &redirect(uint16_t code, std::string_view url);
+    RMVL_W Response &redirect(uint16_t code, std::string_view url);
 
     /**
      * @brief 发送响应数据
@@ -181,7 +182,7 @@ struct Response {
      *
      * @param[in] str 响应数据
      */
-    Response &send(std::string_view str);
+    RMVL_W Response &send(std::string_view str);
 
     /**
      * @brief 发送文件内容作为响应
@@ -189,7 +190,7 @@ struct Response {
      *
      * @param[in] file 文件名
      */
-    Response &sendFile(std::string_view file);
+    RMVL_W Response &sendFile(std::string_view file);
 
     /**
      * @brief 设置响应头
@@ -198,7 +199,7 @@ struct Response {
      * @param[in] key 响应头字段名
      * @param[in] value 响应头字段值
      */
-    Response &set(std::string_view key, std::string_view value);
+    RMVL_W Response &set(std::string_view key, std::string_view value);
 
     /**
      * @brief 设置响应的 HTTP 状态，注意此方法会覆盖原有状态
@@ -206,16 +207,18 @@ struct Response {
      *
      * @param[in] code 状态码
      */
-    Response &status(uint16_t code);
+    RMVL_W Response &status(uint16_t code);
 
     operator bool() const noexcept { return state != 0 && !message.empty(); }
 
-    uint16_t state{};      //!< 响应行：状态码
-    std::string message{}; //!< 响应行：状态消息
+    RMVL_W_RW uint16_t state{};      //!< 响应行：状态码
+    RMVL_W_RW std::string message{}; //!< 响应行：状态消息
 
-    std::unordered_map<std::string, std::string> heads{}; //!< 响应头
+    RMVL_W_RW std::unordered_map<std::string, std::string> heads{}; //!< 响应头
 
-    std::string body{}; //!< 响应数据
+    RMVL_W_RW std::string body{}; //!< 响应数据
+
+    RMVL_W_SUBST("Response")
 };
 
 //! 响应中间件类型
@@ -234,7 +237,7 @@ using ResponseMiddleware = std::function<void(const Request &, Response &)>;
  * @endcode
  * @note 静态路由仅在未处理请求时有效，若有对应的路由表达成匹配，则静态路由中间件不会被调用
  */
-ResponseMiddleware statics(std::string_view url, std::string_view root);
+RMVL_EXPORTS_W ResponseMiddleware statics(std::string_view url, std::string_view root);
 
 /**
  * @brief 跨域资源共享 CORS 中间件，为响应添加 CORS 头部信息
@@ -245,7 +248,7 @@ ResponseMiddleware statics(std::string_view url, std::string_view root);
  * app.use(cors());
  * @endcode
  */
-ResponseMiddleware cors();
+RMVL_EXPORTS_W ResponseMiddleware cors();
 
 //! @} io_net
 
@@ -312,6 +315,95 @@ inline Response del(std::string_view url, const std::vector<std::string> &querys
 } // namespace requests
 
 #if __cplusplus >= 202002L
+
+//! 路由类型
+using RouteHandler = std::function<void(const Request &, Response &)>;
+
+namespace async {
+class Webapp;
+} // namespace async
+
+/**
+ * @brief HTTP 路由器
+ * 目前支持的 HTTP 方法包括 GET、POST、HEAD 和 DELETE
+ */
+class Router final {
+    friend class async::Webapp;
+
+public:
+    //! 路由模式匹配器
+    class RoutePattern {
+    public:
+        /**
+         * @brief 构造路由模式
+         * @param[in] pattern_str 路由模式字符串，如 `"/api/:name"`
+         */
+        explicit RoutePattern(std::string_view pattern_str);
+
+        /**
+         * @brief 匹配路径，并提取参数
+         * @param[in] path 请求路径
+         * @param[out] params 输出参数，提取的路径参数
+         * @return 是否匹配成功
+         */
+        bool match(std::string_view path, std::unordered_map<std::string, std::string> &params) const;
+
+        //! 获取原始路由模式字符串
+        [[nodiscard]] const std::string &pattern() const noexcept { return _pattern; }
+
+    private:
+        std::string _pattern{};                  //!< 原始模式字符串
+        std::vector<std::string> _param_names{}; //!< 参数名列表
+        std::regex _matcher{};                   //!< 编译后的正则表达式
+    };
+
+    //! 路由条目：路由模式 + 处理器
+    struct RouteEntry {
+        RoutePattern pattern;
+        RouteHandler handler;
+
+        RouteEntry(std::string_view pattern_str, RouteHandler h)
+            : pattern(pattern_str), handler(std::move(h)) {}
+    };
+
+    /**
+     * @brief Get 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Get 响应回调
+     */
+    void get(std::string_view uri, RouteHandler callback) { _gets.emplace_back(uri, std::move(callback)); }
+
+    /**
+     * @brief Post 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Post 响应回调
+     */
+    void post(std::string_view uri, RouteHandler callback) { _posts.emplace_back(uri, std::move(callback)); }
+
+    /**
+     * @brief Head 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Head 响应回调
+     */
+    void head(std::string_view uri, RouteHandler callback) { _heads.emplace_back(uri, std::move(callback)); }
+
+    /**
+     * @brief Delete 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Delete 响应回调
+     */
+    void del(std::string_view uri, RouteHandler callback) { _deletes.emplace_back(uri, std::move(callback)); }
+
+private:
+    std::vector<RouteEntry> _gets{};    //!< GET 请求路由列表
+    std::vector<RouteEntry> _posts{};   //!< POST 请求路由列表
+    std::vector<RouteEntry> _heads{};   //!< HEAD 请求路由列表
+    std::vector<RouteEntry> _deletes{}; //!< DELETE 请求路由列表
+};
 
 namespace async {
 
@@ -384,93 +476,11 @@ inline Task<Response> del(IOContext &io_context, std::string_view url, const std
 //! @addtogroup io_net
 //! @{
 
-//! 路由类型
-using RouteHandler = std::function<void(const Request &, Response &)>;
-
-//! HTTP 路由器
-class Router final {
-    friend class Webapp;
-
-public:
-    //! 路由模式匹配器
-    class RoutePattern {
-    public:
-        /**
-         * @brief 构造路由模式
-         * @param[in] pattern_str 路由模式字符串，如 `"/api/:name"`
-         */
-        explicit RoutePattern(std::string_view pattern_str);
-
-        /**
-         * @brief 匹配路径，并提取参数
-         * @param[in] path 请求路径
-         * @param[out] params 输出参数，提取的路径参数
-         * @return 是否匹配成功
-         */
-        bool match(std::string_view path, std::unordered_map<std::string, std::string> &params) const;
-
-        //! 获取原始路由模式字符串
-        [[nodiscard]] const std::string &pattern() const noexcept { return _pattern; }
-
-    private:
-        std::string _pattern{};                  //!< 原始模式字符串
-        std::vector<std::string> _param_names{}; //!< 参数名列表
-        std::regex _matcher{};                   //!< 编译后的正则表达式
-    };
-
-    //! 路由条目：路由模式 + 处理器
-    struct RouteEntry {
-        RoutePattern pattern;
-        RouteHandler handler;
-
-        RouteEntry(std::string_view pattern_str, RouteHandler h)
-            : pattern(pattern_str), handler(std::move(h)) {}
-    };
-
-    /**
-     * @brief Get 请求路由
-     *
-     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
-     * @param[in] callback Get 响应回调
-     */
-    void get(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _gets.emplace_back(uri, std::move(callback)); }
-
-    /**
-     * @brief Post 请求路由
-     *
-     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
-     * @param[in] callback Post 响应回调
-     */
-    void post(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _posts.emplace_back(uri, std::move(callback)); }
-
-    /**
-     * @brief Head 请求路由
-     *
-     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
-     * @param[in] callback Head 响应回调
-     */
-    void head(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _heads.emplace_back(uri, std::move(callback)); }
-
-    /**
-     * @brief Delete 请求路由
-     *
-     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
-     * @param[in] callback Delete 响应回调
-     */
-    void del(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _deletes.emplace_back(uri, std::move(callback)); }
-
-private:
-    std::vector<RouteEntry> _gets{};    //!< GET 请求路由列表
-    std::vector<RouteEntry> _posts{};   //!< POST 请求路由列表
-    std::vector<RouteEntry> _heads{};   //!< HEAD 请求路由列表
-    std::vector<RouteEntry> _deletes{}; //!< DELETE 请求路由列表
-};
-
 /**
  * @brief Web 应用程序框架
  * 1. 轻量级的异步 Web 应用程序框架，支持路由、中间件，支持路径参数和查询参数
  * 2. 所有设计均参考 Express.js，具体的 Express.js 教程请参考 https://expressjs.com/
- * 3. 目前支持的 HTTP 方法包括 GET、POST、DELETE
+ * 3. 目前支持的方法与 rm::Router 一致
  */
 class Webapp final {
 public:
@@ -521,7 +531,7 @@ public:
      * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
      * @param[in] callback Get 响应回调
      */
-    void get(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._gets.emplace_back(uri, callback); }
+    void get(std::string_view uri, RouteHandler callback) { _router._gets.emplace_back(uri, callback); }
 
     /**
      * @brief Post 请求路由
@@ -529,7 +539,7 @@ public:
      * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
      * @param[in] callback Post 响应回调
      */
-    void post(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._posts.emplace_back(uri, callback); }
+    void post(std::string_view uri, RouteHandler callback) { _router._posts.emplace_back(uri, callback); }
 
     /**
      * @brief Head 请求路由
@@ -537,7 +547,7 @@ public:
      * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
      * @param[in] callback Head 响应回调
      */
-    void head(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._heads.emplace_back(uri, callback); }
+    void head(std::string_view uri, RouteHandler callback) { _router._heads.emplace_back(uri, callback); }
 
     /**
      * @brief Delete 请求路由
@@ -545,20 +555,20 @@ public:
      * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
      * @param[in] callback Delete 响应回调
      */
-    void del(std::string_view uri, std::function<void(const Request &, Response &)> callback) { _router._deletes.emplace_back(uri, callback); }
+    void del(std::string_view uri, RouteHandler callback) { _router._deletes.emplace_back(uri, callback); }
 
     /**
-     * @brief 启动事件循环
+     * @brief 启动 Socket 监听任务循环
      *
      * @return rm::async::Task<> 异步任务
      */
     [[nodiscard]] Task<> spin();
 
     //! 是否正在运行
-    [[nodiscard]] bool running() const noexcept { return _running; }
+    [[nodiscard]] bool running() const noexcept { return _running.load(std::memory_order_acquire); }
 
     //! 停止运行
-    void stop() noexcept { _running = false; }
+    void stop() noexcept { _running.store(false, std::memory_order_release); }
 
 private:
     std::atomic_bool _running{false}; //!< 运行标志位

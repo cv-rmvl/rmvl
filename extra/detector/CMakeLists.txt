@@ -71,7 +71,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(detector
     FILES ${detector_inc}
     DEPENDS ${detector_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 

@@ -19,12 +19,13 @@ endif()
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  foreach(m util ipc serial)
+  foreach(m util ipc serial netapp)
     list(APPEND io_inc rmvl/io/${m}.hpp)
   endforeach()
   rmvl_generate_python(io
     FILES ${io_inc}
     DEPENDS io
+    PREBIND json
   )
 endif()
 

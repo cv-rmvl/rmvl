@@ -44,7 +44,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(group
     FILES ${group_inc}
     DEPENDS ${group_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 

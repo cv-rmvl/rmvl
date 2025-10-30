@@ -57,7 +57,7 @@ if(BUILD_PYTHON)
   rmvl_generate_python(tracker
     FILES ${tracker_inc}
     DEPENDS ${tracker_dep}
-    USE_PREBIND
+    PREBIND cv
   )
 endif()
 

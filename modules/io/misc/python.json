@@ -8,5 +8,15 @@
       "def read(self) -> Tuple[bool, str]: ...",
       "def write(self, data: str) -> bool: ..."
     ]
+  },
+  "Response": {
+    "bind": [
+      ".def(\"json\", [](Response &res, const json &j) { return res.json(j); })",
+      ".def(\"bool\", [](const Response &res) -> bool { return res; })"
+    ],
+    "pyi": [
+      "def json(self, j: dict) -> Response: ...",
+      "def bool(self) -> str: ..."
+    ]
   }
 }

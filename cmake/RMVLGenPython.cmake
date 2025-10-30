@@ -38,16 +38,18 @@ endfunction()
 #   根据给定目标生成 Python 绑定代码与接口文件
 #   用法:
 #     rmvl_generate_python(
-#       <name>                        # 目标名称，将生成 rmvl_light_py 模块
-#       [FILES <file1> [<file2> ...]] # 参与绑定的 include/ 文件夹下的头文件
-#       [DEPENDS <dep1> [<dep2> ...]] # 依赖的模块
-#       [USE_PREBIND]                 # 使用预绑定代码段，主要涉及到 OpenCV 的绑定
+#       <name>                          # 目标名称，将生成 rmvl_light_py 模块
+#       [FILES <file1> [<file2> ...]]   # 参与绑定的 include/ 文件夹下的头文件
+#       [EXT_NS <extra_namespace>]      # 额外的命名空间，已内置 rm 和 rm::para
+#       [DEPENDS <dep1> [<dep2> ...]]   # 依赖的模块
+#       [PREBIND <bind1> [<bind2> ...]] # 使用预绑定代码段
 #     )
 #   示例:
-#     rmvl_generate_python(core
-#       FILES core/version.hpp core/timer.hpp
-#       DEPENDS core
-#       USE_PREBIND
+#     rmvl_generate_python(io
+#       FILES rmvl/io/util.hpp rmvl/io/ipc.hpp rmvl/io/serial.hpp
+#       EXT_NS rm::async
+#       DEPENDS io
+#       PREBIND json
 #     )
 # ----------------------------------------------------------------------------
 function(rmvl_generate_python _name)
@@ -57,8 +59,7 @@ function(rmvl_generate_python _name)
     message(STATUS "${msg_prefix} - skipped")
     return()
   endif()
-  set(options "USE_PREBIND")
-  set(multi_value "DEPENDS" "FILES")
+  set(multi_value "EXT_NS" "DEPENDS" "FILES" "PREBIND")
   cmake_parse_arguments("PY" "${options}" "" "${multi_value}" ${ARGN})
 
   set(pybind_ws "${PROJECT_SOURCE_DIR}/cmake/templates/python")
@@ -79,12 +80,21 @@ function(rmvl_generate_python _name)
     set(RMVL_PYBIND_INC "${RMVL_PYBIND_INC}\n#include \"rmvlpara/${_name}.hpp\"")
     set(RMVL_PYBIND_NS "${RMVL_PYBIND_NS}\nusing namespace rm::para;")
   endif()
+
+  # append extra namespaces
+  foreach(ns ${PY_EXT_NS})
+    set(RMVL_PYBIND_NS "${RMVL_PYBIND_NS}\nusing namespace ${ns};")
+  endforeach()
   
   # set prebind contents
-  if(PY_USE_PREBIND)
-    rmvl_cmake_configure("${PROJECT_SOURCE_DIR}/cmake/templates/python/pre_bind.cpp.in" PREBIND_CONTENTS @ONLY)
+  if(PY_PREBIND)
+    foreach(pb ${PY_PREBIND})
+      rmvl_cmake_configure("${PROJECT_SOURCE_DIR}/cmake/templates/python/prebind/${pb}.cpp.in" pbctx @ONLY)
+      set(pbctx "// ------------------ Prebind: ${pb} ------------------\n${pbctx}\n// ----------------------------------------------------")
+      set(PREBIND_CONTENTS "${PREBIND_CONTENTS}\n${pbctx}")
+    endforeach()
   else()
-    set(PREBIND_CONTENTS "// No prebind contents")
+    set(PREBIND_CONTENTS "////////// No prebind contents //////////")
   endif()
   
   # generate wrapper code for python

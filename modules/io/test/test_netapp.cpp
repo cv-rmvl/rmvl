@@ -162,7 +162,7 @@ TEST(IO_netapp, webapp_router) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
 
-    auto api_router = async::Router{};
+    auto api_router = Router{};
     api_router.get("/status", [](const Request &, Response &res) {
         res.json({
             {"status", "ok"},
