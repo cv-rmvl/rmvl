@@ -194,7 +194,7 @@ Task 1: 1s
 
 using namespace rm;
 
-async::Task<> session(async::Socket socket) {
+async::Task<> session(async::StreamSocket socket) {
     std::string str = co_await socket.read();
     if (str.empty()) {
         printf("Read failed\n");
@@ -214,7 +214,7 @@ int main() {
     // 异步等待客户端连接
     co_spawn(io_context, [&]() -> async::Task<> {
         while (true) {
-            async::Socket socket = co_await acceptor.accept();
+            auto socket = co_await acceptor.accept();
             co_spawn(io_context, session, std::move(socket));
         }
     });
