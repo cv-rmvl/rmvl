@@ -153,7 +153,6 @@ std::vector<rm::group::ptr> groups;
   - 进程间通信，使用方法见 @ref tutorial_modules_ipc
     - 跨平台的同步支持包括 rm::PipeServer 和 rm::PipeClient ，对应的异步协程支持包括 rm::async::PipeServer 和 rm::async::PipeClient
     - Linux 下基于 Unix FIFO 实现的 rm::MqServer 和 rm::MqClient
-    - Unix Domain Socket 的同步支持包括 rm::Socket 和对应的提供者 rm::Acceptor 和 rm::Connector ，对应的异步协程支持包括 rm::async::Socket 和对应的提供者 rm::async::Acceptor 和 rm::async::Connector
   - 以 Socket 为核心的传输层支持，使用方法见 @ref tutorial_modules_socket
   - 以 HTTP 为核心的应用层及后端框架支持，使用方法见 @ref tutorial_modules_netapp
     - 基础工具包括 rm::Request 和 rm::Response

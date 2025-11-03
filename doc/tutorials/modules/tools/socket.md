@@ -17,18 +17,23 @@
 
 Socket 是网络通信的基本操作单元，提供了应用层与传输层之间的接口。Socket 可以分为多种类型，最常见的有流式套接字（TCP）和数据报套接字（UDP）。RMVL 提供了跨平台的 Socket 实现，并提供了协程支持，Windows 下基于 Winsock2 实现，Linux 下基于 BSD Socket 实现。
 
-除此之外，Socket 还提供了 Unix Domain Socket（Unix 域套接字）支持，允许在同一台机器上的不同进程之间进行高效的通信，使用方法可参考 @ref tutorial_modules_ipc 。
-
 ## 2 用法
 
 相关类：
 
-- 同步： rm::Socket, rm::Acceptor 及 rm::Connector
-- 异步： rm::async::Socket, rm::async::Acceptor 及 rm::async::Connector
+- 同步：
+  - 流式 rm::StreamSocket 以及 rm::Acceptor 和 rm::Connector
+  - 数据报式 rm::DgramSocket 以及 rm::Sender 和 rm::Listener
 
-一般工程使用中，推荐客户端使用<span style="color: red">同步阻塞</span>方式进行通信，服务端使用<span style="color: red">异步非阻塞</span>方式进行通信，以兼顾高并发性能。
+- 异步：
+  - 流式 rm::async::StreamSocket 以及 rm::async::Acceptor 和 rm::async::Connector
+  - 数据报式 rm::async::DgramSocket 以及 rm::async::Sender 和 rm::async::Listener
+
+一般工程使用中，对于流式 Socket 推荐客户端使用<span style="color: red">同步阻塞</span>方式进行通信，服务端使用<span style="color: red">异步非阻塞</span>方式进行通信，以兼顾高并发性能。对于数据报式 Socket，则根据具体需求选择同步或异步方式，例如在多播场景下，使用同步阻塞的 Listener 和 Sender 即可实现绝大部分功能。
 
 ### 2.1 同步阻塞
+
+下面展示了流式 Socket 的同步阻塞用法。
 
 **服务端**
 
@@ -90,6 +95,8 @@ int main() {
 
 ### 2.2 异步非阻塞
 
+下面展示了流式 Socket 的异步非阻塞用法。
+
 **服务端**
 
 ```cpp
@@ -97,7 +104,7 @@ int main() {
 
 using namespace rm;
 
-async::Task<> session(async::Socket socket) {
+async::Task<> session(async::StreamSocket socket) {
     // 读取数据
     std::string request = co_await socket.read();
     if (request.empty()) {
@@ -121,7 +128,7 @@ int main() {
     // 异步等待客户端连接
     co_spawn(io_context, [&]() -> async::Task<> {
         while (true) {
-            async::Socket socket = co_await acceptor.accept();
+            auto socket = co_await acceptor.accept();
             // 为每个连接启动一个协程任务
             co_spawn(io_context, session, std::move(socket));
         }
