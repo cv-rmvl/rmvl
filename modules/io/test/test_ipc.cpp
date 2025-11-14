@@ -70,16 +70,16 @@ TEST(IO_ipc, async_pipe) {
 
     co_spawn(
         io_context, [](PipeServerPtr srv, PipeClientPtr cli) -> async::Task<> {
-            std::string msg = "Hello, Async IPC!";
-            bool success = co_await cli->write(msg);
+            std::string str1 = "Hello, Async IPC!";
+            bool success = co_await cli->write(str1);
             EXPECT_TRUE(success);
             std::string received = co_await srv->read();
-            EXPECT_EQ(received, msg);
-            msg = "Goodbye, Async IPC!";
-            success = co_await srv->write(msg);
+            EXPECT_EQ(received, str1);
+            str1 = "Goodbye, Async IPC!";
+            success = co_await srv->write(str1);
             EXPECT_TRUE(success);
             received = co_await cli->read();
-            EXPECT_EQ(received, msg);
+            EXPECT_EQ(received, str1);
         },
         std::move(server), std::move(client));
 
@@ -99,15 +99,15 @@ TEST(IO_ipc, sync_mq) {
     MqServer ms("/test_mq");
     MqClient mc("/test_mq");
 
-    std::string msg = "Hello, MQ!";
-    EXPECT_TRUE(mc.write(msg));
+    std::string str1 = "Hello, MQ!";
+    EXPECT_TRUE(mc.write(str1));
     std::string received = ms.read();
-    EXPECT_EQ(received, msg);
+    EXPECT_EQ(received, str1);
 
-    msg = "Goodbye, MQ!";
-    EXPECT_TRUE(ms.write(msg));
+    str1 = "Goodbye, MQ!";
+    EXPECT_TRUE(ms.write(str1));
     received = mc.read();
-    EXPECT_EQ(received, msg);
+    EXPECT_EQ(received, str1);
 }
 
 #endif

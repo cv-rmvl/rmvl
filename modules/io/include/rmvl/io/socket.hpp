@@ -12,9 +12,7 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
-#include <string_view>
-#include <utility>
+#include <array>
 
 #include "async.hpp"
 
@@ -31,41 +29,182 @@ using SocketFd = int;
 constexpr SocketFd INVALID_SOCKET_FD = -1;
 #endif
 
-//! IP 协议族
-struct ip {
-    //! TCP 协议
-    struct tcp {
-        //! 构造端点，以表示 IPv4 TCP 协议
-        static tcp v4();
-        //! 构造端点，以表示 IPv6 TCP 协议
-        static tcp v6();
-        //! 协议族
-        int family{};
-        //! Socket 类型
-        int type{};
-    };
-
-    //! UDP 协议
-    struct udp {
-        //! 构造端点，以表示 IPv4 UDP 协议
-        static udp v4();
-        //! 构造端点，以表示 IPv6 UDP 协议
-        static udp v6();
-        //! 获取协议族
-        int family{};
-        //! 获取 Socket 类型
-        int type{};
-    };
+// 接口驱动类型
+enum class NetworkInterfaceType : uint8_t {
+    Ethernet, //!< 以太网
+    Wireless, //!< 无线接口
+    PPP,      //!< 点对点协议
+    Tunnel,   //!< 隧道接口
+    Loopback, //!< `lo` 回环设备
+    Other,    //!< 其他
+    Unknown,  //!< 未知类型
 };
 
-#if __cplusplus >= 202002L
+// 接口功能与状态标志
+struct NetworkInterfaceFlag {
+    static constexpr uint8_t Up = 1 << 0;        //!< 接口已启用
+    static constexpr uint8_t Broadcast = 1 << 1; //!< 支持广播
+    static constexpr uint8_t Loopback = 1 << 2;  //!< 回环接口
+    static constexpr uint8_t P2P = 1 << 3;       //!< 点对点链接，如 PPP、TUN 等
+    static constexpr uint8_t Multicast = 1 << 4; //!< 支持多播
+    static constexpr uint8_t Running = 1 << 5;   //!< 接口正在运行
+};
 
-/**
- * @brief IP 协议
- * @details 必须为 rm::ip::tcp 或 rm::ip::udp
- */
-template <typename Tp>
-concept IpProtocol = std::same_as<Tp, ip::tcp> || std::same_as<Tp, ip::udp>;
+//! 网络接口
+class NetworkInterface {
+public:
+    //! 获取所有网络接口的 MAC 地址列表
+    static std::vector<NetworkInterface> list() noexcept;
+
+    /**
+     * @brief 根据名称查找网络接口
+     *
+     * @param[in] name 名称字符串，如 "eth0"
+     * @return 找到的网络接口，未找到时返回一个无效的接口
+     */
+    static NetworkInterface findByName(std::string_view name) noexcept;
+
+    /**
+     * @brief 根据 MAC 地址查找网络接口
+     *
+     * @param[in] addr MAC 地址字节数组
+     * @return 找到的网络接口，未找到时返回一个无效的接口
+     */
+    static NetworkInterface findByAddress(const std::array<uint8_t, 6> &addr) noexcept;
+
+    //! 获取网络接口的 MAC 地址
+    const std::array<uint8_t, 6> &address() const noexcept { return _addr; }
+
+    //! 获取接口名称
+    std::string name() const noexcept { return _name; }
+
+    //! 获取接口类型
+    NetworkInterfaceType type() const noexcept { return _type; }
+
+    //! 获取接口功能与状态标志
+    uint8_t flag() const noexcept { return _flag; }
+
+    //! 接口是否启用
+    bool up() const noexcept { return (_flag & NetworkInterfaceFlag::Up) != 0; }
+
+    //! 是否为回环接口
+    bool loopback() const noexcept { return (_flag & NetworkInterfaceFlag::Loopback) != 0; }
+
+    //! 是否支持广播
+    bool broadcast() const noexcept { return (_flag & NetworkInterfaceFlag::Broadcast) != 0; }
+
+    //! 是否为点对点接口
+    bool p2p() const noexcept { return (_flag & NetworkInterfaceFlag::P2P) != 0; }
+
+    //! 是否支持多播
+    bool multicast() const noexcept { return (_flag & NetworkInterfaceFlag::Multicast) != 0; }
+
+    //! 接口是否正在运行
+    bool running() const noexcept { return (_flag & NetworkInterfaceFlag::Running) != 0; }
+
+    //! 获取 MAC 地址的字符串表示形式
+    std::string to_string() const;
+
+    //! 获取 IPv4 地址列表
+    std::vector<std::array<uint8_t, 4>> ipv4() const noexcept;
+
+    //! 获取 IPv6 地址列表
+    std::vector<std::array<uint8_t, 16>> ipv6() const noexcept;
+
+private:
+    std::string _name{};            //!< 接口名称
+    NetworkInterfaceType _type{};   //!< 驱动类型
+    uint8_t _flag{};                //!< 功能与状态标志
+    std::array<uint8_t, 6> _addr{}; //!< MAC 地址
+};
+
+//! IP 协议族
+namespace ip {
+
+struct Protocol {
+    //! 协议族
+    int family{};
+    //! Socket 类型
+    int type{};
+};
+
+namespace multicast {
+
+#ifdef _WIN32
+#define sockopt_data_t const char *
+#else
+#define sockopt_data_t const void *
+#endif
+
+//! 多播接口设置选项
+class Interface {
+public:
+    /**
+     * @brief 构造多播接口设置选项
+     *
+     * @param[in] addr 多播接口的 IPv4 地址
+     */
+    explicit Interface(std::array<uint8_t, 4> addr);
+
+    int name() const;
+    sockopt_data_t data() const;
+    unsigned int size() const;
+
+private:
+    uint8_t _data[4]{}; //!< 多播接口的 IPv4 地址
+};
+
+//! 多播环回控制选项
+class Loopback {
+public:
+    explicit Loopback(bool enabled = true);
+
+    int name() const;
+    sockopt_data_t data() const;
+    unsigned int size() const;
+
+private:
+    uint8_t _data{};
+};
+
+//! 加入多播组控制选项
+class JoinGroup {
+public:
+    explicit JoinGroup(std::string_view group);
+
+    int name() const;
+    sockopt_data_t data() const;
+    unsigned int size() const;
+
+private:
+    uint8_t _data[8]{}; //!< 多播组数据结构
+};
+
+} // namespace multicast
+
+//! TCP 协议
+namespace tcp {
+
+//! 构造端点，以表示 IPv4 TCP 协议
+Protocol v4();
+//! 构造端点，以表示 IPv6 TCP 协议
+Protocol v6();
+
+}; // namespace tcp
+
+//! UDP 协议
+namespace udp {
+
+//! 构造端点，以表示 IPv4 UDP 协议
+Protocol v4();
+//! 构造端点，以表示 IPv6 UDP 协议
+Protocol v6();
+
+}; // namespace udp
+
+} // namespace ip
+
+#if __cplusplus >= 202002L
 
 #endif
 
@@ -81,12 +220,7 @@ public:
      * Endpoint ep(ip::tcp::v4(), 8080);
      * @endcode
      */
-#if __cplusplus >= 202002L
-    Endpoint(IpProtocol auto ip, uint16_t port = 0) : _family(ip.family), _type(ip.type), _port(port) {}
-#else
-    template <typename Tp>
-    Endpoint(const Tp &ip, uint16_t port = 0) : _family(ip.family), _type(ip.type), _port(port) {}
-#endif
+    Endpoint(const ip::Protocol &ip, uint16_t port) : _family(ip.family), _type(ip.type), _port(port) {}
 
     //! 获取协议族
     int family() const { return _family; }
@@ -107,7 +241,7 @@ private:
  * @brief Socket 环境管理
  * @note
  * - Windows 环境专属
- * - 一般无需手动管理，在第一次创建 `rm::Acceptor`、`rm::Connector`、`rm::DgramListener` 及其派生类时自动初始化
+ * - 一般无需手动管理，在第一次创建 `rm::Acceptor`、`rm::Connector`、`rm::Listener`、`rm::Sender` 及其派生类时自动初始化
  */
 class SocketEnv {
 public:
@@ -124,7 +258,7 @@ private:
 
 #endif
 
-//! 由 rm::DgramListener 建立的数据报式 Socket 会话
+//! 由 rm::Listener 或 rm::Sender 建立的数据报式 Socket 会话
 class DgramSocket {
 public:
     /**
@@ -142,6 +276,14 @@ public:
     //! 会话是否失效
     [[nodiscard]] bool invalid() const noexcept { return _fd == INVALID_SOCKET_FD; }
 
+    /**
+     * @brief 设置 Socket 选项
+     *
+     * @param[in] opt Socket 选项
+     */
+    template <typename SockOpt>
+    void setOption(const SockOpt &opt);
+
     ~DgramSocket();
 
     /**
@@ -152,6 +294,9 @@ public:
      * @endcode
      *
      * @return 读取到的数据
+     * @retval data 读取的数据
+     * @retval addr 发送方地址
+     * @retval port 发送方端口
      */
     std::tuple<std::string, std::string, uint16_t> read() noexcept;
 
@@ -174,22 +319,62 @@ protected:
 };
 
 /**
- * @brief 同步数据报式 Socket 监听器
+ * @brief 同步数据报式 Socket 发送器
  * @details 用于将数据报 Socket 绑定到指定端点，并返回新的 Socket 会话
  */
-class DgramListener {
+class Sender {
+public:
+    /**
+     * @brief 创建数据报式 Socket 发送器
+     * @code {.cpp}
+     * // 使用示例
+     * auto sender = rm::Sender(rm::ip::udp::v4());
+     * @endcode
+     *
+     * @param[in] protocol 协议，如 rm::ip::udp::v4()
+     */
+    explicit Sender(const ip::Protocol &protocol) : Sender(protocol, false) {}
+
+    ~Sender();
+
+    /**
+     * @brief 同步绑定 Socket（阻塞）
+     * @code {.cpp}
+     * // 使用示例
+     * auto socket = sender.create();
+     * @endcode
+     *
+     * @return 数据报式 Socket 会话对象
+     */
+    DgramSocket create();
+
+protected:
+    Sender(const ip::Protocol &protocol, bool ov);
+
+    ip::Protocol _protocol;          //!< 协议
+    SocketFd _fd{INVALID_SOCKET_FD}; //!< 未建立会话的 Socket 描述符
+};
+
+/**
+ * @brief 同步数据报式 Socket 监听器
+ * @details
+ * - 用于将数据报 Socket 绑定到指定端点，并返回新的 Socket 会话
+ * - Listener 拥有 Sender 的全部功能，在仅需要发送数据时可使用 Sender
+ */
+class Listener {
 public:
     /**
      * @brief 创建数据报式 Socket 监听器
      * @code {.cpp}
      * // 使用示例
-     * auto listener_1 = rm::DgramListener(rm::Endpoint(rm::ip::udp::v4(), 12345));
-     * auto listener_2 = rm::DgramListener(rm::Endpoint(rm::ip::udp::v4())); // 随机分配端口
+     * auto listener = rm::Listener(rm::Endpoint(rm::ip::udp::v4(), 12345));
      * @endcode
      *
      * @param[in] endpoint 端点
      */
-    explicit DgramListener(const Endpoint &endpoint) : DgramListener(endpoint, false) {}
+    explicit Listener(const Endpoint &endpoint) : Listener(endpoint, false) {}
+
+    ~Listener();
 
     /**
      * @brief 同步绑定 Socket（阻塞）
@@ -203,7 +388,7 @@ public:
     DgramSocket create();
 
 protected:
-    DgramListener(const Endpoint &endpoint, bool ov);
+    Listener(const Endpoint &endpoint, bool ov);
 
     Endpoint _endpoint;              //!< 端点
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 未建立会话的 Socket 描述符
@@ -228,6 +413,14 @@ public:
     [[nodiscard]] bool invalid() const noexcept { return _fd == INVALID_SOCKET_FD; }
 
     ~StreamSocket();
+
+    /**
+     * @brief 设置 Socket 选项
+     *
+     * @param[in] opt Socket 选项
+     */
+    template <typename SockOpt>
+    void setOption(const SockOpt &opt);
 
     /**
      * @brief 同步读取已连接的 Socket 中的数据（阻塞）
@@ -341,7 +534,7 @@ namespace async {
 //! @addtogroup io_net
 //! @{
 
-//! 由 rm::async::DgramListener 建立的数据报式 Socket 异步会话
+//! 由 rm::async::Listener 建立的数据报式 Socket 异步会话
 class DgramSocket : public ::rm::DgramSocket {
 public:
     /**
@@ -382,10 +575,13 @@ public:
      * @brief 异步读取已连接的 Socket 中的数据
      * @code {.cpp}
      * // 使用示例
-     * auto str = co_await socket.read();
+     * auto [data, addr, port] = co_await socket.read();
      * @endcode
      *
-     * @return 使用 `std::string` 存储的读取到的数据
+     * @return 读取到的数据
+     * @retval data 读取的数据
+     * @retval addr 发送方地址
+     * @retval port 发送方端口
      */
     SocketReadAwaiter read() { return {_ctx, _fd}; }
 
@@ -434,21 +630,55 @@ private:
     IOContextRef _ctx; //!< 异步 I/O 执行上下文
 };
 
-//! 异步数据报式 Socket 监听器
-class DgramListener : public ::rm::DgramListener {
+//! 异步数据报式 Socket 发送器
+class Sender : public ::rm::Sender {
+public:
+    /**
+     * @brief 创建异步数据报式 Socket 发送器
+     * @code {.cpp}
+     * // 使用示例
+     * auto listener = rm::async::Sender(io_context, rm::ip::udp::v4());
+     * @endcode
+     *
+     * @param[in] io_context 异步 I/O 执行上下文
+     * @param[in] protocol 协议，如 rm::ip::udp::v4()
+     */
+    Sender(IOContext &io_context, const ip::Protocol &protocol);
+    ~Sender() = default;
+
+    /**
+     * @brief 异步绑定 Socket
+     * @code {.cpp}
+     * // 使用示例
+     * auto socket = listener.create(); // 注意：此处不是异步操作，不得使用 co_await !!!
+     * @endcode
+     *
+     * @return 数据报式 Socket 会话对象
+     */
+    DgramSocket create();
+
+private:
+    IOContextRef _ctx; //!< 异步 I/O 执行上下文
+};
+
+/**
+ * @brief 异步数据报式 Socket 监听器
+ * - async::Listener 拥有 async::Sender 的全部功能，在仅需要发送数据时可使用 async::Sender
+ */
+class Listener : public ::rm::Listener {
 public:
     /**
      * @brief 创建异步数据报式 Socket 监听器
      * @code {.cpp}
      * // 使用示例
-     * auto listener = rm::async::DgramListener(io_context, rm::Endpoint(rm::ip::udp::v4(), 12345));
+     * auto listener = rm::async::Listener(io_context, rm::Endpoint(rm::ip::udp::v4(), 12345));
      * @endcode
      *
      * @param[in] io_context 异步 I/O 执行上下文
      * @param[in] endpoint 端点
      */
-    DgramListener(IOContext &io_context, const Endpoint &endpoint);
-    ~DgramListener() = default;
+    Listener(IOContext &io_context, const Endpoint &endpoint);
+    ~Listener() = default;
 
     /**
      * @brief 异步绑定 Socket

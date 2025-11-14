@@ -4,35 +4,31 @@
 
 using namespace rm;
 
-OpcuaServer server(4840);
+OpcuaServer server(4840, "RMVL Server Demo");
 
 static void onHandle(int) { server.shutdown(); }
 
 //! 清屏
-static void clearSreen()
-{
+static void clearSreen() {
 #ifdef _WIN32
     int ch = system("cls");
 #else
     int ch = system("clear");
 #endif
-    if (ch == -1)
-    {
+    if (ch == -1) {
         printf("\033[2J");
         printf("\033[0;0H");
     }
 }
 
 //! 光标复位
-static void resetCursor()
-{
+static void resetCursor() {
     printf("\033[10;0H");
     fflush(stdout);
 }
 
 //! 显示 OPC UA 服务器表格
-static void show()
-{
+static void show() {
     constexpr const char *data = "  ┌────────────────┬────────────────┬────────────────┬────────────────┐\n"
                                  "  │     NodeId     │  DisplayName   │   BrowseName   │     Value      │\n"
                                  "  ├────────────────┼────────────────┼────────────────┼────────────────┤\n"
@@ -54,14 +50,12 @@ static std::string nodestr(const NodeId &node) { return "ns=" + std::to_string(n
  * @param[in] col 表格列，取值范围 [1, 4]
  * @param[in] msg 更新信息，不得超过 14 个字符
  */
-static void update(int row, int col, std::string_view msg)
-{
+static void update(int row, int col, std::string_view msg) {
     if (row < 1 || row > 3 || col < 1 || col > 4)
         return;
     constexpr int width = 14;
     int size = msg.size();
-    if (size > width)
-    {
+    if (size > width) {
         msg = msg.substr(0, width);
         size = width;
     }
@@ -74,8 +68,7 @@ static void update(int row, int col, std::string_view msg)
     resetCursor();
 }
 
-int main()
-{
+int main() {
     signal(SIGINT, onHandle);
     clearSreen();
     show();

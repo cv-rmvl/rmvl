@@ -438,7 +438,7 @@ std::tuple<std::string, bool> parseDNS(std::string_view hostname) {
     std::string ip_str;
     bool is_ipv6 = false;
 
-    char ip[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN]{};
     if (result != nullptr) {
         void *addr;
         if (result->ai_family == AF_INET) { // IPv4

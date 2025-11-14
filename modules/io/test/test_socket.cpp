@@ -9,7 +9,6 @@
  *
  */
 
-#include <chrono>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -47,11 +46,11 @@ TEST(IO_socket, sync_tcp_socket) {
 
 TEST(IO_socket, sync_udp_socket) {
     auto server_ep = Endpoint(ip::udp::v4(), 10900);
-    auto server_listener = DgramListener(server_ep);
-    auto client_listener = DgramListener(Endpoint(ip::udp::v4()));
+    auto listener = Listener(server_ep);
+    auto sender = Sender(ip::udp::v4());
 
     auto server_thrd = std::thread([&]() {
-        auto socket = server_listener.create();
+        auto socket = listener.create();
         auto [msg, sender_ip, sender_port] = socket.read();
         EXPECT_EQ(msg, "Hello, UDP Socket!");
         EXPECT_EQ(sender_ip, "127.0.0.1");
@@ -60,7 +59,7 @@ TEST(IO_socket, sync_udp_socket) {
     });
 
     auto client_thrd = std::thread([&]() {
-        auto socket = client_listener.create();
+        auto socket = sender.create();
         EXPECT_TRUE(socket.write("127.0.0.1", server_ep, "Hello, UDP Socket!"));
     });
 
@@ -71,11 +70,11 @@ TEST(IO_socket, sync_udp_socket) {
 TEST(IO_socket, sync_udp_socket_specify_port) {
     auto server_ep = Endpoint(ip::udp::v4(), 10901);
     auto client_ep = Endpoint(ip::udp::v4(), 10911);
-    auto server_listener = DgramListener(server_ep);
-    auto client_listener = DgramListener(client_ep);
+    auto listener = Listener(server_ep);
+    auto sender = Listener(client_ep);
 
     auto server_thrd = std::thread([&]() {
-        auto socket = server_listener.create();
+        auto socket = listener.create();
         auto [msg, sender_ip, sender_port] = socket.read();
         EXPECT_EQ(msg, "Hello, UDP Socket!");
         EXPECT_EQ(sender_ip, "127.0.0.1");
@@ -85,7 +84,7 @@ TEST(IO_socket, sync_udp_socket_specify_port) {
     });
 
     auto client_thrd = std::thread([&]() {
-        auto socket = client_listener.create();
+        auto socket = sender.create();
         EXPECT_TRUE(socket.write("127.0.0.1", server_ep, "Hello, UDP Socket!"));
         auto [msg, sender_ip, sender_port] = socket.read();
         EXPECT_EQ(msg, "I hear you!");
@@ -99,7 +98,7 @@ TEST(IO_socket, sync_udp_socket_specify_port) {
 
 #if __cplusplus >= 202002L
 
-TEST(IO_socket, async_net_socket) {
+TEST(IO_socket, async_tcp_socket) {
     auto io_context = async::IOContext{};
     auto acceptor = async::Acceptor(io_context, Endpoint(ip::tcp::v4(), 10801));
     auto connector = async::Connector(io_context, Endpoint(ip::tcp::v4(), 10801), "127.0.0.1");
@@ -122,6 +121,63 @@ TEST(IO_socket, async_net_socket) {
 
     co_spawn(io_context, accept);
     co_spawn(io_context, connect);
+
+    io_context.run();
+}
+
+TEST(IO_socket, async_udp_socket) {
+    auto io_context = async::IOContext{};
+    auto server_ep = Endpoint(ip::udp::v4(), 10902);
+    auto listener = async::Listener(io_context, server_ep);
+    auto sender = async::Sender(io_context, ip::udp::v4());
+
+    auto server = [&]() -> async::Task<> {
+        auto socket = listener.create();
+        auto [msg, sender_ip, sender_port] = co_await socket.read();
+        EXPECT_EQ(msg, "Hello, UDP Socket!");
+        EXPECT_EQ(sender_ip, "127.0.0.1");
+        EXPECT_NE(sender_port, 0);
+        EXPECT_NE(sender_port, 10902);
+    };
+
+    auto client = [&]() -> async::Task<> {
+        auto socket = sender.create();
+        EXPECT_TRUE(co_await socket.write("127.0.0.1", server_ep, "Hello, UDP Socket!"));
+
+        io_context.stop();
+    };
+
+    co_spawn(io_context, server);
+    co_spawn(io_context, client);
+
+    io_context.run();
+}
+
+TEST(IO_socket, async_udp_socket_specify_port) {
+    auto io_context = async::IOContext{};
+    auto server_ep = Endpoint(ip::udp::v4(), 10903);
+    auto client_ep = Endpoint(ip::udp::v4(), 10913);
+    auto listener = async::Listener(io_context, server_ep);
+    auto sender = async::Listener(io_context, client_ep);
+
+    auto server = [&]() -> async::Task<> {
+        auto socket = listener.create();
+        auto [msg, sender_ip, sender_port] = co_await socket.read();
+        EXPECT_EQ(msg, "Hello, UDP Socket!");
+        EXPECT_EQ(sender_ip, "127.0.0.1");
+        EXPECT_NE(sender_port, 0);
+        EXPECT_NE(sender_port, 10903);
+    };
+
+    auto client = [&]() -> async::Task<> {
+        auto socket = sender.create();
+        EXPECT_TRUE(co_await socket.write("127.0.0.1", server_ep, "Hello, UDP Socket!"));
+
+        io_context.stop();
+    };
+
+    co_spawn(io_context, server);
+    co_spawn(io_context, client);
 
     io_context.run();
 }

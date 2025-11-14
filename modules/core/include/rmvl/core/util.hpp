@@ -27,36 +27,31 @@
 //! @{
 
 #define HIGHLIGHT_(...)                               \
-    do                                                \
-    {                                                 \
+    do {                                              \
         printf("\033[35minfo - \033[0m" __VA_ARGS__); \
         printf("\n");                                 \
     } while (false)
 
 #define WARNING_(...)                                 \
-    do                                                \
-    {                                                 \
+    do {                                              \
         printf("\033[33mwarn - \033[0m" __VA_ARGS__); \
         printf("\n");                                 \
     } while (false)
 
 #define PASS_(...)                                    \
-    do                                                \
-    {                                                 \
+    do {                                              \
         printf("\033[32minfo - \033[0m" __VA_ARGS__); \
         printf("\n");                                 \
     } while (false)
 
 #define ERROR_(...)                                   \
-    do                                                \
-    {                                                 \
+    do {                                              \
         printf("\033[31m err - \033[0m" __VA_ARGS__); \
         printf("\n");                                 \
     } while (false)
 
 #define INFO_(...)                     \
-    do                                 \
-    {                                  \
+    do {                               \
         printf("info - " __VA_ARGS__); \
         printf("\n");                  \
     } while (false)
@@ -76,8 +71,7 @@
 #endif
 
 //! @brief RMVL 错误码
-enum RMVLErrorCode : int
-{
+enum RMVLErrorCode : int {
     RMVL_StsOk = 0,           //!< 没有错误 No Error
     RMVL_StsBackTrace = -1,   //!< 回溯 Backtrace
     RMVL_StsError = -2,       //!< 未指定（未知）错误 Unspecified (Unknown) error
@@ -96,8 +90,7 @@ enum RMVLErrorCode : int
 
 //! @} core
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup core
 //! @{
@@ -124,8 +117,7 @@ std::string format(const char *fmt, ...);
  * @brief 触发非法内存操作
  * @note 当调用该函数时，默认错误处理程序会发出一个硬件异常，这可以使调试更加方便
  */
-inline void breakOnError()
-{
+inline void breakOnError() {
     static volatile int *p = nullptr;
     *p = 0;
 }
@@ -134,8 +126,7 @@ inline void breakOnError()
  * @brief 该类封装了有关程序中发生的错误的所有或几乎所有必要信息。异常通常是通过 RMVL_Error
  *        和 RMVL_Error_ 宏隐式构造和抛出的 @see error
  */
-class Exception final : public std::exception
-{
+class Exception final : public std::exception {
 public:
     //! @brief 默认构造
     Exception() : code(RMVL_StsOk), line(0) {}
@@ -240,30 +231,24 @@ const char *getBuildInformation();
 
 //! @} core
 
-namespace rm
-{
+namespace rm {
 
-namespace reflect
-{
+namespace reflect {
 
-namespace helper
-{
+namespace helper {
 
 //! @cond
 
 //! Constructor helper
-struct init
-{
+struct init {
     template <typename Tp>
     operator Tp(); // No need to define
 };
 
 template <std::size_t N>
-struct size_tag : size_tag<N - 1>
-{};
+struct size_tag : size_tag<N - 1> {};
 template <>
-struct size_tag<0>
-{};
+struct size_tag<0> {};
 
 #if __cplusplus < 202002L
 template <typename Tp>
@@ -311,14 +296,12 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
  */
 template <typename Tp>
 #if __cplusplus < 202002L
-constexpr std::size_t size()
-{
+constexpr std::size_t size() {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
     return helper::size<std::remove_reference_t<Tp>>(helper::size_tag<12>{});
 }
 #else
-consteval std::size_t size(auto &&...args)
-{
+consteval std::size_t size(auto &&...args) {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
     if constexpr (!requires { std::remove_reference_t<Tp>{args...}; })
         return sizeof...(args) - 1;
@@ -337,66 +320,42 @@ consteval std::size_t size(auto &&...args)
  * @param[in] f 可调用对象
  */
 template <typename Tp, typename Callable>
-inline void for_each(Tp &&val, Callable &&f)
-{
+inline void for_each(Tp &&val, Callable &&f) {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
-    if constexpr (size<std::remove_reference_t<Tp>>() == 12u)
-    {
+    if constexpr (size<std::remove_reference_t<Tp>>() == 12u) {
         auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10), f(m11);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 11u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 11u) {
         auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9), f(m10);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 10u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 10u) {
         auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8, m9] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8), f(m9);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 9u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 9u) {
         auto &&[m0, m1, m2, m3, m4, m5, m6, m7, m8] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7), f(m8);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 8u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 8u) {
         auto &&[m0, m1, m2, m3, m4, m5, m6, m7] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6), f(m7);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 7u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 7u) {
         auto &&[m0, m1, m2, m3, m4, m5, m6] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5), f(m6);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 6u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 6u) {
         auto &&[m0, m1, m2, m3, m4, m5] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4), f(m5);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 5u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 5u) {
         auto &&[m0, m1, m2, m3, m4] = val;
         f(m0), f(m1), f(m2), f(m3), f(m4);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 4u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 4u) {
         auto &&[m0, m1, m2, m3] = val;
         f(m0), f(m1), f(m2), f(m3);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 3u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 3u) {
         auto &&[m0, m1, m2] = val;
         f(m0), f(m1), f(m2);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 2u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 2u) {
         auto &&[m0, m1] = val;
         f(m0), f(m1);
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 1u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 1u) {
         auto &&[m0] = val;
         f(m0);
     }
@@ -411,77 +370,53 @@ inline void for_each(Tp &&val, Callable &&f)
  * @param[in] rhs 右操作数
  */
 template <typename Tp>
-inline bool equal(const Tp &lhs, const Tp &rhs)
-{
+inline bool equal(const Tp &lhs, const Tp &rhs) {
     static_assert(std::is_aggregate_v<std::remove_reference_t<Tp>>);
-    if constexpr (size<std::remove_reference_t<Tp>>() == 12u)
-    {
+    if constexpr (size<std::remove_reference_t<Tp>>() == 12u) {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9 && l10 == r10 && l11 == r11;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 11u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 11u) {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9 && l10 == r10;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 10u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 10u) {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8, l9] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8, r9] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8 && l9 == r9;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 9u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 9u) {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7, l8] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7, r8] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7 && l8 == r8;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 8u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 8u) {
         const auto &[l0, l1, l2, l3, l4, l5, l6, l7] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6, r7] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6 && l7 == r7;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 7u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 7u) {
         const auto &[l0, l1, l2, l3, l4, l5, l6] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5, r6] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5 && l6 == r6;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 6u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 6u) {
         const auto &[l0, l1, l2, l3, l4, l5] = lhs;
         const auto &[r0, r1, r2, r3, r4, r5] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4 && l5 == r5;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 5u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 5u) {
         const auto &[l0, l1, l2, l3, l4] = lhs;
         const auto &[r0, r1, r2, r3, r4] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3 && l4 == r4;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 4u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 4u) {
         const auto &[l0, l1, l2, l3] = lhs;
         const auto &[r0, r1, r2, r3] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2 && l3 == r3;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 3u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 3u) {
         const auto &[l0, l1, l2] = lhs;
         const auto &[r0, r1, r2] = rhs;
         return l0 == r0 && l1 == r1 && l2 == r2;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 2u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 2u) {
         const auto &[l0, l1] = lhs;
         const auto &[r0, r1] = rhs;
         return l0 == r0 && l1 == r1;
-    }
-    else if constexpr (size<std::remove_reference_t<Tp>>() == 1u)
-    {
+    } else if constexpr (size<std::remove_reference_t<Tp>>() == 1u) {
         const auto &[l0] = lhs;
         const auto &[r0] = rhs;
         return l0 == r0;
@@ -501,10 +436,8 @@ inline bool equal(const Tp &lhs, const Tp &rhs)
  * @tparam Tp 聚合体类型
  */
 template <typename Tp, typename Enable = std::enable_if_t<std::is_aggregate_v<Tp>>>
-struct hash_aggregate
-{
-    std::size_t operator()(const Tp &r) const
-    {
+struct hash_aggregate {
+    std::size_t operator()(const Tp &r) const {
         std::size_t retval{};
         reflect::for_each(r, [&retval](const auto &val) {
             // boost::hash_combine
@@ -528,8 +461,7 @@ struct hash_traits;
  * @tparam Tp 数据类型
  */
 template <typename Tp>
-struct hash_traits<Tp, std::enable_if_t<!std::is_aggregate_v<Tp>>>
-{
+struct hash_traits<Tp, std::enable_if_t<!std::is_aggregate_v<Tp>>> {
     using hash_func = std::hash<Tp>;
 };
 
@@ -539,11 +471,16 @@ struct hash_traits<Tp, std::enable_if_t<!std::is_aggregate_v<Tp>>>
  * @tparam Tp 数据类型
  */
 template <typename Tp>
-struct hash_traits<Tp, std::enable_if_t<std::is_aggregate_v<Tp>>>
-{
+struct hash_traits<Tp, std::enable_if_t<std::is_aggregate_v<Tp>>> {
     using hash_func = hash_aggregate<Tp>;
 };
 
 //! @} core_meta
+
+//! @addtogroup core
+//! @{
+
+//! 获取当前进程的 ID
+RMVL_EXPORTS_W uint32_t processId();
 
 } // namespace rm

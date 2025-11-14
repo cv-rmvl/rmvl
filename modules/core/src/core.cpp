@@ -9,6 +9,12 @@
  *
  */
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <chrono>
 #include <cstdarg>
 #include <thread>
@@ -99,6 +105,14 @@ const char *getBuildInformation() {
 #include "version_string.inc"
         ;
     return build_info;
+}
+
+uint32_t processId() {
+#ifdef _WIN32
+    return static_cast<uint32_t>(::GetCurrentProcessId());
+#else
+    return static_cast<uint32_t>(::getpid());
+#endif
 }
 
 namespace str {

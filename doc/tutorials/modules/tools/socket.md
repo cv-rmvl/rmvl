@@ -170,4 +170,23 @@ int main() {
     io_context.run();
 }
 ```
-    
+
+### 2.3 Socket 控制选项
+
+Socket 类提供了一些控制选项，用于配置 Socket 的行为，例如设置监听方的多播选项等
+
+```cpp
+auto reader = rm::Listener(ip::udp::v4(), 8080);
+// 加入多播组
+reader.setOption(ip::multicast::JoinGroup("224.0.0.1"));
+// 启用多播环回
+reader.setOption(ip::multicast::Loopback(true));
+```
+
+以及发送方的多播选项
+
+```cpp
+auto writer = rm::Sender(ip::udp::v4());
+// 设置多播接口
+writer.setOption(ip::multicast::Interface("192.168.1.100"));
+```
