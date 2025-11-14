@@ -9,20 +9,24 @@
  *
  */
 
+#include <utility>
+
 #include "rmvl/io/socket.hpp"
 #include "rmvl/core/util.hpp"
-#include <cstddef>
 
 #ifdef _WIN32
 #include <MSWSock.h>
 #include <WS2tcpip.h>
 #include <afunix.h>
-
+#include <iphlpapi.h>
+#pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <netpacket/packet.h>
 #include <sys/un.h>
 #include <unistd.h>
 #endif
@@ -37,6 +41,10 @@
 
 namespace rm {
 
+#ifdef __MSVC__
+#pragma region Common Functions
+#endif
+
 inline static int error_code() {
 #ifdef _WIN32
     return WSAGetLastError();
@@ -45,40 +53,323 @@ inline static int error_code() {
 #endif
 }
 
-ip::tcp ip::tcp::v4() { return {AF_INET, SOCK_STREAM}; }
-ip::tcp ip::tcp::v6() { return {AF_INET6, SOCK_STREAM}; }
-ip::udp ip::udp::v4() { return {AF_INET, SOCK_DGRAM}; }
-ip::udp ip::udp::v6() { return {AF_INET6, SOCK_DGRAM}; }
+#ifdef __MSVC__
+#pragma endregion
+#pragma region Network Interface
+#endif
 
-static void fdbind(SocketFd fd, const Endpoint &ep) {
+#ifdef _WIN32
+
+std::vector<NetworkInterface> NetworkInterface::list() noexcept {
+    SocketEnv::ensure_init();
+
+    std::vector<NetworkInterface> res{};
+    ULONG family = AF_UNSPEC;
+    ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
+    ULONG size{};
+    if (GetAdaptersAddresses(family, flags, nullptr, nullptr, &size) != ERROR_BUFFER_OVERFLOW)
+        return res;
+
+    std::vector<char> buffer(size);
+    auto *adapters = reinterpret_cast<IP_ADAPTER_ADDRESSES *>(buffer.data());
+
+    if (GetAdaptersAddresses(family, flags, nullptr, adapters, &size) != NO_ERROR)
+        return res;
+
+    for (PIP_ADAPTER_ADDRESSES adapter = adapters; adapter; adapter = adapter->Next) {
+        // 物理地址长度不为 6 (MAC地址) 则跳过
+        if (adapter->PhysicalAddressLength != 6)
+            continue;
+
+        NetworkInterface iface{};
+        iface._name = adapter->AdapterName;
+        std::copy(adapter->PhysicalAddress, adapter->PhysicalAddress + 6, iface._addr.begin());
+
+        // 设置 flag
+        if (adapter->OperStatus == IfOperStatusUp)
+            iface._flag |= NetworkInterfaceFlag::Up | NetworkInterfaceFlag::Running;
+        if (adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
+            iface._flag |= NetworkInterfaceFlag::Loopback;
+        if (!(adapter->Flags & IP_ADAPTER_NO_MULTICAST))
+            iface._flag |= NetworkInterfaceFlag::Multicast | NetworkInterfaceFlag::Broadcast;
+        if (adapter->IfType == IF_TYPE_PPP || adapter->IfType == IF_TYPE_TUNNEL)
+            iface._flag |= NetworkInterfaceFlag::P2P;
+
+        // 设置 type
+        switch (adapter->IfType) {
+        case IF_TYPE_ETHERNET_CSMACD:
+            iface._type = NetworkInterfaceType::Ethernet;
+            break;
+        case IF_TYPE_SOFTWARE_LOOPBACK:
+            iface._type = NetworkInterfaceType::Loopback;
+            break;
+        case IF_TYPE_IEEE80211:
+            iface._type = NetworkInterfaceType::Wireless;
+            break;
+        case IF_TYPE_PPP:
+            iface._type = NetworkInterfaceType::PPP;
+            break;
+        case IF_TYPE_TUNNEL:
+            iface._type = NetworkInterfaceType::Tunnel;
+            break;
+        default:
+            iface._type = NetworkInterfaceType::Other;
+            break;
+        }
+        res.push_back(std::move(iface));
+    }
+
+    return res;
+}
+
+template <int Family>
+static auto getIp(std::string_view if_name) noexcept -> std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> {
+    std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> res{};
+    ULONG family = AF_UNSPEC;
+    ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
+    ULONG size{};
+    if (GetAdaptersAddresses(family, flags, nullptr, nullptr, &size) != ERROR_BUFFER_OVERFLOW)
+        return res;
+
+    std::vector<char> buffer(size);
+    auto *adapters = reinterpret_cast<IP_ADAPTER_ADDRESSES *>(buffer.data());
+
+    if (GetAdaptersAddresses(family, flags, nullptr, adapters, &size) != NO_ERROR)
+        return res;
+
+    for (PIP_ADAPTER_ADDRESSES adapter = adapters; adapter; adapter = adapter->Next) {
+        if (if_name != adapter->AdapterName)
+            continue;
+
+        for (auto *addr = adapter->FirstUnicastAddress; addr; addr = addr->Next) {
+            if (addr->Address.lpSockaddr->sa_family == Family) {
+                if constexpr (Family == AF_INET) {
+                    auto *addr_v4 = reinterpret_cast<sockaddr_in *>(addr->Address.lpSockaddr);
+                    std::array<uint8_t, 4> ip_bytes{};
+                    memcpy(ip_bytes.data(), &addr_v4->sin_addr.s_addr, 4);
+                    res.push_back(ip_bytes);
+                } else if constexpr (Family == AF_INET6) {
+                    auto *addr_v6 = reinterpret_cast<sockaddr_in6 *>(addr->Address.lpSockaddr);
+                    std::array<uint8_t, 16> ip_bytes{};
+                    memcpy(ip_bytes.data(), &addr_v6->sin6_addr.s6_addr, 16);
+                    res.push_back(ip_bytes);
+                }
+            }
+        }
+        break;
+    }
+    return res;
+}
+
+#else
+
+std::vector<NetworkInterface> NetworkInterface::list() noexcept {
+    std::unordered_map<std::string, NetworkInterface> interfaces;
+    ifaddrs *ifaddr_list{};
+    if (getifaddrs(&ifaddr_list) == -1)
+        return {};
+
+    for (auto *ifa = ifaddr_list; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == nullptr)
+            continue;
+
+        // 使用接口名称作为 key，确保每个接口只处理一次
+        auto &iface = interfaces[ifa->ifa_name];
+        if (iface._name.empty()) {
+            iface._name = ifa->ifa_name;
+            // 设置 flag
+            if (ifa->ifa_flags & IFF_UP)
+                iface._flag |= NetworkInterfaceFlag::Up;
+            if (ifa->ifa_flags & IFF_BROADCAST)
+                iface._flag |= NetworkInterfaceFlag::Broadcast;
+            if (ifa->ifa_flags & IFF_LOOPBACK)
+                iface._flag |= NetworkInterfaceFlag::Loopback;
+            if (ifa->ifa_flags & IFF_POINTOPOINT)
+                iface._flag |= NetworkInterfaceFlag::P2P;
+            if (ifa->ifa_flags & IFF_MULTICAST)
+                iface._flag |= NetworkInterfaceFlag::Multicast;
+            if (ifa->ifa_flags & IFF_RUNNING)
+                iface._flag |= NetworkInterfaceFlag::Running;
+            // 设置 type
+            if (ifa->ifa_flags & IFF_LOOPBACK)
+                iface._type = NetworkInterfaceType::Loopback;
+            else if (ifa->ifa_flags & IFF_POINTOPOINT)
+                iface._type = NetworkInterfaceType::PPP; // 或 Tunnel
+            else if (std::string_view(ifa->ifa_name).rfind("eth", 0) == 0 ||
+                     std::string_view(ifa->ifa_name).rfind("en", 0) == 0)
+                iface._type = NetworkInterfaceType::Ethernet;
+            else if (std::string_view(ifa->ifa_name).rfind("wl", 0) == 0)
+                iface._type = NetworkInterfaceType::Wireless;
+            else
+                iface._type = NetworkInterfaceType::Other;
+        }
+        // 填充 MAC 地址
+        if (ifa->ifa_addr->sa_family == AF_PACKET) {
+            auto *sll = reinterpret_cast<sockaddr_ll *>(ifa->ifa_addr);
+            if (sll->sll_halen == 6)
+                std::copy(sll->sll_addr, sll->sll_addr + 6, iface._addr.begin());
+        }
+    }
+
+    freeifaddrs(ifaddr_list);
+    std::vector<NetworkInterface> res{};
+    res.reserve(interfaces.size());
+    for (auto const &[name, iface] : interfaces)
+        res.push_back(iface);
+
+    return res;
+}
+
+template <int Family>
+static auto getIp(const std::string &if_name) noexcept -> std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> {
+    std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> res{};
+    ifaddrs *ifaddr_list{};
+    if (getifaddrs(&ifaddr_list) == -1)
+        return {};
+
+    for (auto *ifa = ifaddr_list; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr != nullptr && if_name == ifa->ifa_name && ifa->ifa_addr->sa_family == Family) {
+            if constexpr (Family == AF_INET) {
+                auto *addr_v4 = reinterpret_cast<sockaddr_in *>(ifa->ifa_addr);
+                std::array<uint8_t, 4> ip_bytes{};
+                memcpy(ip_bytes.data(), &addr_v4->sin_addr.s_addr, 4);
+                res.push_back(ip_bytes);
+            } else if constexpr (Family == AF_INET6) {
+                auto *addr_v6 = reinterpret_cast<sockaddr_in6 *>(ifa->ifa_addr);
+                std::array<uint8_t, 16> ip_bytes{};
+                memcpy(ip_bytes.data(), &addr_v6->sin6_addr.s6_addr, 16);
+                res.push_back(ip_bytes);
+            }
+        }
+    }
+
+    freeifaddrs(ifaddr_list);
+    return res;
+}
+
+#endif
+
+std::string NetworkInterface::to_string() const {
+    char buf[18]{};
+    std::snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+                  _addr[0], _addr[1], _addr[2], _addr[3], _addr[4], _addr[5]);
+    return buf;
+}
+
+NetworkInterface NetworkInterface::findByName(std::string_view name) noexcept {
+    auto interfaces = list();
+    for (const auto &iface : interfaces)
+        if (iface._name == name)
+            return iface;
+    return {};
+}
+
+NetworkInterface NetworkInterface::findByAddress(const std::array<uint8_t, 6> &addr) noexcept {
+    auto interfaces = list();
+    for (const auto &iface : interfaces)
+        if (iface._addr == addr)
+            return iface;
+    return {};
+}
+
+std::vector<std::array<uint8_t, 4>> NetworkInterface::ipv4() const noexcept { return getIp<AF_INET>(_name); }
+std::vector<std::array<uint8_t, 16>> NetworkInterface::ipv6() const noexcept { return getIp<AF_INET6>(_name); }
+
+#ifdef __MSVC__
+#pragma endregion
+#pragma region IP / Socket Options
+#endif
+
+namespace ip {
+
+namespace multicast {
+
+// Interface Implementation
+
+Interface::Interface(std::array<uint8_t, 4> addr) { std::copy(addr.begin(), addr.end(), _data); }
+int Interface::name() const { return IP_MULTICAST_IF; }
+sockopt_data_t Interface::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
+unsigned int Interface::size() const { return sizeof(_data); }
+
+// Loopback Implementation
+
+Loopback::Loopback(bool enabled) : _data(enabled ? 1 : 0) {}
+int Loopback::name() const { return IP_MULTICAST_LOOP; }
+sockopt_data_t Loopback::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
+unsigned int Loopback::size() const { return sizeof(_data); }
+
+// JoinGroup Implementation
+
+JoinGroup::JoinGroup(std::string_view multicast_addr) {
+    ip_mreq mreq{};
+    inet_pton(AF_INET, multicast_addr.data(), &mreq.imr_multiaddr);
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    memcpy(&_data, &mreq, sizeof(mreq));
+}
+
+int JoinGroup::name() const { return IP_ADD_MEMBERSHIP; }
+sockopt_data_t JoinGroup::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
+unsigned int JoinGroup::size() const { return sizeof(_data); }
+
+} // namespace multicast
+
+namespace tcp {
+
+Protocol v4() { return {AF_INET, SOCK_STREAM}; }
+Protocol v6() { return {AF_INET6, SOCK_STREAM}; }
+
+} // namespace tcp
+
+namespace udp {
+
+Protocol v4() { return {AF_INET, SOCK_DGRAM}; }
+Protocol v6() { return {AF_INET6, SOCK_DGRAM}; }
+
+} // namespace udp
+
+} // namespace ip
+
+template <typename SockOpt>
+static void set_fd_option(SocketFd fd, const SockOpt &opt) {
+    RMVL_DbgAssert(fd != INVALID_SOCKET_FD);
+    if (setsockopt(fd, IPPROTO_IP, opt.name(), opt.data(), static_cast<socklen_t>(opt.size())) < 0)
+        RMVL_Error_(RMVL_StsError, "setsockopt failed, error code: %d", error_code());
+}
+
+#ifdef __MSVC__
+#pragma endregion
+#pragma region Socket Implements
+#endif
+
+static void fdbind(SocketFd fd, int family, uint16_t port = 0) {
     RMVL_Assert(fd != INVALID_SOCKET_FD);
 
-    // 设置允许重用处于 TIME_WAIT 状态的地址
-    int opt = 1;
 #ifdef _WIN32
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char *>(&opt), sizeof(opt)) < 0)
+    char opt = 1;
 #else
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    int opt = 1;
 #endif
+    // 设置允许重用处于 TIME_WAIT 状态的地址
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         WARNING_("setsockopt SO_REUSEADDR failed, error code: %d", error_code());
     // 空端口不进行绑定
-    if (ep.port() == 0)
+    if (port == 0)
         return;
     // IPv4 Socket
-    if (ep.family() == AF_INET) {
+    if (family == AF_INET) {
         sockaddr_in addr{};
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = INADDR_ANY;
-        addr.sin_port = htons(ep.port());
+        addr.sin_port = htons(port);
         if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
             RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
     }
     // IPv6 Socket
-    else if (ep.family() == AF_INET6) {
+    else if (family == AF_INET6) {
         sockaddr_in6 addr{};
         addr.sin6_family = AF_INET6;
         addr.sin6_addr = in6addr_any;
-        addr.sin6_port = htons(ep.port());
+        addr.sin6_port = htons(port);
         if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
             RMVL_Error_(RMVL_StsError, "bind failed, error code: %d", error_code());
     } else
@@ -150,6 +441,11 @@ static bool fdsendto(SocketFd fd, std::string_view addr, const Endpoint &endpoin
     return n == static_cast<decltype(n)>(data.size());
 }
 
+template <>
+void DgramSocket::setOption(const ip::multicast::Loopback &opt) { set_fd_option(_fd, opt); }
+template <>
+void DgramSocket::setOption(const ip::multicast::JoinGroup &opt) { set_fd_option(_fd, opt); }
+
 std::tuple<std::string, std::string, uint16_t> DgramSocket::read() noexcept {
     RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
     return fdrecvfrom(_fd);
@@ -176,18 +472,35 @@ bool StreamSocket::write(std::string_view data) noexcept {
 }
 
 #ifdef _WIN32
-DgramListener::DgramListener(const Endpoint &ep, bool ov) : _endpoint(ep), _fd(INVALID_SOCKET_FD) {
+Listener::Listener(const Endpoint &ep, bool ov) : _endpoint(ep), _fd(INVALID_SOCKET_FD) {
     SocketEnv::ensure_init();
     _fd = ov ? WSASocket(ep.family(), ep.type(), 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(ep.family(), ep.type(), 0);
 #else
-DgramListener::DgramListener(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
+Listener::Listener(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
 #endif
-    fdbind(_fd, ep);
+    fdbind(_fd, ep.family(), ep.port());
 }
 
-DgramSocket DgramListener::create() {
+DgramSocket Listener::create() {
     RMVL_Assert(_fd != INVALID_SOCKET_FD);
-    return DgramSocket(_fd);
+    SocketFd fd = std::exchange(_fd, INVALID_SOCKET_FD); // 转移所有权
+    return DgramSocket(fd);
+}
+
+#ifdef _WIN32
+Sender::Sender(const ip::Protocol &proto, bool ov) : _protocol(proto), _fd(INVALID_SOCKET_FD) {
+    SocketEnv::ensure_init();
+    _fd = ov ? WSASocket(proto.family, proto.type, 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(proto.family, proto.type, 0);
+#else
+Sender::Sender(const ip::Protocol &proto, bool) : _protocol(proto), _fd(socket(proto.family, proto.type, 0)) {
+#endif
+    fdbind(_fd, proto.family);
+}
+
+DgramSocket Sender::create() {
+    RMVL_Assert(_fd != INVALID_SOCKET_FD);
+    SocketFd fd = std::exchange(_fd, INVALID_SOCKET_FD); // 转移所有权
+    return DgramSocket(fd);
 }
 
 StreamSocket &StreamSocket::operator=(StreamSocket &&other) noexcept {
@@ -202,7 +515,7 @@ Acceptor::Acceptor(const Endpoint &ep, bool ov) : _endpoint(ep) {
 #else
 Acceptor::Acceptor(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
 #endif
-    fdbind(_fd, ep);
+    fdbind(_fd, ep.family(), ep.port());
     if (listen(_fd, SOMAXCONN) < 0)
         RMVL_Error_(RMVL_StsError, "listen failed, error code: %d", error_code());
 }
@@ -247,7 +560,7 @@ Connector::Connector(const Endpoint &ep, std::string_view url, bool) : _url(url)
 }
 
 StreamSocket Connector::connect() {
-    int sfd = fdconnect(_fd, _endpoint, _url);
+    int sfd = fdconnect(static_cast<int>(_fd), _endpoint, _url);
     return StreamSocket(sfd);
 }
 
@@ -276,6 +589,8 @@ SocketEnv::SocketEnv() {
 SocketEnv::~SocketEnv() { WSACleanup(); }
 
 DgramSocket::~DgramSocket() { valid(_fd) ? ::closesocket(_fd) : 0; }
+Sender::~Sender() { valid(_fd) ? ::closesocket(_fd) : 0; }
+Listener::~Listener() { valid(_fd) ? ::closesocket(_fd) : 0; }
 StreamSocket::~StreamSocket() { valid(_fd) ? ::closesocket(_fd) : 0; }
 Acceptor::~Acceptor() { valid(_fd) ? ::closesocket(_fd) : 0; }
 Connector::~Connector() { valid(_fd) ? ::closesocket(_fd) : 0; }
@@ -283,17 +598,29 @@ Connector::~Connector() { valid(_fd) ? ::closesocket(_fd) : 0; }
 #else
 
 DgramSocket::~DgramSocket() { valid(_fd) ? ::close(_fd) : 0; }
+Sender::~Sender() { valid(_fd) ? ::close(_fd) : 0; }
+Listener::~Listener() { valid(_fd) ? ::close(_fd) : 0; }
 StreamSocket::~StreamSocket() { valid(_fd) ? ::close(_fd) : 0; }
 Acceptor::~Acceptor() { valid(_fd) ? ::close(_fd) : 0; }
 Connector::~Connector() { valid(_fd) ? ::close(_fd) : 0; }
 
 #endif
 
+#ifdef __MSVC__
+#pragma endregion
+#pragma region Async Socket
+#endif
+
 #if __cplusplus >= 202002L
 
 namespace async {
 
-DgramSocket DgramListener::create() {
+DgramSocket Listener::create() {
+    RMVL_Assert(_fd != INVALID_SOCKET_FD);
+    return DgramSocket(_ctx, _fd);
+}
+
+DgramSocket Sender::create() {
     RMVL_Assert(_fd != INVALID_SOCKET_FD);
     return DgramSocket(_ctx, _fd);
 }
@@ -362,7 +689,15 @@ void DgramSocket::SocketWriteAwaiter::await_suspend(std::coroutine_handle<> hand
     }
 }
 
-DgramListener::DgramListener(IOContext &io_context, const Endpoint &endpoint) : ::rm::DgramListener(endpoint, true), _ctx(io_context) {
+Listener::Listener(IOContext &io_context, const Endpoint &endpoint) : ::rm::Listener(endpoint, true), _ctx(io_context) {
+    if (CreateIoCompletionPort((HANDLE)_fd, _ctx.get().handle(), 0, 0) == nullptr) {
+        auto err = GetLastError();
+        if (err != ERROR_INVALID_PARAMETER)
+            RMVL_Error_(RMVL_StsError, "Associate fd with IOCP failed: %lu", err);
+    }
+}
+
+Sender::Sender(IOContext &io_context, const ip::Protocol &protocol) : ::rm::Sender(protocol, true), _ctx(io_context) {
     if (CreateIoCompletionPort((HANDLE)_fd, _ctx.get().handle(), 0, 0) == nullptr) {
         auto err = GetLastError();
         if (err != ERROR_INVALID_PARAMETER)
@@ -542,7 +877,9 @@ bool DgramSocket::SocketWriteAwaiter::await_resume() {
     return fdsendto(_fd, _addr, _endpoint, _data);
 }
 
-DgramListener::DgramListener(IOContext &io_context, const Endpoint &endpoint) : ::rm::DgramListener(endpoint, true), _ctx(io_context) {}
+Sender::Sender(IOContext &io_context, const ip::Protocol &protocol) : ::rm::Sender(protocol, true), _ctx(io_context) {}
+
+Listener::Listener(IOContext &io_context, const Endpoint &endpoint) : ::rm::Listener(endpoint, true), _ctx(io_context) {}
 
 StreamSocket::StreamSocket(IOContext &io_context, SocketFd fd) : ::rm::StreamSocket(fd), _ctx(io_context) {}
 
@@ -583,5 +920,9 @@ StreamSocket Connector::ConnectAwaiter::await_resume() noexcept {
 } //  namespace async
 
 #endif // __cplusplus >= 202002L
+
+#ifdef __MSVC__
+#pragma endregion
+#endif
 
 } // namespace rm
