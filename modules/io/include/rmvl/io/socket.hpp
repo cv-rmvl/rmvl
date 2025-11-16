@@ -11,8 +11,9 @@
 
 #pragma once
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
+#include <utility>
 
 #include "async.hpp"
 
@@ -136,11 +137,11 @@ namespace multicast {
 #define sockopt_data_t const void *
 #endif
 
-//! 多播接口设置选项
+//! Outbound 多播接口设置选项
 class Interface {
 public:
     /**
-     * @brief 构造多播接口设置选项
+     * @brief 构造 Outbound 多播接口设置选项
      *
      * @param[in] addr 多播接口的 IPv4 地址
      */
