@@ -9,8 +9,6 @@
  *
  */
 
-#include <utility>
-
 #include "rmvl/io/socket.hpp"
 #include "rmvl/core/util.hpp"
 
@@ -41,10 +39,6 @@
 
 namespace rm {
 
-#ifdef __MSVC__
-#pragma region Common Functions
-#endif
-
 inline static int error_code() {
 #ifdef _WIN32
     return WSAGetLastError();
@@ -54,7 +48,6 @@ inline static int error_code() {
 }
 
 #ifdef __MSVC__
-#pragma endregion
 #pragma region Network Interface
 #endif
 
@@ -336,6 +329,13 @@ static void set_fd_option(SocketFd fd, const SockOpt &opt) {
         RMVL_Error_(RMVL_StsError, "setsockopt failed, error code: %d", error_code());
 }
 
+template <>
+void DgramSocket::setOption(const ip::multicast::Loopback &opt) { set_fd_option(_fd, opt); }
+template <>
+void DgramSocket::setOption(const ip::multicast::JoinGroup &opt) { set_fd_option(_fd, opt); }
+template <>
+void DgramSocket::setOption(const ip::multicast::Interface &opt) { set_fd_option(_fd, opt); }
+
 #ifdef __MSVC__
 #pragma endregion
 #pragma region Socket Implements
@@ -440,11 +440,6 @@ static bool fdsendto(SocketFd fd, std::string_view addr, const Endpoint &endpoin
 #endif
     return n == static_cast<decltype(n)>(data.size());
 }
-
-template <>
-void DgramSocket::setOption(const ip::multicast::Loopback &opt) { set_fd_option(_fd, opt); }
-template <>
-void DgramSocket::setOption(const ip::multicast::JoinGroup &opt) { set_fd_option(_fd, opt); }
 
 std::tuple<std::string, std::string, uint16_t> DgramSocket::read() noexcept {
     RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
