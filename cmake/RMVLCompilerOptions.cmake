@@ -115,6 +115,14 @@ set(3P_LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/3rdparty/lib)
 # ----------------------------------------------------------------------------
 #   Build options and configurations
 # ----------------------------------------------------------------------------
+# Build tests
+option(BUILD_TESTS "Build accuracy & regression tests" OFF)
+option(BUILD_PERF_TESTS "Build performance tests" OFF)
+if(BUILD_TESTS OR BUILD_PERF_TESTS)
+  enable_testing()
+endif()
+
+# Build shared libraries
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(ENABLE_PIC "Generate position independent code (necessary for shared libraries)" ON)
 if(ENABLE_PIC)
@@ -257,6 +265,15 @@ endif()
 # ----------------------------------------------------------------------------
 #   3rdparty options
 # ----------------------------------------------------------------------------
+# 3rdparty libraries that need to be used compulsorily
+set(_3rd_dir "${CMAKE_SOURCE_DIR}/3rdparty")
+
+# fmt
+add_subdirectory(${_3rd_dir}/fmt)
+
+# json (nlohmann_json)
+add_subdirectory(${_3rd_dir}/json)
+
 # Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
 function(rmvl_install_sdk sdk)
   # Handle the installation of the include directory
@@ -352,7 +369,7 @@ macro(_rmvl_set_build_with_3rdparty _name build_default_status)
   # "build" 3rdparty option
   option(BUILD_${upper_name} "Build the 3rd party: ${_name}" ${build_default_status})
   if(BUILD_${upper_name})
-    add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/${lower_name})
+    add_subdirectory(${_3rd_dir}/${lower_name})
     set(${_name}_IN_3RD ON CACHE INTERNAL "${_name} is built in 3rdparty")
   endif()
   # "with" 3rdparty option
@@ -378,9 +395,6 @@ _rmvl_set_build_with_3rdparty(apriltag ON)
 
 # open62541
 _rmvl_set_build_with_3rdparty(open62541 OFF)
-
-# nlohmann_json
-_rmvl_set_build_with_3rdparty(nlohmann_json ON)
 
 # ----------------------------------------------------------------------------
 #   Module and other options
@@ -422,7 +436,7 @@ if(BUILD_PYTHON)
   else()
     find_package(pybind11 QUIET)
     if(NOT pybind11_FOUND)
-      add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/pybind11)
+      add_subdirectory(${_3rd_dir}/pybind11)
     endif()
     set(pybind11_VERSION "${pybind11_VERSION}" CACHE INTERNAL "pybind11 version")
     set(RMVL_PYTHON_VERSION_MAJOR "${Python3_VERSION_MAJOR}")
@@ -471,9 +485,7 @@ endif()
 #   Build performance and unit tests
 # ----------------------------------------------------------------------------
 # Unit tests
-option(BUILD_TESTS "Build accuracy & regression tests" OFF)
 if(BUILD_TESTS)
-  enable_testing()
   # Using gtests command
   include(GoogleTest)
   # Find GoogleTest
@@ -487,9 +499,7 @@ if(BUILD_TESTS)
 endif()
 
 # Performance tests
-option(BUILD_PERF_TESTS "Build performance tests" OFF)
 if(BUILD_PERF_TESTS)
-  enable_testing()
   find_package(benchmark QUIET)
   if(NOT benchmark_FOUND)
     set(BENCHMARK_ENABLE_TESTING OFF)
