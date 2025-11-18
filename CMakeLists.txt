@@ -73,10 +73,10 @@ include_directories(${PROJECT_BINARY_DIR})
 include(cmake/RMVLVersion.cmake)
 # RMVL Install layout 
 include(cmake/RMVLInstall.cmake)
-# RMVL compile configure and options
-include(cmake/RMVLCompilerOptions.cmake)
 # RMVL build module
 include(cmake/RMVLModule.cmake)
+# RMVL compile configure and options
+include(cmake/RMVLCompilerOptions.cmake)
 # RMVL extra target
 include(cmake/RMVLExtraTarget.cmake)
 
@@ -172,7 +172,6 @@ status("     ccache:"              ENABLE_CCACHE AND CCACHE_FOUND THEN YES ELSE 
 # =================== Other third-party libraries ===================
 status("")
 status("  Other third-party libraries:")
-status("     Nlohmann JSON:"        WITH_NLOHMANN_JSON THEN YES ELSE NO)
 status("     OpenCV:"               WITH_OPENCV THEN "YES (ver ${OpenCV_VERSION})" ELSE NO)
 status("     Eigen3:"               WITH_EIGEN3 THEN "YES (ver ${EIGEN3_VERSION_STRING})" ELSE NO)
 status("     onnxruntime:"          WITH_ONNXRUNTIME THEN "YES (ver ${Ort_VERSION})" ELSE NO)
