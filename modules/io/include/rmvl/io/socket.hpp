@@ -30,95 +30,6 @@ using SocketFd = int;
 constexpr SocketFd INVALID_SOCKET_FD = -1;
 #endif
 
-// 接口驱动类型
-enum class NetworkInterfaceType : uint8_t {
-    Ethernet, //!< 以太网
-    Wireless, //!< 无线接口
-    PPP,      //!< 点对点协议
-    Tunnel,   //!< 隧道接口
-    Loopback, //!< `lo` 回环设备
-    Other,    //!< 其他
-    Unknown,  //!< 未知类型
-};
-
-// 接口功能与状态标志
-struct NetworkInterfaceFlag {
-    static constexpr uint8_t Up = 1 << 0;        //!< 接口已启用
-    static constexpr uint8_t Broadcast = 1 << 1; //!< 支持广播
-    static constexpr uint8_t Loopback = 1 << 2;  //!< 回环接口
-    static constexpr uint8_t P2P = 1 << 3;       //!< 点对点链接，如 PPP、TUN 等
-    static constexpr uint8_t Multicast = 1 << 4; //!< 支持多播
-    static constexpr uint8_t Running = 1 << 5;   //!< 接口正在运行
-};
-
-//! 网络接口
-class NetworkInterface {
-public:
-    //! 获取所有网络接口的 MAC 地址列表
-    static std::vector<NetworkInterface> list() noexcept;
-
-    /**
-     * @brief 根据名称查找网络接口
-     *
-     * @param[in] name 名称字符串，如 "eth0"
-     * @return 找到的网络接口，未找到时返回一个无效的接口
-     */
-    static NetworkInterface findByName(std::string_view name) noexcept;
-
-    /**
-     * @brief 根据 MAC 地址查找网络接口
-     *
-     * @param[in] addr MAC 地址字节数组
-     * @return 找到的网络接口，未找到时返回一个无效的接口
-     */
-    static NetworkInterface findByAddress(const std::array<uint8_t, 6> &addr) noexcept;
-
-    //! 获取网络接口的 MAC 地址
-    const std::array<uint8_t, 6> &address() const noexcept { return _addr; }
-
-    //! 获取接口名称
-    std::string name() const noexcept { return _name; }
-
-    //! 获取接口类型
-    NetworkInterfaceType type() const noexcept { return _type; }
-
-    //! 获取接口功能与状态标志
-    uint8_t flag() const noexcept { return _flag; }
-
-    //! 接口是否启用
-    bool up() const noexcept { return (_flag & NetworkInterfaceFlag::Up) != 0; }
-
-    //! 是否为回环接口
-    bool loopback() const noexcept { return (_flag & NetworkInterfaceFlag::Loopback) != 0; }
-
-    //! 是否支持广播
-    bool broadcast() const noexcept { return (_flag & NetworkInterfaceFlag::Broadcast) != 0; }
-
-    //! 是否为点对点接口
-    bool p2p() const noexcept { return (_flag & NetworkInterfaceFlag::P2P) != 0; }
-
-    //! 是否支持多播
-    bool multicast() const noexcept { return (_flag & NetworkInterfaceFlag::Multicast) != 0; }
-
-    //! 接口是否正在运行
-    bool running() const noexcept { return (_flag & NetworkInterfaceFlag::Running) != 0; }
-
-    //! 获取 MAC 地址的字符串表示形式
-    std::string to_string() const;
-
-    //! 获取 IPv4 地址列表
-    std::vector<std::array<uint8_t, 4>> ipv4() const noexcept;
-
-    //! 获取 IPv6 地址列表
-    std::vector<std::array<uint8_t, 16>> ipv6() const noexcept;
-
-private:
-    std::string _name{};            //!< 接口名称
-    NetworkInterfaceType _type{};   //!< 驱动类型
-    uint8_t _flag{};                //!< 功能与状态标志
-    std::array<uint8_t, 6> _addr{}; //!< MAC 地址
-};
-
 //! IP 协议族
 namespace ip {
 
@@ -127,6 +38,53 @@ struct Protocol {
     int family{};
     //! Socket 类型
     int type{};
+};
+
+//! IPv4 网络协议
+class Networkv4 {
+public:
+    Networkv4(std::array<uint8_t, 4> addr, std::array<uint8_t, 4> netmask) : _addr(addr), _netmask(netmask) {}
+
+    /**
+     * @brief 获取 IPv4 地址
+     *
+     * @return IPv4 地址数组
+     */
+    std::array<uint8_t, 4> address() const noexcept { return _addr; }
+
+    /**
+     * @brief 获取广播地址
+     *
+     * @return 广播地址数组
+     */
+    std::array<uint8_t, 4> broadcast() const noexcept;
+
+    /**
+     * @brief 获取子网掩码
+     *
+     * @return 子网掩码数组
+     */
+    std::array<uint8_t, 4> netmask() const noexcept { return _netmask; }
+
+private:
+    std::array<uint8_t, 4> _addr{};    //!< IPv4 地址
+    std::array<uint8_t, 4> _netmask{}; //!< 子网掩码
+};
+
+//! IPv6 网络协议
+class Networkv6 {
+public:
+    explicit Networkv6(const std::array<uint8_t, 16> &addr) : _addr(addr) {}
+
+    /**
+     * @brief 获取 IPv6 地址
+     *
+     * @return IPv6 地址数组
+     */
+    const std::array<uint8_t, 16> &address() const noexcept { return _addr; }
+
+private:
+    std::array<uint8_t, 16> _addr{}; //!< IPv6 地址
 };
 
 namespace multicast {
@@ -204,6 +162,95 @@ Protocol v6();
 }; // namespace udp
 
 } // namespace ip
+
+// 接口驱动类型
+enum class NetworkInterfaceType : uint8_t {
+    Ethernet, //!< 以太网
+    Wireless, //!< 无线接口
+    PPP,      //!< 点对点协议
+    Tunnel,   //!< 隧道接口
+    Loopback, //!< `lo` 回环设备
+    Other,    //!< 其他
+    Unknown,  //!< 未知类型
+};
+
+// 接口功能与状态标志
+struct NetworkInterfaceFlag {
+    static constexpr uint8_t Up = 1 << 0;        //!< 接口已启用
+    static constexpr uint8_t Broadcast = 1 << 1; //!< 支持广播
+    static constexpr uint8_t Loopback = 1 << 2;  //!< 回环接口
+    static constexpr uint8_t P2P = 1 << 3;       //!< 点对点链接，如 PPP、TUN 等
+    static constexpr uint8_t Multicast = 1 << 4; //!< 支持多播
+    static constexpr uint8_t Running = 1 << 5;   //!< 接口正在运行
+};
+
+//! 网络接口
+class NetworkInterface {
+public:
+    //! 获取所有网络接口的 MAC 地址列表
+    static std::vector<NetworkInterface> list() noexcept;
+
+    /**
+     * @brief 根据名称查找网络接口
+     *
+     * @param[in] name 名称字符串，如 "eth0"
+     * @return 找到的网络接口，未找到时返回一个无效的接口
+     */
+    static NetworkInterface findByName(std::string_view name) noexcept;
+
+    /**
+     * @brief 根据 MAC 地址查找网络接口
+     *
+     * @param[in] addr MAC 地址字节数组
+     * @return 找到的网络接口，未找到时返回一个无效的接口
+     */
+    static NetworkInterface findByAddress(const std::array<uint8_t, 6> &addr) noexcept;
+
+    //! 获取网络接口的 MAC 地址
+    const std::array<uint8_t, 6> &address() const noexcept { return _addr; }
+
+    //! 获取接口名称
+    std::string name() const noexcept { return _name; }
+
+    //! 获取接口类型
+    NetworkInterfaceType type() const noexcept { return _type; }
+
+    //! 获取接口功能与状态标志
+    uint8_t flag() const noexcept { return _flag; }
+
+    //! 接口是否启用
+    bool up() const noexcept { return (_flag & NetworkInterfaceFlag::Up) != 0; }
+
+    //! 是否为回环接口
+    bool loopback() const noexcept { return (_flag & NetworkInterfaceFlag::Loopback) != 0; }
+
+    //! 是否支持广播
+    bool broadcast() const noexcept { return (_flag & NetworkInterfaceFlag::Broadcast) != 0; }
+
+    //! 是否为点对点接口
+    bool p2p() const noexcept { return (_flag & NetworkInterfaceFlag::P2P) != 0; }
+
+    //! 是否支持多播
+    bool multicast() const noexcept { return (_flag & NetworkInterfaceFlag::Multicast) != 0; }
+
+    //! 接口是否正在运行
+    bool running() const noexcept { return (_flag & NetworkInterfaceFlag::Running) != 0; }
+
+    //! 获取 MAC 地址的字符串表示形式
+    std::string to_string() const;
+
+    //! 获取 IPv4 地址列表
+    std::vector<ip::Networkv4> ipv4() const noexcept;
+
+    //! 获取 IPv6 地址列表
+    std::vector<ip::Networkv6> ipv6() const noexcept;
+
+private:
+    std::string _name{};            //!< 接口名称
+    NetworkInterfaceType _type{};   //!< 驱动类型
+    uint8_t _flag{};                //!< 功能与状态标志
+    std::array<uint8_t, 6> _addr{}; //!< MAC 地址
+};
 
 #if __cplusplus >= 202002L
 

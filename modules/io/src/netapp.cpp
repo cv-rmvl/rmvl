@@ -9,7 +9,8 @@
  *
  */
 
-#include <string>
+#include "fmt/format.h"
+
 #ifdef _WIN32
 #include <WS2tcpip.h>
 #include <afunix.h>
@@ -638,10 +639,8 @@ void Webapp::use(ResponseMiddleware mwf) {
 }
 
 static void bad_request(const Request &req, Response &res) {
-    char bad_request_body[256]{};
-    sprintf(bad_request_body, "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Error</title></head><body><pre>Cannot %s %s</pre></body></html>",
-            get_str_from(req.method), req.uri.data());
-    res.body = bad_request_body;
+    res.body = fmt::format("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Error</title></head><body><pre>Cannot {} {}</pre></body></html>",
+                           get_str_from(req.method), req.uri.data());
 }
 
 static void _handle(const std::vector<rm::Router::RouteEntry> &entries, Request &req, Response &res) {
