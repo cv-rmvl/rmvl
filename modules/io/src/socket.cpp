@@ -116,8 +116,10 @@ std::vector<NetworkInterface> NetworkInterface::list() noexcept {
 }
 
 template <int Family>
-static auto getIp(std::string_view if_name) noexcept -> std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> {
-    std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> res{};
+static auto getIp(std::string_view if_name) noexcept {
+    using NetworkType = std::conditional_t<Family == AF_INET, ip::Networkv4, ip::Networkv6>;
+    std::vector<NetworkType> res{};
+
     ULONG family = AF_UNSPEC;
     ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
     ULONG size{};
@@ -133,19 +135,32 @@ static auto getIp(std::string_view if_name) noexcept -> std::vector<std::array<u
     for (PIP_ADAPTER_ADDRESSES adapter = adapters; adapter; adapter = adapter->Next) {
         if (if_name != adapter->AdapterName)
             continue;
-
         for (auto *addr = adapter->FirstUnicastAddress; addr; addr = addr->Next) {
-            if (addr->Address.lpSockaddr->sa_family == Family) {
-                if constexpr (Family == AF_INET) {
+            if constexpr (Family == AF_INET) {
+                if (addr->Address.lpSockaddr->sa_family == AF_INET) {
                     auto *addr_v4 = reinterpret_cast<sockaddr_in *>(addr->Address.lpSockaddr);
                     std::array<uint8_t, 4> ip_bytes{};
                     memcpy(ip_bytes.data(), &addr_v4->sin_addr.s_addr, 4);
-                    res.push_back(ip_bytes);
-                } else if constexpr (Family == AF_INET6) {
+
+                    std::array<uint8_t, 4> mask_bytes{};
+                    ULONG prefix_length = addr->OnLinkPrefixLength;
+                    for (ULONG i = 0; i < 4; ++i) {
+                        if (prefix_length >= 8) {
+                            mask_bytes[i] = 0xFF;
+                            prefix_length -= 8;
+                        } else {
+                            mask_bytes[i] = static_cast<uint8_t>(0xFF << (8 - prefix_length));
+                            prefix_length = 0;
+                        }
+                    }
+                    res.emplace_back(ip_bytes, mask_bytes);
+                }
+            } else if constexpr (Family == AF_INET6) {
+                if (addr->Address.lpSockaddr->sa_family == AF_INET6) {
                     auto *addr_v6 = reinterpret_cast<sockaddr_in6 *>(addr->Address.lpSockaddr);
                     std::array<uint8_t, 16> ip_bytes{};
                     memcpy(ip_bytes.data(), &addr_v6->sin6_addr.s6_addr, 16);
-                    res.push_back(ip_bytes);
+                    res.emplace_back(ip_bytes);
                 }
             }
         }
@@ -214,11 +229,12 @@ std::vector<NetworkInterface> NetworkInterface::list() noexcept {
 }
 
 template <int Family>
-static auto getIp(const std::string &if_name) noexcept -> std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> {
-    std::vector<std::array<uint8_t, Family == AF_INET ? 4 : 16>> res{};
+static auto getIp(const std::string &if_name) noexcept {
+    using NetworkType = std::conditional_t<Family == AF_INET, ip::Networkv4, ip::Networkv6>;
+    std::vector<NetworkType> res{};
     ifaddrs *ifaddr_list{};
     if (getifaddrs(&ifaddr_list) == -1)
-        return {};
+        return res;
 
     for (auto *ifa = ifaddr_list; ifa != nullptr; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr != nullptr && if_name == ifa->ifa_name && ifa->ifa_addr->sa_family == Family) {
@@ -226,16 +242,20 @@ static auto getIp(const std::string &if_name) noexcept -> std::vector<std::array
                 auto *addr_v4 = reinterpret_cast<sockaddr_in *>(ifa->ifa_addr);
                 std::array<uint8_t, 4> ip_bytes{};
                 memcpy(ip_bytes.data(), &addr_v4->sin_addr.s_addr, 4);
-                res.push_back(ip_bytes);
+                std::array<uint8_t, 4> mask_bytes{};
+                if (ifa->ifa_netmask != nullptr) {
+                    auto *mask_v4 = reinterpret_cast<sockaddr_in *>(ifa->ifa_netmask);
+                    memcpy(mask_bytes.data(), &mask_v4->sin_addr.s_addr, 4);
+                }
+                res.emplace_back(ip_bytes, mask_bytes);
             } else if constexpr (Family == AF_INET6) {
                 auto *addr_v6 = reinterpret_cast<sockaddr_in6 *>(ifa->ifa_addr);
                 std::array<uint8_t, 16> ip_bytes{};
                 memcpy(ip_bytes.data(), &addr_v6->sin6_addr.s6_addr, 16);
-                res.push_back(ip_bytes);
+                res.emplace_back(ip_bytes);
             }
         }
     }
-
     freeifaddrs(ifaddr_list);
     return res;
 }
@@ -265,8 +285,8 @@ NetworkInterface NetworkInterface::findByAddress(const std::array<uint8_t, 6> &a
     return {};
 }
 
-std::vector<std::array<uint8_t, 4>> NetworkInterface::ipv4() const noexcept { return getIp<AF_INET>(_name); }
-std::vector<std::array<uint8_t, 16>> NetworkInterface::ipv6() const noexcept { return getIp<AF_INET6>(_name); }
+std::vector<ip::Networkv4> NetworkInterface::ipv4() const noexcept { return getIp<AF_INET>(_name); }
+std::vector<ip::Networkv6> NetworkInterface::ipv6() const noexcept { return getIp<AF_INET6>(_name); }
 
 #ifdef __MSVC__
 #pragma endregion

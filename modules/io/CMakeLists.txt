@@ -4,7 +4,7 @@
 rmvl_generate_para(io)
 
 rmvl_add_module(io
-  DEPENDS core json
+  DEPENDS core json fmt
 )
 
 # for glibc < 2.34
