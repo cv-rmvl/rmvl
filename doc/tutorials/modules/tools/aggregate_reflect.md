@@ -169,12 +169,14 @@ void init() {
   我们通过一个例子来说明，并给出详细的运行步骤。
 
   ```cpp
+  #include <rmvl/core/util.hpp>
+
   struct X {
       int a{}, b{};
   };
 
   int main() {
-      std::cout << rm::size<X>() << std::endl;
+      std::cout << rm::reflect::size<X>() << std::endl;
       // 输出 2
   }
   ```
@@ -215,6 +217,7 @@ void for_each(const Tp &val, Callable &&f);
 下面给出一个例子
 
 ```cpp
+#include <iostream>
 #include <rmvl/core/util.hpp>
 
 struct X {
@@ -229,7 +232,7 @@ int main() {
     };
 
     X x{1, 3.1, "abc"};
-    rm::for_each(x, f);
+    rm::reflect::for_each(x, f);
 }
 ```
 
@@ -268,6 +271,7 @@ bool equal(const Tp &lhs, const Tp &rhs);
 下面给出一个例子
 
 ```cpp
+#include <iostream>
 #include <rmvl/core/util.hpp>
 
 struct X {
