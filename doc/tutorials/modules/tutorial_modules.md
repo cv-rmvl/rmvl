@@ -34,6 +34,7 @@
 
 - @subpage tutorial_modules_opcua
 - @subpage tutorial_modules_mqtt
+- @subpage tutorial_modules_lpss
 
 #### 硬件设备支持库
 

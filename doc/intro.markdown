@@ -105,8 +105,7 @@ detectors.emplace_back(rm::RuneDetector::make_detector());
 
 std::vector<rm::group::ptr> groups;
 /* ... */
-for (auto &p_detector : detectors)
-{
+for (auto &p_detector : detectors) {
     auto info = p_detector->detect(groups, src, color, imu_data, tick);
     /* ... */
 }
@@ -159,7 +158,7 @@ rm::MvCamera mv(rm::CameraConfig{});
 
 using namespace rm;
 
-rm::MvCamera mv(CameraConfig{});
+MvCamera mv(CameraConfig{});
 ```
 
 第二种方式引入了整个命名空间，容易造成访问冲突，在不影响可读性的情况下建议使用第一种方案。RMVL 中的嵌套命名空间较少，并且一般很少直接使用，不会对可读性造成很大的影响。
@@ -201,12 +200,9 @@ RMVL 使用异常 (exception) 来触发错误，当输入数据出现格式错�
 RMVL 中的异常通常是使用 `RMVL_Error(code, msg)` 宏或类似 `printf` 的 `RMVL_Error_(code, fmt, args...)` 变体进行触发的，或者可以使用 `RMVL_Assert(cond)` 宏检查条件并在不满足条件时触发异常。对于性能要求高的代码，有一个 `RMVL_DbgAssert(cond)` ，它只保留在 Debug 配置中。由于自动内存管理，所有中间缓冲区自动释放的情况下突然出现错误，您只需添加 `try` 语句来捕获异常。
 
 ```cpp
-try
-{
+try {
     ... // 调用 RMVL 函数
-}
-catch (const rm::Exception& e)
-{
+} catch (const rm::Exception& e) {
     const char* err_msg = e.what();
     printf("exception caught: %s", err_msg);
 }

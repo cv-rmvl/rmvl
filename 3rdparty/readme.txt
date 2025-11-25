@@ -40,3 +40,7 @@ nlohmann_json  Description    JSON for modern C++
                CMake options  1. BUILD_NLOHMANN_JSON to download and build this module (enabled by
                                  default)
                               2. WITH_NLOHMANN_JSON to enable nlohmann_json support for the core module
+
+fmt            Description    A modern formatting library
+               License        fmt is covered by the MIT License, see fmt/LICENSE.rst
+               Homepage       https://fmt.dev

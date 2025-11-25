@@ -15,9 +15,6 @@
 #include <regex>
 #endif
 
-#include <unordered_map>
-#include <vector>
-
 #include <nlohmann/json.hpp>
 
 #include "async.hpp"
