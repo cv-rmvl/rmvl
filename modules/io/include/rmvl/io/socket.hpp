@@ -30,9 +30,17 @@ using SocketFd = int;
 constexpr SocketFd INVALID_SOCKET_FD = -1;
 #endif
 
-//! IP 协议族
+/**
+ * @brief IP 协议族，包含 IPv4 和 IPv6 以及多播选项的相关定义
+ *
+ * @details
+ * - 在网络层，提供 ip::Networkv4 和 ip::Networkv6 类来表示 IPv4 和 IPv6 地址
+ * - 在传输层，提供 ip::tcp 和 ip::udp 命名空间，分别表示 TCP 和 UDP 协议
+ * - 提供多播选项的封装类，便于在 Socket 上设置多播相关选项
+ */
 namespace ip {
 
+//! 网络协议
 struct Protocol {
     //! 协议族
     int family{};
@@ -87,6 +95,7 @@ private:
     std::array<uint8_t, 16> _addr{}; //!< IPv6 地址
 };
 
+//! 多播
 namespace multicast {
 
 #ifdef _WIN32
@@ -149,7 +158,7 @@ Protocol v4();
 //! 构造端点，以表示 IPv6 TCP 协议
 Protocol v6();
 
-}; // namespace tcp
+} // namespace tcp
 
 //! UDP 协议
 namespace udp {
@@ -159,11 +168,11 @@ Protocol v4();
 //! 构造端点，以表示 IPv6 UDP 协议
 Protocol v6();
 
-}; // namespace udp
+} // namespace udp
 
 } // namespace ip
 
-// 接口驱动类型
+//! 接口驱动类型
 enum class NetworkInterfaceType : uint8_t {
     Ethernet, //!< 以太网
     Wireless, //!< 无线接口
@@ -171,10 +180,10 @@ enum class NetworkInterfaceType : uint8_t {
     Tunnel,   //!< 隧道接口
     Loopback, //!< `lo` 回环设备
     Other,    //!< 其他
-    Unknown,  //!< 未知类型
+    Unknown   //!< 未知类型
 };
 
-// 接口功能与状态标志
+//! 接口功能与状态标志
 struct NetworkInterfaceFlag {
     static constexpr uint8_t Up = 1 << 0;        //!< 接口已启用
     static constexpr uint8_t Broadcast = 1 << 1; //!< 支持广播
