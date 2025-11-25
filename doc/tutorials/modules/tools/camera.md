@@ -7,7 +7,7 @@
 
 @version 1.0
 
-@prev_tutorial{tutorial_modules_mqtt}
+@prev_tutorial{tutorial_modules_lpss}
 
 @next_tutorial{tutorial_modules_light}
 

@@ -7,7 +7,7 @@
 
 @prev_tutorial{tutorial_modules_opcua}
 
-@next_tutorial{tutorial_modules_camera}
+@next_tutorial{tutorial_modules_lpss}
 
 @tableofcontents
 
