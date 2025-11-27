@@ -22,6 +22,8 @@
 #endif
 #endif
 
+#include <cstring>
+
 #include "rmvl/core/util.hpp"
 #include "rmvl/io/ipc.hpp"
 
