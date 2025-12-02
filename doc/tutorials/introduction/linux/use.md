@@ -21,11 +21,11 @@
 
 创建新的文件夹：`rmvl_deploy_test`，将其链接至 RMVL
 
-```shell
-mkdir rmvl_deploy_test build
-cd rmvl_deploy_test
-touch main.cpp CMakeLists.txt
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">mkdir</span> rmvl_deploy_test build</div>
+<div class="line"><span class="keywordflow">cd</span> rmvl_deploy_test</div>
+<div class="line"><span class="keywordflow">touch</span> main.cpp CMakeLists.txt</div>
+</div>
 
 #### 2 编写测试文件
 
@@ -37,10 +37,10 @@ touch main.cpp CMakeLists.txt
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include <rmvl/core.hpp>
 #include <rmvl/detector.hpp>
 
-int main(int argc, char *argv[])
-{
+int main() {
     cv::Mat src = cv::Mat::zeros(cv::Size(1280, 1024), CV_8UC3);
 
     cv::line(src, cv::Point(450, 380), cv::Point(440, 470), cv::Scalar(0, 0, 255), 18);
@@ -50,11 +50,10 @@ int main(int argc, char *argv[])
     rm::detector::ptr detector = rm::ArmorDetector::make_detector();
     std::vector<rm::group::ptr> groups;
 
-    auto info = detector->detect(groups, src, rm::RED, rm::ImuData{}, Timer::now());
+    auto info = detector->detect(groups, src, rm::RED, rm::ImuData{}, rm::Timer::now());
 
     INFO_("size of armors = %ld", info.combos.size());
-    for (auto p_combo : info.combos)
-    {
+    for (auto p_combo : info.combos) {
         const auto &corners = p_combo->corners();
         cv::line(src, corners[0], corners[2], cv::Scalar(0, 255, 0), 2);
         cv::line(src, corners[1], corners[3], cv::Scalar(0, 255, 0), 2);
@@ -75,35 +74,36 @@ int main(int argc, char *argv[])
 **编写 CMakeLists.txt**
 
 将以下内容写至 `CMakeLists.txt` 中
-```cmake
-cmake_minimum_required(VERSION 3.16)
 
-project(rmvl_deploy)
-
-find_package(RMVL REQUIRED)
-
-add_executable(demo main.cpp)
-
-target_link_libraries(
-    demo
-    PRIVATE ${RMVL_LIBS}
-)
-```
+<div class="fragment">
+<div class="line"><span class="keyword">cmake_minimum_required</span>(VERSION 3.16)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">project</span>(rmvl_deploy)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">find_package</span>(RMVL REQUIRED)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">add_executable</span>(demo main.cpp)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">target_link_libraries</span>(</div>
+<div class="line">&nbsp;&nbsp;demo</div>
+<div class="line">&nbsp;&nbsp;PRIVATE ${RMVL_LIBS}</div>
+<div class="line">)</div>
+</div>
 
 #### 3 构建项目
 
 在 `rmvl_deploy_test` 的顶层文件夹中打开终端，输入以下命令
 
-```shell
-cd build
-cmake ..
-make
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cd</span> build</div>
+<div class="line"><span class="keywordflow">cmake</span> ..</div>
+<div class="line"><span class="keywordflow">make</span></div>
+</div>
 
 #### 4 运行
 
 继续输入以下命令
 
-```shell
-./demo
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">./demo</span></div>
+</div>
