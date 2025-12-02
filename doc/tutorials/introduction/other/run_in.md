@@ -67,3 +67,35 @@ Run In 是一个用于快速进入 RMVL 编译镜像的工具，它可以根据 
 <div class="line">- <span class="keywordtype">name</span>: <span class="stringliteral">u22</span></div>
 <div class="line">&nbsp;&nbsp;<span class="keywordtype">image</span>: <span class="stringliteral">ubuntu:22.04</span></div>
 </div>
+
+## 使用示例
+
+在进入编译镜像前，可以执行
+
+<div class="fragment">
+<div class="line"><span class="keywordflow">make</span> run_in_list</div>
+</div>
+
+来查看当前可用的编译镜像，部分编译镜像会提示可用功能、交叉编译支持等信息，例如
+
+```
+3. run_in_tlt507: Tronlong T507 的 EtherCAT 环境支持，请使用 ~/LinuxSDK/toolchain.cmake 进行交叉编译
+   image: registry.cn-hangzhou.aliyuncs.com/cv-rmvl/ethercat:latest
+   options: -e LANG=C.UTF-8
+   cmd: /bin/bash
+```
+
+然后可以使用
+
+<div class="fragment">
+<div class="line"><span class="keywordflow">make</span> run_in_tlt507</div>
+</div>
+
+来进入该编译镜像，进入后即可使用提示的交叉编译工具链文件进行交叉编译，例如
+
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> CMAKE_TOOLCHAIN_FILE=~/LinuxSDK/toolchain.cmake ..</div>
+<div class="line"><span class="keywordflow">make</span></div>
+</div>
+
+即可完成针对 Tronlong T507 平台的交叉编译，构建完成后，生成的文件会保存在宿主机的 `build/docker_images/tlt507` 目录下，可自行查看。
