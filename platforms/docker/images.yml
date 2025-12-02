@@ -8,3 +8,8 @@
   image: "registry.cn-hangzhou.aliyuncs.com/cv-rmvl/rmvl-u24:latest"
   options:
   - "-e LANG=C.UTF-8"
+- name: "tlt507"
+  description: "Tronlong T507 的 EtherCAT 环境支持，请使用 ~/LinuxSDK/toolchain.cmake 进行交叉编译"
+  image: "registry.cn-hangzhou.aliyuncs.com/cv-rmvl/ethercat:latest"
+  options:
+  - "-e LANG=C.UTF-8"

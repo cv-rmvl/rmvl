@@ -8,6 +8,7 @@ for data in datas:
     name = data.get('name')
     if not name:
         raise ValueError("Each image data must have a 'name' field.")
+    description = data.get('description', '')
     image = data.get('image')
     if not image:
         raise ValueError(f"Image '{name}' must have an 'image' field.")
@@ -16,4 +17,4 @@ for data in datas:
         options = ' '.join(options)
     cmd = data.get('cmd', '/bin/bash')
 
-    print(f"{name}#{image}#{options}#{cmd}")
+    print(f"{name}#{description}#{image}#{options}#{cmd}")
