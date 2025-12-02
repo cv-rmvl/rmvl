@@ -15,9 +15,10 @@ set(img_num 0)
 foreach(line ${parse_result})
   string(REPLACE "#" ";" info "${line}")
   list(GET info 0 name)
-  list(GET info 1 image)
-  list(GET info 2 options)
-  list(GET info 3 cmd)
+  list(GET info 1 description)
+  list(GET info 2 image)
+  list(GET info 3 options)
+  list(GET info 4 cmd)
 
   if("${name}" STREQUAL "list")
     message(FATAL_ERROR "Docker image name 'list' is not allowed")
@@ -43,7 +44,7 @@ foreach(line ${parse_result})
   math(EXPR img_num "${img_num} + 1")
   add_custom_command(
     TARGET run_in_list
-    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --blue "${img_num}. run_in_${name}"
+    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --blue "${img_num}. run_in_${name}: ${description}"
     COMMAND ${CMAKE_COMMAND} -E echo "   image: ${image}"
     COMMAND ${CMAKE_COMMAND} -E echo "   options: ${options}"
     COMMAND ${CMAKE_COMMAND} -E echo "   cmd: ${cmd}"
