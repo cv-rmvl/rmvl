@@ -318,17 +318,16 @@ private:
 //! 由 rm::Listener 或 rm::Sender 建立的数据报式 Socket 会话
 class DgramSocket {
 public:
-    /**
-     * @brief 创建数据报式 Socket 会话
-     *
-     * @param[in] fd 已绑定的 Socket 文件描述符
-     */
+    //! @cond
     explicit DgramSocket(SocketFd fd) : _fd(fd) {}
     DgramSocket(const DgramSocket &) = delete;
     DgramSocket(DgramSocket &&other) noexcept : _fd(std::exchange(other._fd, INVALID_SOCKET_FD)) {}
 
     DgramSocket &operator=(const DgramSocket &) = delete;
     DgramSocket &operator=(DgramSocket &&other) noexcept;
+
+    ~DgramSocket();
+    //! @endcond
 
     //! 会话是否失效
     [[nodiscard]] bool invalid() const noexcept { return _fd == INVALID_SOCKET_FD; }
@@ -341,13 +340,11 @@ public:
     template <typename SockOpt>
     void setOption(const SockOpt &opt);
 
-    ~DgramSocket();
-
     /**
      * @brief 同步读取已连接的 Socket 中的数据（阻塞）
      * @code {.cpp}
      * // 使用示例
-     * auto str = socket.read();
+     * auto [str, addr, port] = socket.read();
      * @endcode
      *
      * @return 读取到的数据
@@ -361,7 +358,7 @@ public:
      * @brief 同步写入数据到已连接的 Socket 中（阻塞）
      * @code {.cpp}
      * // 使用示例
-     * bool success = socket.write("Hello, World!");
+     * bool success = socket.write("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello, World!");
      * @endcode
      *
      * @param[in] addr 目标地址
@@ -454,11 +451,7 @@ protected:
 //! 由 rm::Acceptor 或 rm::Connector 建立的流式 Socket 会话
 class StreamSocket {
 public:
-    /**
-     * @brief 创建流式 Socket 会话
-     *
-     * @param[in] fd 已建立会话的 Socket 文件描述符
-     */
+    //! @cond
     explicit StreamSocket(SocketFd fd) : _fd(fd) {}
     StreamSocket(const StreamSocket &) = delete;
     StreamSocket(StreamSocket &&other) noexcept : _fd(std::exchange(other._fd, INVALID_SOCKET_FD)) {}
@@ -466,10 +459,11 @@ public:
     StreamSocket &operator=(const StreamSocket &) = delete;
     StreamSocket &operator=(StreamSocket &&other) noexcept;
 
+    ~StreamSocket();
+    //! @endcond
+
     //! 会话是否失效
     [[nodiscard]] bool invalid() const noexcept { return _fd == INVALID_SOCKET_FD; }
-
-    ~StreamSocket();
 
     /**
      * @brief 设置 Socket 选项
@@ -594,12 +588,7 @@ namespace async {
 //! 由 rm::async::Listener 建立的数据报式 Socket 异步会话
 class DgramSocket : public ::rm::DgramSocket {
 public:
-    /**
-     * @brief 创建数据报式 Socket 异步会话
-     *
-     * @param[in] io_context 异步 I/O 执行上下文
-     * @param[in] fd 已绑定的 Socket 文件描述符
-     */
+    //! @cond
     DgramSocket(IOContext &io_context, SocketFd fd);
     DgramSocket(const DgramSocket &) = delete;
     DgramSocket(DgramSocket &&other) noexcept = default;
@@ -608,6 +597,7 @@ public:
     DgramSocket &operator=(DgramSocket &&other) = default;
 
     ~DgramSocket() = default;
+    //! @endcond
 
     //! 数据报式 Socket 异步读等待器
     class SocketReadAwaiter final : public AsyncReadAwaiter {
@@ -673,7 +663,7 @@ public:
      * @brief 异步写入数据到已连接的 Socket 中
      * @code {.cpp}
      * // 使用示例
-     * bool success = co_await socket.write("Hello, World!");
+     * bool success = co_await socket.write("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello, World!");
      * @endcode
      *
      * @param[in] addr 目标地址
@@ -755,12 +745,7 @@ private:
 //! 由 rm::async::Acceptor 建立的流式 Socket 异步会话
 class StreamSocket : public ::rm::StreamSocket {
 public:
-    /**
-     * @brief 创建流式 Socket 异步会话
-     *
-     * @param[in] io_context 异步 I/O 执行上下文
-     * @param[in] fd 已建立会话的 Socket 文件描述符
-     */
+    //! @cond
     StreamSocket(IOContext &io_context, SocketFd fd);
     StreamSocket(const StreamSocket &) = delete;
     StreamSocket(StreamSocket &&other) noexcept = default;
@@ -769,6 +754,7 @@ public:
     StreamSocket &operator=(StreamSocket &&other) = default;
 
     ~StreamSocket() = default;
+    //! @endcond
 
     //! 流式 Socket 异步读等待器
     class SocketReadAwaiter final : public AsyncReadAwaiter {
