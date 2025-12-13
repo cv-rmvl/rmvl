@@ -39,13 +39,13 @@ const char *datas[] = {"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS
 
 void use_hash(benchmark::State &state) {
     for (auto _ : state)
-        for (int i = 0; i < std::size(datas); ++i)
+        for (std::size_t i = 0; i < std::size(datas); ++i)
             benchmark::DoNotOptimize(get_method_from_hash(datas[rand() % std::size(datas)]));
 }
 
 void use_if(benchmark::State &state) {
     for (auto _ : state)
-        for (int i = 0; i < std::size(datas); ++i)
+        for (std::size_t i = 0; i < std::size(datas); ++i)
             benchmark::DoNotOptimize(get_method_from_if(datas[rand() % std::size(datas)]));
 }
 

@@ -28,6 +28,9 @@ TEST(IO_socket, sync_tcp_socket) {
 
     auto accept_thrd = std::thread([&]() {
         auto socket = acceptor.accept();
+        auto endpoint = socket.endpoint();
+        EXPECT_EQ(endpoint.port(), 10800);
+
         std::string msg = socket.read();
         EXPECT_EQ(msg, "Hello, Socket!");
         EXPECT_TRUE(socket.write("Hello, Client!"));
@@ -44,6 +47,39 @@ TEST(IO_socket, sync_tcp_socket) {
     connect_thrd.join();
 }
 
+TEST(IO_socket, sync_tcp_socket_nonblocking) {
+    Acceptor acceptor(Endpoint(ip::tcp::v4(), 10801), false);
+    Connector connector(Endpoint(ip::tcp::v4(), 10801), "127.0.0.1");
+
+    auto accept_thrd = std::thread([&]() {
+        auto socket = acceptor.accept();
+        while (socket.invalid())
+            socket = acceptor.accept();
+        auto endpoint = socket.endpoint();
+        EXPECT_EQ(endpoint.port(), 10801);
+
+        std::string msg = socket.read();
+        while (msg.empty())
+            msg = socket.read();
+        EXPECT_EQ(msg, "Hello, Socket!");
+        EXPECT_TRUE(socket.write("Hello, Client!"));
+    });
+
+    auto connect_thrd = std::thread([&]() {
+        auto socket = connector.connect();
+        while (socket.invalid())
+            socket = connector.connect();
+        EXPECT_TRUE(socket.write("Hello, Socket!"));
+        std::string response = socket.read();
+        while (response.empty())
+            response = socket.read();
+        EXPECT_EQ(response, "Hello, Client!");
+    });
+
+    accept_thrd.join();
+    connect_thrd.join();
+}
+
 TEST(IO_socket, sync_udp_socket) {
     auto server_ep = Endpoint(ip::udp::v4(), 10900);
     auto listener = Listener(server_ep);
@@ -51,6 +87,8 @@ TEST(IO_socket, sync_udp_socket) {
 
     auto server_thrd = std::thread([&]() {
         auto socket = listener.create();
+        EXPECT_EQ(socket.endpoint().port(), 10900);
+
         auto [msg, sender_ip, sender_port] = socket.read();
         EXPECT_EQ(msg, "Hello, UDP Socket!");
         EXPECT_EQ(sender_ip, "127.0.0.1");
@@ -65,6 +103,59 @@ TEST(IO_socket, sync_udp_socket) {
 
     server_thrd.join();
     client_thrd.join();
+}
+
+TEST(IO_socket, sync_udp_socket_nonblocking) {
+    auto server_ep = Endpoint(ip::udp::v4(), 10905);
+    auto listener = Listener(server_ep, false);
+    auto sender = Sender(ip::udp::v4(), false);
+
+    auto server_thrd = std::thread([&]() {
+        auto socket = listener.create();
+        EXPECT_EQ(socket.endpoint().port(), 10905);
+
+        auto [msg, sender_ip, sender_port] = socket.read();
+        while (msg.empty())
+            std::tie(msg, sender_ip, sender_port) = socket.read();
+        EXPECT_EQ(msg, "Hello, UDP Socket!");
+        EXPECT_EQ(sender_ip, "127.0.0.1");
+        EXPECT_NE(sender_port, 0);
+        EXPECT_NE(sender_port, 10905);
+    });
+
+    auto client_thrd = std::thread([&]() {
+        auto socket = sender.create();
+        EXPECT_TRUE(socket.write("127.0.0.1", server_ep, "Hello, UDP Socket!"));
+    });
+
+    server_thrd.join();
+    client_thrd.join();
+}
+
+TEST(IO_socket, sync_udp_socket_auto_port) {
+    auto listener = Listener(Endpoint(ip::udp::v4(), 0));
+    auto read_sock = listener.create();
+    auto port = read_sock.endpoint().port();
+    EXPECT_NE(port, 0);
+
+    auto sender = Sender(ip::udp::v4());
+    auto write_sock = sender.create();
+    EXPECT_NE(write_sock.endpoint().port(), 0);
+
+    auto write_thrd = std::thread([&]() {
+        EXPECT_TRUE(write_sock.write("127.0.0.1", Endpoint(ip::udp::v4(), port), "Hello, UDP Socket!"));
+    });
+
+    auto read_thrd = std::thread([&]() {
+        auto [msg, sender_ip, sender_port] = read_sock.read();
+        EXPECT_EQ(msg, "Hello, UDP Socket!");
+        EXPECT_EQ(sender_ip, "127.0.0.1");
+        EXPECT_NE(sender_port, 0);
+        EXPECT_NE(sender_port, port);
+    });
+
+    write_thrd.join();
+    read_thrd.join();
 }
 
 TEST(IO_socket, sync_udp_socket_specify_port) {
@@ -100,8 +191,8 @@ TEST(IO_socket, sync_udp_socket_specify_port) {
 
 TEST(IO_socket, async_tcp_socket) {
     auto io_context = async::IOContext{};
-    auto acceptor = async::Acceptor(io_context, Endpoint(ip::tcp::v4(), 10801));
-    auto connector = async::Connector(io_context, Endpoint(ip::tcp::v4(), 10801), "127.0.0.1");
+    auto acceptor = async::Acceptor(io_context, Endpoint(ip::tcp::v4(), 10810));
+    auto connector = async::Connector(io_context, Endpoint(ip::tcp::v4(), 10810), "127.0.0.1");
 
     auto accept = [&]() -> async::Task<> {
         auto socket = co_await acceptor.accept();

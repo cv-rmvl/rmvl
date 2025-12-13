@@ -134,8 +134,8 @@ RMVL 2.x 起，OpenCV @cite opencv_library 不再是 RMVL 必需的依赖库，�
   </div>
 - 安装（复制头文件与库文件）
   <div class="fragment">
-  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">mkdir</span> /usr/local/include/onnxruntime</div>
-  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cd</span> onnxruntime-linux-x64-1.12.0</div>
+  <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">mkdir</span> <span class="comment">-p</span> /usr/local/include/onnxruntime</div>
+  <div class="line"><span class="keywordflow">cd</span> onnxruntime-linux-x64-1.12.0</div>
   <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cp</span> <span class="comment">-r</span> include/* /usr/local/include/onnxruntime</div>
   <div class="line"><span class="keyword">sudo</span> <span class="keywordflow">cp</span> <span class="comment">-r</span> lib /usr/local</div>
   </div>
