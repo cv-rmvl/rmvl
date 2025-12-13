@@ -272,7 +272,7 @@ public:
      * @brief 构造 Socket 端点
      *
      * @param[in] ip 网络协议
-     * @param[in] port 端口号
+     * @param[in] port 端口号，为 `0` 时表示任意可用或自动分配
      * @code {.cpp}
      * Endpoint ep(ip::tcp::v4(), 8080);
      * @endcode
@@ -289,7 +289,7 @@ public:
 private:
     int _family{};    //!< 协议族
     int _type{};      //!< Socket 类型
-    uint16_t _port{}; //!< 端口号
+    uint16_t _port{}; //!< 端口号，`0` 表示任意可用或自动分配
 };
 
 #ifdef _WIN32
@@ -340,6 +340,9 @@ public:
     template <typename SockOpt>
     void setOption(const SockOpt &opt);
 
+    //! 获取绑定的端点
+    Endpoint endpoint() const;
+
     /**
      * @brief 同步读取已连接的 Socket 中的数据（阻塞）
      * @code {.cpp}
@@ -386,8 +389,9 @@ public:
      * @endcode
      *
      * @param[in] protocol 协议，如 rm::ip::udp::v4()
+     * @param[in] blocking 是否为阻塞模式，默认 `true` 阻塞
      */
-    explicit Sender(const ip::Protocol &protocol) : Sender(protocol, false) {}
+    explicit Sender(const ip::Protocol &protocol, bool blocking = true) : Sender(protocol, blocking, false) {}
 
     ~Sender();
 
@@ -403,7 +407,7 @@ public:
     DgramSocket create();
 
 protected:
-    Sender(const ip::Protocol &protocol, bool ov);
+    Sender(const ip::Protocol &protocol, bool blocking, bool ov);
 
     ip::Protocol _protocol;          //!< 协议
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 未建立会话的 Socket 描述符
@@ -425,8 +429,9 @@ public:
      * @endcode
      *
      * @param[in] endpoint 端点
+     * @param[in] blocking 是否为阻塞模式，默认 `true` 阻塞
      */
-    explicit Listener(const Endpoint &endpoint) : Listener(endpoint, false) {}
+    explicit Listener(const Endpoint &endpoint, bool blocking = true) : Listener(endpoint, blocking, false) {}
 
     ~Listener();
 
@@ -442,7 +447,7 @@ public:
     DgramSocket create();
 
 protected:
-    Listener(const Endpoint &endpoint, bool ov);
+    Listener(const Endpoint &endpoint, bool blocking, bool ov);
 
     Endpoint _endpoint;              //!< 端点
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 未建立会话的 Socket 描述符
@@ -472,6 +477,9 @@ public:
      */
     template <typename SockOpt>
     void setOption(const SockOpt &opt);
+
+    //! 获取绑定的端点
+    Endpoint endpoint() const;
 
     /**
      * @brief 同步读取已连接的 Socket 中的数据（阻塞）
@@ -513,8 +521,9 @@ public:
      * @brief 创建 Socket 接受器
      *
      * @param[in] endpoint 端点
+     * @param[in] blocking 是否为阻塞模式，默认 `true` 阻塞
      */
-    explicit Acceptor(const Endpoint &endpoint) : Acceptor(endpoint, false) {}
+    explicit Acceptor(const Endpoint &endpoint, bool blocking = true) : Acceptor(endpoint, blocking, false) {}
 
     ~Acceptor();
 
@@ -530,7 +539,7 @@ public:
     StreamSocket accept();
 
 protected:
-    Acceptor(const Endpoint &endpoint, bool ov);
+    Acceptor(const Endpoint &endpoint, bool blocking, bool ov);
 
     Endpoint _endpoint;              //!< 端点
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 未建立会话的 Socket 描述符
@@ -553,8 +562,9 @@ public:
      *
      * @param[in] endpoint 指向连接的服务器的端点
      * @param[in] url 目标地址，建立网络连接时有效，默认为 `127.0.0.1`
+     * @param[in] blocking 是否为阻塞模式，默认 `true` 阻塞
      */
-    explicit Connector(const Endpoint &endpoint, std::string_view url = "127.0.0.1") : Connector(endpoint, url, false) {}
+    explicit Connector(const Endpoint &endpoint, std::string_view url = "127.0.0.1", bool blocking = true) : Connector(endpoint, url, blocking, false) {}
     ~Connector();
 
     /**
@@ -569,7 +579,7 @@ public:
     StreamSocket connect();
 
 protected:
-    Connector(const Endpoint &endpoint, std::string_view url, bool ov);
+    Connector(const Endpoint &endpoint, std::string_view url, bool blocking, bool ov);
 
     std::string _url;                //!< 目标地址
     Endpoint _endpoint;              //!< 端点
