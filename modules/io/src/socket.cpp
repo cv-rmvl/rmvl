@@ -361,9 +361,20 @@ void DgramSocket::setOption(const ip::multicast::Interface &opt) { set_fd_option
 #pragma region Socket Implements
 #endif
 
-static void fdbind(SocketFd fd, int family, uint16_t port = 0) {
+static void setNonblock(SocketFd fd) {
     RMVL_Assert(fd != INVALID_SOCKET_FD);
+#ifdef _WIN32
+    u_long mode = 1;
+    ioctlsocket(fd, FIONBIO, &mode);
+#else
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+#endif
+}
 
+// 绑定 Socket 到指定端口，0 表示随机端口
+static void fdbind(SocketFd fd, int family, uint16_t port) {
+    RMVL_Assert(fd != INVALID_SOCKET_FD);
 #ifdef _WIN32
     char opt = 1;
 #else
@@ -372,9 +383,6 @@ static void fdbind(SocketFd fd, int family, uint16_t port = 0) {
     // 设置允许重用处于 TIME_WAIT 状态的地址
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         WARNING_("setsockopt SO_REUSEADDR failed, error code: %d", error_code());
-    // 空端口不进行绑定
-    if (port == 0)
-        return;
     // IPv4 Socket
     if (family == AF_INET) {
         sockaddr_in addr{};
@@ -461,6 +469,22 @@ static bool fdsendto(SocketFd fd, std::string_view addr, const Endpoint &endpoin
     return n == static_cast<decltype(n)>(data.size());
 }
 
+Endpoint _endpoint(SocketFd fd) {
+    RMVL_DbgAssert(fd != INVALID_SOCKET_FD);
+    sockaddr_storage addr{};
+    socklen_t addr_len = sizeof(addr);
+    if (getsockname(fd, reinterpret_cast<sockaddr *>(&addr), &addr_len) < 0)
+        RMVL_Error_(RMVL_StsError, "getsockname failed, error code: %d", error_code());
+
+    if (addr.ss_family == AF_INET6) {
+        auto *addr_v6 = reinterpret_cast<sockaddr_in6 *>(&addr);
+        return Endpoint(ip::tcp::v6(), ntohs(addr_v6->sin6_port));
+    } else {
+        auto *addr_v4 = reinterpret_cast<sockaddr_in *>(&addr);
+        return Endpoint(ip::tcp::v4(), ntohs(addr_v4->sin_port));
+    }
+}
+
 std::tuple<std::string, std::string, uint16_t> DgramSocket::read() noexcept {
     RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
     return fdrecvfrom(_fd);
@@ -470,6 +494,8 @@ bool DgramSocket::write(std::string_view addr, const Endpoint &endpoint, std::st
     RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
     return fdsendto(_fd, addr, endpoint, data);
 }
+
+Endpoint DgramSocket::endpoint() const { return _endpoint(_fd); }
 
 std::string StreamSocket::read() noexcept {
     char buf[2048]{};
@@ -486,13 +512,17 @@ bool StreamSocket::write(std::string_view data) noexcept {
     return n == static_cast<decltype(n)>(data.size());
 }
 
+Endpoint StreamSocket::endpoint() const { return _endpoint(_fd); }
+
 #ifdef _WIN32
-Listener::Listener(const Endpoint &ep, bool ov) : _endpoint(ep), _fd(INVALID_SOCKET_FD) {
+Listener::Listener(const Endpoint &ep, bool blocking, bool ov) : _endpoint(ep), _fd(INVALID_SOCKET_FD) {
     SocketEnv::ensure_init();
     _fd = ov ? WSASocket(ep.family(), ep.type(), 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(ep.family(), ep.type(), 0);
 #else
-Listener::Listener(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
+Listener::Listener(const Endpoint &ep, bool blocking, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
 #endif
+    if (!blocking)
+        setNonblock(_fd);
     fdbind(_fd, ep.family(), ep.port());
 }
 
@@ -503,13 +533,15 @@ DgramSocket Listener::create() {
 }
 
 #ifdef _WIN32
-Sender::Sender(const ip::Protocol &proto, bool ov) : _protocol(proto), _fd(INVALID_SOCKET_FD) {
+Sender::Sender(const ip::Protocol &proto, bool blocking, bool ov) : _protocol(proto), _fd(INVALID_SOCKET_FD) {
     SocketEnv::ensure_init();
     _fd = ov ? WSASocket(proto.family, proto.type, 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(proto.family, proto.type, 0);
 #else
-Sender::Sender(const ip::Protocol &proto, bool) : _protocol(proto), _fd(socket(proto.family, proto.type, 0)) {
+Sender::Sender(const ip::Protocol &proto, bool blocking, bool) : _protocol(proto), _fd(socket(proto.family, proto.type, 0)) {
 #endif
-    fdbind(_fd, proto.family);
+    if (!blocking)
+        setNonblock(_fd);
+    fdbind(_fd, proto.family, 0);
 }
 
 DgramSocket Sender::create() {
@@ -524,12 +556,14 @@ StreamSocket &StreamSocket::operator=(StreamSocket &&other) noexcept {
 }
 
 #ifdef _WIN32
-Acceptor::Acceptor(const Endpoint &ep, bool ov) : _endpoint(ep) {
+Acceptor::Acceptor(const Endpoint &ep, bool blocking, bool ov) : _endpoint(ep) {
     SocketEnv::ensure_init();
     _fd = ov ? WSASocket(ep.family(), ep.type(), 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(ep.family(), ep.type(), 0);
 #else
-Acceptor::Acceptor(const Endpoint &ep, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
+Acceptor::Acceptor(const Endpoint &ep, bool blocking, bool) : _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
 #endif
+    if (!blocking)
+        setNonblock(_fd);
     fdbind(_fd, ep.family(), ep.port());
     if (listen(_fd, SOMAXCONN) < 0)
         RMVL_Error_(RMVL_StsError, "listen failed, error code: %d", error_code());
@@ -565,12 +599,14 @@ static int fdconnect(int fd, const Endpoint &ep, std::string_view url) {
 }
 
 #ifdef _WIN32
-Connector::Connector(const Endpoint &ep, std::string_view url, bool ov) : _url(url), _endpoint(ep) {
+Connector::Connector(const Endpoint &ep, std::string_view url, bool blocking, bool ov) : _url(url), _endpoint(ep) {
     SocketEnv::ensure_init();
     _fd = ov ? WSASocket(ep.family(), ep.type(), 0, NULL, 0, WSA_FLAG_OVERLAPPED) : socket(ep.family(), ep.type(), 0);
 #else
-Connector::Connector(const Endpoint &ep, std::string_view url, bool) : _url(url), _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
+Connector::Connector(const Endpoint &ep, std::string_view url, bool blocking, bool) : _url(url), _endpoint(ep), _fd(socket(ep.family(), ep.type(), 0)) {
 #endif
+    if (!blocking)
+        setNonblock(_fd);
     RMVL_Assert(_fd != INVALID_SOCKET_FD);
 }
 
