@@ -166,7 +166,7 @@ install(
         "${config_dir}/RMVLConfig-version.cmake"
         "${cmake_dir}/RMVLModule.cmake"
         "${cmake_dir}/RMVLUtils.cmake"
-        "${cmake_dir}/RMVLGenPara.cmake"
+        "${cmake_dir}/RMVLCodeGenerate.cmake"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )
 

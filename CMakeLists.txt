@@ -84,7 +84,7 @@ include(cmake/RMVLExtraTarget.cmake)
 #  RMVL parameters and miscellaneous generation
 # ----------------------------------------------------------------------------
 set(para_template_path "${CMAKE_SOURCE_DIR}/cmake/templates" CACHE INTERNAL "GenPara template path" FORCE)
-include(cmake/RMVLGenPara.cmake)
+include(cmake/RMVLCodeGenerate.cmake)
 
 # ----------------------------------------------------------------------------
 #  Process subdirectories
