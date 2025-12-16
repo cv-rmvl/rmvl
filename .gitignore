@@ -36,8 +36,10 @@ devel
 log
 Camera
 
-# 自动生成的参数文件
-*para/
+# 自动生成的文件
+_rm_codegen_*
+rmvlpara/
+rmvlmsg/
 !include/rmvlpara
 
 # 其他文件
