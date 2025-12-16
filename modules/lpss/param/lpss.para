@@ -1,0 +1,1 @@
+uint8_t MAX_NODE_HEARTBEAT_PERIOD = 2 # 节点的最大心跳周期

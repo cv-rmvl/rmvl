@@ -18,7 +18,7 @@ RMVL 中，一部分模块（涉及主要模块和扩展模块）的功能在不
 - 调整参数名、参数默认值
 - 新增某一参数类（结构体）
 
-的时候，需要在头文件以及对应源文件的位置写上大量重复的代码，管理极其不方便。为此 RMVL 参数模块定义了新的参数规范文件，这类文件以 `*.para` 为后缀，以及提供了 CMake 配置期间将 `*.para` 转换为对应 `*.h(hpp)` 以及 `*.cpp` 的 CMake 函数 `rmvl_generate_para`，该函数定义在 `<project>/cmake/RMVLGenPara.cmake` 文件中。
+的时候，需要在头文件以及对应源文件的位置写上大量重复的代码，管理极其不方便。为此 RMVL 参数模块定义了新的参数规范文件，这类文件以 `*.para` 为后缀，以及提供了 CMake 配置期间将 `*.para` 转换为对应 `*.h(hpp)` 以及 `*.cpp` 的 CMake 函数 `rmvl_generate_para`，该函数定义在 `<project>/cmake/RMVLCodeGenerate.cmake` 文件中。
 
 ### 2 参数规范文件
 

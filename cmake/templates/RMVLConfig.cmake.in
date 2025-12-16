@@ -124,7 +124,7 @@ endforeach()
 # use rmvl functions and macros
 set(para_template_path "${CMAKE_CURRENT_LIST_DIR}/templates" CACHE INTERNAL "GenPara template path")
 include(${CMAKE_CURRENT_LIST_DIR}/RMVLUtils.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/RMVLGenPara.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/RMVLCodeGenerate.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/RMVLModule.cmake)
 
 # =============================================================
