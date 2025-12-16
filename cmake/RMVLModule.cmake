@@ -151,18 +151,6 @@ macro(rmvl_add_module _name)
         aux_source_directory(${module_dir} target_src)
       endif()
 
-      # Bind parameter object
-      if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/src/${_name}/para)
-        set(para_dir ${CMAKE_CURRENT_LIST_DIR}/src/${_name}/para)
-      else()
-        set(para_dir ${CMAKE_CURRENT_LIST_DIR}/src/para)
-      endif()
-      set(para_src "")
-      if(IS_DIRECTORY ${para_dir})
-        if(para_dir)
-          aux_source_directory(${para_dir} para_src)
-        endif()
-      endif(IS_DIRECTORY ${para_dir})
       # Bind extra source files
       set(extra_src "")
       if(MD_EXTRA_SOURCE)

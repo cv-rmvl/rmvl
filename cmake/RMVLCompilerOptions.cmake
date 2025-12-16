@@ -295,12 +295,17 @@ function(rmvl_install_sdk sdk)
   endif()
 
   set(lib_files_to_install)
-  if(IS_SYMLINK "${${sdk}_LIB}")
-    get_filename_component(lib_realpath "${${sdk}_LIB}" REALPATH)
-    list(APPEND lib_files_to_install "${lib_realpath}" "${${sdk}_LIB}")
-  else()
-    list(APPEND lib_files_to_install "${${sdk}_LIB}")
-  endif()
+  set(current_lib "${${sdk}_LIB}")
+  list(APPEND lib_files_to_install "${current_lib}")
+  while(IS_SYMLINK "${current_lib}")
+    file(READ_SYMLINK "${current_lib}" target_file)
+    if(NOT IS_ABSOLUTE "${target_file}")
+      get_filename_component(lib_dir "${current_lib}" DIRECTORY)
+      get_filename_component(target_file "${lib_dir}/${target_file}" ABSOLUTE)
+    endif()
+    set(current_lib "${target_file}")
+    list(APPEND lib_files_to_install "${current_lib}")
+  endwhile()
 
   install(
     FILES ${lib_files_to_install}

@@ -140,21 +140,21 @@ function(_parse_assign content_line header_line source_read_line source_write_li
     set(ret_header_line "${ret_header_line}    RMVL_W_RW ${type_sym_correct} ${id_sym} = ${default_sym};\n")
   endif()
   # 获取 Source 部分的返回值
-  set(ret_source_read_line "${ret_source_read_line}    node = fs[\"${id_sym}\"];\n")
+  set(ret_source_read_line "${ret_source_read_line}    _node__ = _fs__[\"${id_sym}\"];\n")
   if(type_sym MATCHES "^bool|uint\\w*|size_t")
-    set(ret_source_read_line "${ret_source_read_line}    if (!node.isNone())\n    {\n")
-    set(ret_source_read_line "${ret_source_read_line}        int tmp{};\n        node >> tmp;\n")
+    set(ret_source_read_line "${ret_source_read_line}    if (!_node__.isNone())\n    {\n")
+    set(ret_source_read_line "${ret_source_read_line}        int tmp{};\n        _node__ >> tmp;\n")
     set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = static_cast<${type_sym_correct}>(tmp);\n    }\n")
     set(ret_source_write_line "${ret_source_write_line}    int tmp_${id_sym} = static_cast<int>(${id_sym});\n")
-    set(ret_source_write_line "${ret_source_write_line}    fs << \"${id_sym}\" << tmp_${id_sym};\n")
+    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << tmp_${id_sym};\n")
   elseif(type_sym MATCHES "int|float|double|string|vector|Point\\w*|Mat\\w*|Vec\\w*")
-    set(ret_source_read_line "${ret_source_read_line}    node.isNone() ? void(0) : (node >> ${id_sym});\n")
-    set(ret_source_write_line "${ret_source_write_line}    fs << \"${id_sym}\" << ${id_sym};\n")
+    set(ret_source_read_line "${ret_source_read_line}    _node__.isNone() ? void(0) : (_node__ >> ${id_sym});\n")
+    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << ${id_sym};\n")
   else()
-    set(ret_source_read_line "${ret_source_read_line}    if (!node.isNone())\n    {\n")
-    set(ret_source_read_line "${ret_source_read_line}        std::string tmp{};\n        node >> tmp;\n")
+    set(ret_source_read_line "${ret_source_read_line}    if (!_node__.isNone())\n    {\n")
+    set(ret_source_read_line "${ret_source_read_line}        std::string tmp{};\n        _node__ >> tmp;\n")
     set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = s2t_${type_sym}.at(tmp);\n    }\n")
-    set(ret_source_write_line "${ret_source_write_line}    fs << \"${id_sym}\" << t2s_${type_sym}.at(${id_sym});\n")
+    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << t2s_${type_sym}.at(${id_sym});\n")
   endif()
   # 作用域提升
   set(${header_line} "${ret_header_line}" PARENT_SCOPE)
@@ -376,7 +376,7 @@ function(rmvl_generate_para target_name)
     if(WITH_OPENCV)
       configure_file(
         ${para_template_path}/para_generator_source.in
-        ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/para/param.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/_rm_codegen_param.cpp
         @ONLY
       )
     endif()
@@ -387,7 +387,7 @@ function(rmvl_generate_para target_name)
     if(WITH_OPENCV)
       configure_file(
         ${para_template_path}/para_generator_source.in
-        ${CMAKE_CURRENT_LIST_DIR}/src/para/param.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_param.cpp
         @ONLY
       )
     endif()
