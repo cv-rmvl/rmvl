@@ -3,6 +3,8 @@
 #
 #   1. rmvl_generate_para:        根据给定目标及对应的参数规范文件 *.para 生成 C++ 文件
 #   2. rmvl_generate_module_para: 根据给定模块下的所有 para 目标生成 C++ 文件
+#   3. rmvl_generate_msg:         根据给定消息及对应的消息规范文件 *.msg 生成 C++ 文件
+#   4. rmvl_generate_module_msg:  根据给定模块下的所有 msg 目标生成 C++ 文件
 #
 # 以及以下次要功能：
 #
@@ -375,7 +377,7 @@ function(rmvl_generate_para target_name)
     set(para_include_path "rmvlpara/${module_name}/${target_name}.${header_ext}")
     if(WITH_OPENCV)
       configure_file(
-        ${para_template_path}/para_generator_source.in
+        ${codegen_template_path}/para_generator_source.in
         ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/_rm_codegen_param.cpp
         @ONLY
       )
@@ -386,7 +388,7 @@ function(rmvl_generate_para target_name)
     set(para_include_path "rmvlpara/${module_name}.${header_ext}")
     if(WITH_OPENCV)
       configure_file(
-        ${para_template_path}/para_generator_source.in
+        ${codegen_template_path}/para_generator_source.in
         ${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_param.cpp
         @ONLY
       )
@@ -399,13 +401,13 @@ function(rmvl_generate_para target_name)
   endif()
   if(WITH_OPENCV)
     configure_file(
-      ${para_template_path}/para_generator_header.in
+      ${codegen_template_path}/para_generator_header.in
       ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path} 
       @ONLY
     )
   else()
     configure_file(
-      ${para_template_path}/para_generator_header_without_cv.in
+      ${codegen_template_path}/para_generator_header_without_cv.in
       ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path}
       @ONLY
     )
@@ -436,9 +438,205 @@ function(rmvl_generate_module_para module_name)
   endforeach()
   # generate C++ file
   configure_file(
-    ${para_template_path}/para_generator_module.in
+    ${codegen_template_path}/para_generator_module.in
     ${CMAKE_CURRENT_LIST_DIR}/include/rmvlpara/${module_name}.hpp
     @ONLY
   )
   message(STATUS "${para_msg} - done")
+endfunction()
+
+# ----------------------------------------------------------------------------
+#   根据指定的消息名在 msg 文件夹下对应的 *.msg 消息规范文件和可选的模块名生成对应的 C++ 代码
+#   用法:
+#     rmvl_generate_msg(
+#       <message_name>
+#       [MODULE module_name]
+#     )
+#   示例:
+#     rmvl_generate_msg(
+#       data
+#       MODULE testdata
+#     )
+# ----------------------------------------------------------------------------
+
+function(rmvl_generate_msg name)
+  cmake_parse_arguments(MSG "" "MODULE" "" ${ARGN})
+
+  set(msg_file "${CMAKE_CURRENT_LIST_DIR}/msg/${name}.msg")
+
+  # define the target path of the src and include files
+  if(MSG_MODULE)
+    set(inc_file "${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${MSG_MODULE}/${name}.hpp")
+    set(src_file "${CMAKE_CURRENT_LIST_DIR}/src/${name}/_rm_codegen_msg${name}.cpp")
+    set(module_name "${MSG_MODULE}")
+    set(MSG_INCLUDE_CONTENT "rmvlmsg/${MSG_MODULE}/${name}.hpp")
+  else()
+    set(inc_file "${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${name}.hpp")
+    set(src_file "${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_msg${name}.cpp")
+    set(module_name "${name}")
+    set(MSG_INCLUDE_CONTENT "rmvlmsg/${name}.hpp")
+  endif()
+  string(FIND "${RMVLMSG_${module_name}}" "${name}" target_idx)
+  if(target_idx EQUAL -1)
+    set(RMVLMSG_${module_name} "${RMVLMSG_${module_name}}" "${name}" CACHE INTERNAL "${module_name} msgs")
+  endif() 
+
+  # Generate class name
+  string(SUBSTRING ${name} 0 1 first_char)
+  string(TOUPPER ${first_char} first_char_upper)
+  string(SUBSTRING ${name} 1 -1 rest_name)
+  set(CLASS_NAME "${first_char_upper}${rest_name}")
+
+  # Read msg file content
+  file(READ ${msg_file} MSG_CONTENT)
+  if(NOT MSG_CONTENT)
+    return()
+  endif()
+    
+  # Parse msg file content
+  set(type_and_ids)
+  string(REPLACE "\n" ";" MSG_LINES ${MSG_CONTENT})
+    
+  foreach(line ${MSG_LINES})
+    # Remove comments
+    string(REGEX REPLACE "#.*$" "" line "${line}")
+    # Remove leading and trailing whitespace
+    string(STRIP "${line}" line)
+            
+    # Skip empty lines
+    if(NOT line)
+      continue()
+    endif()
+            
+    # Parse format: type name
+    string(REGEX MATCH "^([a-zA-Z0-9_]+)[ \t]+([a-zA-Z0-9_]+)$" MATCHED "${line}")
+            
+    if(MATCHED)
+      set(field_type ${CMAKE_MATCH_1})
+      set(field_name ${CMAKE_MATCH_2})
+      list(APPEND type_and_ids "${field_type}@${field_name}")
+      # message(STATUS "      Field: ${field_type} ${field_name}")
+    endif()
+  endforeach()
+        
+  # Validate parsed fields
+  list(LENGTH type_and_ids FIELD_COUNT)
+  if(FIELD_COUNT EQUAL 0)
+    return()
+  endif()
+
+  # Generate type_and_ids_cpp
+  set(type_and_ids_cpp)
+  foreach(n ${type_and_ids})
+    string(REPLACE "@" ";" parts "${n}")
+    list(GET parts 0 type)
+    list(GET parts 1 id)
+
+    if(type STREQUAL "string")
+      string(APPEND type_and_ids_cpp "    std::string ${id};\n")
+    elseif(type STREQUAL "float" OR type STREQUAL "double" OR type STREQUAL "bool" OR type STREQUAL "char")
+      string(APPEND type_and_ids_cpp "    ${type} ${id};\n")
+    else()
+      string(APPEND type_and_ids_cpp "    ${type}_t ${id};\n")
+    endif()
+  endforeach()
+
+  # Calculate serialization size
+  set(size_str)
+  foreach(n ${type_and_ids})
+    string(REPLACE "@" ";" parts "${n}")
+    list(GET parts 0 type)
+    list(GET parts 1 id)
+
+    if(type STREQUAL "string")
+      list(APPEND size_str "sizeof(uint8_t) + ${id}.size()")
+    else()
+      list(APPEND size_str "sizeof(${id})")
+    endif()
+  endforeach()
+
+  string(REPLACE ";" " + " size_str "${size_str}")
+
+  # Generate serialize_content
+  set(serialize_content)
+  foreach(n ${type_and_ids})
+    string(REPLACE "@" ";" parts "${n}")
+    list(GET parts 0 type)
+    list(GET parts 1 id)
+
+    if(type STREQUAL "string")
+      string(APPEND serialize_content "    uint8_t ${id}_size__ = static_cast<uint8_t>(${id}.size());\n")
+      string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(&${id}_size__), sizeof(uint8_t));\n")
+      string(APPEND serialize_content "    _res_.append(${id}.data(), ${id}.size());\n")
+    else()
+      string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(&${id}), sizeof(${id}));\n")
+    endif()
+  endforeach()
+
+  # Generate deserialize_content
+  set(deserialize_content)
+  foreach(n ${type_and_ids})
+    string(REPLACE "@" ";" parts "${n}")
+    list(GET parts 0 type)
+    list(GET parts 1 id)
+
+   if(type STREQUAL "string")
+      string(APPEND deserialize_content "    uint8_t ${id}_size__ = *reinterpret_cast<const uint8_t *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(uint8_t);\n")
+      string(APPEND deserialize_content "    _msg__.${id}.assign(_p__, ${id}_size__);\n")
+      string(APPEND deserialize_content "    _p__ += ${id}_size__;\n")
+    elseif(type STREQUAL "float")
+      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const float *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(float);\n")
+    elseif(type STREQUAL "double")
+      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const double *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(double);\n")
+    elseif(type STREQUAL "bool")
+      string(APPEND deserialize_content "    _msg__.${id} = (*reinterpret_cast<const uint8_t *>(_p__)) != 0;\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(uint8_t);\n")
+    elseif(type STREQUAL "char")
+      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const char *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(char);\n")
+    else()
+      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const ${type}_t *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(${type}_t);\n")
+    endif()
+      endforeach()
+
+  set(MSG_NAME ${name})
+
+  # Generate cpp files
+  configure_file(
+    ${codegen_template_path}/msg_generator.hpp.in
+    ${inc_file}
+    @ONLY
+  )
+  configure_file(
+    ${codegen_template_path}/msg_generator.cpp.in
+    ${src_file}
+    @ONLY
+  )
+endfunction()
+
+# ----------------------------------------------------------------------------
+#   根据给定模块下所有的 msg 目标，生成对应的 C++ 代码
+#   用法:
+#     rmvl_generate_module_msg(
+#       <module_name>
+#     )
+#   示例:
+#     rmvl_generate_module_msg(combo)
+# ----------------------------------------------------------------------------
+function(rmvl_generate_module_msg module_name)
+  set(msg_module_header_details "")
+  foreach(_sub ${RMVLMSG_${module_name}})
+    string(TOUPPER "${_sub}" _upper)
+    set(msg_module_header_details "${msg_module_header_details}#include \"${module_name}/${_sub}.hpp\"\n")
+  endforeach()
+  # generate C++ file
+  configure_file(
+    ${codegen_template_path}/msg_generator_module.in
+    ${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${module_name}.hpp
+    @ONLY
+  )
 endfunction()

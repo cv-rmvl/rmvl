@@ -153,9 +153,11 @@ macro(rmvl_add_module _name)
 
       # Bind extra source files
       set(extra_src "")
-      if(MD_EXTRA_SOURCE)
-        aux_source_directory(${module_dir}/${MD_EXTRA_SOURCE} extra_src)
-      endif()
+      foreach(m ${MD_EXTRA_SOURCE})
+        aux_source_directory(${m} _extra_src_tmp)
+        set(extra_src ${extra_src} ${_extra_src_tmp})
+      endforeach()
+      unset(_extra_src_tmp)
       # Build to *.so (*.dll), *.a (*.lib) or *.o (*.obj)
       if(BUILD_WORLD)
         set(

@@ -81,9 +81,9 @@ include(cmake/RMVLCompilerOptions.cmake)
 include(cmake/RMVLExtraTarget.cmake)
 
 # ----------------------------------------------------------------------------
-#  RMVL parameters and miscellaneous generation
+#  RMVL codegen and miscellaneous generation
 # ----------------------------------------------------------------------------
-set(para_template_path "${CMAKE_SOURCE_DIR}/cmake/templates" CACHE INTERNAL "GenPara template path" FORCE)
+set(codegen_template_path "${CMAKE_SOURCE_DIR}/cmake/templates" CACHE INTERNAL "CodeGenerate template path" FORCE)
 include(cmake/RMVLCodeGenerate.cmake)
 
 # ----------------------------------------------------------------------------
