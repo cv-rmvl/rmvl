@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <shared_mutex>
 #include <thread>
 #include <unordered_set>
@@ -21,8 +22,14 @@
 
 namespace rm::lpss {
 
-//! @addtogroup lpss
-//! @{
+/**
+ * @defgroup lpss 轻量发布订阅服务
+ * @{
+ * @brief 轻量发布订阅服务, 提供节点自动发现与消息发布订阅功能
+ * @details
+ * - LPSS 使用方法见 @ref tutorial_modules_lpss
+ * - 内置消息类型见 @ref rmvlmsg
+ */
 
 /**
  * @brief 发布者代理
@@ -36,6 +43,7 @@ namespace rm::lpss {
 template <typename MsgType>
 class Publisher final {
 public:
+    //! @cond
     Publisher(std::nullptr_t) {}
 
     /**
@@ -45,6 +53,7 @@ public:
      * @param[in] writer 底层数据写入器
      */
     Publisher(std::string_view topic, DataWriterBase::ptr writer) : _topic(topic), _writer(std::move(writer)) {}
+    //! @endcond
 
     //! 判断发布者是否无效
     bool invalid() const noexcept { return !_writer; }
@@ -76,6 +85,7 @@ private:
 template <typename MsgType>
 class Subscriber {
 public:
+    //! @cond
     Subscriber(std::nullptr_t) {}
 
     /**
@@ -85,6 +95,7 @@ public:
      * @param[in] reader 底层数据读取器
      */
     Subscriber(std::string_view topic, DataReaderBase::ptr reader) : _topic(topic), _reader(std::move(reader)) {}
+    //! @endcond
 
     //! 判断订阅者是否无效
     bool invalid() const noexcept { return !_reader; }
@@ -92,12 +103,6 @@ public:
 private:
     DataReaderBase::ptr _reader; //!< 底层数据读取器
     std::string _topic;          //!< 话题名称
-};
-
-//! 节点本机网络信息
-struct NodeNetworkInfo {
-    std::array<uint8_t, 6> basic_mac{};    //!< 主 MAC 地址，与 GUID MAC 对应
-    std::vector<ip::Networkv4> networks{}; //!< 对外可用的 IPv4 网络地址列表
 };
 
 /**
@@ -183,6 +188,9 @@ public:
         return Subscriber<MsgType>(topic, std::move(reader));
     }
 
+    //! 获取节点唯一标识符
+    Guid guid() const noexcept { return _uid; }
+
 private:
     //! 广播 RNDP 消息
     void rndp_multicast();
@@ -205,8 +213,12 @@ private:
     DgramSocket _rndp_writer; //!< RNDP 广播 Socket
     DgramSocket _rndp_reader; //!< RNDP 监听 Socket
 
-    Guid _uid{};             //!< 节点唯一标识符
-    NodeNetworkInfo _info{}; //!< 本机网络信息
+    Guid _uid{}; //!< 节点唯一标识符
+
+    struct NodeNetworkInfo {
+        std::array<uint8_t, 6> basic_mac{};    //!< 主 MAC 地址，与 GUID MAC 对应
+        std::vector<ip::Networkv4> networks{}; //!< 对外可用的 IPv4 网络地址列表
+    } _info{};                                 //!< 本机网络信息
 
     std::shared_mutex _nodes_mtx{};                                          //!< 节点读写锁
     std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{}; //!< 已发现的节点列表
@@ -229,6 +241,8 @@ private:
     std::thread _rndp_listen_thrd{}; //!< RNDP 监听线程
     std::thread _redp_listen_thrd{}; //!< REDP 监听线程
     std::thread _hbt_detect_thrd{};  //!< 心跳检测线程
+    std::mutex _hbt_mtx{};
+    std::condition_variable _hbt_cv{};
 };
 
 //! @} lpss

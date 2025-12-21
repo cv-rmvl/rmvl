@@ -22,7 +22,7 @@
  * @defgroup core_reflect 聚合体编译期反射
  * @defgroup core_meta 元编程
  * @defgroup core_str Python 风格的字符串处理
- * @} core
+ * @}
  */
 
 /**
@@ -35,7 +35,16 @@
  * - 每个参数模块均提供了一个运行时参数加载的函数，用于从 `YAML` 文件中加载参数
  *
  * @see 在引言中提及了有关 @ref intro_parameters_manager 的内容可供参考
- * @} rmvlpara
+ * @}
+ */
+
+/**
+ * @defgroup rmvlmsg 消息模块
+ * @{
+ * @brief RMVL 消息模块
+ * @details
+ * 该模块包含了 RMVL 中提供的所有消息类，包含 `std` 与 `geometry` 两大子消息，提供了常用类型的序列化与反序列化功能
+ * @}
  */
 
 #include <rmvl/rmvl_modules.hpp>

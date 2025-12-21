@@ -36,15 +36,60 @@ TEST(IO_ipc, sync_pipe) {
     srv_thrd.join();
     cli_thrd.join();
 
-    std::string msg = "Hello, IPC!";
-    EXPECT_TRUE(cli->write(msg));
+    std::string str1 = "Hello, IPC!";
+    EXPECT_TRUE(cli->write(str1));
     std::string received = srv->read();
-    EXPECT_EQ(received, msg);
+    EXPECT_EQ(received, str1);
 
-    msg = "Goodbye, IPC!";
-    EXPECT_TRUE(srv->write(msg));
+    str1 = "Goodbye, IPC!";
+    EXPECT_TRUE(srv->write(str1));
     received = cli->read();
-    EXPECT_EQ(received, msg);
+    EXPECT_EQ(received, str1);
+}
+
+TEST(IO_ipc, shm) {
+    constexpr std::size_t SHM_SIZE = 32;
+
+    SharedMemory shm1("test_shm", SHM_SIZE);
+    SharedMemory shm2("test_shm", SHM_SIZE);
+
+    const char str1[] = "SHM Test";
+    memcpy(shm1.data(), str1, std::size(str1));
+    char buffer[SHM_SIZE]{};
+    memcpy(buffer, shm2.data(), std::size(str1));
+    EXPECT_STREQ(buffer, str1);
+    const char str2[] = "Hello";
+    memcpy(shm2.data(), str2, std::size(str2));
+    memset(buffer, 0, sizeof(buffer));
+    memcpy(buffer, shm1.data(), std::size(str2));
+    EXPECT_STREQ(buffer, str2);
+}
+
+TEST(IO_ipc, mpmc_atomic_shm) {
+    MPMCSharedMemory<uint32_t> writer("test_atomic_shm");
+    MPMCSharedMemory<uint32_t> reader("test_atomic_shm");
+
+    writer.write(42);
+    uint32_t value = reader.read();
+    EXPECT_EQ(value, 42);
+
+    writer.write(100);
+    value = reader.read();
+    EXPECT_EQ(value, 100);
+
+    struct TestData {
+        int a;
+        float b;
+        char c;
+    };
+
+    MPMCSharedMemory<TestData> shm("test_atomic_shm2");
+    TestData data1{10, 3.14f, 'x'};
+    shm.write(data1);
+    TestData data2 = shm.read();
+    EXPECT_EQ(data2.a, data1.a);
+    EXPECT_FLOAT_EQ(data2.b, data1.b);
+    EXPECT_EQ(data2.c, data1.c);
 }
 
 #if __cplusplus >= 202002L

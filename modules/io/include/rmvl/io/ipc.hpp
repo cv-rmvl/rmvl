@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <thread>
+
 #include "rmvl/core/rmvldef.hpp"
 
 #include "async.hpp"
@@ -229,6 +231,203 @@ protected:
 #else
     int _mq{}; //!< 消息队列描述符
 #endif
+};
+
+//! 共享内存对象
+class SharedMemory {
+public:
+    /**
+     * @brief 创建或打开共享内存对象并映射到当前进程地址空间
+     *
+     * @param[in] name 共享内存名称
+     * @param[in] size 共享内存大小
+     */
+    SharedMemory(std::string_view name, std::size_t size);
+    ~SharedMemory();
+
+    SharedMemory(const SharedMemory &) = delete;
+    SharedMemory(SharedMemory &&) = default;
+    SharedMemory &operator=(const SharedMemory &) = delete;
+    SharedMemory &operator=(SharedMemory &&) = default;
+
+    /**
+     * @brief 获取共享内存映射指针
+     *
+     * @return 共享内存映射指针
+     */
+    void *data() noexcept { return _ptr; }
+
+private:
+    std::size_t _size{};  //!< 共享内存大小
+    void *_ptr{nullptr};  //!< 共享内存映射指针
+    FileDescriptor _fd{}; //!< 共享内存文件描述符
+};
+
+/**
+ * @brief MPMC 共享内存对象
+ *
+ * @tparam T 共享内存数据类型
+ */
+template <typename T, typename = std::enable_if_t<std::is_trivially_copyable_v<T>>>
+class MPMCSharedMemory : public SharedMemory {
+    struct SHMWrapper {
+        std::atomic_bool lock{false};
+        std::atomic_bool empty{true};
+        T data;
+    };
+
+public:
+    /**
+     * @brief 构造 MPMC 共享内存对象
+     *
+     * @param[in] name 共享内存名称
+     */
+    MPMCSharedMemory(std::string_view name) : SharedMemory(name, sizeof(SHMWrapper)) {}
+
+    MPMCSharedMemory(const MPMCSharedMemory &) = delete;
+    MPMCSharedMemory(MPMCSharedMemory &&) = delete;
+    MPMCSharedMemory &operator=(const MPMCSharedMemory &) = delete;
+    MPMCSharedMemory &operator=(MPMCSharedMemory &&) = delete;
+
+    /**
+     * @brief 获取共享内存中的原子数据，当 `empty()` 为真时，行为未定义
+     *
+     * @return 共享内存中的原子数据
+     */
+    T read() noexcept {
+        T value;
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        while (ptr->lock.exchange(true, std::memory_order_acquire))
+            std::this_thread::yield();
+        value = ptr->data;
+        ptr->lock.store(false, std::memory_order_release);
+        return value;
+    }
+
+    //! 清空共享内存中的数据
+    void clear() noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        while (ptr->lock.exchange(true, std::memory_order_acquire))
+            std::this_thread::yield();
+        ptr->empty.store(true, std::memory_order_relaxed);
+        ptr->lock.store(false, std::memory_order_release);
+    }
+
+    //! 判断共享内存是否为空
+    bool empty() noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        bool is_empty{};
+        while (ptr->lock.exchange(true, std::memory_order_acquire))
+            std::this_thread::yield();
+        is_empty = ptr->empty.load(std::memory_order_relaxed);
+        ptr->lock.store(false, std::memory_order_release);
+        return is_empty;
+    }
+
+    /**
+     * @brief 向共享内存中写入原子数据
+     *
+     * @param[in] value 待写入的原子数据
+     */
+    void write(const T &value) noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        while (ptr->lock.exchange(true, std::memory_order_acquire))
+            std::this_thread::yield();
+        ptr->empty.store(false, std::memory_order_relaxed);
+        ptr->data = value;
+        ptr->lock.store(false, std::memory_order_release);
+    }
+};
+
+/**
+ * @brief SPMC 共享内存对象
+ * @note 允许多个消费者并发读取，性能优于 MPMCSharedMemory，但仅限单生产者场景。
+ * @tparam T 共享内存数据类型
+ */
+template <typename T, typename = std::enable_if_t<std::is_trivially_copyable_v<T>>>
+class SPMCSharedMemory : public SharedMemory {
+    struct SHMWrapper {
+        std::atomic<size_t> seq{0}; // 序列号，偶数表示稳定，奇数表示正在写入
+        std::atomic_bool empty{true};
+        T data;
+    };
+
+public:
+    /**
+     * @brief 构造 SPMC 共享内存对象
+     *
+     * @param[in] name 共享内存名称
+     */
+    SPMCSharedMemory(std::string_view name) : SharedMemory(name, sizeof(SHMWrapper)) {}
+
+    SPMCSharedMemory(const SPMCSharedMemory &) = delete;
+    SPMCSharedMemory(SPMCSharedMemory &&) = delete;
+    SPMCSharedMemory &operator=(const SPMCSharedMemory &) = delete;
+    SPMCSharedMemory &operator=(SPMCSharedMemory &&) = delete;
+
+    /**
+     * @brief 从共享内存中读取数据，当 `empty()` 为真时，行为未定义
+     * @note 多个消费者可以同时调用此函数而不会互相阻塞
+     * @return 共享内存中的数据
+     */
+    T read() noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        T value{};
+        size_t seq1{}, seq2{};
+        do {
+            seq1 = ptr->seq.load(std::memory_order_acquire);
+            if (seq1 & 1) {
+                std::this_thread::yield();
+                continue;
+            }
+            value = ptr->data;
+            seq2 = ptr->seq.load(std::memory_order_acquire);
+        } while (seq1 != seq2);
+        return value;
+    }
+
+    /**
+     * @brief 清空共享内存中的数据
+     */
+    void clear() noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        ptr->seq.fetch_add(1, std::memory_order_release);
+        ptr->empty.store(true, std::memory_order_relaxed);
+        ptr->seq.fetch_add(1, std::memory_order_release);
+    }
+
+    /**
+     * @brief 判断共享内存是否为空
+     * @return 是否为空
+     */
+    bool empty() noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        bool is_empty{};
+        size_t seq1{}, seq2{};
+        do {
+            seq1 = ptr->seq.load(std::memory_order_acquire);
+            if (seq1 & 1) {
+                std::this_thread::yield();
+                continue;
+            }
+            is_empty = ptr->empty.load(std::memory_order_relaxed);
+            seq2 = ptr->seq.load(std::memory_order_acquire);
+        } while (seq1 != seq2);
+        return is_empty;
+    }
+
+    /**
+     * @brief 向共享内存中写入数据
+     *
+     * @param[in] value 待写入的数据
+     */
+    void write(const T &value) noexcept {
+        auto ptr = static_cast<SHMWrapper *>(this->data());
+        ptr->seq.fetch_add(1, std::memory_order_release);
+        ptr->data = value;
+        ptr->empty.store(false, std::memory_order_relaxed);
+        ptr->seq.fetch_add(1, std::memory_order_release);
+    }
 };
 
 //! @} io_ipc

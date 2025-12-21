@@ -11,13 +11,17 @@
 
 #pragma once
 
+#include <exception>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-namespace rm
-{
+#if __cplusplus >= 202002L
+#include <ranges>
+#endif
+
+namespace rm {
 
 //! @addtogroup algorithm
 //! @{
@@ -38,8 +42,7 @@ namespace rm
  * @tparam Compare 比较器可调用对象，默认为 `std::less<Tp>`，即默认为大根堆
  */
 template <typename Tp, typename Sequence = std::vector<Tp>, typename Compare = std::less<Tp>>
-class RaHeap
-{
+class RaHeap {
     static_assert(std::is_same_v<Tp, typename Sequence::value_type>,
                   "value_type must be the same as the underlying container");
 
@@ -58,8 +61,7 @@ public:
      *
      * @param[in] x 待添加的元素
      */
-    inline void push(const Tp &x)
-    {
+    inline void push(const Tp &x) {
         _c.push_back(x);
         _indexs[x] = _c.size() - 1;
         upHeapify(_c.size() - 1);
@@ -70,8 +72,7 @@ public:
      *
      * @param[in] x 待添加的元素
      */
-    inline void push(Tp &&x)
-    {
+    inline void push(Tp &&x) {
         _c.push_back(std::move(x));
         _indexs[x] = _c.size() - 1;
         upHeapify(_c.size() - 1);
@@ -83,8 +84,7 @@ public:
      * @param[in] x 待添加的元素
      */
     template <typename ValueType>
-    inline void emplace(ValueType &&x)
-    {
+    inline void emplace(ValueType &&x) {
         _c.emplace_back(std::forward<ValueType>(x));
         _indexs[x] = _c.size() - 1;
         upHeapify(_c.size() - 1);
@@ -96,8 +96,7 @@ public:
      * @param[in] prev 之前的元素
      * @param[in] value 改动后的元素
      */
-    inline void update(const Tp &prev, const Tp &value)
-    {
+    inline void update(const Tp &prev, const Tp &value) {
         if (_indexs.find(prev) == _indexs.end())
             return;
         std::size_t idx = _indexs[prev];
@@ -112,8 +111,7 @@ public:
      *
      * @param[in] value 待删除的元素
      */
-    inline void erase(const Tp &value)
-    {
+    inline void erase(const Tp &value) {
         if (_indexs.find(value) == _indexs.end())
             return;
         std::size_t idx = _indexs[value];
@@ -124,8 +122,7 @@ public:
     }
 
     //! 弹出堆顶
-    inline void pop()
-    {
+    inline void pop() {
         swapNode(0, _c.size() - 1);
         _indexs.erase(_c.back());
         _c.pop_back();
@@ -143,29 +140,24 @@ public:
 
 private:
     //! 交换 `_c` 数组中指定的两个下标的元素
-    void swapNode(std::size_t idx1, std::size_t idx2)
-    {
+    void swapNode(std::size_t idx1, std::size_t idx2) {
         _indexs[_c[idx1]] = idx2;
         _indexs[_c[idx2]] = idx1;
         std::swap(_c[idx1], _c[idx2]);
     }
 
     //! 从给定的节点开始往上生成堆
-    void upHeapify(std::size_t idx)
-    {
-        while (idx != 0 && _comp(_c[(idx - 1) >> 1], _c[idx]))
-        {
+    void upHeapify(std::size_t idx) {
+        while (idx != 0 && _comp(_c[(idx - 1) >> 1], _c[idx])) {
             swapNode((idx - 1) >> 1, idx);
             idx = (idx - 1) >> 1;
         }
     }
 
     //! 从给定的节点开始往下生成堆
-    void downHeapify(std::size_t idx)
-    {
+    void downHeapify(std::size_t idx) {
         std::size_t left = (idx << 1) + 1;
-        while (left < _c.size())
-        {
+        while (left < _c.size()) {
             // 左节点与右节点比较出满足条件的
             auto better = left + 1 < _c.size() && _comp(_c[left], _c[left + 1]) ? left + 1 : left;
             // 满足条件的子节点与自身比较
@@ -191,8 +183,7 @@ private:
  * @tparam Tp 元素类型
  */
 template <typename Tp>
-class UnionFind
-{
+class UnionFind {
 public:
     typedef Tp value_type;
     typedef Tp &reference;
@@ -207,24 +198,28 @@ public:
      * @param[in] last 终止迭代器
      */
     template <typename InputIterator>
-    UnionFind(InputIterator first, InputIterator last)
-    {
-        try
-        {
-            for (; first != last; ++first)
-            {
+    UnionFind(InputIterator first, InputIterator last) {
+        try {
+            for (; first != last; ++first) {
                 _element_set.insert(*first);
                 _parent_map[*first] = *first;
                 _size_map[*first] = 1;
                 _connected_component++;
             }
-        }
-        catch (...)
-        {
+        } catch (...) {
             _element_set.clear();
-            throw;
+            std::rethrow_exception(std::current_exception());
         }
     }
+
+#if __cplusplus >= 202002L
+    /**
+     * @brief 构造并查集
+     *
+     * @param[in] range 支持范围 for 的容器
+     */
+    UnionFind(std::ranges::range auto &&range) : UnionFind(std::begin(range), std::end(range)) {}
+#endif
 
     /**
      * @brief 两个元素是否在同一个集合
@@ -233,8 +228,7 @@ public:
      * @param[in] val_b 元素 B
      * @return 是否在同一个集合
      */
-    inline bool connected(const Tp &val_a, const Tp &val_b)
-    {
+    inline bool connected(const Tp &val_a, const Tp &val_b) {
         // Sign up?
         if (_element_set.find(val_a) == _element_set.end() ||
             _element_set.find(val_b) == _element_set.end())
@@ -249,8 +243,7 @@ public:
      * @param[in] val_a 元素 A
      * @param[in] val_b 元素 B
      */
-    inline void merge(const Tp &val_a, const Tp &val_b)
-    {
+    inline void merge(const Tp &val_a, const Tp &val_b) {
         // Sign up?
         if (_element_set.find(val_a) == _element_set.end() ||
             _element_set.find(val_b) == _element_set.end())
@@ -274,8 +267,7 @@ public:
      *
      * @return Key: 集合代表元素，Value: 集合
      */
-    inline std::unordered_map<Tp, std::vector<Tp>> extract()
-    {
+    inline std::unordered_map<Tp, std::vector<Tp>> extract() {
         std::unordered_map<Tp, std::vector<Tp>> datas;
         for (const auto &map_pair : _size_map)
             datas[map_pair.first].reserve(map_pair.second);
@@ -289,16 +281,13 @@ public:
 
 private:
     //! 寻找代表元素
-    Tp findRep(Tp element)
-    {
+    Tp findRep(Tp element) {
         std::stack<Tp> path;
-        while (element != _parent_map[element])
-        {
+        while (element != _parent_map[element]) {
             path.push(element);
             element = _parent_map[element];
         }
-        while (!path.empty())
-        {
+        while (!path.empty()) {
             _parent_map[path.top()] = element;
             path.pop();
         }
@@ -310,6 +299,14 @@ private:
     std::unordered_map<Tp, std::size_t> _size_map; //!< 集合大小
     int _connected_component{};                    //!< 连通分量
 };
+
+template <typename InputIterator>
+UnionFind(InputIterator, InputIterator) -> UnionFind<typename std::iterator_traits<InputIterator>::value_type>;
+
+#if __cplusplus >= 202002L
+template <std::ranges::range Range>
+UnionFind(Range &&) -> UnionFind<typename std::ranges::range_value_t<Range>>;
+#endif
 
 //! @} algorithm_datastruct
 

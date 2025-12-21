@@ -1,33 +1,24 @@
+# --------------------------------------------------------------------------
+#  Generate code from IDL
+# --------------------------------------------------------------------------
+# para
 rmvl_generate_para(lpss)
 
-# # file(xxx)
-# foreach(m string unit8 unit16 unit32 unit64 float32 float64)
-#   rmvl_generate_msg(
-#     ${m}
-#     MODULE std
-#   )
-#   set(std_src ${std_src} src/${m})
-# endforeach()
-
-# file(xxx)
-file(GLOB MSG_FILES "${CMAKE_CURRENT_LIST_DIR}/msg/*.msg")
-foreach(msg_file ${MSG_FILES})
-  get_filename_component(m ${msg_file} NAME_WE)
-  rmvl_generate_msg(
-    ${m}
-    MODULE std
-  )
-  set(std_src ${std_src} src/${m})
+# msg
+foreach(dir std geometry sensor)
+  file(GLOB msg_files "${CMAKE_CURRENT_LIST_DIR}/msg/${dir}/*.msg")
+  foreach(msg_file ${msg_files})
+    get_filename_component(msg_name ${msg_file} NAME_WE)
+    rmvl_generate_msg(${dir}/${msg_name})
+  endforeach()
 endforeach()
 
-rmvl_generate_module_msg(std)
-
-rmvl_generate_module_msg(std)
-
+# --------------------------------------------------------------------------
+#  Create module
+# --------------------------------------------------------------------------
 rmvl_add_module(
   lpss
   DEPENDS io
-  EXTRA_SOURCE ${std_src}
 )
 
 # --------------------------------------------------------------------------

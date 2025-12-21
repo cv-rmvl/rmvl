@@ -14,17 +14,13 @@
 #endif // HAVE_OPENCV
 
 #include "rmvl/algorithm/dsp.hpp"
-#include "rmvl/algorithm/math.hpp"
 
-namespace rm
-{
+namespace rm {
 
-RealSignal Gx(const ComplexSignal &x, GxType type)
-{
+RealSignal Gx(const ComplexSignal &x, GxType type) {
     const std::size_t N = x.size();
     RealSignal retval(N);
-    switch (type)
-    {
+    switch (type) {
     case GxType::Amp:
         for (std::size_t i = 0; i < N; ++i)
             retval[i] = std::abs(x[i]) / N;
@@ -48,8 +44,7 @@ RealSignal Gx(const ComplexSignal &x, GxType type)
 
 #ifdef HAVE_OPENCV
 
-cv::Mat draw(const RealSignal &datas, const cv::Scalar &color)
-{
+cv::Mat draw(const RealSignal &datas, const cv::Scalar &color) {
     cv::Mat img(cv::Size(int(datas.size() * 2.5), int(datas.size() * 1.5)), CV_8UC3, cv::Scalar(40, 40, 40));
     int cx{img.cols / 2}, cy{img.rows / 2};
 
@@ -71,8 +66,7 @@ cv::Mat draw(const RealSignal &datas, const cv::Scalar &color)
     return img;
 }
 
-ComplexSignal dft(const ComplexSignal &xt)
-{
+ComplexSignal dft(const ComplexSignal &xt) {
     const int N = static_cast<int>(xt.size());
     // std::deque -> cv::Mat
     cv::Mat input(1, N, CV_64FC2);
@@ -88,8 +82,7 @@ ComplexSignal dft(const ComplexSignal &xt)
     return res;
 }
 
-ComplexSignal idft(const ComplexSignal &Xf)
-{
+ComplexSignal idft(const ComplexSignal &Xf) {
     const int N = static_cast<int>(Xf.size());
     // std::deque -> cv::Mat
     cv::Mat input(1, N, CV_64FC2);
@@ -116,8 +109,7 @@ using namespace numeric_literals;
  * @param[in] N 信号长度
  * @return 离散频域信号
  */
-static inline ComplexSignal fftprocess(const ComplexSignal &xt)
-{
+static inline ComplexSignal fftprocess(const ComplexSignal &xt) {
     std::size_t N = xt.size();
     if (N == 1)
         return xt;
@@ -126,8 +118,7 @@ static inline ComplexSignal fftprocess(const ComplexSignal &xt)
         pe[i] = xt[2 * i], po[i] = xt[2 * i + 1];
     ComplexSignal y(N);
     auto ye = fftprocess(pe), yo = fftprocess(po);
-    for (std::size_t k = 0; k < N / 2; ++k)
-    {
+    for (std::size_t k = 0; k < N / 2; ++k) {
         auto wk_yo = std::polar(1.0, -2_PI / N * k) * yo[k];
         y[k] = ye[k] + wk_yo, y[k + N / 2] = ye[k] - wk_yo;
     }
@@ -135,8 +126,7 @@ static inline ComplexSignal fftprocess(const ComplexSignal &xt)
     return y;
 }
 
-static inline ComplexSignal ifftprocess(const ComplexSignal &Xf)
-{
+static inline ComplexSignal ifftprocess(const ComplexSignal &Xf) {
     std::size_t N = Xf.size();
     if (N == 1)
         return Xf;
@@ -145,8 +135,7 @@ static inline ComplexSignal ifftprocess(const ComplexSignal &Xf)
         pe[i] = Xf[2 * i], po[i] = Xf[2 * i + 1];
     ComplexSignal y(N);
     auto ye = ifftprocess(pe), yo = ifftprocess(po);
-    for (std::size_t k = 0; k < N / 2; ++k)
-    {
+    for (std::size_t k = 0; k < N / 2; ++k) {
         auto wk_yo = std::polar(1.0, 2_PI / N * k) * yo[k];
         y[k] = ye[k] + wk_yo, y[k + N / 2] = ye[k] - wk_yo;
     }
@@ -154,16 +143,14 @@ static inline ComplexSignal ifftprocess(const ComplexSignal &Xf)
     return y;
 }
 
-ComplexSignal dft(const ComplexSignal &xt)
-{
+ComplexSignal dft(const ComplexSignal &xt) {
     std::size_t N = xt.size();
     if (std::log2(N) != std::floor(std::log2(N)))
         RMVL_Error(RMVL_StsBadArg, "The size of the signal must be a power of 2.");
     return fftprocess(xt);
 }
 
-ComplexSignal idft(const ComplexSignal &Xf)
-{
+ComplexSignal idft(const ComplexSignal &Xf) {
     std::size_t N = Xf.size();
     if (std::log2(N) != std::floor(std::log2(N)))
         RMVL_Error(RMVL_StsBadArg, "The size of the signal must be a power of 2.");

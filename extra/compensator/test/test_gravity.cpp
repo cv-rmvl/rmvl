@@ -36,8 +36,8 @@ TEST(GravityCompensator, bulletModel)
     rm::GravityCompensator::Impl impl;
     auto [y_fric, t_fric] = impl.bulletModel(10, 16, 45_to_rad);
     // 无阻力情况下
-    double t = 10 / (16 * cos(rm::PI_4));
-    double y = 16 * sin(rm::PI_4) * t - 0.5 * rm::para::gravity_compensator_param.g * t * t;
+    double t = 10 / (16 * std::cos(rm::PI / 4));
+    double y = 16 * std::sin(rm::PI / 4) * t - 0.5 * rm::para::gravity_compensator_param.g * t * t;
     EXPECT_NEAR(y, y_fric, 5e-2);
     EXPECT_NEAR(t, t_fric, 5e-2);
 }
