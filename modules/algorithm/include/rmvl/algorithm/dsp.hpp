@@ -11,8 +11,8 @@
 
 #pragma once
 
-#include <deque>
 #include <complex>
+#include <deque>
 
 #ifdef HAVE_OPENCV
 #include <opencv2/core/mat.hpp>
@@ -20,8 +20,7 @@
 
 #include "rmvl/core/rmvldef.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup algorithm
 //! @{
@@ -40,8 +39,7 @@ using RealSignal = std::deque<double>;
 using ComplexSignal = std::deque<std::complex<double>>;
 
 //! 信号谱类型
-enum class GxType
-{
+enum class GxType {
     Amp,      //!< 幅度谱
     Phase,    //!< 相位谱
     Power,    //!< 功率谱
@@ -50,7 +48,7 @@ enum class GxType
 
 /**
  * @brief 计算离散傅里叶变换
- * 
+ *
  * @param[in] xt 时域复信号
  * @return 频域复信号
  */
@@ -58,7 +56,7 @@ RMVL_EXPORTS_W ComplexSignal dft(const ComplexSignal &xt);
 
 /**
  * @brief 计算离散傅里叶逆变换
- * 
+ *
  * @param[in] Xf 频域复信号
  * @return 时域复信号
  */
@@ -66,7 +64,7 @@ RMVL_EXPORTS_W ComplexSignal idft(const ComplexSignal &Xf);
 
 /**
  * @brief 计算信号谱
- * 
+ *
  * @param[in] x 复信号
  * @param[in] type 谱类型
  * @return 实数信号谱
@@ -77,7 +75,7 @@ RMVL_EXPORTS_W RealSignal Gx(const ComplexSignal &x, GxType type);
 
 /**
  * @brief 绘制信号
- * 
+ *
  * @param[in] datas 信号数据
  * @param[in] color 颜色
  * @return `cv::Mat` 表示的绘制图像

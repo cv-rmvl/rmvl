@@ -27,23 +27,23 @@ public:
     Impl(const std::vector<std::vector<double>> &samples) : _R(samples), _sample_size(samples.size()), _index_size(samples[0].size()) {}
 
     //! 基于权熵 TOPSIS 推理出最终的指标
-    std::vector<double> inference();
+    std::vector<double> inference() noexcept;
 
 private:
     //! 获取标准化指标
-    void calcR(const std::vector<std::vector<double>> &_R, std::vector<std::vector<double>> &R);
+    void calcR(const std::vector<std::vector<double>> &_R, std::vector<std::vector<double>> &R) noexcept;
 
     //! 获取归一化指标
-    void calcP(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &P);
+    void calcP(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &P) noexcept;
 
     //! 获取指标熵值向量
-    void calcH(const std::vector<std::vector<double>> &P, std::vector<double> &H);
+    void calcH(const std::vector<std::vector<double>> &P, std::vector<double> &H) noexcept;
 
     //! 获取指标熵权向量
-    void calcw(const std::vector<double> &H, std::vector<double> &w);
+    void calcw(const std::vector<double> &H, std::vector<double> &w) noexcept;
 
     //! 获取样本综合指标
-    void calcS(const std::vector<double> &w, const std::vector<std::vector<double>> &R_, std::vector<double> &S_);
+    void calcS(const std::vector<double> &w, const std::vector<std::vector<double>> &R_, std::vector<double> &S_) noexcept;
 
     std::vector<std::vector<double>> _R; //!< 指标数据
     std::vector<double> _S;              //!< 最终的指标数据

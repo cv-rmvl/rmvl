@@ -11,21 +11,18 @@
 
 #include <algorithm>
 #include <limits>
-#include <stdexcept>
 
 #include "mathmodel_impl.hpp"
 
-namespace rm
-{
+namespace rm {
 
 ////////////////////////////////// EwTopsis //////////////////////////////////
 
 EwTopsis::EwTopsis(const std::vector<std::vector<double>> &samples) : _impl(new Impl(samples)) {}
 EwTopsis::~EwTopsis() = default;
-std::vector<double> EwTopsis::inference() { return _impl->inference(); }
+std::vector<double> EwTopsis::inference() noexcept { return _impl->inference(); }
 
-std::vector<double> EwTopsis::Impl::inference()
-{
+std::vector<double> EwTopsis::Impl::inference() noexcept {
     std::vector<std::vector<double>> R{};
     calcR(_R, R);
     std::vector<std::vector<double>> P{};
@@ -38,17 +35,14 @@ std::vector<double> EwTopsis::Impl::inference()
     return _S;
 }
 
-void EwTopsis::Impl::calcR(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &Rstd)
-{
+void EwTopsis::Impl::calcR(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &Rstd) noexcept {
     Rstd = R;
     std::vector<double> min_indexs(_index_size);
     std::vector<double> max_indexs(_index_size);
-    for (std::size_t j = 0; j < _index_size; ++j)
-    {
+    for (std::size_t j = 0; j < _index_size; ++j) {
         min_indexs[j] = _R[0][j];
         max_indexs[j] = _R[0][j];
-        for (std::size_t i = 1; i < _sample_size; ++i)
-        {
+        for (std::size_t i = 1; i < _sample_size; ++i) {
             if (_R[i][j] < min_indexs[j])
                 min_indexs[j] = _R[i][j];
             if (_R[i][j] > max_indexs[j])
@@ -60,8 +54,7 @@ void EwTopsis::Impl::calcR(const std::vector<std::vector<double>> &R, std::vecto
             Rstd[i][j] = (_R[i][j] - min_indexs[j]) / (max_indexs[j] - min_indexs[j]);
 }
 
-void EwTopsis::Impl::calcP(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &P)
-{
+void EwTopsis::Impl::calcP(const std::vector<std::vector<double>> &R, std::vector<std::vector<double>> &P) noexcept {
     P = R;
     std::vector<double> sums(_index_size);
     for (std::size_t j = 0; j < _index_size; ++j)
@@ -73,11 +66,9 @@ void EwTopsis::Impl::calcP(const std::vector<std::vector<double>> &R, std::vecto
             P[i][j] = R[i][j] / sums[j];
 }
 
-void EwTopsis::Impl::calcH(const std::vector<std::vector<double>> &P, std::vector<double> &H)
-{
+void EwTopsis::Impl::calcH(const std::vector<std::vector<double>> &P, std::vector<double> &H) noexcept {
     H.resize(_index_size);
-    for (std::size_t j = 0; j < _index_size; ++j)
-    {
+    for (std::size_t j = 0; j < _index_size; ++j) {
         H[j] = 0;
         for (std::size_t i = 0; i < _sample_size; ++i)
             if (P[i][j] != 0)
@@ -86,19 +77,16 @@ void EwTopsis::Impl::calcH(const std::vector<std::vector<double>> &P, std::vecto
     }
 }
 
-inline void EwTopsis::Impl::calcw(const std::vector<double> &H, std::vector<double> &w)
-{
+inline void EwTopsis::Impl::calcw(const std::vector<double> &H, std::vector<double> &w) noexcept {
     w.resize(_index_size);
     double tmp = static_cast<double>(_index_size) - std::accumulate(H.begin(), H.end(), 0.0);
     for (std::size_t j = 0; j < _index_size; ++j)
         w[j] = (1 - H[j]) / tmp;
 }
 
-inline void EwTopsis::Impl::calcS(const std::vector<double> &w, const std::vector<std::vector<double>> &R, std::vector<double> &S)
-{
+inline void EwTopsis::Impl::calcS(const std::vector<double> &w, const std::vector<std::vector<double>> &R, std::vector<double> &S) noexcept {
     S.resize(_sample_size);
-    for (std::size_t i = 0; i < _sample_size; ++i)
-    {
+    for (std::size_t i = 0; i < _sample_size; ++i) {
         S[i] = 0;
         for (std::size_t j = 0; j < _index_size; ++j)
             S[i] += w[j] * R[i][j];
@@ -113,8 +101,7 @@ std::vector<std::size_t> Munkres::solve() noexcept { return _impl->solve(); }
 
 Munkres::Impl::Impl(const std::vector<std::vector<double>> &cost_matrix)
     : _m(cost_matrix.size()), _n(cost_matrix.front().size()), _matrix(cost_matrix),
-      _mask(_m), _row_covered(_m, false), _col_covered(_n, false)
-{
+      _mask(_m), _row_covered(_m, false), _col_covered(_n, false) {
     for (const auto &row : _matrix)
         if (row.size() != _n)
             RMVL_Error(RMVL_StsBadArg, "Matrix: \"cost_matrix\" is not rectangular");
@@ -122,12 +109,9 @@ Munkres::Impl::Impl(const std::vector<std::vector<double>> &cost_matrix)
         row.resize(_n);
 }
 
-std::vector<std::size_t> Munkres::Impl::solve() noexcept
-{
-    while (_step != Step::End)
-    {
-        switch (_step)
-        {
+std::vector<std::size_t> Munkres::Impl::solve() noexcept {
+    while (_step != Step::End) {
+        switch (_step) {
         case Step::Step1:
             step1();
             break;
@@ -158,8 +142,7 @@ std::vector<std::size_t> Munkres::Impl::solve() noexcept
     return retval;
 }
 
-std::tuple<int, int> Munkres::Impl::findOneZero(const std::vector<bool> &row_covered, const std::vector<bool> &col_covered)
-{
+std::tuple<int, int> Munkres::Impl::findOneZero(const std::vector<bool> &row_covered, const std::vector<bool> &col_covered) {
     for (std::size_t r = 0; r < _m; r++)
         for (std::size_t c = 0; c < _n; c++)
             if (_matrix[r][c] == 0 && !row_covered[r] && !col_covered[c])
@@ -168,8 +151,7 @@ std::tuple<int, int> Munkres::Impl::findOneZero(const std::vector<bool> &row_cov
     return {-1, -1};
 }
 
-bool Munkres::Impl::isStarInRow(int row)
-{
+bool Munkres::Impl::isStarInRow(int row) {
     const std::size_t n = _mask.front().size();
     for (std::size_t c = 0; c < n; c++)
         if (_mask[row][c] == 1)
@@ -177,8 +159,7 @@ bool Munkres::Impl::isStarInRow(int row)
     return false;
 }
 
-int Munkres::Impl::findStarInRow(int row)
-{
+int Munkres::Impl::findStarInRow(int row) {
     const std::size_t n = _mask.front().size();
     for (std::size_t c = 0; c < n; c++)
         if (_mask[row][c] == 1)
@@ -186,8 +167,7 @@ int Munkres::Impl::findStarInRow(int row)
     return -1;
 }
 
-int Munkres::Impl::findStarInCol(int col)
-{
+int Munkres::Impl::findStarInCol(int col) {
     const std::size_t m = _mask.size();
     for (std::size_t r = 0; r < m; r++)
         if (_mask[r][col] == 1)
@@ -195,8 +175,7 @@ int Munkres::Impl::findStarInCol(int col)
     return -1;
 }
 
-int Munkres::Impl::findPrimeInRow(int row)
-{
+int Munkres::Impl::findPrimeInRow(int row) {
     const std::size_t n = _mask.front().size();
     for (std::size_t c = 0; c < n; c++)
         if (_mask[row][c] == 2)
@@ -204,25 +183,19 @@ int Munkres::Impl::findPrimeInRow(int row)
     return -1;
 }
 
-void Munkres::Impl::step1()
-{
+void Munkres::Impl::step1() {
     double min_in_row{};
-    for (auto &row : _matrix)
-    {
+    for (auto &row : _matrix) {
         min_in_row = *std::min_element(row.begin(), row.end());
         std::for_each(row.begin(), row.end(), [min_in_row](double &val) { val -= min_in_row; });
     }
     _step = Step::Step2;
 }
 
-void Munkres::Impl::step2()
-{
-    for (std::size_t r = 0; r < _m; r++)
-    {
-        for (std::size_t c = 0; c < _n; c++)
-        {
-            if (_matrix[r][c] == 0 && !_row_covered[r] && !_col_covered[c])
-            {
+void Munkres::Impl::step2() {
+    for (std::size_t r = 0; r < _m; r++) {
+        for (std::size_t c = 0; c < _n; c++) {
+            if (_matrix[r][c] == 0 && !_row_covered[r] && !_col_covered[c]) {
                 _mask[r][c] = 1;
                 _row_covered[r] = true;
                 _col_covered[c] = true;
@@ -233,8 +206,7 @@ void Munkres::Impl::step2()
     _step = Step::Step3;
 }
 
-void Munkres::Impl::step3()
-{
+void Munkres::Impl::step3() {
     std::size_t colcount = 0;
     for (std::size_t r = 0; r < _m; r++)
         for (std::size_t c = 0; c < _n; c++)
@@ -249,29 +221,21 @@ void Munkres::Impl::step3()
         _step = Step::Step4;
 }
 
-void Munkres::Impl::step4()
-{
+void Munkres::Impl::step4() {
     int row = -1, col = -1;
     bool done = false;
-    while (!done)
-    {
+    while (!done) {
         std::tie(row, col) = findOneZero(_row_covered, _col_covered);
-        if (row == -1)
-        {
+        if (row == -1) {
             done = true;
             _step = Step::Step6;
-        }
-        else
-        {
+        } else {
             _mask[row][col] = 2;
-            if (isStarInRow(row))
-            {
+            if (isStarInRow(row)) {
                 int sta_Rcol = findStarInRow(row);
                 _row_covered[row] = true;
                 _col_covered[sta_Rcol] = false;
-            }
-            else
-            {
+            } else {
                 done = true;
                 _step = Step::Step5;
                 _first_zero = std::make_pair(row, col);
@@ -280,22 +244,19 @@ void Munkres::Impl::step4()
     }
 }
 
-void Munkres::Impl::step5()
-{
+void Munkres::Impl::step5() {
     _path.clear();
     _path.push_back(_first_zero);
 
     bool done = false;
-    do
-    {
+    do {
         int r = findStarInCol(_path.back().second);
         if (r > -1)
             _path.emplace_back(r, _path.back().second);
         else
             done = true;
 
-        if (!done)
-        {
+        if (!done) {
             int c = findPrimeInRow(_path.back().first);
             _path.emplace_back(_path.back().first, c);
         }
@@ -309,8 +270,7 @@ void Munkres::Impl::step5()
     _step = Step::Step3;
 }
 
-void Munkres::Impl::step6()
-{
+void Munkres::Impl::step6() {
     double minval = std::numeric_limits<double>::max();
     for (std::size_t r = 0; r < _m; r++)
         for (std::size_t c = 0; c < _n; c++)
@@ -318,10 +278,8 @@ void Munkres::Impl::step6()
                 if (minval > _matrix[r][c])
                     minval = _matrix[r][c];
     // 重叠区域 +min，非覆盖区域 -min
-    for (std::size_t r = 0; r < _m; r++)
-    {
-        for (std::size_t c = 0; c < _n; c++)
-        {
+    for (std::size_t r = 0; r < _m; r++) {
+        for (std::size_t c = 0; c < _n; c++) {
             _matrix[r][c] += (_row_covered[r] ? minval : 0);
             _matrix[r][c] -= (!_col_covered[c] ? minval : 0);
         }
@@ -329,14 +287,12 @@ void Munkres::Impl::step6()
     _step = Step::Step4;
 }
 
-void Munkres::Impl::clearCovers()
-{
+void Munkres::Impl::clearCovers() {
     std::fill(_row_covered.begin(), _row_covered.end(), false);
     std::fill(_col_covered.begin(), _col_covered.end(), false);
 }
 
-void Munkres::Impl::erasePrimes()
-{
+void Munkres::Impl::erasePrimes() {
     std::for_each(_mask.begin(), _mask.end(), [](std::vector<int> &row) {
         std::for_each(row.begin(), row.end(), [](int &val) { val = (val == 2 ? 0 : val); });
     });

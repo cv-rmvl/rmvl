@@ -111,6 +111,10 @@ Node::~Node() {
         _rndp_reader.write("127.0.0.1", Endpoint(ip::udp::v4(), _redp_port), wake_msg);
         _redp_listen_thrd.join();
     }
+    if (_hbt_detect_thrd.joinable()) {
+        _hbt_cv.notify_one();
+        _hbt_detect_thrd.join();
+    }
 }
 
 void Node::rndp_multicast() {
@@ -126,7 +130,7 @@ void Node::rndp_multicast() {
 
     // 广播 RNDP 消息
     while (_running.load(std::memory_order_acquire)) {
-        std::this_thread::sleep_for(50ms);
+        std::this_thread::sleep_for(20ms);
 
         // 为 Outbound 设置不同的接口地址，并分别发送消息
         for (const auto &network : _info.networks) {
@@ -231,8 +235,6 @@ void Node::redp_listener() {
 
 void Node::heartbeat_detect() {
     while (_running.load(std::memory_order_acquire)) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-
         std::vector<Guid> timeout_guids;
         auto now = Timer::now();
         {
@@ -246,6 +248,8 @@ void Node::heartbeat_detect() {
             for (const auto &guid : timeout_guids)
                 _discovered_nodes.erase(guid);
         }
+        std::unique_lock lk(_hbt_mtx);
+        _hbt_cv.wait_for(lk, 500ms);
     }
 }
 

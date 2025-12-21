@@ -11,8 +11,10 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "opt_camera_impl.h"
+#include "rmvl/core/util.hpp"
 #include "rmvl/core/timer.hpp"
+
+#include "opt_camera_impl.h"
 
 namespace rm {
 

@@ -10,19 +10,52 @@
  */
 
 #include <gtest/gtest.h>
-#include <thread>
 
-#include "rmvl/lpss/msgtmp.hpp"
-#include "rmvl/lpss/node.hpp"
+#include "rmvl/core/timer.hpp"
+#include "rmvl/io/socket.hpp"
+#include "rmvl/lpss.hpp"
 
 namespace rm_test {
 
 using namespace rm;
 
 TEST(LPSS_node, guid_create) {
-    lpss::Node nd1;
-    nd1.createPublisher<lpss::msg::String>("/person");
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    lpss::Node nd1, nd2{1};
+    // 相同主机、相同进程，应具有相同 GUID，不同域 ID 不影响 GUID
+    EXPECT_EQ(nd1.guid(), nd2.guid());
+}
+
+TEST(LPSS_node, same_domain_discover) {
+    lpss::Node nd;
+    DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
+    sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
+    Timer::reset();
+    auto [data, addr, port] = sock.read();
+    while (data.empty() && Timer::now() < 40)
+        std::tie(data, addr, port) = sock.read();
+    EXPECT_FALSE(data.empty());
+}
+
+TEST(LPSS_node, diff_domain_issolate) {
+    lpss::Node nd{1};
+    DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
+    sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
+    Timer::reset();
+    auto [data, addr, port] = sock.read();
+    while (data.empty() && Timer::now() < 40)
+        std::tie(data, addr, port) = sock.read();
+    EXPECT_TRUE(data.empty());
+}
+
+TEST(LPSS_node, diff_domain_discover) {
+    lpss::Node nd{1};
+    DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7501), false).create();
+    sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
+    Timer::reset();
+    auto [data, addr, port] = sock.read();
+    while (data.empty() && Timer::now() < 40)
+        std::tie(data, addr, port) = sock.read();
+    EXPECT_FALSE(data.empty());
 }
 
 } // namespace rm_test

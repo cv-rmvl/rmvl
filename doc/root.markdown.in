@@ -10,7 +10,9 @@ RMVL 说明文档 {#mainpage}
 - @ref tutorials_python
 @refs_modules@
 @refs_extra@
-- Parameter modules. @ref rmvlpara
+- Code generation contents. 代码生成相关内容
+  - Parameter modules. @ref rmvlpara
+  - Message modules. @ref rmvlmsg
 - @ref citelist
 
 #### 快速开始

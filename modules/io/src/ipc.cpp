@@ -12,6 +12,7 @@
 #ifndef _WIN32
 #include <fcntl.h>
 #include <mqueue.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -118,6 +119,34 @@ PipeClient::~PipeClient() {
         closePipe(_fd);
 }
 
+SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size) {
+    _fd = CreateFileMappingA(
+        INVALID_HANDLE_VALUE,     // 使用系统分页文件
+        nullptr,                  // 默认安全属性
+        PAGE_READWRITE,           // 可读写
+        0,                        // 最大对象大小（高32位）
+        static_cast<DWORD>(size), // 最大对象大小（低32位）
+        name.data());             // 名称
+    if (_fd == nullptr) {
+        ERROR_("Failed to create shared memory");
+        return;
+    }
+    _ptr = MapViewOfFile(_fd, FILE_MAP_ALL_ACCESS, 0, 0, size);
+    if (_ptr == nullptr) {
+        ERROR_("Failed to map view of file");
+        CloseHandle(_fd);
+        _fd = nullptr;
+        return;
+    }
+}
+
+SharedMemory::~SharedMemory() {
+    if (_ptr != nullptr)
+        UnmapViewOfFile(_ptr);
+    if (_fd != nullptr)
+        CloseHandle(_fd);
+}
+
 #else
 
 static std::string readPipe(int fd) noexcept {
@@ -159,6 +188,49 @@ PipeClient::PipeClient(std::string_view name, bool) : _fd(::open(("/tmp/"s + nam
 PipeClient::~PipeClient() {
     if (_fd != -1)
         ::close(_fd);
+}
+
+SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size) {
+    std::string shm_path = "/dev/shm/"s + name.data();
+    bool is_creator = false;
+    _fd = ::open(shm_path.c_str(), O_RDWR | O_CREAT | O_EXCL, 0666);
+
+    if (_fd >= 0)
+        is_creator = true;
+    else if (errno == EEXIST) {
+        _fd = ::open(shm_path.c_str(), O_RDWR, 0);
+        if (_fd == -1) {
+            ERROR_("Failed to open existing shared memory: %s", strerror(errno));
+            return;
+        }
+    } else {
+        ERROR_("Failed to create shared memory: %s", strerror(errno));
+        return;
+    }
+
+    // 设置内存大小
+    if (is_creator) {
+        if (ftruncate(_fd, size) == -1) {
+            ERROR_("Failed to set shared memory size: %s", strerror(errno));
+            close(_fd);
+            _fd = -1;
+            return;
+        }
+    }
+    _ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, _fd, 0);
+    if (_ptr == MAP_FAILED) {
+        ERROR_("Failed to map shared memory: %s", strerror(errno));
+        close(_fd);
+        _fd = -1;
+        return;
+    }
+}
+
+SharedMemory::~SharedMemory() {
+    if (_ptr != MAP_FAILED)
+        munmap(_ptr, _size);
+    if (_fd != -1)
+        close(_fd);
 }
 
 #endif

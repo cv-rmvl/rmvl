@@ -11,6 +11,8 @@
 
 #include "opt_camera_impl.h"
 
+#include "rmvl/core/util.hpp"
+
 #include "rmvlpara/camera/opt_camera.h"
 
 namespace rm {

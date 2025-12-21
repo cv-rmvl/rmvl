@@ -3,12 +3,13 @@
 #
 #   1. rmvl_generate_para:        根据给定目标及对应的参数规范文件 *.para 生成 C++ 文件
 #   2. rmvl_generate_module_para: 根据给定模块下的所有 para 目标生成 C++ 文件
-#   3. rmvl_generate_msg:         根据给定消息及对应的消息规范文件 *.msg 生成 C++ 文件
-#   4. rmvl_generate_module_msg:  根据给定模块下的所有 msg 目标生成 C++ 文件
+#   3. rmvl_generate_msg:         根据指定的消息描述文件 *.msg 生成 C++ 文件
 #
 # 以及以下次要功能：
 #
 #   1. system_date:   获取系统日期
+#   2. to_upperfirst: 将字符串的首字母转换为大写
+#   3. to_lowerfirst: 将字符串的首字母转换为小写
 # =====================================================================================
 
 # ----------------------------------------------------------------------------
@@ -51,6 +52,65 @@ system_date(year month day)
 set(year ${year} CACHE INTERNAL "year")
 set(month ${month} CACHE INTERNAL "month")
 set(day ${day} CACHE INTERNAL "day")
+
+# ----------------------------------------------------------------------------
+#   将字符串的首字母转换为大写
+#   用法:
+#     to_upperfirst(
+#       <input_string> <output_string>
+#     )
+#   示例:
+#     to_upperfirst(
+#       "${input_str}" # 输入字符串
+#       output_str     # 输出字符串: 首字母大写
+#     )
+# ----------------------------------------------------------------------------
+function(to_upperfirst input_str output_str)
+  string(SUBSTRING ${input_str} 0 1 first_c)
+  string(TOUPPER ${first_c} first_c_upper)
+  string(SUBSTRING ${input_str} 1 -1 rest_c)
+  set(${output_str} "${first_c_upper}${rest_c}" PARENT_SCOPE)
+endfunction()
+
+# ----------------------------------------------------------------------------
+#   将字符串的首字母转换为小写
+#   用法:
+#     to_lowerfirst(
+#       <input_string> <output_string>
+#     )
+#   示例:
+#     to_lowerfirst(
+#       "${input_str}" # 输入字符串
+#       output_str     # 输出字符串: 首字母小写
+#     )
+# ----------------------------------------------------------------------------
+function(to_lowerfirst input_str output_str)
+  string(SUBSTRING ${input_str} 0 1 first_c)
+  string(TOLOWER ${first_c} first_c_lower)
+  string(SUBSTRING ${input_str} 1 -1 rest_c)
+  set(${output_str} "${first_c_lower}${rest_c}" PARENT_SCOPE)
+endfunction()
+
+# ----------------------------------------------------------------------------
+#   将字符串转换为蛇形命名法
+#   用法:
+#     _to_snake_case(
+#       <input_string> <output_string>
+#     )
+#   示例:
+#     _to_snake_case(
+#       "ColorRGBA" # 输入字符串
+#       output_str  # 输出字符串: color_rgba
+#     )
+# ----------------------------------------------------------------------------
+function(_to_snake_case input_str output_str)
+  # Add underscore before capital letters that are preceded by lowercase or digits
+  string(REGEX REPLACE "([a-z0-9])([A-Z])" "\\1_\\2" result "${input_str}")
+  # Convert to lower case
+  # e.g., Color_RGBA -> color_rgba, UInt8 -> uint8
+  string(TOLOWER "${result}" result)
+  set(${output_str} "${result}" PARENT_SCOPE)
+endfunction()
 
 # ----------------------------------------------------------------------------
 #   修正类型符号: 增加 C++ 的作用域
@@ -348,11 +408,8 @@ function(rmvl_generate_para target_name)
   string(REGEX REPLACE "_" ";" para_name_cut "${target_name}_param")
   set(class_name "")
   foreach(_sub ${para_name_cut})
-    string(SUBSTRING ${_sub} 0 1 first_c)
-    string(TOUPPER ${first_c} first_c)
-    string(SUBSTRING ${_sub} 1 -1 remain_c)
-    list(APPEND class_name "${first_c}${remain_c}")
-    string(REGEX REPLACE ";" "" class_name "${class_name}")
+    to_upperfirst("${_sub}" class_name_part)
+    string(APPEND class_name "${class_name_part}")
   endforeach()
   ###################### Generate C++ class file ######################
   string(FIND "${RMVLPARA_${module_name}}" "${target_name}" target_idx)
@@ -446,10 +503,10 @@ function(rmvl_generate_module_para module_name)
 endfunction()
 
 # ----------------------------------------------------------------------------
-#   根据指定的消息名在 msg 文件夹下对应的 *.msg 消息规范文件和可选的模块名生成对应的 C++ 代码
+#   根据指定的消息描述文件 *.msg 和可选的模块名生成对应的 C++ 代码
 #   用法:
 #     rmvl_generate_msg(
-#       <message_name>
+#       <message_file>
 #       [MODULE module_name]
 #     )
 #   示例:
@@ -459,33 +516,27 @@ endfunction()
 #     )
 # ----------------------------------------------------------------------------
 
-function(rmvl_generate_msg name)
+function(rmvl_generate_msg file)
   cmake_parse_arguments(MSG "" "MODULE" "" ${ARGN})
 
-  set(msg_file "${CMAKE_CURRENT_LIST_DIR}/msg/${name}.msg")
+  set(msg_file "${CMAKE_CURRENT_LIST_DIR}/msg/${file}.msg")
+  _to_snake_case("${file}" file_snake_case)
+  set(inc_file "${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${file_snake_case}.hpp")
+  set(MSG_INCLUDE_CONTENT "rmvlmsg/${file_snake_case}.hpp")
+  set(CLASS_NAME_COMMENT "${file}")
+  get_filename_component(CLASS_NAME "${file}" NAME)
+  _to_snake_case("${CLASS_NAME}" name)
 
   # define the target path of the src and include files
   if(MSG_MODULE)
-    set(inc_file "${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${MSG_MODULE}/${name}.hpp")
-    set(src_file "${CMAKE_CURRENT_LIST_DIR}/src/${name}/_rm_codegen_msg${name}.cpp")
+    set(src_file "${CMAKE_CURRENT_LIST_DIR}/src/${name}/_rm_codegen_msg_${name}.cpp")
     set(module_name "${MSG_MODULE}")
-    set(MSG_INCLUDE_CONTENT "rmvlmsg/${MSG_MODULE}/${name}.hpp")
   else()
-    set(inc_file "${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${name}.hpp")
-    set(src_file "${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_msg${name}.cpp")
+    set(src_file "${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_msg_${name}.cpp")
     set(module_name "${name}")
-    set(MSG_INCLUDE_CONTENT "rmvlmsg/${name}.hpp")
   endif()
-  string(FIND "${RMVLMSG_${module_name}}" "${name}" target_idx)
-  if(target_idx EQUAL -1)
-    set(RMVLMSG_${module_name} "${RMVLMSG_${module_name}}" "${name}" CACHE INTERNAL "${module_name} msgs")
-  endif() 
 
-  # Generate class name
-  string(SUBSTRING ${name} 0 1 first_char)
-  string(TOUPPER ${first_char} first_char_upper)
-  string(SUBSTRING ${name} 1 -1 rest_name)
-  set(CLASS_NAME "${first_char_upper}${rest_name}")
+  set(MSG_EXTRA_HEADERS "")
 
   # Read msg file content
   file(READ ${msg_file} MSG_CONTENT)
@@ -502,23 +553,50 @@ function(rmvl_generate_msg name)
     string(REGEX REPLACE "#.*$" "" line "${line}")
     # Remove leading and trailing whitespace
     string(STRIP "${line}" line)
-            
-    # Skip empty lines
     if(NOT line)
       continue()
     endif()
-            
     # Parse format: type name
-    string(REGEX MATCH "^([a-zA-Z0-9_]+)[ \t]+([a-zA-Z0-9_]+)$" MATCHED "${line}")
-            
+    string(REGEX MATCH "^([a-zA-Z0-9_/]+)(\\[[0-9]*\\])?[ \t]+([a-zA-Z0-9_]+)$" MATCHED "${line}")
+
     if(MATCHED)
-      set(field_type ${CMAKE_MATCH_1})
-      set(field_name ${CMAKE_MATCH_2})
-      list(APPEND type_and_ids "${field_type}@${field_name}")
-      # message(STATUS "      Field: ${field_type} ${field_name}")
+      set(base_type ${CMAKE_MATCH_1})
+      set(array_spec ${CMAKE_MATCH_2})
+      set(field_name ${CMAKE_MATCH_3})
+
+      # Handle default std types
+      if(base_type STREQUAL "Header")
+        set(base_type "std/${base_type}")
+      endif()
+      # Handle 'folder/type' format
+      if(base_type MATCHES ".+/.+")
+        string(REPLACE "/" ";" type_parts "${base_type}")
+        list(GET type_parts 0 folder)
+        list(GET type_parts 1 type_name)
+        to_lowerfirst("${type_name}" include_type_name)
+        set(msg_header_ext_line "#include \"rmvlmsg/${folder}/${include_type_name}.hpp\"")
+        list(FIND MSG_EXTRA_HEADERS_LIST "${msg_header_ext_line}" _header_found_idx)
+        if(_header_found_idx EQUAL -1)
+          list(APPEND MSG_EXTRA_HEADERS_LIST "${msg_header_ext_line}")
+          set(MSG_EXTRA_HEADERS "${MSG_EXTRA_HEADERS}${msg_header_ext_line}\n")
+        endif()
+        to_upperfirst("${type_name}" base_type)
+      endif()
+
+      set(array_info "SCALAR@")
+      if(array_spec)
+        if(array_spec STREQUAL "[]")
+          set(array_info "VARIABLE_ARRAY@")
+        else()
+          string(REGEX MATCH "[0-9]+" array_size "${array_spec}")
+          set(array_info "FIXED_ARRAY@${array_size}")
+        endif()
+      endif()
+
+      list(APPEND type_and_ids "${base_type}@${field_name}@${array_info}")
     endif()
   endforeach()
-        
+
   # Validate parsed fields
   list(LENGTH type_and_ids FIELD_COUNT)
   if(FIELD_COUNT EQUAL 0)
@@ -527,78 +605,167 @@ function(rmvl_generate_msg name)
 
   # Generate type_and_ids_cpp
   set(type_and_ids_cpp)
-  foreach(n ${type_and_ids})
-    string(REPLACE "@" ";" parts "${n}")
-    list(GET parts 0 type)
-    list(GET parts 1 id)
-
-    if(type STREQUAL "string")
-      string(APPEND type_and_ids_cpp "    std::string ${id};\n")
-    elseif(type STREQUAL "float" OR type STREQUAL "double" OR type STREQUAL "bool")
-      string(APPEND type_and_ids_cpp "    ${type} ${id};\n")
-    else()
-      string(APPEND type_and_ids_cpp "    ${type}_t ${id};\n")
-    endif()
-  endforeach()
-
-  # Calculate serialization size
-  set(size_str)
-  foreach(n ${type_and_ids})
-    string(REPLACE "@" ";" parts "${n}")
-    list(GET parts 0 type)
-    list(GET parts 1 id)
-
-    if(type STREQUAL "string")
-      list(APPEND size_str "sizeof(uint8_t) + ${id}.size()")
-    else()
-      list(APPEND size_str "sizeof(${id})")
-    endif()
-  endforeach()
-
-  string(REPLACE ";" " + " size_str "${size_str}")
-
-  # Generate serialize_content
+  set(size_list)
   set(serialize_content)
+  set(deserialize_content)
+
   foreach(n ${type_and_ids})
     string(REPLACE "@" ";" parts "${n}")
     list(GET parts 0 type)
     list(GET parts 1 id)
+    list(GET parts 2 array_type)
+    list(GET parts 3 array_size)
 
+    # Generate base C++ type
+    set(is_custom_type OFF)
     if(type STREQUAL "string")
+      set(cpp_base_type "std::string")
+    elseif(type STREQUAL "bool")
+      set(cpp_base_type "bool")
+    elseif(type STREQUAL "float32")
+      set(cpp_base_type "float")
+    elseif(type STREQUAL "float64")
+      set(cpp_base_type "double")
+    elseif(type MATCHES "^int(8|16|32|64)$")
+      set(cpp_base_type "${type}_t")
+    elseif(type MATCHES "^uint(8|16|32|64)$")
+      set(cpp_base_type "${type}_t")
+    else()
+      to_upperfirst("${type}" type)
+      set(cpp_base_type "${type}")
+      set(is_custom_type ON)
+    endif()
+
+    # Generate final C++ type based on array type
+    if(array_type STREQUAL "FIXED_ARRAY")
+      string(APPEND type_and_ids_cpp "    std::array<${cpp_base_type}, ${array_size}> ${id}{};\n")
+    elseif(array_type STREQUAL "VARIABLE_ARRAY")
+      string(APPEND type_and_ids_cpp "    std::vector<${cpp_base_type}> ${id}{};\n")
+    else() # SCALAR
+      string(APPEND type_and_ids_cpp "    ${cpp_base_type} ${id}{};\n")
+    endif()
+
+    # Calculate size
+    if(array_type STREQUAL "FIXED_ARRAY")
+      if(is_custom_type)
+        set(size_expr "std::accumulate(${id}.begin(), ${id}.end(), size_t(0), [](size_t a, const auto& i) { return a + i.compact_size(); })")
+        string(REPLACE ";" "\\;" size_expr "${size_expr}")
+        list(APPEND size_list "${size_expr}")
+      else()
+        list(APPEND size_list "sizeof(${id})")
+      endif()
+    elseif(array_type STREQUAL "VARIABLE_ARRAY")
+      if(is_custom_type)
+        set(size_expr "sizeof(uint8_t) + std::accumulate(${id}.begin(), ${id}.end(), size_t(0), [](size_t a, const auto& i) { return a + i.compact_size(); })")
+        string(REPLACE ";" "\\;" size_expr "${size_expr}")
+        list(APPEND size_list "${size_expr}")
+      else()
+        if(type STREQUAL "string")
+          set(size_expr "sizeof(uint8_t) + std::accumulate(${id}.begin(), ${id}.end(), size_t(0), [](size_t a, const auto& i) { return a + sizeof(uint8_t) + i.size(); })")
+          string(REPLACE ";" "\\;" size_expr "${size_expr}")
+          list(APPEND size_list "${size_expr}")
+        else()
+          list(APPEND size_list "sizeof(uint8_t) + ${id}.size() * sizeof(${cpp_base_type})")
+        endif()
+      endif()
+    elseif(type STREQUAL "string")
+      list(APPEND size_list "sizeof(uint8_t) + ${id}.size()")
+    elseif(is_custom_type)
+      list(APPEND size_list "${id}.compact_size()")
+    else() # SCALAR
+      list(APPEND size_list "sizeof(${id})")
+    endif()
+
+    # Generate serialization code
+    if(array_type STREQUAL "FIXED_ARRAY")
+      if(is_custom_type)
+        string(APPEND serialize_content "    for (const auto& v : ${id})\n        _res_.append(v.serialize());\n")
+      else()
+        if(type STREQUAL "string")
+          string(APPEND serialize_content "    for (const auto &v : ${id}) {\n")
+          string(APPEND serialize_content "        uint8_t v_size__ = static_cast<uint8_t>(v.size());\n")
+          string(APPEND serialize_content "        _res_.append(reinterpret_cast<const char *>(&v_size__), sizeof(uint8_t));\n")
+          string(APPEND serialize_content "        _res_.append(v.data(), v.size());\n")
+          string(APPEND serialize_content "    }\n")
+        else()
+          string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(${id}.data()), ${id}.size() * sizeof(${cpp_base_type}));\n")
+        endif()
+      endif()
+    elseif(array_type STREQUAL "VARIABLE_ARRAY")
+      string(APPEND serialize_content "    uint8_t ${id}_size__ = static_cast<uint8_t>(${id}.size());\n")
+      string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(&${id}_size__), sizeof(uint8_t));\n")
+      if(is_custom_type)
+        string(APPEND serialize_content "    for (const auto &v : ${id})\n        _res_.append(v.serialize());\n")
+      else()
+        if(type STREQUAL "string")
+          string(APPEND serialize_content "    for (const auto &v : ${id}) {\n")
+          string(APPEND serialize_content "        uint8_t v_size__ = static_cast<uint8_t>(v.size());\n")
+          string(APPEND serialize_content "        _res_.append(reinterpret_cast<const char *>(&v_size__), sizeof(uint8_t));\n")
+          string(APPEND serialize_content "        _res_.append(v.data(), v.size());\n")
+          string(APPEND serialize_content "    }\n")
+        else()
+          string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(${id}.data()), ${id}.size() * sizeof(${cpp_base_type}));\n")
+        endif()
+      endif()
+    elseif(type STREQUAL "string")
       string(APPEND serialize_content "    uint8_t ${id}_size__ = static_cast<uint8_t>(${id}.size());\n")
       string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(&${id}_size__), sizeof(uint8_t));\n")
       string(APPEND serialize_content "    _res_.append(${id}.data(), ${id}.size());\n")
+    elseif(is_custom_type)
+      string(APPEND serialize_content "    _res_.append(${id}.serialize());\n")
     else()
       string(APPEND serialize_content "    _res_.append(reinterpret_cast<const char *>(&${id}), sizeof(${id}));\n")
     endif()
-  endforeach()
 
-  # Generate deserialize_content
-  set(deserialize_content)
-  foreach(n ${type_and_ids})
-    string(REPLACE "@" ";" parts "${n}")
-    list(GET parts 0 type)
-    list(GET parts 1 id)
-
-   if(type STREQUAL "string")
+    # Generate deserialization code
+    if(array_type STREQUAL "FIXED_ARRAY")
+      if(is_custom_type)
+        string(APPEND deserialize_content "    for (auto& v : _msg__.${id})\n        v = ${cpp_base_type}::deserialize(_p__);\n")
+      else()
+        string(APPEND deserialize_content "    const auto src_ptr_${id}__ = reinterpret_cast<const ${cpp_base_type} *>(_p__);\n")
+        string(APPEND deserialize_content "    std::copy_n(src_ptr_${id}__, ${array_size}, _msg__.${id}.data());\n")
+        string(APPEND deserialize_content "    _p__ += sizeof(${cpp_base_type}) * ${array_size};\n")
+      endif()
+    elseif(array_type STREQUAL "VARIABLE_ARRAY")
+      string(APPEND deserialize_content "    uint8_t ${id}_size__ = *reinterpret_cast<const uint8_t *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(uint8_t);\n")
+      string(APPEND deserialize_content "    _msg__.${id}.resize(${id}_size__);\n")
+      if(is_custom_type)
+        string(APPEND deserialize_content "    for (auto& v : _msg__.${id})\n        v = ${cpp_base_type}::deserialize(_p__);\n")
+      else()
+        if(type STREQUAL "string")
+          string(APPEND deserialize_content "    for (size_t i = 0; i < ${id}_size__; ++i) {\n")
+          string(APPEND deserialize_content "        uint8_t v_size__ = *reinterpret_cast<const uint8_t *>(_p__);\n")
+          string(APPEND deserialize_content "        _p__ += sizeof(uint8_t);\n")
+          string(APPEND deserialize_content "        _msg__.${id}[i].assign(_p__, v_size__);\n")
+          string(APPEND deserialize_content "        _p__ += v_size__;\n")
+          string(APPEND deserialize_content "    }\n")
+        else()
+          string(APPEND deserialize_content "    const auto src_ptr_${id}__ = reinterpret_cast<const ${cpp_base_type} *>(_p__);\n")
+          string(APPEND deserialize_content "    std::copy_n(src_ptr_${id}__, ${id}_size__, _msg__.${id}.data());\n")
+          string(APPEND deserialize_content "    _p__ += sizeof(${cpp_base_type}) * ${id}_size__;\n")
+        endif()
+      endif()
+    elseif(type STREQUAL "string")
       string(APPEND deserialize_content "    uint8_t ${id}_size__ = *reinterpret_cast<const uint8_t *>(_p__);\n")
       string(APPEND deserialize_content "    _p__ += sizeof(uint8_t);\n")
       string(APPEND deserialize_content "    _msg__.${id}.assign(_p__, ${id}_size__);\n")
       string(APPEND deserialize_content "    _p__ += ${id}_size__;\n")
-    elseif(type STREQUAL "float")
-      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const float *>(_p__);\n")
-      string(APPEND deserialize_content "    _p__ += sizeof(float);\n")
-    elseif(type STREQUAL "double")
-      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const double *>(_p__);\n")
-      string(APPEND deserialize_content "    _p__ += sizeof(double);\n")
-    elseif(type STREQUAL "bool")
-      string(APPEND deserialize_content "    _msg__.${id} = (*reinterpret_cast<const uint8_t *>(_p__)) != 0;\n")
-      string(APPEND deserialize_content "    _p__ += sizeof(uint8_t);\n")
-    else()
-      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const ${type}_t *>(_p__);\n")
-      string(APPEND deserialize_content "    _p__ += sizeof(${type}_t);\n")
+    elseif(is_custom_type)
+      string(APPEND deserialize_content "    _msg__.${id} = ${cpp_base_type}::deserialize(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += _msg__.${id}.compact_size();\n")
+    else() # SCALAR
+      string(APPEND deserialize_content "    _msg__.${id} = *reinterpret_cast<const ${cpp_base_type} *>(_p__);\n")
+      string(APPEND deserialize_content "    _p__ += sizeof(${cpp_base_type});\n")
     endif()
-      endforeach()
+  endforeach()
+
+  # Concat size string
+  list(JOIN size_list " + " size_str)
+  string(REPLACE "\\;" ";" size_str "${size_str}")
+  if(NOT size_str)
+    set(size_str "0")
+  endif()
 
   set(MSG_NAME ${name})
 
@@ -611,29 +778,6 @@ function(rmvl_generate_msg name)
   configure_file(
     ${codegen_template_path}/msg_generator.cpp.in
     ${src_file}
-    @ONLY
-  )
-endfunction()
-
-# ----------------------------------------------------------------------------
-#   根据给定模块下所有的 msg 目标，生成对应的 C++ 代码
-#   用法:
-#     rmvl_generate_module_msg(
-#       <module_name>
-#     )
-#   示例:
-#     rmvl_generate_module_msg(combo)
-# ----------------------------------------------------------------------------
-function(rmvl_generate_module_msg module_name)
-  set(msg_module_header_details "")
-  foreach(_sub ${RMVLMSG_${module_name}})
-    string(TOUPPER "${_sub}" _upper)
-    set(msg_module_header_details "${msg_module_header_details}#include \"${module_name}/${_sub}.hpp\"\n")
-  endforeach()
-  # generate C++ file
-  configure_file(
-    ${codegen_template_path}/msg_generator_module.in
-    ${CMAKE_CURRENT_LIST_DIR}/include/rmvlmsg/${module_name}.hpp
     @ONLY
   )
 endfunction()

@@ -56,7 +56,7 @@ struct RNDPMessage {
     //! 反序列化 RNDP 消息
     static RNDPMessage deserialize(const char *data) noexcept;
 
-    Guid guid;                       //!< 节点唯一标识符
+    Guid guid{};                     //!< 节点唯一标识符
     uint8_t heartbeat_timeout{};     //!< 心跳周期（单位：s）
     std::vector<Locator> locators{}; //!< 用于 REDP 的单播定位器列表
 };

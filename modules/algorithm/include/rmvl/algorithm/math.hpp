@@ -12,12 +12,11 @@
 #pragma once
 
 #include <cmath>
-#include <functional>
 #include <numeric>
 #include <unordered_map>
 #include <vector>
 
-#if defined HAVE_OPENCV
+#ifdef HAVE_OPENCV
 #include <opencv2/core/matx.hpp>
 #else
 #include <algorithm>
@@ -26,8 +25,7 @@
 
 #include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup algorithm
 //! @{
@@ -40,11 +38,7 @@ constexpr double PI = 3.14159265358979323; //!< 圆周率: \f$\pi\f$
 constexpr double e = 2.7182818459045;      //!< 自然对数底数: \f$e\f$
 constexpr double SQRT_2 = 1.4142135623731; //!< 根号 2: \f$\sqrt2\f$
 
-constexpr double PI_2 = PI / 2.; //!< PI / 2: \f$\frac\pi2\f$
-constexpr double PI_4 = PI / 4.; //!< PI / 4: \f$\frac\pi4\f$
-
-namespace numeric_literals
-{
+namespace numeric_literals {
 
 constexpr double operator""_PI(long double num) { return num * PI; }
 constexpr double operator""_PI(long long unsigned num) { return num * PI; }
@@ -62,8 +56,7 @@ constexpr double operator""_to_deg(long long unsigned num) { return num * 180. /
 #ifdef HAVE_OPENCV
 
 // 定义部分 Matx
-namespace cv
-{
+namespace cv {
 
 using Matx11f = Matx<float, 1, 1>;
 using Matx11d = Matx<double, 1, 1>;
@@ -78,8 +71,7 @@ using Matx55d = Matx<double, 5, 5>;
 
 #endif // HAVE_OPENCV
 
-namespace rm
-{
+namespace rm {
 
 #ifdef HAVE_OPENCV
 
@@ -95,8 +87,7 @@ constexpr cv::Matx<Tp, 1, 1> operator-(const cv::Matx<Tp, 1, 1> &mat, Tp val) { 
 #endif // HAVE_OPENCV
 
 //! 角度制式
-enum AngleMode : bool
-{
+enum AngleMode : bool {
     RAD = true, //!< 弧度制
     DEG = false //!< 角度制
 };
@@ -137,9 +128,8 @@ constexpr Tp rad2deg(Tp rad) { return rad * static_cast<Tp>(180) / static_cast<T
  * @return 平面欧式距离
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getDistance(const cv::Point_<Tp1> &pt_1, const cv::Point_<Tp2> &pt_2)
-{
-    return std::sqrt(std::pow(pt_1.x - pt_2.x, 2) + std::pow(pt_1.y - pt_2.y, 2));
+constexpr auto getDistance(const cv::Point_<Tp1> &pt_1, const cv::Point_<Tp2> &pt_2) {
+    return std::hypot(pt_1.x - pt_2.x, pt_1.y - pt_2.y);
 }
 
 /**
@@ -152,14 +142,12 @@ constexpr auto getDistance(const cv::Point_<Tp1> &pt_1, const cv::Point_<Tp2> &p
  * @return 平面欧式距离
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getDistance(const cv::Vec<Tp1, 2> &vec_1, const cv::Vec<Tp2, 2> &vec_2)
-{
-    return std::sqrt(std::pow(vec_1(0) - vec_2(0), 2) + std::pow(vec_1(1) - vec_2(1), 2));
+constexpr auto getDistance(const cv::Vec<Tp1, 2> &vec_1, const cv::Vec<Tp2, 2> &vec_2) {
+    return std::hypot(vec_1(0) - vec_2(0), vec_1(1) - vec_2(1));
 }
 
 //! 计算所在平面
-enum class CalPlane : uint8_t
-{
+enum class CalPlane : uint8_t {
     xyz = 0, //!< 三维空间
     xOy = 1, //!< xOy平面
     xOz = 2, //!< xOz平面
@@ -177,18 +165,16 @@ enum class CalPlane : uint8_t
  * @return 空间欧式距离
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getDistance(const cv::Point3_<Tp1> &pt_1, const cv::Point3_<Tp2> &pt_2, CalPlane calplane = CalPlane::xyz)
-{
-    switch (calplane)
-    {
+constexpr auto getDistance(const cv::Point3_<Tp1> &pt_1, const cv::Point3_<Tp2> &pt_2, CalPlane calplane = CalPlane::xyz) {
+    switch (calplane) {
     case CalPlane::xOy:
-        return std::sqrt(std::pow(pt_1.x - pt_2.x, 2) + std::pow(pt_1.y - pt_2.y, 2));
+        return std::hypot(pt_1.x - pt_2.x, pt_1.y - pt_2.y);
     case CalPlane::xOz:
-        return std::sqrt(std::pow(pt_1.x - pt_2.x, 2) + std::pow(pt_1.z - pt_2.z, 2));
+        return std::hypot(pt_1.x - pt_2.x, pt_1.z - pt_2.z);
     case CalPlane::yOz:
-        return std::sqrt(std::pow(pt_1.y - pt_2.y, 2) + std::pow(pt_1.z - pt_2.z, 2));
+        return std::hypot(pt_1.y - pt_2.y, pt_1.z - pt_2.z);
     default:
-        return std::sqrt(std::pow(pt_1.x - pt_2.x, 2) + std::pow(pt_1.y - pt_2.y, 2) + std::pow(pt_1.z - pt_2.z, 2));
+        return std::hypot(pt_1.x - pt_2.x, pt_1.y - pt_2.y, pt_1.z - pt_2.z);
     }
 }
 
@@ -203,8 +189,7 @@ constexpr auto getDistance(const cv::Point3_<Tp1> &pt_1, const cv::Point3_<Tp2> 
  * @return 空间欧式距离
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &vec_2, CalPlane calplane = CalPlane::xyz)
-{
+constexpr auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &vec_2, CalPlane calplane = CalPlane::xyz) {
     return getDistance(cv::Point3_<Tp1>(vec_1), cv::Point3_<Tp2>(vec_2), calplane);
 }
 
@@ -226,8 +211,7 @@ constexpr auto getDistance(const cv::Vec<Tp1, 3> &vec_1, const cv::Vec<Tp2, 3> &
  * @return 平面欧式距离
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, bool direc = true)
-{
+constexpr auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, bool direc = true) {
     auto retval = (line(1) * pt.x - line(0) * pt.y + line(0) * line(3) - line(1) * line(2)) /
                   std::sqrt(line(0) * line(0) + line(1) * line(1));
     return direc ? retval : std::abs(retval);
@@ -246,8 +230,7 @@ constexpr auto getDistance(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &p
  * @return 返回角度
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD)
-{
+constexpr auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD) {
     auto rad = -std::atan2((end.y - start.y), (end.x - start.x));
     return mode ? rad : rad2deg(rad);
 }
@@ -264,8 +247,7 @@ constexpr auto getHAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &en
  * @return 返回角度
  */
 template <typename Tp1, typename Tp2>
-constexpr auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD)
-{
+constexpr auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &end, AngleMode mode = RAD) {
     auto rad = std::atan2((end.x - start.x), (start.y - end.y));
     return mode ? rad : rad2deg(rad);
 }
@@ -281,20 +263,17 @@ constexpr auto getVAngle(const cv::Point_<Tp1> &start, const cv::Point_<Tp2> &en
  * @return 夹角，角度的范围是 \f$(-180°,180°]\f$
  */
 template <typename Tp>
-constexpr Tp getDeltaAngle(Tp angle_1, Tp angle_2)
-{
-    // 角度范围统一化
-    while (std::abs(angle_1) > 180)
-        angle_1 -= (angle_1 > 0) ? 360 : -360;
-    while (std::abs(angle_2) > 180)
-        angle_2 -= (angle_2 > 0) ? 360 : -360;
-    // 计算差值
-    Tp delta_angle = angle_1 - angle_2;
-    if (angle_1 > 150 && angle_2 < -150)
-        delta_angle -= 360;
-    else if (angle_1 < -150 && angle_2 > 150)
-        delta_angle += 360;
-    return std::abs(delta_angle);
+constexpr Tp getDeltaAngle(Tp angle_1, Tp angle_2) {
+    Tp delta = angle_1 - angle_2;
+    if constexpr (std::is_integral_v<Tp>)
+        delta = delta % 360;
+    else
+        delta = std::fmod(delta, static_cast<Tp>(360));
+    if (delta > 180)
+        delta -= 360;
+    else if (delta <= -180)
+        delta += 360;
+    return std::abs(delta);
 }
 
 // ------------------------【常用数学公式】------------------------
@@ -356,15 +335,14 @@ constexpr Tp sigmoid(Tp x, Tp k = 1, Tp Kp = 1, Tp mu = 0) { return Kp / (1 + st
 
 /**
  * @brief 计算均值
- * 
+ *
  * @tparam ForwardIterator 前向迭代器
  * @param[in] first 起始迭代器
  * @param[in] last 终止迭代器
  * @return 均值
  */
 template <typename ForwardIterator>
-constexpr typename std::iterator_traits<ForwardIterator>::value_type mean(ForwardIterator first, ForwardIterator last)
-{
+constexpr typename std::iterator_traits<ForwardIterator>::value_type mean(ForwardIterator first, ForwardIterator last) {
     using Tp = typename std::iterator_traits<ForwardIterator>::value_type;
     static_assert(std::is_arithmetic_v<Tp>, "Tp must be arithmetic type");
     return std::accumulate(first, last, Tp{}) / std::distance(first, last);
@@ -379,8 +357,7 @@ constexpr typename std::iterator_traits<ForwardIterator>::value_type mean(Forwar
  * @return 方差
  */
 template <typename ForwardIterator>
-constexpr typename std::iterator_traits<ForwardIterator>::value_type variance(ForwardIterator first, ForwardIterator last)
-{
+constexpr typename std::iterator_traits<ForwardIterator>::value_type variance(ForwardIterator first, ForwardIterator last) {
     using Tp = typename std::iterator_traits<ForwardIterator>::value_type;
     Tp m = mean(first, last);
     Tp accum{};
@@ -423,8 +400,7 @@ constexpr Tp cross2D(const cv::Point_<Tp> &a, const cv::Point_<Tp> &b) { return 
  * @return 众数
  */
 template <typename ForwardIterator>
-typename std::iterator_traits<ForwardIterator>::value_type calculateModeNum(ForwardIterator first, ForwardIterator last)
-{
+typename std::iterator_traits<ForwardIterator>::value_type calculateModeNum(ForwardIterator first, ForwardIterator last) {
     assert(first != last);
     using Tp = typename ForwardIterator::value_type;
     std::unordered_map<Tp, std::size_t, typename hash_traits<Tp>::hash_func> hash_map;
@@ -439,8 +415,7 @@ typename std::iterator_traits<ForwardIterator>::value_type calculateModeNum(Forw
 // ------------------------【数学模型算法】------------------------
 
 //! 熵权 TOPSIS 算法
-class RMVL_EXPORTS_W EwTopsis
-{
+class RMVL_EXPORTS_W EwTopsis {
     RMVL_IMPL;
 
 public:
@@ -458,12 +433,11 @@ public:
      *
      * @return 最终指标
      */
-    RMVL_W std::vector<double> inference();
+    RMVL_W std::vector<double> inference() noexcept;
 };
 
 //! KM 算法求解器
-class RMVL_EXPORTS_W Munkres
-{
+class RMVL_EXPORTS_W Munkres {
     RMVL_IMPL;
 
 public:
