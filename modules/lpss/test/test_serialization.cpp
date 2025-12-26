@@ -11,12 +11,89 @@
 
 #include <gtest/gtest.h>
 
+#include "rmvlmsg/std/bool.hpp"
+#include "rmvlmsg/std/string.hpp"
+#include "rmvlmsg/std/int32.hpp"
 #include "rmvlmsg/sensor/imu.hpp"
 #include "rmvlmsg/sensor/joint_state.hpp"
 
 namespace rm_test {
 
 using namespace rm;
+
+TEST(LPSS_serialization, bool) {
+    lpss::msg::Bool msg;
+    msg.data = true;
+
+    auto str = msg.serialize();
+
+    auto dst = lpss::msg::Bool::deserialize(str.data());
+    EXPECT_EQ(dst.data, true);
+}
+
+TEST(LPSS_serialization, string) {
+    lpss::msg::String msg;
+    msg.data = "Hello, LPSS!";
+
+    auto str = msg.serialize();
+
+    auto dst = lpss::msg::String::deserialize(str.data());
+    EXPECT_EQ(dst.data, "Hello, LPSS!");
+}
+
+TEST(LPSS_serialization, int32) {
+    lpss::msg::Int32 msg;
+    msg.data = 42;
+
+    auto str = msg.serialize();
+
+    auto dst = lpss::msg::Int32::deserialize(str.data());
+    EXPECT_EQ(dst.data, 42);
+}
+
+TEST(LPSS_serialization, header) {
+    lpss::msg::Header msg;
+    msg.seq = 1;
+    msg.frame_id = "base_link";
+    msg.stamp = 123.456;
+
+    auto str = msg.serialize();
+
+    auto dst = lpss::msg::Header::deserialize(str.data());
+    EXPECT_EQ(dst.seq, 1);
+    EXPECT_EQ(dst.frame_id, "base_link");
+    EXPECT_DOUBLE_EQ(dst.stamp, 123.456);
+}
+
+TEST(LPSS_serialization, quaternion) {
+    lpss::msg::Quaternion msg;
+    msg.x = 0.7;
+    msg.y = 0.0;
+    msg.z = 0.7;
+    msg.w = 0.0;
+
+    auto str = msg.serialize();
+
+    auto dst = lpss::msg::Quaternion::deserialize(str.data());
+    EXPECT_DOUBLE_EQ(dst.x, 0.7);
+    EXPECT_DOUBLE_EQ(dst.y, 0.0);
+    EXPECT_DOUBLE_EQ(dst.z, 0.7);
+    EXPECT_DOUBLE_EQ(dst.w, 0.0);
+}
+
+TEST(LPSS_serialization, vector3) {
+    lpss::msg::Vector3 msg;
+    msg.x = 1.0;
+    msg.y = 2.0;
+    msg.z = 3.0;
+
+    auto str = msg.serialize();
+
+    auto dst = lpss::msg::Vector3::deserialize(str.data());
+    EXPECT_DOUBLE_EQ(dst.x, 1.0);
+    EXPECT_DOUBLE_EQ(dst.y, 2.0);
+    EXPECT_DOUBLE_EQ(dst.z, 3.0);
+}
 
 TEST(LPSS_serialization, joint) {
     lpss::msg::JointState msg;

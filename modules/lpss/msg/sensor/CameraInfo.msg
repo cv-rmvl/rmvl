@@ -19,9 +19,8 @@ Header header # Header timestamp should be acquisition time of image
 uint32 height
 uint32 width
 
-# The distortion parameters, size depending on the distortion model.
-# For "plumb_bob", the 5 parameters are: (k1, k2, t1, t2, k3).
-float64[] D
+# The distortion parameters, the 5 parameters are: (k1, k2, t1, t2, k3).
+float64[5] D
 
 # Intrinsic camera matrix for the raw (distorted) images.
 #     [fx  0 cx]

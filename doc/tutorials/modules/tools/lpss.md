@@ -13,3 +13,472 @@
 @tableofcontents
 
 ------
+
+相关模块： @ref lpss ， @ref tutorial_table_of_content_rmvlmsg
+
+## 1 机制
+
+### 1.1 简介
+
+Lightweight Pub/Sub Service (LPSS)，即轻量发布订阅服务，通过模仿 ROS 2(DDS) 的去中心化设计，以数据为核心，使用二进制直接存储的序列化与反序列化方式，提供两层的服务发现机制，建立起数据输出端（发布者）与输入端（订阅者）之间的 UDPv4 单播或 SHM 共享内存的实时通信。
+
+### 1.2 服务发现
+
+LPSS 标准提供
+
+- NDP 节点发现协议，用于发现网络中的节点
+- EDP 通信端点发现协议，用于发现节点上的发布者和订阅者
+
+两层的服务发现机制，确保发布者和订阅者能够在去中心化的网络环境中找到彼此，并进行高效的数据交换。
+
+#### 1.2.1 节点发现协议
+
+即 Node Discovery Protocol(NDP)， @ref lpss 提供的 RNDP 是节点发现协议的 RMVL 实现，NDP 标准的数据包格式如下所示：
+
+> NDP 包含 \f$16\f$ 字节的 Header 头部信息和 \f$6n\f$ 字节的 Payload 负载信息，Header 头部信息用于标识数据包类型，Payload 负载信息用于存储节点的详细信息。
+>
+> 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 NDP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\sim9\f$ 字节为 GUID 的主 MAC 地址，选取依据为：有线网卡 > 无线网卡 > 虚拟网卡，若系统中存在多个同类型的网卡，则选取第一个启用的网卡；第 \f$10\sim11\f$ 字节为 GUID 的 PID 部分；第 \f$12\sim13\f$ 字节为 GUID 的 Entity ID 部分，属于无效字段，一般可以设置为 `0`；第 \f$14\f$ 字节为单字节无符号整数表示的 LocatorNum，用于标记 Payload 负载信息的段数；第 \f$15\f$ 字节为单字节无符号整数表示的 HBT，单位为秒，用于提示本节点的最大心跳包超时时间。
+> 2. 后续的 Payload 负载信息部分，每 \f$6\f$ 字节表示一个节点的信息，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示 EDP 通信端点的端口号，采用大端序存储；第 \f$2\sim5\f$ 字节为 Locator 的 Addr 部分，表示 EDP 通信端点的 IPv4 地址。每个节点可以包含多个 Locator 信息段，具体数量由 Header 头部信息中的 LocatorNum 字段决定，并且由实际的网卡数量所限制。
+
+此外，实现方需使用 UDPv4 多播的方式发送 NDP 数据包，且多播地址为 `239.255.0.5`，多播端口为 `7500 + <LPSS_DOMAIN_ID>`，其中 `LPSS_DOMAIN_ID` 是一个单字节无符号整数。标准还规定每个节点应当周期性地发送心跳包，以维持其在网络中的可见性，心跳包的发送频率应当小于等于 \f$\frac{\text{HBT}}2\f$ 的值。
+
+实现方需完成生命周期管理，需要不短于每隔 1s 的频率检查所有的已发现的节点在上次收到的心跳包的时间戳与当前时间间隔是否超过 HBT，若超过则删除。
+
+RNDP 同样满足以上 NDP 标准，具体的信息格式如下所示：
+
+<div class="full_width_table">
+<table class="markdownTable">
+<tr class="markdownTableHead">
+  <th class="markdownTableHeadCenter">0 byte</th>
+  <th class="markdownTableHeadCenter">1 byte</th>
+  <th class="markdownTableHeadCenter">2 byte</th>
+  <th class="markdownTableHeadCenter">3 byte</th>
+  <th class="markdownTableHeadCenter">4 byte</th>
+  <th class="markdownTableHeadCenter">5 byte</th>
+  <th class="markdownTableHeadCenter">6 byte</th>
+  <th class="markdownTableHeadCenter">7 byte</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter"><code>'R'</code></td>
+  <td class="markdownTableBodyCenter"><code>'N'</code></td>
+  <td class="markdownTableBodyCenter"><code>'D'</code></td>
+  <td class="markdownTableBodyCenter"><code>'P'</code></td>
+  <td class="markdownTableBodyCenter" colspan="4">GUID MAC</td>
+</tr>
+<tr class="markdownTableRowEven">
+  <th class="markdownTableHeadCenter">8 byte</th>
+  <th class="markdownTableHeadCenter">9 byte</th>
+  <th class="markdownTableHeadCenter">10 byte</th>
+  <th class="markdownTableHeadCenter">11 byte</th>
+  <th class="markdownTableHeadCenter">12 byte</th>
+  <th class="markdownTableHeadCenter">13 byte</th>
+  <th class="markdownTableHeadCenter">14 byte</th>
+  <th class="markdownTableHeadCenter">15 byte</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter" colspan="2">GUID MAC</td>
+  <td class="markdownTableBodyCenter" colspan="2">GUID PID</td>
+  <td class="markdownTableBodyCenter" colspan="2">GUID Entity ID</td>
+  <td class="markdownTableBodyCenter">LocatorNum</td>
+  <td class="markdownTableBodyCenter">HBT</td>
+</tr>
+<tr class="markdownTableRowEven">
+  <th class="markdownTableHeadCenter">16 byte</th>
+  <th class="markdownTableHeadCenter">17 byte</th>
+  <th class="markdownTableHeadCenter">18 byte</th>
+  <th class="markdownTableHeadCenter">19 byte</th>
+  <th class="markdownTableHeadCenter">20 byte</th>
+  <th class="markdownTableHeadCenter">21 byte</th>
+  <th class="markdownTableHeadCenter">22 byte</th>
+  <th class="markdownTableHeadCenter">23 byte</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter" colspan="2">Port 0</td>
+  <td class="markdownTableBodyCenter" colspan="4">Addr 0</td>
+  <td class="markdownTableBodyCenter" colspan="2">Port 1</td>
+</tr>
+<tr class="markdownTableRowEven">
+  <th class="markdownTableHeadCenter">24 byte</th>
+  <th class="markdownTableHeadCenter">25 byte</th>
+  <th class="markdownTableHeadCenter">26 byte</th>
+  <th class="markdownTableHeadCenter">27 byte</th>
+  <th class="markdownTableHeadCenter">...</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter" colspan="4">Addr 1</td>
+  <td class="markdownTableBodyCenter">...</td>
+</tr>
+</table>
+</div>
+
+#### 1.2.2 通信端点发现协议
+
+即 Endpoint Discovery Protocol(EDP)， @ref lpss 提供的 REDP 是通信端点发现协议的 RMVL 实现，EDP 标准的数据包格式如下所示：
+
+> EDP 包含 \f$16\f$ 字节的 Header 头部信息和 \f$2+n\f$ 字节的 Payload 负载信息，Header 头部信息用于标识数据包、承载 GUID、状态标志以及话题大小。Payload 负载信息用于存储 TIO 阶段实际通信时 UDPv4 通道的端口号和话题名称，其中话题名称也作为 SHM 通道的共享内存名称。
+>
+> 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 EDP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\sim9\f$ 字节为 GUID 的主 MAC 地址，选取依据同 NDP；第 \f$10\sim11\f$ 字节为 GUID 的 PID 部分；第 \f$12\sim13\f$ 字节为 GUID 的 Entity ID 部分，每个节点中的发布者、订阅者将有不同的 Entity ID；第 \f$14\f$ 字节为单字节无符号整数表示的 Status 状态标志，用于标记本次操作属于添加、移除发布者、订阅者，第 \f$15\f$ 字节为单字节无符号整数表示的 TopicSize，表示话题名称的字节大小。
+> 2. 后续的 Payload 负载信息部分，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示实际通信时 UDPv4 通道的端口号，采用大端序存储；第 \f$2\sim(2+\text{TopicSize})\f$ 字节为 TopicName 部分，表示话题名称的字符串内容，采用 UTF-8 编码存储。
+
+当触发以下事件时，节点将通过 UDPv4 单播的方式发送 EDP 数据包，目标地址为对应节点的 Locator 列表中的 Addr 和 Port：
+
+1. 发现新节点时
+   - 遍历本地的发布者，向新节点依次发送 Add 和 Writer 状态的 EDP 数据包，EDP 报文中 Port 可不作设置；
+   - 遍历本地的订阅者，向新节点依次发送 Add 和 Reader 状态的 EDP 数据包；
+2. 创建发布者时，遍历本地已发现的节点，向每个节点依次发送 Add 和 Writer 状态的 EDP 数据包，EDP 报文中 Port 可不作设置；
+3. 创建订阅者时，遍历本地已发现的节点，向每个节点依次发送 Add 和 Reader 状态的 EDP 数据包；
+4. 节点销毁时
+   - 遍历已发现的节点，向每个节点依次发送 Remove 和 Writer 状态的 EDP 数据包，EDP 报文中 Port 可不作设置；
+   - 遍历已发现的节点，向每个节点依次发送 Remove 和 Reader 状态的 EDP 数据包，EDP 报文中 Port 可不作设置；
+
+REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
+
+<div class="full_width_table">
+<table class="markdownTable">
+<tr class="markdownTableHead">
+  <th class="markdownTableHeadCenter">0 byte</th>
+  <th class="markdownTableHeadCenter">1 byte</th>
+  <th class="markdownTableHeadCenter">2 byte</th>
+  <th class="markdownTableHeadCenter">3 byte</th>
+  <th class="markdownTableHeadCenter">4 byte</th>
+  <th class="markdownTableHeadCenter">5 byte</th>
+  <th class="markdownTableHeadCenter">6 byte</th>
+  <th class="markdownTableHeadCenter">7 byte</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter"><code>'R'</code></td>
+  <td class="markdownTableBodyCenter"><code>'E'</code></td>
+  <td class="markdownTableBodyCenter"><code>'D'</code></td>
+  <td class="markdownTableBodyCenter"><code>'P'</code></td>
+  <td class="markdownTableBodyCenter" colspan="4">GUID MAC</td>
+</tr>
+<tr class="markdownTableRowEven">
+  <th class="markdownTableHeadCenter">8 byte</th>
+  <th class="markdownTableHeadCenter">9 byte</th>
+  <th class="markdownTableHeadCenter">10 byte</th>
+  <th class="markdownTableHeadCenter">11 byte</th>
+  <th class="markdownTableHeadCenter">12 byte</th>
+  <th class="markdownTableHeadCenter">13 byte</th>
+  <th class="markdownTableHeadCenter">14 byte</th>
+  <th class="markdownTableHeadCenter">15 byte</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter" colspan="2">GUID MAC</td>
+  <td class="markdownTableBodyCenter" colspan="2">GUID PID</td>
+  <td class="markdownTableBodyCenter" colspan="2">GUID Entity ID</td>
+  <td class="markdownTableBodyCenter">Status</td>
+  <td class="markdownTableBodyCenter">TopicSize</td>
+</tr>
+<tr class="markdownTableRowEven">
+  <th class="markdownTableHeadCenter">16 byte</th>
+  <th class="markdownTableHeadCenter">17 byte</th>
+  <th class="markdownTableHeadCenter">18 byte</th>
+  <th class="markdownTableHeadCenter">...</th>
+</tr>
+<tr class="markdownTableRowOdd">
+  <td class="markdownTableBodyCenter" colspan="2">Port</td>
+  <td class="markdownTableBodyCenter" colspan="2">TopicName</td>
+</tr>
+</table>
+</div>
+
+### 1.3 序列化与反序列化
+
+LPSS 标准要求采用二进制直接序列化 / 反序列化的方式，不区分端序，数据在发布者与订阅者之间的传输效率非常高。此外 RMVL 提供了消息类型的自动代码生成工具，用户可以通过定义消息类型的 `*.msg` 文件，使用 RMVL 提供的代码生成工具生成对应的 C++ 代码文件，从而简化消息类型的创建过程。
+
+RMVL 内置了一些常用的消息类型，用户可以直接使用这些消息类型，而无需自行定义和生成代码。同时，RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，可以辅助用户完成自定义消息类型的代码生成过程，详情可参考 @ref tutorial_table_of_content_rmvlmsg 。
+
+## 2 使用示例
+
+LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。以下示例展示了如何使用 LPSS 创建发布者与订阅者。
+
+### 2.1 创建简单的发布者与订阅者
+
+#### 2.1.1 发布者示例
+
+**示例 1**
+
+下面的示例展示了如何创建一个发布者，该发布者每隔 100 毫秒发布一次包含递增计数值的字符串消息。
+
+```cpp
+// RMVL 内置的第三方 fmt 库，用于格式化字符串，不需要 fmt 库的不用包含该头文件
+#include <fmt/format.h>
+// LPSS 完整功能的头文件
+#include <rmvl/lpss.hpp>
+// 内置的 std 分组的 String 消息类型头文件
+#include <rmvlmsg/std/string.hpp>
+
+using namespace std::chrono_literals; // 使用时间字面量，如 100ms、5s 等
+using namespace rm;                   // 使用 RMVL 提供的命名空间
+
+int main() {
+    // 创建 LPSS 节点
+    auto nd = lpss::Node();
+    // 创建发布者，发布 String 类型的消息到 /topic 话题
+    auto publisher = nd.createPublisher<lpss::msg::String>("/topic");
+
+    // 准备消息类型
+    auto msg = lpss::msg::String();
+    uint16_t count{};
+
+    // 循环发布消息
+    while (true) {
+        // sleep 是为了模拟程序可能执行的其他功能
+        std::this_thread::sleep_for(100ms);
+        // 设置消息内容，这里使用的是 RMVL 内置的第三方 fmt 库，也可以使用别的方式进行设置
+        msg.data = fmt::format("Times: {}", count++);
+        // 发布消息，这一步会完成消息的序列化和传输
+        publisher.publish(msg);
+    }
+    return 0;
+}
+```
+
+**示例 2**
+
+下面的示例展示了如何创建一个发布者类，该类每隔 10 毫秒发布一次颜色消息。
+
+```cpp
+#include <rmvl/lpss.hpp>
+// 内置的 std 分组的 ColorRGBA 消息类型头文件
+#include <rmvlmsg/std/color_rgba.hpp>
+
+using namespace std::chrono_literals;
+using namespace rm;
+
+// 自定义的发布者类，继承自 lpss::Node
+class MyPublisher : public lpss::Node {
+public:
+    MyPublisher() : Node() {
+        // 在构造函数中创建发布者，发布 ColorRGBA 类型的消息到 /color 话题
+        _pub = this->createPublisher<lpss::msg::ColorRGBA>("/color");
+    }
+    
+    void publish(float r, float g, float b, float a) {
+        // 设置消息内容
+        _msg.r = r;
+        _msg.g = g;
+        _msg.b = b;
+        _msg.a = a;
+        // 或者直接使用下面的聚合初始化方式进行设置
+        // _msg = {r, g, b, a};
+        // 发布消息
+        _pub.publish(_msg);
+    }
+
+private:
+    // 持有的实际发布者对象
+    lpss::Publisher<lpss::msg::ColorRGBA> _pub{};
+    // 消息对象
+    lpss::msg::ColorRGBA _msg{};
+};
+
+int main() {
+    // 创建自定义的发布者
+    auto publisher = MyPublisher{};
+
+    uint16_t count{};
+    while (true) {
+        std::this_thread::sleep_for(10ms);
+        publisher.publish(1.0f, 0.0f, 0.0f, 1.0f);
+    }
+    return 0;
+}
+```
+
+#### 2.1.2 订阅者示例
+
+**示例 1**
+
+下面展示了如何创建一个订阅者，该订阅者订阅 `/topic` 话题的字符串消息，并在收到消息时打印消息内容。
+
+```cpp
+#include <fmt/format.h>
+#include <rmvl/lpss.hpp>
+#include <rmvlmsg/std/string.hpp>
+
+using namespace std::chrono_literals;
+using namespace rm;
+
+int main() {
+    // 创建 LPSS 节点
+    auto nd = lpss::Node();
+    // 创建订阅者，订阅 /topic 话题的 String 类型的消息
+    auto subscriber = nd.createSubscriber<lpss::msg::String>(
+        "/topic", [](const lpss::msg::String &msg) {
+            // 收到消息后的回调函数，这里使用的是 lambda 表达式，内部仅简单地打印收到的消息内容
+            fmt::println("I heard: '{}'", msg.data);
+        });
+
+    while (true) {
+        // 下面的 sleep 只是为了保持程序运行，可以在这里执行其他功能
+        std::this_thread::sleep_for(1s);
+    }
+}
+```
+
+**示例 2**
+
+下面展示了如何创建一个订阅者类，该类订阅 `/color` 话题的颜色消息，并在收到消息时打印颜色值。
+
+```cpp
+#include <fmt/format.h>
+#include <rmvl/lpss.hpp>
+#include <rmvlmsg/std/color_rgba.hpp>
+
+using namespace std::chrono_literals;
+using namespace rm;
+
+class MySubscriber : public lpss::Node {
+public:
+    MySubscriber() : Node() {
+        _sub = this->createSubscriber<lpss::msg::ColorRGBA>(
+            "/color", [](const lpss::msg::ColorRGBA &msg) {
+                fmt::println("R: {}, G:{}, B:{}, A:{}", msg.r, msg.g, msg.b, msg.a);
+            });
+    }
+    
+private:
+    lpss::Subscriber<lpss::msg::ColorRGBA> _sub{};
+};
+
+int main() {
+    auto subscriber = MySubscriber{};
+
+    while (true) {
+        // 保持程序运行，可以在这里执行其他功能
+        std::this_thread::sleep_for(1s);
+    }
+}
+```
+
+### 2.2 创建自定义消息类型的发布者与订阅者
+
+除了使用 RMVL 内置的消息类型外，用户还可以自定义消息类型，并使用这些自定义的消息类型创建发布者与订阅者。下面的示例展示了如何定义一个自定义的消息类型，并使用该消息类型创建发布者与订阅者。
+
+#### 2.2.1 创建项目结构
+
+首先可以创建一个项目，假设项目名称为 `demo`，并在其中创建
+
+- `msg` 目录，用于存放自定义的消息类型文件；
+- `src` 目录，用于存放发布者与订阅者的源代码文件；
+- `CMakeLists.txt` 文件，用于配置项目的构建过程。
+
+#### 2.2.2 文件内容
+
+<div class="tabbed">
+
+- <b class="tab-title">CMakeLists.txt</b>
+
+  <div class="fragment">
+  <div class="line"><span class="keyword">cmake_minimum_required</span>(VERSION 3.16)</div>
+  <div class="line"><span class="keyword">project</span>(LPSSDemo)</div>
+  <div class="line"></div>
+  <div class="line"><span class="keyword">set</span>(CMAKE_CXX_STANDARD 17)</div>
+  <div class="line"><span class="keyword">set</span>(CMAKE_CXX_STANDARD_REQUIRED ON)</div>
+  <div class="line"></div>
+  <div class="line"><span class="comment"># 查找 RMVL 包，其中包含了自动代码生成的功能</span></div>
+  <div class="line"><span class="keyword">find_package</span>(RMVL REQUIRED)</div>
+  <div class="line"></div>
+  <div class="line"><span class="comment"># 生成自定义消息类型的代码</span></div>
+  <div class="line"><span class="keyword">rmvl_generate_msg</span>(MyCustomMsg)</div>
+  <div class="line"></div>
+  <div class="line"><span class="comment"># 添加发布者和订阅者的可执行文件</span></div>
+  <div class="line"><span class="keywordflow">foreach</span>(m pub sub)</div>
+  <div class="line">&nbsp;&nbsp;<span class="keyword">rmvl_add_exe</span>(${m}</div>
+  <div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">SOURCES</span> src/${m}.cpp</div>
+  <div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">DEPENDS</span> lpss</div>
+  <div class="line">&nbsp;&nbsp;)</div>
+  <div class="line"></div>
+  <div class="line">&nbsp;&nbsp;<span class="keyword">target_include_directories</span>(${m} <span class="keyword">PRIVATE</span> include)</div>
+  <div class="line"><span class="keywordflow">endforeach</span>()</div>
+  </div>
+
+- <b class="tab-title">MyCustomMsg.msg</b>
+
+  在 `msg` 目录下创建 `MyCustomMsg.msg` 文件，定义自定义的消息类型：
+
+  <div class="fragment">
+  <div class="line"><span class="comment"># MyCustomMsg.msg</span></div>
+  <div class="line"></div>
+  <div class="line"><span class="keywordtype">int32</span> id</div>
+  <div class="line"><span class="keywordtype">string</span> name</div>
+  <div class="line"><span class="keywordtype">bool</span> is_active</div>
+  </div>
+
+- <b class="tab-title">pub.cpp</b>
+
+  在 `src` 目录下创建 `pub.cpp` 文件，实现发布者：
+
+  ```cpp
+  #include <rmvl/lpss.hpp>
+
+  #include "rmvlmsg/my_custom_msg.hpp"
+
+  using namespace std::chrono_literals;
+  using namespace rm;
+
+  int main() {
+      auto nd = lpss::Node();
+      auto publisher = nd.createPublisher<lpss::msg::MyCustomMsg>("/my_custom_topic");
+
+      lpss::msg::MyCustomMsg msg;
+      int32_t count{0};
+
+      while (true) {
+          std::this_thread::sleep_for(50ms);
+          msg.id = count++;
+          msg.name = "Message_" + std::to_string(msg.id);
+          msg.is_active = (msg.id % 2 == 0);
+          publisher.publish(msg);
+      }
+      return 0;
+  }
+  ```
+
+- <b class="tab-title">sub.cpp</b>
+
+  在 `src` 目录下创建 `sub.cpp` 文件，实现订阅者：
+
+  ```cpp
+  #include <fmt/format.h>
+  #include <rmvl/lpss.hpp>
+
+  #include "rmvlmsg/my_custom_msg.hpp"
+
+  using namespace std::chrono_literals;
+  using namespace rm;
+
+  int main() {
+      auto nd = lpss::Node();
+      auto subscriber = nd.createSubscriber<lpss::msg::MyCustomMsg>(
+          "/my_custom_topic", [](const lpss::msg::MyCustomMsg &msg) {
+              fmt::println("ID: {}, Name: {}, Active: {}", msg.id, msg.name, msg.is_active);
+          });
+
+      while (true)
+          std::this_thread::sleep_for(1s);
+  }
+  ```
+
+</div>
+
+#### 2.2.3 构建与运行
+
+在项目根目录下运行以下命令进行构建，并运行发布者：
+
+<div class="fragment">
+<div class="line"><span class="comment"># Build</span></div>
+<div class="line"><span class="keywordflow">mkdir</span> build &amp;&amp; <span class="keywordflow">cd</span> build</div>
+<div class="line"><span class="keywordflow">cmake</span> ..</div>
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">\-\-build</span> .</div>
+<div class="line"></div>
+<div class="line"><span class="comment"># Run</span></div>
+<div class="line">./pub</div>
+</div>
+
+然后在另一个终端中运行订阅者，记得进入 build 目录：
+
+<div class="fragment">
+<div class="line">./sub</div>
+</div>
