@@ -3,7 +3,7 @@
 
 @prev_tutorial{tutorial_table_of_content_modules}
 
-@next_tutorial{tutorial_table_of_content_extra}
+@next_tutorial{tutorial_table_of_content_rmvlmsg}
 
 @tableofcontents
 
@@ -75,7 +75,7 @@ RMVL 中，一部分模块（涉及主要模块和扩展模块）的功能在不
 </div>
 
 @note
-- `#` 和注释信息之间<u>**不必**</u>使用空格分隔，例如 `#相机曝光`
+- <code>#</code> 和注释信息之间<u>**不必**</u>使用空格分隔，例如 <code>\#相机曝光</code>
 
 枚举类型可在每个枚举项后加上具体的值，也能使用 `#` 为枚举项添加注释，例如
 
