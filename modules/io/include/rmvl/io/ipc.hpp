@@ -233,8 +233,8 @@ protected:
 #endif
 };
 
-//! 共享内存对象
-class SharedMemory {
+//! 共享内存对象基类
+class SHMBase {
 public:
     /**
      * @brief 创建或打开共享内存对象并映射到当前进程地址空间
@@ -242,13 +242,13 @@ public:
      * @param[in] name 共享内存名称
      * @param[in] size 共享内存大小
      */
-    SharedMemory(std::string_view name, std::size_t size);
-    ~SharedMemory();
+    SHMBase(std::string_view name, std::size_t size);
+    ~SHMBase();
 
-    SharedMemory(const SharedMemory &) = delete;
-    SharedMemory(SharedMemory &&) = default;
-    SharedMemory &operator=(const SharedMemory &) = delete;
-    SharedMemory &operator=(SharedMemory &&) = default;
+    SHMBase(const SHMBase &) = delete;
+    SHMBase(SHMBase &&) = default;
+    SHMBase &operator=(const SHMBase &) = delete;
+    SHMBase &operator=(SHMBase &&) = default;
 
     /**
      * @brief 获取共享内存映射指针
@@ -257,23 +257,42 @@ public:
      */
     void *data() noexcept { return _ptr; }
 
+    /**
+     * @brief 获取共享内存映射指针
+     *
+     * @return 共享内存映射指针
+     */
+    const void *data() const noexcept { return _ptr; }
+
+    //! 是否为创建者
+    bool isCreator() const noexcept { return _is_creator; }
+
+    /**
+     * @brief 显式移除指定名称的共享内存对象，Windows 平台下调用该函数无效果
+     * @details 析构中不提供清理操作，这是数据持久化优于自动清理的设计选择
+     * @param[in] name 共享内存名称
+     */
+    static void destroy(std::string_view name);
+
 private:
-    std::size_t _size{};  //!< 共享内存大小
-    void *_ptr{nullptr};  //!< 共享内存映射指针
-    FileDescriptor _fd{}; //!< 共享内存文件描述符
+    std::size_t _size{};     //!< 共享内存大小
+    std::string _name{};     //!< 共享内存名称
+    void *_ptr{nullptr};     //!< 共享内存映射指针
+    FileDescriptor _fd{};    //!< 共享内存文件描述符
+    bool _is_creator{false}; //!< 是否为创建者
 };
 
 /**
- * @brief MPMC 共享内存对象
+ * @brief MPMC 原子共享内存对象
  *
  * @tparam T 共享内存数据类型
  */
 template <typename T, typename = std::enable_if_t<std::is_trivially_copyable_v<T>>>
-class MPMCSharedMemory : public SharedMemory {
-    struct SHMWrapper {
-        std::atomic_bool lock{false};
-        std::atomic_bool empty{true};
-        T data;
+class AtomicSHM : public SHMBase {
+    struct Layout {
+        alignas(64) std::atomic_flag writer_mtx = ATOMIC_FLAG_INIT; // 写者互斥锁
+        alignas(64) std::atomic_uint32_t seq{0};                    // 序列号：偶数=有效，奇数=正在写
+        T data{};                                                   // 真实数据
     };
 
 public:
@@ -282,155 +301,104 @@ public:
      *
      * @param[in] name 共享内存名称
      */
-    MPMCSharedMemory(std::string_view name) : SharedMemory(name, sizeof(SHMWrapper)) {}
+    AtomicSHM(std::string_view name);
 
-    MPMCSharedMemory(const MPMCSharedMemory &) = delete;
-    MPMCSharedMemory(MPMCSharedMemory &&) = delete;
-    MPMCSharedMemory &operator=(const MPMCSharedMemory &) = delete;
-    MPMCSharedMemory &operator=(MPMCSharedMemory &&) = delete;
-
-    /**
-     * @brief 获取共享内存中的原子数据，当 `empty()` 为真时，行为未定义
-     *
-     * @return 共享内存中的原子数据
-     */
-    T read() noexcept {
-        T value;
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        while (ptr->lock.exchange(true, std::memory_order_acquire))
-            std::this_thread::yield();
-        value = ptr->data;
-        ptr->lock.store(false, std::memory_order_release);
-        return value;
-    }
-
-    //! 清空共享内存中的数据
-    void clear() noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        while (ptr->lock.exchange(true, std::memory_order_acquire))
-            std::this_thread::yield();
-        ptr->empty.store(true, std::memory_order_relaxed);
-        ptr->lock.store(false, std::memory_order_release);
-    }
-
-    //! 判断共享内存是否为空
-    bool empty() noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        bool is_empty{};
-        while (ptr->lock.exchange(true, std::memory_order_acquire))
-            std::this_thread::yield();
-        is_empty = ptr->empty.load(std::memory_order_relaxed);
-        ptr->lock.store(false, std::memory_order_release);
-        return is_empty;
-    }
+    AtomicSHM(const AtomicSHM &) = delete;
+    AtomicSHM(AtomicSHM &&) = delete;
+    AtomicSHM &operator=(const AtomicSHM &) = delete;
+    AtomicSHM &operator=(AtomicSHM &&) = delete;
 
     /**
-     * @brief 向共享内存中写入原子数据
+     * @brief 原子的获取共享内存中数据，当 `empty()` 为真时，行为未定义
      *
-     * @param[in] value 待写入的原子数据
+     * @return 共享内存中的数据
      */
-    void write(const T &value) noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        while (ptr->lock.exchange(true, std::memory_order_acquire))
-            std::this_thread::yield();
-        ptr->empty.store(false, std::memory_order_relaxed);
-        ptr->data = value;
-        ptr->lock.store(false, std::memory_order_release);
-    }
+    bool read(T &value) noexcept;
+
+    /**
+     * @brief 向共享内存中原子的写入数据
+     *
+     * @param[in] value 要写入的数据
+     */
+    void write(const T &value) noexcept;
+
+    //! 判断是否为空 (从未写入过)
+    bool empty() const noexcept;
 };
 
 /**
- * @brief SPMC 共享内存对象
- * @note 允许多个消费者并发读取，性能优于 MPMCSharedMemory，但仅限单生产者场景。
- * @tparam T 共享内存数据类型
+ * @brief 基于共享内存的无锁 MPMC（多生产者多消费者）环形缓冲区
+ *
+ * @tparam T 共享数据类型，必须是可平凡复制类型
+ * @tparam Capacity 环形缓冲区容量，必须是 2 的幂
  */
-template <typename T, typename = std::enable_if_t<std::is_trivially_copyable_v<T>>>
-class SPMCSharedMemory : public SharedMemory {
-    struct SHMWrapper {
-        std::atomic<size_t> seq{0}; // 序列号，偶数表示稳定，奇数表示正在写入
-        std::atomic_bool empty{true};
-        T data;
+template <typename T, size_t Capacity, typename = std::enable_if_t<std::is_trivially_copyable_v<T>>>
+class RingBufferSlotSHM : public SHMBase {
+    static_assert((Capacity > 0) && ((Capacity & (Capacity - 1)) == 0), "Capacity must be a power of two");
+
+    struct Slot {
+        alignas(64) std::atomic_size_t sequence{}; // 避免伪共享
+        T data{};
+    };
+
+    struct Buffer {
+        alignas(64) std::atomic_size_t head{};
+        alignas(64) std::atomic_size_t tail{};
+        Slot slots[Capacity]{};
     };
 
 public:
     /**
-     * @brief 构造 SPMC 共享内存对象
+     * @brief 构造或连接到一个 MPMC 环形缓冲区
      *
-     * @param[in] name 共享内存名称
+     * @param[in] name 共享内存的唯一名称
      */
-    SPMCSharedMemory(std::string_view name) : SharedMemory(name, sizeof(SHMWrapper)) {}
-
-    SPMCSharedMemory(const SPMCSharedMemory &) = delete;
-    SPMCSharedMemory(SPMCSharedMemory &&) = delete;
-    SPMCSharedMemory &operator=(const SPMCSharedMemory &) = delete;
-    SPMCSharedMemory &operator=(SPMCSharedMemory &&) = delete;
+    RingBufferSlotSHM(std::string_view name);
 
     /**
-     * @brief 从共享内存中读取数据，当 `empty()` 为真时，行为未定义
-     * @note 多个消费者可以同时调用此函数而不会互相阻塞
-     * @return 共享内存中的数据
-     */
-    T read() noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        T value{};
-        size_t seq1{}, seq2{};
-        do {
-            seq1 = ptr->seq.load(std::memory_order_acquire);
-            if (seq1 & 1) {
-                std::this_thread::yield();
-                continue;
-            }
-            value = ptr->data;
-            seq2 = ptr->seq.load(std::memory_order_acquire);
-        } while (seq1 != seq2);
-        return value;
-    }
-
-    /**
-     * @brief 清空共享内存中的数据
-     */
-    void clear() noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        ptr->seq.fetch_add(1, std::memory_order_release);
-        ptr->empty.store(true, std::memory_order_relaxed);
-        ptr->seq.fetch_add(1, std::memory_order_release);
-    }
-
-    /**
-     * @brief 判断共享内存是否为空
-     * @return 是否为空
-     */
-    bool empty() noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        bool is_empty{};
-        size_t seq1{}, seq2{};
-        do {
-            seq1 = ptr->seq.load(std::memory_order_acquire);
-            if (seq1 & 1) {
-                std::this_thread::yield();
-                continue;
-            }
-            is_empty = ptr->empty.load(std::memory_order_relaxed);
-            seq2 = ptr->seq.load(std::memory_order_acquire);
-        } while (seq1 != seq2);
-        return is_empty;
-    }
-
-    /**
-     * @brief 向共享内存中写入数据
+     * @brief 向缓冲区中写入一个值（非阻塞）
      *
-     * @param[in] value 待写入的数据
+     * @param[in] value 要写入的值
+     * @return 如果成功写入则返回 `true`，如果缓冲区已满则返回 `false`
      */
-    void write(const T &value) noexcept {
-        auto ptr = static_cast<SHMWrapper *>(this->data());
-        ptr->seq.fetch_add(1, std::memory_order_release);
-        ptr->data = value;
-        ptr->empty.store(false, std::memory_order_relaxed);
-        ptr->seq.fetch_add(1, std::memory_order_release);
-    }
+    bool write(const T &value) noexcept;
+
+    /**
+     * @brief 从缓冲区读取一个值（非阻塞）
+     *
+     * @param[out] value 读取到的值
+     * @return 如果成功读取则返回 `true`，如果缓冲区为空则返回 `false`
+     */
+    bool read(T &value) noexcept;
 };
 
+//! 2 槽位共享内存无锁环形缓冲区 @tparam T 共享数据类型，必须是可平凡复制类型
+template <typename T>
+using RingBufferSlotSHM2 = RingBufferSlotSHM<T, 2>;
+
+//! 4 槽位共享内存无锁环形缓冲区 @tparam T 共享数据类型，必须是可平凡复制类型
+template <typename T>
+using RingBufferSlotSHM4 = RingBufferSlotSHM<T, 4>;
+
+//! 8 槽位共享内存无锁环形缓冲区 @tparam T 共享数据类型，必须是可平凡复制类型
+template <typename T>
+using RingBufferSlotSHM8 = RingBufferSlotSHM<T, 8>;
+
+//! 16 槽位共享内存无锁环形缓冲区 @tparam T 共享数据类型，必须是可平凡复制类型
+template <typename T>
+using RingBufferSlotSHM16 = RingBufferSlotSHM<T, 16>;
+
+//! 32 槽位共享内存无锁环形缓冲区 @tparam T 共享数据类型，必须是可平凡复制类型
+template <typename T>
+using RingBufferSlotSHM32 = RingBufferSlotSHM<T, 32>;
+
+//! 64 槽位共享内存无锁环形缓冲区 @tparam T 共享数据类型，必须是可平凡复制类型
+template <typename T>
+using RingBufferSlotSHM64 = RingBufferSlotSHM<T, 64>;
+
 //! @} io_ipc
+
+#include "details/shm.hpp"
 
 #if __cplusplus >= 202002L
 

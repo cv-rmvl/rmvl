@@ -289,7 +289,7 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 
 /**
  * @brief 获取指定类型的成员个数
- * @note 成员个数不要超过 `12`
+ * @note 成员个数不要超过 12
  *
  * @tparam Tp 聚合类类型
  * @return 成员个数
@@ -312,7 +312,7 @@ consteval std::size_t size(auto &&...args) {
 
 /**
  * @brief 遍历聚合类的每一个数据成员
- * @note 成员个数不要超过 `12`
+ * @note 成员个数不要超过 12
  *
  * @tparam Tp 聚合类类型
  * @tparam Callable 可调用对象类型
@@ -363,7 +363,7 @@ inline void for_each(Tp &&val, Callable &&f) {
 
 /**
  * @brief 判断两个聚合类数据是否相同
- * @note 成员个数不要超过 `12`
+ * @note 成员个数不要超过 12
  *
  * @tparam Tp 聚合类类型
  * @param[in] lhs 左操作数

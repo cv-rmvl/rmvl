@@ -256,3 +256,33 @@ int main() {
     }
 }
 ```
+
+## 3 共享内存
+
+相关类： rm::SHMBase 以及 rm::RingBufferSlotSHM
+
+共享内存（Shared Memory）是一种极其高效的进程间通信方式，允许多个进程访问同一块内存区域，RMVL 提供了跨平台的共享内存实现。
+
+### 3.1 基础共享内存设施
+
+```cpp
+#include <rmvl/io/ipc.hpp>
+
+using namespace rm;
+
+int main() {
+    // 创建或打开共享内存
+    SHMBase shm("/myshm", 1024);
+
+    // 写入数据
+    const char data[] = "Hello, Shared Memory!";
+    shm.write(0, data, strlen(data) + 1);
+
+    // 读取数据
+    char buffer[64]{};
+    shm.read(0, buffer, sizeof(buffer));
+    printf("Read from SHM: %s\n", buffer);
+
+    return 0;
+}
+```
