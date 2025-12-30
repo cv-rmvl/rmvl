@@ -119,7 +119,7 @@ PipeClient::~PipeClient() {
         closePipe(_fd);
 }
 
-SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size) {
+SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size) {
     _fd = CreateFileMappingA(
         INVALID_HANDLE_VALUE,     // 使用系统分页文件
         nullptr,                  // 默认安全属性
@@ -131,6 +131,7 @@ SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size
         ERROR_("Failed to create shared memory");
         return;
     }
+    _is_creator = (GetLastError() != ERROR_ALREADY_EXISTS);
     _ptr = MapViewOfFile(_fd, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (_ptr == nullptr) {
         ERROR_("Failed to map view of file");
@@ -140,12 +141,14 @@ SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size
     }
 }
 
-SharedMemory::~SharedMemory() {
+SHMBase::~SHMBase() {
     if (_ptr != nullptr)
         UnmapViewOfFile(_ptr);
     if (_fd != nullptr)
         CloseHandle(_fd);
 }
+
+void SHMBase::destroy(std::string_view) {}
 
 #else
 
@@ -190,17 +193,28 @@ PipeClient::~PipeClient() {
         ::close(_fd);
 }
 
-SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size) {
-    std::string shm_path = "/dev/shm/"s + name.data();
-    bool is_creator = false;
-    _fd = ::open(shm_path.c_str(), O_RDWR | O_CREAT | O_EXCL, 0666);
+SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(name.starts_with('/') ? std::string(name) : "/"s + std::string(name)) {
+    _fd = ::shm_open(_name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0666);
 
     if (_fd >= 0)
-        is_creator = true;
+        _is_creator = true;
     else if (errno == EEXIST) {
-        _fd = ::open(shm_path.c_str(), O_RDWR, 0);
+        _fd = ::shm_open(_name.c_str(), O_RDWR, 0);
         if (_fd == -1) {
             ERROR_("Failed to open existing shared memory: %s", strerror(errno));
+            return;
+        }
+        struct stat st{};
+        if (::fstat(_fd, &st) == -1) {
+            ERROR_("Failed to get shared memory status: %s", strerror(errno));
+            ::close(_fd);
+            _fd = -1;
+            return;
+        }
+        if (static_cast<size_t>(st.st_size) != size) {
+            ERROR_("Shared memory size mismatch: expected %zu, got %ld", size, st.st_size);
+            ::close(_fd);
+            _fd = -1;
             return;
         }
     } else {
@@ -209,10 +223,11 @@ SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size
     }
 
     // 设置内存大小
-    if (is_creator) {
+    if (_is_creator) {
         if (ftruncate(_fd, size) == -1) {
             ERROR_("Failed to set shared memory size: %s", strerror(errno));
             close(_fd);
+            ::shm_unlink(_name.c_str());
             _fd = -1;
             return;
         }
@@ -221,16 +236,25 @@ SharedMemory::SharedMemory(std::string_view name, std::size_t size) : _size(size
     if (_ptr == MAP_FAILED) {
         ERROR_("Failed to map shared memory: %s", strerror(errno));
         close(_fd);
+        if (_is_creator)
+            ::shm_unlink(_name.c_str());
         _fd = -1;
+        _ptr = nullptr;
         return;
     }
 }
 
-SharedMemory::~SharedMemory() {
+SHMBase::~SHMBase() {
     if (_ptr != MAP_FAILED)
         munmap(_ptr, _size);
     if (_fd != -1)
         close(_fd);
+}
+
+void SHMBase::destroy(std::string_view name) {
+    std::string shm_name = name.starts_with('/') ? std::string(name) : "/"s + std::string(name);
+    if (::shm_unlink(shm_name.c_str()) == -1)
+        ERROR_("Failed to unlink shared memory: %s", strerror(errno));
 }
 
 #endif
