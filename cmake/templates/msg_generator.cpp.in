@@ -13,7 +13,7 @@
 
 #include "@MSG_INCLUDE_CONTENT@"
 
-namespace rm::lpss::msg {
+namespace rm::msg {
 
 std::string @CLASS_NAME@::serialize() const noexcept {
     std::string _res_;
@@ -33,4 +33,4 @@ std::size_t @CLASS_NAME@::compact_size() const noexcept {
     return @size_str@;
 }
 
-} // namespace rm::lpss::msg
+} // namespace rm::msg

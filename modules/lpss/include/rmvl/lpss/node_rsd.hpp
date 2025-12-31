@@ -12,6 +12,7 @@
 #pragma once
 
 #include <shared_mutex>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -23,17 +24,29 @@ namespace rm::lpss {
 //! @cond
 
 //! GUID
-struct Guid {
-    std::array<uint8_t, 6> mac{}; //!< MAC 地址
-    uint16_t pid{};               //!< 进程 ID
-    uint16_t entity{};            //!< 实体 ID，用于区分 Node 内的 Writer/Reader 实例
+union Guid {
+    uint64_t full;
 
-    bool operator==(const Guid &oth) const { return mac == oth.mac && pid == oth.pid && entity == oth.entity; }
+    struct {
+        uint32_t host : 32;   //!< 主机 ID (MAC 低 4 字节)
+        uint16_t pid : 16;    //!< 进程 ID
+        uint16_t entity : 16; //!< 实体 ID
+    } fields;
+
+    // 构造函数
+    Guid() : full(0) {}
+    Guid(uint64_t val) : full(val) {}
+    Guid(uint32_t h, uint16_t p, uint16_t e);
+
+    // 运算符重载
+    inline bool operator==(const Guid &oth) const { return full == oth.full; }
+    inline bool operator!=(const Guid &oth) const { return full != oth.full; }
+    inline bool operator<(const Guid &oth) const { return full < oth.full; }
 };
 
 //! GUID 哈希函数对象
 struct GuidHash {
-    std::size_t operator()(const rm::lpss::Guid &guid) const noexcept;
+    inline std::size_t operator()(const rm::lpss::Guid &guid) const noexcept { return static_cast<std::size_t>(guid.full); }
 };
 
 constexpr std::size_t RNDP_HEADER_SIZE = 4 + sizeof(Guid) + 2;
@@ -123,9 +136,10 @@ public:
      * @brief 创建数据写入器基类
      *
      * @param[in] guid 含 Entity ID 的 GUID
+     * @param[in] type 消息类型，使用 `<MsgType>::msg_type` 获取
      * @param[in] topic 写入话题，用于共享内存通道
      */
-    DataWriterBase(const Guid &guid, std::string_view topic);
+    DataWriterBase(const Guid &guid, std::string_view type, std::string_view topic);
 
     virtual ~DataWriterBase() = default;
 
@@ -155,13 +169,15 @@ public:
     void write(std::string_view data) noexcept;
 
 protected:
-    Guid _guid;           //!< 写入器所属实体 GUID
-    DgramSocket _socket;  //!< UDPv4 通道 Socket
-    std::string _topic{}; //!< 写入话题
+    Guid _guid;               //!< 写入器所属实体 GUID
+    DgramSocket _socket;      //!< UDPv4 通道 Socket
+    std::string_view _type{}; //!< 消息类型
+    std::string _topic{};     //!< 写入话题
 
-    std::shared_mutex _mtx;                                     //!< 保护目标列表的读写锁
-    std::unordered_map<Guid, Locator, GuidHash> _udpv4_targets; //!< 目标 UDPv4 定位器缓存集合
-    // std::unordered_map<Guid, MPMCSharedMemory, GuidHash> _shm_targets; //!< 目标 SHM 通道集合
+    //! 保护目标列表的读写锁
+    std::shared_mutex _mtx;
+    //! 目标 UDPv4 定位器缓存集合
+    std::unordered_map<Guid, Locator, GuidHash> _udpv4_targets;
 };
 
 /**
@@ -176,9 +192,10 @@ public:
      * @brief 创建数据读取器基类
      *
      * @param[in] guid 含 Entity ID 的 GUID
+     * @param[in] type 消息类型，使用 `<MsgType>::msg_type` 获取`
      * @param[in] topic 监听话题，用于共享内存通道
      */
-    DataReaderBase(const Guid &guid, std::string_view topic);
+    DataReaderBase(const Guid &guid, std::string_view type, std::string_view topic);
 
     virtual ~DataReaderBase() = default;
 
@@ -196,10 +213,11 @@ public:
     inline uint16_t port() const noexcept { return _port; }
 
 protected:
-    Guid _guid;         //!< 读取器所属实体 GUID
-    uint16_t _port;     //!< 监听端口
-    DgramSocket _udpv4; //!< UDPv4 通道
-    // MPMCSharedMemory _shm; //!< 共享内存通道
+    uint16_t _port{};         //!< 监听端口
+    Guid _guid;               //!< 读取器所属实体 GUID
+    DgramSocket _udpv4;       //!< UDPv4 通道
+    std::string_view _type{}; //!< 消息类型
+    std::string _topic{};     //!< 监听话题
 };
 
 /**
@@ -213,7 +231,7 @@ protected:
 template <typename MsgType>
 class DataWriter : public DataWriterBase {
 public:
-    DataWriter(const Guid &guid, std::string_view topic) : DataWriterBase(guid, topic) {}
+    DataWriter(const Guid &guid, std::string_view topic) : DataWriterBase(guid, MsgType::msg_type, topic) {}
 };
 
 /**
@@ -235,10 +253,14 @@ public:
      * @param[in] callback 消息回调函数
      */
     template <typename Callback, typename = std::enable_if_t<std::is_invocable_v<Callback, const MsgType &>>>
-    DataReader(const Guid &guid, std::string_view topic, Callback &&callback) : DataReaderBase(guid, topic) {
+    DataReader(const Guid &guid, std::string_view topic, Callback &&callback) : DataReaderBase(guid, MsgType::msg_type, topic) {
         _thrd = std::thread([this, cb = std::forward<Callback>(callback)]() {
-            while (true)
-                cb(MsgType::deserialize(this->read()));
+            while (true) {
+                auto data = this->read();
+                if (data.empty())
+                    continue;
+                cb(MsgType::deserialize(data.data()));
+            }
         });
     }
 

@@ -47,11 +47,11 @@ rmvl_hik_lightctl /dev/ttyUSB0
 <div class="line"><span class="keyword">Common functions usage:</span></div>
 <div class="line">&nbsp;&nbsp;h, help, ?, usage <span class="comment"># show this help message</span></div>
 <div class="line">&nbsp;&nbsp;exit, quit, q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># exit the program</span></div>
-<div class="line"> </div>
+<div class="line"></div>
 <div class="line"><span class="keyword">Parameters control usage:</span></div>
 <div class="line">&nbsp;&nbsp;ctl get delay&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># get the delay time after writing</span></div>
 <div class="line">&nbsp;&nbsp;ctl set delay &lt;val&gt; <span class="comment"># set the delay time after writing</span></div>
-<div class="line"> </div>
+<div class="line"></div>
 <div class="line"><span class="keyword">Commands usage:</span></div>
 <div class="line">&nbsp;&nbsp;open&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># open all the channels</span></div>
 <div class="line">&nbsp;&nbsp;close&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># close all the channels</span></div>

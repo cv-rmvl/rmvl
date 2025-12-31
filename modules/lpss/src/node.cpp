@@ -29,8 +29,7 @@ namespace rm::lpss {
 
 void sendREDPMessage(Locator ctrl_loc, const REDPMessage &msg);
 
-Node::Node(uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()),
-                             _rndp_reader(Listener(Endpoint(ip::udp::v4(), _rndp_port)).create()) {
+Node::Node(uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()) {
     static_assert(sizeof(Locator) == 6, "Locator size must be 6 bytes");
 
     auto interfaces = NetworkInterface::list();
@@ -45,35 +44,45 @@ Node::Node(uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::
         return a.type() != b.type() ? a.type() < b.type() : a.name() < b.name();
     });
 
+    std::vector<ip::Networkv4> networks{};
+    networks.reserve(candidate_interfaces.size());
     if (!candidate_interfaces.empty()) {
         // 选取最优接口为 GUID MAC 和 basic_mac
         const auto &primary_iface = candidate_interfaces.front();
-        _uid.mac = _info.basic_mac = primary_iface.address();
-        _uid.pid = static_cast<uint16_t>(processId());
+        auto basic_mac = primary_iface.address();
+        _uid.fields.host = (static_cast<uint32_t>(basic_mac[2]) << 24) |
+                           (static_cast<uint32_t>(basic_mac[3]) << 16) |
+                           (static_cast<uint32_t>(basic_mac[4]) << 8) |
+                           static_cast<uint32_t>(basic_mac[5]);
+        _uid.fields.pid = static_cast<uint16_t>(processId());
+        _uid.fields.entity = 0;
         // 收集 IP
         for (const auto &iface : candidate_interfaces) {
-            auto networks = iface.ipv4();
-            _info.networks.insert(_info.networks.end(), networks.begin(), networks.end());
+            auto nets = iface.ipv4();
+            networks.insert(networks.end(), std::make_move_iterator(nets.begin()), std::make_move_iterator(nets.end()));
         }
     } else {
         WARNING_("[LPSS Node] No valid network interface found, using 00:00:00:00:00:00 as MAC address");
-        _uid.pid = static_cast<uint16_t>(processId());
+        _uid.fields.pid = static_cast<uint16_t>(processId());
     }
 
-    // REDP 端口范围：7751 ~ 26117，选取质数作为取模基数以减少端口冲突
-    _redp_port = 7751 + _uid.pid % 18367;
+    // 创建监听 Socket
+    auto rndp_reader = Listener(Endpoint(ip::udp::v4(), _rndp_port)).create();
+    auto redp_socket = Listener(Endpoint(ip::udp::v4(), Endpoint::ANY_PORT)).create();
+    _redp_port = redp_socket.endpoint().port();
 
+    // 设置 Socket 选项
     _rndp_writer.setOption(ip::multicast::Loopback(true));
-    _rndp_reader.setOption(ip::multicast::JoinGroup(BROADCAST_IP));
+    rndp_reader.setOption(ip::multicast::JoinGroup(BROADCAST_IP));
 
     // 启动广播线程
-    _bcast_thrd = std::thread(&Node::rndp_multicast, this);
+    _bcast_thrd = std::thread(&Node::rndp_multicast, this, std::move(networks));
 
     // 启动监听线程
-    _rndp_listen_thrd = std::thread(&Node::rndp_listener, this);
+    _rndp_listen_thrd = std::thread(&Node::rndp_listener, this, std::move(rndp_reader));
 
     // 启动 REDP 监听线程
-    _redp_listen_thrd = std::thread(&Node::redp_listener, this);
+    _redp_listen_thrd = std::thread(&Node::redp_listener, this, std::move(redp_socket));
 
     // 启动心跳检测线程
     _hbt_detect_thrd = std::thread(&Node::heartbeat_detect, this);
@@ -104,11 +113,11 @@ Node::~Node() {
     if (_bcast_thrd.joinable())
         _bcast_thrd.join();
     if (_rndp_listen_thrd.joinable()) {
-        _rndp_reader.write(BROADCAST_IP, Endpoint(ip::udp::v4(), _rndp_port), wake_msg);
+        _rndp_writer.write("127.0.0.1", Endpoint(ip::udp::v4(), _rndp_port), wake_msg);
         _rndp_listen_thrd.join();
     }
     if (_redp_listen_thrd.joinable()) {
-        _rndp_reader.write("127.0.0.1", Endpoint(ip::udp::v4(), _redp_port), wake_msg);
+        _rndp_writer.write("127.0.0.1", Endpoint(ip::udp::v4(), _redp_port), wake_msg);
         _redp_listen_thrd.join();
     }
     if (_hbt_detect_thrd.joinable()) {
@@ -117,12 +126,12 @@ Node::~Node() {
     }
 }
 
-void Node::rndp_multicast() {
+void Node::rndp_multicast(std::vector<ip::Networkv4> networks) {
     // 准备 RNDP 消息
-    uint8_t locator_num = static_cast<uint8_t>(_info.networks.size() + 1);
+    uint8_t locator_num = static_cast<uint8_t>(networks.size() + 1);
     RNDPMessage rndp_msg{_uid, para::lpss_param.MAX_NODE_HEARTBEAT_PERIOD};
     rndp_msg.locators.reserve(locator_num);
-    for (auto network : _info.networks)
+    for (auto network : networks)
         rndp_msg.locators.push_back({_redp_port, network.address()});
 
     // 序列化 RNDP 消息
@@ -133,7 +142,7 @@ void Node::rndp_multicast() {
         std::this_thread::sleep_for(20ms);
 
         // 为 Outbound 设置不同的接口地址，并分别发送消息
-        for (const auto &network : _info.networks) {
+        for (const auto &network : networks) {
             _rndp_writer.setOption(ip::multicast::Interface(network.address()));
             _rndp_writer.write(BROADCAST_IP, Endpoint(ip::udp::v4(), _rndp_port), rndp_msg_data);
         }
@@ -147,10 +156,10 @@ static Locator selectBestLocator(std::array<uint8_t, 4> target_ip, const RNDPMes
     return {};
 }
 
-void Node::rndp_listener() {
+void Node::rndp_listener(DgramSocket rndp_reader) {
     while (_running.load(std::memory_order_acquire)) {
         // 接收原始 UDP 报文
-        auto [data, addr_str, port] = _rndp_reader.read();
+        auto [data, addr_str, port] = rndp_reader.read();
 
         if (data.size() < RNDP_HEADER_SIZE)
             continue;
@@ -191,9 +200,7 @@ void Node::rndp_listener() {
     }
 }
 
-void Node::redp_listener() {
-    auto redp_listener = Listener(Endpoint(ip::udp::v4(), _redp_port));
-    auto redp_socket = redp_listener.create();
+void Node::redp_listener(DgramSocket redp_socket) {
     while (_running.load(std::memory_order_acquire)) {
         auto [redp_msg, addr_str, port] = redp_socket.read();
         std::array<uint8_t, 4> addr{};

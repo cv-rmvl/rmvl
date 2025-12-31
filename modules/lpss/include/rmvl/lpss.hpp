@@ -16,8 +16,6 @@
 #include <thread>
 #include <unordered_set>
 
-#include "rmvl/core/util.hpp"
-
 #include "lpss/node_rsd.hpp"
 
 namespace rm::lpss {
@@ -63,10 +61,7 @@ public:
      *
      * @param[in] msg 消息内容
      */
-    void publish(const MsgType &msg) {
-        RMVL_Assert(!invalid());
-        _writer->write(msg.serialize());
-    }
+    void publish(const MsgType &msg);
 
 private:
     DataWriterBase::ptr _writer{}; //!< 底层数据写入器
@@ -131,32 +126,7 @@ public:
      * @return Publisher<MsgType> 发布者对象
      */
     template <typename MsgType>
-    Publisher<MsgType> createPublisher(std::string_view topic) noexcept {
-        if (_local_writers.find(std::string(topic)) != _local_writers.end())
-            return nullptr;
-        Guid pub_guid = _uid;
-        pub_guid.entity = _next_eid.fetch_add(1, std::memory_order_relaxed);
-        DataWriterBase::ptr writer = std::make_shared<DataWriter<MsgType>>(pub_guid, topic);
-        // 设置 SHM 通道和 UDPv4 缓存
-        {
-            std::shared_lock lk(_discovered_mtx);
-            auto it = _discovered_readers.find(std::string(topic));
-            if (it != _discovered_readers.end())
-                for (const auto &[reader_guid, locator] : it->second)
-                    writer->add(reader_guid, locator);
-        }
-        // 注册本地 DataWriter
-        {
-            std::lock_guard lk(_local_mtx);
-            _local_writers[std::string(topic)] = writer;
-        }
-        // 向已发现的节点发送 addWriter 的 REDP 消息
-        REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic);
-        std::shared_lock lk(_discovered_mtx);
-        for (const auto &[guid, node_info] : _discovered_nodes)
-            sendREDPMessage(node_info.ctrl_loc, redp_msg);
-        return Publisher<MsgType>(topic, std::move(writer));
-    }
+    Publisher<MsgType> createPublisher(std::string_view topic) noexcept;
 
     /**
      * @brief 创建订阅者
@@ -168,38 +138,20 @@ public:
      * @return Subscriber<MsgType> 订阅者对象
      */
     template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
-    Subscriber<MsgType> createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept {
-        if (_local_readers.find(std::string(topic)) != _local_readers.end())
-            return nullptr;
-        Guid sub_guid = _uid;
-        sub_guid.entity = _next_eid.fetch_add(1, std::memory_order_relaxed);
-        // 注册本地 DataReader
-        DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(sub_guid, topic, callback);
-        {
-            std::lock_guard lk(_local_mtx);
-            _local_readers[std::string(topic)] = reader;
-        }
-        // 向已发现的节点发送 addReader 的 REDP 消息
-        REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port());
-        std::shared_lock lk(_discovered_mtx);
-        for (const auto &[guid, node_info] : _discovered_nodes)
-            sendREDPMessage(node_info.ctrl_loc, redp_msg);
-
-        return Subscriber<MsgType>(topic, std::move(reader));
-    }
+    Subscriber<MsgType> createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept;
 
     //! 获取节点唯一标识符
     Guid guid() const noexcept { return _uid; }
 
 private:
     //! 广播 RNDP 消息
-    void rndp_multicast();
+    void rndp_multicast(std::vector<ip::Networkv4> info);
 
     //! 监听 RNDP 消息
-    void rndp_listener();
+    void rndp_listener(DgramSocket rndp_reader);
 
     //! 监听 REDP 消息
-    void redp_listener();
+    void redp_listener(DgramSocket redp_socket);
 
     //! 心跳检测
     void heartbeat_detect();
@@ -211,14 +163,8 @@ private:
     uint16_t _redp_port{}; //!< REDP 监听端口号
 
     DgramSocket _rndp_writer; //!< RNDP 广播 Socket
-    DgramSocket _rndp_reader; //!< RNDP 监听 Socket
 
     Guid _uid{}; //!< 节点唯一标识符
-
-    struct NodeNetworkInfo {
-        std::array<uint8_t, 6> basic_mac{};    //!< 主 MAC 地址，与 GUID MAC 对应
-        std::vector<ip::Networkv4> networks{}; //!< 对外可用的 IPv4 网络地址列表
-    } _info{};                                 //!< 本机网络信息
 
     std::shared_mutex _nodes_mtx{};                                          //!< 节点读写锁
     std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{}; //!< 已发现的节点列表
@@ -248,3 +194,5 @@ private:
 //! @} lpss
 
 } // namespace rm::lpss
+
+#include "lpss/details/node_impl.hpp"
