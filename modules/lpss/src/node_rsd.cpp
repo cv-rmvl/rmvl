@@ -23,14 +23,10 @@
 
 namespace rm::lpss {
 
-size_t GuidHash::operator()(const rm::lpss::Guid &guid) const noexcept {
-    size_t seed{};
-    constexpr auto MAGIC = 0x9e3779b9;
-    for (uint8_t byte : guid.mac)
-        seed ^= std::hash<uint8_t>{}(byte) + MAGIC + (seed << 6) + (seed >> 2);
-    seed ^= std::hash<uint16_t>{}(guid.pid) + MAGIC + (seed << 6) + (seed >> 2);
-    seed ^= std::hash<uint16_t>{}(guid.entity) + MAGIC + (seed << 6) + (seed >> 2);
-    return seed;
+Guid::Guid(uint32_t h, uint16_t p, uint16_t e) {
+    fields.host = h;
+    fields.pid = p;
+    fields.entity = e;
 }
 
 std::string RNDPMessage::serialize() const noexcept {
@@ -40,11 +36,9 @@ std::string RNDPMessage::serialize() const noexcept {
 
     // RNDP 头部
     strcpy(rndp_msg.data(), "RNDP");
-    ::memcpy(rndp_msg.data() + 4, guid.mac.data(), guid.mac.size());
-    new (rndp_msg.data() + 4 + sizeof(guid.mac)) uint16_t{::htons(guid.pid)};
-    new (rndp_msg.data() + 4 + sizeof(guid.mac) + sizeof(guid.pid)) uint16_t{::htons(guid.entity)};
-    ::memcpy(rndp_msg.data() + 4 + sizeof(guid), &num, sizeof(num));
-    ::memcpy(rndp_msg.data() + 4 + sizeof(guid) + 1, &heartbeat_timeout, sizeof(heartbeat_timeout));
+    ::memcpy(rndp_msg.data() + 4, &guid.full, sizeof(guid.full));
+    ::memcpy(rndp_msg.data() + 4 + sizeof(guid.full), &num, sizeof(num));
+    ::memcpy(rndp_msg.data() + 4 + sizeof(guid.full) + 1, &heartbeat_timeout, sizeof(heartbeat_timeout));
 
     // RNDP 负载
     auto p_locator = reinterpret_cast<Locator *>(rndp_msg.data() + RNDP_HEADER_SIZE);
@@ -59,11 +53,9 @@ RNDPMessage RNDPMessage::deserialize(const char *data) noexcept {
     RNDPMessage res;
     if (std::string_view(data, 4) != "RNDP")
         return res;
-    ::memcpy(res.guid.mac.data(), data + 4, res.guid.mac.size());
-    res.guid.pid = ::ntohs(*reinterpret_cast<const uint16_t *>(data + 4 + sizeof(guid.mac)));
-    res.guid.entity = ::ntohs(*reinterpret_cast<const uint16_t *>(data + 4 + sizeof(guid.mac) + sizeof(guid.pid)));
-    auto num = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(guid));
-    res.heartbeat_timeout = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(guid) + sizeof(num));
+    ::memcpy(&res.guid.full, data + 4, sizeof(res.guid.full));
+    auto num = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.guid.full));
+    res.heartbeat_timeout = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.guid.full) + sizeof(num));
     res.locators.reserve(num);
 
     for (size_t i = 0; i < num; ++i) {
@@ -82,12 +74,9 @@ std::string REDPMessage::serialize() const noexcept {
 
     // REDP 头部
     ::strcpy(redp_msg.data(), "REDP");
-    ::memcpy(redp_msg.data() + 4, &endpoint_guid.mac, sizeof(endpoint_guid.mac));
-    new (redp_msg.data() + 4 + sizeof(endpoint_guid.mac)) uint16_t{::htons(endpoint_guid.pid)};
-    new (redp_msg.data() + 4 + sizeof(endpoint_guid.mac) + sizeof(endpoint_guid.pid)) uint16_t{::htons(endpoint_guid.entity)};
-    new (redp_msg.data() + 4 + sizeof(endpoint_guid)) uint8_t{static_cast<uint8_t>(static_cast<uint8_t>(action) | static_cast<uint8_t>(type))};
-    ::memcpy(redp_msg.data() + 4 + sizeof(endpoint_guid) + 1, &topic_size, sizeof(topic_size));
-
+    ::memcpy(redp_msg.data() + 4, &endpoint_guid.full, sizeof(endpoint_guid.full));
+    new (redp_msg.data() + 4 + sizeof(endpoint_guid.full)) uint8_t{static_cast<uint8_t>(static_cast<uint8_t>(action) | static_cast<uint8_t>(type))};
+    ::memcpy(redp_msg.data() + 4 + sizeof(endpoint_guid.full) + 1, &topic_size, sizeof(topic_size));
     // REDP 负载
     uint16_t net_port = htons(port);
     ::memcpy(redp_msg.data() + REDP_HEADER_SIZE, &net_port, sizeof(net_port));
@@ -100,12 +89,10 @@ REDPMessage REDPMessage::deserialize(const char *data) noexcept {
     // REDP 头部
     if (std::string_view(data, 4) != "REDP")
         return res;
-    ::memcpy(res.endpoint_guid.mac.data(), data + 4, res.endpoint_guid.mac.size());
-    res.endpoint_guid.pid = ntohs(*reinterpret_cast<const uint16_t *>(data + 4 + sizeof(endpoint_guid.mac)));
-    res.endpoint_guid.entity = ntohs(*reinterpret_cast<const uint16_t *>(data + 4 + sizeof(endpoint_guid.mac) + sizeof(endpoint_guid.pid)));
-    res.action = static_cast<Action>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(endpoint_guid)) & 0b01);
-    res.type = static_cast<Type>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(endpoint_guid)) & 0b10);
-    uint8_t topic_size = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(endpoint_guid) + 1);
+    ::memcpy(&res.endpoint_guid.full, data + 4, sizeof(res.endpoint_guid.full));
+    res.action = static_cast<Action>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b01);
+    res.type = static_cast<Type>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b10);
+    uint8_t topic_size = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full) + 1);
 
     // REDP 负载
     res.port = ntohs(*reinterpret_cast<const uint16_t *>(data + REDP_HEADER_SIZE));

@@ -114,9 +114,11 @@ public:
      */
     explicit Interface(std::array<uint8_t, 4> addr);
 
+    //! @cond
     int name() const;
     sockopt_data_t data() const;
     unsigned int size() const;
+    //! @endcond
 
 private:
     uint8_t _data[4]{}; //!< 多播接口的 IPv4 地址
@@ -127,9 +129,11 @@ class Loopback {
 public:
     explicit Loopback(bool enabled = true);
 
+    //! @cond
     int name() const;
     sockopt_data_t data() const;
     unsigned int size() const;
+    //! @endcond
 
 private:
     uint8_t _data{};
@@ -140,9 +144,11 @@ class JoinGroup {
 public:
     explicit JoinGroup(std::string_view group);
 
+    //! @cond
     int name() const;
     sockopt_data_t data() const;
     unsigned int size() const;
+    //! @endcond
 
 private:
     uint8_t _data[8]{}; //!< 多播组数据结构
@@ -268,6 +274,8 @@ private:
 //! 端点
 class Endpoint {
 public:
+    static constexpr uint16_t ANY_PORT = 0; //!< 任意可用或自动分配端口标识
+
     /**
      * @brief 构造 Socket 端点
      *
@@ -344,7 +352,7 @@ public:
     Endpoint endpoint() const;
 
     /**
-     * @brief 同步读取已连接的 Socket 中的数据（阻塞）
+     * @brief 同步读取 Socket 中的数据（阻塞）
      * @code {.cpp}
      * // 使用示例
      * auto [str, addr, port] = socket.read();
@@ -358,7 +366,7 @@ public:
     std::tuple<std::string, std::string, uint16_t> read() noexcept;
 
     /**
-     * @brief 同步写入数据到已连接的 Socket 中（阻塞）
+     * @brief 同步写入数据到的 Socket 中（阻塞）
      * @code {.cpp}
      * // 使用示例
      * bool success = socket.write("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello, World!");
@@ -370,6 +378,20 @@ public:
      * @return 是否写入成功
      */
     bool write(std::string_view addr, const Endpoint &endpoint, std::string_view data) noexcept;
+
+    /**
+     * @brief 同步写入数据到的 IPv4 的 Socket 中（阻塞）
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = socket.write({192, 168, 1, 100}, rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello, World!");
+     * @endcode
+     *
+     * @param[in] addr 使用数组形式表示的 IPv4 目标地址
+     * @param[in] endpoint 目标端点
+     * @param[in] data 待写入的数据
+     * @return 是否写入成功
+     */
+    bool write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) noexcept;
 
 protected:
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 会话文件描述符

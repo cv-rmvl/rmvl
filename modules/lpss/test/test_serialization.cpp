@@ -22,51 +22,51 @@ namespace rm_test {
 using namespace rm;
 
 TEST(LPSS_serialization, bool) {
-    lpss::msg::Bool msg;
+    msg::Bool msg;
     msg.data = true;
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::Bool::deserialize(str.data());
+    auto dst = msg::Bool::deserialize(str.data());
     EXPECT_EQ(dst.data, true);
 }
 
 TEST(LPSS_serialization, string) {
-    lpss::msg::String msg;
+    msg::String msg;
     msg.data = "Hello, LPSS!";
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::String::deserialize(str.data());
+    auto dst = msg::String::deserialize(str.data());
     EXPECT_EQ(dst.data, "Hello, LPSS!");
 }
 
 TEST(LPSS_serialization, int32) {
-    lpss::msg::Int32 msg;
+    msg::Int32 msg;
     msg.data = 42;
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::Int32::deserialize(str.data());
+    auto dst = msg::Int32::deserialize(str.data());
     EXPECT_EQ(dst.data, 42);
 }
 
 TEST(LPSS_serialization, header) {
-    lpss::msg::Header msg;
+    msg::Header msg;
     msg.seq = 1;
     msg.frame_id = "base_link";
     msg.stamp = 123.456;
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::Header::deserialize(str.data());
+    auto dst = msg::Header::deserialize(str.data());
     EXPECT_EQ(dst.seq, 1);
     EXPECT_EQ(dst.frame_id, "base_link");
     EXPECT_DOUBLE_EQ(dst.stamp, 123.456);
 }
 
 TEST(LPSS_serialization, quaternion) {
-    lpss::msg::Quaternion msg;
+    msg::Quaternion msg;
     msg.x = 0.7;
     msg.y = 0.0;
     msg.z = 0.7;
@@ -74,7 +74,7 @@ TEST(LPSS_serialization, quaternion) {
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::Quaternion::deserialize(str.data());
+    auto dst = msg::Quaternion::deserialize(str.data());
     EXPECT_DOUBLE_EQ(dst.x, 0.7);
     EXPECT_DOUBLE_EQ(dst.y, 0.0);
     EXPECT_DOUBLE_EQ(dst.z, 0.7);
@@ -82,21 +82,21 @@ TEST(LPSS_serialization, quaternion) {
 }
 
 TEST(LPSS_serialization, vector3) {
-    lpss::msg::Vector3 msg;
+    msg::Vector3 msg;
     msg.x = 1.0;
     msg.y = 2.0;
     msg.z = 3.0;
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::Vector3::deserialize(str.data());
+    auto dst = msg::Vector3::deserialize(str.data());
     EXPECT_DOUBLE_EQ(dst.x, 1.0);
     EXPECT_DOUBLE_EQ(dst.y, 2.0);
     EXPECT_DOUBLE_EQ(dst.z, 3.0);
 }
 
 TEST(LPSS_serialization, joint) {
-    lpss::msg::JointState msg;
+    msg::JointState msg;
     msg.header.frame_id = "joint_frame";
     msg.header.stamp = 100.5;
     msg.position = {1.0, 2.0, 3.0};
@@ -105,7 +105,7 @@ TEST(LPSS_serialization, joint) {
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::JointState::deserialize(str.data());
+    auto dst = msg::JointState::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "joint_frame");
     EXPECT_DOUBLE_EQ(dst.header.stamp, 100.5);
@@ -121,7 +121,7 @@ TEST(LPSS_serialization, joint) {
 }
 
 TEST(LPSS_serialization, imu) {
-    lpss::msg::Imu msg;
+    msg::Imu msg;
     msg.header.frame_id = "imu_frame";
     msg.header.stamp = 200.5;
     msg.orientation = {0.0, 0.0, 0.0, 1.0};
@@ -130,7 +130,7 @@ TEST(LPSS_serialization, imu) {
 
     auto str = msg.serialize();
 
-    auto dst = lpss::msg::Imu::deserialize(str.data());
+    auto dst = msg::Imu::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "imu_frame");
     EXPECT_DOUBLE_EQ(dst.header.stamp, 200.5);

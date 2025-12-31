@@ -16,7 +16,7 @@
 
 @MSG_EXTRA_HEADERS@
 //! LPSS 消息类型命名空间
-namespace rm::lpss::msg {
+namespace rm::msg {
 
 //! @addtogroup rmvlmsg
 //! @{
@@ -25,6 +25,9 @@ namespace rm::lpss::msg {
 class @CLASS_NAME@ {
 public:
 @type_and_ids_cpp@
+
+    static constexpr const char msg_type[] = "@CLASS_NAME_COMMENT@"; //!< 消息类型字符串常量
+
     /**
      * @brief 消息序列化
      *
@@ -46,4 +49,4 @@ public:
 
 //! @} rmvlmsg
 
-} // namespace rm::lpss::msg
+} // namespace rm::msg

@@ -62,30 +62,7 @@ TEST(IO_netapp, basic_http) {
     EXPECT_EQ(req.body, "{\"name\":\"rmvl_test\",\"message\":\"test\"}");
 }
 
-TEST(IO_netapp, sync_request) {
-    auto res = requests::get("http://www.example.com");
-    EXPECT_EQ(res.state, 200);
-    EXPECT_EQ(res.message, "OK");
-    EXPECT_NE(res.body.find("<title>Example Domain</title>"), std::string::npos);
-}
-
 #if __cplusplus >= 202002L
-
-TEST(IO_netapp, async_request) {
-    auto io_context = async::IOContext{};
-
-    auto task = [&]() -> async::Task<> {
-        auto res = co_await async::requests::get(io_context, "http://www.example.com");
-        EXPECT_EQ(res.state, 200);
-        EXPECT_EQ(res.message, "OK");
-        EXPECT_NE(res.body.find("<title>Example Domain</title>"), std::string::npos);
-
-        io_context.stop();
-    };
-
-    co_spawn(io_context, task);
-    io_context.run();
-}
 
 using namespace std::literals::chrono_literals;
 

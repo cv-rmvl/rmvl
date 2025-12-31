@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 #include <nlohmann/json.hpp>
 
-namespace rm::lpss::msg {
+namespace rm::msg {
 
 class TestData {
 public:
@@ -37,14 +37,14 @@ public:
     std::string c;
 };
 
-} // namespace rm::lpss::msg
+} // namespace rm::msg
 
 using namespace rm;
 
 namespace rm_test {
 
 void data_serialize(benchmark::State &state) {
-    lpss::msg::TestData msg;
+    msg::TestData msg;
     msg.a = 42;
     msg.b = 2024;
     msg.c = "Hello, LPSS!";
@@ -54,13 +54,13 @@ void data_serialize(benchmark::State &state) {
 }
 
 void data_deserialize(benchmark::State &state) {
-    lpss::msg::TestData msg;
+    msg::TestData msg;
     msg.a = 42;
     msg.b = 2024;
     msg.c = "Hello, LPSS!";
     auto serialized = msg.serialize();
     for (auto _ : state) {
-        auto data = lpss::msg::TestData::deserialize(serialized);
+        auto data = msg::TestData::deserialize(serialized);
         benchmark::DoNotOptimize(data);
     }
 }

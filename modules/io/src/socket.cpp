@@ -495,6 +495,22 @@ bool DgramSocket::write(std::string_view addr, const Endpoint &endpoint, std::st
     return fdsendto(_fd, addr, endpoint, data);
 }
 
+bool DgramSocket::write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) noexcept {
+    RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
+    sockaddr_in dst{};
+    socklen_t addr_len{};
+    dst.sin_family = AF_INET;
+    dst.sin_port = htons(endpoint.port());
+    memcpy(&dst.sin_addr.s_addr, addr.data(), 4);
+    addr_len = sizeof(sockaddr_in);
+#ifdef _WIN32
+    auto n = ::sendto(_fd, data.data(), static_cast<int>(data.size()), 0, reinterpret_cast<sockaddr *>(&dst), addr_len);
+#else
+    auto n = ::sendto(_fd, data.data(), data.size(), 0, reinterpret_cast<sockaddr *>(&dst), addr_len);
+#endif
+    return n == static_cast<decltype(n)>(data.size());
+}
+
 Endpoint DgramSocket::endpoint() const { return _endpoint(_fd); }
 
 std::string StreamSocket::read() noexcept {
