@@ -148,8 +148,6 @@ SHMBase::~SHMBase() {
         CloseHandle(_fd);
 }
 
-void SHMBase::destroy(std::string_view) {}
-
 #else
 
 static std::string readPipe(int fd) noexcept {
@@ -193,7 +191,7 @@ PipeClient::~PipeClient() {
         ::close(_fd);
 }
 
-SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(name.starts_with('/') ? std::string(name) : "/"s + std::string(name)) {
+SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(name.find('/') == 0 ? std::string(name) : "/"s + std::string(name)) {
     _fd = ::shm_open(_name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0666);
 
     if (_fd >= 0)
@@ -249,12 +247,8 @@ SHMBase::~SHMBase() {
         munmap(_ptr, _size);
     if (_fd != -1)
         close(_fd);
-}
-
-void SHMBase::destroy(std::string_view name) {
-    std::string shm_name = name.starts_with('/') ? std::string(name) : "/"s + std::string(name);
-    if (::shm_unlink(shm_name.c_str()) == -1)
-        ERROR_("Failed to unlink shared memory: %s", strerror(errno));
+    if (_is_creator)
+        ::shm_unlink(_name.c_str());
 }
 
 #endif

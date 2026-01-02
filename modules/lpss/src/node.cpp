@@ -9,6 +9,8 @@
  *
  */
 
+#include <algorithm>
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -171,7 +173,7 @@ void Node::rndp_listener(DgramSocket rndp_reader) {
         bool is_new_node{};
         {
             std::lock_guard lk(_nodes_mtx);
-            auto [it, inserted] = _discovered_nodes.try_emplace(rndp_msg.guid, rndp_msg);
+            auto [it, inserted] = _discovered_nodes.try_emplace(rndp_msg.guid, NodeStorageInfo{rndp_msg});
             if (inserted)
                 is_new_node = true;
             else

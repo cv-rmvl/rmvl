@@ -267,13 +267,6 @@ public:
     //! 是否为创建者
     bool isCreator() const noexcept { return _is_creator; }
 
-    /**
-     * @brief 显式移除指定名称的共享内存对象，Windows 平台下调用该函数无效果
-     * @details 析构中不提供清理操作，这是数据持久化优于自动清理的设计选择
-     * @param[in] name 共享内存名称
-     */
-    static void destroy(std::string_view name);
-
 private:
     std::size_t _size{};     //!< 共享内存大小
     std::string _name{};     //!< 共享内存名称
@@ -359,9 +352,10 @@ public:
      * @brief 向缓冲区中写入一个值（非阻塞）
      *
      * @param[in] value 要写入的值
+     * @param[in] overwrite 是否在缓冲区满时覆盖旧数据，默认为 `false`
      * @return 如果成功写入则返回 `true`，如果缓冲区已满则返回 `false`
      */
-    bool write(const T &value) noexcept;
+    bool write(const T &value, bool overwrite = false) noexcept;
 
     /**
      * @brief 从缓冲区读取一个值（非阻塞）
