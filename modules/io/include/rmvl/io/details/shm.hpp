@@ -83,7 +83,7 @@ RingBufferSlotSHM<T, Capacity, Enable>::RingBufferSlotSHM(std::string_view name)
 }
 
 template <typename T, size_t Capacity, typename Enable>
-bool RingBufferSlotSHM<T, Capacity, Enable>::write(const T &value) noexcept {
+bool RingBufferSlotSHM<T, Capacity, Enable>::write(const T &value, bool overwrite) noexcept {
     auto buf = static_cast<Buffer *>(this->data());
     if (!buf)
         return false;
@@ -101,6 +101,8 @@ bool RingBufferSlotSHM<T, Capacity, Enable>::write(const T &value) noexcept {
                 return true;
             }
         } else if (diff < 0) {
+            if (!overwrite)
+                return false; // 缓冲区已满，且不覆盖旧数据
             size_t current_head = buf->head.load(std::memory_order_relaxed);
             Slot &head_slot = buf->slots[current_head & (Capacity - 1)];
             size_t head_seq = head_slot.sequence.load(std::memory_order_acquire);

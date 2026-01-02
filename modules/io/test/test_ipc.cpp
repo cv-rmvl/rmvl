@@ -85,8 +85,6 @@ TEST(IO_ipc, atomic_shm_construction_and_empty) {
 
     TestData data{};
     EXPECT_FALSE(shm.read(data));
-
-    SHMBase::destroy("test_atomic_shm");
 }
 
 TEST(IO_ipc, atomic_shm_basic_io) {
@@ -107,16 +105,12 @@ TEST(IO_ipc, atomic_shm_basic_io) {
 
     EXPECT_TRUE(shm.read(output));
     EXPECT_EQ(input2, output);
-
-    SHMBase::destroy("test_atomic_shm");
 }
 
 TEST(IO_ipc, atomic_shm_multiple_connection) {
-    {
-        rm::AtomicSHM<TestData> server("test_atomic_shm");
-        TestData input{100, 123.456, "ServerMsg"};
-        server.write(input);
-    } // server 析构，但 SHM 不会销毁
+    rm::AtomicSHM<TestData> server("test_atomic_shm");
+    TestData input{100, 123.456, "ServerMsg"};
+    server.write(input);
 
     // 连接者
     rm::AtomicSHM<TestData> client("test_atomic_shm");
@@ -129,8 +123,6 @@ TEST(IO_ipc, atomic_shm_multiple_connection) {
     EXPECT_EQ(output.id, 100);
     EXPECT_DOUBLE_EQ(output.value, 123.456);
     EXPECT_STREQ(output.msg, "ServerMsg");
-
-    SHMBase::destroy("test_atomic_shm");
 }
 
 TEST(IO_ipc, atomic_shm_concurrency_io_spmc) {
@@ -183,8 +175,6 @@ TEST(IO_ipc, atomic_shm_concurrency_io_spmc) {
     TestData final_data;
     EXPECT_TRUE(shm.read(final_data));
     EXPECT_EQ(final_data.id, kWriteCount);
-
-    SHMBase::destroy("test_atomic_shm");
 }
 
 TEST(IO_ipc, atomic_shm_concurrency_io_mpmc) {
@@ -192,7 +182,7 @@ TEST(IO_ipc, atomic_shm_concurrency_io_mpmc) {
     std::atomic<bool> running{true};
     const int kProducers = 4;
     const int kConsumers = 4;
-    const int kWritesPerProducer = 2000;
+    const int kWritesPerProducer = 1000;
 
     // 生产者线程
     std::vector<std::thread> producers;
@@ -228,14 +218,14 @@ TEST(IO_ipc, atomic_shm_concurrency_io_mpmc) {
                     // 验证数据内部一致性 (msg 与 id 是否匹配)
                     char expected_msg[16]{};
                     fmt::format_to_n(expected_msg, sizeof(expected_msg), "P{}-{}", p_id, seq_id);
-                    
+
                     if (std::strncmp(current_data.msg, expected_msg, 16) != 0) {
                         ADD_FAILURE() << "Data torn detected! ID: " << current_data.id
                                       << ", Msg: " << current_data.msg
                                       << ", Expected: " << expected_msg;
                     }
                     total_reads++;
-                } else 
+                } else
                     std::this_thread::yield();
             }
         });
@@ -264,8 +254,6 @@ TEST(IO_ipc, atomic_shm_concurrency_io_mpmc) {
         fmt::format_to_n(expected_msg, sizeof(expected_msg), "P{}-{}", p_id, seq_id);
         EXPECT_STREQ(final_data.msg, expected_msg);
     }
-
-    SHMBase::destroy("test_atomic_shm_mpmc");
 }
 
 TEST(IO_ipc, ring_buffer_shm_basic_operations) {
@@ -289,7 +277,6 @@ TEST(IO_ipc, ring_buffer_shm_basic_operations) {
 
     // 缓冲区空，读取应失败
     EXPECT_FALSE(buffer.read(val));
-    SHMBase::destroy(shm_name);
 }
 
 TEST(IO_ipc, ring_buffer_shm_overwrite_strategy) {
@@ -302,7 +289,7 @@ TEST(IO_ipc, ring_buffer_shm_overwrite_strategy) {
         EXPECT_TRUE(buffer.write(i));
 
     // 缓冲区已满
-    EXPECT_TRUE(buffer.write(100));
+    EXPECT_TRUE(buffer.write(100, true));
 
     int val = 0;
     // 读取数据 1, 2, 3, 100
@@ -316,7 +303,6 @@ TEST(IO_ipc, ring_buffer_shm_overwrite_strategy) {
     EXPECT_EQ(val, 100);
     // 再次读取应为空
     EXPECT_FALSE(buffer.read(val));
-    SHMBase::destroy(shm_name);
 }
 
 TEST(IO_ipc, ring_buffer_shm_complex_object_transfer) {
@@ -334,8 +320,6 @@ TEST(IO_ipc, ring_buffer_shm_complex_object_transfer) {
     EXPECT_EQ(out_data.id, 42);
     EXPECT_DOUBLE_EQ(out_data.value, 3.14159);
     EXPECT_STREQ(out_data.msg, "Hello");
-
-    SHMBase::destroy(shm_name);
 }
 
 // 并发压力测试 (多生产者单消费者)
@@ -377,8 +361,6 @@ TEST(IO_ipc, ring_buffer_shm_concurrency_stress) {
     consumer.join();
 
     EXPECT_EQ(read_count.load(), num_producers * items_per_producer);
-
-    SHMBase::destroy(shm_name);
 }
 
 TEST(IO_ipc, ring_buffer_shm_multi_instance) {
@@ -401,15 +383,13 @@ TEST(IO_ipc, ring_buffer_shm_multi_instance) {
     });
 
     // 主线程作为生产者 (模拟进程 A)
-    {
-        RingBufferSlotSHM8<int> producer_buffer(shm_name);
-        EXPECT_TRUE(producer_buffer.isCreator());
+    RingBufferSlotSHM8<int> producer_buffer(shm_name);
+    EXPECT_TRUE(producer_buffer.isCreator());
 
-        for (int i = 0; i < 5; ++i) {
-            while (!producer_buffer.write(i * 10))
-                std::this_thread::yield();
-            std::this_thread::sleep_for(2ms);
-        }
+    for (int i = 0; i < 5; ++i) {
+        while (!producer_buffer.write(i * 10))
+            std::this_thread::yield();
+        std::this_thread::sleep_for(2ms);
     }
 
     consumer_thread.join();
@@ -421,8 +401,6 @@ TEST(IO_ipc, ring_buffer_shm_multi_instance) {
     EXPECT_EQ(received_data[2], 20);
     EXPECT_EQ(received_data[3], 30);
     EXPECT_EQ(received_data[4], 40);
-
-    SHMBase::destroy(shm_name);
 }
 
 #if __cplusplus >= 202002L

@@ -11,7 +11,9 @@
 
 #ifdef HAVE_OPENCV
 #include <opencv2/imgproc.hpp>
-#endif // HAVE_OPENCV
+#else
+#include "rmvl/algorithm/math.hpp"
+#endif
 
 #include "rmvl/algorithm/dsp.hpp"
 

@@ -23,7 +23,7 @@ namespace rm::lpss {
 /**
  * @defgroup lpss 轻量发布订阅服务
  * @{
- * @brief 轻量发布订阅服务, 提供节点自动发现与消息发布订阅功能
+ * @brief 轻量发布订阅服务，提供节点自动发现与消息发布订阅功能
  * @details
  * - LPSS 使用方法见 @ref tutorial_modules_lpss
  * - 内置消息类型见 @ref rmvlmsg

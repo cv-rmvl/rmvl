@@ -40,7 +40,7 @@ LPSS 标准提供
 > 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 NDP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\sim7\f$ 字节为 GUID 的低 4 字节主 MAC 地址，选取依据为：有线网卡 > 无线网卡 > 虚拟网卡，若系统中存在多个同类型的网卡，则选取第一个启用的网卡；第 \f$8\sim9\f$ 字节为 GUID 的 PID 部分；第 \f$10\sim11\f$ 字节为 GUID 的 Entity ID 部分，属于无效字段，一般可以设置为 `0`；第 \f$12\f$ 字节为单字节无符号整数表示的 LocatorNum，用于标记 Data 数据信息的段数；第 \f$13\f$ 字节为单字节无符号整数表示的 HBT，单位为秒，用于提示本节点的最大心跳包超时时间。
 > 2. 后续的 Data 数据信息部分，每 \f$6\f$ 字节表示一个节点的信息，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示 EDP 通信端点的端口号，采用大端序存储；第 \f$2\sim5\f$ 字节为 Locator 的 Addr 部分，表示 EDP 通信端点的 IPv4 地址。每个节点可以包含多个 Locator 信息段，具体数量由 Header 头部信息中的 LocatorNum 字段决定，并且由实际的网卡数量所限制。
 
-此外，实现方需使用 UDPv4 多播的方式发送 NDP 数据包，且多播地址为 `239.255.0.5`，多播端口为 `7500 + <LPSS_DOMAIN_ID>`，其中 `LPSS_DOMAIN_ID` 是一个单字节无符号整数。标准还规定每个节点应当周期性地发送心跳包，以维持其在网络中的可见性，心跳包的发送频率应当小于等于 \f$\frac{\text{HBT}}2\f$ 的值。
+此外，实现方需使用 UDPv4 多播的方式发送 NDP 数据包，且多播地址为 `239.255.0.5`，多播端口为 `7500 + <LPSS_DOMAIN_ID>`，其中 `LPSS_DOMAIN_ID` 是一个单字节无符号整数。标准还规定每个节点应当周期性地发送心跳包，以维持其在网络中的可见性，心跳包的发送周期应当小于等于 \f$\frac{\text{HBT}}2\f$ 的值。
 
 实现方需完成生命周期管理，需要不短于每隔 1s 的频率检查所有的已发现的节点在上次收到的心跳包的时间戳与当前时间间隔是否超过 HBT，若超过则删除。
 
@@ -403,11 +403,13 @@ int main() {
 
 首先可以创建一个项目，假设项目名称为 `demo`，并在其中创建
 
-- `msg` 目录，用于存放自定义的消息类型文件；
+- `custom_msg` 目录，用于存放自定义的消息类型文件，以及自动生成的代码；
 - `src` 目录，用于存放发布者与订阅者的源代码文件；
 - `CMakeLists.txt` 文件，用于配置项目的构建过程。
 
 #### 2.2.2 文件内容
+
+基本内容：
 
 <div class="tabbed">
 
@@ -423,37 +425,19 @@ int main() {
   <div class="line"><span class="comment"># 查找 RMVL 包，其中包含了自动代码生成的功能</span></div>
   <div class="line"><span class="keyword">find_package</span>(RMVL REQUIRED)</div>
   <div class="line"></div>
-  <div class="line"><span class="comment"># 生成自定义消息类型的代码</span></div>
-  <div class="line"><span class="keyword">rmvl_generate_msg</span>(MyCustomMsg)</div>
-  <div class="line"><span class="keyword">add_library</span>(my_custom_msg src/_rm_codegen_msg_my_custom_msg.cpp)</div>
-  <div class="line"><span class="keyword">target_include_directories</span>(my_custom_msg</div>
-  <div class="line">&nbsp;&nbsp;<span class="keyword">PUBLIC</span> include</div>
-  <div class="line">)</div>
+  <div class="line"><span class="comment"># 添加子目录</span></div>
+  <div class="line"><span class="keyword">add_subdirectory</span>(custom_msg)</div>
   <div class="line"></div>
   <div class="line"><span class="comment"># 添加发布者和订阅者的可执行文件</span></div>
   <div class="line"><span class="keywordflow">foreach</span>(m pub sub)</div>
   <div class="line">&nbsp;&nbsp;<span class="keyword">rmvl_add_exe</span>(${m}</div>
   <div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">SOURCES</span> src/${m}.cpp</div>
-  <div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">DEPENDS</span> lpss</div>
+  <div class="line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">DEPENDS</span> lpss custom_msg</div>
   <div class="line">&nbsp;&nbsp;)</div>
-  <div class="line"></div>
-  <div class="line">&nbsp;&nbsp;<span class="keyword">target_include_directories</span>(${m} <span class="keyword">PRIVATE</span> include)</div>
   <div class="line"><span class="keywordflow">endforeach</span>()</div>
   </div>
 
-- <b class="tab-title">MyCustomMsg.msg</b>
-
-  在 `msg` 目录下创建 `MyCustomMsg.msg` 文件，定义自定义的消息类型：
-
-  <div class="fragment">
-  <div class="line"><span class="comment"># MyCustomMsg.msg</span></div>
-  <div class="line"></div>
-  <div class="line"><span class="keywordtype">int32</span> id</div>
-  <div class="line"><span class="keywordtype">string</span> name</div>
-  <div class="line"><span class="keywordtype">bool</span> is_active</div>
-  </div>
-
-- <b class="tab-title">pub.cpp</b>
+- <b class="tab-title">src/pub.cpp</b>
 
   在 `src` 目录下创建 `pub.cpp` 文件，实现发布者：
 
@@ -483,7 +467,7 @@ int main() {
   }
   ```
 
-- <b class="tab-title">sub.cpp</b>
+- <b class="tab-title">src/sub.cpp</b>
 
   在 `src` 目录下创建 `sub.cpp` 文件，实现订阅者：
 
@@ -507,6 +491,36 @@ int main() {
           std::this_thread::sleep_for(1s);
   }
   ```
+
+</div>
+
+然后在 `custom_msg` 目录下创建
+
+- `msg` 目录，用于存放自定义的消息类型定义文件；
+- `CMakeLists.txt` 文件，配置消息类型的代码生成。
+
+<div class="tabbed">
+
+- <b class="tab-title">MyCustomMsg.msg</b>
+
+  在 `msg` 目录下创建 `MyCustomMsg.msg` 文件，定义自定义的消息类型：
+
+  <div class="fragment">
+  <div class="line"><span class="comment"># MyCustomMsg.msg</span></div>
+  <div class="line"></div>
+  <div class="line"><span class="keywordtype">int32</span> id</div>
+  <div class="line"><span class="keywordtype">string</span> name</div>
+  <div class="line"><span class="keywordtype">bool</span> is_active</div>
+  </div>
+
+- <b class="tab-title">CMakeLists.txt</b>
+
+  <div class="fragment">
+  <div class="line"><span class="comment"># 生成自定义消息类型的代码</span></div>
+  <div class="line"><span class="keyword">rmvl_generate_msg</span>(MyCustomMsg)</div>
+  <div class="line"><span class="comment"># 添加模块</span></div>
+  <div class="line"><span class="keyword">rmvl_add_module</span>(custom_msg)</div>
+  </div>
 
 </div>
 
