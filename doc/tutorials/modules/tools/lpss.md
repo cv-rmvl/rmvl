@@ -113,7 +113,7 @@ RNDP 同样满足以上 NDP 标准，具体的信息格式如下所示：
 
 即 Endpoint Discovery Protocol(EDP)， @ref lpss 提供的 REDP 是通信端点发现协议的 RMVL 实现，EDP 标准的数据包格式如下所示：
 
-> EDP 包含 \f$14\f$ 字节的 Header 头部信息和 \f$2+n\f$ 字节的 Data 数据信息，Header 头部信息用于标识数据包、承载 GUID、状态标志以及话题大小。Data 数据信息用于存储 TIO 阶段实际通信时 UDPv4 通道的端口号和话题名称，其中话题名称也作为 SHM 通道的共享内存名称。
+> EDP 包含 \f$14\f$ 字节的 Header 头部信息和 \f$2+n\f$ 字节的 Data 数据信息，Header 头部信息用于标识数据包、承载 GUID、状态标志以及话题大小。Data 数据信息用于存储 MTP 阶段实际通信时 UDPv4 通道的端口号和话题名称，其中话题名称也作为 SHM 通道的共享内存名称。
 >
 > 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 EDP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\sim7\f$ 字节为 GUID 的低 4 字节主 MAC 地址，选取依据同 NDP；第 \f$8\sim9\f$ 字节为 GUID 的 PID 部分；第 \f$10\sim11\f$ 字节为 GUID 的 Entity ID 部分，每个节点中的发布者、订阅者将有不同的 Entity ID；第 \f$12\f$ 字节为单字节无符号整数表示的 Status 状态标志，用于标记本次操作属于添加、移除发布者、订阅者，第 \f$13\f$ 字节为单字节无符号整数表示的 TopicSize，表示话题名称的字节大小。
 > 2. 后续的 Data 数据信息部分，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示实际通信时 UDPv4 通道的端口号，采用大端序存储；第 \f$2\sim(2+\text{TopicSize})\f$ 字节为 TopicName 部分，表示话题名称的字符串内容，采用 UTF-8 编码存储。
@@ -179,16 +179,16 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
 
 ### 1.3 数据传输
 
-#### 1.3.1 话题输入输出机制
+#### 1.3.1 话题消息传输协议
 
-即 Topic Input/Output (TIO)， @ref lpss 提供的 RTIO 是话题输入输出协议的 RMVL 实现，TIO 标准的数据包格式如下所示：
+即 Message Transfer Protocol， @ref lpss 提供的 RMTP 是话题消息传输协议的 RMVL 实现，MTP 标准的数据包格式如下所示：
 
-> 一个完整的 TIO 数据包含 \f$6+M+N\f$ 字节的 Header 头部信息和剩下的 Payload 负载信息，Header 头部信息用于标识数据包，以及提供话题、消息类型相关信息，Paylaod 负载用于存储后续实际通信时的数据内容。
+> 一个完整的 MTP 数据包含 \f$6+M+N\f$ 字节的 Header 头部信息和剩下的 Payload 负载信息，Header 头部信息用于标识数据包，以及提供话题、消息类型相关信息，Payload 负载用于存储后续实际通信时的数据内容。
 >
-> 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 TIO 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\f$ 字节为话题字符串长度 TopicSize，记作 \f$M\f$；第 \f$5\sim4+M\f$ 字节为话题名称字符串；第 \f$5+M\f$ 字节为消息类型字符串长度 TypeSize，记作 \f$N\f$，第 \f$6+M\sim5+M+N\f$ 字节为消息类型字符串。
+> 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 MTP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\f$ 字节为话题字符串长度 TopicSize，记作 \f$M\f$；第 \f$5\sim4+M\f$ 字节为话题名称字符串；第 \f$5+M\f$ 字节为消息类型字符串长度 TypeSize，记作 \f$N\f$，第 \f$6+M\sim5+M+N\f$ 字节为消息类型字符串。
 > 2. 后续的 Payload 负载信息部分，由序列化与反序列化的具体协议提供支持。
 
-RTIO 同样满足以上 TIO 标准，具体的信息格式如下所示：
+RMTP 同样满足以上 MTP 标准，具体的信息格式如下所示：
 
 <div class="full_width_table">
 <table class="markdownTable">
@@ -204,9 +204,9 @@ RTIO 同样满足以上 TIO 标准，具体的信息格式如下所示：
 </tr>
 <tr class="markdownTableRowOdd">
   <td class="markdownTableBodyCenter"><code>'R'</code></td>
+  <td class="markdownTableBodyCenter"><code>'M'</code></td>
   <td class="markdownTableBodyCenter"><code>'T'</code></td>
-  <td class="markdownTableBodyCenter"><code>'I'</code></td>
-  <td class="markdownTableBodyCenter"><code>'O'</code></td>
+  <td class="markdownTableBodyCenter"><code>'P'</code></td>
   <td class="markdownTableBodyCenter">TopicSize</td>
   <td class="markdownTableBodyCenter" colspan="3">Topic</td>
 </tr>
@@ -227,7 +227,7 @@ RTIO 同样满足以上 TIO 标准，具体的信息格式如下所示：
 
 #### 1.3.2 序列化与反序列化
 
-TIO 标准不要求采用任何特定的序列化与反序列化方式，一切由实现方自行提供。因此 RMVL 使用二进制直接序列化 / 反序列化的方式，不区分端序（这会降低一部分兼容性，但在主流架构以及 OS 上均一致），因此数据在发布者与订阅者之间的传输效率非常高。此外 RMVL 提供了消息类型的自动代码生成工具，用户可以通过定义消息类型的 `*.msg` 文件，使用 RMVL 提供的代码生成工具生成对应的 C++ 代码文件，从而简化消息类型的创建过程。
+MTP 标准使用二进制直接序列化 / 反序列化的方式，不区分端序（这会降低一部分兼容性，但在主流架构以及 OS 上均一致），因此数据在发布者与订阅者之间的传输效率非常高。此外 RMVL 提供了消息类型的自动代码生成工具，用户可以通过定义消息类型的 `*.msg` 文件，使用 RMVL 提供的代码生成工具生成对应的 C++ 代码文件，从而简化消息类型的创建过程。
 
 RMVL 内置了一些常用的消息类型，用户可以直接使用这些消息类型，而无需自行定义和生成代码。同时，RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，可以辅助用户完成自定义消息类型的代码生成过程，详情可参考 @ref tutorial_table_of_content_rmvlmsg 。
 

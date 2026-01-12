@@ -1,7 +1,7 @@
 /**
- * @file node_rtio.cpp
+ * @file node_rmtp.cpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 轻量级发布订阅服务：话题 IO 实现
+ * @brief 轻量级发布订阅服务：消息传输协议 RMTP 节点实现
  * @version 1.0
  * @date 2025-12-05
  *
@@ -41,23 +41,23 @@ void DataWriterBase::remove(const Guid &guid) noexcept {
 }
 
 void DataWriterBase::write(std::string_view data) noexcept {
-    // 构造 RTIO 数据包
-    std::string rtio_data;
-    rtio_data.reserve(6 + _type.size() + _topic.size() + data.size());
-    rtio_data.append("RTIO");
+    // 构造 RMTP 数据包
+    std::string rmtp_data;
+    rmtp_data.reserve(6 + _type.size() + _topic.size() + data.size());
+    rmtp_data.append("RMTP");
     uint8_t topic_size = static_cast<uint8_t>(_topic.size());
-    rtio_data.append(reinterpret_cast<const char *>(&topic_size), sizeof(uint8_t));
-    rtio_data.append(_topic);
+    rmtp_data.append(reinterpret_cast<const char *>(&topic_size), sizeof(uint8_t));
+    rmtp_data.append(_topic);
     uint8_t type_size = static_cast<uint8_t>(_type.size());
-    rtio_data.append(reinterpret_cast<const char *>(&type_size), sizeof(uint8_t));
-    rtio_data.append(_type);
-    rtio_data.append(data);
+    rmtp_data.append(reinterpret_cast<const char *>(&type_size), sizeof(uint8_t));
+    rmtp_data.append(_type);
+    rmtp_data.append(data);
     // 发送到 SHM 目标
 
     // 发送到 UDPv4 目标
     std::shared_lock lk(_mtx);
     for (const auto &[guid, loc] : _udpv4_targets)
-        _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), rtio_data);
+        _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), rmtp_data);
 }
 
 DataReaderBase::DataReaderBase(const Guid &guid, std::string_view type, std::string_view topic)
@@ -74,7 +74,7 @@ std::string DataReaderBase::read() noexcept {
 
     // 提取数据
     const char *ptr = data.data();
-    if (data.size() < 6 || std::string_view(ptr, 4) != "RTIO")
+    if (data.size() < 6 || std::string_view(ptr, 4) != "RMTP")
         return {};
     ptr += 4;
     uint8_t topic_size = *reinterpret_cast<const uint8_t *>(ptr);

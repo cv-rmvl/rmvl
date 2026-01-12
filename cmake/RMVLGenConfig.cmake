@@ -170,12 +170,16 @@ install(
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}"
 )
 
-# gen para
-install(
-  FILES "${cmake_dir}/templates/para_generator_header.in"
-        "${cmake_dir}/templates/para_generator_module.in"
-        "${cmake_dir}/templates/para_generator_source.in"
-        "${cmake_dir}/templates/para_generator_header_without_cv.in"
+# code generator templates
+install(FILES
+  # *.para
+  "${cmake_dir}/templates/para_generator_header.in"
+  "${cmake_dir}/templates/para_generator_module.in"
+  "${cmake_dir}/templates/para_generator_source.in"
+  "${cmake_dir}/templates/para_generator_header_without_cv.in"
+  # *.msg
+  "${cmake_dir}/templates/msg_generator.cpp.in"
+  "${cmake_dir}/templates/msg_generator.hpp.in"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}/templates"
 )
 
