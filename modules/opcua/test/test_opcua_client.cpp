@@ -9,23 +9,22 @@
  *
  */
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
 #include <gtest/gtest.h>
+#include <utility>
 
 #include "rmvl/opcua/client.hpp"
+#include "rmvl/opcua/method.hpp"
+#include "rmvl/opcua/object.hpp"
 #include "rmvl/opcua/server.hpp"
 
-#include "rmvlpara/opcua.hpp"
-
-namespace rm_test
-{
+namespace rm_test {
 
 using namespace std::chrono_literals;
 
-TEST(OPC_UA_ClientTest, connect)
-{
+TEST(OPC_UA_ClientTest, connect) {
     rm::UserConfig config;
     rm::OpcuaServer srv(4999, "Test OpcuaServer", {{"admin", "admin"}});
     std::thread t(&rm::OpcuaServer::spin, &srv);
@@ -42,8 +41,7 @@ TEST(OPC_UA_ClientTest, connect)
     t.join();
 }
 
-static void configServer(rm::OpcuaServer &srv)
-{
+static void configServer(rm::OpcuaServer &srv) {
     // 添加单变量节点
     rm::Variable single_value = 42;
     single_value.browse_name = "single";
@@ -78,14 +76,40 @@ static void configServer(rm::OpcuaServer &srv)
     method.iargs = {{"a", rm::tpInt32}, {"b", rm::tpInt32}};
     method.oargs = {{"c", rm::tpInt32}};
     srv.addMethodNode(method);
+    // 添加 person/name 对象节点及其方法
+    rm::Object person;
+    person.display_name = "Person";
+    person.browse_name = "person";
+    person.description = "人物";
+    rm::Variable age = 18;
+    age.display_name = "Age";
+    age.browse_name = "age";
+    age.description = "年龄";
+    person.add(age);
+
+    auto person_nd = srv.addObjectNode(person);
+    rm::Object name;
+    name.display_name = "Name";
+    name.browse_name = "name";
+    name.description = "名字";
+    rm::Method get = [](const rm::NodeId &, const rm::Variables &) {
+        rm::Variables output = {"Alice"};
+        return std::make_pair(true, output);
+    };
+    get.browse_name = "get";
+    get.display_name = "Get";
+    get.description = "获取名字";
+    get.oargs = {{"name", rm::tpString, 1, "名字"}};
+    name.add(get);
+    srv.addObjectNode(name, person_nd);
 }
 
 // 路径搜索
-TEST(OPC_UA_ClientTest, path_search)
-{
+TEST(OPC_UA_ClientTest, path_search) {
     rm::OpcuaServer srv(5000);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::OpcuaClient cli("opc.tcp://127.0.0.1:5000");
     // 读取测试服务器上的变量值
     auto id = cli.find("array");
@@ -101,11 +125,11 @@ TEST(OPC_UA_ClientTest, path_search)
 }
 
 // 变量读写
-TEST(OPC_UA_ClientTest, variable_IO)
-{
+TEST(OPC_UA_ClientTest, variable_io) {
     rm::OpcuaServer srv(5001);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::OpcuaClient cli("opc.tcp://127.0.0.1:5001");
     // 读取测试服务器上的变量值
     auto id = cli.find("single");
@@ -121,11 +145,11 @@ TEST(OPC_UA_ClientTest, variable_IO)
 }
 
 // 方法调用
-TEST(OPC_UA_ClientTest, call)
-{
+TEST(OPC_UA_ClientTest, call) {
     rm::OpcuaServer srv(5002);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::OpcuaClient cli("opc.tcp://127.0.0.1:5002");
     // 调用测试服务器上的方法
     rm::Variables input = {1, 2};
@@ -139,11 +163,11 @@ TEST(OPC_UA_ClientTest, call)
 }
 
 // 高级方法调用
-TEST(OPC_UA_ClientTest, callx)
-{
+TEST(OPC_UA_ClientTest, callx) {
     rm::OpcuaServer srv(5003);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::OpcuaClient cli("opc.tcp://127.0.0.1:5003");
     // 以 callx 调用测试服务器上的方法
     auto [res, output] = cli.callx("add", 1, 2);
@@ -155,12 +179,33 @@ TEST(OPC_UA_ClientTest, callx)
     t.join();
 }
 
+// 自动路径搜索方法调用
+TEST(OPC_UA_ClientTest, findcall) {
+    rm::OpcuaServer srv(5004);
+    configServer(srv);
+    std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
+    rm::OpcuaClient cli("opc.tcp://127.0.0.1:5004");
+    // 以 findcall 调用测试服务器上的方法
+    auto [res, output] = cli.findcall("person/name/get", {});
+    EXPECT_TRUE(res);
+    EXPECT_EQ(output[0], "Alice");
+
+    std::tie(res, output) = cli.findcallx("person/name/get");
+    EXPECT_TRUE(res);
+    EXPECT_EQ(output[0], "Alice");
+
+    cli.shutdown();
+    srv.shutdown();
+    t.join();
+}
+
 // 订阅
-TEST(OPC_UA_ClientTest, variable_monitor)
-{
+TEST(OPC_UA_ClientTest, variable_monitor) {
     rm::OpcuaServer srv(5005);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::OpcuaClient cli("opc.tcp://127.0.0.1:5005");
     // 订阅测试服务器上的变量
     int receive_data{};
@@ -186,11 +231,11 @@ TEST(OPC_UA_ClientTest, variable_monitor)
     t.join();
 }
 
-TEST(OPC_UA_ClientTest, event_monitor)
-{
+TEST(OPC_UA_ClientTest, event_monitor) {
     rm::OpcuaServer srv(5010);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::EventType etype;
     etype.browse_name = "TestEventType";
     etype.display_name = "测试事件类型";
@@ -223,8 +268,7 @@ TEST(OPC_UA_ClientTest, event_monitor)
     t.join();
 }
 
-TEST(OPC_UA_Client, timer_test)
-{
+TEST(OPC_UA_ClientTest, timer_test) {
     rm::OpcuaServer srv(5015);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
@@ -244,11 +288,11 @@ TEST(OPC_UA_Client, timer_test)
 }
 
 // 数据源变量读写
-TEST(OPC_UA_ClientTest, data_source_variable_IO)
-{
+TEST(OPC_UA_ClientTest, data_source_variable_IO) {
     rm::OpcuaServer srv(5020);
     configServer(srv);
     std::thread t(&rm::OpcuaServer::spin, &srv);
+    std::this_thread::sleep_for(10ms);
     rm::OpcuaClient cli("opc.tcp://127.0.0.1:5020");
     // 读取测试服务器上的变量值
     auto id = cli.find("data_source");

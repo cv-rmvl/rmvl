@@ -212,7 +212,8 @@ public:
      * @param[in] obj_nd 对象节点
      * @param[in] name 方法名
      * @param[in] inputs 输入参数列表
-     * @retval res, oargs
+     * @retval res 调用是否成功
+     * @retval oargs 输出参数列表
      * @return 是否成功完成当前操作，以及输出参数列表
      */
     RMVL_W std::pair<bool, Variables> call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const;
@@ -223,7 +224,8 @@ public:
      * @param[in] obj_nd 对象节点
      * @param[in] name 方法名
      * @param[in] args 方法的所有传入参数
-     * @retval res, oargs
+     * @retval res 调用是否成功
+     * @retval oargs 输出参数列表
      * @return 是否成功完成当前操作，以及输出参数列表
      */
     template <typename... Args>
@@ -234,7 +236,8 @@ public:
      *
      * @param[in] name 方法名 `browse_name`
      * @param[in] inputs 输入参数列表
-     * @retval res, oargs
+     * @retval res 调用是否成功
+     * @retval oargs 输出参数列表
      * @return 是否成功完成当前操作，以及输出参数列表
      */
     RMVL_W std::pair<bool, Variables> call(std::string_view name, const Variables &inputs) const { return call(nodeObjectsFolder, name, inputs); }
@@ -244,11 +247,43 @@ public:
      *
      * @param[in] name 方法名 `browse_name`
      * @param[in] args 方法的所有传入参数
-     * @retval res, oargs
+     * @retval res 调用是否成功
+     * @retval oargs 输出参数列表
      * @return 是否成功完成当前操作，以及输出参数列表
      */
     template <typename... Args>
     std::pair<bool, Variables> callx(std::string_view name, Args &&...args) const { return call(name, {std::forward<Args>(args)...}); }
+
+    /**
+     * @brief 支持路径搜索的调用方法
+     *
+     * @param[in] name 方法名 `browse_name` 的完整路径，使用 `/` 分隔，例如 `person/set_age`
+     * @param[in] inputs 输入参数列表
+     * @retval res 调用是否成功
+     * @retval oargs 输出参数列表
+     * @return 是否成功完成当前操作，以及输出参数列表
+     * @code{.cpp}
+     * // 例如调用 ObjectsFolder 下 person 节点的 set_age 方法，注意这里的 person 是 BrowseName
+     * auto [res, outputs] = cli.findcall("person/set_age", {18});
+     * @endcode
+     */
+    RMVL_W std::pair<bool, Variables> findcall(std::string_view name, const Variables &inputs) const;
+
+    /**
+     * @brief 支持路径搜索的调用方法
+     *
+     * @param[in] name 方法名 `browse_name` 的完整路径，使用 `/` 分隔，例如 `person/set_age`
+     * @param[in] args 方法的所有传入参数
+     * @retval res 调用是否成功
+     * @retval oargs 输出参数列表
+     * @return 是否成功完成当前操作，以及输出参数列表
+     * @code{.cpp}
+     * // 例如调用 ObjectsFolder 下 person 节点的 set_age 方法，注意这里的 person 是 BrowseName
+     * auto [res, outputs] = cli.findcallx("person/set_age", 18);
+     * @endcode
+     */
+    template <typename... Args>
+    std::pair<bool, Variables> findcallx(std::string_view name, Args &&...args) const { return findcall(name, {std::forward<Args>(args)...}); }
 
     /**
      * @brief 添加 OPC UA 视图节点 ViewNode 至 `ViewsFolder` 中
