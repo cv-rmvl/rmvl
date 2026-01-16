@@ -147,7 +147,8 @@ UA_Variant cvtVariable(const Variable &val) noexcept {
     if (val.size() == -1) {
         switch (val.getDataType()) {
         case UA_TYPES_STRING: {
-            UA_String str = UA_STRING(to_char(std::any_cast<std::string>(data)));
+            const auto &str_std = std::any_cast<const std::string &>(data);
+            UA_String str = UA_STRING(to_char(str_std));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
             break;
         }
@@ -352,7 +353,8 @@ UA_Variant cvtVariable(const VariableType &vtype) noexcept {
     if (vtype.size() == -1) {
         switch (vtype.getDataType()) {
         case UA_TYPES_STRING: {
-            UA_String str = UA_STRING(to_char(std::any_cast<std::string>(data)));
+            const auto &str_std = std::any_cast<const std::string &>(data);
+            UA_String str = UA_STRING(to_char(str_std));
             UA_Variant_setScalarCopy(&p_val, &str, &UA_TYPES[UA_TYPES_STRING]);
             break;
         }
