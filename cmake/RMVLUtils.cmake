@@ -200,6 +200,13 @@ endfunction()
 function(rmvl_download dl_name dl_kind dl_info)
   include(FetchContent)
   string(TOLOWER "${dl_kind}" dl_kind_lower)
+
+  set(dl_args)
+  # DOWNLOAD_EXTRACT_TIMESTAMP is added in CMake 3.24
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    list(APPEND dl_args DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  endif()
+
   # use git
   if("${dl_kind_lower}" STREQUAL "git")
     string(REGEX MATCH "(.*)@(.*)" RESULT "${dl_info}")
@@ -210,6 +217,7 @@ function(rmvl_download dl_name dl_kind dl_info)
       ${dl_name}
       GIT_REPOSITORY ${git_url}
       GIT_TAG ${git_tag}
+      ${dl_args}
     )
   # use url
   elseif("${dl_kind_lower}" STREQUAL "url")
@@ -217,6 +225,7 @@ function(rmvl_download dl_name dl_kind dl_info)
     FetchContent_Declare(
       ${dl_name}
       URL ${dl_info}
+      ${dl_args}
     )
   else()
     message(FATAL_ERROR "Unknown download kind: ${dl_kind}")

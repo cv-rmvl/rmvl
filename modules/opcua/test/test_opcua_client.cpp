@@ -282,6 +282,7 @@ TEST(OPC_UA_ClientTest, timer_test) {
     cli.spinOnce();
     EXPECT_EQ(times, 2);
 
+    timer.cancel();
     cli.shutdown();
     srv.shutdown();
     t.join();
