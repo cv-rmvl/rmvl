@@ -21,7 +21,7 @@
 
 #include "rmvl/core/timer.hpp"
 #include "rmvl/core/util.hpp"
-#include "rmvl/lpss.hpp"
+#include "rmvl/lpss/node.hpp"
 
 #include "rmvlpara/lpss.hpp"
 
@@ -31,7 +31,7 @@ namespace rm::lpss {
 
 void sendREDPMessage(Locator ctrl_loc, const REDPMessage &msg);
 
-Node::Node(uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()) {
+Node::Node(std::string_view name, uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()) {
     static_assert(sizeof(Locator) == 6, "Locator size must be 6 bytes");
 
     auto interfaces = NetworkInterface::list();
@@ -78,7 +78,7 @@ Node::Node(uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::
     rndp_reader.setOption(ip::multicast::JoinGroup(BROADCAST_IP));
 
     // 启动广播线程
-    _bcast_thrd = std::thread(&Node::rndp_multicast, this, std::move(networks));
+    _bcast_thrd = std::thread(&Node::rndp_multicast, this, std::move(networks), std::string(name));
 
     // 启动监听线程
     _rndp_listen_thrd = std::thread(&Node::rndp_listener, this, std::move(rndp_reader));
@@ -128,13 +128,19 @@ Node::~Node() {
     }
 }
 
-void Node::rndp_multicast(std::vector<ip::Networkv4> networks) {
+void Node::rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name) {
     // 准备 RNDP 消息
-    uint8_t locator_num = static_cast<uint8_t>(networks.size() + 1);
-    RNDPMessage rndp_msg{_uid, para::lpss_param.MAX_NODE_HEARTBEAT_PERIOD};
-    rndp_msg.locators.reserve(locator_num);
-    for (auto network : networks)
-        rndp_msg.locators.push_back({_redp_port, network.address()});
+    const auto rndp_msg = [this, &networks, name = std::move(node_name)]() {
+        uint8_t locator_num = static_cast<uint8_t>(networks.size() + 1);
+        RNDPMessage res;
+        res.guid = _uid;
+        res.heartbeat_timeout = para::lpss_param.MAX_NODE_HEARTBEAT_PERIOD;
+        res.name = name;
+        res.locators.reserve(locator_num);
+        for (auto network : networks)
+            res.locators.push_back({_redp_port, network.address()});
+        return res;
+    }();
 
     // 序列化 RNDP 消息
     auto rndp_msg_data = rndp_msg.serialize();

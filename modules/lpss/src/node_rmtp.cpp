@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "rmvl/lpss/node_rsd.hpp"
+#include "rmvl/lpss/details/node_rsd.hpp"
 
 namespace rm::lpss {
 
@@ -44,7 +44,7 @@ void DataWriterBase::write(std::string_view data) noexcept {
     // 构造 RMTP 数据包
     std::string rmtp_data;
     rmtp_data.reserve(6 + _type.size() + _topic.size() + data.size());
-    rmtp_data.append("RMTP");
+    rmtp_data.append("MT01");
     uint8_t topic_size = static_cast<uint8_t>(_topic.size());
     rmtp_data.append(reinterpret_cast<const char *>(&topic_size), sizeof(uint8_t));
     rmtp_data.append(_topic);
@@ -74,7 +74,7 @@ std::string DataReaderBase::read() noexcept {
 
     // 提取数据
     const char *ptr = data.data();
-    if (data.size() < 6 || std::string_view(ptr, 4) != "RMTP")
+    if (data.size() < 6 || std::string_view(ptr, 4) != "MT01")
         return {};
     ptr += 4;
     uint8_t topic_size = *reinterpret_cast<const uint8_t *>(ptr);

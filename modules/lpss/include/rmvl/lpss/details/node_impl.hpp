@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "rmvl/lpss.hpp"
+#include "rmvl/lpss/node.hpp"
 
 #include "rmvl/core/util.hpp"
 

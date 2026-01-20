@@ -1,0 +1,193 @@
+/**
+ * @file node.hpp
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 轻量发布订阅服务框架（Lightweight Pub/Sub Service）
+ * @version 1.0
+ * @date 2025-11-03
+ *
+ * @copyright Copyright 2025 (c), zhaoxi
+ *
+ */
+
+#pragma once
+
+#include <condition_variable>
+#include <shared_mutex>
+#include <thread>
+#include <unordered_set>
+
+#include "details/node_rsd.hpp"
+
+namespace rm::lpss {
+
+//! @addtogroup lpss
+//! @{
+
+/**
+ * @brief 发布者代理
+ *
+ * @tparam MsgType 消息类型
+ * @details
+ * - 用户需使用 lpss::Node 的 `createPublisher` 方法创建发布者
+ * - 发布者可使用 `publish` 方法发布消息到指定话题
+ * - 在创建发布者后，自动注册到本地通信端点，并向所有通过 RNDP 发现的节点发送 REDP 消息
+ */
+template <typename MsgType>
+class Publisher final {
+public:
+    //! @cond
+    Publisher(std::nullptr_t) {}
+
+    /**
+     * @brief 创建发布者
+     *
+     * @param[in] topic 话题名称
+     * @param[in] writer 底层数据写入器
+     */
+    Publisher(std::string_view topic, DataWriterBase::ptr writer) : _topic(topic), _writer(std::move(writer)) {}
+    //! @endcond
+
+    //! 判断发布者是否无效
+    bool invalid() const noexcept { return !_writer; }
+
+    /**
+     * @brief 发布消息到指定话题
+     *
+     * @param[in] msg 消息内容
+     */
+    void publish(const MsgType &msg);
+
+private:
+    DataWriterBase::ptr _writer{}; //!< 底层数据写入器
+    std::string _topic{};          //!< 话题名称
+};
+
+/**
+ * @brief 订阅者代理
+ *
+ * @tparam MsgType 消息类型
+ * @details
+ * - 用户需使用 lpss::Node 的 `createSubscriber` 方法创建订阅者
+ * - 订阅者可使用 `subscribe` 方法 **重新** 订阅指定话题的消息
+ * - 在创建订阅者后，自动注册到本地通信端点，并向所有通过 RNDP 发现的节点发送 REDP 消息
+ */
+template <typename MsgType>
+class Subscriber {
+public:
+    //! @cond
+    Subscriber(std::nullptr_t) {}
+
+    /**
+     * @brief 创建订阅者
+     *
+     * @param[in] topic 话题名称
+     * @param[in] reader 底层数据读取器
+     */
+    Subscriber(std::string_view topic, DataReaderBase::ptr reader) : _topic(topic), _reader(std::move(reader)) {}
+    //! @endcond
+
+    //! 判断订阅者是否无效
+    bool invalid() const noexcept { return !_reader; }
+
+private:
+    DataReaderBase::ptr _reader; //!< 底层数据读取器
+    std::string _topic;          //!< 话题名称
+};
+
+/**
+ * @brief 轻量级发布订阅服务节点
+ * @details
+ * - 内置节点发现协议 NDP (Node Discovery Protocol)，用于节点间的自动发现与通信
+ * - 内置通信端点发现协议 EDP (Endpoint Discovery Protocol)，用于发布者与订阅者间的自动发现与通信
+ * @see 详情见 @ref tutorial_modules_lpss
+ */
+class Node {
+public:
+    /**
+     * @brief 创建通用节点，默认域 ID 为 0
+     *
+     * @param[in] name 节点名称
+     * @param[in] domain_id 域 ID
+     */
+    explicit Node(std::string_view name, uint8_t domain_id = 0);
+
+    ~Node();
+
+    /**
+     * @brief 创建发布者
+     *
+     * @tparam MsgType 消息类型
+     * @param[in] topic 话题名称
+     * @return Publisher<MsgType> 发布者对象
+     */
+    template <typename MsgType>
+    Publisher<MsgType> createPublisher(std::string_view topic) noexcept;
+
+    /**
+     * @brief 创建订阅者
+     *
+     * @tparam MsgType 消息类型
+     * @tparam SubscribeMsgCallback 订阅回调函数类型
+     * @param[in] topic 话题名称
+     * @param[in] callback 订阅回调函数
+     * @return Subscriber<MsgType> 订阅者对象
+     */
+    template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
+    Subscriber<MsgType> createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept;
+
+    //! 获取节点唯一标识符
+    Guid guid() const noexcept { return _uid; }
+
+private:
+    //! 广播 RNDP 消息
+    void rndp_multicast(std::vector<ip::Networkv4> info, std::string node_name);
+
+    //! 监听 RNDP 消息
+    void rndp_listener(DgramSocket rndp_reader);
+
+    //! 监听 REDP 消息
+    void redp_listener(DgramSocket redp_socket);
+
+    //! 心跳检测
+    void heartbeat_detect();
+
+    std::atomic_bool _running{true};   //!< 运行状态
+    std::atomic_uint16_t _next_eid{1}; //!< 用于生成实体 ID 的原子计数器
+
+    uint16_t _rndp_port{}; //!< RNDP 广播端口号
+    uint16_t _redp_port{}; //!< REDP 监听端口号
+
+    DgramSocket _rndp_writer; //!< RNDP 广播 Socket
+
+    Guid _uid{}; //!< 节点唯一标识符
+
+    std::shared_mutex _nodes_mtx{};                                          //!< 节点读写锁
+    std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{}; //!< 已发现的节点列表
+
+    //! 本地实体读写锁
+    std::shared_mutex _local_mtx{};
+    //! 已注册的 Writers 列表
+    std::unordered_map<std::string, DataWriterBase::ptr> _local_writers{};
+    //! 已注册的 Readers 列表
+    std::unordered_map<std::string, DataReaderBase::ptr> _local_readers{};
+
+    //! 已发现实体读写锁
+    std::shared_mutex _discovered_mtx{};
+    //! 已发现的 Writers 列表，[Topic: [Guid]]
+    std::unordered_map<std::string, std::unordered_set<Guid, GuidHash>> _discovered_writers{};
+    //! 已发现的 Readers 列表，[Topic: [Guid: Locator]]
+    std::unordered_map<std::string, std::unordered_map<Guid, Locator, GuidHash>> _discovered_readers{};
+
+    std::thread _bcast_thrd{};       //!< 广播线程
+    std::thread _rndp_listen_thrd{}; //!< RNDP 监听线程
+    std::thread _redp_listen_thrd{}; //!< REDP 监听线程
+    std::thread _hbt_detect_thrd{};  //!< 心跳检测线程
+    std::mutex _hbt_mtx{};
+    std::condition_variable _hbt_cv{};
+};
+
+//! @} lpss
+
+} // namespace rm::lpss
+
+#include "details/node_impl.hpp"
