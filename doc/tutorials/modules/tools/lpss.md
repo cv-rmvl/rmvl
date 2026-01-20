@@ -35,10 +35,10 @@ LPSS 标准提供
 
 即 Node Discovery Protocol(NDP)， @ref lpss 提供的 RNDP 是节点发现协议的 RMVL 实现，NDP 标准的数据包格式如下所示：
 
-> NDP 包含 \f$14\f$ 字节的 Header 头部信息和 \f$6n\f$ 字节的 Data 数据信息，Header 头部信息用于标识数据包类型，Data 数据信息用于存储节点的详细信息。
+> NDP 包含 \f$14\f$ 字节的 Header 头部信息和 \f$6n+1+m\f$ 字节的 Data 数据信息，Header 头部信息用于标识数据包类型，Data 数据信息用于存储节点的详细信息。
 >
 > 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 NDP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\sim7\f$ 字节为 GUID 的低 4 字节主 MAC 地址，选取依据为：有线网卡 > 无线网卡 > 虚拟网卡，若系统中存在多个同类型的网卡，则选取第一个启用的网卡；第 \f$8\sim9\f$ 字节为 GUID 的 PID 部分；第 \f$10\sim11\f$ 字节为 GUID 的 Entity ID 部分，属于无效字段，一般可以设置为 `0`；第 \f$12\f$ 字节为单字节无符号整数表示的 LocatorNum，用于标记 Data 数据信息的段数；第 \f$13\f$ 字节为单字节无符号整数表示的 HBT，单位为秒，用于提示本节点的最大心跳包超时时间。
-> 2. 后续的 Data 数据信息部分，每 \f$6\f$ 字节表示一个节点的信息，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示 EDP 通信端点的端口号，采用大端序存储；第 \f$2\sim5\f$ 字节为 Locator 的 Addr 部分，表示 EDP 通信端点的 IPv4 地址。每个节点可以包含多个 Locator 信息段，具体数量由 Header 头部信息中的 LocatorNum 字段决定，并且由实际的网卡数量所限制。
+> 2. 后续的 Data 数据信息部分，每 \f$6\f$ 字节表示一个节点的信息，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示 EDP 通信端点的端口号，采用大端序存储；第 \f$2\sim5\f$ 字节为 Locator 的 Addr 部分，表示 EDP 通信端点的 IPv4 地址。每个节点可以包含多个 Locator 信息段，具体数量由 Header 头部信息中的 LocatorNum 字段决定，并且由实际的网卡数量所限制。$6n$ 字节之后的 \f$1\f$ 字节为节点名称字符串的长度 NodeNameSize，记作 \f$m\f$，后续的 \f$m\f$ 字节为节点名称字符串 NodeName，采用 UTF-8 编码存储。
 
 此外，实现方需使用 UDPv4 多播的方式发送 NDP 数据包，且多播地址为 `239.255.0.5`，多播端口为 `7500 + <LPSS_DOMAIN_ID>`，其中 `LPSS_DOMAIN_ID` 是一个单字节无符号整数。标准还规定每个节点应当周期性地发送心跳包，以维持其在网络中的可见性，心跳包的发送周期应当小于等于 \f$\frac{\text{HBT}}2\f$ 的值。
 
@@ -59,10 +59,10 @@ RNDP 同样满足以上 NDP 标准，具体的信息格式如下所示：
   <th class="markdownTableHeadCenter">7 byte</th>
 </tr>
 <tr class="markdownTableRowOdd">
-  <td class="markdownTableBodyCenter"><code>'R'</code></td>
   <td class="markdownTableBodyCenter"><code>'N'</code></td>
   <td class="markdownTableBodyCenter"><code>'D'</code></td>
-  <td class="markdownTableBodyCenter"><code>'P'</code></td>
+  <td class="markdownTableBodyCenter"><code>'0'</code></td>
+  <td class="markdownTableBodyCenter"><code>'1'</code></td>
   <td class="markdownTableBodyCenter" colspan="4">GUID MAC</td>
 </tr>
 <tr class="markdownTableRowEven">
@@ -100,11 +100,13 @@ RNDP 同样满足以上 NDP 标准，具体的信息格式如下所示：
 <tr class="markdownTableRowEven">
   <th class="markdownTableHeadCenter">24 byte</th>
   <th class="markdownTableHeadCenter">25 byte</th>
+  <th class="markdownTableHeadCenter">26 byte</th>
   <th class="markdownTableHeadCenter">...</th>
 </tr>
 <tr class="markdownTableRowOdd">
   <td class="markdownTableBodyCenter" colspan="2">Addr 1</td>
-  <td class="markdownTableBodyCenter">...</td>
+  <td class="markdownTableBodyCenter">NodeNameSize</td>
+  <td class="markdownTableBodyCenter" colspan="...">NodeName</td>
 </tr>
 </table>
 </div>
