@@ -192,7 +192,7 @@ void IOContext::run() {
         }
         // 处理 IO 事件
         constexpr std::size_t MAX_EVENTS = 256;
-        epoll_event events[MAX_EVENTS];
+        epoll_event events[MAX_EVENTS]{};
         int n = epoll_wait(_aioh, events, MAX_EVENTS, unfinish.empty() ? 0 : -1);
         for (int i = 0; i < n; ++i) {
             // 处理唤醒事件

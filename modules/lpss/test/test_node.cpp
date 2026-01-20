@@ -13,20 +13,21 @@
 
 #include "rmvl/core/timer.hpp"
 #include "rmvl/io/socket.hpp"
-#include "rmvl/lpss.hpp"
+#include "rmvl/lpss/node.hpp"
 
 namespace rm_test {
 
 using namespace rm;
 
 TEST(LPSS_node, guid_create) {
-    lpss::Node nd1, nd2{1};
+    lpss::Node nd1("node1", 0);
+    lpss::Node nd2("Node2", 1);
     // 相同主机、相同进程，应具有相同 GUID，不同域 ID 不影响 GUID
     EXPECT_EQ(nd1.guid(), nd2.guid());
 }
 
 TEST(LPSS_node, same_domain_discover) {
-    lpss::Node nd;
+    lpss::Node nd("node1");
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     Timer::reset();
@@ -37,7 +38,7 @@ TEST(LPSS_node, same_domain_discover) {
 }
 
 TEST(LPSS_node, diff_domain_issolate) {
-    lpss::Node nd{1};
+    lpss::Node nd( "node1", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     Timer::reset();
@@ -48,7 +49,7 @@ TEST(LPSS_node, diff_domain_issolate) {
 }
 
 TEST(LPSS_node, diff_domain_discover) {
-    lpss::Node nd{1};
+    lpss::Node nd("node1", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7501), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     Timer::reset();

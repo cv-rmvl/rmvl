@@ -9,6 +9,7 @@
  *
  */
 
+#include <cstdint>
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -19,7 +20,7 @@
 
 #include <cstring>
 
-#include "rmvl/lpss/node_rsd.hpp"
+#include "rmvl/lpss/details/node_rsd.hpp"
 
 namespace rm::lpss {
 
@@ -31,27 +32,32 @@ Guid::Guid(uint32_t h, uint16_t p, uint16_t e) {
 
 std::string RNDPMessage::serialize() const noexcept {
     const uint8_t num = static_cast<uint8_t>(locators.size());
-    const size_t msg_size = RNDP_HEADER_SIZE + num * sizeof(Locator);
+    const size_t msg_size = RNDP_HEADER_SIZE + num * sizeof(Locator) + 1 + name.length();
     std::string rndp_msg(msg_size, '\0');
 
     // RNDP 头部
-    strcpy(rndp_msg.data(), "RNDP");
+    strcpy(rndp_msg.data(), "ND01");
     ::memcpy(rndp_msg.data() + 4, &guid.full, sizeof(guid.full));
     ::memcpy(rndp_msg.data() + 4 + sizeof(guid.full), &num, sizeof(num));
     ::memcpy(rndp_msg.data() + 4 + sizeof(guid.full) + 1, &heartbeat_timeout, sizeof(heartbeat_timeout));
 
-    // RNDP 负载
+    // RNDP 数据
     auto p_locator = reinterpret_cast<Locator *>(rndp_msg.data() + RNDP_HEADER_SIZE);
     for (const auto &loc : locators) {
         p_locator = new (p_locator) Locator{static_cast<uint16_t>(::htons(loc.port)), loc.addr};
         ++p_locator;
     }
+
+    uint8_t name_size = static_cast<uint8_t>(name.length());
+    ::memcpy(rndp_msg.data() + RNDP_HEADER_SIZE + num * sizeof(Locator), &name_size, sizeof(name_size));
+    ::memcpy(rndp_msg.data() + RNDP_HEADER_SIZE + num * sizeof(Locator) + 1, name.data(), name_size);
+
     return rndp_msg;
 }
 
 RNDPMessage RNDPMessage::deserialize(const char *data) noexcept {
     RNDPMessage res;
-    if (std::string_view(data, 4) != "RNDP")
+    if (std::string_view(data, 4) != "ND01")
         return res;
     ::memcpy(&res.guid.full, data + 4, sizeof(res.guid.full));
     auto num = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.guid.full));
@@ -63,6 +69,9 @@ RNDPMessage RNDPMessage::deserialize(const char *data) noexcept {
         locator.port = ::ntohs(locator.port);
         res.locators.emplace_back(locator);
     }
+
+    uint8_t name_size = *reinterpret_cast<const uint8_t *>(data + RNDP_HEADER_SIZE + num * sizeof(Locator));
+    res.name = std::string(data + RNDP_HEADER_SIZE + num * sizeof(Locator) + 1, name_size);
     return res;
 }
 
@@ -73,7 +82,7 @@ std::string REDPMessage::serialize() const noexcept {
     std::string redp_msg(msg_size, '\0');
 
     // REDP 头部
-    ::strcpy(redp_msg.data(), "REDP");
+    ::strcpy(redp_msg.data(), "ED01");
     ::memcpy(redp_msg.data() + 4, &endpoint_guid.full, sizeof(endpoint_guid.full));
     new (redp_msg.data() + 4 + sizeof(endpoint_guid.full)) uint8_t{static_cast<uint8_t>(static_cast<uint8_t>(action) | static_cast<uint8_t>(type))};
     ::memcpy(redp_msg.data() + 4 + sizeof(endpoint_guid.full) + 1, &topic_size, sizeof(topic_size));
@@ -87,7 +96,7 @@ std::string REDPMessage::serialize() const noexcept {
 REDPMessage REDPMessage::deserialize(const char *data) noexcept {
     REDPMessage res;
     // REDP 头部
-    if (std::string_view(data, 4) != "REDP")
+    if (std::string_view(data, 4) != "ED01")
         return res;
     ::memcpy(&res.endpoint_guid.full, data + 4, sizeof(res.endpoint_guid.full));
     res.action = static_cast<Action>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b01);
