@@ -11,13 +11,10 @@
 
 #include "hik_camera_impl.h"
 
-namespace rm
-{
+namespace rm {
 
-const char *HikCamera::Impl::errorCode2Str(unsigned int code) noexcept
-{
-    switch (code)
-    {
+const char *HikCamera::Impl::errorCode2Str(unsigned int code) noexcept {
+    switch (code) {
     case MV_E_HANDLE:
         return "Error or invalid handle";
     case MV_E_SUPPORT:

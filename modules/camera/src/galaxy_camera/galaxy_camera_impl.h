@@ -33,22 +33,15 @@ public:
     //! 加载相机参数
     void load(const para::GalaxyCameraParam &param);
 
-    /**
-     * @brief 设置相机参数/事件
-     *
-     * @param propId 参数/事件编号
-     * @param value 参数/事件值
-     * @return 是否设置成功
-     */
-    bool set(int propId, double value) noexcept;
+    //! 设置相机参数
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_same_v<Tp, bool> || std::is_same_v<Tp, int64_t> || std::is_same_v<Tp, double>>>
+    bool set(CameraProperties prop_id, Tp value) noexcept;
 
-    /**
-     * @brief 获取相机参数
-     *
-     * @param propId 参数编号
-     * @return 参数值
-     */
-    double get(int propId) const noexcept;
+    //! 获取相机参数
+    double get(CameraProperties prop_id) const noexcept;
+
+    //! 触发相机事件
+    bool trigger(CameraEvents event_id) const noexcept;
 
     //! 打开相机
     bool open() noexcept;

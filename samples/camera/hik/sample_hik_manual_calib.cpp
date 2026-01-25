@@ -1,5 +1,5 @@
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
@@ -19,15 +19,13 @@ static cv::Matx<double, 5, 1> distCoeffs = {0, 0, 0, 0, 0};
 
 static rm::HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
-void cameraMatrixCallBack(int pos, void *mat_pos_)
-{
+void cameraMatrixCallBack(int pos, void *mat_pos_) {
     cv::Point *mat_pos = static_cast<cv::Point *>(mat_pos_);
     // 内参矩阵
     cameraMatrix(mat_pos->x, mat_pos->y) = pos;
 }
 
-void distCoeffCallBack(int pos, void *mat_pos_)
-{
+void distCoeffCallBack(int pos, void *mat_pos_) {
     cv::Point *mat_pos = static_cast<cv::Point *>(mat_pos_);
     // 畸变系数
     if (mat_pos->x == 0 || mat_pos->x == 1)
@@ -36,24 +34,22 @@ void distCoeffCallBack(int pos, void *mat_pos_)
         distCoeffs(mat_pos->x, mat_pos->y) = static_cast<double>(-500. + pos) / 5000.;
 }
 
-int main()
-{
+int main() {
     // 读取相机内参、畸变系数
     const char *file_name = "out_calibration.yml";
     cv::FileStorage fs_mv_in(file_name, cv::FileStorage::READ);
     fs_mv_in["cameraMatrix"].isNone() ? void(0) : (fs_mv_in["cameraMatrix"] >> cameraMatrix);
     fs_mv_in["distCoeffs"].isNone() ? void(0) : (fs_mv_in["distCoeffs"] >> distCoeffs);
 
-    int exposure = 1000;
-    int gain = 0;
+    float exposure = 1000;
+    float gain = 0;
     int r_gain = 1200;
     int g_gain = 1200;
     int b_gain = 1200;
 
     // 设置相机参数
     cv::FileStorage fs_hik_set("out_para.yml", cv::FileStorage::READ);
-    if (fs_hik_set.isOpened())
-    {
+    if (fs_hik_set.isOpened()) {
         fs_hik_set["exposure"].isNone() ? void(0) : (fs_hik_set["exposure"] >> exposure);
         fs_hik_set["gain"].isNone() ? void(0) : (fs_hik_set["gain"] >> gain);
         fs_hik_set["r_gain"].isNone() ? void(0) : (fs_hik_set["r_gain"] >> r_gain);
@@ -61,13 +57,13 @@ int main()
         fs_hik_set["b_gain"].isNone() ? void(0) : (fs_hik_set["b_gain"] >> b_gain);
     }
 
-    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
-    capture.set(rm::CAMERA_EXPOSURE, exposure);
-    capture.set(rm::CAMERA_GAIN, gain);
-    capture.set(rm::CAMERA_MANUAL_WB);
-    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
-    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
-    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CameraProperties::auto_exposure, false);
+    capture.set(rm::CameraProperties::exposure, exposure);
+    capture.set(rm::CameraProperties::gain, gain);
+    capture.set(rm::CameraProperties::auto_wb, false);
+    capture.set(rm::CameraProperties::wb_rgain, static_cast<uint32_t>(r_gain));
+    capture.set(rm::CameraProperties::wb_ggain, static_cast<uint32_t>(g_gain));
+    capture.set(rm::CameraProperties::wb_bgain, static_cast<uint32_t>(b_gain));
 
     cv::namedWindow("图像画面", cv::WINDOW_NORMAL);
     cv::namedWindow("控制面板", cv::WINDOW_AUTOSIZE);
@@ -110,8 +106,7 @@ int main()
         return -1;
     cv::resizeWindow("图像画面", cv::Size(frame.cols * 0.8, frame.rows * 0.8));
 
-    while (true)
-    {
+    while (true) {
         if (!capture.read(frame))
             continue;
 
@@ -131,14 +126,12 @@ int main()
 
         char c = cv::waitKey(1);
         // 退出程序
-        if (c == 27)
-        {
+        if (c == 27) {
             if (cv::waitKey(0) == 27)
                 break;
         }
         // 保存参数
-        else if (c == 's')
-        {
+        else if (c == 's') {
             cv::FileStorage fs_mv_out(file_name, cv::FileStorage::WRITE);
             fs_mv_out << "cameraMatrix" << cameraMatrix;
             fs_mv_out << "distCoeffs" << distCoeffs;

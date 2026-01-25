@@ -13,55 +13,48 @@ static int b_gain = 100;
 
 rm::MvCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
-void exposureCallBack(int pos, void *)
-{
+void exposureCallBack(int pos, void *) {
     exposure = pos;
-    cap.set(rm::CAMERA_EXPOSURE, exposure);
+    cap.set(rm::CameraProperties::exposure, exposure);
 }
 
-void gainCallBack(int pos, void *)
-{
+void gainCallBack(int pos, void *) {
     gain = pos;
-    cap.set(rm::CAMERA_GAIN, gain);
+    cap.set(rm::CameraProperties::gain, gain);
 }
 
-void rGainCallBack(int pos, void *)
-{
+void rGainCallBack(int pos, void *) {
     r_gain = pos;
-    cap.set(rm::CAMERA_WB_RGAIN, r_gain);
+    cap.set(rm::CameraProperties::wb_rgain, r_gain);
 }
 
-void gGainCallBack(int pos, void *)
-{
+void gGainCallBack(int pos, void *) {
     g_gain = pos;
-    cap.set(rm::CAMERA_WB_GGAIN, g_gain);
+    cap.set(rm::CameraProperties::wb_ggain, g_gain);
 }
 
-void bGainCallBack(int pos, void *)
-{
+void bGainCallBack(int pos, void *) {
     b_gain = pos;
-    cap.set(rm::CAMERA_WB_BGAIN, b_gain);
+    cap.set(rm::CameraProperties::wb_bgain, b_gain);
 }
 
-int main()
-{
+int main() {
     // Load the last parameters
     cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
-    if (fs.isOpened())
-    {
+    if (fs.isOpened()) {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
         fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
         fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
         fs["g_gain"].isNone() ? void(0) : (fs["g_gain"] >> g_gain);
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
-    cap.set(rm::CAMERA_MANUAL_EXPOSURE);
-    cap.set(rm::CAMERA_EXPOSURE, exposure);
-    cap.set(rm::CAMERA_GAIN, gain);
-    cap.set(rm::CAMERA_MANUAL_WB);
-    cap.set(rm::CAMERA_WB_RGAIN, r_gain);
-    cap.set(rm::CAMERA_WB_GGAIN, g_gain);
-    cap.set(rm::CAMERA_WB_BGAIN, b_gain);
+    cap.set(rm::CameraProperties::auto_exposure, false);
+    cap.set(rm::CameraProperties::exposure, exposure);
+    cap.set(rm::CameraProperties::gain, gain);
+    cap.set(rm::CameraProperties::auto_wb, false);
+    cap.set(rm::CameraProperties::wb_rgain, r_gain);
+    cap.set(rm::CameraProperties::wb_ggain, g_gain);
+    cap.set(rm::CameraProperties::wb_bgain, b_gain);
 
     namedWindow("图像画面", cv::WINDOW_NORMAL);
     namedWindow("控制面板", cv::WINDOW_AUTOSIZE);
@@ -88,20 +81,16 @@ int main()
         return -1;
     resizeWindow("图像画面", cv::Size(static_cast<int>(frame.cols * 0.8), static_cast<int>(frame.rows * 0.8)));
 
-    while (true)
-    {
+    while (true) {
         if (!cap.read(frame))
             continue;
         imshow("图像画面", frame);
         imshow("控制面板", track_bar_img);
         char c = cv::waitKey(1);
-        if (c == 27)
-        {
+        if (c == 27) {
             if (cv::waitKey(0) == 27)
                 break;
-        }
-        else if (c == 's')
-        {
+        } else if (c == 's') {
             cv::FileStorage fs(file_name, cv::FileStorage::WRITE);
             fs.write("exposure", exposure);
             fs.write("gain", gain);

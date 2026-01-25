@@ -57,7 +57,7 @@ public:
      *
      * @param[in] param 相机参数对象
      */
-    RMVL_W void load(const para::GalaxyCameraParam &param);
+    RMVL_W void load(const para::GalaxyCameraParam &param) noexcept;
 
     /**
      * @brief 构建大恒相机对象
@@ -69,13 +69,14 @@ public:
     static std::unique_ptr<GalaxyCamera> make_capture(CameraConfig cfg, std::string_view id = "") { return std::make_unique<GalaxyCamera>(cfg, id); }
 
     /**
-     * @brief 设置相机参数/事件
+     * @brief 设置相机参数
      *
-     * @param[in] prop_id 参数/事件编号
-     * @param[in] value 参数/事件值
+     * @param[in] prop_id 参数编号
+     * @param[in] value 参数值
      * @return 是否设置成功
      */
-    RMVL_W bool set(int prop_id, double value = 0.0) const;
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_same_v<Tp, bool> || std::is_same_v<Tp, int64_t> || std::is_same_v<Tp, double>>>
+    bool set(CameraProperties prop_id, Tp value) const noexcept;
 
     /**
      * @brief 获取相机参数
@@ -83,10 +84,18 @@ public:
      * @param[in] prop_id 参数编号
      * @return 参数值
      */
-    RMVL_W double get(int prop_id) const;
+    RMVL_W double get(CameraProperties prop_id) const noexcept;
+
+    /**
+     * @brief 触发相机事件
+     *
+     * @param[in] event_id 相机事件
+     * @return 是否触发成功
+     */
+    RMVL_W bool trigger(CameraEvents event_id) const noexcept;
 
     //! 相机是否打开
-    RMVL_W bool isOpened() const;
+    RMVL_W bool isOpened() const noexcept;
 
     /**
      * @brief 从相机设备中读取图像

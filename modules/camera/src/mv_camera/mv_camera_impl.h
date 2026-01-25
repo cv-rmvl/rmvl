@@ -18,11 +18,9 @@
 
 #include "rmvl/camera/mv_camera.h"
 
-namespace rm
-{
+namespace rm {
 
-class MvCamera::Impl
-{
+class MvCamera::Impl {
     // ------------------------- 相机信息 -------------------------
     bool _is_opened = false;         //!< 相机是否打开
     std::string _camera_id;          //!< 指定相机的串口号
@@ -38,18 +36,8 @@ class MvCamera::Impl
     RetrieveMode _retrieve_mode; //!< 图像处理模式
 
     // ------------------------- 图像信息 -------------------------
-    tSdkFrameHead _frame_info;   //!< 图像帧头信息
-    int _channel = 3;            //!< 通道数
-    bool _auto_exposure = false; //!< 相机自动曝光
-    double _exposure = 1200;     //!< 相机设备曝光时间
-    int _gain = 1;               //!< 全通道增益
-    int _r_gain = 100;           //!< 图像红色通道增益
-    int _g_gain = 100;           //!< 图像绿色通道增益
-    int _b_gain = 100;           //!< 图像蓝色通道增益
-    int _gamma = 100;            //!< 图像 Gamma 值
-    int _contrast = 100;         //!< 图像对比度
-    int _saturation = 100;       //!< 图像饱和度
-    int _sharpness = 0;          //!< 图像锐度
+    tSdkFrameHead _frame_info; //!< 图像帧头信息
+    int _channel = 3;          //!< 通道数
 
 public:
     Impl(CameraConfig init_mode, std::string_view serial) noexcept;
@@ -60,10 +48,14 @@ public:
     void load(const para::MvCameraParam &param);
 
     //! 设置相机参数
-    bool set(int propId, double value) noexcept;
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_same_v<Tp, bool> || std::is_same_v<Tp, int> || std::is_same_v<Tp, double>>>
+    bool set(CameraProperties propId, Tp value) noexcept;
 
     //! 获取相机参数
-    double get(int propId) const noexcept;
+    double get(CameraProperties propId) const noexcept;
+
+    //! 触发相机事件
+    bool trigger(CameraEvents eventId) const noexcept;
 
     //! 相机是否打开
     inline bool isOpened() const noexcept { return _is_opened; }
@@ -75,8 +67,7 @@ public:
     bool retrieve(cv::OutputArray image) noexcept;
 
     //! 从相机设备中读取图像
-    inline bool read(cv::OutputArray image) noexcept
-    {
+    inline bool read(cv::OutputArray image) noexcept {
         if (grab())
             retrieve(image);
         else

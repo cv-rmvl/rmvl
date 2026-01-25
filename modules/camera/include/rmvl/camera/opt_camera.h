@@ -57,25 +57,24 @@ public:
      *                      配置为 `GrabMode::Hardware`，则需要添加触发通道的配置项，例如 `TriggerChannel::Chn1`
      * @param[in] handle_info 句柄信息，例如序列号、IP、用户标识
      */
-    static std::unique_ptr<OptCamera> make_capture(CameraConfig init_mode, std::string_view handle_info = "") {
-        return std::unique_ptr<OptCamera>(new OptCamera(init_mode, handle_info));
-    }
+    static std::unique_ptr<OptCamera> make_capture(CameraConfig init_mode, std::string_view handle_info = "") { return std::make_unique<OptCamera>(init_mode, handle_info); }
 
     /**
      * @brief 加载奥普特相机参数
      *
      * @param[in] param 相机参数对象
      */
-    RMVL_W void load(const para::OptCameraParam &param);
+    RMVL_W void load(const para::OptCameraParam &param) noexcept;
 
     /**
      * @brief 设置相机参数、触发相机事件
      *
-     * @param[in] prop_id 参数/事件编号
-     * @param[in] value 参数/事件值
+     * @param[in] prop_id 参数编号
+     * @param[in] value 参数值
      * @return 是否设置成功
      */
-    RMVL_W bool set(int prop_id, double value = 0.0);
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_same_v<Tp, bool> || std::is_same_v<Tp, int64_t> || std::is_same_v<Tp, double>>>
+    bool set(CameraProperties prop_id, Tp value) noexcept;
 
     /**
      * @brief 获取相机参数
@@ -83,10 +82,18 @@ public:
      * @param[in] prop_id 参数编号
      * @return 参数值
      */
-    RMVL_W double get(int prop_id) const;
+    RMVL_W double get(CameraProperties prop_id) const noexcept;
+
+    /**
+     * @brief 触发相机事件
+     *
+     * @param[in] event_id 相机事件
+     * @return 是否触发成功
+     */
+    RMVL_W bool trigger(CameraEvents event_id) const noexcept;
 
     //! 相机是否已经打开
-    RMVL_W bool isOpened() const;
+    RMVL_W bool isOpened() const noexcept;
 
     /**
      * @brief 从相机设备中读取图像

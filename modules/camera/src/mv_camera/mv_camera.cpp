@@ -20,10 +20,16 @@ namespace rm {
 
 MvCamera::MvCamera(CameraConfig init_mode, std::string_view serial) : _impl(new MvCamera::Impl(init_mode, serial)) {}
 MvCamera::~MvCamera() = default;
-void MvCamera::load(const para::MvCameraParam &param) { _impl->load(param); }
-bool MvCamera::set(int propId, double value) { return _impl->set(propId, value); }
-double MvCamera::get(int propId) const { return _impl->get(propId); }
-bool MvCamera::isOpened() const { return _impl->isOpened(); }
+void MvCamera::load(const para::MvCameraParam &param) noexcept { _impl->load(param); }
+template <>
+bool MvCamera::set(CameraProperties propId, bool value) noexcept { return _impl->set(propId, value); }
+template <>
+bool MvCamera::set(CameraProperties propId, int value) noexcept { return _impl->set(propId, value); }
+template <>
+bool MvCamera::set(CameraProperties propId, double value) noexcept { return _impl->set(propId, value); }
+double MvCamera::get(CameraProperties propId) const noexcept { return _impl->get(propId); }
+bool MvCamera::trigger(CameraEvents eventId) const noexcept { return _impl->trigger(eventId); }
+bool MvCamera::isOpened() const noexcept { return _impl->isOpened(); }
 bool MvCamera::read(cv::OutputArray image) { return _impl->read(image); }
 bool MvCamera::reconnect() { return _impl->reconnect(); }
 
@@ -173,13 +179,6 @@ bool MvCamera::Impl::reconnect() noexcept {
     // 重置相机数量
     _camera_counts = 8;
     open();
-    // 还原参数设置
-    _auto_exposure ? set(CAMERA_AUTO_EXPOSURE, 0) : set(CAMERA_MANUAL_EXPOSURE, 0);
-    set(CAMERA_EXPOSURE, _exposure);
-    set(CAMERA_GAIN, _gain);
-    set(CAMERA_WB_RGAIN, _r_gain);
-    set(CAMERA_WB_GGAIN, _g_gain);
-    set(CAMERA_WB_BGAIN, _b_gain);
     return true;
 }
 

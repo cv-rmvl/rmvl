@@ -13,6 +13,7 @@
 
 #include <MvCameraControl.h>
 
+#include "rmvl/camera/camutils.hpp"
 #include "rmvl/camera/hik_camera.h"
 
 namespace rm
@@ -43,24 +44,17 @@ public:
     ~Impl() noexcept;
 
     //! 加载相机参数
-    void load(const para::HikCameraParam &param);
+    void load(const para::HikCameraParam &param) noexcept;
 
-    /**
-     * @brief 设置相机参数/事件
-     *
-     * @param propId 参数/事件编号
-     * @param value 参数/事件值
-     * @return 是否设置成功
-     */
-    bool set(int propId, double value) noexcept;
+    //! 设置相机参数
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_same_v<Tp, bool> || std::is_same_v<Tp, uint32_t> || std::is_same_v<Tp, float>>>
+    bool set(CameraProperties propId, Tp value) noexcept;
 
-    /**
-     * @brief 获取相机参数
-     *
-     * @param propId 参数编号
-     * @return 参数值
-     */
-    double get(int propId) const noexcept;
+    //! 获取相机参数
+    double get(CameraProperties propId) const noexcept;
+
+    //! 触发相机事件
+    bool trigger(CameraEvents eventId) const noexcept;
 
     //! 相机是否打开
     inline bool isOpened() const noexcept { return _opened; }

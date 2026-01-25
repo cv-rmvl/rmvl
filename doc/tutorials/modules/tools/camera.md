@@ -157,14 +157,14 @@
 
   ```cpp
   capture.set(rm::CAMERA_MANUAL_EXPOSURE); // 手动曝光
-  capture.set(rm::CAMERA_AUTO_EXPOSURE);   // 自动曝光
+  capture.set(rm::CameraProperties::auto_exposure);   // 自动曝光
   ```
 
 - <b class="tab-title">Python</b>
 
   ```python
   capture.set(rm.CAMERA_MANUAL_EXPOSURE) # 手动曝光
-  capture.set(rm.CAMERA_AUTO_EXPOSURE)   # 自动曝光
+  capture.set(rm.CameraProperties::auto_exposure)   # 自动曝光
   ```
 
 </div>
@@ -176,13 +176,13 @@
 - <b class="tab-title">C++</b>
 
   ```cpp
-  capture.set(rm::CAMERA_EXPOSURE, 600); // 设置曝光值为 600
+  capture.set(rm::CameraProperties::exposure, 600); // 设置曝光值为 600
   ```
 
 - <b class="tab-title">Python</b>
 
   ```python
-  capture.set(rm.CAMERA_EXPOSURE, 600) # 设置曝光值为 600
+  capture.set(rm.CameraProperties::exposure, 600) # 设置曝光值为 600
   ```
 
 </div>
@@ -197,13 +197,13 @@
 
   ```cpp
   capture.set(rm::CAMERA_MANUAL_WB); // 手动白平衡
-  capture.set(rm::CAMERA_AUTO_WB);   // 自动白平衡
+  capture.set(rm::CameraProperties::auto_wb);   // 自动白平衡
   ```
 - <b class="tab-title">Python</b>
 
   ```python
   capture.set(rm.CAMERA_MANUAL_WB) # 手动白平衡
-  capture.set(rm.CAMERA_AUTO_WB)   # 自动白平衡
+  capture.set(rm.CameraProperties::auto_wb)   # 自动白平衡
   ```
 
 </div>
@@ -215,17 +215,17 @@
 - <b class="tab-title">C++</b>
 
   ```cpp
-  capture.set(rm::CAMERA_WB_RGAIN, 102); // 红色通道增益设置为 102
-  capture.set(rm::CAMERA_WB_GGAIN, 101); // 绿色通道增益设置为 101
-  capture.set(rm::CAMERA_WB_BGAIN, 100); // 蓝色通道增益设置为 100
+  capture.set(rm::CameraProperties::wb_rgain, 102); // 红色通道增益设置为 102
+  capture.set(rm::CameraProperties::wb_ggain, 101); // 绿色通道增益设置为 101
+  capture.set(rm::CameraProperties::wb_bgain, 100); // 蓝色通道增益设置为 100
   ```
 
 - <b class="tab-title">Python</b>
 
   ```python
-  capture.set(rm.CAMERA_WB_RGAIN, 102) # 红色通道增益设置为 102
-  capture.set(rm.CAMERA_WB_GGAIN, 101) # 绿色通道增益设置为 101
-  capture.set(rm.CAMERA_WB_BGAIN, 100) # 蓝色通道增益设置为 100
+  capture.set(rm.CameraProperties::wb_rgain, 102) # 红色通道增益设置为 102
+  capture.set(rm.CameraProperties::wb_ggain, 101) # 绿色通道增益设置为 101
+  capture.set(rm.CameraProperties::wb_bgain, 100) # 蓝色通道增益设置为 100
   ```
 
 </div>
@@ -237,21 +237,21 @@
 - <b class="tab-title">C++</b>
 
   ```cpp
-  capture.set(rm::CAMERA_GAIN, 64);        // 设置模拟增益为 64
-  capture.set(rm::CAMERA_GAMMA, 80);       // 设置 Gamma 为 80
-  capture.set(rm::CAMERA_CONTRAST, 120);   // 设置对比度为 120
-  capture.set(rm::CAMERA_SATURATION, 100); // 设置饱和度为 100
-  capture.set(rm::CAMERA_SHARPNESS, 100);  // 设置锐度为 100
+  capture.set(rm::CameraProperties::gain, 64);        // 设置模拟增益为 64
+  capture.set(rm::CameraProperties::gamma, 80);       // 设置 Gamma 为 80
+  capture.set(rm::CameraProperties::contrast, 120);   // 设置对比度为 120
+  capture.set(rm::CameraProperties::saturation, 100); // 设置饱和度为 100
+  capture.set(rm::CameraProperties::sharpness, 100);  // 设置锐度为 100
   ```
 
 - <b class="tab-title">Python</b>
 
   ```python
-  capture.set(rm.CAMERA_GAIN, 64)        # 设置模拟增益为 64
-  capture.set(rm.CAMERA_GAMMA, 80)       # 设置 Gamma 为 80
-  capture.set(rm.CAMERA_CONTRAST, 120)   # 设置对比度为 120
-  capture.set(rm.CAMERA_SATURATION, 100) # 设置饱和度为 100
-  capture.set(rm.CAMERA_SHARPNESS, 100)  # 设置锐度为 100
+  capture.set(rm.CameraProperties::gain, 64)        # 设置模拟增益为 64
+  capture.set(rm.CameraProperties::gamma, 80)       # 设置 Gamma 为 80
+  capture.set(rm.CameraProperties::contrast, 120)   # 设置对比度为 120
+  capture.set(rm.CameraProperties::saturation, 100) # 设置饱和度为 100
+  capture.set(rm.CameraProperties::sharpness, 100)  # 设置锐度为 100
   ```
 
 </div>
@@ -267,29 +267,29 @@
 
   ```cpp
   // 设置硬触发采集延迟为 1000 μs，仅在硬触发模式下有效
-  capture.set(rm::CAMERA_TRIGGER_DELAY, 1000);
+  capture.set(rm::CameraProperties::trigger_delay, 1000);
   // 设置单次触发时的触发帧数为 5 帧，即一次触发能触发 5 帧画面，仅在触发模式下有效
-  capture.set(rm::CAMERA_TRIGGER_COUNT, 5);
+  capture.set(rm::CameraProperties::trigger_count, 5);
   // 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
-  capture.set(rm::CAMERA_TRIGGER_PERIOD, 100);
+  capture.set(rm::CameraProperties::trigger_period, 100);
   // 执行一次白平衡操作，仅在手动白平衡模式下有效
-  capture.set(rm::CAMERA_ONCE_WB);
+  capture.set(rm::CameraEvents::once_wb);
   // 执行一次软触发，仅在软触发模式下有效
-  capture.set(rm::CAMERA_TRIGGER_SOFT);
+  capture.set(rm::CameraEvents::software);
   ```
 - <b class="tab-title">Python</b>
 
   ```python
   # 设置硬触发采集延迟为 1000 μs，仅在硬触发模式下有效
-  capture.set(rm.CAMERA_TRIGGER_DELAY, 1000)
+  capture.set(rm.CameraProperties::trigger_delay, 1000)
   # 设置单次触发时的触发帧数为 5 帧，即一次触发能触发 5 帧画面，仅在触发模式下有效
-  capture.set(rm.CAMERA_TRIGGER_COUNT, 5)
+  capture.set(rm.CameraProperties::trigger_count, 5)
   # 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
-  capture.set(rm.CAMERA_TRIGGER_PERIOD, 100)
+  capture.set(rm.CameraProperties::trigger_period, 100)
   # 执行一次白平衡操作，仅在手动白平衡模式下有效
-  capture.set(rm.CAMERA_ONCE_WB)
+  capture.set(rm.CameraEvents::once_wb)
   # 执行一次软触发，仅在软触发模式下有效
-  capture.set(rm.CAMERA_TRIGGER_SOFT)
+  capture.set(rm.CameraEvents::software)
   ```
 
 </div>
@@ -435,7 +435,7 @@ bin/rmvl_mv_manual_calib
       std::thread th([&run]() {
           while (run) {
               Timer::sleep_for(10);
-              capture.set(rm::CAMERA_TRIGGER_SOFT); // 触发
+              capture.set(rm::CameraEvents::software); // 触发
           }
       });
 

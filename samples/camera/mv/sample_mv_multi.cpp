@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui.hpp>
 
+#include "rmvl/camera/camutils.hpp"
 #include "rmvl/camera/mv_camera.h"
 
 #ifdef _WIN32
@@ -10,13 +11,11 @@
 
 #include <CameraApi.h>
 
-int main()
-{
+int main() {
     int camera_counts = 8;
     std::vector<tSdkCameraDevInfo> camera_list(camera_counts);
     auto status = CameraEnumerateDevice(camera_list.data(), &camera_counts);
-    if (status != CAMERA_STATUS_SUCCESS)
-    {
+    if (status != CAMERA_STATUS_SUCCESS) {
         printf("Failed to enumerate the camera decive!\n");
         return 0;
     }
@@ -44,8 +43,7 @@ int main()
 
     // Load the last parameters
     cv::FileStorage fs("out_para.yml", cv::FileStorage::READ);
-    if (fs.isOpened())
-    {
+    if (fs.isOpened()) {
         fs["exposure"].isNone() ? void(0) : (fs["exposure"] >> exposure);
         fs["gain"].isNone() ? void(0) : (fs["gain"] >> gain);
         fs["r_gain"].isNone() ? void(0) : (fs["r_gain"] >> r_gain);
@@ -53,13 +51,13 @@ int main()
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
-    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
-    capture.set(rm::CAMERA_EXPOSURE, exposure);
-    capture.set(rm::CAMERA_GAIN, gain);
-    capture.set(rm::CAMERA_MANUAL_WB);
-    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
-    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
-    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CameraProperties::auto_exposure, false);
+    capture.set(rm::CameraProperties::exposure, exposure);
+    capture.set(rm::CameraProperties::gain, gain);
+    capture.set(rm::CameraProperties::auto_wb, false);
+    capture.set(rm::CameraProperties::wb_rgain, r_gain);
+    capture.set(rm::CameraProperties::wb_ggain, g_gain);
+    capture.set(rm::CameraProperties::wb_bgain, b_gain);
 
     namedWindow("frame", cv::WINDOW_NORMAL);
 
@@ -69,8 +67,7 @@ int main()
     resizeWindow("frame", cv::Size(static_cast<int>(frame.cols * 0.8),
                                    static_cast<int>(frame.rows * 0.8)));
 
-    while (capture.read(frame))
-    {
+    while (capture.read(frame)) {
         cv::imshow("frame", frame);
         if (cv::waitKey(1) == 27)
             if (cv::waitKey(0) == 27)
