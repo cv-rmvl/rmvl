@@ -8,19 +8,19 @@
 
 using namespace std::chrono_literals;
 
-static int exposure = 5000;
-static int gain = 0;
+static float exposure = 5000;
+static float gain = 0;
 static int r_gain = 1200;
 static int g_gain = 1200;
 static int b_gain = 1200;
 
 static rm::HikCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
-inline void exposureCallBack(int pos, void *) { exposure = pos, cap.set(rm::CAMERA_EXPOSURE, exposure); }
-inline void gainCallBack(int pos, void *) { gain = pos, cap.set(rm::CAMERA_GAIN, gain); }
-inline void rGainCallBack(int pos, void *) { r_gain = pos, cap.set(rm::CAMERA_WB_RGAIN, r_gain); }
-inline void gGainCallBack(int pos, void *) { g_gain = pos, cap.set(rm::CAMERA_WB_GGAIN, g_gain); }
-inline void bGainCallBack(int pos, void *) { b_gain = pos, cap.set(rm::CAMERA_WB_BGAIN, b_gain); }
+inline void exposureCallBack(int pos, void *) { exposure = pos, cap.set(rm::CameraProperties::exposure, exposure); }
+inline void gainCallBack(int pos, void *) { gain = pos, cap.set(rm::CameraProperties::gain, gain); }
+inline void rGainCallBack(int pos, void *) { r_gain = pos, cap.set(rm::CameraProperties::wb_rgain, static_cast<uint32_t>(r_gain)); }
+inline void gGainCallBack(int pos, void *) { g_gain = pos, cap.set(rm::CameraProperties::wb_ggain, static_cast<uint32_t>(g_gain)); }
+inline void bGainCallBack(int pos, void *) { b_gain = pos, cap.set(rm::CameraProperties::wb_bgain, static_cast<uint32_t>(b_gain)); }
 
 int main()
 {
@@ -35,13 +35,13 @@ int main()
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
-    cap.set(rm::CAMERA_MANUAL_EXPOSURE);
-    cap.set(rm::CAMERA_EXPOSURE, exposure);
-    cap.set(rm::CAMERA_GAIN, gain);
-    cap.set(rm::CAMERA_MANUAL_WB);
-    cap.set(rm::CAMERA_WB_RGAIN, r_gain);
-    cap.set(rm::CAMERA_WB_GGAIN, g_gain);
-    cap.set(rm::CAMERA_WB_BGAIN, b_gain);
+    cap.set(rm::CameraProperties::auto_exposure, false);
+    cap.set(rm::CameraProperties::exposure, exposure);
+    cap.set(rm::CameraProperties::gain, gain);
+    cap.set(rm::CameraProperties::auto_wb, false);
+    cap.set(rm::CameraProperties::wb_rgain, static_cast<uint32_t>(r_gain));
+    cap.set(rm::CameraProperties::wb_ggain, static_cast<uint32_t>(g_gain));
+    cap.set(rm::CameraProperties::wb_bgain, static_cast<uint32_t>(b_gain));
 
     namedWindow("图像画面", cv::WINDOW_NORMAL);
     resizeWindow("图像画面", cv::Size(1000, 750));
@@ -87,8 +87,8 @@ int main()
             fs.write("b_gain", b_gain);
 
             printf("\033[32mSuccess to write the parameters into \"%s\"\033[0m\n", file_name);
-            printf(" -- exposure: %d\n", exposure);
-            printf(" -- gain: %d\n", gain);
+            printf(" -- exposure: %f\n", exposure);
+            printf(" -- gain: %f\n", gain);
             printf(" -- r_gain: %d\n", r_gain);
             printf(" -- g_gain: %d\n", g_gain);
             printf(" -- b_gain: %d\n", b_gain);

@@ -23,11 +23,17 @@ namespace rm {
 
 HikCamera::HikCamera(CameraConfig cfg, std::string_view info) : _impl(new HikCamera::Impl(cfg, info)) {}
 HikCamera::~HikCamera() = default;
-void HikCamera::load(const para::HikCameraParam &param) { _impl->load(param); }
-bool HikCamera::set(int propId, double value) { return _impl->set(propId, value); }
-double HikCamera::get(int propId) const { return _impl->get(propId); }
+void HikCamera::load(const para::HikCameraParam &param) noexcept { _impl->load(param); }
+template <>
+bool HikCamera::set(CameraProperties propId, bool value) noexcept { return _impl->set(propId, value); }
+template <>
+bool HikCamera::set(CameraProperties propId, uint32_t value) noexcept { return _impl->set(propId, value); }
+template <>
+bool HikCamera::set(CameraProperties propId, float value) noexcept { return _impl->set(propId, value); }
+double HikCamera::get(CameraProperties propId) const noexcept { return _impl->get(propId); }
+bool HikCamera::trigger(CameraEvents eventId) const noexcept { return _impl->trigger(eventId); }
 bool HikCamera::read(cv::OutputArray image) { return _impl->read(image); }
-bool HikCamera::isOpened() const { return _impl->isOpened(); }
+bool HikCamera::isOpened() const noexcept { return _impl->isOpened(); }
 bool HikCamera::reconnect() { return _impl->reconnect(); }
 
 std::string HikCamera::version() {
@@ -41,10 +47,6 @@ std::string HikCamera::version() {
     } else
         return vstr;
 }
-
-//! MV_CC_PIXEL_CONVERT_PARAM 的初始化变量
-static const MV_CC_PIXEL_CONVERT_PARAM MV_CC_PIXEL_CONVERT_PARAM_Init =
-    {0, 0, PixelType_Gvsp_Undefined, nullptr, 0, PixelType_Gvsp_Undefined, nullptr, 0, 0, {0}};
 
 HikCamera::Impl::Impl(CameraConfig cfg, std::string_view info) noexcept : _cfg(cfg), _info(info) { _opened = open(); }
 
@@ -223,7 +225,7 @@ bool HikCamera::Impl::retrieve(cv::OutputArray image, RetrieveMode flag) noexcep
     auto ret = MV_OK;
     // MV_CC_ConvertPixelType
     if (flag == RetrieveMode::SDK) {
-        MV_CC_PIXEL_CONVERT_PARAM cvt_param{MV_CC_PIXEL_CONVERT_PARAM_Init};
+        MV_CC_PIXEL_CONVERT_PARAM cvt_param{};
         cvt_param.nWidth = frame_info.nWidth;              // 图像宽
         cvt_param.nHeight = frame_info.nHeight;            // 图像高
         cvt_param.pSrcData = _p_out.pBufAddr;              // 输入数据缓存

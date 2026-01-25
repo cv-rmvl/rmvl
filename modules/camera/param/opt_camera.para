@@ -1,7 +1,7 @@
 #################### 光学参数 ####################
 double exposure = 1000 # 相机曝光
 double gamma = 1       # 相机 Gamma 值
-int contrast = 1       # 相机对比度
+int64_t contrast = 1   # 相机对比度
 double gain = 1        # 相机全通道增益
 double b_gain = 1      # 相机蓝色增益
 double g_gain = 1      # 相机绿色增益

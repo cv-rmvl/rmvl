@@ -109,13 +109,13 @@ int main(int argc, const char *argv[]) {
         fs_mv_set["b_gain"].isNone() ? void(0) : (fs_mv_set["b_gain"] >> b_gain);
     }
 
-    capture->set(rm::CAMERA_MANUAL_EXPOSURE, 0);
-    capture->set(rm::CAMERA_EXPOSURE, exposure);
-    capture->set(rm::CAMERA_GAIN, gain);
-    capture->set(rm::CAMERA_MANUAL_WB, 0);
-    capture->set(rm::CAMERA_WB_RGAIN, r_gain);
-    capture->set(rm::CAMERA_WB_GGAIN, g_gain);
-    capture->set(rm::CAMERA_WB_BGAIN, b_gain);
+    capture->set(rm::CameraProperties::auto_exposure, false);
+    capture->set(rm::CameraProperties::exposure, exposure);
+    capture->set(rm::CameraProperties::gain, gain);
+    capture->set(rm::CameraProperties::auto_wb, false);
+    capture->set(rm::CameraProperties::wb_rgain, r_gain);
+    capture->set(rm::CameraProperties::wb_ggain, g_gain);
+    capture->set(rm::CameraProperties::wb_bgain, b_gain);
 
     cv::Ptr<cv::ml::SVM> p_svm = nullptr;
 

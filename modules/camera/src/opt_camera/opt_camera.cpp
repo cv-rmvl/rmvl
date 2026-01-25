@@ -20,10 +20,16 @@ namespace rm {
 
 OptCamera::OptCamera(CameraConfig init_mode, std::string_view handle_info) : _impl(new OptCamera::Impl(init_mode, handle_info)) {}
 OptCamera::~OptCamera() = default;
-void OptCamera::load(const para::OptCameraParam &param) { _impl->load(param); }
-bool OptCamera::set(int propId, double value) { return _impl->set(propId, value); }
-double OptCamera::get(int propId) const { return _impl->get(propId); }
-bool OptCamera::isOpened() const { return _impl->isOpened(); }
+void OptCamera::load(const para::OptCameraParam &param) noexcept { _impl->load(param); }
+template <>
+bool OptCamera::set(CameraProperties prop_id, bool value) noexcept { return _impl->set(prop_id, value); }
+template <>
+bool OptCamera::set(CameraProperties prop_id, int64_t value) noexcept { return _impl->set(prop_id, value); }
+template <>
+bool OptCamera::set(CameraProperties prop_id, double value) noexcept { return _impl->set(prop_id, value); }
+double OptCamera::get(CameraProperties prop_id) const noexcept { return _impl->get(prop_id); }
+bool OptCamera::trigger(CameraEvents event_id) const noexcept { return _impl->trigger(event_id); }
+bool OptCamera::isOpened() const noexcept { return _impl->isOpened(); }
 bool OptCamera::read(cv::OutputArray image) { return _impl->read(image); }
 bool OptCamera::reconnect() { return _impl->reconnect(); }
 

@@ -15,15 +15,13 @@
 
 #include "rmvl/core/rmvldef.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup camera
 //! @{
 
 //! 相机外部触发通道
-enum class TriggerChannel : uint8_t
-{
+enum class TriggerChannel : uint8_t {
     Chn0, //!< 通道 0
     Chn1, //!< 通道 1
     Chn2, //!< 通道 2
@@ -31,8 +29,7 @@ enum class TriggerChannel : uint8_t
 };
 
 //! 相机采集模式
-enum class GrabMode : uint8_t
-{
+enum class GrabMode : uint8_t {
     Continuous, //!< 连续采样
     Software,   //!< 软触发
     Hardware,   //!< 硬触发
@@ -40,8 +37,7 @@ enum class GrabMode : uint8_t
 };
 
 //! 相机句柄创建方式
-enum class HandleMode : uint8_t
-{
+enum class HandleMode : uint8_t {
     Index, //!< 相机的索引号 `(0, 1, 2 ...)`
     Key,   //!< 制造商：序列号 S/N
     MAC,   //!< 相机的 MAC 地址
@@ -49,15 +45,13 @@ enum class HandleMode : uint8_t
 };
 
 //! 相机数据处理模式
-enum class RetrieveMode : uint8_t
-{
+enum class RetrieveMode : uint8_t {
     OpenCV, //!< 使用 OpenCV 的 'cvtColor' 进行处理
     SDK,    //!< 使用官方 SDK 进行处理
 };
 
 //! 相机初始化配置模式
-struct RMVL_EXPORTS_W_AG CameraConfig
-{
+struct RMVL_EXPORTS_W_AG CameraConfig {
     RMVL_W_RW TriggerChannel trigger_channel{TriggerChannel::Chn1}; //!< 触发通道
     RMVL_W_RW GrabMode grab_mode{GrabMode::Continuous};             //!< 采集模式
     RMVL_W_RW HandleMode handle_mode{HandleMode::Key};              //!< 句柄创建方式
@@ -69,8 +63,7 @@ struct RMVL_EXPORTS_W_AG CameraConfig
      * @param[in] modes 配置模式参数包
      */
     template <typename... Args>
-    static inline CameraConfig create(Args &&...modes)
-    {
+    static inline CameraConfig create(Args &&...modes) {
         CameraConfig config;
         config.set(std::forward<Args>(modes)...);
         return config;
@@ -92,37 +85,35 @@ private:
 };
 
 //! 相机运行时属性
-enum CameraProperties : uint16_t
-{
+enum class CameraProperties : uint8_t {
     // ---------------- 设备属性 ----------------
-    CAMERA_AUTO_EXPOSURE = 0x1,   //!< 自动曝光
-    CAMERA_MANUAL_EXPOSURE = 0x2, //!< 手动曝光
-    CAMERA_ONCE_EXPOSURE = 0x3,   //!< 单次曝光
-    CAMERA_AUTO_WB = 0x10,        //!< 自动白平衡
-    CAMERA_MANUAL_WB = 0x11,      //!< 手动白平衡
-    CAMERA_EXPOSURE = 0x20,       //!< 曝光值
-    CAMERA_GAIN = 0x21,           //!< 模拟增益
-    CAMERA_GAMMA = 0x22,          //!< Gamma 值
-    CAMERA_WB_RGAIN = 0x23,       //!< 白平衡红色分量
-    CAMERA_WB_GGAIN = 0x24,       //!< 白平衡绿色分量
-    CAMERA_WB_BGAIN = 0x25,       //!< 白平衡蓝色分量
-    CAMERA_CONTRAST = 0x26,       //!< 对比度
-    CAMERA_SATURATION = 0x27,     //!< 饱和度
-    CAMERA_SHARPNESS = 0x28,      //!< 锐度
-    CAMERA_FRAME_HEIGHT = 0x30,   //!< 图像帧高度
-    CAMERA_FRAME_WIDTH = 0x31,    //!< 图像帧宽度
+    auto_exposure,  //!< 自动曝光
+    auto_wb,        //!< 自动白平衡
+    exposure,       //!< 曝光值
+    gain,           //!< 模拟增益
+    gamma,          //!< Gamma 值
+    wb_rgain,       //!< 白平衡红色分量
+    wb_ggain,       //!< 白平衡绿色分量
+    wb_bgain,       //!< 白平衡蓝色分量
+    contrast,       //!< 对比度
+    saturation,     //!< 饱和度
+    sharpness,      //!< 锐度
+    frame_height,   //!< 图像帧高度
+    frame_width,    //!< 图像帧宽度
+    trigger_delay,  //!< 硬触发采集延迟（微秒\f$μs\f$）
+    trigger_count,  //!< 单次触发时的触发帧数
+    trigger_period, //!< 单次触发时多次采集的周期（微秒\f$μs\f$）
+};
 
-    // ---------------- 触发属性 ----------------
-    CAMERA_TRIGGER_DELAY = 0x40,  //!< 硬触发采集延迟（微秒\f$μs\f$）
-    CAMERA_TRIGGER_COUNT = 0x41,  //!< 单次触发时的触发帧数
-    CAMERA_TRIGGER_PERIOD = 0x42, //!< 单次触发时多次采集的周期（微秒\f$μs\f$）
-    CAMERA_TRIGGER_SOFT = 0x43,   //!< 执行软触发
-    CAMERA_ONCE_WB = 0x44,        //!< 执行单次白平衡
+//! 相机运行时事件
+enum CameraEvents : uint8_t {
+    once_exposure, //!< 单次曝光
+    once_wb,       //!< 执行单次白平衡
+    software,      //!< 执行软触发
 };
 
 //! 相机外参
-class RMVL_EXPORTS_W CameraExtrinsics
-{
+class RMVL_EXPORTS_W CameraExtrinsics {
 public:
     //! 获取平移向量
     RMVL_W inline const cv::Vec3f &tvec() const { return _tvec; }

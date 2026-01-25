@@ -73,16 +73,17 @@ public:
      *
      * @param[in] param 相机参数对象
      */
-    RMVL_W void load(const para::MvCameraParam &param);
+    RMVL_W void load(const para::MvCameraParam &param) noexcept;
 
     /**
-     * @brief 设置相机参数/事件
+     * @brief 设置相机参数
      *
-     * @param[in] propId 参数/事件编号
-     * @param[in] value 参数/事件值
+     * @param[in] propId 参数编号
+     * @param[in] value 参数值
      * @return 是否设置成功
      */
-    RMVL_W bool set(int propId, double value = 0.0);
+    template <typename Tp, typename Enable = std::enable_if_t<std::is_same_v<Tp, bool> || std::is_same_v<Tp, int> || std::is_same_v<Tp, double>>>
+    bool set(CameraProperties propId, Tp value) noexcept;
 
     /**
      * @brief 获取相机参数
@@ -90,10 +91,18 @@ public:
      * @param[in] propId 参数编号
      * @return 参数值
      */
-    RMVL_W double get(int propId) const;
+    RMVL_W double get(CameraProperties propId) const noexcept;
+
+    /**
+     * @brief 触发相机事件
+     *
+     * @param[in] eventId 相机事件
+     * @return 是否触发成功
+     */
+    RMVL_W bool trigger(CameraEvents eventId) const noexcept;
 
     //! 相机是否打开
-    RMVL_W bool isOpened() const;
+    RMVL_W bool isOpened() const noexcept;
 
     /**
      * @brief 从相机设备中读取图像

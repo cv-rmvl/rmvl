@@ -26,10 +26,15 @@ namespace rm {
 
 GalaxyCamera::GalaxyCamera(CameraConfig cfg, std::string_view id) : _impl(new GalaxyCamera::Impl(cfg, id)) {}
 GalaxyCamera::~GalaxyCamera() = default;
-bool GalaxyCamera::set(int prop_id, double value) const { return _impl->set(prop_id, value); }
-void GalaxyCamera::load(const para::GalaxyCameraParam &param) { _impl->load(param); }
-double GalaxyCamera::get(int prop_id) const { return _impl->get(prop_id); }
-bool GalaxyCamera::isOpened() const { return _impl->isOpened(); }
+template <>
+bool GalaxyCamera::set(CameraProperties prop_id, bool value) const noexcept { return _impl->set(prop_id, value); }
+template <>
+bool GalaxyCamera::set(CameraProperties prop_id, int64_t value) const noexcept { return _impl->set(prop_id, value); }
+template <>
+bool GalaxyCamera::set(CameraProperties prop_id, double value) const noexcept { return _impl->set(prop_id, value); }
+void GalaxyCamera::load(const para::GalaxyCameraParam &param) noexcept { _impl->load(param); }
+double GalaxyCamera::get(CameraProperties prop_id) const noexcept { return _impl->get(prop_id); }
+bool GalaxyCamera::isOpened() const noexcept { return _impl->isOpened(); }
 bool GalaxyCamera::read(cv::OutputArray image) { return _impl->read(image); }
 bool GalaxyCamera::reconnect() const { return _impl->reconnect(); }
 

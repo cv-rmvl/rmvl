@@ -73,8 +73,8 @@ int main(int argc, char *argv[]) {
     }
     cv::FileStorage camera_param("out_para.yml", cv::FileStorage::READ);
 
-    int exposure = 3000;
-    int gain = 8;
+    float exposure = 3000;
+    float gain = 8;
     int r_gain = 1500;
     int g_gain = 1500;
     int b_gain = 1500;
@@ -89,13 +89,13 @@ int main(int argc, char *argv[]) {
         fs_mv_set["b_gain"].isNone() ? void(0) : (fs_mv_set["b_gain"] >> b_gain);
     }
 
-    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
-    capture.set(rm::CAMERA_EXPOSURE, exposure);
-    capture.set(rm::CAMERA_GAIN, gain);
-    capture.set(rm::CAMERA_MANUAL_WB);
-    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
-    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
-    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CameraProperties::auto_exposure, false);
+    capture.set(rm::CameraProperties::exposure, exposure);
+    capture.set(rm::CameraProperties::gain, gain);
+    capture.set(rm::CameraProperties::auto_wb, false);
+    capture.set(rm::CameraProperties::wb_rgain, static_cast<uint32_t>(r_gain));
+    capture.set(rm::CameraProperties::wb_ggain, static_cast<uint32_t>(g_gain));
+    capture.set(rm::CameraProperties::wb_bgain, static_cast<uint32_t>(b_gain));
 
     auto p_detector = rm::ArmorDetector::make_detector();
     std::vector<rm::group::ptr> groups;

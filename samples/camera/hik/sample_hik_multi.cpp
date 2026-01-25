@@ -41,8 +41,8 @@ int main() {
 
     rm::HikCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV), sn.c_str());
 
-    int exposure = 1000;
-    int gain = 0;
+    float exposure = 1000;
+    float gain = 0;
     int r_gain = 1200;
     int g_gain = 1200;
     int b_gain = 1200;
@@ -57,13 +57,13 @@ int main() {
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
 
-    capture.set(rm::CAMERA_MANUAL_EXPOSURE);
-    capture.set(rm::CAMERA_EXPOSURE, exposure);
-    capture.set(rm::CAMERA_GAIN, gain);
-    capture.set(rm::CAMERA_MANUAL_WB);
-    capture.set(rm::CAMERA_WB_RGAIN, r_gain);
-    capture.set(rm::CAMERA_WB_GGAIN, g_gain);
-    capture.set(rm::CAMERA_WB_BGAIN, b_gain);
+    capture.set(rm::CameraProperties::auto_exposure, false);
+    capture.set(rm::CameraProperties::exposure, exposure);
+    capture.set(rm::CameraProperties::gain, gain);
+    capture.set(rm::CameraProperties::auto_wb, false);
+    capture.set(rm::CameraProperties::wb_rgain, static_cast<uint32_t>(r_gain));
+    capture.set(rm::CameraProperties::wb_ggain, static_cast<uint32_t>(g_gain));
+    capture.set(rm::CameraProperties::wb_bgain, static_cast<uint32_t>(b_gain));
 
     namedWindow("图像画面", cv::WINDOW_NORMAL);
     resizeWindow("图像画面", cv::Size(640, 480));

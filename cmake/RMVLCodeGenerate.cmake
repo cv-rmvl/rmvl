@@ -203,7 +203,7 @@ function(_parse_assign content_line header_line source_read_line source_write_li
   endif()
   # 获取 Source 部分的返回值
   set(ret_source_read_line "${ret_source_read_line}    _node__ = _fs__[\"${id_sym}\"];\n")
-  if(type_sym MATCHES "^bool|uint\\w*|size_t")
+  if(type_sym MATCHES "^bool|uint\\w*|size_t|int[0-9]+_t$")
     set(ret_source_read_line "${ret_source_read_line}    if (!_node__.isNone())\n    {\n")
     set(ret_source_read_line "${ret_source_read_line}        int tmp{};\n        _node__ >> tmp;\n")
     set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = static_cast<${type_sym_correct}>(tmp);\n    }\n")
