@@ -678,6 +678,17 @@ public:
          */
         SocketWriteAwaiter(IOContext &ctx, SocketFd fd, std::string_view addr, const Endpoint &ep, std::string_view data) : AsyncWriteAwaiter(ctx, FileDescriptor(fd), data), _addr(addr), _endpoint(ep) {}
 
+        /**
+         * @brief 创建流式 Socket 异步写等待器
+         *
+         * @param[in] ctx 异步 I/O 执行上下文
+         * @param[in] fd 需要监听的文件描述符
+         * @param[in] addr 目标地址
+         * @param[in] ep 目标端点
+         * @param[in] data 待写入的数据
+         */
+        SocketWriteAwaiter(IOContext &ctx, SocketFd fd, std::array<uint8_t, 4> addr, const Endpoint &ep, std::string_view data);
+
         //! @cond
 #ifdef _WIN32
         void await_suspend(std::coroutine_handle<> handle);
@@ -704,6 +715,20 @@ public:
      * @return 是否写入成功
      */
     SocketWriteAwaiter write(std::string_view addr, const Endpoint &endpoint, std::string_view data) { return {_ctx, _fd, addr, endpoint, data}; }
+
+    /**
+     * @brief 异步写入数据到的 IPv4 的 Socket 中
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = co_await socket.write({192, 168, 1, 100}, rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello, World!");
+     * @endcode
+     *
+     * @param[in] addr 使用数组形式表示的 IPv4 目标地址
+     * @param[in] endpoint 目标端点
+     * @param[in] data 待写入的数据
+     * @return 是否写入成功
+     */
+    SocketWriteAwaiter write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) { return {_ctx, _fd, addr, endpoint, data}; }
 
 private:
     IOContextRef _ctx; //!< 异步 I/O 执行上下文

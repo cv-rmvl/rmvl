@@ -447,6 +447,41 @@ private:
     FileDescriptor _fd{INVALID_FD}; //!< 定时器文件句柄
 };
 
+//! 异步信号
+class Signal {
+public:
+    /**
+     * @brief 创建异步信号
+     *
+     * @param[in] io_context 异步 I/O 执行上下文
+     * @param[in] signum 信号编号
+     */
+    Signal(IOContext &io_context, int signum);
+    ~Signal();
+
+    //! 信号等待器
+    class SignalAwaiter : public AsyncIOAwaiter {
+    public:
+        SignalAwaiter(IOContext &ctx, FileDescriptor fd) : AsyncIOAwaiter(ctx, fd) {}
+
+        //! @cond
+        void await_suspend(std::coroutine_handle<> handle);
+        int await_resume();
+        //! @endcond
+    };
+
+    /**
+     * @brief 创建信号等待器
+     *
+     * @return 信号等待器
+     */
+    SignalAwaiter wait() { return {_ctx, _fd}; }
+
+private:
+    IOContextRef _ctx;              //!< 异步 I/O 执行上下文
+    FileDescriptor _fd{INVALID_FD}; //!< 信号文件句柄
+};
+
 //! @} io
 
 } // namespace async

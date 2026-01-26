@@ -1,13 +1,18 @@
 /**
- * @file node.cpp
+ * @file node_async.cpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 轻量级发布订阅服务：节点实现
+ * @brief 轻量级发布订阅服务：节点实现（基于异步协程）
  * @version 1.0
- * @date 2025-11-04
+ * @date 2026-01-25
  *
- * @copyright Copyright 2025 (c), zhaoxi
+ * @copyright Copyright 2026 (c), zhaoxi
  *
  */
+
+#include <vector>
+#if __cplusplus >= 202002L
+
+#include <csignal>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -28,73 +33,9 @@ namespace rm::lpss {
 std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid();
 Locator selectBestLocator(std::array<uint8_t, 4> target_ip, const RNDPMessage &rndp_msg);
 
-Node::Node(std::string_view name, uint8_t domain) : helper::NodeRunningInfo(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()) {
-    static_assert(sizeof(Locator) == 6, "Locator size must be 6 bytes");
+namespace async {
 
-    std::vector<ip::Networkv4> networks{};
-    std::tie(_uid, networks) = generateNodeGuid();
-
-    // 创建监听 Socket
-    auto rndp_reader = Listener(Endpoint(ip::udp::v4(), _rndp_port)).create();
-    auto redp_socket = Listener(Endpoint(ip::udp::v4(), Endpoint::ANY_PORT)).create();
-    _redp_port = redp_socket.endpoint().port();
-
-    // 设置 Socket 选项
-    _rndp_writer.setOption(ip::multicast::Loopback(true));
-    rndp_reader.setOption(ip::multicast::JoinGroup(BROADCAST_IP));
-
-    // 启动广播线程
-    _bcast_thrd = std::thread(&Node::rndp_multicast, this, std::move(networks), std::string(name));
-
-    // 启动监听线程
-    _rndp_listen_thrd = std::thread(&Node::rndp_listener, this, std::move(rndp_reader));
-
-    // 启动 REDP 监听线程
-    _redp_listen_thrd = std::thread(&Node::redp_listener, this, std::move(redp_socket));
-
-    // 启动心跳检测线程
-    _hbt_detect_thrd = std::thread(&Node::heartbeat_detect, this);
-}
-
-Node::~Node() {
-    // 向已发现节点发送 Remove 的 REDP 消息
-    std::vector<REDPMessage> redp_msgs{};
-    redp_msgs.reserve(_local_writers.size() + _local_readers.size());
-    {
-        std::shared_lock lk(_local_mtx);
-        for (const auto &[topic, writer] : _local_writers)
-            redp_msgs.push_back(REDPMessage::removeWriter(writer->guid(), topic));
-        for (const auto &[topic, reader] : _local_readers)
-            redp_msgs.push_back(REDPMessage::removeReader(reader->guid(), topic));
-    }
-    {
-        std::shared_lock lk(_nodes_mtx);
-        for (const auto &[guid, node_info] : _discovered_nodes)
-            for (const auto &msg : redp_msgs)
-                sendREDPMessage(node_info.ctrl_loc, msg);
-    }
-
-    constexpr const char wake_msg[] = "Done";
-
-    // 停止所有线程
-    _running.store(false, std::memory_order_release);
-    if (_bcast_thrd.joinable())
-        _bcast_thrd.join();
-    if (_rndp_listen_thrd.joinable()) {
-        _rndp_writer.write("127.0.0.1", Endpoint(ip::udp::v4(), _rndp_port), wake_msg);
-        _rndp_listen_thrd.join();
-    }
-    if (_redp_listen_thrd.joinable()) {
-        _rndp_writer.write("127.0.0.1", Endpoint(ip::udp::v4(), _redp_port), wake_msg);
-        _redp_listen_thrd.join();
-    }
-    if (_hbt_detect_thrd.joinable()) {
-        _hbt_cv.notify_one();
-        _hbt_detect_thrd.join();
-    }
-}
-
-void Node::rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name) {
+rm::async::Task<> Node::rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name) {
     // 准备 RNDP 消息
     const auto rndp_msg = [this, &networks, name = std::move(node_name)]() {
         uint8_t locator_num = static_cast<uint8_t>(networks.size() + 1);
@@ -111,22 +52,21 @@ void Node::rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_
     // 序列化 RNDP 消息
     auto rndp_msg_data = rndp_msg.serialize();
 
-    // 广播 RNDP 消息
     while (_running.load(std::memory_order_acquire)) {
-        std::this_thread::sleep_for(25ms);
+        co_await _broadcast_timer.sleep_for(25ms);
 
         // 为 Outbound 设置不同的接口地址，并分别发送消息
         for (const auto &network : networks) {
             _rndp_writer.setOption(ip::multicast::Interface(network.address()));
-            _rndp_writer.write(BROADCAST_IP, Endpoint(ip::udp::v4(), _rndp_port), rndp_msg_data);
+            co_await _rndp_writer.write(BROADCAST_IP, Endpoint(ip::udp::v4(), _rndp_port), rndp_msg_data);
         }
     }
 }
 
-void Node::rndp_listener(DgramSocket rndp_reader) {
+rm::async::Task<> Node::rndp_listener(rm::async::DgramSocket rndp_reader) {
     while (_running.load(std::memory_order_acquire)) {
         // 接收原始 UDP 报文
-        auto [data, addr_str, port] = rndp_reader.read();
+        auto [data, addr_str, port] = co_await rndp_reader.read();
 
         if (data.size() < RNDP_HEADER_SIZE)
             continue;
@@ -136,14 +76,11 @@ void Node::rndp_listener(DgramSocket rndp_reader) {
             continue;
         // 处理发现的节点信息
         bool is_new_node{};
-        {
-            std::lock_guard lk(_nodes_mtx);
-            auto [it, inserted] = _discovered_nodes.try_emplace(rndp_msg.guid, NodeStorageInfo{rndp_msg});
-            if (inserted)
-                is_new_node = true;
-            else
-                it->second.last_alive = std::chrono::steady_clock::now();
-        }
+        auto [it, inserted] = _discovered_nodes.try_emplace(rndp_msg.guid, NodeStorageInfo{rndp_msg});
+        if (inserted)
+            is_new_node = true;
+        else
+            it->second.last_alive = std::chrono::steady_clock::now();
 
         if (is_new_node) {
             std::array<uint8_t, 4> addr{};
@@ -153,7 +90,6 @@ void Node::rndp_listener(DgramSocket rndp_reader) {
             std::vector<REDPMessage> redp_msgs{};
             redp_msgs.reserve(_local_writers.size() + _local_readers.size());
             if (!ctrl_loc.invalid()) {
-                std::lock_guard lk(_nodes_mtx);
                 _discovered_nodes[rndp_msg.guid].ctrl_loc = ctrl_loc;
                 for (const auto &[topic, writer] : _local_writers)
                     redp_msgs.push_back(REDPMessage::addWriter(writer->guid(), topic));
@@ -167,22 +103,20 @@ void Node::rndp_listener(DgramSocket rndp_reader) {
     }
 }
 
-void Node::redp_listener(DgramSocket redp_socket) {
+rm::async::Task<> Node::redp_listener(rm::async::DgramSocket redp_socket) {
     while (_running.load(std::memory_order_acquire)) {
-        auto [redp_msg, addr_str, port] = redp_socket.read();
+        auto [redp_msg, addr_str, port] = co_await redp_socket.read();
         std::array<uint8_t, 4> addr{};
         inet_pton(AF_INET, addr_str.c_str(), addr.data());
         // 解析 REDP 消息
         auto msg = REDPMessage::deserialize(reinterpret_cast<const char *>(redp_msg.data()));
         // 设置已发现的 Writers/Readers 列表
         if (msg.action == REDPMessage::Action::Add) {
-            std::lock_guard lk(_discovered_mtx);
             if (msg.type == REDPMessage::Type::Writer)
                 _discovered_writers[msg.topic].insert(msg.endpoint_guid);
             else // Reader
                 _discovered_readers[msg.topic][msg.endpoint_guid] = {msg.port, addr};
         } else { // Remove
-            std::lock_guard lk(_discovered_mtx);
             if (msg.type == REDPMessage::Type::Writer) {
                 _discovered_writers[msg.topic].erase(msg.endpoint_guid);
                 if (_discovered_writers[msg.topic].empty())
@@ -195,7 +129,6 @@ void Node::redp_listener(DgramSocket redp_socket) {
         }
         // 为本地 DataWriters 更新缓存
         if (msg.type == REDPMessage::Type::Reader) {
-            std::lock_guard lk(_local_mtx);
             auto it = _local_writers.find(msg.topic);
             if (it != _local_writers.end()) {
                 if (msg.action == REDPMessage::Action::Add)
@@ -207,24 +140,82 @@ void Node::redp_listener(DgramSocket redp_socket) {
     }
 }
 
-void Node::heartbeat_detect() {
+rm::async::Task<> Node::heartbeat_detect() {
     while (_running.load(std::memory_order_acquire)) {
-        std::vector<Guid> timeout_guids{};
         auto now = std::chrono::steady_clock::now();
-        {
-            std::shared_lock lk(_nodes_mtx);
-            for (const auto &[guid, data] : _discovered_nodes)
-                if (now - data.last_alive > std::chrono::milliseconds(data.rndp_msg.heartbeat_timeout * 1000))
-                    timeout_guids.push_back(guid);
-        }
-        if (!timeout_guids.empty()) {
-            std::lock_guard lk(_nodes_mtx);
-            for (const auto &guid : timeout_guids)
-                _discovered_nodes.erase(guid);
-        }
-        std::unique_lock lk(_hbt_mtx);
-        _hbt_cv.wait_for(lk, 500ms);
+        std::vector<Guid> guid_ready_to_erase{};
+        for (const auto &[guid, data] : _discovered_nodes)
+            if (now - data.last_alive > std::chrono::milliseconds(data.rndp_msg.heartbeat_timeout * 1000))
+                guid_ready_to_erase.push_back(guid);
+        for (const auto &g : guid_ready_to_erase)
+            _discovered_nodes.erase(g);
+
+        co_await _hbt_timer.sleep_for(500ms);
     }
 }
 
+static void sendStopMessage(const std::unordered_map<Guid, NodeStorageInfo, GuidHash> &discovered_nodes,
+                            const std::unordered_map<std::string, DataWriterBase::ptr> &local_writers,
+                            const std::unordered_map<std::string, DataReaderBase::ptr> &local_readers) {
+    // 向已发现节点发送 Remove 的 REDP 消息
+    std::vector<REDPMessage> redp_msgs{};
+    redp_msgs.reserve(local_writers.size() + local_readers.size());
+    for (const auto &[topic, writer] : local_writers)
+        redp_msgs.push_back(REDPMessage::removeWriter(writer->guid(), topic));
+    for (const auto &[topic, reader] : local_readers)
+        redp_msgs.push_back(REDPMessage::removeReader(reader->guid(), topic));
+
+    for (const auto &[guid, node_info] : discovered_nodes)
+        for (const auto &msg : redp_msgs)
+            sendREDPMessage(node_info.ctrl_loc, msg);
+}
+
+rm::async::Task<> Node::on_sigint() {
+    rm::async::Signal sig(_ctx, SIGINT);
+    co_await sig.wait();
+    printf("\nReceived interrupt signal, stopping node...\n");
+    sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
+    _ctx.stop();
+}
+
+Node::Node(std::string_view name, uint8_t domain_id) : helper::NodeRunningInfo(7500 + domain_id), _rndp_writer(rm::async::Sender(_ctx, ip::udp::v4()).create()) {
+    static_assert(sizeof(Locator) == 6, "Locator size must be 6 bytes");
+
+    std::vector<ip::Networkv4> networks{};
+    std::tie(_uid, networks) = generateNodeGuid();
+
+    // 创建监听 Socket
+    auto rndp_reader = rm::async::Listener(_ctx, Endpoint(ip::udp::v4(), _rndp_port)).create();
+    auto redp_socket = rm::async::Listener(_ctx, Endpoint(ip::udp::v4(), Endpoint::ANY_PORT)).create();
+    _redp_port = redp_socket.endpoint().port();
+
+    // 设置 Socket 选项
+    _rndp_writer.setOption(ip::multicast::Loopback(true));
+    rndp_reader.setOption(ip::multicast::JoinGroup(BROADCAST_IP));
+
+    // 启动广播协程任务
+    co_spawn(_ctx, &Node::rndp_multicast, this, std::move(networks), std::string(name));
+
+    // 启动监听协程任务
+    co_spawn(_ctx, &Node::rndp_listener, this, std::move(rndp_reader));
+
+    // 启动 REDP 监听协程任务
+    co_spawn(_ctx, &Node::redp_listener, this, std::move(redp_socket));
+
+    // 启动心跳检测协程任务
+    co_spawn(_ctx, &Node::heartbeat_detect, this);
+
+    // 启动 SIGINT 信号处理协程任务
+    co_spawn(_ctx, &Node::on_sigint, this);
+}
+
+Node::~Node() {
+    sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
+    _ctx.stop();
+}
+
+} // namespace async
+
 } // namespace rm::lpss
+
+#endif

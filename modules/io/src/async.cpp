@@ -9,12 +9,14 @@
  *
  */
 
+#include <csignal>
 #include <unordered_map>
 
 #ifndef _WIN32
 #include <cstring>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
+#include <sys/signalfd.h>
 #include <sys/timerfd.h>
 #endif
 
@@ -197,7 +199,7 @@ void IOContext::run() {
         for (int i = 0; i < n; ++i) {
             // 处理唤醒事件
             if (events[i].data.fd == _wakeup) {
-                uint64_t buf;
+                uint64_t buf{};
                 // 清除事件
                 [[maybe_unused]] auto _ = read(_wakeup, &buf, sizeof(buf));
                 continue;
@@ -264,6 +266,7 @@ Timer::Timer(IOContext &io_context) : _ctx(io_context) {
 Timer::~Timer() {
     if (_fd != -1) {
         close(_fd);
+        _fd = -1;
     }
 }
 
@@ -298,6 +301,45 @@ void Timer::TimerAwaiter::await_resume() noexcept {
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     uint64_t expirations;
     [[maybe_unused]] auto _ = read(_fd, &expirations, sizeof(expirations));
+}
+
+Signal::Signal(IOContext &io_context, int signum) : _ctx(io_context) {
+    sigset_t mask{};
+    sigemptyset(&mask);
+    sigaddset(&mask, signum);
+    sigprocmask(SIG_BLOCK, &mask, nullptr);
+    _fd = signalfd(-1, &mask, 0);
+    if (_fd == -1)
+        RMVL_Error_(RMVL_StsError, "Failed to set signalfd mask: %s", strerror(errno));
+}
+
+Signal::~Signal() {
+    if (_fd != -1) {
+        close(_fd);
+        _fd = -1;
+    }
+}
+
+void Signal::SignalAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd >= 0);
+    epoll_event ev{};
+    ev.events = EPOLLIN;
+    ev.data.ptr = handle.address(); // 设置唤醒时的协程句柄地址
+    // 将 signalfd 加入到 epoll 实例中进行监听
+    if (epoll_ctl(_aioh, EPOLL_CTL_ADD, _fd, &ev) == -1)
+        RMVL_Error_(RMVL_StsError, "Failed to add signalfd to epoll: %s", strerror(errno));
+}
+
+int Signal::SignalAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd >= 0);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+
+    signalfd_siginfo fdsi{};
+    auto s = read(_fd, &fdsi, sizeof(signalfd_siginfo));
+    if (s != sizeof(signalfd_siginfo))
+        return -1;
+
+    return static_cast<int>(fdsi.ssi_signo);
 }
 
 #endif

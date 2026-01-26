@@ -72,4 +72,76 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
     return Subscriber<MsgType>(topic, std::move(reader));
 }
 
+namespace async {
+
+template <typename MsgType>
+void Publisher<MsgType>::publish(const MsgType &msg) {
+    RMVL_Assert(!invalid());
+    co_spawn(_ctx, &DataWriterBase::write, _writer, msg.serialize());
+}
+
+template <typename MsgType>
+typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) noexcept {
+    if (_local_writers.find(std::string(topic)) != _local_writers.end())
+        return nullptr;
+    Guid pub_guid = _uid;
+    pub_guid.fields.entity = _next_eid.fetch_add(1, std::memory_order_relaxed);
+    DataWriterBase::ptr writer = std::make_shared<DataWriter<MsgType>>(_ctx, pub_guid, topic);
+    // 设置 SHM 通道和 UDPv4 缓存
+    auto it = _discovered_readers.find(std::string(topic));
+    if (it != _discovered_readers.end())
+        for (const auto &[reader_guid, locator] : it->second)
+            writer->add(reader_guid, locator);
+    // 注册本地 DataWriter
+    _local_writers[std::string(topic)] = writer;
+    // 向已发现的节点发送 addWriter 的 REDP 消息
+    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic);
+    for (const auto &[guid, node_info] : _discovered_nodes)
+        sendREDPMessage(node_info.ctrl_loc, redp_msg);
+    return std::make_shared<Publisher<MsgType>>(_ctx, topic, std::move(writer));
+}
+
+template <typename MsgType, typename SubscribeMsgCallback, typename Enable>
+typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic, SubscribeMsgCallback callback) noexcept {
+    if (_local_readers.find(std::string(topic)) != _local_readers.end())
+        return nullptr;
+    Guid sub_guid = _uid;
+    sub_guid.fields.entity = _next_eid.fetch_add(1, std::memory_order_relaxed);
+    // 注册本地 DataReader
+    DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(_ctx, sub_guid, topic, std::move(callback));
+    _local_readers[std::string(topic)] = reader;
+    // 向已发现的节点发送 addReader 的 REDP 消息
+    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port());
+    for (const auto &[guid, node_info] : _discovered_nodes)
+        sendREDPMessage(node_info.ctrl_loc, redp_msg);
+
+    return std::make_shared<Subscriber<MsgType>>(_ctx, topic, std::move(reader));
+}
+
+template <typename Rep, typename Period, typename TimerCallback>
+static rm::async::Task<> timer_task(Timer::ptr timer, std::chrono::duration<Rep, Period> dur, TimerCallback cb) {
+    auto next_time = std::chrono::steady_clock::now();
+    try {
+        while (true) {
+            next_time += dur;
+            if (next_time < std::chrono::steady_clock::now())
+                next_time = std::chrono::steady_clock::now();
+            co_await timer->sleep_until(next_time);
+            cb();
+        }
+    } catch (...) {
+    }
+    co_return;
+}
+
+template <typename Rep, typename Period, typename TimerCallback>
+Timer::ptr Node::createTimer(std::chrono::duration<Rep, Period> dur, TimerCallback cb) noexcept {
+    auto timer = std::make_shared<Timer>(_ctx);
+    co_spawn(_ctx, timer_task<Rep, Period, TimerCallback>, timer, dur, std::move(cb));
+
+    return timer;
+}
+
+} // namespace async
+
 } // namespace rm::lpss
