@@ -43,8 +43,7 @@ namespace rm {
  */
 template <typename Tp, typename Sequence = std::vector<Tp>, typename Compare = std::less<Tp>>
 class RaHeap {
-    static_assert(std::is_same_v<Tp, typename Sequence::value_type>,
-                  "value_type must be the same as the underlying container");
+    static_assert(std::is_same_v<Tp, typename Sequence::value_type>, "value_type must be the same as the underlying container");
 
 public:
     typedef Tp value_type;

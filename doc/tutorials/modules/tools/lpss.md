@@ -146,10 +146,10 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
   <th class="markdownTableHeadCenter">7 byte</th>
 </tr>
 <tr class="markdownTableRowOdd">
-  <td class="markdownTableBodyCenter"><code>'R'</code></td>
   <td class="markdownTableBodyCenter"><code>'E'</code></td>
   <td class="markdownTableBodyCenter"><code>'D'</code></td>
-  <td class="markdownTableBodyCenter"><code>'P'</code></td>
+  <td class="markdownTableBodyCenter"><code>'0'</code></td>
+  <td class="markdownTableBodyCenter"><code>'1'</code></td>
   <td class="markdownTableBodyCenter" colspan="4">GUID MAC</td>
 </tr>
 <tr class="markdownTableRowEven">
@@ -205,10 +205,10 @@ RMTP 同样满足以上 MTP 标准，具体的信息格式如下所示：
   <th class="markdownTableHeadCenter">4+M byte</th>
 </tr>
 <tr class="markdownTableRowOdd">
-  <td class="markdownTableBodyCenter"><code>'R'</code></td>
   <td class="markdownTableBodyCenter"><code>'M'</code></td>
   <td class="markdownTableBodyCenter"><code>'T'</code></td>
-  <td class="markdownTableBodyCenter"><code>'P'</code></td>
+  <td class="markdownTableBodyCenter"><code>'0'</code></td>
+  <td class="markdownTableBodyCenter"><code>'1'</code></td>
   <td class="markdownTableBodyCenter">TopicSize</td>
   <td class="markdownTableBodyCenter" colspan="3">Topic</td>
 </tr>
@@ -233,23 +233,21 @@ MTP 标准使用二进制直接序列化 / 反序列化的方式，不区分端�
 
 RMVL 内置了一些常用的消息类型，用户可以直接使用这些消息类型，而无需自行定义和生成代码。同时，RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，可以辅助用户完成自定义消息类型的代码生成过程，详情可参考 @ref tutorial_table_of_content_rmvlmsg 。
 
-## 2 使用示例
+## 2 同步模式使用示例
 
-LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。以下示例展示了如何使用 LPSS 创建发布者与订阅者。
+LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。每个节点内部维护了众多线程，以下示例展示了如何使用 LPSS 创建发布者与订阅者。
 
 ### 2.1 创建简单的发布者与订阅者
 
 #### 2.1.1 发布者示例
-
-**示例 1**
 
 下面的示例展示了如何创建一个发布者，该发布者每隔 100 毫秒发布一次包含递增计数值的字符串消息。
 
 ```cpp
 // RMVL 内置的第三方 fmt 库，用于格式化字符串，不需要 fmt 库的不用包含该头文件
 #include <fmt/format.h>
-// LPSS 完整功能的头文件
-#include <rmvl/lpss.hpp>
+// LPSS 节点功能的头文件
+#include <rmvl/lpss/node.hpp>
 // 内置的 std 分组的 String 消息类型头文件
 #include <rmvlmsg/std/string.hpp>
 
@@ -258,7 +256,7 @@ using namespace rm;                   // 使用 RMVL 提供的命名空间
 
 int main() {
     // 创建 LPSS 节点
-    auto nd = lpss::Node();
+    auto nd = lpss::Node("pub_node");
     // 创建发布者，发布 String 类型的消息到 /topic 话题
     auto publisher = nd.createPublisher<msg::String>("/topic");
 
@@ -279,67 +277,13 @@ int main() {
 }
 ```
 
-**示例 2**
-
-下面的示例展示了如何创建一个发布者类，该类每隔 10 毫秒发布一次颜色消息。
-
-```cpp
-#include <rmvl/lpss.hpp>
-// 内置的 std 分组的 ColorRGBA 消息类型头文件
-#include <rmvlmsg/std/color_rgba.hpp>
-
-using namespace std::chrono_literals;
-using namespace rm;
-
-// 自定义的发布者类，继承自 lpss::Node
-class MyPublisher : public lpss::Node {
-public:
-    MyPublisher() : Node() {
-        // 在构造函数中创建发布者，发布 ColorRGBA 类型的消息到 /color 话题
-        _pub = this->createPublisher<msg::ColorRGBA>("/color");
-    }
-    
-    void publish(float r, float g, float b, float a) {
-        // 设置消息内容
-        _msg.r = r;
-        _msg.g = g;
-        _msg.b = b;
-        _msg.a = a;
-        // 或者直接使用下面的聚合初始化方式进行设置
-        // _msg = {r, g, b, a};
-        // 发布消息
-        _pub.publish(_msg);
-    }
-
-private:
-    // 持有的实际发布者对象
-    lpss::Publisher<msg::ColorRGBA> _pub{};
-    // 消息对象
-    msg::ColorRGBA _msg{};
-};
-
-int main() {
-    // 创建自定义的发布者
-    auto publisher = MyPublisher{};
-
-    uint16_t count{};
-    while (true) {
-        std::this_thread::sleep_for(10ms);
-        publisher.publish(1.0f, 0.0f, 0.0f, 1.0f);
-    }
-    return 0;
-}
-```
-
 #### 2.1.2 订阅者示例
-
-**示例 1**
 
 下面展示了如何创建一个订阅者，该订阅者订阅 `/topic` 话题的字符串消息，并在收到消息时打印消息内容。
 
 ```cpp
 #include <fmt/format.h>
-#include <rmvl/lpss.hpp>
+#include <rmvl/lpss/node.hpp>
 #include <rmvlmsg/std/string.hpp>
 
 using namespace std::chrono_literals;
@@ -347,7 +291,7 @@ using namespace rm;
 
 int main() {
     // 创建 LPSS 节点
-    auto nd = lpss::Node();
+    auto nd = lpss::Node("sub_node");
     // 创建订阅者，订阅 /topic 话题的 String 类型的消息
     auto subscriber = nd.createSubscriber<msg::String>(
         "/topic", [](const msg::String &msg) {
@@ -362,46 +306,85 @@ int main() {
 }
 ```
 
-**示例 2**
+@warning 订阅者的回调函数是在 LPSS 内部的线程中执行的，如果用户定义了多个订阅者，这些订阅者的回调函数可能会在不同的线程中并发执行。因此，用户在编写回调函数时<u><i><b>需要注意线程安全问题</b></i></u>，避免在回调函数中使用非线程安全的资源，或者使用适当的同步机制来保护共享资源，如果想避免这一问题，可以考虑使用下文异步模式的发布订阅服务。
 
-下面展示了如何创建一个订阅者类，该类订阅 `/color` 话题的颜色消息，并在收到消息时打印颜色值。
+## 3 异步模式使用示例
+
+LPSS 同样支持异步模式的发布订阅服务，均定义在 `::rm::lpss::async` 命名空间中。内部使用 coroutine + epoll/IOCP 的方式创建发布者与订阅者，实现更加灵活的数据通信，但需要 C++20 的支持，详情请参见 @ref tutorial_modules_coro 。下面的示例展示了如何使用异步模式创建发布者与订阅者。
+
+### 3.1 异步发布者示例
+
+异步模式的 LPSS 节点增加了定时器功能，可以方便地实现周期性任务。下面的示例展示了如何创建一个异步发布者，该发布者每隔 20 毫秒发布一次包含递增计数值的字符串消息。
 
 ```cpp
 #include <fmt/format.h>
-#include <rmvl/lpss.hpp>
-#include <rmvlmsg/std/color_rgba.hpp>
 
-using namespace std::chrono_literals;
+#include <rmvl/lpss/node.hpp>
+#include <rmvlmsg/std/string.hpp>
+
 using namespace rm;
+using namespace std::chrono_literals;
 
-class MySubscriber : public lpss::Node {
+class MyPublisher : public lpss::async::Node {
 public:
-    MySubscriber() : Node() {
-        _sub = this->createSubscriber<msg::ColorRGBA>(
-            "/color", [](const msg::ColorRGBA &msg) {
-                fmt::println("R: {}, G:{}, B:{}, A:{}", msg.r, msg.g, msg.b, msg.a);
-            });
+    MyPublisher(std::string_view name) : lpss::async::Node(name) {
+        _pub = this->createPublisher<msg::String>("/topic");
+        _timer = this->createTimer(20ms, [this]() {
+            auto msg = msg::String{};
+            msg.data = fmt::format("Async Times: {}", _count++);
+            _pub->publish(msg);
+        });
     }
-    
+  
 private:
-    lpss::Subscriber<msg::ColorRGBA> _sub{};
+    uint16_t _count{};
+    lpss::async::Publisher<msg::String>::ptr _pub{};
+    lpss::async::Timer::ptr _timer{};
 };
 
 int main() {
-    auto subscriber = MySubscriber{};
-
-    while (true) {
-        // 保持程序运行，可以在这里执行其他功能
-        std::this_thread::sleep_for(1s);
-    }
+    auto node = MyPublisher("async_pub_node");
+    node.spin();
+    return 0;
 }
 ```
 
-### 2.2 创建自定义消息类型的发布者与订阅者
+### 3.2 异步订阅者示例
 
-除了使用 RMVL 内置的消息类型外，用户还可以自定义消息类型，并使用这些自定义的消息类型创建发布者与订阅者。下面的示例展示了如何定义一个自定义的消息类型，并使用该消息类型创建发布者与订阅者。
+下面展示了如何创建一个异步订阅者，该订阅者订阅 `/topic` 话题的字符串消息，并在收到消息时打印消息内容。
 
-#### 2.2.1 创建项目结构
+```cpp
+#include <fmt/format.h>
+
+#include <rmvl/lpss/node.hpp>
+#include <rmvlmsg/std/string.hpp>
+
+using namespace rm;
+
+class MySubscriber : public lpss::async::Node {
+public:
+    MySubscriber(std::string_view name) : lpss::async::Node(name) {
+        _sub = this->createSubscriber<msg::String>("/topic", [](const msg::String &msg) {
+            fmt::println("Async I heard: '{}'", msg.data);
+        });
+    }
+
+private:
+    lpss::async::Subscriber<msg::String>::ptr _sub{};
+};
+
+int main() {
+    auto node = MySubscriber("async_sub_node");
+    node.spin();
+    return 0;
+}
+```
+
+## 4 创建自定义消息类型
+
+除了使用 RMVL 内置的消息类型外，用户还可以自定义消息类型，并使用这些自定义的消息类型创建发布者与订阅者。下面的示例展示了如何定义一个自定义的消息类型，并使用该消息类型创建异步的发布者与订阅者。
+
+### 4.1 创建项目结构
 
 首先可以创建一个项目，假设项目名称为 `demo`，并在其中创建
 
@@ -409,7 +392,7 @@ int main() {
 - `src` 目录，用于存放发布者与订阅者的源代码文件；
 - `CMakeLists.txt` 文件，用于配置项目的构建过程。
 
-#### 2.2.2 文件内容
+### 4.2 文件内容
 
 基本内容：
 
@@ -441,7 +424,7 @@ int main() {
 
 - <b class="tab-title">src/pub.cpp</b>
 
-  在 `src` 目录下创建 `pub.cpp` 文件，实现发布者：
+  在 `src` 目录下创建 `pub.cpp` 文件，实现异步发布者：
 
   ```cpp
   #include <rmvl/lpss.hpp>
@@ -451,27 +434,34 @@ int main() {
   using namespace std::chrono_literals;
   using namespace rm;
 
-  int main() {
-      auto nd = lpss::Node();
-      auto publisher = nd.createPublisher<msg::MyCustomMsg>("/my_custom_topic");
-
-      msg::MyCustomMsg msg;
-      int32_t count{0};
-
-      while (true) {
-          std::this_thread::sleep_for(50ms);
-          msg.id = count++;
-          msg.name = "Message_" + std::to_string(msg.id);
-          msg.is_active = (msg.id % 2 == 0);
-          publisher.publish(msg);
+  class CustomMsgPublisher : public lpss::async::Node {
+  public:
+      CustomMsgPublisher(std::string_view name) : lpss::async::Node(name) {
+          _pub = this->createPublisher<msg::MyCustomMsg>("/my_custom_topic");
+          _timer = this->createTimer(50ms, [this]() {
+              msg::MyCustomMsg msg;
+              msg.id = _count++;
+              msg.name = "Message_" + std::to_string(msg.id);
+              msg.is_active = (msg.id % 2 == 0);
+              _pub->publish(msg);
+          });
       }
-      return 0;
+
+  private:
+      int32_t _count{};
+      lpss::async::Publisher<msg::MyCustomMsg>::ptr _pub{};
+      lpss::async::Timer::ptr _timer{};
+  };
+
+  int main() {
+      auto nd = CustomMsgPublisher("custom_msg_pub_node");
+      nd.spin();
   }
   ```
 
 - <b class="tab-title">src/sub.cpp</b>
 
-  在 `src` 目录下创建 `sub.cpp` 文件，实现订阅者：
+  在 `src` 目录下创建 `sub.cpp` 文件，实现异步订阅者：
 
   ```cpp
   #include <fmt/format.h>
@@ -482,15 +472,22 @@ int main() {
   using namespace std::chrono_literals;
   using namespace rm;
 
-  int main() {
-      auto nd = lpss::Node();
-      auto subscriber = nd.createSubscriber<msg::MyCustomMsg>(
-          "/my_custom_topic", [](const msg::MyCustomMsg &msg) {
-              fmt::println("ID: {}, Name: {}, Active: {}", msg.id, msg.name, msg.is_active);
-          });
+  class CustomMsgSubscriber : public lpss::async::Node {
+  public:
+      CustomMsgSubscriber(std::string_view name) : lpss::async::Node(name) {
+          _sub = this->createSubscriber<msg::MyCustomMsg>(
+              "/my_custom_topic", [](const msg::MyCustomMsg &msg) {
+                  fmt::println("ID: {}, Name: {}, Active: {}", msg.id, msg.name, msg.is_active);
+              });
+      }
 
-      while (true)
-          std::this_thread::sleep_for(1s);
+  private:
+      lpss::async::Subscriber<msg::MyCustomMsg>::ptr _sub{};
+  };
+
+  int main() {
+      auto nd = CustomMsgSubscriber("custom_msg_sub_node");
+      nd.spin();
   }
   ```
 
@@ -526,7 +523,7 @@ int main() {
 
 </div>
 
-#### 2.2.3 构建与运行
+### 4.3 构建与运行
 
 在项目根目录下运行以下命令进行构建，并运行发布者：
 

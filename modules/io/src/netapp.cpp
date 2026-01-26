@@ -23,6 +23,7 @@
 #endif
 
 #include <chrono>
+#include <csignal>
 #include <fstream>
 #include <tuple>
 
@@ -617,8 +618,10 @@ Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::
 }
 
 Webapp::~Webapp() {
-    if (_running)
+    if (_running) {
         stop();
+        _ctx.get().stop();
+    }
 }
 
 void Webapp::use(std::string_view url, const Router &router) {
@@ -653,10 +656,18 @@ static void _handle(const std::vector<rm::Router::RouteEntry> &entries, Request 
     }
 }
 
-Task<> Webapp::spin() {
-    // open event loop
-    auto acceptor = async::Acceptor(_ctx, Endpoint(ip::tcp::v4(), _port));
+Task<> Webapp::on_sigint() {
+    Signal sig(_ctx, SIGINT);
+    co_await sig.wait();
+    printf("\nReceived interrupt signal, stopping server...\n");
+    stop();
+    _ctx.get().stop();
+}
 
+Task<> Webapp::spin() {
+    co_spawn(_ctx, &Webapp::on_sigint, this);
+
+    auto acceptor = async::Acceptor(_ctx, Endpoint(ip::tcp::v4(), _port));
     // execute listen callback
     if (_listen)
         _listen();

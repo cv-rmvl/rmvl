@@ -21,6 +21,40 @@
 
 namespace rm::lpss {
 
+static std::string mtp_pack(std::string_view data, std::string_view type, std::string_view topic) {
+    std::string res{};
+    res.reserve(6 + type.size() + topic.size() + data.size());
+    res.append("MT01");
+    uint8_t topic_size = static_cast<uint8_t>(topic.size());
+    res.append(reinterpret_cast<const char *>(&topic_size), sizeof(uint8_t));
+    res.append(topic);
+    uint8_t type_size = static_cast<uint8_t>(type.size());
+    res.append(reinterpret_cast<const char *>(&type_size), sizeof(uint8_t));
+    res.append(type);
+    res.append(data);
+    return res;
+}
+
+static std::string mtp_unpack(std::string_view data, std::string_view type, std::string_view topic) {
+    const char *ptr = data.data();
+    if (data.size() < 6 || std::string_view(ptr, 4) != "MT01")
+        return {};
+    ptr += 4;
+    uint8_t topic_size = *reinterpret_cast<const uint8_t *>(ptr);
+    ptr += sizeof(uint8_t);
+    std::string_view read_topic(ptr, topic_size);
+    if (read_topic != topic)
+        return {};
+    ptr += topic_size;
+    uint8_t type_size = *reinterpret_cast<const uint8_t *>(ptr);
+    ptr += sizeof(uint8_t);
+    std::string_view read_type(ptr, type_size);
+    if (read_type != type)
+        return {};
+    ptr += type_size;
+    return std::string(ptr, data.size() - 6 - topic_size - type_size);
+}
+
 DataWriterBase::DataWriterBase(const Guid &guid, std::string_view type, std::string_view topic)
     : _guid(guid), _socket(Sender(ip::udp::v4()).create()), _type(type), _topic(topic) {}
 
@@ -40,18 +74,9 @@ void DataWriterBase::remove(const Guid &guid) noexcept {
     _udpv4_targets.erase(guid);
 }
 
-void DataWriterBase::write(std::string_view data) noexcept {
+void DataWriterBase::write(std::string data) noexcept {
     // 构造 RMTP 数据包
-    std::string rmtp_data;
-    rmtp_data.reserve(6 + _type.size() + _topic.size() + data.size());
-    rmtp_data.append("MT01");
-    uint8_t topic_size = static_cast<uint8_t>(_topic.size());
-    rmtp_data.append(reinterpret_cast<const char *>(&topic_size), sizeof(uint8_t));
-    rmtp_data.append(_topic);
-    uint8_t type_size = static_cast<uint8_t>(_type.size());
-    rmtp_data.append(reinterpret_cast<const char *>(&type_size), sizeof(uint8_t));
-    rmtp_data.append(_type);
-    rmtp_data.append(data);
+    std::string rmtp_data = mtp_pack(data, _type, _topic);
     // 发送到 SHM 目标
 
     // 发送到 UDPv4 目标
@@ -73,23 +98,54 @@ std::string DataReaderBase::read() noexcept {
     // 从 SHM 通道读取数据
 
     // 提取数据
-    const char *ptr = data.data();
-    if (data.size() < 6 || std::string_view(ptr, 4) != "MT01")
-        return {};
-    ptr += 4;
-    uint8_t topic_size = *reinterpret_cast<const uint8_t *>(ptr);
-    ptr += sizeof(uint8_t);
-    std::string_view topic(ptr, topic_size);
-    if (topic != _topic)
-        return {};
-    ptr += topic_size;
-    uint8_t type_size = *reinterpret_cast<const uint8_t *>(ptr);
-    ptr += sizeof(uint8_t);
-    std::string_view type(ptr, type_size);
-    if (type != _type)
-        return {};
-    ptr += type_size;
-    return std::string(ptr, data.size() - 6 - topic_size - type_size);
+    return mtp_unpack(data, _type, _topic);
 }
+
+namespace async {
+
+DataWriterBase::DataWriterBase(rm::async::IOContext &io_context, const Guid &guid, std::string_view type, std::string_view topic)
+    : _guid(guid), _socket(rm::async::Sender(io_context, ip::udp::v4()).create()), _type(type), _topic(topic) {}
+
+void DataWriterBase::add(const Guid &guid, Locator loc) noexcept {
+    // SHM 通道
+
+    // UDPv4 通道
+    _udpv4_targets[guid] = loc;
+}
+
+void DataWriterBase::remove(const Guid &guid) noexcept {
+    // SHM 通道
+
+    // UDPv4 通道
+    _udpv4_targets.erase(guid);
+}
+
+rm::async::Task<> DataWriterBase::write(std::string data) noexcept {
+    // 构造 RMTP 数据包
+    std::string rmtp_data = mtp_pack(data, _type, _topic);
+    // 发送到 SHM 目标
+
+    // 发送到 UDPv4 目标
+    for (const auto &[guid, loc] : _udpv4_targets)
+        co_await _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), rmtp_data);
+}
+
+DataReaderBase::DataReaderBase(rm::async::IOContext &io_context, const Guid &guid, std::string_view type, std::string_view topic)
+    : _guid(guid), _udpv4(rm::async::Listener(io_context, Endpoint(ip::udp::v4(), Endpoint::ANY_PORT)).create()), _type(type), _topic(topic) {
+    auto ep = _udpv4.endpoint();
+    _port = ep.port();
+}
+
+rm::async::Task<std::string> DataReaderBase::read() noexcept {
+    // 从 UDPv4 通道读取数据
+    auto [data, addr, port] = co_await _udpv4.read();
+
+    // 从 SHM 通道读取数据
+
+    // 提取数据
+    co_return mtp_unpack(data, _type, _topic);
+}
+
+} // namespace async
 
 } // namespace rm::lpss

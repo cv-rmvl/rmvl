@@ -568,6 +568,8 @@ public:
     void stop() noexcept { _running.store(false, std::memory_order_release); }
 
 private:
+    Task<> on_sigint();
+
     std::atomic_bool _running{false}; //!< 运行标志位
 
     IOContextRef _ctx;                       //!< 异步 I/O 执行上下文

@@ -684,12 +684,21 @@ namespace async {
 
 DgramSocket Listener::create() {
     RMVL_Assert(_fd != INVALID_SOCKET_FD);
-    return DgramSocket(_ctx, _fd);
+    SocketFd fd = std::exchange(_fd, INVALID_SOCKET_FD); // 转移所有权
+    return DgramSocket(_ctx, fd);
 }
 
 DgramSocket Sender::create() {
     RMVL_Assert(_fd != INVALID_SOCKET_FD);
-    return DgramSocket(_ctx, _fd);
+    SocketFd fd = std::exchange(_fd, INVALID_SOCKET_FD); // 转移所有权
+    return DgramSocket(_ctx, fd);
+}
+
+DgramSocket::SocketWriteAwaiter::SocketWriteAwaiter(IOContext &ctx, SocketFd fd, std::array<uint8_t, 4> addr, const Endpoint &ep, std::string_view data)
+    : AsyncWriteAwaiter(ctx, FileDescriptor(fd), data), _endpoint(ep) {
+    char buf[INET_ADDRSTRLEN]{};
+    inet_ntop(AF_INET, addr.data(), buf, sizeof(buf));
+    _addr = buf;
 }
 
 #ifdef _WIN32
