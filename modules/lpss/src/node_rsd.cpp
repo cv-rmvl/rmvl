@@ -9,7 +9,6 @@
  *
  */
 
-#include <cstdint>
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -18,6 +17,7 @@
 #include <arpa/inet.h>
 #endif
 
+#include <algorithm>
 #include <cstring>
 
 #include "rmvl/core/util.hpp"

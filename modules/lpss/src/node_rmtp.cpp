@@ -101,6 +101,8 @@ std::string DataReaderBase::read() noexcept {
     return mtp_unpack(data, _type, _topic);
 }
 
+#if __cplusplus >= 202002L
+
 namespace async {
 
 DataWriterBase::DataWriterBase(rm::async::IOContext &io_context, const Guid &guid, std::string_view type, std::string_view topic)
@@ -147,5 +149,7 @@ rm::async::Task<std::string> DataReaderBase::read() noexcept {
 }
 
 } // namespace async
+
+#endif
 
 } // namespace rm::lpss

@@ -9,6 +9,9 @@
  *
  */
 
+#ifdef _WIN32
+#include <chrono>
+#endif
 #include <thread>
 
 #include <gtest/gtest.h>

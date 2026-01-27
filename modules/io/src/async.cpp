@@ -18,6 +18,9 @@
 #include <sys/eventfd.h>
 #include <sys/signalfd.h>
 #include <sys/timerfd.h>
+#else
+#include <mutex>
+#include <vector>
 #endif
 
 #include "rmvl/core/util.hpp"
@@ -163,6 +166,97 @@ void Timer::TimerAwaiter::await_suspend(std::coroutine_handle<> handle) {
 }
 
 void Timer::TimerAwaiter::await_resume() noexcept {}
+
+namespace helper {
+
+struct WinSignalState {
+    int signum{};
+    IOContext *ctx;
+    IocpOverlapped *waiting_ovl{nullptr};
+    std::atomic<int> pending_count{0};
+};
+
+static std::mutex g_sig_mtx{};
+static std::vector<std::unique_ptr<WinSignalState>> g_sig_states{};
+static bool g_handler_installed = false;
+
+static BOOL WINAPI ConsoleCtrlHandler(DWORD dwCtrlType) {
+    int signum = 0;
+    switch (dwCtrlType) {
+    case CTRL_C_EVENT:
+        signum = SIGINT;
+        break;
+    case CTRL_BREAK_EVENT:
+    case CTRL_CLOSE_EVENT:
+        signum = SIGTERM;
+        break;
+    default:
+        return FALSE;
+    }
+
+    std::lock_guard<std::mutex> lock(g_sig_mtx);
+    bool handled = false;
+    for (const auto &state_ptr : g_sig_states) {
+        auto *state = state_ptr.get();
+        if (state->signum == signum) {
+            if (state->waiting_ovl) {
+                // 有协程在等待，直接挂入 IOCP 唤醒
+                PostQueuedCompletionStatus(state->ctx->handle(), 0, 0, &state->waiting_ovl->ov);
+                state->waiting_ovl = nullptr;
+            } else
+                state->pending_count.fetch_add(1);
+            handled = true;
+        }
+    }
+    return handled ? TRUE : FALSE;
+}
+
+} // namespace helper
+
+Signal::Signal(IOContext &io_context, int signum) : _ctx(io_context) {
+    std::lock_guard<std::mutex> lock(helper::g_sig_mtx);
+    if (!helper::g_handler_installed) {
+        SetConsoleCtrlHandler(helper::ConsoleCtrlHandler, TRUE);
+        helper::g_handler_installed = true;
+    }
+
+    // 创建状态对象并作为虚假的 _fd 存储
+    auto state = std::make_unique<helper::WinSignalState>(signum, &io_context);
+    auto raw_ptr = state.get();
+    helper::g_sig_states.push_back(std::move(state));
+    _fd = static_cast<HANDLE>(raw_ptr);
+}
+
+Signal::~Signal() {
+    if (_fd != INVALID_HANDLE_VALUE) {
+        auto *raw_ptr = static_cast<helper::WinSignalState *>(_fd);
+        {
+            std::lock_guard<std::mutex> lock(helper::g_sig_mtx);
+            std::erase_if(helper::g_sig_states, [raw_ptr](const auto &ptr) { return ptr.get() == raw_ptr; });
+        }
+        _fd = INVALID_HANDLE_VALUE;
+    }
+}
+
+void Signal::SignalAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+    auto state = static_cast<helper::WinSignalState *>(_fd);
+
+    std::lock_guard<std::mutex> lock(helper::g_sig_mtx);
+    if (state->pending_count.load() > 0) {
+        // 有挂起的信号，消耗一个并立即投递完成包以唤醒协程
+        state->pending_count.fetch_sub(1);
+        PostQueuedCompletionStatus(_aioh, 0, 0, &_ovl->ov);
+    } else {
+        // 无挂起信号，注册等待
+        state->waiting_ovl = _ovl.get();
+    }
+}
+
+int Signal::SignalAwaiter::await_resume() {
+    auto state = static_cast<helper::WinSignalState *>(_fd);
+    return state->signum;
+}
 
 #else
 

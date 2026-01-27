@@ -72,6 +72,8 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
     return Subscriber<MsgType>(topic, std::move(reader));
 }
 
+#if __cplusplus >= 202002L
+
 namespace async {
 
 template <typename MsgType>
@@ -143,5 +145,7 @@ Timer::ptr Node::createTimer(std::chrono::duration<Rep, Period> dur, TimerCallba
 }
 
 } // namespace async
+
+#endif
 
 } // namespace rm::lpss
