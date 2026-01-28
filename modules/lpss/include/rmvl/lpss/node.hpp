@@ -22,10 +22,13 @@
 
 #include "details/node_rsd.hpp"
 
-namespace rm::lpss {
+namespace rm {
 
 //! @addtogroup lpss
 //! @{
+
+//! 轻量发布订阅服务框架命名空间，包含节点、发布者、订阅者等相关定义
+namespace lpss {
 
 /**
  * @brief 发布者代理
@@ -371,8 +374,10 @@ private:
 
 #endif
 
+} // namespace lpss
+
 //! @} lpss
 
-} // namespace rm::lpss
+} // namespace rm
 
 #include "details/node_impl.hpp"

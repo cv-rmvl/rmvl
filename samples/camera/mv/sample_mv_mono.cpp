@@ -15,7 +15,7 @@ rm::MvCamera cap(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::Retrieve
 
 void exposureCallBack(int pos, void *) {
     exposure = pos;
-    cap.set(rm::CameraProperties::exposure, exposure);
+    cap.set(rm::CameraProperties::exposure, static_cast<double>(exposure));
 }
 
 void gainCallBack(int pos, void *) {

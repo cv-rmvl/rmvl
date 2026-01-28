@@ -52,7 +52,7 @@ int main() {
     }
 
     capture.set(rm::CameraProperties::auto_exposure, false);
-    capture.set(rm::CameraProperties::exposure, exposure);
+    capture.set(rm::CameraProperties::exposure, static_cast<double>(exposure));
     capture.set(rm::CameraProperties::gain, gain);
     capture.set(rm::CameraProperties::auto_wb, false);
     capture.set(rm::CameraProperties::wb_rgain, r_gain);
