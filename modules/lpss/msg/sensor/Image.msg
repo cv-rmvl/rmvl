@@ -11,11 +11,11 @@ Header header # Header timestamp should be acquisition time of image
               # message associated with the image conflict
               # the behavior is undefined
 
-uint32 height # image height, that is, number of rows
-uint32 width  # image width, that is, number of columns
+int32 height # image height, that is, number of rows
+int32 width  # image width, that is, number of columns
 
 string encoding # Encoding of pixels -- channel meaning, ordering
-                  # contain "rgb8", "bgr8", "mono8", "mono16", "rgba8",
-                  # "bgra8", "bayer_rggb8", "bayer_bggr8",
-                  # "bayer_rggb16", "bayer_bggbr16", "yuv422", "yuv420"
-uint8[] data    # actual matrix data, size is (step * rows)
+                # contain "rgb8", "bgr8", "mono8", "mono16", "rgba8",
+                # "bgra8", "bayer_rggb8", "bayer_bggr8",
+                # "bayer_rggb16", "bayer_bggbr16", "yuv422", "yuv420"
+uint8[] data    # actual matrix data

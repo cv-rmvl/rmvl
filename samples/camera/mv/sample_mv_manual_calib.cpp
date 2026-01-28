@@ -41,7 +41,7 @@ int main() {
     fs_mv_in["cameraMatrix"].isNone() ? void(0) : (fs_mv_in["cameraMatrix"] >> cameraMatrix);
     fs_mv_in["distCoeffs"].isNone() ? void(0) : (fs_mv_in["distCoeffs"] >> distCoeffs);
 
-    int exposure = 10000;
+    double exposure = 10000;
     int gain = 64;
     int r_gain = 100;
     int g_gain = 100;

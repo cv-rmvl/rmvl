@@ -12,7 +12,7 @@ int main() {
         ERROR_("fail to read the image.");
     cv::VideoWriter writer("ts.avi", cv::VideoWriter::fourcc('F', 'L', 'V', '1'), 40, tmp.size());
 
-    int exposure = 1000;
+    double exposure = 1000;
     int gain = 64;
     int r_gain = 100;
     int g_gain = 100;

@@ -22,3 +22,4 @@
  */
 
 #include "lpss/node.hpp"
+#include "lpss/cv.hpp"

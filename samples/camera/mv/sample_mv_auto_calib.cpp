@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
     int flags = 0;
     rm::MvCamera capture(rm::CameraConfig::create(rm::GrabMode::Continuous, rm::RetrieveMode::OpenCV));
 
-    int exposure{10000};
+    double exposure{10000};
     int gain{128};
     int r_gain{100};
     int g_gain{100};
