@@ -526,6 +526,9 @@ public:
      */
     bool write(std::string_view data) noexcept;
 
+    //! 手动关闭 Socket 会话，一般情况无需调用，除非需要提前释放资源
+    void close() noexcept;
+
 protected:
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 会话文件描述符
 };

@@ -32,7 +32,7 @@
 #include "rmvl/core/version.hpp"
 
 #include "rmvl/io/netapp.hpp"
-#include "rmvl/io/socket.hpp"
+#include "ws_aux.hpp"
 
 namespace rm {
 
@@ -139,7 +139,7 @@ Request Request::parse(std::string_view str) {
         else if (req_head_strs[0] == "Connection")
             req.connection = value;
         else
-            continue;
+            req.heads[std::string(req_head_strs[0])] = value;
     }
     // 请求体
     req.body = str;
@@ -617,6 +617,101 @@ Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::
     co_return Response::parse(response_str);
 }
 
+Task<bool> WebSocket::send(std::string_view message) {
+    if (!is_open())
+        co_return false;
+    std::string frame;
+    frame.reserve(2 + message.size() + 8);
+    frame.push_back(static_cast<char>(0b1000'0001)); // FIN = 1, Opcode = 1 Text
+    if (message.size() <= 125) {
+        frame.push_back(static_cast<char>(message.size()));
+    } else if (message.size() <= 65535) {
+        frame.push_back(126);
+        uint16_t len = htons(static_cast<uint16_t>(message.size()));
+        frame.append(reinterpret_cast<const char *>(&len), 2);
+    } else {
+        frame.push_back(127);
+#ifdef _WIN32
+        uint64_t len = htonll(static_cast<uint64_t>(message.size()));
+#else
+        uint64_t len = htobe64(message.size());
+#endif
+        frame.append(reinterpret_cast<const char *>(&len), 8);
+    }
+
+    frame.append(message);
+    bool success = co_await _sock.write(frame);
+    co_return success ? message.size() : 0;
+}
+
+Task<std::string> WebSocket::recv() {
+    // 读取初始数据
+    std::string buffer = co_await _sock.read();
+    if (buffer.size() < 2)
+        co_return {};
+
+    // 解析基础头部
+    // bool fin = (buffer[0] & 0x80) != 0;
+    uint8_t opcode = buffer[0] & 0x0F;
+    bool masked = (buffer[1] & 0x80) != 0;
+    uint64_t payload_len = buffer[1] & 0x7F;
+
+    size_t header_len = 2;
+
+    // 解析扩展长度
+    if (payload_len == 126) {
+        header_len += 2;
+        while (buffer.size() < header_len)
+            buffer.append(co_await _sock.read());
+        const uint8_t *p = reinterpret_cast<const uint8_t *>(&buffer[2]);
+        payload_len = (static_cast<uint16_t>(p[0]) << 8) | p[1];
+    } else if (payload_len == 127) {
+        header_len += 8;
+        while (buffer.size() < header_len)
+            buffer.append(co_await _sock.read());
+        const uint8_t *p = reinterpret_cast<const uint8_t *>(&buffer[2]);
+        payload_len = 0;
+        for (int i = 0; i < 8; ++i)
+            payload_len = (payload_len << 8) | p[i];
+    }
+
+    // 读取掩码 Key (客户端发来的必须有掩码)
+    uint8_t mask_key[4]{};
+    if (masked) {
+        size_t mask_offset = header_len;
+        header_len += 4; // Mask Key 占 4 字节
+        while (buffer.size() < header_len)
+            buffer.append(co_await _sock.read());
+
+        ::memcpy(mask_key, buffer.data() + mask_offset, 4);
+    }
+
+    // 循环读取直到获取完整 Payload
+    size_t total_len = header_len + payload_len;
+    while (buffer.size() < total_len) {
+        std::string chunk = co_await _sock.read();
+        if (chunk.empty())
+            break;
+        buffer.append(chunk);
+    }
+
+    // 截取 Payload 部分
+    std::string payload = buffer.substr(header_len, payload_len);
+
+    // 解码 (XOR Unmasking)
+    if (masked)
+        for (size_t i = 0; i < payload.size(); ++i)
+            payload[i] ^= mask_key[i % 4];
+
+    // 处理 Close 帧
+    if (opcode == 0x8) {
+        _sock.close();
+        co_return {};
+    }
+
+    co_return payload;
+}
+
 Webapp::~Webapp() {
     if (_running) {
         stop();
@@ -664,6 +759,75 @@ Task<> Webapp::on_sigint() {
     _ctx.get().stop();
 }
 
+Task<> Webapp::handle_client(StreamSocket socket) {
+    std::string request_str = co_await socket.read();
+    if (request_str.empty())
+        co_return;
+    auto req = Request::parse(request_str);
+    auto res = Response{};
+
+    // 检测是否为 ws 升级请求
+    bool is_ws_upgrade{};
+    if (req.method == HTTPMethod::Get &&
+        req.connection.find("Upgrade") != std::string::npos &&
+        req.heads.contains("Upgrade") && req.heads["Upgrade"] == "websocket") {
+        is_ws_upgrade = true;
+    }
+
+    if (is_ws_upgrade) {
+        bool matched = false;
+        WebSocketHandler target_handler;
+
+        // 查找匹配的 WebSocket 路由
+        for (const auto &entry : _router._wss) {
+            if (entry.pattern.match(req.uri, req.params)) {
+                target_handler = entry.handler;
+                matched = true;
+                break;
+            }
+        }
+
+        if (matched && req.heads.count("Sec-WebSocket-Key")) {
+            std::string accept_key = ws_helper::generate_accept_key(req.heads["Sec-WebSocket-Key"]);
+            // 发送握手响应
+            res.status(101).set("Upgrade", "websocket").set("Connection", "Upgrade").set("Sec-WebSocket-Accept", accept_key);
+            if (co_await socket.write(res.generate())) {
+                DEBUG_PASS_("WebSocket Upgrade: %s", req.uri.c_str());
+                auto ws = WebSocket(std::move(socket));
+                co_await target_handler(ws, req);
+            }
+        } else {
+            DEBUG_ERROR_("WebSocket match failed: %s", req.uri.c_str());
+            res.status(400).send("Bad Request: Invalid WebSocket Handshake");
+            auto res_str = res.generate();
+            co_await socket.write(res_str);
+        }
+
+        co_return;
+    }
+
+    // 路由处理
+    if (req.method == HTTPMethod::Get)
+        _handle(_router._gets, req, res);
+    else if (req.method == HTTPMethod::Post)
+        _handle(_router._posts, req, res);
+    else if (req.method == HTTPMethod::Delete)
+        _handle(_router._deletes, req, res);
+    else if (req.method == HTTPMethod::Head)
+        _handle(_router._heads, req, res);
+    // 中间件处理
+    for (const auto &mwf : _mwfs)
+        mwf(req, res);
+    // 异常处理
+    if (res.state == 0) {
+        DEBUG_ERROR_("%s %s failed, execute bad_request", get_str_from(req.method), req.uri.c_str());
+        bad_request(req, res);
+    }
+    auto res_str = res.generate();
+    if (!co_await socket.write(res_str))
+        printf("Failed to send response\n");
+}
+
 Task<> Webapp::spin() {
     co_spawn(_ctx, &Webapp::on_sigint, this);
 
@@ -679,31 +843,7 @@ Task<> Webapp::spin() {
             ERROR_("Failed to accept connection");
             continue;
         }
-
-        auto req = Request::parse(co_await socket.read());
-        auto res = Response{};
-
-        // 路由处理
-        if (req.method == HTTPMethod::Get)
-            _handle(_router._gets, req, res);
-        else if (req.method == HTTPMethod::Post)
-            _handle(_router._posts, req, res);
-        else if (req.method == HTTPMethod::Delete)
-            _handle(_router._deletes, req, res);
-        else if (req.method == HTTPMethod::Head)
-            _handle(_router._heads, req, res);
-        // 中间件处理
-        for (const auto &mwf : _mwfs)
-            mwf(req, res);
-        // 异常处理
-        if (res.state == 0) {
-            DEBUG_ERROR_("%s %s failed, execute bad_request", get_str_from(req.method), req.uri.c_str());
-            bad_request(req, res);
-        }
-        auto res_str = res.generate();
-        bool send_stat = co_await socket.write(res_str);
-        if (!send_stat)
-            printf("Failed to send response\n");
+        co_spawn(_ctx, &Webapp::handle_client, this, std::move(socket));
     }
 }
 

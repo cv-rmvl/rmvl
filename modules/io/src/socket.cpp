@@ -528,6 +528,17 @@ bool StreamSocket::write(std::string_view data) noexcept {
     return n == static_cast<decltype(n)>(data.size());
 }
 
+void StreamSocket::close() noexcept {
+    if (_fd != INVALID_SOCKET_FD) {
+#ifdef _WIN32
+        closesocket(_fd);
+#else
+        ::close(_fd);
+#endif
+        _fd = INVALID_SOCKET_FD;
+    }
+}
+
 Endpoint StreamSocket::endpoint() const { return _endpoint(_fd); }
 
 #ifdef _WIN32

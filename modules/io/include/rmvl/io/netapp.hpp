@@ -17,8 +17,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "async.hpp"
 #include "rmvl/core/rmvldef.hpp"
+#include "socket.hpp"
 
 namespace rm {
 
@@ -97,6 +97,8 @@ struct RMVL_EXPORTS_W_AG Request {
     RMVL_W_RW std::string accept{"*/*"};     //!< 请求头：可接受的内容类型
     RMVL_W_RW std::string accept_language{}; //!< 请求头：可接受的语言
     RMVL_W_RW std::string connection{};      //!< 请求头：连接类型
+
+    RMVL_W_RW std::unordered_map<std::string, std::string> heads{}; //!< 其他请求头
 
     RMVL_W_RW std::string body{}; //!< 请求数据
 };
@@ -318,6 +320,34 @@ using RouteHandler = std::function<void(const Request &, Response &)>;
 
 namespace async {
 class Webapp;
+
+//! WebSocket 连接对象接口
+class WebSocket {
+public:
+    explicit WebSocket(StreamSocket socket) : _sock(std::move(socket)) {}
+    ~WebSocket() = default;
+
+    /**
+     * @brief 异步发送文本消息
+     *
+     * @param[in] message 消息内容
+     */
+    Task<bool> send(std::string_view message);
+
+    //! 异步接收消息，这是一个挂起点，直到收到客户端消息或连接关闭
+    Task<std::string> recv();
+
+    //! 获取连接是否活跃
+    bool is_open() const noexcept { return _active && !_sock.invalid(); }
+
+private:
+    StreamSocket _sock;
+    bool _active{true};
+};
+
+//! WebSocket 路由处理函数：收到握手请求建立连接后调用
+using WebSocketHandler = std::function<Task<>(WebSocket &, const Request &)>;
+
 } // namespace async
 
 /**
@@ -359,8 +389,15 @@ public:
         RoutePattern pattern;
         RouteHandler handler;
 
-        RouteEntry(std::string_view pattern_str, RouteHandler h)
-            : pattern(pattern_str), handler(std::move(h)) {}
+        RouteEntry(std::string_view pattern_str, RouteHandler h) : pattern(pattern_str), handler(std::move(h)) {}
+    };
+
+    //! WebSocket 路由条目
+    struct WSRouteEntry {
+        RoutePattern pattern;
+        async::WebSocketHandler handler;
+
+        WSRouteEntry(std::string_view pattern_str, async::WebSocketHandler h) : pattern(pattern_str), handler(std::move(h)) {}
     };
 
     /**
@@ -395,11 +432,20 @@ public:
      */
     void del(std::string_view uri, RouteHandler callback) { _deletes.emplace_back(uri, std::move(callback)); }
 
+    /**
+     * @brief WebSocket 路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:room"
+     * @param[in] callback WebSocket 连接处理回调
+     */
+    void ws(std::string_view uri, async::WebSocketHandler callback) { _wss.emplace_back(uri, std::move(callback)); }
+
 private:
     std::vector<RouteEntry> _gets{};    //!< GET 请求路由列表
     std::vector<RouteEntry> _posts{};   //!< POST 请求路由列表
     std::vector<RouteEntry> _heads{};   //!< HEAD 请求路由列表
     std::vector<RouteEntry> _deletes{}; //!< DELETE 请求路由列表
+    std::vector<WSRouteEntry> _wss{};   //!< WebSocket 路由列表
 };
 
 namespace async {
@@ -486,7 +532,7 @@ public:
      *
      * @param[in] io_context 异步 I/O 执行上下文
      */
-    Webapp(IOContext &io_context) : _ctx(io_context){};
+    Webapp(IOContext &io_context) : _ctx(io_context) {};
 
     //! @cond
     Webapp(const Webapp &) = delete;
@@ -555,6 +601,14 @@ public:
     void del(std::string_view uri, RouteHandler callback) { _router._deletes.emplace_back(uri, callback); }
 
     /**
+     * @brief WebSocket 路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/ws/chat"
+     * @param[in] callback WebSocket 建立连接后的回调
+     */
+    void ws(std::string_view uri, WebSocketHandler callback) { _router._wss.emplace_back(uri, callback); }
+
+    /**
      * @brief 启动 Socket 监听任务循环
      *
      * @return rm::async::Task<> 异步任务
@@ -569,6 +623,7 @@ public:
 
 private:
     Task<> on_sigint();
+    Task<> handle_client(StreamSocket socket);
 
     std::atomic_bool _running{false}; //!< 运行标志位
 
