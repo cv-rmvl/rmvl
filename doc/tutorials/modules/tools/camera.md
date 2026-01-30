@@ -156,15 +156,15 @@
 - <b class="tab-title">C++</b>
 
   ```cpp
-  capture.set(rm::CAMERA_MANUAL_EXPOSURE); // 手动曝光
-  capture.set(rm::CameraProperties::auto_exposure);   // 自动曝光
+  capture.set(rm::CameraProperties::auto_exposure, false); // 手动曝光
+  capture.set(rm::CameraProperties::auto_exposure, true);  // 自动曝光
   ```
 
 - <b class="tab-title">Python</b>
 
   ```python
-  capture.set(rm.CAMERA_MANUAL_EXPOSURE) # 手动曝光
-  capture.set(rm.CameraProperties::auto_exposure)   # 自动曝光
+  capture.set(rm.CameraProperties::auto_exposure, False) # 手动曝光
+  capture.set(rm.CameraProperties::auto_exposure, True)  # 自动曝光
   ```
 
 </div>
@@ -196,14 +196,14 @@
 - <b class="tab-title">C++</b>
 
   ```cpp
-  capture.set(rm::CAMERA_MANUAL_WB); // 手动白平衡
-  capture.set(rm::CameraProperties::auto_wb);   // 自动白平衡
+  capture.set(rm::CameraProperties::auto_wb, false); // 手动白平衡
+  capture.set(rm::CameraProperties::auto_wb, true);  // 自动白平衡
   ```
 - <b class="tab-title">Python</b>
 
   ```python
-  capture.set(rm.CAMERA_MANUAL_WB) # 手动白平衡
-  capture.set(rm.CameraProperties::auto_wb)   # 自动白平衡
+  capture.set(rm.CameraProperties::auto_wb, False) # 手动白平衡
+  capture.set(rm.CameraProperties::auto_wb, True)  # 自动白平衡
   ```
 
 </div>
@@ -272,10 +272,11 @@
   capture.set(rm::CameraProperties::trigger_count, 5);
   // 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
   capture.set(rm::CameraProperties::trigger_period, 100);
+
   // 执行一次白平衡操作，仅在手动白平衡模式下有效
-  capture.set(rm::CameraEvents::once_wb);
+  capture.trigger(rm::CameraEvents::once_wb);
   // 执行一次软触发，仅在软触发模式下有效
-  capture.set(rm::CameraEvents::software);
+  capture.trigger(rm::CameraEvents::software);
   ```
 - <b class="tab-title">Python</b>
 
@@ -286,10 +287,11 @@
   capture.set(rm.CameraProperties::trigger_count, 5)
   # 设置单次触发时多次采集的周期为 100 μs，即一次触发信号能触发多帧画面，每帧间隔为 100 μs
   capture.set(rm.CameraProperties::trigger_period, 100)
+
   # 执行一次白平衡操作，仅在手动白平衡模式下有效
-  capture.set(rm.CameraEvents::once_wb)
+  capture.trigger(rm.CameraEvents::once_wb)
   # 执行一次软触发，仅在软触发模式下有效
-  capture.set(rm.CameraEvents::software)
+  capture.trigger(rm.CameraEvents::software)
   ```
 
 </div>
@@ -300,20 +302,12 @@ RMVL 提供了全局的相机参数对象： rm::para::camera_param ，详情可
 
 ## 3 示例程序
 
-在构建 RMVL 时，需开启 `BUILD_EXAMPLES` 选项（默认开启）
-
-```bash
-cmake -DBUILD_EXAMPLES=ON ..
-cmake --build . --parallel 4
-cd build
-```
-
 ### 3.1 单相机
 
-单相机例程，在 build 文件夹下执行以下命令
+单相机例程，打开终端，输入以下命令
 
 ```bash
-bin/rmvl_mv_mono
+rmvl_mv_mono
 ```
 
 相机按照连续采样、`cvtColor` 处理方式运行，程序运行中，`cv::waitKey(1)` 接受到 `s` 键被按下时，可将参数保存到 `out_para.yml` 文件中。
@@ -322,10 +316,10 @@ bin/rmvl_mv_mono
 
 ### 3.2 多相机
 
-多相机例程，在 `build` 文件夹下执行以下命令
+多相机例程，打开终端，输入以下命令
 
 ```bash
-bin/rmvl_mv_multi
+rmvl_mv_multi
 ```
 
 相机按照连续采样、`cvtColor` 处理方式运行，程序会枚举所有的相机设备，并可视化的显示出来，指定一个序列号来启动某一相机。
@@ -336,38 +330,38 @@ bin/rmvl_mv_multi
 
 ### 3.3 相机录屏
 
-相机录屏例程，在 build 文件夹下执行以下命令
+相机录屏例程，打开终端，输入以下命令
 
 ```bash
-bin/rmvl_mv_writer
+rmvl_mv_writer
 ```
 
 相机按照连续采样、`cvtColor` 处理方式运行，`-o` 可指定输出文件名，否则默认输出到 `ts.avi`，例如
 
 ```bash
-bin/rmvl_mv_writer -o=aaa.avi
+rmvl_mv_writer -o=aaa.avi
 ```
 
 程序运行过程中，相机参数会自动从 `out_para.yml` 中加载，若没有则会按照默认值运行。
 
 ### 3.4 相机标定
 
-MvCamera 相机自动标定程序，在 `build` 文件夹下执行以下命令
+MvCamera 相机自动标定程序，打开终端，输入以下命令
 
 ```bash
-bin/rmvl_mv_auto_calib -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
+rmvl_mv_auto_calib -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
 ```
 
 `<?>` 表示可调节，具体帮助可直接执行以下命令
 
 ```bash
-bin/rmvl_mv_calibration -help
+rmvl_mv_calibration -help
 ```
 
 另外还有相机手动标定程序，可执行以下命令
 
 ```bash
-bin/rmvl_mv_manual_calib
+rmvl_mv_manual_calib
 ```
 
 ## 4 使用 Demo
@@ -435,7 +429,7 @@ bin/rmvl_mv_manual_calib
       std::thread th([&run]() {
           while (run) {
               Timer::sleep_for(10);
-              capture.set(rm::CameraEvents::software); // 触发
+              capture.trigger(rm::CameraEvents::software); // 触发
           }
       });
 

@@ -49,7 +49,7 @@ int main() {
         fs["b_gain"].isNone() ? void(0) : (fs["b_gain"] >> b_gain);
     }
     cap.set(rm::CameraProperties::auto_exposure, false);
-    cap.set(rm::CameraProperties::exposure, exposure);
+    cap.set(rm::CameraProperties::exposure, static_cast<double>(exposure));
     cap.set(rm::CameraProperties::gain, gain);
     cap.set(rm::CameraProperties::auto_wb, false);
     cap.set(rm::CameraProperties::wb_rgain, r_gain);
