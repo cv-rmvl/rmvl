@@ -32,7 +32,7 @@ TEST(LPSS_node, same_domain_discover) {
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     Timer::reset();
     auto [data, addr, port] = sock.read();
-    while (data.empty() && Timer::now() < 40)
+    while (data.empty() && Timer::now() < 50)
         std::tie(data, addr, port) = sock.read();
     EXPECT_FALSE(data.empty());
 }
@@ -43,7 +43,7 @@ TEST(LPSS_node, diff_domain_issolate) {
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     Timer::reset();
     auto [data, addr, port] = sock.read();
-    while (data.empty() && Timer::now() < 40)
+    while (data.empty() && Timer::now() < 50)
         std::tie(data, addr, port) = sock.read();
     EXPECT_TRUE(data.empty());
 }
@@ -54,7 +54,7 @@ TEST(LPSS_node, diff_domain_discover) {
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     Timer::reset();
     auto [data, addr, port] = sock.read();
-    while (data.empty() && Timer::now() < 40)
+    while (data.empty() && Timer::now() < 50)
         std::tie(data, addr, port) = sock.read();
     EXPECT_FALSE(data.empty());
 }

@@ -207,8 +207,11 @@ void Node::redp_listener(DgramSocket redp_socket) {
     }
 }
 
+static bool is_same_node(const Guid &lhs, const Guid &rhs) { return lhs.fields.host == rhs.fields.host && lhs.fields.pid == rhs.fields.pid; }
+
 void Node::heartbeat_detect() {
     while (_running.load(std::memory_order_acquire)) {
+        // 检测心跳超时的节点
         std::vector<Guid> timeout_guids{};
         auto now = std::chrono::steady_clock::now();
         {
@@ -222,6 +225,27 @@ void Node::heartbeat_detect() {
             for (const auto &guid : timeout_guids)
                 _discovered_nodes.erase(guid);
         }
+        // 删除节点关联的发布者、订阅者缓存，使用 iterator 遍历以避免 crash
+        if (!timeout_guids.empty()) {
+            std::lock_guard lk(_discovered_mtx);
+            for (const auto &dead_guid : timeout_guids) {
+                // 清理 Writers
+                for (auto it = _discovered_writers.begin(); it != _discovered_writers.end();) {
+                    auto &writers = it->second;
+                    for (auto set_it = writers.begin(); set_it != writers.end();)
+                        is_same_node(*set_it, dead_guid) ? set_it = writers.erase(set_it) : ++set_it;
+                    writers.empty() ? it = _discovered_writers.erase(it) : ++it;
+                }
+                // 清理 Readers
+                for (auto it = _discovered_readers.begin(); it != _discovered_readers.end();) {
+                    auto &readers = it->second;
+                    for (auto map_it = readers.begin(); map_it != readers.end();)
+                        is_same_node(map_it->first, dead_guid) ? map_it = readers.erase(map_it) : ++map_it;
+                    readers.empty() ? it = _discovered_readers.erase(it) : ++it;
+                }
+            }
+        }
+
         std::unique_lock lk(_hbt_mtx);
         _hbt_cv.wait_for(lk, 500ms);
     }

@@ -615,6 +615,13 @@ public:
      */
     [[nodiscard]] Task<> spin();
 
+    /**
+     * @brief 启动 Socket 监听任务循环，不启用 SIGINT 信号处理
+     * 
+     * @return Task<> 异步任务
+     */
+    [[nodiscard]] Task<> spinWithoutSigint();
+
     //! 是否正在运行
     [[nodiscard]] bool running() const noexcept { return _running.load(std::memory_order_acquire); }
 

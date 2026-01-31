@@ -43,7 +43,7 @@ Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
         std::lock_guard lk(_local_mtx);
         _local_writers[std::string(topic)] = writer;
     }
-    // 向已发现的节点发送 addWriter 的 REDP 消息
+    // 向已发现的节点发送 addWriter 的 EDP 消息
     REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic);
     std::shared_lock lk(_discovered_mtx);
     for (const auto &[guid, node_info] : _discovered_nodes)
@@ -63,13 +63,49 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
         std::lock_guard lk(_local_mtx);
         _local_readers[std::string(topic)] = reader;
     }
-    // 向已发现的节点发送 addReader 的 REDP 消息
+    // 向已发现的节点发送 addReader 的 EDP 消息
     REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port());
     std::shared_lock lk(_discovered_mtx);
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
 
     return Subscriber<MsgType>(topic, std::move(reader));
+}
+
+template <typename MsgType>
+void Node::destroyPublisher(const Publisher<MsgType> &pub) {
+    if (pub.invalid())
+        return;
+    // 移除本地 DataWriter
+    {
+        std::lock_guard lk(_local_mtx);
+        _local_writers.erase(pub._topic);
+    }
+    // 向已发现的节点发送 removeWriter 的 EDP 消息
+    REDPMessage redp_msg = REDPMessage::removeWriter(pub._writer->guid(), pub._topic);
+    std::shared_lock lk(_discovered_mtx);
+    for (const auto &[guid, node_info] : _discovered_nodes)
+        sendREDPMessage(node_info.ctrl_loc, redp_msg);
+    // 释放资源
+    pub._writer.reset();
+}
+
+template <typename MsgType>
+void Node::destroySubscriber(const Subscriber<MsgType> &sub) {
+    if (sub.invalid())
+        return;
+    // 移除本地 DataReader
+    {
+        std::lock_guard lk(_local_mtx);
+        _local_readers.erase(sub._topic);
+    }
+    // 向已发现的节点发送 removeReader 的 EDP 消息
+    REDPMessage redp_msg = REDPMessage::removeReader(sub._reader->guid(), sub._topic);
+    std::shared_lock lk(_discovered_mtx);
+    for (const auto &[guid, node_info] : _discovered_nodes)
+        sendREDPMessage(node_info.ctrl_loc, redp_msg);
+    // 释放资源
+    sub._reader.reset();
 }
 
 #if __cplusplus >= 202002L
@@ -96,7 +132,7 @@ typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) n
             writer->add(reader_guid, locator);
     // 注册本地 DataWriter
     _local_writers[std::string(topic)] = writer;
-    // 向已发现的节点发送 addWriter 的 REDP 消息
+    // 向已发现的节点发送 addWriter 的 EDP 消息
     REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic);
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
@@ -112,12 +148,40 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
     // 注册本地 DataReader
     DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(_ctx, sub_guid, topic, std::move(callback));
     _local_readers[std::string(topic)] = reader;
-    // 向已发现的节点发送 addReader 的 REDP 消息
+    // 向已发现的节点发送 addReader 的 EDP 消息
     REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port());
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
 
     return std::make_shared<Subscriber<MsgType>>(_ctx, topic, std::move(reader));
+}
+
+template <typename MsgType>
+void Node::destroyPublisher(typename Publisher<MsgType>::ptr pub) {
+    if (pub->invalid())
+        return;
+    // 移除本地 DataWriter
+    _local_writers.erase(pub->_topic);
+    // 向已发现的节点发送 removeWriter 的 EDP 消息
+    REDPMessage redp_msg = REDPMessage::removeWriter(pub->_writer->guid(), pub->_topic);
+    for (const auto &[guid, node_info] : _discovered_nodes)
+        sendREDPMessage(node_info.ctrl_loc, redp_msg);
+    // 释放资源
+    pub->_writer.reset();
+}
+
+template <typename MsgType>
+void Node::destroySubscriber(typename Subscriber<MsgType>::ptr sub) {
+    if (sub->invalid())
+        return;
+    // 移除本地 DataReader
+    _local_readers.erase(sub->_topic);
+    // 向已发现的节点发送 removeReader 的 EDP 消息
+    REDPMessage redp_msg = REDPMessage::removeReader(sub->_reader->guid(), sub->_topic);
+    for (const auto &[guid, node_info] : _discovered_nodes)
+        sendREDPMessage(node_info.ctrl_loc, redp_msg);
+    // 释放资源
+    sub->_reader.reset();
 }
 
 template <typename Rep, typename Period, typename TimerCallback>
