@@ -30,6 +30,8 @@ namespace rm {
 //! 轻量发布订阅服务框架命名空间，包含节点、发布者、订阅者等相关定义
 namespace lpss {
 
+class Node;
+
 /**
  * @brief 发布者代理
  *
@@ -41,6 +43,8 @@ namespace lpss {
  */
 template <typename MsgType>
 class Publisher final {
+    friend class Node;
+
 public:
     //! @cond
     Publisher(std::nullptr_t) {}
@@ -80,6 +84,8 @@ private:
  */
 template <typename MsgType>
 class Subscriber {
+    friend class Node;
+
 public:
     //! @cond
     Subscriber(std::nullptr_t) {}
@@ -142,6 +148,24 @@ public:
     template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
     Subscriber<MsgType> createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept;
 
+    /**
+     * @brief 销毁发布者
+     *
+     * @tparam MsgType 消息类型
+     * @param[in] pub 发布者对象
+     */
+    template <typename MsgType>
+    void destroyPublisher(const Publisher<MsgType> &pub);
+
+    /**
+     * @brief 销毁订阅者
+     *
+     * @tparam MsgType 消息类型
+     * @param[in] sub 订阅者对象
+     */
+    template <typename MsgType>
+    void destroySubscriber(const Subscriber<MsgType> &sub);
+
 private:
     //! 广播 NDP 消息
     void rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name);
@@ -186,6 +210,8 @@ private:
 //! 基于 C++20 协程的异步操作
 namespace async {
 
+class Node;
+
 /**
  * @brief 异步发布者代理
  *
@@ -197,6 +223,8 @@ namespace async {
  */
 template <typename MsgType>
 class Publisher final {
+    friend class Node;
+
 public:
     using ptr = std::shared_ptr<Publisher<MsgType>>;
 
@@ -235,11 +263,12 @@ private:
  * @tparam MsgType 消息类型
  * @details
  * - 用户需使用 lpss::async::Node 的 `createSubscriber` 方法创建订阅者
- * - 订阅者可使用 `subscribe` 方法 **重新** 订阅指定话题的消息
  * - 在创建订阅者后，自动注册到本地通信端点，并向所有通过 NDP 发现的节点发送 EDP 消息
  */
 template <typename MsgType>
 class Subscriber {
+    friend class Node;
+
 public:
     using ptr = std::shared_ptr<Subscriber<MsgType>>;
 
@@ -322,6 +351,24 @@ public:
     typename Subscriber<MsgType>::ptr createSubscriber(std::string_view topic, SubscribeMsgCallback callback) noexcept;
 
     /**
+     * @brief 销毁发布者
+     *
+     * @tparam MsgType 消息类型
+     * @param[in] pub 发布者对象
+     */
+    template <typename MsgType>
+    void destroyPublisher(typename Publisher<MsgType>::ptr pub);
+
+    /**
+     * @brief 销毁订阅者
+     *
+     * @tparam MsgType 消息类型
+     * @param[in] sub 订阅者对象
+     */
+    template <typename MsgType>
+    void destroySubscriber(typename Subscriber<MsgType>::ptr sub);
+
+    /**
      * @brief 创建异步定时器
      *
      * @tparam Rep 定时器时间间隔的表示类型
@@ -353,7 +400,10 @@ private:
     //! 处理 SIGINT 信号
     rm::async::Task<> on_sigint();
 
-    rm::async::IOContext _ctx{};             //!< 异步 IO 上下文
+protected:
+    rm::async::IOContext _ctx{}; //!< 异步 IO 上下文
+
+private:
     rm::async::Timer _broadcast_timer{_ctx}; //!< NDP 广播异步定时器
     rm::async::Timer _hbt_timer{_ctx};       //!< 心跳检测异步定时器
 

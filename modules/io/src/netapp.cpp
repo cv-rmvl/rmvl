@@ -830,7 +830,10 @@ Task<> Webapp::handle_client(StreamSocket socket) {
 
 Task<> Webapp::spin() {
     co_spawn(_ctx, &Webapp::on_sigint, this);
+    co_await spinWithoutSigint();
+}
 
+Task<> Webapp::spinWithoutSigint() {
     auto acceptor = async::Acceptor(_ctx, Endpoint(ip::tcp::v4(), _port));
     // execute listen callback
     if (_listen)
