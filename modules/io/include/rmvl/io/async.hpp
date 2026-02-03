@@ -273,7 +273,7 @@ struct IocpOverlapped {
     OVERLAPPED ov{};
     std::coroutine_handle<> handle{};
     char info[256]{}; //! 附加信息存储区
-    char buf[2048]{}; //! 实际发生传输的数据
+    char buf[65536]{}; //! 实际发生传输的数据
 
     IocpOverlapped(std::coroutine_handle<> h) : handle(h) {}
 };

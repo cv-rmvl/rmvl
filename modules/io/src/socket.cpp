@@ -447,14 +447,15 @@ static _dgram_sendto_res parse_sendto(const std::string_view &addr, const Endpoi
 }
 
 static std::tuple<std::string, std::string, uint16_t> fdrecvfrom(SocketFd fd) {
-    char buf[2048]{};
+    std::string buf;
+    buf.resize(65536);
     sockaddr_storage sender_addr{};
     socklen_t addr_len = sizeof(sender_addr);
-    auto n = ::recvfrom(fd, buf, sizeof(buf), 0, reinterpret_cast<sockaddr *>(&sender_addr), &addr_len);
+    auto n = ::recvfrom(fd, buf.data(), buf.size(), 0, reinterpret_cast<sockaddr *>(&sender_addr), &addr_len);
     if (n > 0) {
-        std::string data(buf, n);
+        buf.resize(n);
         auto [sender_ip_str, sender_port] = parse_recvfrom(sender_addr);
-        return {data, sender_ip_str, sender_port};
+        return {buf, sender_ip_str, sender_port};
     }
     return {};
 }
@@ -514,13 +515,18 @@ bool DgramSocket::write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, s
 Endpoint DgramSocket::endpoint() const { return _endpoint(_fd); }
 
 std::string StreamSocket::read() noexcept {
-    char buf[2048]{};
+    std::string buf;
+    buf.resize(65536);
 #if _WIN32
-    auto n = ::recv(_fd, buf, static_cast<int>(sizeof(buf)), 0);
+    auto n = ::recv(_fd, buf.data(), static_cast<int>(buf.size()), 0);
 #else
-    auto n = ::recv(_fd, buf, sizeof(buf), 0);
+    auto n = ::recv(_fd, buf.data(), buf.size(), 0);
 #endif
-    return n > 0 ? std::string(buf, n) : std::string{};
+    if (n > 0) {
+        buf.resize(n);
+        return buf;
+    }
+    return {};
 }
 
 bool StreamSocket::write(std::string_view data) noexcept {
@@ -973,15 +979,29 @@ StreamSocket::StreamSocket(IOContext &io_context, SocketFd fd) : ::rm::StreamSoc
 std::string StreamSocket::SocketReadAwaiter::await_resume() {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    char buf[2048]{};
-    ssize_t n = ::recv(_fd, buf, sizeof(buf), 0);
-    return n > 0 ? std::string(buf, n) : std::string{};
+    std::string buf{};
+    buf.resize(65536);
+#if _WIN32
+    ssize_t n = ::recv(_fd, buf.data(), static_cast<int>(buf.size()), 0);
+#else
+    ssize_t n = ::recv(_fd, buf.data(), buf.size(), 0);
+#endif
+    if (n > 0) {
+        buf.resize(n);
+        return buf;
+    }
+    return {};
 }
 
 bool StreamSocket::SocketWriteAwaiter::await_resume() {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    return ::send(_fd, _data.data(), _data.size(), 0) == static_cast<ssize_t>(_data.size());
+#if _WIN32
+    ssize_t n = ::send(_fd, _data.data(), static_cast<int>(_data.size()), 0);
+#else
+    ssize_t n = ::send(_fd, _data.data(), _data.size(), 0);
+#endif
+    return n == static_cast<ssize_t>(_data.size());
 }
 
 Acceptor::Acceptor(IOContext &io_context, const Endpoint &endpoint) : ::rm::Acceptor(endpoint, true), _ctx(io_context) {}

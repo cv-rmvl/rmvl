@@ -1,7 +1,7 @@
 /**
  * @file node_rmtp.cpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 轻量级发布订阅服务：消息传输协议 RMTP 节点实现
+ * @brief 轻量级发布订阅服务：消息传输协议 MTP 节点实现
  * @version 1.0
  * @date 2025-12-05
  *
@@ -60,29 +60,47 @@ DataWriterBase::DataWriterBase(const Guid &guid, std::string_view type, std::str
 
 void DataWriterBase::add(const Guid &guid, Locator loc) noexcept {
     std::lock_guard lk(_mtx);
-    // SHM 通道
-
     // UDPv4 通道
     _udpv4_targets[guid] = loc;
 }
 
 void DataWriterBase::remove(const Guid &guid) noexcept {
     std::lock_guard lk(_mtx);
-    // SHM 通道
-
     // UDPv4 通道
     _udpv4_targets.erase(guid);
 }
 
+using namespace std::chrono_literals;
+
+#ifdef _WIN32
+#undef min
+#endif
+
 void DataWriterBase::write(std::string data) noexcept {
     // 构造 RMTP 数据包
     std::string rmtp_data = mtp_pack(data, _type, _topic);
-    // 发送到 SHM 目标
+    // 数据分片
+    std::string_view rmtp_view = rmtp_data;
+    std::size_t offset = 0;
+    constexpr std::size_t MAX_UDP_PAYLOAD = 65507;
+    while (offset < rmtp_data.size()) {
+        std::size_t len = std::min(MAX_UDP_PAYLOAD, rmtp_data.size() - offset);
+        auto payload = rmtp_view.substr(offset, len);
+        // 发送到 UDPv4 目标
+        {
+            std::shared_lock lk(_mtx);
+            for (const auto &[guid, loc] : _udpv4_targets)
+                _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), payload);
+        }
 
-    // 发送到 UDPv4 目标
-    std::shared_lock lk(_mtx);
-    for (const auto &[guid, loc] : _udpv4_targets)
-        _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), rmtp_data);
+        std::this_thread::sleep_for(100us);
+        offset += len;
+    }
+    if (rmtp_view.size() > 0 && rmtp_view.size() % MAX_UDP_PAYLOAD == 0) {
+        std::shared_lock lk(_mtx);
+        for (const auto &[guid, loc] : _udpv4_targets)
+            _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), std::string_view{});
+    }
 }
 
 DataReaderBase::DataReaderBase(const Guid &guid, std::string_view type, std::string_view topic)
@@ -92,13 +110,22 @@ DataReaderBase::DataReaderBase(const Guid &guid, std::string_view type, std::str
 }
 
 std::string DataReaderBase::read() noexcept {
-    // 从 UDPv4 通道读取数据
-    auto [data, addr, port] = _udpv4.read();
+    std::string rmtp_data;
+    rmtp_data.reserve(65536);
 
-    // 从 SHM 通道读取数据
+    constexpr std::size_t MAX_UDP_PAYLOAD = 65507;
+
+    while (true) {
+        // 从 UDPv4 通道读取数据
+        auto [part, addr, port] = _udpv4.read();
+        rmtp_data.append(part);
+
+        if (part.size() < MAX_UDP_PAYLOAD)
+            break;
+    }
 
     // 提取数据
-    return mtp_unpack(data, _type, _topic);
+    return mtp_unpack(rmtp_data, _type, _topic);
 }
 
 #if __cplusplus >= 202002L
@@ -109,15 +136,11 @@ DataWriterBase::DataWriterBase(rm::async::IOContext &io_context, const Guid &gui
     : _guid(guid), _socket(rm::async::Sender(io_context, ip::udp::v4()).create()), _type(type), _topic(topic) {}
 
 void DataWriterBase::add(const Guid &guid, Locator loc) noexcept {
-    // SHM 通道
-
     // UDPv4 通道
     _udpv4_targets[guid] = loc;
 }
 
 void DataWriterBase::remove(const Guid &guid) noexcept {
-    // SHM 通道
-
     // UDPv4 通道
     _udpv4_targets.erase(guid);
 }
@@ -125,11 +148,22 @@ void DataWriterBase::remove(const Guid &guid) noexcept {
 rm::async::Task<> DataWriterBase::write(std::string data) noexcept {
     // 构造 RMTP 数据包
     std::string rmtp_data = mtp_pack(data, _type, _topic);
-    // 发送到 SHM 目标
-
-    // 发送到 UDPv4 目标
-    for (const auto &[guid, loc] : _udpv4_targets)
-        co_await _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), rmtp_data);
+    // 数据分片
+    std::string_view rmtp_view = rmtp_data;
+    std::size_t offset = 0;
+    constexpr std::size_t MAX_UDP_PAYLOAD = 65507;
+    while (offset < rmtp_data.size()) {
+        std::size_t len = std::min(MAX_UDP_PAYLOAD, rmtp_data.size() - offset);
+        auto payload = rmtp_view.substr(offset, len);
+        // 发送到 UDPv4 目标
+        for (const auto &[guid, loc] : _udpv4_targets)
+            co_await _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), payload);
+        std::this_thread::sleep_for(100us);
+        offset += len;
+    }
+    if (rmtp_view.size() > 0 && rmtp_view.size() % MAX_UDP_PAYLOAD == 0)
+        for (const auto &[guid, loc] : _udpv4_targets)
+            co_await _socket.write(loc.addr, Endpoint(ip::udp::v4(), loc.port), std::string_view{});
 }
 
 DataReaderBase::DataReaderBase(rm::async::IOContext &io_context, const Guid &guid, std::string_view type, std::string_view topic)
@@ -139,11 +173,17 @@ DataReaderBase::DataReaderBase(rm::async::IOContext &io_context, const Guid &gui
 }
 
 rm::async::Task<std::string> DataReaderBase::read() noexcept {
-    // 从 UDPv4 通道读取数据
-    auto [data, addr, port] = co_await _udpv4.read();
+    std::string data;
+    data.reserve(65536);
+    constexpr std::size_t MAX_UDP_PAYLOAD = 65507;
+    while (true) {
+        // 从 UDPv4 通道读取数据
+        auto [part, addr, port] = co_await _udpv4.read();
+        data.append(part);
 
-    // 从 SHM 通道读取数据
-
+        if (part.size() < MAX_UDP_PAYLOAD)
+            break;
+    }
     // 提取数据
     co_return mtp_unpack(data, _type, _topic);
 }
