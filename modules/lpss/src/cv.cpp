@@ -42,6 +42,9 @@ msg::Image to_msg(cv::Mat img, std::string_view encoding) {
     if (valid_encodings.find(std::string(encoding)) == valid_encodings.end())
         return msg::Image{};
 
+    if (!img.isContinuous())
+        img = img.clone();
+
     msg::Image img_msg{};
     img_msg.height = img.rows;
     img_msg.width = img.cols;

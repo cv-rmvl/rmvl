@@ -331,9 +331,14 @@ void AsyncReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
 std::string AsyncReadAwaiter::await_resume() {
     RMVL_DbgAssert(_fd >= 0);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    char buf[2048]{};
-    ssize_t n = ::read(_fd, buf, sizeof(buf));
-    return n > 0 ? std::string(buf, n) : std::string{};
+    std::string buf{};
+    buf.resize(65536);
+    ssize_t n = ::read(_fd, buf.data(), buf.size());
+    if (n > 0) {
+        buf.resize(n);
+        return buf;
+    }
+    return {};
 }
 
 void AsyncWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
@@ -348,7 +353,12 @@ void AsyncWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
 bool AsyncWriteAwaiter::await_resume() {
     RMVL_DbgAssert(_fd >= 0);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    return ::write(_fd, _data.data(), _data.size()) == static_cast<ssize_t>(_data.size());
+#if _WIN32
+    ssize_t n = ::write(_fd, _data.data(), static_cast<int>(_data.size()));
+#else
+    ssize_t n = ::write(_fd, _data.data(), _data.size());
+#endif
+    return n == static_cast<ssize_t>(_data.size());
 }
 
 Timer::Timer(IOContext &io_context) : _ctx(io_context) {
