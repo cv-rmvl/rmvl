@@ -12,22 +12,18 @@
 #include "rmvl/feature/tag.h"
 
 #include "rmvl/algorithm/math.hpp"
-#include "rmvl/core/util.hpp"
 
-namespace rm
-{
+namespace rm {
 
-Tag::ptr Tag::make_feature(const std::vector<cv::Point2f> &corners, char type)
-{
-    if (type <= '0' || (type >= '9' && type <= 'A') || (type >= 'Z' && type <= 'a') || type >= 'z')
+Tag::ptr Tag::make_feature(const std::vector<cv::Point2f> &corners, char type) {
+    if (type < '0' || (type > '9' && type < 'A') || (type > 'Z' && type < 'a') || type > 'z')
         return nullptr;
     if (corners.size() != 4)
         return nullptr;
     auto retval = std::make_shared<Tag>();
 
     retval->_corners = std::vector<cv::Point2f>(corners.begin(), corners.end());
-    retval->_state["tag"] = std::string(1, type);
-    cv::Point2f center;
+    retval->_type = type;
     retval->_center = std::accumulate(corners.begin(), corners.end(), cv::Point2f(0, 0)) / 4.f;
 
     double length1 = getDistance(corners[0], corners[1]);

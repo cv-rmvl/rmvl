@@ -11,17 +11,15 @@
 
 #pragma once
 
-#include "compensator.h"
+#include "details/common.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup gravity_compensator
 //! @{
 
 //! 使用重力模型的补偿模块
-class GravityCompensator final : public compensator
-{
+class GravityCompensator final {
 public:
     GravityCompensator() noexcept;
     ~GravityCompensator();
@@ -32,12 +30,12 @@ public:
     /**
      * @brief 补偿函数，考虑空气阻力，使用 2 阶龙格库塔方法（中点公式）计算弹道
      *
-     * @param[in] groups 所有序列组
+     * @param[in] trackers 所有追踪器序列
      * @param[in] shoot_speed 子弹射速 (m/s)
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) override;
+    CompensateInfo compensate(const std::vector<tracker::ptr> &trackers, float shoot_speed, CompensateType com_flag);
 
 private:
     class Impl;

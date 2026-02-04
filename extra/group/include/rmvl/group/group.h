@@ -13,15 +13,13 @@
 
 #include "rmvl/tracker/tracker.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup group
 //! @{
 
 //! 相关追踪器的空间集合（序列组）
-class RMVL_EXPORTS_W_ABS group
-{
+class RMVL_EXPORTS_W_ABS group {
 protected:
     std::vector<tracker::ptr> _trackers; //!< 同组追踪器
 
@@ -122,37 +120,10 @@ public:
     StateInfo &state() { return _state; }
 };
 
+//! `rm::group` 序列组类型转换宏
 #define RMVL_GROUP_CAST(name)                                                                       \
     static inline ptr cast(group::ptr p_group) { return std::dynamic_pointer_cast<name>(p_group); } \
     static inline const_ptr cast(group::const_ptr p_group) { return std::dynamic_pointer_cast<const name>(p_group); }
-
-//! 默认序列组（一般退化为 `trackers` 使用）
-class RMVL_EXPORTS_W_DES DefaultGroup final : public group
-{
-public:
-    using ptr = std::shared_ptr<DefaultGroup>;
-    using const_ptr = std::shared_ptr<const DefaultGroup>;
-
-    //! 构建 DefaultGroup
-    RMVL_W static inline ptr make_group() { return std::make_shared<DefaultGroup>(); }
-
-    /**
-     * @brief 从另一个序列组进行构造
-     *
-     * @return 指向新序列组的共享指针
-     */
-    RMVL_W group::ptr clone() override;
-
-    RMVL_GROUP_CAST(DefaultGroup)
-
-    /**
-     * @brief DefaultGroup 同步操作（空实现，不执行任何操作）
-     *
-     * @param[in] imu 最新 IMU 数据
-     * @param[in] tick 最新时间点，可用 `rm::Timer::now()` 获取
-     */
-    RMVL_W void sync(const ImuData &imu, double tick) override;
-};
 
 //! @} group
 

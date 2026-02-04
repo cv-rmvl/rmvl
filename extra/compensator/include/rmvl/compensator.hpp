@@ -21,8 +21,6 @@
 
 #include <rmvl/rmvl_modules.hpp>
 
-#include "compensator/compensator.h"
-
 #ifdef HAVE_RMVL_GRAVITY_COMPENSATOR
 #include "compensator/gravity_compensator.h"
 #endif // HAVE_RMVL_GRAVITY_COMPENSATOR

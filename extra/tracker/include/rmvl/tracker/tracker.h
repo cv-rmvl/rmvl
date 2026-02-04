@@ -15,15 +15,13 @@
 
 #include "rmvl/combo/combo.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup tracker
 //! @{
 
 //! 组合体时间序列
-class RMVL_EXPORTS_W_ABS tracker
-{
+class RMVL_EXPORTS_W_ABS tracker {
 protected:
     std::deque<combo::ptr> _combo_deque; //!< 组合体时间队列
     uint32_t _vanish_num{};              //!< 消失帧数
@@ -103,57 +101,10 @@ public:
     RMVL_W const cv::Point2f &speed() const { return _speed; }
 };
 
+//! `rm::tracker` 追踪器类型转换宏
 #define RMVL_TRACKER_CAST(name)                                                                           \
     static inline ptr cast(tracker::ptr p_tracker) { return std::dynamic_pointer_cast<name>(p_tracker); } \
     static inline const_ptr cast(tracker::const_ptr p_tracker) { return std::dynamic_pointer_cast<const name>(p_tracker); }
-
-//! 默认追踪器，时间序列仅用于存储组合体，可退化为 `combos` 使用
-class RMVL_EXPORTS_W_DES DefaultTracker final : public tracker
-{
-public:
-    using ptr = std::shared_ptr<DefaultTracker>;
-    using const_ptr = std::shared_ptr<const DefaultTracker>;
-
-    //! @cond
-    DefaultTracker() = default;
-    explicit DefaultTracker(combo::ptr);
-    //! @endcond
-
-    /**
-     * @brief 构造 DefaultTracker
-     *
-     * @param[in] p_combo 第一帧组合体（不允许为空）
-     * @return DefaultTracker 共享指针
-     */
-    RMVL_W static inline ptr make_tracker(combo::ptr p_combo) { return std::make_shared<DefaultTracker>(p_combo); }
-
-    /**
-     * @brief 从另一个追踪器进行构造
-     *
-     * @return 指向新追踪器的共享指针
-     */
-    RMVL_W tracker::ptr clone() override;
-
-    /**
-     * @brief 使用已捕获的 `combo` 更新追踪器
-     *
-     * @param[in] p_combo 更新的组合体
-     */
-    RMVL_W void update(combo::ptr p_combo) override;
-
-    //! 未捕获 `combo`，仅更新消失帧数
-    RMVL_W void update(double tick, const ImuData &imu) override;
-
-    RMVL_TRACKER_CAST(DefaultTracker)
-
-private:
-    /**
-     * @brief 将 combo 中的数据更新至 tracker
-     *
-     * @param[in] p_combo Armor::ptr 指针
-     */
-    void updateData(combo::ptr p_combo);
-};
 
 //! @} tracker
 

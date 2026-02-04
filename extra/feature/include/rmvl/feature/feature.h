@@ -17,15 +17,13 @@
 
 #include "rmvl/types.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup feature
 //! @{
 
 //! 图像中的轮廓特征
-class RMVL_EXPORTS_W_ABS feature
-{
+class RMVL_EXPORTS_W_ABS feature {
 protected:
     float _width{};                    //!< 特征宽度
     float _height{};                   //!< 特征高度
@@ -64,37 +62,10 @@ public:
     StateInfo &state() { return _state; }
 };
 
+//! `rm::feature` 轮廓特征类型转换宏
 #define RMVL_FEATURE_CAST(name)                                                                           \
     static inline ptr cast(feature::ptr p_feature) { return std::dynamic_pointer_cast<name>(p_feature); } \
     static inline const_ptr cast(feature::const_ptr p_feature) { return std::dynamic_pointer_cast<const name>(p_feature); }
-
-//! 默认图像特征，仅表示一个孤立的点 `cv::Point2f`
-class RMVL_EXPORTS_W_DES DefaultFeature final : public feature
-{
-public:
-    using ptr = std::shared_ptr<DefaultFeature>;
-    using const_ptr = std::shared_ptr<const DefaultFeature>;
-
-    DefaultFeature() = default;
-    DefaultFeature(const cv::Point2f &p) : feature() { _center = p, _corners = {p}; }
-
-    /**
-     * @brief DefaultFeature 构造接口
-     *
-     * @param[in] p 孤立的二维点
-     * @return DefaultFeature 共享指针
-     */
-    RMVL_W static inline ptr make_feature(const cv::Point2f &p) { return std::make_shared<DefaultFeature>(p); }
-
-    /**
-     * @brief 从另一个特征进行构造
-     *
-     * @return 指向新特征的共享指针
-     */
-    RMVL_W feature::ptr clone() override { return std::make_shared<DefaultFeature>(*this); }
-
-    RMVL_FEATURE_CAST(DefaultFeature)
-};
 
 //! @} feature
 

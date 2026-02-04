@@ -11,35 +11,32 @@
 
 #pragma once
 
-#include <vector>
+#include "rmvl/tracker/rune_tracker.h"
 
-#include "predictor.h"
+#include "details/rune.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup rune_predictor
 //! @{
 
 //! 神符预测模块
-class RunePredictor final : public predictor
-{
+class RunePredictor final {
 public:
     RunePredictor() = default;
 
     /**
      * @brief 神符预测核心函数
      * @note
-     * - 静态响应预测量 `B` 生效: `ANG_Z`
+     * - 静态响应预测量 `B`
      * @note
-     * - 动态响应预测量 `Kt` 生效: `ANG_Z`
+     * - 动态响应预测量 `Kt`
      *
-     * @param[in] groups 所有序列组向量
+     * @param[in] trackers 所有追踪器
      * @param[in] tof 每个追踪器对应的子弹飞行时间
      * @return 预测模块信息
      */
-    PredictInfo predict(const std::vector<group::ptr> &groups,
-                        const std::unordered_map<tracker::ptr, double> &tof) override;
+    RunePredictorInfo predict(const std::vector<RuneTracker::ptr> &trackers, const std::unordered_map<tracker::ptr, double> &tof);
 
     //! 构建 RunePredictor
     static inline std::unique_ptr<RunePredictor> make_predictor() { return std::make_unique<RunePredictor>(); }

@@ -1,10 +1,6 @@
 # ----------------------------------------------------------------------------
 #  Generate para and add module for each decider
 # ----------------------------------------------------------------------------
-rmvl_add_module(
-  decider INTERFACE
-  DEPENDS detector compensator predictor
-)
 
 # GyroDecider
 rmvl_generate_para(
@@ -13,7 +9,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_decider
-  DEPENDS decider camera
+  DEPENDS gyro_compensator gyro_predictor
 )
 
 # TranslationDecider
@@ -23,7 +19,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   translation_decider
-  DEPENDS decider camera
+  DEPENDS gravity_compensator armor_predictor
 )
 
 # RuneDecider
@@ -33,7 +29,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   rune_decider
-  DEPENDS decider camera
+  DEPENDS rune_predictor spi_rune_predictor gravity_compensator
 )
 
 rmvl_generate_module_para(decider)

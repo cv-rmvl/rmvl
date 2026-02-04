@@ -18,6 +18,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/algorithm/math.hpp"
+#include "rmvl/algorithm/pretreat.hpp"
 #include "rmvl/combo/rune.h"
 #include "rmvl/core/timer.hpp"
 #include "rmvl/detector/rune_detector.h"
@@ -29,8 +30,8 @@ namespace rm_test {
 class RuneDetectorTest : public testing::Test {
 public:
     cv::Mat src;
-    std::vector<rm::group::ptr> groups;
-    rm::detector::ptr p_detector;
+    rm::group::ptr group;
+    rm::RuneDetector::ptr p_detector;
 
     void SetUp() override {
         p_detector = rm::RuneDetector::make_detector();
@@ -146,7 +147,7 @@ public:
     }
 
     std::vector<rm::combo::ptr> detect() {
-        auto info = p_detector->detect(groups, src, rm::RED, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(group, src, rm::RED, rm::ImuData(), rm::Timer::now());
         return info.combos;
     }
 };

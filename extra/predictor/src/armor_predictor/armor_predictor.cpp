@@ -15,28 +15,26 @@
 
 namespace rm {
 
-PredictInfo ArmorPredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof) {
+ArmorPredictor::Info ArmorPredictor::predict(const std::vector<tracker::ptr> &trackers, const std::unordered_map<tracker::ptr, double> &tof) const {
     // 预测信息
-    PredictInfo info{};
-    for (auto p_group : groups) {
-        for (auto p_tracker : p_group->data()) {
-            double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
-            // 获取 IMU 角速度
-            cv::Point2f gyro_speed = {p_tracker->front()->imu().rotation.yaw_speed,
-                                      p_tracker->front()->imu().rotation.pitch_speed};
-            // 计算用于预测的合成角速度
-            cv::Point2f speed = p_tracker->speed() + gyro_speed;
-            double dB_yaw = speed.x * para::armor_predictor_param.YAW_B;
-            double dB_pitch = speed.y * para::armor_predictor_param.PITCH_B;
-            double dKt_yaw = speed.x * para::armor_predictor_param.YAW_K * tf;
-            double dKt_pitch = speed.y * para::armor_predictor_param.PITCH_K * tf;
+    Info info{};
+    for (auto p_tracker : trackers) {
+        double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
+        // 获取 IMU 角速度
+        cv::Point2f gyro_speed = {p_tracker->front()->imu().rotation.yaw_speed,
+                                  p_tracker->front()->imu().rotation.pitch_speed};
+        // 计算用于预测的合成角速度
+        cv::Point2f speed = p_tracker->speed() + gyro_speed;
+        double dB_yaw = speed.x * para::armor_predictor_param.YAW_B;
+        double dB_pitch = speed.y * para::armor_predictor_param.PITCH_B;
+        double dKt_yaw = speed.x * para::armor_predictor_param.YAW_K * tf;
+        double dKt_pitch = speed.y * para::armor_predictor_param.PITCH_K * tf;
 
-            // 更新预测信息
-            info.static_prediction[p_tracker][YAW] = dB_yaw;
-            info.static_prediction[p_tracker][PITCH] = dB_pitch;
-            info.dynamic_prediction[p_tracker][YAW] = dKt_yaw;
-            info.dynamic_prediction[p_tracker][PITCH] = dKt_pitch;
-        }
+        // 更新预测信息
+        info.static_prediction[p_tracker][0] = dB_yaw;
+        info.static_prediction[p_tracker][1] = dB_pitch;
+        info.dynamic_prediction[p_tracker][0] = dKt_yaw;
+        info.dynamic_prediction[p_tracker][1] = dKt_pitch;
     }
     return info;
 }

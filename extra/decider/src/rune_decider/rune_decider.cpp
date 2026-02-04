@@ -18,8 +18,7 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/decider/rune_decider.h"
 
-namespace rm
-{
+namespace rm {
 
 /**
  * @brief 从角度预测增量中获取实际目标转角增量、图像中的位置信息
@@ -29,8 +28,7 @@ namespace rm
  * @param[out] d_angle 实际目标转角增量信息
  * @param[out] d_center 实际图像中的位置信息
  */
-static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, cv::Point2f &d_angle, cv::Point2f &d_center)
-{
+static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, cv::Point2f &d_angle, cv::Point2f &d_center) {
     auto p_rune = Rune::cast(ref_tracker->front());
     // 特征距离
     cv::Point2f rune_center = p_rune->at(1)->center();
@@ -47,23 +45,17 @@ static void getPredictMsgFromAngleZ(float d_predict, tracker::ptr ref_tracker, c
               ref_tracker->getRelativeAngle();
 }
 
-DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
-                               tracker::ptr last_target, const DetectInfo &,
-                               const CompensateInfo &compensate_info, const PredictInfo &predict_info)
-{
+RuneDecider::Info RuneDecider::decide(group::ptr group, bool is_active, tracker::ptr last_target,
+                                      const CompensateInfo &compensate_info, const RunePredictorInfo &predict_info) {
     // 决策信息
-    DecideInfo info{};
-    if (groups.size() != 1)
-        RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
-    RMVL_Assert(flag.contains("rune"));
+    Info info{};
     // 需要被考虑的真实追踪器
     std::vector<tracker::ptr> true_trackers;
     true_trackers.reserve(5);
 
-    for (auto &p_tracker : groups.front()->data())
-        if (p_tracker->state().at("rune") == flag.at("rune"))
+    for (auto &p_tracker : group->data())
+        if (std::get<std::string>(p_tracker->state().at("rune")) == (is_active ? "active" : "inactive"))
             true_trackers.emplace_back(p_tracker);
-    bool is_active = flag.at_string("rune") == "active";
 
     if (last_target != nullptr)
         for (auto &p_tracker : true_trackers)
@@ -73,47 +65,39 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, const Stat
     if (!info.target && true_trackers.empty())
         return info;
     // 无目标 && 有神符
-    else if (!info.target && !true_trackers.empty())
-    {
+    else if (!info.target && !true_trackers.empty()) {
         // 已激活神符决策
         if (is_active)
             info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
                 return lhs->center().y < rhs->center().y;
             });
         // 未激活神符决策
-        else
-        {
+        else {
             triggerInit();
             // 记录出现神符开始时的时间
             info.target = true_trackers.back();
         }
     }
     // 有目标
-    else
-    {
+    else {
         // 已激活神符决策
-        if (is_active)
-        {
+        if (is_active) {
             // 寻找最下方神符
             info.target = *min_element(true_trackers.begin(), true_trackers.end(), [&](const auto &lhs, const auto &rhs) {
                 return lhs->center().y < rhs->center().y;
             });
-        }
-        else
-        {
+        } else {
             // 若正在追踪的目标不是最新的目标，则需要重置决策信息
-            if (info.target != true_trackers.back())
-            {
+            if (info.target != true_trackers.back()) {
                 triggerInit();
                 info.target = true_trackers.back();
             }
         }
     }
 
-    if (info.target != nullptr)
-    {
-        auto dKt = predict_info.dynamic_prediction.at(info.target)(ANG_Z);
-        auto dB = predict_info.static_prediction.at(info.target)(ANG_Z);
+    if (info.target != nullptr) {
+        auto dKt = predict_info.dynamic_prediction.at(info.target);
+        auto dB = predict_info.static_prediction.at(info.target);
         auto comp = compensate_info.compensation.at(info.target);
 
         cv::Point2f d_angle, center, unused_v;
@@ -127,33 +111,25 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, const Stat
 
         _delta_time = Timer::now() - _start_tick;
         // 判断能否射击
-        if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _miss_frequency && !_is_changed)
-        {
-            if (_send_times < 5)
-            {
+        if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _miss_frequency && !_is_changed) {
+            if (_send_times < 5) {
                 info.can_shoot = true;
                 _send_times++;
-            }
-            else
-            {
+            } else {
                 triggerInit();
                 _is_changed = false;
             }
-        }
-        else if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _initial_frequency && _is_changed)
-        {
+        } else if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _initial_frequency && _is_changed) {
             // 继续追踪 5 帧，作为靠近目标后的保险措施
             if (_send_times < 5)
                 _send_times++;
             // 连续发送 5 次可以击打的信号
-            else if (_send_times >= 5 && _send_times <= 10)
-            {
+            else if (_send_times >= 5 && _send_times <= 10) {
                 info.can_shoot = true;
                 _send_times++;
             }
             // 击打完毕后重置的目标，并标记为 false 表示该目标已经击打过一次
-            else
-            {
+            else {
                 triggerInit();
                 _is_changed = false;
             }
@@ -162,8 +138,7 @@ DecideInfo RuneDecider::decide(const std::vector<group::ptr> &groups, const Stat
     return info;
 }
 
-bool RuneDecider::judgeShoot(tracker::ptr target_tracker, bool is_active, const cv::Point2f &comp, const cv::Point2f &center2d, cv::Point2f &shoot_center)
-{
+bool RuneDecider::judgeShoot(tracker::ptr target_tracker, bool is_active, const cv::Point2f &comp, const cv::Point2f &center2d, cv::Point2f &shoot_center) {
     if (!target_tracker)
         return false;
     // 子弹落点转换为图像中的坐标点
@@ -177,8 +152,7 @@ bool RuneDecider::judgeShoot(tracker::ptr target_tracker, bool is_active, const 
         return center_dis <= para::rune_decider_param.NORMAL_RADIUS_RATIO * target_tracker->front()->at(1)->width();
 }
 
-void RuneDecider::triggerInit()
-{
+void RuneDecider::triggerInit() {
     _is_changed = true;
     _start_tick = Timer::now();
     _initial_frequency = para::rune_decider_param.INIT_FREQUENCY;

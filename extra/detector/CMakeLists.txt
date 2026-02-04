@@ -1,11 +1,6 @@
 # ----------------------------------------------------------------------------
 #  Generate para and add module for each detector
 # ----------------------------------------------------------------------------
-rmvl_add_module(
-  detector INTERFACE
-  DEPENDS group
-)
-
 # armor_detector
 rmvl_update_build(armor_detector WITH_ONNXRUNTIME)
 rmvl_generate_para(
@@ -14,7 +9,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   armor_detector
-  DEPENDS detector ort planar_tracker
+  DEPENDS ort planar_tracker
 )
 
 # gyro_detector
@@ -25,7 +20,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_detector
-  DEPENDS detector ort gyro_tracker gyro_group
+  DEPENDS ort gyro_tracker gyro_group
 )
 
 # rune_detector
@@ -35,18 +30,14 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   rune_detector
-  DEPENDS detector rune_group
+  DEPENDS rune_group
 )
 
 # tag_detector
 rmvl_update_build(tag_detector WITH_APRILTAG)
-rmvl_generate_para(
-  tag_detector
-  MODULE detector
-)
 rmvl_add_module(
   tag_detector
-  DEPENDS detector planar_tracker tag
+  DEPENDS planar_tracker tag
   EXTERNAL apriltag
 )
 

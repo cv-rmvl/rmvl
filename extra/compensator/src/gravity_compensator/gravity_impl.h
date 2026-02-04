@@ -25,7 +25,7 @@ public:
     Impl();
 
     //! 补偿函数，考虑空气阻力，使用 2 阶龙格库塔方法（中点公式）计算弹道
-    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag);
+    CompensateInfo compensate(const std::vector<tracker::ptr> &trackers, float shoot_speed, CompensateType com_flag);
 
 private:
     /**

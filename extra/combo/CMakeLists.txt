@@ -2,7 +2,7 @@
 #  Generate para and add module for each combo
 # ----------------------------------------------------------------------------
 rmvl_add_module(
-  combo
+  combo INTERFACE
   DEPENDS feature camera io
 )
 

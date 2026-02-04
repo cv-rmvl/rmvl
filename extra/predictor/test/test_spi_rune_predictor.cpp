@@ -44,7 +44,6 @@ TEST(Run_Accuracy, data_from_0_300) {
     tof.emplace(p_tracker, 0.02);
     auto p_group = RuneGroup::make_group();
     p_group->add(p_tracker);
-    std::vector<group::ptr> groups = {p_group};
 
     for (int i = 0; i < 300; ++i) {
         cv::Point target_point(500 + 100 * cos(deg2rad(i)),
@@ -58,7 +57,7 @@ TEST(Run_Accuracy, data_from_0_300) {
         p_group->sync(imu_data, tick);
 
         // predict
-        p_predictor->predict(groups, tof);
+        p_predictor->predict(p_group, tof);
     }
 }
 

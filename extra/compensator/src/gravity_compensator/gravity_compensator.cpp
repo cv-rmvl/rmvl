@@ -20,8 +20,8 @@ GravityCompensator::GravityCompensator() noexcept : _impl(new Impl) {}
 
 GravityCompensator::~GravityCompensator() { delete _impl; }
 
-CompensateInfo GravityCompensator::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) {
-    return _impl->compensate(groups, shoot_speed, com_flag);
+CompensateInfo GravityCompensator::compensate(const std::vector<tracker::ptr> &trackers, float shoot_speed, CompensateType com_flag) {
+    return _impl->compensate(trackers, shoot_speed, com_flag);
 }
 
 GravityCompensator::Impl::Impl() : _yaw_static_com(para::gravity_compensator_param.PITCH_COMPENSATE),
@@ -104,29 +104,27 @@ void GravityCompensator::Impl::updateStaticCom(CompensateType com_flag, float &x
     }
 }
 
-CompensateInfo GravityCompensator::Impl::compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) {
+CompensateInfo GravityCompensator::Impl::compensate(const std::vector<tracker::ptr> &trackers, float shoot_speed, CompensateType com_flag) {
     CompensateInfo info{};
     // 补偿手动调节
     updateStaticCom(com_flag, _yaw_static_com, _pitch_static_com);
     // 对每个序列组的每个追踪器按照一种方式进行补偿计算
-    for (auto &p_group : groups) {
-        for (auto &p_tracker : p_group->data()) {
-            // 单位换算
-            double dis = p_tracker->extrinsic().distance() / 1000.;
-            // 提取当前 IMU 角度
-            auto gyro_angle = cv::Point2f(p_tracker->front()->imu().rotation.yaw,
-                                          p_tracker->front()->imu().rotation.pitch);
-            // 目标与云台转轴的连线与水平方向的夹角
-            double angle = gyro_angle.y + p_tracker->getRelativeAngle().y;
-            // 计算补偿角度和对应的子弹飞行时间（模型中角度要求向上为正，这里需取反）
-            auto [angle_com, t_com] = calc(dis * cos(deg2rad(-angle)), dis * sin(deg2rad(-angle)), shoot_speed);
-            double gp = rad2deg(-angle_com);
-            double x_com = _yaw_static_com;
-            double y_com = gp - angle + _pitch_static_com;
-            // 更新
-            info.compensation.emplace(p_tracker, cv::Point2f(x_com, y_com));
-            info.tof.emplace(p_tracker, t_com);
-        }
+    for (auto &p_tracker : trackers) {
+        // 单位换算
+        double dis = p_tracker->extrinsic().distance() / 1000.;
+        // 提取当前 IMU 角度
+        auto gyro_angle = cv::Point2f(p_tracker->front()->imu().rotation.yaw,
+                                      p_tracker->front()->imu().rotation.pitch);
+        // 目标与云台转轴的连线与水平方向的夹角
+        double angle = gyro_angle.y + p_tracker->getRelativeAngle().y;
+        // 计算补偿角度和对应的子弹飞行时间（模型中角度要求向上为正，这里需取反）
+        auto [angle_com, t_com] = calc(dis * cos(deg2rad(-angle)), dis * sin(deg2rad(-angle)), shoot_speed);
+        double gp = rad2deg(-angle_com);
+        double x_com = _yaw_static_com;
+        double y_com = gp - angle + _pitch_static_com;
+        // 更新
+        info.compensation.emplace(p_tracker, cv::Point2f(x_com, y_com));
+        info.tof.emplace(p_tracker, t_com);
     }
     return info;
 }

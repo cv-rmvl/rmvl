@@ -11,19 +11,17 @@
 
 #pragma once
 
-#include <vector>
+#include "rmvl/group/rune_group.h"
 
-#include "predictor.h"
+#include "details/rune.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup spi_rune_predictor
 //! @{
 
 //! 系统参数辨识神符预测类
-class SpiRunePredictor final : public predictor
-{
+class SpiRunePredictor final {
     const size_t _n;        //!< 模型阶数
     const double _interval; //!< 采样间隔
     cv::Mat _pm;            //!< 协方差矩阵
@@ -36,16 +34,15 @@ public:
     /**
      * @brief 系统参数辨识神符预测核心函数
      * @note
-     * - 静态响应预测量 `B` 生效: `ANG_Z`
+     * - 静态响应预测量 `B`
      * @note
-     * - 动态响应预测量 `Kt` 生效: `ANG_Z`
+     * - 动态响应预测量 `Kt`
      *
-     * @param[in] groups 序列组列表
+     * @param[in] group 神符序列组
      * @param[in] tof 每个追踪器对应的子弹飞行时间
      * @return 预测模块信息
      */
-    PredictInfo predict(const std::vector<group::ptr> &groups,
-                        const std::unordered_map<tracker::ptr, double> &tof) override;
+    RunePredictorInfo predict(RuneGroup::ptr group, const std::unordered_map<tracker::ptr, double> &tof);
 
     //! 构建 SpiRunePredictor
     static inline std::unique_ptr<SpiRunePredictor> make_predictor() { return std::make_unique<SpiRunePredictor>(); }

@@ -1,7 +1,10 @@
 # ----------------------------------------------------------------------------
 #  Generate para and add module for each group
 # ----------------------------------------------------------------------------
-rmvl_add_module(group DEPENDS tracker)
+rmvl_add_module(
+  group INTERFACE
+  DEPENDS tracker
+)
 
 # gyro_group
 rmvl_generate_para(

@@ -9,29 +9,24 @@
  *
  */
 
+#include "rmvl/algorithm/pretreat.hpp"
 #include "rmvl/detector/armor_detector.h"
 
 #include "rmvlpara/detector/armor_detector.h"
 
-namespace rm
-{
+namespace rm {
 
-ArmorDetector::ArmorDetector(std::string_view model)
-{
+ArmorDetector::ArmorDetector(std::string_view model) {
     _ort = std::make_unique<ClassificationNet>(model);
     for (int i = 0; i < 9; ++i)
         _robot_t[i] = static_cast<RobotType>(i);
 }
 
-DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick)
-{
-    DetectInfo info{};
+ArmorDetectorInfo ArmorDetector::detect(std::vector<tracker::ptr> &trackers, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) {
+    ArmorDetectorInfo info{};
     info.src = src;
     _tick = tick;
     _imu_data = imu_data;
-    // 初始化存储信息
-    if (groups.empty())
-        groups.emplace_back(DefaultGroup::make_group());
     // 二值化处理图像
     PixChannel ch_minus = color == RED ? BLUE : RED;
     int thesh = color == RED ? para::armor_detector_param.GRAY_THRESHOLD_RED : para::armor_detector_param.GRAY_THRESHOLD_BLUE;
@@ -39,8 +34,8 @@ DetectInfo ArmorDetector::detect(std::vector<group::ptr> &groups, const cv::Mat 
 
     // 找到所有的灯条和装甲板
     find(info.bin, info.features, info.combos, info.rois);
-    // 将目标匹配进序列组
-    match(groups, info.combos);
+    // 将目标匹配进时间序列
+    match(trackers, info.combos);
     return info;
 }
 

@@ -2,7 +2,7 @@
 #  Generate para and add module for each tracker
 # ----------------------------------------------------------------------------
 rmvl_add_module(
-  tracker
+  tracker INTERFACE
   DEPENDS combo
 )
 

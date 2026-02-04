@@ -22,8 +22,6 @@
 
 #include <rmvl/rmvl_modules.hpp>
 
-#include "decider/decider.h"
-
 #ifdef HAVE_RMVL_GYRO_DECIDER
 #include "decider/gyro_decider.h"
 #endif // HAVE_RMVL_GYRO_DECIDER

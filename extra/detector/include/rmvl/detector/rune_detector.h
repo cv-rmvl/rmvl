@@ -11,15 +11,30 @@
 
 #pragma once
 
-#include "detector.h"
+#include "rmvl/group/group.h"
 
 namespace rm {
 
 //! @addtogroup rune_detector
 //! @{
 
+//! 能量机关识别信息结构体
+struct RMVL_EXPORTS_W_AG RuneDetectorInfo {
+    RMVL_W_RW cv::Mat src;               //!< 原图
+    RMVL_W_RW cv::Mat gray;              //!< 灰度图列表
+    RMVL_W_RW cv::Mat bin;               //!< 二值图列表
+    RMVL_W_RW std::vector<cv::Mat> rois; //!< ROI 列表
+    RMVL_W_RW cv::Mat rendergraph;       //!< 渲染图
+
+    RMVL_W_RW std::vector<combo::ptr> combos;     //!< 当前帧所有组合体
+    RMVL_W_RW std::vector<feature::ptr> features; //!< 当前帧所有特征
+};
+
 //! 能量机关识别模块（包含已激活、未激活）
-class RMVL_EXPORTS_W_DEU RuneDetector final : public detector {
+class RMVL_EXPORTS_W RuneDetector final {
+    double _tick;      //!< 每一帧对应的时间点
+    ImuData _imu_data; //!< 每一帧对应的 IMU 数据
+
 public:
     using ptr = std::unique_ptr<RuneDetector>;
 
@@ -28,16 +43,16 @@ public:
     //! @endcond
 
     /**
-     * @brief 神符识别核心函数
+     * @brief 能量机关识别核心函数
      *
-     * @param[in out] groups 所有序列组
+     * @param[in out] group 能量机关序列组
      * @param[in] src 原图像
      * @param[in] color 待识别的颜色
      * @param[in] imu_data IMU 数据
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
+    RMVL_W RuneDetectorInfo detect(group::ptr &group, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick);
 
     //! 构建 RuneDetector
     RMVL_W static inline ptr make_detector() { return std::make_unique<RuneDetector>(); }

@@ -1,10 +1,6 @@
 # ----------------------------------------------------------------------------
 #  Generate para and add module for each predictor
 # ----------------------------------------------------------------------------
-rmvl_add_module(
-  predictor INTERFACE
-  DEPENDS group
-)
 
 # armor_predictor
 rmvl_generate_para(
@@ -13,7 +9,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   armor_predictor
-  DEPENDS predictor camera
+  DEPENDS tracker camera
 )
 
 # rune_predictor
@@ -23,7 +19,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   rune_predictor
-  DEPENDS predictor camera rune_group
+  DEPENDS rune_tracker camera rune_group
 )
 
 # spi_rune_predictor
@@ -33,7 +29,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   spi_rune_predictor
-  DEPENDS predictor rune_group
+  DEPENDS rune_group rune_group
 )
 
 # gyro_predictor
@@ -43,7 +39,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_predictor
-  DEPENDS predictor camera
+  DEPENDS gyro_group camera
 )
 
 rmvl_generate_module_para(predictor)

@@ -53,18 +53,15 @@ void SpiRunePredictor::identifier(const std::deque<double> &raw_datas) {
     _xm = _xm + _pm * amt * (bm - cv::Mat(am * _xm).at<double>(0));
 }
 
-PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof) {
-    PredictInfo info{};
-    if (groups.empty() || groups.front()->data().empty()) {
+RunePredictorInfo SpiRunePredictor::predict(RuneGroup::ptr group, const std::unordered_map<tracker::ptr, double> &tof) {
+    RunePredictorInfo info{};
+    if (group->data().empty()) {
         resetPmxm(_n, _pm, _xm);
         return info;
     }
-    if (groups.size() > 1)
-        RMVL_Error_(RMVL_StsBadArg, "Bad Argument of the \"groups\", size of the \"groups\" is %zu", groups.size());
     // ------------------- 系统参数辨识过程 -------------------
-    auto p_rune_group = RuneGroup::cast(groups.front());
-    const auto &trackers = p_rune_group->data();
-    const auto &raw_datas = p_rune_group->getRawDatas();
+    const auto &trackers = group->data();
+    const auto &raw_datas = group->getRawDatas();
     identifier(raw_datas);
     // ---------------------- 预测量计算 ----------------------
     for (auto p_tracker : trackers) {
@@ -73,8 +70,8 @@ PredictInfo SpiRunePredictor::predict(const std::vector<group::ptr> &groups, con
         // 动态预测角度增量
         double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
         auto dKt = anglePredict(raw_datas, tf);
-        info.static_prediction[p_tracker](ANG_Z) = dB;
-        info.dynamic_prediction[p_tracker](ANG_Z) = dKt;
+        info.static_prediction[p_tracker] = dB;
+        info.dynamic_prediction[p_tracker] = dKt;
     }
     return info;
 }

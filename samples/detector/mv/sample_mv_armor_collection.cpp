@@ -4,6 +4,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include "rmvl/algorithm/pretreat.hpp"
 #include "rmvl/camera/mv_camera.h"
 #include "rmvl/core/timer.hpp"
 #include "rmvl/core/util.hpp"
@@ -98,7 +99,7 @@ int main(int argc, char *argv[]) {
     capture.set(rm::CameraProperties::wb_bgain, b_gain);
 
     auto p_detector = rm::ArmorDetector::make_detector();
-    std::vector<rm::group::ptr> groups;
+    std::vector<rm::tracker::ptr> trackers;
 
     namedWindow("装甲板收集", cv::WINDOW_NORMAL);
     resizeWindow("装甲板收集", cv::Size(1000, 800));
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
         if (!capture.read(src))
             RMVL_Error(RMVL_StsError, "Fail to read the image.");
         // 识别
-        auto info = p_detector->detect(groups, src, color, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(trackers, src, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
         if (combos.size() > 1)
             WARNING_("当前识别到多于 1 个装甲板：识别到 %zu 个", combos.size());
