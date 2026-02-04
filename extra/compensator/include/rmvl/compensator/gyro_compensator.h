@@ -11,17 +11,17 @@
 
 #pragma once
 
-#include "compensator.h"
+#include "details/common.hpp"
 
-namespace rm
-{
+#include "rmvl/group/group.h"
+
+namespace rm {
 
 //! @addtogroup gyro_compensator
 //! @{
 
 //! 整车状态补偿模块
-class GyroCompensator final : public compensator
-{
+class GyroCompensator final {
     float _yaw_static_com;   //!< yaw 轴静态补偿，方向与 yaw 一致
     float _pitch_static_com; //!< pitch 轴静态补偿，方向与 pitch 一致
 
@@ -40,7 +40,7 @@ public:
      * @param[in] com_flag 手动调节补偿标志
      * @return 补偿模块信息
      */
-    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag) override;
+    CompensateInfo compensate(const std::vector<group::ptr> &groups, float shoot_speed, CompensateType com_flag);
 };
 
 //! @} compensator

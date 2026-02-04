@@ -10,31 +10,23 @@
  */
 
 #include "rmvl/predictor/rune_predictor.h"
-#include "rmvl/core/util.hpp"
-#include "rmvl/group/rune_group.h"
 #include "rmvl/tracker/rune_tracker.h"
 
 #include "rmvlpara/predictor/rune_predictor.h"
 
 namespace rm {
 
-PredictInfo RunePredictor::predict(const std::vector<group::ptr> &groups, const std::unordered_map<tracker::ptr, double> &tof) {
-    if (groups.size() != 1)
-        RMVL_Error(RMVL_StsBadSize, "Size of the groups is not equal to \'1\'");
-    auto rune_group = RuneGroup::cast(groups.front()); // 转换为神符 group 子类
-    if (rune_group == nullptr)
-        RMVL_Error(RMVL_BadDynamicType, "Dynamic type of the group::ptr is not equal to Runegroup::ptr");
+RunePredictorInfo RunePredictor::predict(const std::vector<RuneTracker::ptr> &trackers, const std::unordered_map<tracker::ptr, double> &tof) {
     // 预测信息
-    PredictInfo info{};
-    for (auto p_tracker : rune_group->data()) {
-        auto p_rune_tracker = RuneTracker::cast(p_tracker);
+    RunePredictorInfo info{};
+    for (auto p_tracker : trackers) {
         double tf = (tof.find(p_tracker) == tof.end()) ? 0. : tof.at(p_tracker);
         // Kt + B 预测模型
-        double dKt = p_rune_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_K * tf;
-        double dB = p_rune_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_B;
+        double dKt = p_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_K * tf;
+        double dB = p_tracker->getRotatedSpeed() * para::rune_predictor_param.PREDICT_B;
         // 更新预测量
-        info.dynamic_prediction.at(p_tracker)[ANG_Z] = dKt;
-        info.static_prediction.at(p_tracker)[ANG_Z] = dB;
+        info.dynamic_prediction.at(p_tracker) = dKt;
+        info.static_prediction.at(p_tracker) = dB;
     }
     return info;
 }

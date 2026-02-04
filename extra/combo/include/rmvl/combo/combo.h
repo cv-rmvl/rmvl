@@ -103,39 +103,10 @@ public:
     RMVL_W inline bool empty() const { return _features.empty(); }
 };
 
+//! `rm::combo` 特征组合类型转换宏
 #define RMVL_COMBO_CAST(name)                                                                       \
     static inline ptr cast(combo::ptr p_combo) { return std::dynamic_pointer_cast<name>(p_combo); } \
     static inline const_ptr cast(combo::const_ptr p_combo) { return std::dynamic_pointer_cast<const name>(p_combo); }
-
-//! 默认组合体，包含一个固定的特征，退化为 `feature` 使用
-class RMVL_EXPORTS_W_DES DefaultCombo final : public combo {
-public:
-    using ptr = std::shared_ptr<DefaultCombo>;
-    using const_ptr = std::shared_ptr<const DefaultCombo>;
-
-    //! @cond
-    DefaultCombo(feature::ptr, double);
-    //! @endcond
-
-    /**
-     * @brief 构造 DefaultCombo
-     *
-     * @param[in] p_feature 特征 `feature` 共享指针
-     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
-     * @return DefaultCombo 共享指针
-     */
-    RMVL_W static inline ptr make_combo(feature::ptr p_feature, double tick) { return std::make_shared<DefaultCombo>(p_feature, tick); }
-
-    /**
-     * @brief 从另一个组合体进行构造
-     *
-     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
-     * @return 指向新组合体的共享指针
-     */
-    RMVL_W combo::ptr clone(double tick) override;
-
-    RMVL_COMBO_CAST(DefaultCombo)
-};
 
 //! @} combo
 

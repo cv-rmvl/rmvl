@@ -18,19 +18,16 @@
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/detector/armor_detector.h"
 
-namespace rm_test
-{
+namespace rm_test {
 
 // 装甲板识别单元测试组件
-class ArmorDetectorTest : public testing::Test
-{
+class ArmorDetectorTest : public testing::Test {
 public:
     cv::Mat src;
-    rm::detector::ptr p_detector;
-    std::vector<rm::group::ptr> groups;
+    rm::ArmorDetector::ptr p_detector;
+    std::vector<rm::tracker::ptr> trackers;
 
-    void SetUp() override
-    {
+    void SetUp() override {
         resetImg();
         resetDetector();
     }
@@ -53,8 +50,7 @@ public:
      * @param angle 装甲板倾角
      * @return
      */
-    void buildArmorImg(cv::Point center, float angle)
-    {
+    void buildArmorImg(cv::Point center, float angle) {
         buildBlobImg(angle, center - cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
         buildBlobImg(angle, center + cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
     }
@@ -66,8 +62,7 @@ public:
      * @param center 中心点
      * @return
      */
-    void buildBlobImg(float angle, cv::Point center)
-    {
+    void buildBlobImg(float angle, cv::Point center) {
         cv::Point base_bias(static_cast<int>(-110 * sin(rm::deg2rad(angle))),
                             static_cast<int>(110 * cos(rm::deg2rad(angle))));
         cv::line(src, center - base_bias / 2, center + base_bias / 2, cv::Scalar(0, 0, 255), 12);

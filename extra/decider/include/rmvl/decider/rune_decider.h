@@ -11,17 +11,18 @@
 
 #pragma once
 
-#include "decider.h"
+#include "rmvl/group/group.h"
 
-namespace rm
-{
+#include "rmvl/compensator/details/common.hpp"
+#include "rmvl/predictor/details/rune.hpp"
+
+namespace rm {
 
 //! @addtogroup rune_decider
 //! @{
 
 //! 神符决策模块
-class RuneDecider final : public decider
-{
+class RuneDecider final {
     bool _is_changed = true;         //!< 神符改变标志位
     double _start_tick{};            //!< 起始时间
     double _delta_time{};            //!< 累积时间
@@ -30,6 +31,20 @@ class RuneDecider final : public decider
     float _initial_frequency{0.17f}; //!< 初始击打间隔
 
 public:
+    /**
+     * @brief 决策模块信息
+     * @note
+     * - 作为目标决策模块接口的返回值
+     */
+    struct Info {
+        tracker::ptr target;      //!< 目标追踪器
+        cv::Point2f shoot_center; //!< 目标追踪器对应距离下的实时射击中心
+        cv::Point2f exp_angle;    //!< 云台响应的期望角度偏移量
+        cv::Point2f exp_center2d; //!< 像素坐标系下的期望目标点
+        cv::Point3f exp_center3d; //!< 相机坐标系下的期望目标点
+        bool can_shoot = false;   //!< 能否射击
+    };
+
     RuneDecider() = default;
 
     //! 构造 RuneDecider
@@ -46,9 +61,8 @@ public:
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    DecideInfo decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
-                      tracker::ptr last_target, const DetectInfo &detect_info,
-                      const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
+    Info decide(group::ptr group, bool is_active, tracker::ptr last_target,
+                const CompensateInfo &compensate_info, const RunePredictorInfo &predict_info);
 
 private:
     /**

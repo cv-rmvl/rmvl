@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "rmvl/algorithm/pretreat.hpp"
 #include "rmvl/camera/hik_camera.h"
 #include "rmvl/core/timer.hpp"
 #include "rmvl/core/util.hpp"
@@ -17,7 +18,7 @@ static int collect_num = 2000;
 static rm::HikCamera::ptr capture;                           // 相机
 static auto p_detector = rm::ArmorDetector::make_detector(); // 识别模块
 static cv::Mat frame;                                        // 帧图像
-static std::vector<rm::group::ptr> groups;                   // 序列组列表
+static std::vector<rm::tracker::ptr> trackers;               // 追踪器列表
 static cv::Mat armor_samples;                                // 装甲板信息样本
 static cv::Mat armor_responses;                              // 装甲板响应/标签
 
@@ -26,7 +27,7 @@ void collect(rm::PixChannel color, rm::ArmorSizeType type, int begin_idx) {
         capture->read(frame);
         if (frame.empty())
             RMVL_Error(RMVL_StsBadSize, "frame is empty, something wrong with the camera.");
-        auto info = p_detector->detect(groups, frame, color, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(trackers, frame, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
         if (combos.size() != 1) {
             if (combos.size() > 1)
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
     }
     printf("在键盘上按下一次 \033[33mEsc\033[0m 来暂停，按下两次 \033[33mEsc\033[0m 来退出测试\n");
     while (capture->read(frame)) {
-        auto info = p_detector->detect(groups, frame, color, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(trackers, frame, color, rm::ImuData(), rm::Timer::now());
         const auto &combos = info.combos;
         if (!combos.empty()) {
             if (combos.size() > 1)

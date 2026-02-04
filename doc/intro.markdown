@@ -59,13 +59,13 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 #### 数据组件 {#data_components}
 
-@ref feature (**feature**) —— RMVL 最基本的用于存储的数据结构，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** @cite opencv_library 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 feature 有用的信息（一般是通过 feature 的构造函数完成）。此外 RMVL 提供了默认 feature，即 rm::DefaultFeature ，用于表示无轮廓的信息，一般是一个角点。
+@ref feature (**feature**) —— RMVL 最基本的用于存储的数据结构，代表图像中的一个封闭曲线（轮廓、简单封闭图形）。开发中，轮廓通常可以使用 **OpenCV** @cite opencv_library 中的 `cv::findContours` 函数来获取，简单封闭图形可通过 **OpenCV** 中的 `imgproc` 模块提供的各类函数接口来进行获取，例如最小外接矩形 `cv::minAreaRect`、最小包络三角 `cv::minEnclosingTriangle` 等，提取到的对象 `cv::RotatedRect` 或一个 `cv::OutputArray` 等内容可由开发者自行转化成 feature 有用的信息（一般是通过 feature 的构造函数完成）。
 
-@ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature::ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息用于构造 combo 的派生对象。此外 RMVL 提供了默认 combo，即 rm::DefaultCombo ，用于表示单独的无关联的 feature。
+@ref combo (**combo**) —— 这种类型的组件由一系列特征组成，并使用 `std::vector<feature::ptr>` 来存储它们，特征的数量通常不会太多，并且这类特征在物理空间中通常是刚性的，即特征之间大致具备尺度不变的特点。开发中，一般会使用若干特征以及附带信息用于构造 combo 的派生对象。
 
-@ref tracker (**tracker**) —— tracker 是在时间上包含了许多相同物理特性的 combo，从而形成一个 combo 的时间序列，在 RMVL 中，则通过使用 `std::deque<combo::ptr>` 来表示这个时间序列。在功能上，tracker 不仅表示了不同时间下相同的 combo 的相关信息，还能处理在某个时间点上获取到不正确的 combo 的异常情况。此外 RMVL 提供了默认 tracker，即 rm::DefaultTracker ，用于表示无需时间序列信息的一组 combo。
+@ref tracker (**tracker**) —— tracker 是在时间上包含了许多相同物理特性的 combo，从而形成一个 combo 的时间序列，在 RMVL 中，则通过使用 `std::deque<combo::ptr>` 来表示这个时间序列。在功能上，tracker 不仅表示了不同时间下相同的 combo 的相关信息，还能处理在某个时间点上获取到不正确的 combo 的异常情况。
 
-@ref group (**group**) —— 如果多个追踪器在物理空间上具有一定的相关性，比如共享轴旋转、刚性连接等属性，它们可以一起形成一个序列组 group，从而能够表示更加高级的物理信息。序列组使用 `std::vector<tracker::ptr>` 来存储这些追踪器。此外 RMVL 提供了默认 group，即 rm::DefaultGroup ，用于表示若干无相关性的一组 tracker，即退化成了 `std::vector<tracker::ptr>`。
+@ref group (**group**) —— 如果多个追踪器在物理空间上具有一定的相关性，比如共享轴旋转、刚性连接等属性，它们可以一起形成一个序列组 group，从而能够表示更加高级的物理信息。序列组使用 `std::vector<tracker::ptr>` 来存储这些追踪器。
 
 #### 功能模块 {#function_modules}
 

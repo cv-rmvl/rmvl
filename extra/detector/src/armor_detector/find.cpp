@@ -15,27 +15,22 @@
 
 #include "rmvlpara/detector/armor_detector.h"
 
-namespace rm
-{
+namespace rm {
 
-void ArmorDetector::find(cv::Mat &src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos, std::vector<cv::Mat> &rois)
-{
+void ArmorDetector::find(cv::Mat &src, std::vector<feature::ptr> &features, std::vector<combo::ptr> &combos, std::vector<cv::Mat> &rois) {
     // ----------------------- light_blob -----------------------
     // 找到所有灯条
     std::vector<LightBlob::ptr> blobs = findLightBlobs(src);
     // 删除过亮灯条
     eraseBrightBlobs(src, blobs);
     // ------------------------- armor --------------------------
-    if (blobs.size() >= 2)
-    {
+    if (blobs.size() >= 2) {
         // 找到所有装甲板
         std::vector<Armor::ptr> armors = findArmors(blobs);
-        if (_ort)
-        {
+        if (_ort) {
             rois.clear();
             rois.reserve(armors.size());
-            for (const auto &armor : armors)
-            {
+            for (const auto &armor : armors) {
                 cv::Mat roi = Armor::getNumberROI(src, armor);
                 PreprocessOptions preop;
                 preop.means = {para::armor_detector_param.MODEL_MEAN};
@@ -45,8 +40,7 @@ void ArmorDetector::find(cv::Mat &src, std::vector<feature::ptr> &features, std:
                 rois.emplace_back(roi);
             }
             // eraseFakeArmors(armors);
-        }
-        else
+        } else
             for (const auto &armor : armors)
                 armor->setType(RobotType::UNKNOWN);
 
@@ -61,16 +55,14 @@ void ArmorDetector::find(cv::Mat &src, std::vector<feature::ptr> &features, std:
     }
 }
 
-std::vector<LightBlob::ptr> ArmorDetector::findLightBlobs(cv::Mat &bin)
-{
+std::vector<LightBlob::ptr> ArmorDetector::findLightBlobs(cv::Mat &bin) {
     // 储存找到的灯条
     std::vector<LightBlob::ptr> light_blobs;
     // 储存查找出的轮廓
     std::vector<std::vector<cv::Point>> contours;
     // 查找最外围轮廓
     cv::findContours(bin, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-    for (auto &contour : contours)
-    {
+    for (auto &contour : contours) {
         // 排除面积过小的误识别
         if (cv::contourArea(contour) < para::armor_detector_param.MIN_CONTOUR_AREA)
             continue;
@@ -83,8 +75,7 @@ std::vector<LightBlob::ptr> ArmorDetector::findLightBlobs(cv::Mat &bin)
     return light_blobs;
 }
 
-std::vector<Armor::ptr> ArmorDetector::findArmors(std::vector<LightBlob::ptr> &light_blobs)
-{
+std::vector<Armor::ptr> ArmorDetector::findArmors(std::vector<LightBlob::ptr> &light_blobs) {
     // 灯条从左到右排序
     sort(light_blobs.begin(), light_blobs.end(), [&](LightBlob::ptr p_left, LightBlob::ptr p_right) {
         return p_left->center().x < p_right->center().x;
@@ -94,10 +85,8 @@ std::vector<Armor::ptr> ArmorDetector::findArmors(std::vector<LightBlob::ptr> &l
     if (light_blobs.size() < 2)
         return current_armors;
     // -------------------------------------【匹配】-------------------------------------
-    for (size_t i = 0; i + 1 < light_blobs.size(); ++i)
-    {
-        for (size_t j = i + 1; j < light_blobs.size(); j++)
-        {
+    for (size_t i = 0; i + 1 < light_blobs.size(); ++i) {
+        for (size_t j = i + 1; j < light_blobs.size(); j++) {
             // 构造装甲板
             Armor::ptr armor = Armor::make_combo(light_blobs[i], light_blobs[j], _imu_data, _tick);
             // 是否找到目标（未找到则单次跳出）
@@ -108,10 +97,8 @@ std::vector<Armor::ptr> ArmorDetector::findArmors(std::vector<LightBlob::ptr> &l
              * @note 分支限界，复杂度不会过高
              */
             bool contain = false;
-            for (size_t k = i + 1; k < j; ++k)
-            {
-                if (Armor::isContainBlob(light_blobs[k], armor))
-                {
+            for (size_t k = i + 1; k < j; ++k) {
+                if (Armor::isContainBlob(light_blobs[k], armor)) {
                     contain = true;
                     break;
                 }
@@ -125,8 +112,7 @@ std::vector<Armor::ptr> ArmorDetector::findArmors(std::vector<LightBlob::ptr> &l
     return current_armors;
 }
 
-void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
-{
+void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors) {
     // 判断大小是否允许被删除
     if (armors.size() < 2)
         return;
@@ -134,10 +120,8 @@ void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
     for (const auto &armor : armors)
         armor_map[armor] = false;
     // 设置是否删除的标志位
-    for (size_t i = 0; i + 1 < armors.size(); i++)
-    {
-        for (size_t j = i + 1; j < armors.size(); j++)
-        {
+    for (size_t i = 0; i + 1 < armors.size(); i++) {
+        for (size_t j = i + 1; j < armors.size(); j++) {
             // 共享左灯条 or 右灯条，优先匹配宽度小的
             if (armors[i]->at(0) == armors[j]->at(0) || armors[i]->at(1) == armors[j]->at(1))
                 armor_map[armors[i]->width() > armors[j]->width() ? armors[i] : armors[j]] = true;
@@ -153,20 +137,17 @@ void ArmorDetector::eraseErrorArmors(std::vector<Armor::ptr> &armors)
                  armors.end());
 }
 
-void ArmorDetector::eraseFakeArmors(std::vector<Armor::ptr> &armors)
-{
+void ArmorDetector::eraseFakeArmors(std::vector<Armor::ptr> &armors) {
     armors.erase(remove_if(armors.begin(), armors.end(), [&](Armor::ptr &it) {
                      return it->state().at_string("robot") == "unknown";
                  }),
                  armors.end());
 }
 
-void ArmorDetector::eraseBrightBlobs(cv::Mat src, std::vector<LightBlob::ptr> &blobs)
-{
+void ArmorDetector::eraseBrightBlobs(cv::Mat src, std::vector<LightBlob::ptr> &blobs) {
     blobs.erase(remove_if(blobs.begin(), blobs.end(), [&](LightBlob::ptr blob) {
                     int total_brightness = 0;
-                    for (int i = -5; i <= 5; i++)
-                    {
+                    for (int i = -5; i <= 5; i++) {
                         if (i == 0)
                             continue;
                         int x = blob->center().x - blob->height() * i / 5;

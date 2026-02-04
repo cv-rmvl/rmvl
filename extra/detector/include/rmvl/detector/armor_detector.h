@@ -11,9 +11,8 @@
 
 #pragma once
 
-#include "detector.h"
-
 #include "rmvl/combo/armor.h"
+#include "rmvl/tracker/tracker.h"
 #include "rmvl/ml/ort.h"
 
 namespace rm {
@@ -24,12 +23,28 @@ namespace rm {
 //! @example samples/detector/mv/sample_mv_armor_collection.cpp 装甲板收集例程 Armor collection demo
 //! @example samples/detector/hik/sample_hik_armor_collection.cpp 装甲板收集例程 Armor collection demo
 
+//! 装甲板识别信息结构体
+struct RMVL_EXPORTS_W_AG ArmorDetectorInfo {
+    RMVL_W_RW cv::Mat src;               //!< 原图
+    RMVL_W_RW cv::Mat gray;              //!< 灰度图列表
+    RMVL_W_RW cv::Mat bin;               //!< 二值图列表
+    RMVL_W_RW std::vector<cv::Mat> rois; //!< ROI 列表
+    RMVL_W_RW cv::Mat rendergraph;       //!< 渲染图
+
+    RMVL_W_RW std::vector<combo::ptr> combos;     //!< 当前帧所有组合体
+    RMVL_W_RW std::vector<feature::ptr> features; //!< 当前帧所有特征
+};
+
 //! 装甲板识别模块
-class RMVL_EXPORTS_W_DEU ArmorDetector final : public detector {
+class RMVL_EXPORTS_W ArmorDetector final {
+    double _tick;      //!< 每一帧对应的时间点
+    ImuData _imu_data; //!< 每一帧对应的 IMU 数据
     std::unique_ptr<OnnxNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
 
 public:
+    using ptr = std::unique_ptr<ArmorDetector>;
+
     //! @cond
     ArmorDetector() = default;
     ~ArmorDetector() = default;
@@ -40,14 +55,14 @@ public:
     /**
      * @brief 装甲板识别核心函数
      *
-     * @param[in out] groups 序列组容器
+     * @param[in out] trackers 所有追踪器序列
      * @param[in] src 原图像
      * @param[in] color 待识别的颜色
      * @param[in] imu_data IMU 数据
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
+    RMVL_W ArmorDetectorInfo detect(std::vector<tracker::ptr> &trackers, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick);
 
     //! 构建 ArmorDetector
     RMVL_W static inline auto make_detector() { return std::make_unique<ArmorDetector>(); }
@@ -73,10 +88,10 @@ private:
     /**
      * @brief 匹配、更新时间序列
      *
-     * @param[in] groups 所有序列组
+     * @param[in] trackers 所有追踪器序列
      * @param[in] combos 每一帧的所有目标
      */
-    void match(std::vector<group::ptr> &groups, const std::vector<combo::ptr> &combos);
+    void match(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos);
 
     /**
      * @brief 寻找灯条

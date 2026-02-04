@@ -11,23 +11,35 @@
 
 #pragma once
 
-#include "decider.h"
-#include "rmvl/tracker/tracker.h"
+#include "rmvl/compensator/details/common.hpp"
+#include "rmvl/predictor/gyro_predictor.h"
 
 #include "rmvl/combo/armor.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup gyro_decider
 //! @{
 
 //! 整车状态决策类
-class GyroDecider final : public decider
-{
+class GyroDecider final {
     std::unordered_map<RobotType, int> _priority; //!< 数字决策优先级
 
 public:
+    /**
+     * @brief 决策模块信息
+     * @note
+     * - 作为目标决策模块接口的返回值
+     */
+    struct Info {
+        tracker::ptr target;      //!< 目标追踪器
+        cv::Point2f shoot_center; //!< 目标追踪器对应距离下的实时射击中心
+        cv::Point2f exp_angle;    //!< 云台响应的期望角度偏移量
+        cv::Point2f exp_center2d; //!< 像素坐标系下的期望目标点
+        cv::Point3f exp_center3d; //!< 相机坐标系下的期望目标点
+        bool can_shoot = false;   //!< 能否射击
+    };
+
     GyroDecider();
 
     /**
@@ -39,16 +51,13 @@ public:
      *       `target_tracker`，最后设置 `TransferData`。
      *
      * @param[in] groups 所有序列组
-     * @param[in] flag 决策状态模式
      * @param[in] last_target 历史目标追踪器，为空则默认自动判断
-     * @param[in] detect_info 辅助决策的识别模块信息
      * @param[in] compensate_info 辅助决策的补偿模块信息
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息
      */
-    DecideInfo decide(const std::vector<group::ptr> &groups, const StateInfo &flag,
-                      tracker::ptr last_target, const DetectInfo &detect_info,
-                      const CompensateInfo &compensate_info, const PredictInfo &predict_info) override;
+    Info decide(const std::vector<group::ptr> &groups, tracker::ptr last_target,
+                const CompensateInfo &compensate_info, const GyroPredictor::Info &predict_info);
 
     //! 构造 GyroDecider
     static inline std::unique_ptr<GyroDecider> make_decider() { return std::make_unique<GyroDecider>(); }
@@ -62,7 +71,7 @@ private:
      * @param[in] info 预测信息
      * @return 最近的目标追踪器
      */
-    tracker::ptr getClosestTracker(group::ptr p_group, const PredictInfo &info);
+    tracker::ptr getClosestTracker(group::ptr p_group, const GyroPredictor::Info &info);
 
     /**
      * @brief 获取优先级最高的目标序列组

@@ -12,6 +12,7 @@
 #include "rmvl/decider/gyro_decider.h"
 #include "rmvl/algorithm/transform.hpp"
 #include "rmvl/group/gyro_group.h"
+#include "rmvl/predictor/gyro_predictor.h"
 #include "rmvl/tracker/gyro_tracker.h"
 
 #include "rmvlpara/camera/camera.h"
@@ -101,11 +102,9 @@ static cv::Point2f calculateHighSpeedBasicResponse(group::ptr target_group, trac
                                                                           pitch_min * (1 - para::gyro_decider_param.PITCH_RESPONSE_AMP))};
 }
 
-DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const StateInfo &,
-                               tracker::ptr last_target, const DetectInfo &,
-                               const CompensateInfo &compensate_info, const PredictInfo &predict_info) {
+GyroDecider::Info GyroDecider::decide(const std::vector<group::ptr> &groups, tracker::ptr last_target, const CompensateInfo &compensate_info, const GyroPredictor::Info &predict_info) {
     // 决策信息
-    DecideInfo info{};
+    Info info{};
     // 若没有序列组，则返回
     if (groups.empty() || groups.front()->data().empty())
         return info;
@@ -133,8 +132,8 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
         const auto &pKt = predict_info.dynamic_prediction.at(info.target);
         const auto &pB = predict_info.static_prediction.at(info.target);
         const auto &pBs = predict_info.shoot_delay_prediction.at(info.target);
-        auto tdKt = cv::Vec3f(pKt(POS_X), pKt(POS_Y), pKt(POS_Z));
-        auto tdB = cv::Vec3f(pB(POS_X), pB(POS_Y), pB(POS_Z));
+        auto tdKt = cv::Vec3f(pKt[GyroPredictor::POS_X], pKt[GyroPredictor::POS_Y], pKt[GyroPredictor::POS_Z]);
+        auto tdB = cv::Vec3f(pB[GyroPredictor::POS_X], pB[GyroPredictor::POS_Y], pB[GyroPredictor::POS_Z]);
         auto comp = compensate_info.compensation.at(info.target);
 
         // 低速状态跟随装甲板
@@ -144,13 +143,13 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
             cv::Point3f resp_p3d; // 预测值 (3D)
             cv::Point2f resp_dp;  // 预测增量
 
-            calcPrediction(target_group, info.target, tdKt + tdB, pKt(ANG_Y) + pB(ANG_Y),
+            calcPrediction(target_group, info.target, tdKt + tdB, pKt[GyroPredictor::ANG_Y] + pB[GyroPredictor::ANG_Y],
                            resp_p2d, resp_p3d, resp_dp);
             // --------------------【提取用于发弹的预测量】--------------------
             cv::Point2f shoot_p2d; // 预测值 (2D)
             cv::Point3f shoot_p3d; // 预测值 (3D)
             cv::Point2f shoot_dp;  // 预测增量
-            calcPrediction(target_group, info.target, tdKt, pKt(ANG_Y), shoot_p2d, shoot_p3d, shoot_dp);
+            calcPrediction(target_group, info.target, tdKt, pKt[GyroPredictor::ANG_Y], shoot_p2d, shoot_p3d, shoot_dp);
             // 更新决策信息
             info.exp_angle = info.target->getRelativeAngle();
             info.exp_angle += resp_dp; // 考虑预测
@@ -169,14 +168,14 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
             cv::Point2f resp_y_p2d; // pitch 预测值 (2D)
             cv::Point3f resp_y_p3d; // pitch 预测值 (3D)
             cv::Point2f resp_y_dp;  // pitch 预测增量
-            calcPrediction(target_group, info.target, tdKt + tdB, pKt(ANG_Y) + pB(ANG_Y) + pBs(ANG_Y),
+            calcPrediction(target_group, info.target, tdKt + tdB, pKt[GyroPredictor::ANG_Y] + pB[GyroPredictor::ANG_Y] + pBs,
                            resp_y_p2d, resp_y_p3d, resp_y_dp);
 
             // --------------------【提取用于发弹的预测量】--------------------
             cv::Point2f shoot_p2d; // 动态预测值 (2D)
             cv::Point3f shoot_p3d; // 动态预测值 (3D)
             cv::Point2f shoot_dp;  // 动态预测增量
-            calcPrediction(target_group, info.target, tdKt, pKt(ANG_Y) + pBs(ANG_Y), shoot_p2d, shoot_p3d, shoot_dp);
+            calcPrediction(target_group, info.target, tdKt, pKt[GyroPredictor::ANG_Y] + pBs, shoot_p2d, shoot_p3d, shoot_dp);
 
             info.exp_angle = calculateHighSpeedBasicResponse(target_group, info.target, shoot_p3d);
             info.exp_angle += cv::Point2f(resp_x_dp.x, resp_y_dp.y); // 考虑预测
@@ -197,7 +196,7 @@ DecideInfo GyroDecider::decide(const std::vector<group::ptr> &groups, const Stat
     return info;
 }
 
-tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInfo &info) {
+tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const GyroPredictor::Info &info) {
     if (p_group == nullptr)
         return nullptr;
     if (p_group->empty())
@@ -209,14 +208,14 @@ tracker::ptr GyroDecider::getClosestTracker(group::ptr p_group, const PredictInf
 
     return *min_element(trackers.begin(), trackers.end(), [&](tracker::const_ptr lhs, tracker::const_ptr rhs) {
         cv::Point3f lhs_preaim_p3d; // 左操作数预测值 (3D)
-        float lhs_preaim_angle = info.dynamic_prediction.at(lhs)(ANG_Y) +
-                                 info.shoot_delay_prediction.at(lhs)(ANG_Y) +
+        float lhs_preaim_angle = info.dynamic_prediction.at(lhs)[GyroPredictor::ANG_Y] +
+                                 info.shoot_delay_prediction.at(lhs) +
                                  para::gyro_decider_param.PRE_AIM_ANGLE * sgn(GyroGroup::cast(p_group)->getRotatedSpeed());
         calcPrediction(p_group, lhs, {}, lhs_preaim_angle, unused_pa, lhs_preaim_p3d, unused_pb);
 
         cv::Point3f rhs_preaim_p3d; // 右操作数预测值 (3D)
-        float rhs_preaim_angle = info.dynamic_prediction.at(rhs)(ANG_Y) +
-                                 info.shoot_delay_prediction.at(rhs)(ANG_Y) +
+        float rhs_preaim_angle = info.dynamic_prediction.at(rhs)[GyroPredictor::ANG_Y] +
+                                 info.shoot_delay_prediction.at(rhs) +
                                  para::gyro_decider_param.PRE_AIM_ANGLE * sgn(GyroGroup::cast(p_group)->getRotatedSpeed());
         calcPrediction(p_group, rhs, {}, rhs_preaim_angle, unused_pa, rhs_preaim_p3d, unused_pb);
 
@@ -233,7 +232,7 @@ group::ptr GyroDecider::getHighestPriorityGroup(const std::vector<group::ptr> &g
         GyroGroup::const_ptr lhs = GyroGroup::cast(g1);
         GyroGroup::const_ptr rhs = GyroGroup::cast(g2);
         auto type_lhs = to_robot_type(g1->state().at("robot"));
-        auto type_rhs = to_robot_type(g1->state().at("robot"));
+        auto type_rhs = to_robot_type(g2->state().at("robot"));
         // 需要满足: 优先级 rhs > lhs
         if (_priority.find(type_lhs) != _priority.end() &&
             _priority.find(type_rhs) != _priority.end() &&

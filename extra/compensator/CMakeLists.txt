@@ -1,10 +1,6 @@
 # ----------------------------------------------------------------------------
 #  Generate para and add module for each compensator
 # ----------------------------------------------------------------------------
-rmvl_add_module(
-  compensator INTERFACE
-  DEPENDS group
-)
 
 # gravity_compensator
 rmvl_generate_para(
@@ -13,7 +9,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gravity_compensator
-  DEPENDS compensator
+  DEPENDS tracker
 )
 
 # gyro_compensator
@@ -23,7 +19,7 @@ rmvl_generate_para(
 )
 rmvl_add_module(
   gyro_compensator
-  DEPENDS compensator gyro_group
+  DEPENDS gyro_group
 )
 
 rmvl_generate_module_para(compensator)

@@ -13,15 +13,13 @@
 
 #include "feature.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup tag
 //! @{
 
 //! AprilTag 视觉标签特征类
-class RMVL_EXPORTS_W_DES Tag final : public feature
-{
+class RMVL_EXPORTS_W_DES Tag final : public feature {
 public:
     using ptr = std::shared_ptr<Tag>;
     using const_ptr = std::shared_ptr<const Tag>;
@@ -35,6 +33,9 @@ public:
      */
     RMVL_W static ptr make_feature(const std::vector<cv::Point2f> &corners, char type);
 
+    //! 获取 AprilTag 视觉标签类型，包含 `A` 到 `Z` 和 `0` 到 `9`
+    RMVL_W char type() const noexcept { return _type; }
+
     /**
      * @brief 从另一个特征进行构造
      *
@@ -43,6 +44,9 @@ public:
     RMVL_W feature::ptr clone() override { return std::make_shared<Tag>(*this); }
 
     RMVL_FEATURE_CAST(Tag)
+
+private:
+    char _type; //!< AprilTag 视觉标签类型，包含 `A` 到 `Z` 和 `0` 到 `9`
 };
 
 //! @} tag

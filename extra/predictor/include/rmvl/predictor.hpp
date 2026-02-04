@@ -23,8 +23,6 @@
 
 #include <rmvl/rmvl_modules.hpp>
 
-#include "predictor/predictor.h"
-
 #ifdef HAVE_RMVL_ARMOR_PREDICTOR
 #include "predictor/armor_predictor.h"
 #endif // HAVE_RMVL_ARMOR_PREDICTOR

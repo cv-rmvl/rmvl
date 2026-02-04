@@ -1,1 +1,0 @@
-float MAX_TRACKER_DELTA_DIS = 255.f # 识别为相同追踪器时，Tag 中心在两帧之间允许的最大距离

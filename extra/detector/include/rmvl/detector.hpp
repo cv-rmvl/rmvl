@@ -23,8 +23,6 @@
 
 #include <rmvl/rmvl_modules.hpp>
 
-#include "detector/detector.h"
-
 #ifdef HAVE_RMVL_ARMOR_DETECTOR
 #include "detector/armor_detector.h"
 #endif // HAVE_RMVL_ARMOR_DETECTOR

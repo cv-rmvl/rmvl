@@ -13,9 +13,8 @@
 
 #include <unordered_map>
 
-#include "detector.h"
-
 #include "rmvl/combo/armor.h"
+#include "rmvl/group/group.h"
 #include "rmvl/ml/ort.h"
 
 namespace rm {
@@ -23,9 +22,23 @@ namespace rm {
 //! @addtogroup gyro_detector
 //! @{
 
+//! 装甲板识别信息结构体
+struct RMVL_EXPORTS_W_AG GyroDetectorInfo {
+    RMVL_W_RW cv::Mat src;               //!< 原图
+    RMVL_W_RW cv::Mat gray;              //!< 灰度图列表
+    RMVL_W_RW cv::Mat bin;               //!< 二值图列表
+    RMVL_W_RW std::vector<cv::Mat> rois; //!< ROI 列表
+    RMVL_W_RW cv::Mat rendergraph;       //!< 渲染图
+
+    RMVL_W_RW std::vector<combo::ptr> combos;     //!< 当前帧所有组合体
+    RMVL_W_RW std::vector<feature::ptr> features; //!< 当前帧所有特征
+};
+
 //! 整车状态识别模块
-class RMVL_EXPORTS_W_DEU GyroDetector final : public detector {
-    int _armor_num; //!< 默认装甲板数目
+class RMVL_EXPORTS_W GyroDetector final {
+    double _tick;      //!< 每一帧对应的时间点
+    ImuData _imu_data; //!< 每一帧对应的 IMU 数据
+    int _armor_num;    //!< 默认装甲板数目
 
     std::unique_ptr<OnnxNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
@@ -49,7 +62,7 @@ public:
      * @param[in] tick 当前时间点
      * @return 识别信息结构体
      */
-    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
+    RMVL_W GyroDetectorInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick);
 
     /**
      * @brief 构建 GyroDetector

@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "detector.h"
+#include "rmvl/feature/tag.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,8 +26,7 @@ typedef struct apriltag_detector apriltag_detector_t;
 }
 #endif
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup tag_detector
 //! @{
@@ -37,8 +36,7 @@ namespace rm
  * @note 仅支持 Tag25h9 格式
  * @cite AprilRobotics23
  */
-class RMVL_EXPORTS_W_DEU TagDetector final : public detector
-{
+class RMVL_EXPORTS_W_DEU TagDetector final {
     apriltag_family_t *_tf{};
     apriltag_detector_t *_td{};
 
@@ -62,13 +60,10 @@ public:
      * @brief 识别接口
      * @note 提取出所有角点以及对应的类型，通过 `type` 和 `corners` 方法可以获取
      *
-     * @param[in out] groups 所有序列组
      * @param[in] src 原图像
-     * @param[in] color 待处理颜色
-     * @param[in] imu_data 当前 IMU 数据
-     * @param[in] tick 当前时间点
+     * @return 识别到的 Tag 列表
      */
-    RMVL_W DetectInfo detect(std::vector<group::ptr> &groups, const cv::Mat &src, uint8_t color, const ImuData &imu_data, double tick) override;
+    RMVL_W std::vector<Tag::const_ptr> detect(cv::Mat src);
 };
 
 //! @} tag_detector

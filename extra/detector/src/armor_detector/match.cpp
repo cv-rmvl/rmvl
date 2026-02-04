@@ -33,8 +33,7 @@ static inline bool isChange(const combo::ptr &t_combo, const combo::ptr &combo, 
     return ((t_combo->angle() * combo->angle() < -80.f) || dis > para::armor_detector_param.MAX_TRACKER_DELTA_DIS);
 }
 
-void ArmorDetector::match(std::vector<group::ptr> &groups, const std::vector<combo::ptr> &combos) {
-    auto &trackers = groups.front()->data();
+void ArmorDetector::match(std::vector<tracker::ptr> &trackers, const std::vector<combo::ptr> &combos) {
     // combo 匹配 tracker
     matchArmors(trackers, combos);
     // 删除失效的 tracker
