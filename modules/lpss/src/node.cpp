@@ -28,7 +28,7 @@ namespace rm::lpss {
 std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid();
 Locator selectBestLocator(std::array<uint8_t, 4> target_ip, const RNDPMessage &rndp_msg);
 
-Node::Node(std::string_view name, uint8_t domain) : helper::NodeRunningInfo(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()) {
+Node::Node(std::string_view name, uint8_t domain) : _rndp_port(7500 + domain), _rndp_writer(Sender(ip::udp::v4()).create()) {
     static_assert(sizeof(Locator) == 6, "Locator size must be 6 bytes");
 
     std::vector<ip::Networkv4> networks{};
@@ -56,7 +56,7 @@ Node::Node(std::string_view name, uint8_t domain) : helper::NodeRunningInfo(7500
     _hbt_detect_thrd = std::thread(&Node::heartbeat_detect, this);
 }
 
-Node::~Node() {
+void Node::shutdown() noexcept {
     // 向已发现节点发送 Remove 的 REDP 消息
     std::vector<REDPMessage> redp_msgs{};
     redp_msgs.reserve(_local_writers.size() + _local_readers.size());

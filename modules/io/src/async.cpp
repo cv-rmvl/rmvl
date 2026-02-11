@@ -275,9 +275,9 @@ IOContext::~IOContext() {
 }
 
 void IOContext::run() {
-    _running = true;
+    _running.store(true, std::memory_order_release);
     std::unordered_map<void *, BasicTask::ptr> unfinish;
-    while (_running) {
+    while (_running.load(std::memory_order_acquire)) {
         // 优先处理就绪队列
         while (!_ready.empty()) {
             auto task = std::move(_ready.front());
@@ -314,7 +314,7 @@ void IOContext::run() {
 }
 
 void IOContext::stop() noexcept {
-    _running = false;
+    _running.store(false, std::memory_order_release);
     uint64_t one = 1;
     [[maybe_unused]] auto _ = write(_wakeup, &one, sizeof(one));
 }
