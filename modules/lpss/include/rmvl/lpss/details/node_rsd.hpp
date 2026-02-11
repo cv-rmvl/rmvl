@@ -125,30 +125,6 @@ struct NodeStorageInfo {
     Locator ctrl_loc{};                                              //!< 与该节点通信的最佳控制平面定位器
 };
 
-namespace helper {
-
-//! 节点运行时信息
-class NodeRunningInfo {
-public:
-    NodeRunningInfo(uint16_t ndp_port) : _rndp_port(ndp_port) {}
-
-    //! 获取节点唯一标识符
-    Guid guid() const noexcept { return _uid; }
-
-protected:
-    std::atomic_bool _running{true};   //!< 运行状态
-    std::atomic_uint16_t _next_eid{1}; //!< 用于生成实体 ID 的原子计数器
-
-    uint16_t _rndp_port{}; //!< RNDP 广播端口号
-    uint16_t _redp_port{}; //!< REDP 监听端口号
-
-    Guid _uid{}; //!< 节点唯一标识符
-
-    std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{}; //!< 已发现的节点列表
-};
-
-} // namespace helper
-
 /**
  * @brief 数据写入器基类
  * @details 每个 DataWriter 都对应一个动态分配端口的 UDPv4 通道以及设置指定话题的 MPMC SHM 通道

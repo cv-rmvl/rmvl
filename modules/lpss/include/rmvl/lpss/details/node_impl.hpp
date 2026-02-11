@@ -123,7 +123,7 @@ typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) n
     if (_local_writers.find(std::string(topic)) != _local_writers.end())
         return nullptr;
     Guid pub_guid = _uid;
-    pub_guid.fields.entity = _next_eid.fetch_add(1, std::memory_order_relaxed);
+    pub_guid.fields.entity = _next_eid++;
     DataWriterBase::ptr writer = std::make_shared<DataWriter<MsgType>>(_ctx, pub_guid, topic);
     // 设置 SHM 通道和 UDPv4 缓存
     auto it = _discovered_readers.find(std::string(topic));
@@ -144,7 +144,7 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
     if (_local_readers.find(std::string(topic)) != _local_readers.end())
         return nullptr;
     Guid sub_guid = _uid;
-    sub_guid.fields.entity = _next_eid.fetch_add(1, std::memory_order_relaxed);
+    sub_guid.fields.entity = _next_eid++;
     // 注册本地 DataReader
     DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(_ctx, sub_guid, topic, std::move(callback));
     _local_readers[std::string(topic)] = reader;

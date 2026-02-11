@@ -51,7 +51,7 @@ rm::async::Task<> Node::rndp_multicast(std::vector<ip::Networkv4> networks, std:
     // 序列化 RNDP 消息
     auto rndp_msg_data = rndp_msg.serialize();
 
-    while (_running.load(std::memory_order_acquire)) {
+    while (_running) {
         co_await _broadcast_timer.sleep_for(25ms);
 
         // 为 Outbound 设置不同的接口地址，并分别发送消息
@@ -63,7 +63,7 @@ rm::async::Task<> Node::rndp_multicast(std::vector<ip::Networkv4> networks, std:
 }
 
 rm::async::Task<> Node::rndp_listener(rm::async::DgramSocket rndp_reader) {
-    while (_running.load(std::memory_order_acquire)) {
+    while (_running) {
         // 接收原始 UDP 报文
         auto [data, addr_str, port] = co_await rndp_reader.read();
 
@@ -103,7 +103,7 @@ rm::async::Task<> Node::rndp_listener(rm::async::DgramSocket rndp_reader) {
 }
 
 rm::async::Task<> Node::redp_listener(rm::async::DgramSocket redp_socket) {
-    while (_running.load(std::memory_order_acquire)) {
+    while (_running) {
         auto [redp_msg, addr_str, port] = co_await redp_socket.read();
         std::array<uint8_t, 4> addr{};
         inet_pton(AF_INET, addr_str.c_str(), addr.data());
@@ -142,7 +142,7 @@ rm::async::Task<> Node::redp_listener(rm::async::DgramSocket redp_socket) {
 static bool is_same_node(const Guid &lhs, const Guid &rhs) { return lhs.fields.host == rhs.fields.host && lhs.fields.pid == rhs.fields.pid; }
 
 rm::async::Task<> Node::heartbeat_detect() {
-    while (_running.load(std::memory_order_acquire)) {
+    while (_running) {
         // 检测心跳超时的节点
         auto now = std::chrono::steady_clock::now();
         std::vector<Guid> guid_ready_to_erase{};
@@ -199,7 +199,7 @@ rm::async::Task<> Node::on_sigint() {
     _ctx.stop();
 }
 
-Node::Node(std::string_view name, uint8_t domain_id) : helper::NodeRunningInfo(7500 + domain_id), _rndp_writer(rm::async::Sender(_ctx, ip::udp::v4()).create()) {
+Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_id), _rndp_writer(rm::async::Sender(_ctx, ip::udp::v4()).create()) {
     static_assert(sizeof(Locator) == 6, "Locator size must be 6 bytes");
 
     std::vector<ip::Networkv4> networks{};
@@ -230,7 +230,7 @@ Node::Node(std::string_view name, uint8_t domain_id) : helper::NodeRunningInfo(7
     co_spawn(_ctx, &Node::on_sigint, this);
 }
 
-Node::~Node() {
+void Node::shutdown() noexcept {
     sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
     _ctx.stop();
 }

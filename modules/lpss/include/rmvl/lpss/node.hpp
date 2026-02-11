@@ -114,7 +114,7 @@ private:
  * - 内置通信端点发现协议 EDP (Endpoint Discovery Protocol)，用于发布者与订阅者间的自动发现与通信
  * @see 详情见 @ref tutorial_modules_lpss
  */
-class Node : public helper::NodeRunningInfo {
+class Node {
 public:
     /**
      * @brief 创建通用节点，默认域 ID 为 0
@@ -124,7 +124,10 @@ public:
      */
     explicit Node(std::string_view name, uint8_t domain_id = 0);
 
-    ~Node();
+    ~Node() noexcept { shutdown(); }
+
+    //! 获取节点唯一标识符
+    inline Guid guid() const noexcept { return _uid; }
 
     /**
      * @brief 创建发布者
@@ -166,6 +169,9 @@ public:
     template <typename MsgType>
     void destroySubscriber(const Subscriber<MsgType> &sub);
 
+    //! 手动停止节点运行 @note 推荐使用析构函数自动清理资源并停止节点，除非在多线程环境中需要提前停止节点以释放资源
+    void shutdown() noexcept;
+
 private:
     //! 广播 NDP 消息
     void rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name);
@@ -179,9 +185,27 @@ private:
     //! 心跳检测
     void heartbeat_detect();
 
+    std::atomic_bool _running{true};   //!< 运行状态
+    std::atomic_uint16_t _next_eid{1}; //!< 用于生成实体 ID 的原子计数器
+
+    uint16_t _rndp_port{}; //!< RNDP 广播端口号
+    uint16_t _redp_port{}; //!< REDP 监听端口号
+
+    Guid _uid{};              //!< 节点唯一标识符
     DgramSocket _rndp_writer; //!< NDP 广播 Socket
 
-    std::shared_mutex _nodes_mtx{}; //!< 节点读写锁
+    std::thread _bcast_thrd{};       //!< 广播线程
+    std::thread _rndp_listen_thrd{}; //!< NDP 监听线程
+    std::thread _redp_listen_thrd{}; //!< EDP 监听线程
+    std::thread _hbt_detect_thrd{};  //!< 心跳检测线程
+    std::mutex _hbt_mtx{};
+    std::condition_variable _hbt_cv{};
+
+protected:
+    //! 节点读写锁
+    std::shared_mutex _nodes_mtx{};
+    //! 已发现的节点列表
+    std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{};
 
     //! 本地实体读写锁
     std::shared_mutex _local_mtx{};
@@ -196,13 +220,6 @@ private:
     std::unordered_map<std::string, std::unordered_set<Guid, GuidHash>> _discovered_writers{};
     //! 已发现的 Readers 列表，[Topic: [Guid: Locator]]
     std::unordered_map<std::string, std::unordered_map<Guid, Locator, GuidHash>> _discovered_readers{};
-
-    std::thread _bcast_thrd{};       //!< 广播线程
-    std::thread _rndp_listen_thrd{}; //!< NDP 监听线程
-    std::thread _redp_listen_thrd{}; //!< EDP 监听线程
-    std::thread _hbt_detect_thrd{};  //!< 心跳检测线程
-    std::mutex _hbt_mtx{};
-    std::condition_variable _hbt_cv{};
 };
 
 #if __cplusplus >= 202002L
@@ -316,7 +333,7 @@ public:
  * - 内置通信端点发现协议 EDP (Endpoint Discovery Protocol)，用于发布者与订阅者间的自动发现与通信
  * @see 详情见 @ref tutorial_modules_lpss
  */
-class Node : public helper::NodeRunningInfo {
+class Node {
 public:
     /**
      * @brief 创建通用节点，默认域 ID 为 0
@@ -326,7 +343,10 @@ public:
      */
     explicit Node(std::string_view name, uint8_t domain_id = 0);
 
-    ~Node();
+    ~Node() noexcept { shutdown(); }
+
+    //! 获取节点唯一标识符
+    inline Guid guid() const noexcept { return _uid; }
 
     /**
      * @brief 创建发布者
@@ -384,6 +404,9 @@ public:
     //! 运行异步 IO 上下文
     void spin() { _ctx.run(); }
 
+    //! 手动停止节点运行 @note 推荐使用析构函数自动清理资源并停止节点，除非在多线程环境中需要提前停止节点以释放资源
+    void shutdown() noexcept;
+
 private:
     //! 广播 NDP 消息
     rm::async::Task<> rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name);
@@ -404,10 +427,21 @@ protected:
     rm::async::IOContext _ctx{}; //!< 异步 IO 上下文
 
 private:
+    bool _running{true};   //!< 运行状态
+    uint16_t _next_eid{1}; //!< 用于生成实体 ID 的计数器
+
+    uint16_t _rndp_port{}; //!< RNDP 广播端口号
+    uint16_t _redp_port{}; //!< REDP 监听端口号
+
+    Guid _uid{};                         //!< 节点唯一标识符
+    rm::async::DgramSocket _rndp_writer; //!< NDP 广播 Socket
+
     rm::async::Timer _broadcast_timer{_ctx}; //!< NDP 广播异步定时器
     rm::async::Timer _hbt_timer{_ctx};       //!< 心跳检测异步定时器
 
-    rm::async::DgramSocket _rndp_writer; //!< NDP 广播 Socket
+protected:
+    //! 已发现的节点列表
+    std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{};
 
     //! 已注册的 Writers 列表
     std::unordered_map<std::string, DataWriterBase::ptr> _local_writers{};
