@@ -166,15 +166,20 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
   <td class="markdownTableBodyCenter" colspan="2">GUID PID</td>
   <td class="markdownTableBodyCenter" colspan="2">GUID Entity ID</td>
   <td class="markdownTableBodyCenter">Status</td>
-  <td class="markdownTableBodyCenter">TopicSize</td>
   <td class="markdownTableBodyCenter" colspan="2">Port</td>
+  <td class="markdownTableBodyCenter">TopicSize</td>
 </tr>
 <tr class="markdownTableRowEven">
   <th class="markdownTableHeadCenter">16 byte</th>
   <th class="markdownTableHeadCenter">...</th>
+  <th class="markdownTableHeadCenter">16 + TopicSize byte</th>
+  <th class="markdownTableHeadCenter">17 + TopicSize byte</th>
+  <th class="markdownTableHeadCenter">...</th>
 </tr>
 <tr class="markdownTableRowOdd">
   <td class="markdownTableBodyCenter" colspan="2">Topic</td>
+  <td class="markdownTableBodyCenter">MsgtypeSize</td>
+  <td class="markdownTableBodyCenter" colspan="...">Msgtype</td>
 </tr>
 </table>
 </div>

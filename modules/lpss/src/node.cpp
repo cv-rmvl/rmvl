@@ -156,9 +156,9 @@ void Node::rndp_listener(DgramSocket rndp_reader) {
                 std::lock_guard lk(_nodes_mtx);
                 _discovered_nodes[rndp_msg.guid].ctrl_loc = ctrl_loc;
                 for (const auto &[topic, writer] : _local_writers)
-                    redp_msgs.push_back(REDPMessage::addWriter(writer->guid(), topic));
+                    redp_msgs.push_back(REDPMessage::addWriter(writer->guid(), topic, writer->msgtype()));
                 for (const auto &[topic, reader] : _local_readers)
-                    redp_msgs.push_back(REDPMessage::addReader(reader->guid(), topic, reader->port()));
+                    redp_msgs.push_back(REDPMessage::addReader(reader->guid(), topic, reader->port(), reader->msgtype()));
             }
             // 向新发现的节点单播包含所有本地 Writers/Readers 的 REDP 消息
             for (const auto &msg : redp_msgs)
@@ -177,19 +177,30 @@ void Node::redp_listener(DgramSocket redp_socket) {
         // 设置已发现的 Writers/Readers 列表
         if (msg.action == REDPMessage::Action::Add) {
             std::lock_guard lk(_discovered_mtx);
-            if (msg.type == REDPMessage::Type::Writer)
-                _discovered_writers[msg.topic].insert(msg.endpoint_guid);
-            else // Reader
-                _discovered_readers[msg.topic][msg.endpoint_guid] = {msg.port, addr};
+            if (msg.type == REDPMessage::Type::Writer) {
+                _discovered_writers[msg.topic].writers.insert(msg.endpoint_guid);
+                if (_discovered_writers[msg.topic].msgtype.empty())
+                    _discovered_writers[msg.topic].msgtype = msg.msgtype;
+                if (_discovered_writers[msg.topic].msgtype != msg.msgtype)
+                    RMVL_Error_(RMVL_StsError, "[LPSS Node] Inconsistent msgtype for topic '%s': existing '%s', new '%s'",
+                                msg.topic.c_str(), _discovered_writers[msg.topic].msgtype.data(), msg.msgtype.data());
+            } else { // Reader
+                _discovered_readers[msg.topic].readers[msg.endpoint_guid] = {msg.port, addr};
+                if (_discovered_readers[msg.topic].msgtype.empty())
+                    _discovered_readers[msg.topic].msgtype = msg.msgtype;
+                if (_discovered_readers[msg.topic].msgtype != msg.msgtype)
+                    RMVL_Error_(RMVL_StsError, "[LPSS Node] Inconsistent msgtype for topic '%s': existing '%s', new '%s'",
+                                msg.topic.c_str(), _discovered_readers[msg.topic].msgtype.data(), msg.msgtype.data());
+            }
         } else { // Remove
             std::lock_guard lk(_discovered_mtx);
             if (msg.type == REDPMessage::Type::Writer) {
-                _discovered_writers[msg.topic].erase(msg.endpoint_guid);
-                if (_discovered_writers[msg.topic].empty())
+                _discovered_writers[msg.topic].writers.erase(msg.endpoint_guid);
+                if (_discovered_writers[msg.topic].writers.empty())
                     _discovered_writers.erase(msg.topic);
             } else { // Reader
-                _discovered_readers[msg.topic].erase(msg.endpoint_guid);
-                if (_discovered_readers[msg.topic].empty())
+                _discovered_readers[msg.topic].readers.erase(msg.endpoint_guid);
+                if (_discovered_readers[msg.topic].readers.empty())
                     _discovered_readers.erase(msg.topic);
             }
         }
@@ -231,17 +242,17 @@ void Node::heartbeat_detect() {
             for (const auto &dead_guid : timeout_guids) {
                 // 清理 Writers
                 for (auto it = _discovered_writers.begin(); it != _discovered_writers.end();) {
-                    auto &writers = it->second;
-                    for (auto set_it = writers.begin(); set_it != writers.end();)
-                        is_same_node(*set_it, dead_guid) ? set_it = writers.erase(set_it) : ++set_it;
-                    writers.empty() ? it = _discovered_writers.erase(it) : ++it;
+                    auto &writer_storage = it->second;
+                    for (auto set_it = writer_storage.writers.begin(); set_it != writer_storage.writers.end();)
+                        is_same_node(*set_it, dead_guid) ? set_it = writer_storage.writers.erase(set_it) : ++set_it;
+                    writer_storage.writers.empty() ? it = _discovered_writers.erase(it) : ++it;
                 }
                 // 清理 Readers
                 for (auto it = _discovered_readers.begin(); it != _discovered_readers.end();) {
-                    auto &readers = it->second;
-                    for (auto map_it = readers.begin(); map_it != readers.end();)
-                        is_same_node(map_it->first, dead_guid) ? map_it = readers.erase(map_it) : ++map_it;
-                    readers.empty() ? it = _discovered_readers.erase(it) : ++it;
+                    auto &reader_storage = it->second;
+                    for (auto map_it = reader_storage.readers.begin(); map_it != reader_storage.readers.end();)
+                        is_same_node(map_it->first, dead_guid) ? map_it = reader_storage.readers.erase(map_it) : ++map_it;
+                    reader_storage.readers.empty() ? it = _discovered_readers.erase(it) : ++it;
                 }
             }
         }

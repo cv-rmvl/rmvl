@@ -35,7 +35,7 @@ Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
         std::shared_lock lk(_discovered_mtx);
         auto it = _discovered_readers.find(std::string(topic));
         if (it != _discovered_readers.end())
-            for (const auto &[reader_guid, locator] : it->second)
+            for (const auto &[reader_guid, locator] : it->second.readers)
                 writer->add(reader_guid, locator);
     }
     // 注册本地 DataWriter
@@ -44,7 +44,7 @@ Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
         _local_writers[std::string(topic)] = writer;
     }
     // 向已发现的节点发送 addWriter 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic);
+    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic, writer->msgtype());
     std::shared_lock lk(_discovered_mtx);
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
@@ -64,7 +64,7 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
         _local_readers[std::string(topic)] = reader;
     }
     // 向已发现的节点发送 addReader 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port());
+    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port(), reader->msgtype());
     std::shared_lock lk(_discovered_mtx);
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
@@ -128,12 +128,12 @@ typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) n
     // 设置 SHM 通道和 UDPv4 缓存
     auto it = _discovered_readers.find(std::string(topic));
     if (it != _discovered_readers.end())
-        for (const auto &[reader_guid, locator] : it->second)
+        for (const auto &[reader_guid, locator] : it->second.readers)
             writer->add(reader_guid, locator);
     // 注册本地 DataWriter
     _local_writers[std::string(topic)] = writer;
     // 向已发现的节点发送 addWriter 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic);
+    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic, writer->msgtype());
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
     return std::make_shared<Publisher<MsgType>>(_ctx, topic, std::move(writer));
@@ -149,7 +149,7 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
     DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(_ctx, sub_guid, topic, std::move(callback));
     _local_readers[std::string(topic)] = reader;
     // 向已发现的节点发送 addReader 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port());
+    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port(), reader->msgtype());
     for (const auto &[guid, node_info] : _discovered_nodes)
         sendREDPMessage(node_info.ctrl_loc, redp_msg);
 

@@ -14,7 +14,6 @@
 #include <condition_variable>
 #include <shared_mutex>
 #include <thread>
-#include <unordered_set>
 
 #if __cplusplus >= 202002L
 #include "rmvl/io/async.hpp"
@@ -216,10 +215,10 @@ protected:
 
     //! 已发现实体读写锁
     std::shared_mutex _discovered_mtx{};
-    //! 已发现的 Writers 列表，[Topic: [Guid]]
-    std::unordered_map<std::string, std::unordered_set<Guid, GuidHash>> _discovered_writers{};
-    //! 已发现的 Readers 列表，[Topic: [Guid: Locator]]
-    std::unordered_map<std::string, std::unordered_map<Guid, Locator, GuidHash>> _discovered_readers{};
+    //! 已发现的 Writers 列表
+    std::unordered_map<std::string, DiscoveredWriterStorageInfo> _discovered_writers{};
+    //! 已发现的 Readers 列表
+    std::unordered_map<std::string, DiscoveredReaderStorageInfo> _discovered_readers{};
 };
 
 #if __cplusplus >= 202002L
@@ -448,10 +447,10 @@ protected:
     //! 已注册的 Readers 列表
     std::unordered_map<std::string, DataReaderBase::ptr> _local_readers{};
 
-    //! 已发现的 Writers 列表，[Topic: [Guid]]
-    std::unordered_map<std::string, std::unordered_set<Guid, GuidHash>> _discovered_writers{};
-    //! 已发现的 Readers 列表，[Topic: [Guid: Locator]]
-    std::unordered_map<std::string, std::unordered_map<Guid, Locator, GuidHash>> _discovered_readers{};
+    //! 已发现的 Writers 列表
+    std::unordered_map<std::string, DiscoveredWriterStorageInfo> _discovered_writers{};
+    //! 已发现的 Readers 列表
+    std::unordered_map<std::string, DiscoveredReaderStorageInfo> _discovered_readers{};
 };
 
 } // namespace async

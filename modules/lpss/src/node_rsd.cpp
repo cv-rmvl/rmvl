@@ -9,6 +9,7 @@
  *
  */
 
+#include <cstdint>
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -79,18 +80,22 @@ RNDPMessage RNDPMessage::deserialize(const char *data) noexcept {
 std::string REDPMessage::serialize() const noexcept {
     // 数据准备
     const uint8_t topic_size = static_cast<uint8_t>(topic.length());
-    const size_t msg_size = REDP_HEADER_SIZE + 6 + topic_size;
+    const uint8_t msgtype_size = static_cast<uint8_t>(msgtype.length());
+    const size_t msg_size = REDP_HEADER_SIZE + 3 + topic_size + 1 + msgtype_size;
     std::string redp_msg(msg_size, '\0');
 
     // REDP 头部
     ::strcpy(redp_msg.data(), "ED01");
     ::memcpy(redp_msg.data() + 4, &endpoint_guid.full, sizeof(endpoint_guid.full));
     new (redp_msg.data() + 4 + sizeof(endpoint_guid.full)) uint8_t{static_cast<uint8_t>(static_cast<uint8_t>(action) | static_cast<uint8_t>(type))};
-    ::memcpy(redp_msg.data() + 4 + sizeof(endpoint_guid.full) + 1, &topic_size, sizeof(topic_size));
+
     // REDP 负载
     uint16_t net_port = htons(port);
     ::memcpy(redp_msg.data() + REDP_HEADER_SIZE, &net_port, sizeof(net_port));
-    ::memcpy(redp_msg.data() + REDP_HEADER_SIZE + 2, topic.data(), topic_size);
+    ::memcpy(redp_msg.data() + REDP_HEADER_SIZE + 2, &topic_size, sizeof(topic_size));
+    ::memcpy(redp_msg.data() + REDP_HEADER_SIZE + 3, topic.data(), topic_size);
+    ::memcpy(redp_msg.data() + REDP_HEADER_SIZE + 3 + topic_size, &msgtype_size, sizeof(msgtype_size));
+    ::memcpy(redp_msg.data() + REDP_HEADER_SIZE + 3 + topic_size + 1, msgtype.data(), msgtype_size);
     return redp_msg;
 }
 
@@ -102,11 +107,13 @@ REDPMessage REDPMessage::deserialize(const char *data) noexcept {
     ::memcpy(&res.endpoint_guid.full, data + 4, sizeof(res.endpoint_guid.full));
     res.action = static_cast<Action>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b01);
     res.type = static_cast<Type>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b10);
-    uint8_t topic_size = *reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full) + 1);
-
+    
     // REDP 负载
     res.port = ntohs(*reinterpret_cast<const uint16_t *>(data + REDP_HEADER_SIZE));
-    res.topic = std::string(data + REDP_HEADER_SIZE + 2, topic_size);
+    uint8_t topic_size = *reinterpret_cast<const uint8_t *>(data + REDP_HEADER_SIZE + 2);
+    res.topic = std::string(data + REDP_HEADER_SIZE + 3, topic_size);
+    uint8_t msgtype_size = *reinterpret_cast<const uint8_t *>(data + REDP_HEADER_SIZE + 3 + topic_size);
+    res.msgtype = std::string(data + REDP_HEADER_SIZE + 3 + topic_size + 1, msgtype_size);
     return res;
 }
 
