@@ -13,8 +13,10 @@
 
 #include <shared_mutex>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "rmvl/io/socket.hpp"
@@ -50,7 +52,7 @@ struct GuidHash {
 };
 
 constexpr std::size_t RNDP_HEADER_SIZE = 4 + sizeof(Guid) + 2;
-constexpr std::size_t REDP_HEADER_SIZE = 4 + sizeof(Guid) + 2;
+constexpr std::size_t REDP_HEADER_SIZE = 4 + sizeof(Guid) + 1;
 constexpr auto BROADCAST_IP = "239.255.0.5";
 
 //! 定位器
@@ -83,14 +85,14 @@ struct REDPMessage {
     //! 反序列化 REDP 消息
     static REDPMessage deserialize(const char *data) noexcept;
 
-    //! 创建添加读取端点消息，其中 `l` 表示 DataReader 所监听的定位器
-    static inline REDPMessage addReader(const Guid &g, std::string_view topic, uint16_t port) noexcept {
-        return {Action::Add, Type::Reader, g, port, std::string(topic)};
+    //! 创建添加读取端点消息
+    static inline REDPMessage addReader(const Guid &g, std::string_view topic, uint16_t port, std::string_view msgtype) noexcept {
+        return {Action::Add, Type::Reader, g, port, std::string(topic), std::string(msgtype)};
     }
 
     //! 创建添加写入端点消息
-    static inline REDPMessage addWriter(const Guid &g, std::string_view topic) noexcept {
-        return {Action::Add, Type::Writer, g, {}, std::string(topic)};
+    static inline REDPMessage addWriter(const Guid &g, std::string_view topic, std::string_view msgtype) noexcept {
+        return {Action::Add, Type::Writer, g, {}, std::string(topic), std::string(msgtype)};
     }
 
     //! 创建移除读取端点消息
@@ -113,9 +115,10 @@ struct REDPMessage {
         Writer = 0b10  //!< 数据写入端点
     } type{};          //!< 端点类型
 
-    Guid endpoint_guid{}; //!< 端点所属实体 GUID
-    uint16_t port{};      //!< 监听端口，用于 UDPv4 通道
-    std::string topic{};  //!< 话题名称，用于 SHM 通道
+    Guid endpoint_guid{};  //!< 端点所属实体 GUID
+    uint16_t port{};       //!< 监听端口
+    std::string topic{};   //!< 话题名称
+    std::string msgtype{}; //!< 消息类型
 };
 
 //! 节点存储信息
@@ -146,6 +149,9 @@ public:
 
     //! 获取写入器所属实体 GUID
     inline const Guid &guid() const noexcept { return _guid; }
+
+    //! 获取写入话题的消息类型
+    inline std::string_view msgtype() const noexcept { return _type; }
 
     /**
      * @brief 添加数据接收端点
@@ -181,6 +187,12 @@ protected:
     std::unordered_map<Guid, Locator, GuidHash> _udpv4_targets;
 };
 
+//! 发现的发布者端点存储信息
+struct DiscoveredWriterStorageInfo {
+    std::unordered_set<Guid, GuidHash> writers; //!< 相关的端点 GUID 列表
+    std::string_view msgtype;                   //!< 消息类型
+};
+
 /**
  * @brief 数据读取器基类
  * @details 每个 DataReader 都对应一个监听端口的 UDPv4 通道以及设置指定话题的 MPMC SHM 通道
@@ -199,6 +211,9 @@ public:
     DataReaderBase(const Guid &guid, std::string_view type, std::string_view topic);
 
     virtual ~DataReaderBase() = default;
+
+    //! 获取监听话题的消息类型
+    inline std::string_view msgtype() const noexcept { return _type; }
 
     /**
      * @brief 读取数据
@@ -219,6 +234,12 @@ protected:
     DgramSocket _udpv4;       //!< UDPv4 通道
     std::string_view _type{}; //!< 消息类型
     std::string _topic{};     //!< 监听话题
+};
+
+//! 发现的订阅者端点存储信息
+struct DiscoveredReaderStorageInfo {
+    std::unordered_map<Guid, Locator, GuidHash> readers; //!< 相关的端点 GUID 与定位器映射表 [Guid: Locator]
+    std::string_view msgtype;                            //!< 消息类型
 };
 
 /**
@@ -296,6 +317,9 @@ public:
     //! 获取写入器所属实体 GUID
     inline const Guid &guid() const noexcept { return _guid; }
 
+    //! 获取写入话题的消息类型
+    inline std::string_view msgtype() const noexcept { return _type; }
+
     /**
      * @brief 添加数据接收端点
      *
@@ -347,6 +371,9 @@ public:
     DataReaderBase(rm::async::IOContext &io_context, const Guid &guid, std::string_view type, std::string_view topic);
 
     virtual ~DataReaderBase() = default;
+
+    //! 获取监听话题的消息类型
+    inline std::string_view msgtype() const noexcept { return _type; }
 
     /**
      * @brief 读取数据
