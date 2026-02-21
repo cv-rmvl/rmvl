@@ -20,7 +20,7 @@
 namespace rm
 {
 
-//! @addtogroup algorithm
+//! @addtogroup algorithm_math
 //! @{
 
 //! 欧拉角转轴枚举
@@ -105,7 +105,7 @@ inline cv::Matx<Tp, 3, 3> euler2Mat(Tp val, EulerAxis axis)
     }
 }
 
-//! @} algorithm
+//! @} algorithm_math
 
 } // namespace rm
 

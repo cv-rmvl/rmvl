@@ -22,13 +22,13 @@
 
 namespace rm {
 
-//! @addtogroup algorithm
+//! @addtogroup algorithm_cal
 //! @{
 //! @defgroup algorithm_dsp 数字信号处理
 //! @{
 //! @brief 包含数字信号处理的相关函数
 //! @} algorithm_dsp
-//! @} algorithm
+//! @} algorithm_cal
 
 //! @addtogroup algorithm_dsp
 //! @{

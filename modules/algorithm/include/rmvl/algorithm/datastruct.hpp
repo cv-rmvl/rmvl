@@ -23,15 +23,7 @@
 
 namespace rm {
 
-//! @addtogroup algorithm
-//! @{
-//! @defgroup algorithm_datastruct 数据结构
-//! @{
-//! @brief 包含自定义的容器适配器以及其余数据结构
-//! @} algorithm_datastruct
-//! @} algorithm
-
-//! @addtogroup algorithm_datastruct
+//! @addtogroup algorithm_data
 //! @{
 
 /**
@@ -278,7 +270,7 @@ public:
     //! 获取连通分量
     inline int components() { return _connected_component; }
 
-private:
+protected:
     //! 寻找代表元素
     Tp findRep(Tp element) {
         std::stack<Tp> path;
@@ -307,6 +299,6 @@ template <std::ranges::range Range>
 UnionFind(Range &&) -> UnionFind<typename std::ranges::range_value_t<Range>>;
 #endif
 
-//! @} algorithm_datastruct
+//! @} algorithm_data
 
 } // namespace rm

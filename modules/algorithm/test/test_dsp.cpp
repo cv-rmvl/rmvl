@@ -14,11 +14,9 @@
 #include "rmvl/algorithm/dsp.hpp"
 #include "rmvl/algorithm/math.hpp"
 
-namespace rm_test
-{
+namespace rm_test {
 
-TEST(DSPTest, dft)
-{
+TEST(Algorithm_cal, dsp_dft) {
     constexpr int f = 16;
     // 1024 个点的正弦波
     rm::ComplexSignal x(1024);

@@ -17,7 +17,7 @@
 
 #include <opencv2/core.hpp>
 
-//! @addtogroup algorithm
+//! @addtogroup algorithm_cal
 //! @{
 //! @defgroup algorithm_kalman 卡尔曼滤波模块
 //! @{
@@ -29,7 +29,7 @@
 //! @brief
 //! - 相关知识点可参考说明文档 @ref tutorial_modules_kalman 以及 @ref tutorial_modules_ekf
 //! @} algorithm_kalman
-//! @} algorithm
+//! @} algorithm_cal
 
 namespace rm
 {
