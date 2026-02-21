@@ -15,7 +15,41 @@
 
 #ifdef HAVE_OPENCV
 
-namespace rm {
+namespace rm::cvmsg {
+
+cv::Point3d from_msg(const msg::Point &pt_msg) { return {pt_msg.x, pt_msg.y, pt_msg.z}; }
+
+msg::Point to_msg(const cv::Point3d &pt) { return {pt.x, pt.y, pt.z}; }
+
+cv::Point3f from_msg(const msg::Point32 &pt_msg) { return {pt_msg.x, pt_msg.y, pt_msg.z}; }
+
+msg::Point32 to_msg(const cv::Point3f &pt) { return {pt.x, pt.y, pt.z}; }
+
+cv::Vec3d from_msg(const msg::Vector3 &vec_msg) { return {vec_msg.x, vec_msg.y, vec_msg.z}; }
+
+msg::Vector3 to_msg(const cv::Vec3d &vec) { return {vec[0], vec[1], vec[2]}; }
+
+#if LPSS_CV_VERSION >= 40501
+
+cv::Quatd from_msg(const msg::Quaternion &quat_msg) { return {quat_msg.w, quat_msg.x, quat_msg.y, quat_msg.z}; }
+
+msg::Quaternion to_msg(const cv::Quatd &quat) { return {quat.w, quat.x, quat.y, quat.z}; }
+
+cv::Affine3d from_msg(const msg::Transform &tf_msg) {
+    cv::Quatd quat = from_msg(tf_msg.rotation);
+    cv::Vec3d trans = from_msg(tf_msg.translation);
+    return cv::Affine3d(quat.toRotMat3x3(), trans);
+}
+
+msg::Transform to_msg(const cv::Affine3d &tf) {
+    cv::Matx33d rot_mat = tf.rotation();
+    msg::Transform tf_msg{};
+    tf_msg.rotation = to_msg(cv::Quatd::createFromRotMat(rot_mat));
+    tf_msg.translation = to_msg(tf.translation());
+    return tf_msg;
+}
+
+#endif
 
 cv::Mat from_msg(const msg::Image &img_msg) {
     if (img_msg.data.empty()) {
@@ -55,6 +89,6 @@ msg::Image to_msg(cv::Mat img, std::string_view encoding) {
     return img_msg;
 }
 
-} // namespace rm
+} // namespace rm::cvmsg
 
 #endif

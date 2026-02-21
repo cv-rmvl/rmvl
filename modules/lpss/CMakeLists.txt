@@ -39,3 +39,8 @@ if(BUILD_PERF_TESTS)
     EXTERNAL benchmark::benchmark_main
   )
 endif(BUILD_PERF_TESTS)
+
+# ----------------------------------------------------------------------------
+#  Doxygen update
+# ----------------------------------------------------------------------------
+rmvl_update_doxygen_predefined("LPSS_CV_VERSION=99999") # Doxygen 设置为支持所有版本的 OpenCV，实际值在 cv.hpp 中定义
