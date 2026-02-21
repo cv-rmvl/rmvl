@@ -14,14 +14,26 @@
 /**
  * @defgroup core RMVL 核心模块
  * @{
- * @brief 涵盖了有关异常处理、定时器、编程工具等相关内容
- * @details
- * - 异常处理可参考 rm::Exception 类，提供了异常处理的相关函数
- * - 定时器可参考 rm::Timer 类
- * - 编程工具包括了 @ref core_reflect 、 @ref core_meta 、@ref core_str 和 @ref io 等
- * @defgroup core_reflect 聚合体编译期反射
- * @defgroup core_meta 元编程
- * @defgroup core_str Python 风格的字符串处理
+ *   @brief 涵盖了有关异常处理、定时器、编程工具等相关内容
+ *   @details
+ *   - 异常处理可参考 rm::Exception 类，提供了异常处理的相关函数
+ *   - 定时器可参考 rm::Timer 类
+ *   - 编程工具包括了 @ref core_reflect 、 @ref core_meta 、@ref core_str 等
+ *   @defgroup core_reflect 聚合体编译期反射
+ *   @{
+ *     @brief 提供了 C++17 和 C++20 两种实现的聚合体编译期反射功能
+ *     @details
+ *     - 该模块提供了对聚合体的编译期反射功能，使得用户可以在编译期获取聚合体的成员信息
+ *     - 该模块的内容定义在 rm::reflect 命名空间中，提供了 rm::reflect::size 和 rm::reflect::for_each 两个主要的函数模板
+ *   @}
+ *   @defgroup core_meta 元编程
+ *   @{
+ *     @brief 目前提供了 hash 生成相关的 Type Traits
+ *   @}
+ *   @defgroup core_str Python 风格的字符串处理
+ *   @{
+ *     @brief 提供了 Python 风格的字符串处理函数，例如 split、strip 等
+ *   @}
  * @}
  */
 

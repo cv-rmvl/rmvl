@@ -20,15 +20,7 @@
 namespace rm
 {
 
-//! @addtogroup algorithm
-//! @{
-//! @defgroup algorithm_pretreat 图像预处理模块
-//! @{
-//! @brief 提供了二值化等图像预处理功能
-//! @} algorithm_pretreat
-//! @} algorithm
-
-//! @addtogroup algorithm_pretreat
+//! @addtogroup algorithm_img
 //! @{
 
 //! 像素通道枚举
@@ -64,7 +56,7 @@ RMVL_EXPORTS_W cv::Mat binary(cv::Mat src, uint8_t ch1, uint8_t ch2, uint8_t thr
  */
 RMVL_EXPORTS_W cv::Mat binary(cv::Mat src, uint8_t threshold);
 
-//! @} algorithm_pretreat
+//! @} algorithm_img
 
 } // namespace rm
 

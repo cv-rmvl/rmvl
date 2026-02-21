@@ -23,7 +23,7 @@
 
 #include "rmvl/core/rmvldef.hpp"
 
-//! @addtogroup algorithm
+//! @addtogroup algorithm_cal
 //! @{
 //! @defgroup algorithm_numcal 数值计算模块
 //! @{
@@ -33,7 +33,7 @@
 //! @{
 //! @brief 包含一维函数最小值搜索、无约束多维函数最小值搜索等最优化算法
 //! @} algorithm_optimal
-//! @} algorithm
+//! @} algorithm_cal
 
 namespace rm {
 

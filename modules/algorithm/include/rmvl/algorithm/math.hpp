@@ -27,7 +27,7 @@
 
 namespace rm {
 
-//! @addtogroup algorithm
+//! @addtogroup algorithm_math
 //! @{
 
 // --------------------【结构、类型、常量定义】--------------------
@@ -458,6 +458,6 @@ public:
     RMVL_W std::vector<std::size_t> solve() noexcept;
 };
 
-//! @} algorithm
+//! @} algorithm_math
 
 } // namespace rm

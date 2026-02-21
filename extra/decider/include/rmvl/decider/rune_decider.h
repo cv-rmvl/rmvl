@@ -53,10 +53,9 @@ public:
     /**
      * @brief 神符决策核心函数
      *
-     * @param[in] groups 所有序列组
-     * @param[in] flag 决策状态模式
+     * @param[in] group 序列组共享指针
+     * @param[in] is_active 决策状态模式
      * @param[in] last_target 历史目标追踪器，为空则默认自动判断
-     * @param[in] detect_info 辅助决策的识别模块信息
      * @param[in] compensate_info 辅助决策的补偿模块信息
      * @param[in] predict_info 辅助决策的预测模块信息
      * @return 决策模块信息

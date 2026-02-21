@@ -361,8 +361,14 @@ ResponseMiddleware statics(std::string_view url_path, std::string_view root) {
                 res.message = "Forbidden";
                 return;
             }
-            DEBUG_INFO_("GET \033[36m%s\033[0m --> %s", req.uri.c_str(), file_path.c_str());
-            res.sendFile(file_path);
+            std::string_view file_path_view(file_path);
+            auto file_path_size = file_path_view.size();
+            if (file_path_size > 32)
+                DEBUG_INFO_("GET \033[36m%s\033[0m -> ...%s", req.uri.c_str(), file_path_view.substr(file_path_view.size() - 32).data());
+            else
+                DEBUG_INFO_("GET \033[36m%s\033[0m -> %s", req.uri.c_str(), file_path_view.data());
+
+            res.sendFile(file_path_view);
         }
     };
 }

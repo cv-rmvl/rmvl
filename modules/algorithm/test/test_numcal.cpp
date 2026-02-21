@@ -15,19 +15,16 @@
 
 #include "rmvl/algorithm/numcal.hpp"
 
-namespace rm_test
-{
+namespace rm_test {
 
-TEST(NumberCalculation, polynomial)
-{
+TEST(Algorithm_cal, numcal_polynomial) {
     rm::Polynomial foo({1, 2, 3});
     EXPECT_EQ(foo(0), 1);  // 1 + 2*0 + 3*0*0 = 1
     EXPECT_EQ(foo(1), 6);  // 1 + 2*1 + 3*1*1 = 6
     EXPECT_EQ(foo(2), 17); // 1 + 2*2 + 3*2*2 = 17
 }
 
-TEST(NumberCalculation, function_interpolator)
-{
+TEST(Algorithm_cal, numcal_function_interpolator) {
     rm::Interpolator foo({1, 2, 3}, {0, 1, 0});
     EXPECT_EQ(foo(0), -3); // a0 = -3, a1 = 4, a2 = -1
     foo.add(0, 1);
@@ -36,23 +33,20 @@ TEST(NumberCalculation, function_interpolator)
 
 #ifdef HAVE_OPENCV
 
-TEST(NumberCalculation, curve_fitter_ax_b)
-{
+TEST(Algorithm_cal, numcal_curve_fitter_ax_b) {
     rm::CurveFitter foo({1, 2, 3, 4}, {0, 2, 1, 3}, 0b11);
     EXPECT_NEAR(foo(0.625), 0, 1e-5);
     EXPECT_NEAR(foo(0), -0.5, 1e-5);
 }
 
-TEST(NumberCalculation, curve_fitter_ax2_bx_c)
-{
+TEST(Algorithm_cal, numcal_curve_fitter_ax2_bx_c) {
     // 2x^2 + 3x - 1
     rm::CurveFitter foo({0, 1, 2}, {-1, 4, 13}, 0b111);
     // 2*3^2 + 3*3 - 1 = 26
     EXPECT_NEAR(foo(3), 26, 1e-5);
 }
 
-TEST(NumberCalculation, curve_fitter_ax3_cx_d)
-{
+TEST(Algorithm_cal, numcal_curve_fitter_ax3_cx_d) {
     // x^3 - 4x + 1
     rm::CurveFitter foo({0, 1, 2}, {1, -2, 1}, 0b1011);
     // 3^3 - 4*3 + 1 = 16
@@ -61,8 +55,7 @@ TEST(NumberCalculation, curve_fitter_ax3_cx_d)
 
 #endif // HAVE_OPENCV
 
-TEST(NumberCalculation, nonlinear_solver)
-{
+TEST(Algorithm_cal, numcal_nonlinear_solver) {
     rm::NonlinearSolver foo([](double x) { // f(x)
         return x * x - 4;
     });
@@ -72,8 +65,7 @@ TEST(NumberCalculation, nonlinear_solver)
     EXPECT_NEAR(foo(-1.5), -2, 1e-5); // fo(-2) = 0
 }
 
-TEST(NumberCalculation, runge_kutta_ode)
-{
+TEST(Algorithm_cal, numcal_runge_kutta_ode) {
     auto f = [](double, const std::valarray<double> &xs) { return -2 * xs[0] - 2; }; // e^{-2x} - 1
     rm::Odes fs = {f};
 
@@ -98,8 +90,7 @@ TEST(NumberCalculation, runge_kutta_ode)
     EXPECT_NEAR(res4[0], std::expm1(-2), 1e-6);
 }
 
-TEST(NumberCalculation, runge_kutta_odes)
-{
+TEST(Algorithm_cal, numcal_runge_kutta_odes) {
     rm::Ode dot_x1 = [](double t, const std::valarray<double> &x) { return 2 * x[1] + t; };
     rm::Ode dot_x2 = [](double, const std::valarray<double> &x) { return -x[0] - 3 * x[1]; };
     rm::Odes fs = {dot_x1, dot_x2};
@@ -124,8 +115,7 @@ TEST(NumberCalculation, runge_kutta_odes)
 }
 
 #if __cpp_lib_generator >= 202207L
-TEST(NumberCalculation, runge_kutta_ode_generator)
-{
+TEST(Algorithm_cal, numcal_runge_kutta_ode_generator) {
     auto f = [](double, const std::valarray<double> &) { return 1; }; // x + 1
     rm::Odes fs = {f};
 

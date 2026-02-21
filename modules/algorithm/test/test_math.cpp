@@ -13,11 +13,9 @@
 
 #include "rmvl/algorithm/math.hpp"
 
-namespace rm_test
-{
+namespace rm_test {
 
-TEST(MathTest, Mean)
-{
+TEST(Algorithm_math, mean) {
     std::vector vec = {1, 2, 3, 4, 5};
     auto mean = rm::mean(vec.begin(), vec.end());
     EXPECT_EQ(mean, 3);
@@ -40,8 +38,7 @@ TEST(MathTest, Mean)
 #endif
 }
 
-TEST(MathTest, Variance)
-{
+TEST(Algorithm_math, variance) {
     std::vector vec = {1., 2., 3., 4., 5.};
     auto var = rm::variance(vec.begin(), vec.end());
     EXPECT_NEAR(var, 2, 1e-8);

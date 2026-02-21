@@ -1,12 +1,12 @@
 /**
  * @file test_pretreat.cpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 
+ * @brief
  * @version 1.0
  * @date 2024-06-05
- * 
+ *
  * @copyright Copyright 2024 (c), zhaoxi
- * 
+ *
  */
 
 #ifdef HAVE_OPENCV
@@ -18,11 +18,9 @@
 using namespace cv;
 using namespace rm;
 
-namespace rm_test
-{
+namespace rm_test {
 
-class PretreatTest : public testing::Test
-{
+class Algorithm_img : public testing::Test {
 public:
     Mat img;
 
@@ -33,15 +31,13 @@ public:
 };
 
 //! 空图像输入
-TEST_F(PretreatTest, null_image_input)
-{
+TEST_F(Algorithm_img, null_image_input) {
     Mat n;
     EXPECT_TRUE(binary(n, 100).empty());
 }
 
 //! 单通道图像亮度阈值
-TEST_F(PretreatTest, 1_channel_brightness)
-{
+TEST_F(Algorithm_img, pretreat_1_channel_brightness) {
     Mat ch1 = make_single_ch1(80);
     Mat bin = binary(ch1, 100);
     EXPECT_EQ(bin.at<uchar>(0, 0), 0);
@@ -54,16 +50,14 @@ TEST_F(PretreatTest, 1_channel_brightness)
 }
 
 //! 3 通道图像亮度阈值
-TEST_F(PretreatTest, 3_channel_brightness)
-{
+TEST_F(Algorithm_img, pretreat_3_channel_brightness) {
     Mat ch3 = make_single_ch3(20, 80, 20);
     Mat bin = binary(ch3, 50);
     EXPECT_EQ(bin.at<uchar>(0, 0), 255);
 }
 
 //! 通道相减阈值
-TEST_F(PretreatTest, 3_channel_minus)
-{
+TEST_F(Algorithm_img, pretreat_3_channel_minus) {
     Mat ch3 = make_single_ch3(120, 20, 20);
     Mat bin = binary(ch3, BLUE, RED, 80);
     EXPECT_EQ(bin.at<uchar>(0, 0), 255);
