@@ -207,6 +207,8 @@ rm::async::Task<> Node::on_sigint() {
     co_await sig.wait();
     printf("\nReceived interrupt signal, stopping node...\n");
     sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
+    _local_readers.clear();
+    _local_writers.clear();
     _ctx.stop();
 }
 
@@ -243,6 +245,8 @@ Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_
 
 void Node::shutdown() noexcept {
     sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
+    _local_readers.clear();
+    _local_writers.clear();
     _ctx.stop();
 }
 

@@ -190,7 +190,7 @@ protected:
 //! 发现的发布者端点存储信息
 struct DiscoveredWriterStorageInfo {
     std::unordered_set<Guid, GuidHash> writers; //!< 相关的端点 GUID 列表
-    std::string_view msgtype;                   //!< 消息类型
+    std::string msgtype;                        //!< 消息类型
 };
 
 /**
@@ -239,7 +239,7 @@ protected:
 //! 发现的订阅者端点存储信息
 struct DiscoveredReaderStorageInfo {
     std::unordered_map<Guid, Locator, GuidHash> readers; //!< 相关的端点 GUID 与定位器映射表 [Guid: Locator]
-    std::string_view msgtype;                            //!< 消息类型
+    std::string msgtype;                                 //!< 消息类型
 };
 
 /**

@@ -67,11 +67,18 @@ void Node::shutdown() noexcept {
         for (const auto &[topic, reader] : _local_readers)
             redp_msgs.push_back(REDPMessage::removeReader(reader->guid(), topic));
     }
+    // 向所有已发现节点单播 REDP 消息
     {
         std::shared_lock lk(_nodes_mtx);
         for (const auto &[guid, node_info] : _discovered_nodes)
             for (const auto &msg : redp_msgs)
                 sendREDPMessage(node_info.ctrl_loc, msg);
+    }
+    // 移除本地注册的 Writers/Readers
+    {
+        std::lock_guard lk(_local_mtx);
+        _local_writers.clear();
+        _local_readers.clear();
     }
 
     constexpr const char wake_msg[] = "Done";
