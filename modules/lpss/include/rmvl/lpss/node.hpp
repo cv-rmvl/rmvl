@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <shared_mutex>
 #include <thread>
@@ -167,6 +168,9 @@ public:
      */
     template <typename MsgType>
     void destroySubscriber(const Subscriber<MsgType> &sub);
+
+    //! 获取当前时间（微秒级，自 epoch 起的微秒数）
+    static inline int64_t now() noexcept { return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count(); }
 
     //! 手动停止节点运行 @note 推荐使用析构函数自动清理资源并停止节点，除非在多线程环境中需要提前停止节点以释放资源
     void shutdown() noexcept;
@@ -402,6 +406,9 @@ public:
 
     //! 运行异步 IO 上下文
     void spin() { _ctx.run(); }
+
+    //! 获取当前时间（微秒级，自 epoch 起的微秒数）
+    static inline int64_t now() noexcept { return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count(); }
 
     //! 手动停止节点运行 @note 推荐使用析构函数自动清理资源并停止节点，除非在多线程环境中需要提前停止节点以释放资源
     void shutdown() noexcept;

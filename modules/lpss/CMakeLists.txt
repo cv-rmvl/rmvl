@@ -5,7 +5,7 @@
 rmvl_generate_para(lpss)
 
 # msg
-foreach(dir std geometry sensor)
+foreach(dir std geometry sensor viz)
   file(GLOB msg_files "${CMAKE_CURRENT_LIST_DIR}/msg/${dir}/*.msg")
   foreach(msg_file ${msg_files})
     get_filename_component(msg_name ${msg_file} NAME_WE)
