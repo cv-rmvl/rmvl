@@ -9,7 +9,6 @@
 #
 #   1. system_date:   获取系统日期
 #   2. to_upperfirst: 将字符串的首字母转换为大写
-#   3. to_lowerfirst: 将字符串的首字母转换为小写
 # =====================================================================================
 
 # ----------------------------------------------------------------------------
@@ -73,25 +72,6 @@ function(to_upperfirst input_str output_str)
 endfunction()
 
 # ----------------------------------------------------------------------------
-#   将字符串的首字母转换为小写
-#   用法:
-#     to_lowerfirst(
-#       <input_string> <output_string>
-#     )
-#   示例:
-#     to_lowerfirst(
-#       "${input_str}" # 输入字符串
-#       output_str     # 输出字符串: 首字母小写
-#     )
-# ----------------------------------------------------------------------------
-function(to_lowerfirst input_str output_str)
-  string(SUBSTRING ${input_str} 0 1 first_c)
-  string(TOLOWER ${first_c} first_c_lower)
-  string(SUBSTRING ${input_str} 1 -1 rest_c)
-  set(${output_str} "${first_c_lower}${rest_c}" PARENT_SCOPE)
-endfunction()
-
-# ----------------------------------------------------------------------------
 #   将字符串转换为蛇形命名法
 #   用法:
 #     _to_snake_case(
@@ -107,7 +87,7 @@ function(_to_snake_case input_str output_str)
   # Add underscore before capital letters that are preceded by lowercase or digits
   string(REGEX REPLACE "([a-z0-9])([A-Z])" "\\1_\\2" result "${input_str}")
   # Convert to lower case
-  # e.g., Color_RGBA -> color_rgba, UInt8 -> uint8
+  # e.g., ColorRGBA -> color_rgba, UInt8 -> uint8
   string(TOLOWER "${result}" result)
   set(${output_str} "${result}" PARENT_SCOPE)
 endfunction()
@@ -546,6 +526,7 @@ function(rmvl_generate_msg file)
     
   # Parse msg file content
   set(type_and_ids)
+  set(constexpr_fields_cpp)
   string(REPLACE "\n" ";" MSG_LINES ${MSG_CONTENT})
     
   foreach(line ${MSG_LINES})
@@ -556,6 +537,39 @@ function(rmvl_generate_msg file)
     if(NOT line)
       continue()
     endif()
+
+    # Parse format: type name = value (constexpr field)
+    string(REGEX MATCH "^([a-zA-Z0-9_/]+)[ \t]+([a-zA-Z0-9_]+)[ \t]*=[ \t]*(.+)$" CONST_MATCHED "${line}")
+    if(CONST_MATCHED)
+      set(const_type ${CMAKE_MATCH_1})
+      set(const_name ${CMAKE_MATCH_2})
+      set(const_value ${CMAKE_MATCH_3})
+      string(STRIP "${const_value}" const_value)
+
+      # Convert type to C++ type
+      if(const_type STREQUAL "string")
+        set(cpp_const_type "const char *")
+        set(const_value "\"${const_value}\"")
+      elseif(const_type STREQUAL "bool" OR const_type STREQUAL "char")
+        set(cpp_const_type "${const_type}")
+      elseif(const_type STREQUAL "float32")
+        set(cpp_const_type "float")
+      elseif(const_type STREQUAL "float64")
+        set(cpp_const_type "double")
+      elseif(const_type STREQUAL "time")
+        set(cpp_const_type "int64_t")
+      elseif(const_type MATCHES "^int(8|16|32|64)$")
+        set(cpp_const_type "${const_type}_t")
+      elseif(const_type MATCHES "^uint(8|16|32|64)$")
+        set(cpp_const_type "${const_type}_t")
+      else()
+        set(cpp_const_type "${const_type}")
+      endif()
+
+      string(APPEND constexpr_fields_cpp "    static constexpr ${cpp_const_type} ${const_name} = ${const_value};\n")
+      continue()
+    endif()
+
     # Parse format: type name
     string(REGEX MATCH "^([a-zA-Z0-9_/]+)(\\[[0-9]*\\])?[ \t]+([a-zA-Z0-9_]+)$" MATCHED "${line}")
 
@@ -573,7 +587,7 @@ function(rmvl_generate_msg file)
         string(REPLACE "/" ";" type_parts "${base_type}")
         list(GET type_parts 0 folder)
         list(GET type_parts 1 type_name)
-        to_lowerfirst("${type_name}" include_type_name)
+        _to_snake_case("${type_name}" include_type_name)
         set(msg_header_ext_line "#include \"rmvlmsg/${folder}/${include_type_name}.hpp\"")
         list(FIND MSG_EXTRA_HEADERS_LIST "${msg_header_ext_line}" _header_found_idx)
         if(_header_found_idx EQUAL -1)
@@ -599,7 +613,7 @@ function(rmvl_generate_msg file)
 
   # Validate parsed fields
   list(LENGTH type_and_ids FIELD_COUNT)
-  if(FIELD_COUNT EQUAL 0)
+  if(FIELD_COUNT EQUAL 0 AND NOT constexpr_fields_cpp)
     return()
   endif()
 
@@ -626,6 +640,8 @@ function(rmvl_generate_msg file)
       set(cpp_base_type "float")
     elseif(type STREQUAL "float64")
       set(cpp_base_type "double")
+    elseif(type STREQUAL "time")
+      set(cpp_base_type "int64_t")
     elseif(type MATCHES "^int(8|16|32|64)$")
       set(cpp_base_type "${type}_t")
     elseif(type MATCHES "^uint(8|16|32|64)$")
@@ -759,6 +775,14 @@ function(rmvl_generate_msg file)
       string(APPEND deserialize_content "    _p__ += sizeof(${cpp_base_type});\n")
     endif()
   endforeach()
+
+  # Append constexpr fields to type_and_ids_cpp
+  if(constexpr_fields_cpp)
+    if(type_and_ids_cpp)
+      string(APPEND type_and_ids_cpp "\n")
+    endif()
+    string(APPEND type_and_ids_cpp "${constexpr_fields_cpp}")
+  endif()
 
   # Concat size string
   list(JOIN size_list " + " size_str)
