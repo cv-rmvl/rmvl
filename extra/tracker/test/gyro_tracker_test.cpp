@@ -10,6 +10,7 @@
  */
 
 #include "rmvl/rmvl_modules.hpp"
+#include <cstdint>
 
 #ifdef HAVE_RMVL_GYRO_TRACKER
 
@@ -30,7 +31,7 @@ class GyroTrackerTest : public testing::Test {
     cv::Mat src;
 
 public:
-    double tick{Time::now()};
+    int64_t tick{Time::now()};
     ImuData imu_data{};
 
     void SetUp() override {

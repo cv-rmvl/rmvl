@@ -131,11 +131,10 @@ cv::Mat from_msg(const msg::Image &img_msg);
  * @brief 从 cv::Mat 转换为 Image 消息
  *
  * @param[in] img OpenCV 图像矩阵
- * @param[in] encoding 图像编码格式，包括 "rgb8", "bgr8", "mono8", "mono16", "rgba8",
- * "bgra8", "bayer_rggb8" 和 "bayer_bggr8"
+ * @param[in] encoding 图像编码格式，必须是 msg::Image 中定义的编码类型之一
  * @return Image 图像消息
  */
-msg::Image to_msg(cv::Mat img, std::string_view encoding);
+msg::Image to_msg(cv::Mat img, uint8_t encoding);
 
 } // namespace cvmsg
 

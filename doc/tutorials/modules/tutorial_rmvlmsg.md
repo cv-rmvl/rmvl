@@ -17,7 +17,7 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
 
 ### 2 内置消息类型
 
-以下是一些常用的内置消息类型，分为三个主要分组：`std`、`geometry` 和 `sensor`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
+以下是一些常用的内置消息类型，分为四个主要分组：`std`、`geometry`、`sensor` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
 
 <div class="tabbed">
 
@@ -74,7 +74,7 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
     <td class="markdownTableBodyLeft"><code>Header</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">uint32</span> seq</div>
-      <div class="line"><span class="keywordtype">float64</span> stamp</div>
+      <div class="line"><span class="keywordtype">time</span> stamp</div>
       <div class="line"><span class="keywordtype">string</span> frame_id</div>
     </div></td>
     <td class="markdownTableBodyLeft">包含序列号、时间戳和坐标系 ID 的标准消息头</td>
@@ -115,27 +115,34 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
     <td class="markdownTableBodyLeft">表示字符串数据，底层采用 `std::string` 存储</td>
   </tr>
   <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyLeft"><code>Time</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keywordtype">time</span> data</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">记录了自 1970 年 1 月 1 日以来的时间，一般采用毫秒时间戳</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyLeft"><code>UInt8</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">uint8</span> data</div>
     </div></td>
     <td class="markdownTableBodyLeft">表示 8 位无符号整数数据</td>
   </tr>
-  <tr class="markdownTableRowOdd">
+  <tr class="markdownTableRowEven">
     <td class="markdownTableBodyLeft"><code>UInt16</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">uint16</span> data</div>
     </div></td>
     <td class="markdownTableBodyLeft">表示 16 位无符号整数数据</td>
   </tr>
-  <tr class="markdownTableRowEven">
+  <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyLeft"><code>UInt32</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">uint32</span> data</div>
     </div></td>
     <td class="markdownTableBodyLeft">表示 32 位无符号整数数据</td>
   </tr>
-  <tr class="markdownTableRowOdd">
+  <tr class="markdownTableRowEven">
     <td class="markdownTableBodyLeft"><code>UInt64</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">uint64</span> data</div>
@@ -326,6 +333,45 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
   <div class="line"><span class="keywordtype">string</span> robot_name</div>
   <div class="line"><span class="keywordtype">uint8</span>[4] ip</div>
   <div class="line"><span class="keyword">sensor/JointState</span> joint_state</div>
+  </div>
+
+- <b class="tab-title">viz 消息分组</b>
+
+  `viz` 消息用于表示可视化相关的数据，例如标记、路径和交互式控制，嵌套使用时<span style="color: red">需要</span>使用 `viz/` 前缀。
+
+  <div class="full_width_table">
+  <table class="markdownTable">
+  <tr class="markdownTableHead">
+    <th class="markdownTableHeadCenter">类型</th>
+    <th class="markdownTableHeadCenter">*.msg 定义</th>
+    <th class="markdownTableHeadCenter">描述</th>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>Marker</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keywordtype">uint32</span> id</div>
+      <div class="line"><span class="keywordtype">uint8</span> type</div>
+      <div class="line"><span class="keywordtype">uint8</span> action</div>
+      <div class="line"><span class="keyword">geometry/Pose</span> pose</div>
+      <div class="line"><span class="keyword">geometry/Vector3</span> scale</div>
+      <div class="line"><span class="keyword">ColorRGBA</span> color</div>
+      <div class="line"><span class="keyword">geometry/Point</span>[] points</div>
+      <div class="line"><span class="keyword">ColorRGBA</span>[] colors</div>
+      <div class="line"></div>
+      <div class="line"><span class="keyword">geometry/Point</span>[] points</div>
+      <div class="line"><span class="keyword">ColorRGBA</span>[] colors</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">标记显示，允许以编程方式向 LViz 3D 视图添加各种基本形状</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyLeft"><code>MarkerArray</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keyword">viz/Marker</span>[] markers</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">标记显示数组，允许一次发布多个标记以提高效率</td>
+  </table>
   </div>
 
 </div>
