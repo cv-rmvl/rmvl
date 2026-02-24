@@ -853,14 +853,18 @@ OPC UA 支持变量节点和事件的监视，下面分别以变量节点和事�
 
   ```cpp
   // client_1.cpp
+  #include <thread>
+
   #include <rmvl/opcua/client.hpp>
   #include <rmvl/core/timer.hpp>
+
+  using namespace std::chrono_literals;
 
   int main() {
       rm::OpcuaClient cli("opc.tcp://127.0.0.1:4840");
       auto node = cli.find("number");
       for (int i = 0; i < 100; ++i) {
-          Timer::sleep_for(1000);
+          std::this_thread::sleep_for(1s);
           // 写入数据，i + 200 隐式构造成了 rm::Variable
           bool success = cli.write(node, i + 200);
           if (!success)

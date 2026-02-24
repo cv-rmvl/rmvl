@@ -28,7 +28,7 @@ class PlanarTrackerTest : public testing::Test {
     cv::Mat src;
 
 public:
-    double tick{rm::Timer::now()};
+    int64_t tick{rm::Time::now()};
     rm::ImuData imu_data{};
 
     void SetUp() override {
@@ -54,7 +54,7 @@ public:
     rm::Armor::ptr buildArmor(cv::Point center, float angle) {
         rm::LightBlob::ptr left_blob = buildBlob(angle, center - cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
         rm::LightBlob::ptr right_blob = buildBlob(angle, center + cv::Point(125 * cos(rm::deg2rad(angle)), 125 * sin(rm::deg2rad(angle))));
-        return rm::Armor::make_combo(left_blob, right_blob, rm::ImuData(), rm::Timer::now());
+        return rm::Armor::make_combo(left_blob, right_blob, rm::ImuData(), rm::Time::now());
     }
 
     /**

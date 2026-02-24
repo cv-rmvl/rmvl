@@ -15,12 +15,9 @@
 #include <unistd.h>
 #endif
 
-#include <chrono>
 #include <cstdarg>
-#include <thread>
 
 #include "rmvl/core/str.hpp"
-#include "rmvl/core/timer.hpp"
 #include "rmvl/core/util.hpp"
 
 namespace rm {
@@ -164,24 +161,5 @@ std::string upper(std::string_view str) {
 }
 
 } // namespace str
-
-//////////////////////////////////////////// Timer ////////////////////////////////////////////
-
-static std::chrono::steady_clock::time_point g_init_tick = {};
-
-void Timer::reset() { g_init_tick = std::chrono::steady_clock::now(); }
-
-double Timer::now() {
-    return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(std::chrono::steady_clock::now() - g_init_tick).count();
-}
-
-void Timer::sleep_for(double t) {
-    std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(t));
-}
-
-void Timer::sleep_until(double t) {
-    auto tick = g_init_tick + std::chrono::duration<double, std::milli>(t);
-    std::this_thread::sleep_until(tick);
-}
 
 } // namespace rm

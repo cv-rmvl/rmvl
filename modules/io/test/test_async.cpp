@@ -9,7 +9,6 @@
  *
  */
 
-#include <chrono>
 #include <gtest/gtest.h>
 
 #include "rmvl/core/timer.hpp"
@@ -84,9 +83,9 @@ TEST(IO_async, timer_sleep) {
 
     io_context.spawn([&]() -> async::Task<> {
         async::Timer t(io_context);
-        auto now = Timer::now();
+        auto now = Time::now();
         co_await t.sleep_for(200ms);
-        EXPECT_NEAR(Timer::now() - now, 200, 20);
+        EXPECT_NEAR(Time::now() - now, 200, 20);
         io_context.stop();
     });
 

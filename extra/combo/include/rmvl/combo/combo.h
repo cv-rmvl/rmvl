@@ -12,8 +12,8 @@
 
 #include "rmvl/camera/camutils.hpp"
 
-#include "rmvl/io/util.hpp"
 #include "rmvl/feature/feature.h"
+#include "rmvl/io/util.hpp"
 
 namespace rm {
 
@@ -34,7 +34,7 @@ protected:
     ImuData _imu_data;                 //!< 当前 IMU 数据
     std::vector<cv::Point2f> _corners; //!< 角点
     CameraExtrinsics _extrinsic;       //!< 相机外参
-    double _tick{};                    //!< 捕获该组合体时的时间点
+    int64_t _tick{};                   //!< 捕获该组合体时的时间点
 
 public:
     using ptr = std::shared_ptr<combo>;
@@ -43,10 +43,10 @@ public:
     /**
      * @brief 从另一个组合体进行构造
      *
-     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
+     * @param[in] tick 当前时间点，可用 `rm::Time::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    RMVL_W virtual ptr clone(double tick) = 0;
+    RMVL_W virtual ptr clone(int64_t tick) = 0;
 
     //! 获取组合体高度
     RMVL_W inline float height() const { return _height; }
@@ -73,7 +73,7 @@ public:
     //! 获取组合体状态
     StateInfo &state() { return _state; }
     //! 获取捕获该组合体的时间点
-    RMVL_W inline double tick() const { return _tick; }
+    RMVL_W inline int64_t tick() const { return _tick; }
     //! 获取组合体的相对目标转角
     RMVL_W inline cv::Point2f getRelativeAngle() const { return _relative_angle; }
     //! 获取组合体当前的 IMU 数据

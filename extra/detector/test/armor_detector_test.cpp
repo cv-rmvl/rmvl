@@ -28,7 +28,7 @@ TEST_F(ArmorDetectorTest, single_armor_function_test) {
     buildArmorImg(center, 5);
     // imshow("src", src);
     // waitKey(0);
-    auto info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    auto info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
     EXPECT_EQ(trackers.size(), 1);
 
     if (info.combos.size() == 1)
@@ -43,7 +43,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb) {
     // 单装甲板区域内有灯条 ( /\/ )
     buildArmorImg(center, 0);
     buildBlobImg(7, center);
-    auto info = p_detector->detect(trackers, src, BLUE, ImuData(), Timer::now());
+    auto info = p_detector->detect(trackers, src, BLUE, ImuData(), Time::now());
     EXPECT_TRUE(trackers.empty());
     EXPECT_TRUE(info.combos.empty());
     // 单装甲板侧面有反向倾斜灯条 ( /·/ \ )
@@ -52,7 +52,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb) {
     buildBlobImg(-15, cv::Point(1000, 480));
     // imshow("src", src);
     // waitKey(0);
-    info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
     EXPECT_EQ(trackers.size(), 1);
 
     if (info.combos.size() == 1)
@@ -65,7 +65,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb) {
     buildBlobImg(-15, cv::Point(600, 200));
     // imshow("src", src);
     // waitKey(0);
-    info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
     EXPECT_EQ(trackers.size(), 1);
 
     if (info.combos.size() == 1)
@@ -79,7 +79,7 @@ TEST_F(ArmorDetectorTest, single_armor_more_blob_disturb) {
     buildBlobImg(-10, cv::Point(1000, 450));
     // imshow("src", src);
     // waitKey(0);
-    info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
     EXPECT_EQ(trackers.size(), 1);
 
     if (info.combos.size() == 1)
@@ -94,7 +94,7 @@ TEST_F(ArmorDetectorTest, more_armor_independence) {
     buildArmorImg(cv::Point(500, 300), 0);
     buildArmorImg(cv::Point(800, 500), -7);
 
-    auto info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    auto info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
 
     sort(info.combos.begin(), info.combos.end(), [](const combo::ptr &lhs, const combo::ptr &rhs) {
         return lhs->center().x < rhs->center().x;
@@ -119,7 +119,7 @@ TEST_F(ArmorDetectorTest, more_armor_disturb) {
     buildBlobImg(0, cv::Point(205, 500));
     // imshow("src", src);
     // waitKey(0);
-    auto info = p_detector->detect(trackers, src, BLUE, ImuData(), Timer::now());
+    auto info = p_detector->detect(trackers, src, BLUE, ImuData(), Time::now());
     EXPECT_TRUE(info.combos.empty());
     // 正对 2 装甲板倾角相反
     reset();
@@ -127,7 +127,7 @@ TEST_F(ArmorDetectorTest, more_armor_disturb) {
     buildArmorImg(cv::Point(800, 500), -8);
     // imshow("src", src);
     // waitKey(0);
-    info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
 
     EXPECT_EQ(info.combos.size(), 2);
     // 2 装甲板上下相距较近、有部分交错
@@ -136,7 +136,7 @@ TEST_F(ArmorDetectorTest, more_armor_disturb) {
     buildArmorImg(cv::Point(440, 400), 3);
     // imshow("src", src);
     // waitKey(0);
-    info = p_detector->detect(trackers, src, RED, ImuData(), Timer::now());
+    info = p_detector->detect(trackers, src, RED, ImuData(), Time::now());
 
     EXPECT_EQ(info.combos.size(), 2);
 }

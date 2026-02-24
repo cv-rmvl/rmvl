@@ -50,7 +50,7 @@ int main() {
     rm::detector::ptr detector = rm::ArmorDetector::make_detector();
     std::vector<rm::group::ptr> groups;
 
-    auto info = detector->detect(groups, src, rm::RED, rm::ImuData{}, rm::Timer::now());
+    auto info = detector->detect(groups, src, rm::RED, rm::ImuData{}, rm::Time::now());
 
     INFO_("size of armors = %ld", info.combos.size());
     for (auto p_combo : info.combos) {

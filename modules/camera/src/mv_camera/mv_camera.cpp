@@ -9,12 +9,13 @@
  *
  */
 
+#include <thread>
+
 #include <opencv2/imgproc.hpp>
 
-#include "mv_camera_impl.h"
-
-#include "rmvl/core/timer.hpp"
 #include "rmvl/core/util.hpp"
+
+#include "mv_camera_impl.h"
 
 namespace rm {
 
@@ -174,7 +175,7 @@ bool MvCamera::Impl::reconnect() noexcept {
     using namespace std::chrono_literals;
     INFO_("(mv) Camera device reconnect");
     release();
-    Timer::sleep_for(100);
+    std::this_thread::sleep_for(100ms);
 
     // 重置相机数量
     _camera_counts = 8;

@@ -109,7 +109,7 @@ RuneDecider::Info RuneDecider::decide(group::ptr group, bool is_active, tracker:
         info.exp_angle += comp;    // 加上补偿
         info.exp_center2d = center;
 
-        _delta_time = Timer::now() - _start_tick;
+        _delta_time = Time::now() - _start_tick;
         // 判断能否射击
         if (judgeShoot(info.target, is_active, comp, info.exp_center2d, info.shoot_center) && _delta_time > _miss_frequency && !_is_changed) {
             if (_send_times < 5) {
@@ -154,7 +154,7 @@ bool RuneDecider::judgeShoot(tracker::ptr target_tracker, bool is_active, const 
 
 void RuneDecider::triggerInit() {
     _is_changed = true;
-    _start_tick = Timer::now();
+    _start_tick = Time::now();
     _initial_frequency = para::rune_decider_param.INIT_FREQUENCY;
     _miss_frequency = para::rune_decider_param.MISS_FREQUENCY;
     _send_times = 0;

@@ -75,15 +75,15 @@ public:
      * @param[in] armor_size_type 需要指定的大小装甲板类型，默认为 `ArmorSizeType::UNKNOWN`
      * @return 若成功，返回 Armor 的共享指针，否则返回空
      */
-    RMVL_W static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, double tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
+    RMVL_W static ptr make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, int64_t tick, ArmorSizeType armor_size_type = ArmorSizeType::UNKNOWN);
 
     /**
      * @brief 从另一个组合体进行构造
      *
-     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
+     * @param[in] tick 当前时间点，可用 `rm::Time::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    RMVL_W combo::ptr clone(double tick) override;
+    RMVL_W combo::ptr clone(int64_t tick) override;
 
     RMVL_COMBO_CAST(Armor)
 

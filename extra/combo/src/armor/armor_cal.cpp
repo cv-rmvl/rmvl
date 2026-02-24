@@ -11,17 +11,14 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include "rmvl/combo/armor.h"
 #include "rmvl/algorithm/transform.hpp"
+#include "rmvl/combo/armor.h"
 
 #include "rmvlpara/combo/armor.h"
 
-namespace rm
-{
+namespace rm {
 
-void Armor::imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec,
-                               const ImuData &imu_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec)
-{
+void Armor::imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gyro_tvec, const ImuData &imu_data, cv::Matx33f &cam_rmat, cv::Vec3f &cam_tvec) {
     auto rot = euler2Mat(deg2rad(imu_data.rotation.yaw), EulerAxis::Y) *
                euler2Mat(deg2rad(-imu_data.rotation.pitch), EulerAxis::X);
     rot = rot.inv();
@@ -30,16 +27,14 @@ void Armor::imuConvertToCamera(const cv::Matx33f &gyro_rmat, const cv::Vec3f &gy
 }
 
 void Armor::cameraConvertToImu(const cv::Matx33f &cam_rmat, const cv::Vec3f &cam_tvec,
-                               const ImuData &imu_data, cv::Matx33f &gyro_rmat, cv::Vec3f &gyro_tvec)
-{
+                               const ImuData &imu_data, cv::Matx33f &gyro_rmat, cv::Vec3f &gyro_tvec) {
     auto rot = euler2Mat(deg2rad(imu_data.rotation.yaw), EulerAxis::Y) *   // yaw 方向与 Y 轴欧拉角方向相同
                euler2Mat(deg2rad(-imu_data.rotation.pitch), EulerAxis::X); // pitch 方向与 X 轴欧拉角方向相反
     gyro_rmat = rot * cam_rmat;
     gyro_tvec = rot * cam_tvec;
 }
 
-bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
-{
+bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor) {
     // Get the four corner points of the area where the armor is located: (a, b, c, d)
     const auto &points = armor->corners();
     cv::Vec2f ab = {points[1].x - points[0].x, points[1].y - points[0].y};
@@ -70,8 +65,7 @@ bool Armor::isContainBlob(LightBlob::ptr blob, Armor::ptr armor)
         return false;
 }
 
-cv::Mat Armor::getNumberROI(cv::Mat src, const_ptr p_armor)
-{
+cv::Mat Armor::getNumberROI(cv::Mat src, const_ptr p_armor) {
     // 计算装甲板之间距离,该距离为获得的roi的边长
     double h_dis = p_armor->height() * para::armor_param.ROI_HEIGHT_RATIO;
     double w_dis = p_armor->width() * para::armor_param.ROI_WIDTH_RATIO;

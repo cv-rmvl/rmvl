@@ -1,12 +1,10 @@
-#include <chrono>
-#include <iostream>
+#include <thread>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/camera/hik_camera.h"
-#include "rmvl/core/timer.hpp"
 
 using namespace std::chrono_literals;
 
@@ -97,7 +95,7 @@ int main() {
     cv::createTrackbar("畸变 4", "控制面板", nullptr, 1000, distCoeffCallBack, &(dist_pose.at(4)));
     cv::setTrackbarPos("畸变 4", "控制面板", distCoeffs(4, 0) * 5000 + 500);
 
-    rm::Timer::sleep_for(1000);
+    std::this_thread::sleep_for(1000ms);
 
     printf("Press the 's' key to save the parameters to the yaml file: \033[33m%s\033[0m\n", file_name);
 

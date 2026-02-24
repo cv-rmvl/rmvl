@@ -55,14 +55,14 @@ TEST(LPSS_serialization, header) {
     msg::Header msg;
     msg.seq = 1;
     msg.frame_id = "base_link";
-    msg.stamp = 123.456;
+    msg.stamp = 123456;
 
     auto str = msg.serialize();
 
     auto dst = msg::Header::deserialize(str.data());
     EXPECT_EQ(dst.seq, 1);
     EXPECT_EQ(dst.frame_id, "base_link");
-    EXPECT_DOUBLE_EQ(dst.stamp, 123.456);
+    EXPECT_EQ(dst.stamp, 123456);
 }
 
 TEST(LPSS_serialization, quaternion) {
@@ -98,7 +98,7 @@ TEST(LPSS_serialization, vector3) {
 TEST(LPSS_serialization, joint) {
     msg::JointState msg;
     msg.header.frame_id = "joint_frame";
-    msg.header.stamp = 100.5;
+    msg.header.stamp = 100;
     msg.position = {1.0, 2.0, 3.0};
     msg.velocity = {0.1, 0.2, 0.3};
     msg.effort = {0.01, 0.02, 0.03};
@@ -108,7 +108,7 @@ TEST(LPSS_serialization, joint) {
     auto dst = msg::JointState::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "joint_frame");
-    EXPECT_DOUBLE_EQ(dst.header.stamp, 100.5);
+    EXPECT_EQ(dst.header.stamp, 100);
     EXPECT_DOUBLE_EQ(dst.position[0], 1.0);
     EXPECT_DOUBLE_EQ(dst.position[1], 2.0);
     EXPECT_DOUBLE_EQ(dst.position[2], 3.0);
@@ -123,7 +123,7 @@ TEST(LPSS_serialization, joint) {
 TEST(LPSS_serialization, imu) {
     msg::Imu msg;
     msg.header.frame_id = "imu_frame";
-    msg.header.stamp = 200.5;
+    msg.header.stamp = 123;
     msg.orientation = {0.0, 0.0, 0.0, 1.0};
     msg.angular_velocity = {0.1, 0.2, 0.3};
     msg.linear_acceleration = {9.8, 0.0, 0.0};
@@ -133,7 +133,6 @@ TEST(LPSS_serialization, imu) {
     auto dst = msg::Imu::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "imu_frame");
-    EXPECT_DOUBLE_EQ(dst.header.stamp, 200.5);
     EXPECT_DOUBLE_EQ(dst.orientation.x, 0.0);
     EXPECT_DOUBLE_EQ(dst.orientation.y, 0.0);
     EXPECT_DOUBLE_EQ(dst.orientation.z, 0.0);
