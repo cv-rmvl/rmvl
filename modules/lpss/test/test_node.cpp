@@ -30,9 +30,9 @@ TEST(LPSS_node, same_domain_discover) {
     lpss::Node nd("node3");
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    Timer::reset();
     auto [data, addr, port] = sock.read();
-    while (data.empty() && Timer::now() < 50)
+    auto start_time = Time::now();
+    while (data.empty() && Time::now() - start_time < 50)
         std::tie(data, addr, port) = sock.read();
     EXPECT_FALSE(data.empty());
 }
@@ -41,9 +41,9 @@ TEST(LPSS_node, diff_domain_issolate) {
     lpss::Node nd( "node4", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    Timer::reset();
     auto [data, addr, port] = sock.read();
-    while (data.empty() && Timer::now() < 50)
+    auto start_time = Time::now();
+    while (data.empty() && Time::now() - start_time < 50)
         std::tie(data, addr, port) = sock.read();
     EXPECT_TRUE(data.empty());
 }
@@ -52,9 +52,9 @@ TEST(LPSS_node, diff_domain_discover) {
     lpss::Node nd("node5", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7501), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    Timer::reset();
     auto [data, addr, port] = sock.read();
-    while (data.empty() && Timer::now() < 50)
+    auto start_time = Time::now();
+    while (data.empty() && Time::now() - start_time < 50)
         std::tie(data, addr, port) = sock.read();
     EXPECT_FALSE(data.empty());
 }

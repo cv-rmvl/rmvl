@@ -30,7 +30,7 @@ class GyroTrackerTest : public testing::Test {
     cv::Mat src;
 
 public:
-    double tick{Timer::now()};
+    double tick{Time::now()};
     ImuData imu_data{};
 
     void SetUp() override {
@@ -56,7 +56,7 @@ public:
     Armor::ptr buildArmor(cv::Point center, float angle) {
         LightBlob::ptr left_blob = buildBlob(angle, center - cv::Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
         LightBlob::ptr right_blob = buildBlob(angle, center + cv::Point(125 * cos(deg2rad(angle)), 125 * sin(deg2rad(angle))));
-        return Armor::make_combo(left_blob, right_blob, ImuData(), Timer::now());
+        return Armor::make_combo(left_blob, right_blob, ImuData(), Time::now());
     }
 
     /**

@@ -17,13 +17,10 @@
 #include "rmvlpara/camera/camera.h"
 #include "rmvlpara/combo/armor.h"
 
-namespace rm
-{
+namespace rm {
 
-const char *to_string(ArmorSizeType armor_size)
-{
-    switch (armor_size)
-    {
+const char *to_string(ArmorSizeType armor_size) {
+    switch (armor_size) {
     case ArmorSizeType::SMALL:
         return "small";
     case ArmorSizeType::BIG:
@@ -33,8 +30,7 @@ const char *to_string(ArmorSizeType armor_size)
     }
 }
 
-ArmorSizeType to_armor_size_type(const StateType &tp)
-{
+ArmorSizeType to_armor_size_type(const StateType &tp) {
     if (tp.index() == 0)
         return ArmorSizeType::UNKNOWN;
 
@@ -46,10 +42,8 @@ ArmorSizeType to_armor_size_type(const StateType &tp)
     return ArmorSizeType::UNKNOWN;
 }
 
-const char *to_string(RobotType robot)
-{
-    switch (robot)
-    {
+const char *to_string(RobotType robot) {
+    switch (robot) {
     case RobotType::HERO:
         return "hero";
     case RobotType::ENGINEER:
@@ -71,8 +65,7 @@ const char *to_string(RobotType robot)
     }
 }
 
-RobotType to_robot_type(const StateType &type)
-{
+RobotType to_robot_type(const StateType &type) {
     if (type.index() == 0)
         return RobotType::UNKNOWN;
 
@@ -107,8 +100,7 @@ RobotType to_robot_type(const StateType &type)
  * @return CameraExtrinsics - 相机外参
  */
 static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const ImuData &imu_data,
-                                           ArmorSizeType type, const std::vector<cv::Point2f> &corners)
-{
+                                           ArmorSizeType type, const std::vector<cv::Point2f> &corners) {
     cv::Vec3f rvec;             // 旋转向量
     cv::Vec3f tvec;             // 平移向量
     CameraExtrinsics extrinsic; // 存储相机外参
@@ -127,9 +119,7 @@ static CameraExtrinsics calculateExtrinsic(const cv::Matx33f &cameraMatrix, cons
     return extrinsic;
 }
 
-std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data,
-                                         double tick, ArmorSizeType armor_size_type)
-{
+std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p_right, const ImuData &imu_data, int64_t tick, ArmorSizeType armor_size_type) {
     // 判空
     if (p_left == nullptr || p_right == nullptr)
         return nullptr;
@@ -165,8 +155,7 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
                         para::armor_param.ERROR_WIDTH_SCALE_RATIO * width_ratio +
                         para::armor_param.ERROR_TILT_ANGLE_RATIO * corner_angle +
                         para::armor_param.ERROR_ANGLE_SCALE_RATIO * angle_diff;
-    if (armor_size_type == ArmorSizeType::UNKNOWN)
-    {
+    if (armor_size_type == ArmorSizeType::UNKNOWN) {
         // 判断是否构造
         if (length_ratio >= para::armor_param.MAX_LENGTH_RATIO) // 长度偏差判断
             return nullptr;
@@ -196,10 +185,8 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
     retval->_angle = (p_left->angle() + p_right->angle()) / 2.f;
     // 匹配大小装甲板
     ArmorSizeType armor_size{};
-    if (armor_size_type == ArmorSizeType::UNKNOWN)
-    {
-        if (_svm != nullptr)
-        {
+    if (armor_size_type == ArmorSizeType::UNKNOWN) {
+        if (_svm != nullptr) {
             cv::Matx15f test_sample = {combo_ratio,   // 装甲板长宽比
                                        width_ratio,   // 灯条宽度比
                                        length_ratio}; // 灯条长度比
@@ -221,8 +208,7 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
             armor_size = ArmorSizeType::SMALL; // 装甲板长宽比例较小
         else
             armor_size = ArmorSizeType::BIG;
-    }
-    else
+    } else
         armor_size = armor_size_type;
     retval->_state["armor_size"] = to_string(armor_size);
     // 更新角点
@@ -246,8 +232,7 @@ void Armor::setType(RobotType stat) { _state["robot"] = to_string(stat); }
 Armor::Armor(float width_r, float length_r, float corner_angle, float match_error)
     : _width_ratio(width_r), _length_ratio(length_r), _corner_angle(corner_angle), _match_error(match_error) {}
 
-combo::ptr Armor::clone(double tick)
-{
+combo::ptr Armor::clone(int64_t tick) {
     auto retval = std::make_shared<Armor>(*this);
     // 更新内部所有特征
     for (auto &p_feature : retval->_features)

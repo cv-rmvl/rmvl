@@ -130,7 +130,7 @@ rm::predictor::ptr p_predictor = rm::ArmorPredictor::make_predictor();
 rm::decider::ptr p_decider = rm::TranslationDecider::make_decider();
 std::vector<rm::group::ptr> groups;
 /* ... */
-auto detect_info = p_detector->detect(groups, src, BLUE, rm::ImuData(), Timer::now());
+auto detect_info = p_detector->detect(groups, src, BLUE, rm::ImuData(), rm::Time::now());
 auto compensate_info = p_compensator->compensate(groups, {imu_data.yaw, imu_data.pitch}, shoot_speed);
 auto predict_info = p_predictor->predict(groups);
 auto decide_info = p_decider->decide(groups);

@@ -1,5 +1,6 @@
+#include <thread>
+
 #include "hik_light_impl.hpp"
-#include "rmvl/core/timer.hpp"
 
 #include "rmvlpara/light/hik_light_control.h"
 
@@ -28,7 +29,7 @@ bool HikLightController::Impl::open() {
     RMVL_DbgAssert(isOpened());
     if (!_sp->write("SH#"))
         return false;
-    Timer::sleep_for(para::hik_light_control_param.DELAY_AFTER_WRITE);
+    std::this_thread::sleep_for(std::chrono::microseconds(para::hik_light_control_param.DELAY_AFTER_WRITE));
     std::string buf;
     if (!_sp->read(buf))
         return false;
@@ -39,7 +40,7 @@ bool HikLightController::Impl::close() {
     RMVL_DbgAssert(isOpened());
     if (!_sp->write("SL#"))
         return false;
-    Timer::sleep_for(para::hik_light_control_param.DELAY_AFTER_WRITE);
+    std::this_thread::sleep_for(std::chrono::microseconds(para::hik_light_control_param.DELAY_AFTER_WRITE));
     std::string buf;
     if (!_sp->read(buf))
         return false;
@@ -52,7 +53,7 @@ int HikLightController::Impl::get(int chn) const {
     if (!_sp->write("S"s + HIK_CHN_STR[chn - 1] + "#"))
         return -1;
     std::string buf;
-    Timer::sleep_for(para::hik_light_control_param.DELAY_AFTER_WRITE);
+    std::this_thread::sleep_for(std::chrono::microseconds(para::hik_light_control_param.DELAY_AFTER_WRITE));
     if (!_sp->read(buf))
         return -1;
     if (buf == "NG")
@@ -74,7 +75,7 @@ bool HikLightController::Impl::set(int chn, int val) {
 
     if (!_sp->write(command))
         return false;
-    Timer::sleep_for(para::hik_light_control_param.DELAY_AFTER_WRITE);
+    std::this_thread::sleep_for(std::chrono::microseconds(para::hik_light_control_param.DELAY_AFTER_WRITE));
     std::string buf;
     if (!_sp->read(buf))
         return false;

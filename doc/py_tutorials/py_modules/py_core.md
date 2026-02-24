@@ -18,6 +18,6 @@
 import rm
 
 # 定时器
-t = rm.Timer.now()
+t = rm.Time.now()
 print("now = {:.6f}".format(t))
 ```

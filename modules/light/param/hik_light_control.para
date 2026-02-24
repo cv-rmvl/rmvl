@@ -1,1 +1,1 @@
-double DELAY_AFTER_WRITE = 10.0 # 串口写入后的延时时间，单位 ms
+int64_t DELAY_AFTER_WRITE = 10 # 串口写入后的延时时间，单位 ms

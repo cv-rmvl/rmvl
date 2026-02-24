@@ -59,7 +59,7 @@ public:
         cv::projectPoints(world_points, rvec, tvec, cameraMatrix, distCoeffs, imagePoints);
         auto p_left = rm::LightBlob::make_feature(imagePoints[1], imagePoints[0], 10);
         auto p_right = rm::LightBlob::make_feature(imagePoints[2], imagePoints[3], 10);
-        return rm::Armor::make_combo(p_left, p_right, rm::ImuData(), rm::Timer::now(), rm::ArmorSizeType::SMALL);
+        return rm::Armor::make_combo(p_left, p_right, rm::ImuData(), rm::Time::now(), rm::ArmorSizeType::SMALL);
     }
 };
 

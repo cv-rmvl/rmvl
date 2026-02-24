@@ -49,15 +49,15 @@ public:
      * @param[in] force 是否为强制构造
      * @return 神符共享指针
      */
-    RMVL_W static ptr make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &imu_data, double tick, bool force = false);
+    RMVL_W static ptr make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &imu_data, int64_t tick, bool force = false);
 
     /**
      * @brief 从另一个组合体进行构造
      *
-     * @param[in] tick 当前时间点，可用 `rm::Timer::now()` 获取
+     * @param[in] tick 当前时间点，可用 `rm::Time::now()` 获取
      * @return 指向新组合体的共享指针
      */
-    RMVL_W combo::ptr clone(double tick) override;
+    RMVL_W combo::ptr clone(int64_t tick) override;
 
     RMVL_COMBO_CAST(Rune)
 

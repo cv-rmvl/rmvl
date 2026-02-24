@@ -416,10 +416,12 @@ rmvl_mv_manual_calib
 - <b class="tab-title">C++</b>
 
   ```cpp
+  #include <thread>
   #include <opencv2/highgui.hpp>
 
   #include <rmvl/camera/mv_camera.h>
-  #include <rmvl/core/timer.hpp>
+
+  using namespace std::chrono_literals;
 
   int main() {
       auto camera_config = rm::CameraConfig::create(rm::GrabMode::Software, rm::RetrieveMode::OpenCV)
@@ -428,7 +430,7 @@ rmvl_mv_manual_calib
       bool run = true;
       std::thread th([&run]() {
           while (run) {
-              Timer::sleep_for(10);
+              std::this_thread::sleep_for(10ms);           // 每隔 10ms 触发一次
               capture.trigger(rm::CameraEvents::software); // 触发
           }
       });

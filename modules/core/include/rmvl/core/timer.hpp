@@ -13,45 +13,35 @@
 
 #include "rmvldef.hpp"
 
+#include <chrono>
+
 //! @addtogroup core
 //! @{
 //! @defgroup core_timer 定时、计时模块
 //! @}
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup core_timer
 //! @{
 
-/**
- * @brief 定时器
- * @brief
- * - 在程序开始时调用 `reset()` 函数，之后调用 `now()` 函数即可返回从构造初期到现在经过的时间
- */
-class RMVL_EXPORTS_W Timer
-{
+//! 计时器类
+class RMVL_EXPORTS_W Time {
 public:
-    RMVL_W Timer() { reset(); }
+    //! 返回 Epoch 时间（单位：秒）
+    RMVL_W static inline int64_t now_s() {
+        return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
 
-    //! 重置定时器
-    RMVL_W static void reset();
-    //! 返回从构造初期到现在经过的时间（单位：ms）
-    RMVL_W static double now();
+    //! 返回 Epoch 时间（单位：毫秒）
+    RMVL_W static inline int64_t now() {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
 
-    /**
-     * @brief 当前线程休眠指定时间
-     * 
-     * @param[in] t 时间间隔（单位：ms）
-     */
-    RMVL_W static void sleep_for(double t);
-
-    /**
-     * @brief 当前线程休眠至指定时间
-     * 
-     * @param[in] t 时间点（单位：ms）
-     */
-    RMVL_W static void sleep_until(double t);
+    //! 返回 Epoch 时间（单位：微秒）
+    RMVL_W static inline int64_t now_us() {
+        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
 };
 
 //! @} core_timer

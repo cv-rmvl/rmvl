@@ -120,7 +120,7 @@ async::Task<> session(async::PipeClient cli) {
 
 ### 2.3 异步定时器
 
-相关类： rm::async::Timer
+相关类： rm::async::Timer —— 异步定时器
 
 @ref io 在
 

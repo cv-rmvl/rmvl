@@ -19,7 +19,7 @@
 namespace rm {
 
 Rune::ptr Rune::make_combo(RuneTarget::ptr p_target, RuneCenter::ptr p_center,
-                           const ImuData &imu_data, double tick, bool force) {
+                           const ImuData &imu_data, int64_t tick, bool force) {
     // ------------------------------【判空】------------------------------
     if (p_target == nullptr || p_center == nullptr)
         return nullptr;
@@ -74,7 +74,7 @@ Rune::Rune(RuneTarget::ptr p_target, RuneCenter::ptr p_center, const ImuData &im
     _tick = tick;
 }
 
-combo::ptr Rune::clone(double tick) {
+combo::ptr Rune::clone(int64_t tick) {
     auto retval = std::make_shared<Rune>(*this);
     // 更新内部所有特征
     for (std::size_t i = 0; i < _features.size(); ++i)

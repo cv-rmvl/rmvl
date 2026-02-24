@@ -140,8 +140,7 @@ FeatureHandler: Handling the feature request.
 下面给出一个简单的例子
 
 ```cpp
-bool run()
-{
+bool run() {
     /* 读取数据 raw_data */
 
     /* 提取通信得到的控制信息 */
@@ -153,8 +152,7 @@ bool run()
 
     // 视觉处理，这里采用 LUT 方式控制逻辑分支
     cv::Mat src;
-    if (!capture_map[camera_flag]->read(src))
-    {
+    if (!capture_map[camera_flag]->read(src)) {
         // 不能正常打开相机
         WARNING_("相机打开异常");
         return false;
@@ -162,12 +160,9 @@ bool run()
 
     // 程序处理 I: 识别
     DetectInfo detect_info{};
-    try
-    {
-        detect_info = detector_map[detect_flag]->detect(groups, src, color, data, Timer::now());
-    }
-    catch (const rm::Exception &e)
-    {
+    try {
+        detect_info = detector_map[detect_flag]->detect(groups, src, color, data, rm::Time::now());
+    } catch (const rm::Exception &e) {
         ERROR_("Occurred an exception! %s", e.err.c_str());
         groups.clear();
         /* 发送默认数据 */

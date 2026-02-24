@@ -1,4 +1,4 @@
-#include <iostream>
+#include <thread>
 
 #include "rmvl/algorithm/pretreat.hpp"
 #include "rmvl/camera/hik_camera.h"
@@ -27,7 +27,7 @@ void collect(rm::PixChannel color, rm::ArmorSizeType type, int begin_idx) {
         capture->read(frame);
         if (frame.empty())
             RMVL_Error(RMVL_StsBadSize, "frame is empty, something wrong with the camera.");
-        auto info = p_detector->detect(trackers, frame, color, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(trackers, frame, color, rm::ImuData(), rm::Time::now());
         const auto &combos = info.combos;
         if (combos.size() != 1) {
             if (combos.size() > 1)
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
             return 0;
         collect(color, rm::ArmorSizeType::SMALL, 0);
         cv::destroyAllWindows();
-        rm::Timer::sleep_for(10);
+        std::this_thread::sleep_for(10ms);
 
         // --------------------- 大装甲板收集 ---------------------
         printf("\033[32m大装甲板\033[0m信息收集即将开始...\n");
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
             return 0;
         collect(color, rm::ArmorSizeType::BIG, collect_num);
         cv::destroyAllWindows();
-        rm::Timer::sleep_for(10);
+        std::this_thread::sleep_for(10ms);
 
         // 训练与分类
         p_svm = cv::ml::SVM::create();
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
     }
     printf("在键盘上按下一次 \033[33mEsc\033[0m 来暂停，按下两次 \033[33mEsc\033[0m 来退出测试\n");
     while (capture->read(frame)) {
-        auto info = p_detector->detect(trackers, frame, color, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(trackers, frame, color, rm::ImuData(), rm::Time::now());
         const auto &combos = info.combos;
         if (!combos.empty()) {
             if (combos.size() > 1)

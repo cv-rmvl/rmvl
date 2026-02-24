@@ -432,7 +432,7 @@ public:
     /**
      * @brief 创建一个在指定时间点触发的定时等待器
      *
-     * @param[in] time_point 定时器触发的时间点，通常使用 `rm::Timer::now()` 获取当前时间
+     * @param[in] time_point 定时器触发的时间点，通常使用 `rm::Time::now()` 获取当前时间
      * @return 定时等待器
      */
     template <typename Clock, typename Duration>

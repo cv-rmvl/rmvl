@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
         if (!capture.read(src))
             RMVL_Error(RMVL_StsError, "Fail to read the image.");
         // 识别
-        auto info = p_detector->detect(trackers, src, color, rm::ImuData(), rm::Timer::now());
+        auto info = p_detector->detect(trackers, src, color, rm::ImuData(), rm::Time::now());
         const auto &combos = info.combos;
         if (combos.size() > 1)
             WARNING_("当前识别到多于 1 个装甲板：识别到 %zu 个", combos.size());

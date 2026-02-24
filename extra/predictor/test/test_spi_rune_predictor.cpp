@@ -38,7 +38,7 @@ TEST(Run_Accuracy, data_from_0_300) {
     auto p_predictor = SpiRunePredictor::make_predictor();
     auto p_center = RuneCenter::make_feature(cv::Point(500, 500));
     auto p_target = RuneTarget::make_feature(cv::Point(600, 500), false);
-    auto p_rune = Rune::make_combo(p_target, p_center, ImuData(), Timer::now(), true);
+    auto p_rune = Rune::make_combo(p_target, p_center, ImuData(), Time::now(), true);
     auto p_tracker = RuneTracker::make_tracker(p_rune);
     std::unordered_map<tracker::ptr, double> tof;
     tof.emplace(p_tracker, 0.02);
@@ -50,7 +50,7 @@ TEST(Run_Accuracy, data_from_0_300) {
                                500 - 100 * sin(deg2rad(i)));
         auto new_target = RuneTarget::make_feature(cv::Point(600, 500), false);
         auto imu_data = ImuData{};
-        double tick = Timer::now();
+        double tick = Time::now();
 
         auto new_rune = Rune::make_combo(new_target, p_center, imu_data, tick, true);
         p_tracker->update(new_rune);
