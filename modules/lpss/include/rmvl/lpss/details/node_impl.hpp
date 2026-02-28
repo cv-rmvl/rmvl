@@ -158,7 +158,7 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
 
 template <typename MsgType>
 void Node::destroyPublisher(typename Publisher<MsgType>::ptr pub) {
-    if (pub->invalid())
+    if (!pub || pub->invalid())
         return;
     // 移除本地 DataWriter
     _local_writers.erase(pub->_topic);
@@ -172,7 +172,7 @@ void Node::destroyPublisher(typename Publisher<MsgType>::ptr pub) {
 
 template <typename MsgType>
 void Node::destroySubscriber(typename Subscriber<MsgType>::ptr sub) {
-    if (sub->invalid())
+    if (!sub || sub->invalid())
         return;
     // 移除本地 DataReader
     _local_readers.erase(sub->_topic);
