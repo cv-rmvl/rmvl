@@ -55,7 +55,7 @@
  * @{
  * @brief RMVL 消息模块
  * @details
- * 该模块包含了 RMVL 中提供的所有消息类，包含 `std`、`geometry` 和 `sensor` 三个消息分组，提供了常用类型的序列化与反序列化功能
+ * 该模块包含了 RMVL 中提供的所有消息类，包含 `std`、`geometry`、`sensor`、`motion` 和 `viz` 共 5 个消息分组，提供了常用类型的序列化与反序列化功能
  * @}
  */
 

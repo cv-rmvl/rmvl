@@ -17,7 +17,7 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
 
 ### 2 内置消息类型
 
-以下是一些常用的内置消息类型，分为四个主要分组：`std`、`geometry`、`sensor` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
+以下是一些常用的内置消息类型，分为 5 个主要分组：`std`、`geometry`、`sensor`、`motion` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
 
 <div class="tabbed">
 
@@ -214,6 +214,15 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
     <td class="markdownTableBodyLeft">表示两个坐标系之间的变换关系（平移 + 旋转）</td>
   </tr>
   <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>TransformStamped</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keywordtype">string</span> child_frame_id</div>
+      <div class="line"><span class="keyword">geometry/Transform</span> transform</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">带时间戳的坐标变换，表示从 <code>header.frame_id</code> 到 <code>child_frame_id</code> 的变换</td>
+  </tr>
+  <tr class="markdownTableRowEven">
     <td class="markdownTableBodyLeft"><code>Twist</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keyword">geometry/Vector3</span> linear</div> 
@@ -221,7 +230,7 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
     </div></td>
     <td class="markdownTableBodyLeft">表示物体的线速度和角速度</td>
   </tr>
-  <tr class="markdownTableRowEven">
+  <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyLeft"><code>Vector3</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">float64</span> x</div>
@@ -230,7 +239,7 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
     </div></td>
     <td class="markdownTableBodyLeft">表示空间中的一个 3D 向量</td>
   </tr>
-  <tr class="markdownTableRowOdd">
+  <tr class="markdownTableRowEven">
     <td class="markdownTableBodyLeft"><code>Wrench</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keyword">geometry/Vector3</span> force</div>
@@ -333,6 +342,57 @@ RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段�
   <div class="line"><span class="keywordtype">string</span> robot_name</div>
   <div class="line"><span class="keywordtype">uint8</span>[4] ip</div>
   <div class="line"><span class="keyword">sensor/JointState</span> joint_state</div>
+  </div>
+
+- <b class="tab-title">motion 消息分组</b>
+
+  `motion` 消息用于表示运动相关的数据，例如轨迹、坐标变换树等内容，嵌套使用时<span style="color: red">需要</span>使用 `motion/` 前缀。
+
+  <div class="full_width_table">
+  <table class="markdownTable">
+  <tr class="markdownTableHead">
+    <th class="markdownTableHeadCenter">类型</th>
+    <th class="markdownTableHeadCenter">*.msg 定义</th>
+    <th class="markdownTableHeadCenter">描述</th>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>JointTrajectory</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keywordtype">string</span>[] joint_names</div>
+      <div class="line"><span class="keyword">motion/JointTrajectoryPoint</span>[] points</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">关节轨迹，包含轨迹点序列，描述了一组关节随时间的运动规划</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyLeft"><code>JointTrajectoryPoint</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keywordtype">float64</span>[] positions</div>
+      <div class="line"><span class="keywordtype">float64</span>[] velocities</div>
+      <div class="line"><span class="keywordtype">float64</span>[] accelerations</div>
+      <div class="line"><span class="keywordtype">float64</span>[] effort</div>
+      <div class="line"><span class="keywordtype">int64</span> time_from_start</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">关节轨迹中的单个轨迹点，包含各关节的位置、速度、加速度、力矩以及从轨迹起点到达此点的期望时间</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>TF</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">geometry/TransformStamped</span>[] transforms</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">坐标变换树，包含一组带时间戳的坐标系变换关系</td>
+  </tr>
+  </table>
+  </div>
+
+  与 `geometry` 分组的消息类似，在自定义 `*.msg` 文件中使用 `motion` 分组的消息时，需要手动指定分组前缀，即要手动添加 `motion/` 前缀，例如：
+
+  <div class="fragment">
+  <div class="line"><span class="comment"># 自定义消息类型 ArmPlan.msg</span></div>
+  <div class="line"><span class="keyword">Header</span> header</div>
+  <div class="line"></div>
+  <div class="line"><span class="keywordtype">string</span> robot_name</div>
+  <div class="line"><span class="keyword">motion/JointTrajectory</span> trajectory</div>
   </div>
 
 - <b class="tab-title">viz 消息分组</b>
