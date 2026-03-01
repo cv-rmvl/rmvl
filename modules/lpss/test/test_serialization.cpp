@@ -16,6 +16,7 @@
 #include "rmvlmsg/std/int32.hpp"
 #include "rmvlmsg/sensor/imu.hpp"
 #include "rmvlmsg/sensor/joint_state.hpp"
+#include "rmvlmsg/geometry/polygon.hpp"
 
 namespace rm_test {
 
@@ -120,6 +121,97 @@ TEST(LPSS_serialization, joint) {
     EXPECT_DOUBLE_EQ(dst.effort[2], 0.03);
 }
 
+TEST(LPSS_serialization, joint_with_names) {
+    msg::JointState msg;
+    msg.header.seq = 10;
+    msg.header.frame_id = "robot_arm";
+    msg.header.stamp = 999;
+    msg.name = {"joint1", "joint2", "joint3"};
+    msg.position = {0.5, 1.5, 2.5};
+    msg.velocity = {-0.1, -0.2, -0.3};
+    msg.effort = {10.0, 20.0, 30.0};
+
+    auto str = msg.serialize();
+    auto dst = msg::JointState::deserialize(str.data());
+
+    EXPECT_EQ(dst.header.seq, 10);
+    EXPECT_EQ(dst.header.frame_id, "robot_arm");
+    EXPECT_EQ(dst.header.stamp, 999);
+    ASSERT_EQ(dst.name.size(), 3u);
+    EXPECT_EQ(dst.name[0], "joint1");
+    EXPECT_EQ(dst.name[1], "joint2");
+    EXPECT_EQ(dst.name[2], "joint3");
+    ASSERT_EQ(dst.position.size(), 3u);
+    EXPECT_DOUBLE_EQ(dst.position[0], 0.5);
+    EXPECT_DOUBLE_EQ(dst.position[1], 1.5);
+    EXPECT_DOUBLE_EQ(dst.position[2], 2.5);
+    ASSERT_EQ(dst.velocity.size(), 3u);
+    EXPECT_DOUBLE_EQ(dst.velocity[0], -0.1);
+    EXPECT_DOUBLE_EQ(dst.velocity[1], -0.2);
+    EXPECT_DOUBLE_EQ(dst.velocity[2], -0.3);
+    ASSERT_EQ(dst.effort.size(), 3u);
+    EXPECT_DOUBLE_EQ(dst.effort[0], 10.0);
+    EXPECT_DOUBLE_EQ(dst.effort[1], 20.0);
+    EXPECT_DOUBLE_EQ(dst.effort[2], 30.0);
+}
+
+TEST(LPSS_serialization, joint_empty_arrays) {
+    msg::JointState msg;
+    msg.header.frame_id = "empty";
+    msg.header.stamp = 0;
+
+    auto str = msg.serialize();
+    auto dst = msg::JointState::deserialize(str.data());
+
+    EXPECT_EQ(dst.header.frame_id, "empty");
+    EXPECT_EQ(dst.header.stamp, 0);
+    EXPECT_TRUE(dst.name.empty());
+    EXPECT_TRUE(dst.position.empty());
+    EXPECT_TRUE(dst.velocity.empty());
+    EXPECT_TRUE(dst.effort.empty());
+}
+
+TEST(LPSS_serialization, joint_different_array_sizes) {
+    msg::JointState msg;
+    msg.header.frame_id = "flex";
+    msg.header.stamp = 42;
+    msg.name = {"a", "bb", "ccc", "dddd", "eeeee"};
+    msg.position = {1.0, 2.0};
+    msg.velocity = {3.0};
+    msg.effort = {};
+
+    auto str = msg.serialize();
+    auto dst = msg::JointState::deserialize(str.data());
+
+    EXPECT_EQ(dst.header.frame_id, "flex");
+    EXPECT_EQ(dst.header.stamp, 42);
+    ASSERT_EQ(dst.name.size(), 5u);
+    EXPECT_EQ(dst.name[0], "a");
+    EXPECT_EQ(dst.name[1], "bb");
+    EXPECT_EQ(dst.name[2], "ccc");
+    EXPECT_EQ(dst.name[3], "dddd");
+    EXPECT_EQ(dst.name[4], "eeeee");
+    ASSERT_EQ(dst.position.size(), 2u);
+    EXPECT_DOUBLE_EQ(dst.position[0], 1.0);
+    EXPECT_DOUBLE_EQ(dst.position[1], 2.0);
+    ASSERT_EQ(dst.velocity.size(), 1u);
+    EXPECT_DOUBLE_EQ(dst.velocity[0], 3.0);
+    EXPECT_TRUE(dst.effort.empty());
+}
+
+TEST(LPSS_serialization, joint_compact_size) {
+    msg::JointState msg;
+    msg.header.frame_id = "sz";
+    msg.header.stamp = 1;
+    msg.name = {"x"};
+    msg.position = {1.0, 2.0};
+    msg.velocity = {};
+    msg.effort = {3.0};
+
+    auto str = msg.serialize();
+    EXPECT_EQ(str.size(), msg.compact_size());
+}
+
 TEST(LPSS_serialization, imu) {
     msg::Imu msg;
     msg.header.frame_id = "imu_frame";
@@ -143,6 +235,55 @@ TEST(LPSS_serialization, imu) {
     EXPECT_DOUBLE_EQ(dst.linear_acceleration.x, 9.8);
     EXPECT_DOUBLE_EQ(dst.linear_acceleration.y, 0.0);
     EXPECT_DOUBLE_EQ(dst.linear_acceleration.z, 0.0);
+}
+
+TEST(LPSS_serialization, polygon_basic) {
+    msg::Polygon msg;
+    msg.points = {{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}, {7.0f, 8.0f, 9.0f}};
+
+    auto str = msg.serialize();
+    auto dst = msg::Polygon::deserialize(str.data());
+
+    ASSERT_EQ(dst.points.size(), 3u);
+    EXPECT_FLOAT_EQ(dst.points[0].x, 1.0f);
+    EXPECT_FLOAT_EQ(dst.points[0].y, 2.0f);
+    EXPECT_FLOAT_EQ(dst.points[0].z, 3.0f);
+    EXPECT_FLOAT_EQ(dst.points[1].x, 4.0f);
+    EXPECT_FLOAT_EQ(dst.points[1].y, 5.0f);
+    EXPECT_FLOAT_EQ(dst.points[1].z, 6.0f);
+    EXPECT_FLOAT_EQ(dst.points[2].x, 7.0f);
+    EXPECT_FLOAT_EQ(dst.points[2].y, 8.0f);
+    EXPECT_FLOAT_EQ(dst.points[2].z, 9.0f);
+}
+
+TEST(LPSS_serialization, polygon_empty) {
+    msg::Polygon msg;
+
+    auto str = msg.serialize();
+    auto dst = msg::Polygon::deserialize(str.data());
+
+    EXPECT_TRUE(dst.points.empty());
+}
+
+TEST(LPSS_serialization, polygon_single_point) {
+    msg::Polygon msg;
+    msg.points = {{-1.5f, 0.0f, 2.5f}};
+
+    auto str = msg.serialize();
+    auto dst = msg::Polygon::deserialize(str.data());
+
+    ASSERT_EQ(dst.points.size(), 1u);
+    EXPECT_FLOAT_EQ(dst.points[0].x, -1.5f);
+    EXPECT_FLOAT_EQ(dst.points[0].y, 0.0f);
+    EXPECT_FLOAT_EQ(dst.points[0].z, 2.5f);
+}
+
+TEST(LPSS_serialization, polygon_compact_size) {
+    msg::Polygon msg;
+    msg.points = {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}};
+
+    auto str = msg.serialize();
+    EXPECT_EQ(str.size(), msg.compact_size());
 }
 
 } // namespace rm_test
