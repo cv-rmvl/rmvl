@@ -428,7 +428,7 @@ struct _dgram_sendto_res {
     socklen_t addr_len{};
 };
 
-static _dgram_sendto_res parse_sendto(const std::string_view &addr, const Endpoint &endpoint) noexcept {
+static _dgram_sendto_res parse_sendto(std::string_view addr, const Endpoint &endpoint) noexcept {
     _dgram_sendto_res res{};
     if (endpoint.family() == AF_INET) {
         auto *dst_addr = reinterpret_cast<sockaddr_in *>(&res.dst_storage);

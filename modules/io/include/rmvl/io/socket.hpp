@@ -701,7 +701,7 @@ public:
         //! @endcond
 
     private:
-        std::string_view _addr;
+        std::string _addr;
         Endpoint _endpoint;
     };
 

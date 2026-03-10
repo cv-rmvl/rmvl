@@ -191,7 +191,7 @@ PipeClient::~PipeClient() {
         ::close(_fd);
 }
 
-SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(name.find('/') == 0 ? std::string(name) : "/"s + std::string(name)) {
+SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(name.find('/') == 0 ? std::string(name) : "/"s.append(name)) {
     _fd = ::shm_open(_name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0666);
 
     if (_fd >= 0)
