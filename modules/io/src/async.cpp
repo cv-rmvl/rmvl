@@ -380,6 +380,9 @@ void Timer::TimerAwaiter::await_suspend(std::coroutine_handle<> handle) {
     std::memset(&tconfig, 0, sizeof(tconfig));
     tconfig.it_value.tv_sec = static_cast<time_t>(_duration / 1000);
     tconfig.it_value.tv_nsec = static_cast<long>((_duration / 1000 - tconfig.it_value.tv_sec) * 1e9);
+    // 避免出现剩余时间为 0 或负数导致 timerfd 被解除
+    if (tconfig.it_value.tv_sec == 0 && tconfig.it_value.tv_nsec <= 0)
+        tconfig.it_value.tv_nsec = 1;
 
     if (timerfd_settime(_fd, 0, &tconfig, nullptr) == -1)
         RMVL_Error_(RMVL_StsBadArg, "Failed to set timerfd: %s", strerror(errno));
