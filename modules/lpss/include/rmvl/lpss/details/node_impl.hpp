@@ -17,6 +17,8 @@
 
 namespace rm::lpss {
 
+//! @cond
+
 template <typename MsgType>
 void Publisher<MsgType>::publish(const MsgType &msg) {
     RMVL_Assert(!invalid());
@@ -73,7 +75,7 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
 }
 
 template <typename MsgType>
-void Node::destroyPublisher(const Publisher<MsgType> &pub) {
+void Node::destroyPublisher(Publisher<MsgType> &pub) {
     if (pub.invalid())
         return;
     // 移除本地 DataWriter
@@ -91,7 +93,7 @@ void Node::destroyPublisher(const Publisher<MsgType> &pub) {
 }
 
 template <typename MsgType>
-void Node::destroySubscriber(const Subscriber<MsgType> &sub) {
+void Node::destroySubscriber(Subscriber<MsgType> &sub) {
     if (sub.invalid())
         return;
     // 移除本地 DataReader
@@ -211,5 +213,7 @@ Timer::ptr Node::createTimer(std::chrono::duration<Rep, Period> dur, TimerCallba
 } // namespace async
 
 #endif
+
+//! @endcond
 
 } // namespace rm::lpss
