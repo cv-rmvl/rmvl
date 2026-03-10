@@ -274,6 +274,9 @@ add_subdirectory(${_3rd_dir}/fmt)
 # json (nlohmann_json)
 add_subdirectory(${_3rd_dir}/json)
 
+# tinyxml2
+add_subdirectory(${_3rd_dir}/tinyxml2)
+
 # Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
 function(rmvl_install_sdk sdk)
   # Handle the installation of the include directory
