@@ -22,7 +22,12 @@ namespace rm::msg {
 //! @addtogroup rmvlmsg
 //! @{
 
-//! @CLASS_NAME@ 消息类型：`@CLASS_NAME_COMMENT@`
+/**
+ * @brief @CLASS_NAME@ 消息类型：`@CLASS_NAME_COMMENT@`
+ * @see
+ * - 详细描述请参考 @ref tutorial_table_of_content_rmvlmsg 的 **自动代码生成** 章节；
+ * - LPSS 使用教程请参考 @ref tutorial_modules_lpss 。
+ */
 class @CLASS_NAME@ {
 public:
 @type_and_ids_cpp@

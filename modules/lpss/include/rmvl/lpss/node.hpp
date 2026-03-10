@@ -55,7 +55,7 @@ public:
      * @param[in] topic 话题名称
      * @param[in] writer 底层数据写入器
      */
-    Publisher(std::string_view topic, DataWriterBase::ptr writer) : _topic(topic), _writer(std::move(writer)) {}
+    Publisher(std::string_view topic, DataWriterBase::ptr writer) : _writer(std::move(writer)), _topic(topic) {}
     //! @endcond
 
     //! 判断发布者是否无效
@@ -158,7 +158,7 @@ public:
      * @param[in] pub 发布者对象
      */
     template <typename MsgType>
-    void destroyPublisher(const Publisher<MsgType> &pub);
+    void destroyPublisher(Publisher<MsgType> &pub);
 
     /**
      * @brief 销毁订阅者
@@ -167,7 +167,7 @@ public:
      * @param[in] sub 订阅者对象
      */
     template <typename MsgType>
-    void destroySubscriber(const Subscriber<MsgType> &sub);
+    void destroySubscriber(Subscriber<MsgType> &sub);
 
     //! 手动停止节点运行 @note 推荐使用析构函数自动清理资源并停止节点，除非在多线程环境中需要提前停止节点以释放资源
     void shutdown() noexcept;
