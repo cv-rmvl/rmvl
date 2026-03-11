@@ -1,7 +1,7 @@
 /**
  * @file cv.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief OpenCV 消息转换定义
+ * @brief LPSS OpenCV 消息转换定义
  * @version 1.0
  * @date 2026-01-28
  *
