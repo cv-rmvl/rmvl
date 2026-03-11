@@ -23,3 +23,4 @@
 
 #include "lpss/node.hpp"
 #include "lpss/cv.hpp"
+#include "lpss/robot.hpp"

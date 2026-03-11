@@ -19,6 +19,7 @@ endforeach()
 rmvl_add_module(
   lpss
   DEPENDS io
+  EXTERNAL tinyxml2
 )
 
 # --------------------------------------------------------------------------
@@ -27,7 +28,7 @@ rmvl_add_module(
 if(BUILD_TESTS)
   rmvl_add_test(
     lpss Unit
-    DEPENDS lpss
+    DEPENDS lpss algorithm
     EXTERNAL GTest::gtest_main
   )
 endif(BUILD_TESTS)
