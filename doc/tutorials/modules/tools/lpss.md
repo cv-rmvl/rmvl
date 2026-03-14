@@ -409,7 +409,7 @@ int main() {
   <div class="line"><span class="keyword">cmake_minimum_required</span>(VERSION 3.16)</div>
   <div class="line"><span class="keyword">project</span>(LPSSDemo)</div>
   <div class="line"></div>
-  <div class="line"><span class="keyword">set</span>(CMAKE_CXX_STANDARD 17)</div>
+  <div class="line"><span class="keyword">set</span>(CMAKE_CXX_STANDARD 20)</div>
   <div class="line"><span class="keyword">set</span>(CMAKE_CXX_STANDARD_REQUIRED ON)</div>
   <div class="line"></div>
   <div class="line"><span class="comment"># 查找 RMVL 包，其中包含了自动代码生成的功能</span></div>
