@@ -1,3 +1,6 @@
+#ifdef _WIN32
+#include <chrono>
+#endif
 #include <thread>
 
 #include <opencv2/highgui.hpp>
