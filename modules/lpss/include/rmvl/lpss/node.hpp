@@ -377,7 +377,7 @@ public:
      * @param[in] pub 发布者对象
      */
     template <typename MsgType>
-    void destroyPublisher(typename Publisher<MsgType>::ptr pub);
+    void destroyPublisher(std::shared_ptr<Publisher<MsgType>> pub);
 
     /**
      * @brief 销毁订阅者
@@ -386,7 +386,7 @@ public:
      * @param[in] sub 订阅者对象
      */
     template <typename MsgType>
-    void destroySubscriber(typename Subscriber<MsgType>::ptr sub);
+    void destroySubscriber(std::shared_ptr<Subscriber<MsgType>> sub);
 
     /**
      * @brief 创建异步定时器

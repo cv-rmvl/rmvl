@@ -11,9 +11,6 @@
 
 #pragma once
 
-#include <functional>
-#include <string_view>
-
 #include "rmvl/lpss/node.hpp"
 
 #include "rmvlmsg/geometry/pose.hpp"
@@ -118,14 +115,34 @@ public:
     const msg::TF &tf() const noexcept;
 
     /**
-     * @brief 规划从当前关节状态到目标位姿的轨迹
-     * @details 基于内部维护的 URDF 运动学模型和当前 JointState，通过逆运动学求解目标关节角，并插值生成一系列轨迹点
+     * @brief 关节空间点到点规划
      *
-     * @param[in] frame 目标末端执行器坐标系名称
-     * @param[in] target_pose 目标末端执行器位姿（位置 + 姿态）
-     * @return 规划得到的关节轨迹，若规划失败则 `points` 为空
+     * @details
+     * - 已知目标关节角，从当前关节角出发，用五次多项式插值生成平滑轨迹。
+     * - 不需要逆运动学，适合直接指定关节角度的场景。
+     *
+     * @param[in] target 目标关节状态（仅使用 position 字段）
+     * @return 关节轨迹，若关节数为 0 则返回空轨迹
      */
-    msg::JointTrajectory plan(std::string_view frame, const msg::Pose &target_pose) const;
+    msg::JointTrajectory plan(const msg::JointState &target) const;
+
+    /**
+     * @brief 笛卡尔空间点到点规划
+     *
+     * @param[in] frame 目标连杆名称
+     * @param[in] target 目标位姿
+     * @return 关节轨迹
+     */
+    msg::JointTrajectory plan(std::string_view frame, const msg::Pose &target) const;
+
+    /**
+     * @brief 笛卡尔空间多段途经点规划
+     *
+     * @param[in] frame 目标连杆名称
+     * @param[in] waypoints 途经位姿列表
+     * @return 关节轨迹
+     */
+    msg::JointTrajectory plan(std::string_view frame, const std::vector<msg::Pose> &waypoints) const;
 
     /**
      * @brief 获取指定连杆相对于基坐标系的位姿（正运动学）
@@ -134,6 +151,34 @@ public:
      * @return 该连杆在基坐标系下的位姿
      */
     msg::Pose linkpose(std::string_view link_name) const;
+
+    /**
+     * @brief 设置最大速度缩放因子
+     * @details 轨迹规划时所有关节的最大速度将乘以该系数，值域 \f$(0,1]\f$。
+     *
+     * @param[in] factor 速度缩放因子，将被截断到\f$(0,1]\f$范围
+     */
+    void setMaxVelocityScalingFactor(double factor);
+
+    /**
+     * @brief 获取当前最大速度缩放因子
+     * @return 当前速度缩放因子
+     */
+    double getMaxVelocityScalingFactor() const noexcept;
+
+    /**
+     * @brief 设置最大加速度缩放因子
+     * @details 轨迹规划时所有关节的最大加速度将乘以该系数，值域\f$(0,1]\f$。
+     *
+     * @param[in] factor 加速度缩放因子，将被截断到\f$(0,1]\f$范围
+     */
+    void setMaxAccelerationScalingFactor(double factor);
+
+    /**
+     * @brief 获取当前最大加速度缩放因子
+     * @return 当前加速度缩放因子
+     */
+    double getMaxAccelerationScalingFactor() const noexcept;
 
 protected:
     class Impl;

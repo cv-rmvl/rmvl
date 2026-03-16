@@ -103,12 +103,6 @@ __find_3rd_modules(apriltag
   TARGETS apriltag
 )
 
-# nlohmann_json
-__find_3rd_modules(nlohmann_json
-  CFG_SUFFIX "${RMVL_CONFIG_INSTALL_PATH}/nlohmann_jsonTargets.cmake"
-  TARGETS nlohmann_json::nlohmann_json
-)
-
 # --------- download ---------
 set(RMVL_MODULES_3RD_CONFIGCMAKE "${RMVL_MODULES_3RD_CONFIGCMAKE}# ----- 3rdparty download -----\n")
 # open62541

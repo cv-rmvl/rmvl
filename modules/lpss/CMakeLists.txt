@@ -21,6 +21,10 @@ rmvl_add_module(
   DEPENDS io
   EXTERNAL tinyxml2
 )
+if(WITH_EIGEN3)
+  rmvl_link_libraries(lpss PUBLIC kdl)
+  target_compile_definitions(rmvl_lpss PUBLIC RMVL_LPSS_WITH_KDL)
+endif()
 
 # --------------------------------------------------------------------------
 #  Build the test program

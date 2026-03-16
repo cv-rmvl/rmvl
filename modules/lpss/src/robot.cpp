@@ -9,13 +9,6 @@
  *
  */
 
-#include <fstream>
-#include <unordered_set>
-
-#include "rmvl/core/util.hpp"
-#include "rmvl/lpss/robot.hpp"
-#include "rmvlmsg/motion/urdf.hpp"
-
 #include "tinyxml2/tinyxml2.h"
 
 #include "robot_impl.hpp"
@@ -131,6 +124,21 @@ void URDFModel::parse(std::string_view urdf_str) {
          elem = elem->NextSiblingElement("link")) {
         LinkInfo li;
         li.name = elem->Attribute("name");
+
+        // 解析 <inertial>
+        if (auto *inertial = elem->FirstChildElement("inertial")) {
+            if (auto *mass_elem = inertial->FirstChildElement("mass"))
+                mass_elem->QueryDoubleAttribute("value", &li.mass);
+            if (auto *inertia_elem = inertial->FirstChildElement("inertia")) {
+                inertia_elem->QueryDoubleAttribute("ixx", &li.inertia[0]);
+                inertia_elem->QueryDoubleAttribute("ixy", &li.inertia[1]);
+                inertia_elem->QueryDoubleAttribute("ixz", &li.inertia[2]);
+                inertia_elem->QueryDoubleAttribute("iyy", &li.inertia[3]);
+                inertia_elem->QueryDoubleAttribute("iyz", &li.inertia[4]);
+                inertia_elem->QueryDoubleAttribute("izz", &li.inertia[5]);
+            }
+        }
+
         link_index[li.name] = links.size();
         links.push_back(std::move(li));
     }
@@ -174,6 +182,8 @@ void URDFModel::parse(std::string_view urdf_str) {
         if (auto *limit = elem->FirstChildElement("limit")) {
             limit->QueryDoubleAttribute("lower", &ji.lower);
             limit->QueryDoubleAttribute("upper", &ji.upper);
+            limit->QueryDoubleAttribute("velocity", &ji.max_velocity);
+            limit->QueryDoubleAttribute("effort", &ji.max_effort);
         }
 
         std::size_t idx = joints.size();
@@ -196,6 +206,38 @@ void URDFModel::parse(std::string_view urdf_str) {
             break;
         }
     }
+
+    // 根据 effort / 转动惯量 估算 max_acceleration
+    // 对旋转关节: a = M / I，I 取子连杆惯性张量在关节旋转轴方向的投影 I = axis^T * I_mat * axis
+    // 对移动关节: a = F / m
+    // 如果 effort 或惯性信息缺失，则保留默认值 10
+    for (auto &j : joints) {
+        if (j.type == JointType::Fixed)
+            continue;
+        if (j.max_effort <= 0.0)
+            continue; // effort 未指定，保留默认 max_acceleration = 10
+
+        auto child_it = link_index.find(j.child_link);
+        if (child_it == link_index.end())
+            continue;
+        const auto &child = links[child_it->second];
+
+        // 移动关节: a = F / m
+        if (j.type == JointType::Prismatic) {
+            if (child.mass > 1e-12)
+                j.max_acceleration = j.max_effort / child.mass;
+        }
+        // 旋转关节: alpha = M / I_axis
+        else {
+            const auto &ax = j.axis;
+            // I_mat = [ixx ixy ixz; ixy iyy iyz; ixz iyz izz]
+            const auto &I = child.inertia; // [ixx, ixy, ixz, iyy, iyz, izz]
+            // I_axis = axis^T * I_mat * axis（轴方向的等效转动惯量）
+            const double Iax = I[0] * ax[0] * ax[0] + I[3] * ax[1] * ax[1] + I[5] * ax[2] * ax[2] + 2.0 * (I[1] * ax[0] * ax[1] + I[2] * ax[0] * ax[2] + I[4] * ax[1] * ax[2]);
+            if (Iax > 1e-12)
+                j.max_acceleration = j.max_effort / Iax;
+        }
+    }
 }
 
 void RobotPlanner::Impl::resetJointState() {
@@ -208,7 +250,7 @@ void RobotPlanner::Impl::resetJointState() {
         joint_state.name[i] = model.joints[model.active_joint_indices[i]].name;
 }
 
-msg::TransformStamped RobotPlanner::Impl::computeJointTransform(const JointInfo &joint, double q) {
+msg::TransformStamped computeJointTransform(const JointInfo &joint, double q) {
     // Step 1: 静态原点变换：origin xyz + rpy
     msg::Transform origin{{joint.origin_xyz[0], joint.origin_xyz[1], joint.origin_xyz[2]},
                           rpy2quat(joint.origin_rpy[0], joint.origin_rpy[1], joint.origin_rpy[2])};
@@ -252,6 +294,134 @@ void RobotPlanner::Impl::updateTF() {
     }
 }
 
+std::vector<msg::JointTrajectoryPoint> interpolate(
+    const double *q_start, const double *q_end, std::size_t n,
+    int64_t t_start, int64_t duration, std::size_t n_seg) {
+    const double T = duration * 1e-3;
+
+    std::vector<msg::JointTrajectoryPoint> res{};
+    res.reserve(n);
+
+    /**
+     * @brief 五次多项式轨迹插值
+     *
+     * 将关节从 q_start 平滑运动到 q_end，结果追加到 traj 末尾。
+     *
+     * **时间归一化**
+     *
+     * 把时间 t 归一化为 s = t / T（T 为总时长），s 从 0 增长到 1。
+     * s=0 对应运动起点，s=1 对应运动终点。
+     * 归一化后无论总时长是多少，插值公式的形式都一样。
+     *
+     * **位置插值公式**
+     *
+     * p(s) = 10s³ - 15s⁴ + 6s⁵
+     *
+     * 该公式满足以下边界条件，保证机械臂平滑启停、无冲击：
+     * - p(0) = 0，p(1) = 1（起点对应 q_start，终点对应 q_end）
+     * - p'(0) = 0，p'(1) = 0（两端速度为零）
+     * - p''(0) = 0，p''(1) = 0（两端加速度为零）
+     *
+     * 对每个关节 i，实际位置为：
+     *   q_i(s) = q_start_i + (q_end_i - q_start_i) * p(s)
+     *
+     * 速度和加速度通过对 p(s) 求导得到：
+     *   p'(s)  = 30s²(1-s)²           → 速度  = dq * p'(s) / T
+     *   p''(s) = 60s(1 - 3s + 2s²)    → 加速度 = dq * p''(s) / T²
+     *   其中 dq = q_end_i - q_start_i 是该关节的总位移
+     *
+     * @param[in] q_start  起始关节角
+     * @param[in] q_end    终止关节角
+     * @param[in] t_start  起始时间戳（毫秒），用于多段拼接时的时间偏移
+     * @param[in] duration 运动总时长（毫秒）
+     * @param[in] n_points 插值段数，实际生成 n_points+1 个轨迹点
+     * @param[out] traj    轨迹（追加模式，不清空已有内容）
+     */
+
+    for (std::size_t k = 0; k <= n_seg; ++k) {
+        // s 是归一化时间，从 0 均匀增长到 1
+        const double s = static_cast<double>(k) / n_seg;
+        const double ps = s * s * s * (10.0 + s * (-15.0 + 6.0 * s));         // p(s)：位置系数
+        const double vs = 30.0 * s * s * (1.0 - s) * (1.0 - s) / T;           // p'(s)/T：速度
+        const double as = 60.0 * s * (1.0 - 3.0 * s + 2.0 * s * s) / (T * T); // p''(s)/T²：加速度
+
+        msg::JointTrajectoryPoint pt;
+        pt.positions.resize(n);
+        pt.velocities.resize(n);
+        pt.accelerations.resize(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            const double dq = q_end[i] - q_start[i]; // 该关节的总位移
+            pt.positions[i] = q_start[i] + dq * ps;
+            pt.velocities[i] = dq * vs;
+            pt.accelerations[i] = dq * as;
+        }
+        pt.time_from_start = t_start + static_cast<int64_t>(s * duration);
+        res.push_back(std::move(pt));
+    }
+    return res;
+}
+
+int64_t estimateDuration(const double *q_start, const double *q_end,
+                         const std::vector<const JointInfo *> &joints,
+                         double velocity_scale, double acceleration_scale) {
+    velocity_scale = std::clamp(velocity_scale, 0.01, 1.0);
+    acceleration_scale = std::clamp(acceleration_scale, 0.01, 1.0);
+
+    /**
+     * 直接基于五次多项式 p(s) = 10s³ - 15s⁴ + 6s⁵ 的解析峰值求时间下界。
+     *
+     *   p'(s)  的最大值 = 1.875（在 s=0.5 处） → 峰值速度     = 1.875 * |dq| / T
+     *   p''(s) 的最大值 ≈ 5.7735（在 s≈0.2113处）→ 峰值加速度 = 5.7735 * |dq| / T²
+     *
+     * 为保证峰值不超限:
+     *   速度约束:   T >= 1.875  * |dq| / v_max
+     *   加速度约束: T >= sqrt(5.7735 * |dq| / a_max)
+     *
+     * 对所有关节取最大值即可。复杂度 O(n)，n 为活动关节数。
+     */
+    constexpr double kv = 1.875;  // 五次多项式峰值速度系数
+    constexpr double ka = 5.7735; // 五次多项式峰值加速度系数（= 10√3/3）
+
+    double t_max = 0.0;
+    for (std::size_t i = 0; i < joints.size(); ++i) {
+        const auto *j = joints[i];
+        const double dq = std::abs(q_end[i] - q_start[i]);
+        if (dq < 1e-12)
+            continue;
+
+        const double v = j->max_velocity * velocity_scale;
+        const double a = j->max_acceleration * acceleration_scale;
+
+        // 速度约束: kv * dq / T <= v  =>  T >= kv * dq / v
+        const double t_vel = kv * dq / v;
+        // 加速度约束: ka * dq / T² <= a  =>  T >= sqrt(ka * dq / a)
+        const double t_acc = std::sqrt(ka * dq / a);
+
+        t_max = std::max({t_max, t_vel, t_acc});
+    }
+
+    // 最小时间保护
+    t_max = std::max(t_max, 0.05);
+
+    return static_cast<int64_t>(std::ceil(t_max * 1000.0));
+}
+
+void RobotPlanner::setMaxVelocityScalingFactor(double factor) {
+    _impl->velocity_scale = std::clamp(factor, 0.01, 1.0);
+}
+
+double RobotPlanner::getMaxVelocityScalingFactor() const noexcept {
+    return _impl->velocity_scale;
+}
+
+void RobotPlanner::setMaxAccelerationScalingFactor(double factor) {
+    _impl->acceleration_scale = std::clamp(factor, 0.01, 1.0);
+}
+
+double RobotPlanner::getMaxAccelerationScalingFactor() const noexcept {
+    return _impl->acceleration_scale;
+}
+
 RobotPlanner::RobotPlanner(std::string_view urdf_path, std::string_view mesh_path) : _impl(std::make_unique<Impl>()) { load(urdf_path, mesh_path); }
 
 RobotPlanner::RobotPlanner(RobotPlanner &&) noexcept = default;
@@ -277,15 +447,24 @@ const msg::JointState &RobotPlanner::joints() const noexcept { return _impl->joi
 const msg::URDF &RobotPlanner::urdf() const noexcept { return _impl->urdf; }
 const msg::TF &RobotPlanner::tf() const noexcept { return _impl->tf; }
 
-msg::JointTrajectory RobotPlanner::plan(std::string_view /* frame */, const msg::Pose & /* target_pose */) const {
-    msg::JointTrajectory trajectory;
-    trajectory.joint_names = _impl->joint_state.name;
+msg::JointTrajectory RobotPlanner::plan(const msg::JointState &target) const {
+    msg::JointTrajectory traj{};
+    traj.joint_names = _impl->joint_state.name;
+    const auto dof = _impl->joint_state.position.size();
+    if (dof == 0)
+        return traj;
 
-    // TODO: 逆运动学求解目标关节角
-    // TODO: 轨迹插值（如梯形速度规划 / 三次样条 / 五次多项式）
-    // TODO: 填充 trajectory.points
+    // 收集活动关节的限位信息用于时间估算
+    std::vector<const JointInfo *> active_joints;
+    active_joints.reserve(_impl->model.active_joint_indices.size());
+    for (auto idx : _impl->model.active_joint_indices)
+        active_joints.push_back(&_impl->model.joints[idx]);
 
-    return trajectory;
+    // 起点：当前关节角；终点：目标关节角
+    const int64_t duration = estimateDuration(_impl->joint_state.position, target.position,
+                                              active_joints, _impl->velocity_scale, _impl->acceleration_scale);
+    traj.points = interpolate(_impl->joint_state.position, target.position, 0, duration, 20);
+    return traj;
 }
 
 msg::Pose RobotPlanner::linkpose(std::string_view link_name) const {
@@ -363,8 +542,8 @@ RobotStatePublisher::~RobotStatePublisher() {
     if (_urdf_thread.joinable())
         _urdf_thread.join();
 
-    _node.get().destroyPublisher<msg::TF>(_tf_pub);
-    _node.get().destroyPublisher<msg::URDF>(_urdf_pub);
+    _node.get().destroyPublisher(_tf_pub);
+    _node.get().destroyPublisher(_urdf_pub);
 }
 
 #if __cplusplus >= 202002L
@@ -384,8 +563,8 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
 }
 
 RobotStatePublisher::~RobotStatePublisher() {
-    _node.get().destroyPublisher<msg::TF>(_tf_pub);
-    _node.get().destroyPublisher<msg::URDF>(_urdf_pub);
+    _node.get().destroyPublisher(_tf_pub);
+    _node.get().destroyPublisher(_urdf_pub);
 }
 
 } // namespace async

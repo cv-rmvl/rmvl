@@ -268,6 +268,51 @@ endif()
 # 3rdparty libraries that need to be used compulsorily
 set(_3rd_dir "${CMAKE_SOURCE_DIR}/3rdparty")
 
+# ------------------------------------------------------------
+# 按照本地构建 -> 本地查找 -> 放弃的流程设置 BUILD 和 WITH 前缀
+# ------------------------------------------------------------
+
+# Set the "WITH_" and "BUILD_" compilation options of 3rdparty, with "build_default_status"
+# as the default value of "BUILD_". If "BUILD_" is ON, automatically set "WITH_" to ON, otherwise,
+# by default, find the 3rdparty from the system path as the default value of "WITH_".
+macro(_rmvl_set_build_with_3rdparty _name build_default_status)
+  # uppercase and lowercase
+  string(TOUPPER ${_name} upper_name)
+  string(TOLOWER ${_name} lower_name)
+  # "build" 3rdparty option
+  option(BUILD_${upper_name} "Build the 3rd party: ${_name}" ${build_default_status})
+  if(BUILD_${upper_name})
+    add_subdirectory(${_3rd_dir}/${lower_name})
+    set(${_name}_IN_3RD ON CACHE INTERNAL "${_name} is built in 3rdparty")
+  endif()
+  # "with" 3rdparty option
+  if(BUILD_${upper_name})
+    unset(WITH_${upper_name} CACHE)
+    option(WITH_${upper_name} "Enable ${_name} support" ON)
+  else()
+    find_package(${_name} QUIET)
+    if(${_name}_FOUND)
+      option(WITH_${upper_name} "Enable ${_name} support" ON)
+    else()
+      unset(WITH_${upper_name} CACHE)
+      option(WITH_${upper_name} "Enable ${_name} support" OFF)
+    endif()
+  endif()
+endmacro()
+
+# eigen3
+_rmvl_set_build_with_3rdparty(Eigen3 OFF)
+
+# apriltag
+_rmvl_set_build_with_3rdparty(apriltag ON)
+
+# open62541
+_rmvl_set_build_with_3rdparty(open62541 OFF)
+
+# ------------------------------------------------------------
+# 强制本地构建
+# ------------------------------------------------------------
+
 # fmt
 add_subdirectory(${_3rd_dir}/fmt)
 
@@ -276,6 +321,50 @@ add_subdirectory(${_3rd_dir}/json)
 
 # tinyxml2
 add_subdirectory(${_3rd_dir}/tinyxml2)
+
+# kdl
+if(WITH_EIGEN3)
+  add_subdirectory(${_3rd_dir}/kdl)
+endif()
+
+# ------------------------------------------------------------
+# 强制 find_package 以提供 WITH 选项
+# ------------------------------------------------------------
+
+# opencv
+find_package(OpenCV QUIET)
+if(OpenCV_FOUND)
+  option(WITH_OPENCV "Enable opencv support" ON)
+  # get the path of all 'DLLs' of OpenCV for Windows
+  if(WIN32)
+    if(TARGET opencv_world)
+      get_target_property(opencv_world_dll_path opencv_world IMPORTED_LOCATION_RELEASE)
+      get_target_property(opencv_world_lib_path opencv_world IMPORTED_IMPLIB_RELEASE)
+      if(EXISTS ${opencv_world_dll_path} AND EXISTS ${opencv_world_lib_path})
+        set(OpenCV_DLL_PATHS ${opencv_world_dll_path})
+        set(OpenCV_LIB_PATHS ${opencv_world_lib_path})
+      endif()
+    endif()
+    set(OpenCV_DLL_PATHS ${OpenCV_DLL_PATHS} CACHE INTERNAL "OpenCV DLL paths")
+    set(OpenCV_LIB_PATHS ${OpenCV_LIB_PATHS} CACHE INTERNAL "OpenCV LIB paths")
+    get_filename_component(OpenCV_DLL_NAME ${OpenCV_DLL_PATHS} NAME)
+    get_filename_component(OpenCV_LIB_NAME ${OpenCV_LIB_PATHS} NAME)
+    set(OpenCV_DLL_NAME ${OpenCV_DLL_NAME} CACHE INTERNAL "OpenCV DLL name")
+    set(OpenCV_LIB_NAME ${OpenCV_LIB_NAME} CACHE INTERNAL "OpenCV LIB name")
+  endif()
+else()
+  unset(WITH_OPENCV CACHE)
+  option(WITH_OPENCV "Enable opencv support" OFF)
+endif()
+
+# onnxruntime
+find_package(Ort QUIET)
+if(Ort_FOUND)
+  option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" ON)
+else()
+  unset(WITH_ONNXRUNTIME CACHE)
+  option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" OFF)
+endif()
 
 # Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
 function(rmvl_install_sdk sdk)
@@ -331,78 +420,6 @@ function(rmvl_install_sdk sdk)
     )
   endif()
 endfunction()
-
-# opencv
-find_package(OpenCV QUIET)
-if(OpenCV_FOUND)
-  option(WITH_OPENCV "Enable opencv support" ON)
-  # get the path of all 'DLLs' of OpenCV for Windows
-  if(WIN32)
-    if(TARGET opencv_world)
-      get_target_property(opencv_world_dll_path opencv_world IMPORTED_LOCATION_RELEASE)
-      get_target_property(opencv_world_lib_path opencv_world IMPORTED_IMPLIB_RELEASE)
-      if(EXISTS ${opencv_world_dll_path} AND EXISTS ${opencv_world_lib_path})
-        set(OpenCV_DLL_PATHS ${opencv_world_dll_path})
-        set(OpenCV_LIB_PATHS ${opencv_world_lib_path})
-      endif()
-    endif()
-    set(OpenCV_DLL_PATHS ${OpenCV_DLL_PATHS} CACHE INTERNAL "OpenCV DLL paths")
-    set(OpenCV_LIB_PATHS ${OpenCV_LIB_PATHS} CACHE INTERNAL "OpenCV LIB paths")
-    get_filename_component(OpenCV_DLL_NAME ${OpenCV_DLL_PATHS} NAME)
-    get_filename_component(OpenCV_LIB_NAME ${OpenCV_LIB_PATHS} NAME)
-    set(OpenCV_DLL_NAME ${OpenCV_DLL_NAME} CACHE INTERNAL "OpenCV DLL name")
-    set(OpenCV_LIB_NAME ${OpenCV_LIB_NAME} CACHE INTERNAL "OpenCV LIB name")
-  endif()
-else()
-  unset(WITH_OPENCV CACHE)
-  option(WITH_OPENCV "Enable opencv support" OFF)
-endif()
-
-# onnxruntime
-find_package(Ort QUIET)
-if(Ort_FOUND)
-  option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" ON)
-else()
-  unset(WITH_ONNXRUNTIME CACHE)
-  option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" OFF)
-endif()
-
-# Set the "WITH_" and "BUILD_" compilation options of 3rdparty, with "build_default_status"
-# as the default value of "BUILD_". If "BUILD_" is ON, automatically set "WITH_" to ON, otherwise,
-# by default, find the 3rdparty from the system path as the default value of "WITH_".
-macro(_rmvl_set_build_with_3rdparty _name build_default_status)
-  # uppercase and lowercase
-  string(TOUPPER ${_name} upper_name)
-  string(TOLOWER ${_name} lower_name)
-  # "build" 3rdparty option
-  option(BUILD_${upper_name} "Build the 3rd party: ${_name}" ${build_default_status})
-  if(BUILD_${upper_name})
-    add_subdirectory(${_3rd_dir}/${lower_name})
-    set(${_name}_IN_3RD ON CACHE INTERNAL "${_name} is built in 3rdparty")
-  endif()
-  # "with" 3rdparty option
-  if(BUILD_${upper_name})
-    unset(WITH_${upper_name} CACHE)
-    option(WITH_${upper_name} "Enable ${_name} support" ON)
-  else()
-    find_package(${_name} QUIET)
-    if(${_name}_FOUND)
-      option(WITH_${upper_name} "Enable ${_name} support" ON)
-    else()
-      unset(WITH_${upper_name} CACHE)
-      option(WITH_${upper_name} "Enable ${_name} support" OFF)
-    endif()
-  endif()
-endmacro()
-
-# eigen3
-_rmvl_set_build_with_3rdparty(Eigen3 OFF)
-
-# apriltag
-_rmvl_set_build_with_3rdparty(apriltag ON)
-
-# open62541
-_rmvl_set_build_with_3rdparty(open62541 OFF)
 
 # ----------------------------------------------------------------------------
 #   Module and other options
