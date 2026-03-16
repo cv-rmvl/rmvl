@@ -159,7 +159,7 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
 }
 
 template <typename MsgType>
-void Node::destroyPublisher(typename Publisher<MsgType>::ptr pub) {
+void Node::destroyPublisher(std::shared_ptr<Publisher<MsgType>> pub) {
     if (!pub || pub->invalid())
         return;
     // 移除本地 DataWriter
@@ -173,7 +173,7 @@ void Node::destroyPublisher(typename Publisher<MsgType>::ptr pub) {
 }
 
 template <typename MsgType>
-void Node::destroySubscriber(typename Subscriber<MsgType>::ptr sub) {
+void Node::destroySubscriber(std::shared_ptr<Subscriber<MsgType>> sub) {
     if (!sub || sub->invalid())
         return;
     // 移除本地 DataReader
