@@ -370,20 +370,6 @@ TEST(LPSS_robotctl, reload_changes_model) {
 
 // ========================== plan ==========================
 
-TEST(LPSS_robotctl, plan_returns_correct_joint_names) {
-    auto path = writeTempURDF(k_urdf_2dof, "test_2dof.urdf");
-    RobotPlanner rp(path);
-
-    msg::Pose target;
-    target.position = {0.707107, 0.707107, 0.5};
-    target.orientation = {0, 0, 0.3827, 0.9239};
-
-    auto traj = rp.plan("link2", target);
-    ASSERT_EQ(traj.joint_names.size(), 2u);
-    EXPECT_EQ(traj.joint_names[0], "joint1");
-    EXPECT_EQ(traj.joint_names[1], "joint2");
-}
-
 TEST(LPSS_robotctl, plan_onestep_jointstate) {
     auto path = writeTempURDF(k_urdf_2dof, "test_2dof.urdf");
     RobotPlanner rp(path);
@@ -414,6 +400,20 @@ TEST(LPSS_robotctl, plan_onestep_jointstate) {
 }
 
 #ifdef RMVL_LPSS_WITH_KDL
+
+TEST(LPSS_robotctl, plan_onestep_pose_traj_names) {
+    auto path = writeTempURDF(k_urdf_2dof, "test_2dof.urdf");
+    RobotPlanner rp(path);
+
+    msg::Pose target;
+    target.position = {0.707107, 0.707107, 0.5};
+    target.orientation = {0, 0, 0.3827, 0.9239};
+
+    auto traj = rp.plan("link2", target);
+    ASSERT_EQ(traj.joint_names.size(), 2u);
+    EXPECT_EQ(traj.joint_names[0], "joint1");
+    EXPECT_EQ(traj.joint_names[1], "joint2");
+}
 
 TEST(LPSS_robotctl, plan_onestep_pose_invalid_frame) {
     auto path = writeTempURDF(k_urdf_2dof, "test_2dof.urdf");

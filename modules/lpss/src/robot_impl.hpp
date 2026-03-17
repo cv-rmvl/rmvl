@@ -11,9 +11,6 @@
 
 #pragma once
 
-#include <cmath>
-#include <unordered_map>
-
 #include "rmvl/lpss/robot.hpp"
 
 #ifdef RMVL_LPSS_WITH_KDL

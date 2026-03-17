@@ -9,11 +9,11 @@
  *
  */
 
-#ifdef RMVL_LPSS_WITH_KDL
-
 #include "robot_impl.hpp"
 
 namespace rm::lpss {
+
+#ifdef RMVL_LPSS_WITH_KDL
 
 bool RobotPlanner::Impl::buildChain(std::string_view frame, KDL::Chain &chain,
                                     std::vector<const JointInfo *> &path) const {
@@ -120,18 +120,6 @@ bool RobotPlanner::Impl::solveIK(const KDL::Chain &chain,
     return ik_solver.CartToJnt(q_init, t_goal, q_out) >= 0;
 }
 
-/**
- * @brief 笛卡尔空间点到点规划
- *
- * 已知末端目标位姿，先用逆运动学（LMA 迭代）求出对应关节角，
- * 再从当前关节角出发做五次多项式插值。
- *
- * 若目标位姿超出工作空间或逆运动学不收敛，返回空轨迹。
- *
- * @param[in] frame 目标连杆名称（末端执行器所在连杆）
- * @param[in] target 目标位姿（位置 + 四元数姿态）
- * @return 关节轨迹，IK 失败或连杆不存在时返回空轨迹
- */
 msg::JointTrajectory RobotPlanner::plan(std::string_view frame, const msg::Pose &target) const {
     msg::JointTrajectory traj;
     traj.joint_names = _impl->joint_state.name;
@@ -173,18 +161,6 @@ msg::JointTrajectory RobotPlanner::plan(std::string_view frame, const msg::Pose 
     return traj;
 }
 
-/**
- * @brief 笛卡尔空间多段途经点规划
- *
- * 末端依次经过多个目标位姿，对每段分别做逆运动学 + 五次多项式插值，
- * 各段轨迹首尾拼接，每段根据关节速度/加速度限制自动估算时长。
- *
- * 若某段逆运动学失败，返回已成功规划的部分轨迹。
- *
- * @param[in] frame 目标连杆名称（末端执行器所在连杆）
- * @param[in] waypoints 途经位姿列表，按顺序依次到达
- * @return 关节轨迹，连杆不存在时返回空轨迹
- */
 msg::JointTrajectory RobotPlanner::plan(std::string_view frame, const std::vector<msg::Pose> &waypoints) const {
     msg::JointTrajectory traj;
     traj.joint_names = _impl->joint_state.name;
@@ -230,6 +206,20 @@ msg::JointTrajectory RobotPlanner::plan(std::string_view frame, const std::vecto
     return traj;
 }
 
-} // namespace rm::lpss
+#else
+
+msg::JointTrajectory RobotPlanner::plan(std::string_view, const msg::Pose &) const {
+    RMVL_Error(RMVL_StsBadFunc, "this function must be used with Eigen3, please recompile RMVL "
+                                "by setting \"WITH_EIGEN3=ON\" or \"BUILD_EIGEN3=ON\" in CMake");
+    return {};
+}
+
+msg::JointTrajectory RobotPlanner::plan(std::string_view frame, const std::vector<msg::Pose> &waypoints) const {
+    RMVL_Error(RMVL_StsBadFunc, "this function must be used with Eigen3, please recompile RMVL "
+                                "by setting \"WITH_EIGEN3=ON\" or \"BUILD_EIGEN3=ON\" in CMake");
+    return {};
+}
 
 #endif
+
+} // namespace rm::lpss
