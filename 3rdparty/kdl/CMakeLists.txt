@@ -43,12 +43,7 @@ target_link_libraries(kdl PUBLIC Eigen3::Eigen)
 # ----------------------------------------------------------------------------
 install(
   TARGETS kdl
-  EXPORT kdlTargets
+  EXPORT RMVLModules
   ARCHIVE DESTINATION ${RMVL_3P_LIB_INSTALL_PATH}
   OPTIONAL
-)
-install(
-  EXPORT kdlTargets
-  FILE kdlTargets.cmake
-  DESTINATION ${RMVL_CONFIG_INSTALL_PATH}
 )
