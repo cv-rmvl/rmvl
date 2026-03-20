@@ -25,64 +25,56 @@
 #include "frames.hpp"
 #include <Eigen/Core>
 
-namespace KDL
-{
-    // Equal is friend function, but default arguments for friends are forbidden (§8.3.6.4)
-    class Jacobian;
-    bool Equal(const Jacobian& a,const Jacobian& b,double eps=epsilon);
-    void SetToZero(Jacobian& jac);
+namespace KDL {
+// Equal is friend function, but default arguments for friends are forbidden (§8.3.6.4)
+class Jacobian;
+bool Equal(const Jacobian &a, const Jacobian &b, double eps = epsilon);
+void SetToZero(Jacobian &jac);
 
+class Jacobian {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Eigen::Matrix<double, 6, Eigen::Dynamic> data;
+    Jacobian() = default;
+    explicit Jacobian(unsigned int nr_of_columns);
+    Jacobian(const Jacobian &arg);
 
-    class Jacobian
-    {
-    public:
+    /// Allocates memory for new size (can break realtime behavior)
+    void resize(unsigned int newNrOfColumns);
 
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        Eigen::Matrix<double,6,Eigen::Dynamic> data;
-        Jacobian();
-        explicit Jacobian(unsigned int nr_of_columns);
-        Jacobian(const Jacobian& arg);
+    /// Allocates memory if size of this and argument is different
+    Jacobian &operator=(const Jacobian &arg);
 
-        ///Allocates memory for new size (can break realtime behavior)
-        void resize(unsigned int newNrOfColumns);
+    bool operator==(const Jacobian &arg) const;
+    bool operator!=(const Jacobian &arg) const;
 
-        ///Allocates memory if size of this and argument is different
-        Jacobian& operator=(const Jacobian& arg);
+    friend bool Equal(const Jacobian &a, const Jacobian &b, double eps);
 
-        bool operator ==(const Jacobian& arg)const;
-        bool operator !=(const Jacobian& arg)const;
-        
-        friend bool Equal(const Jacobian& a,const Jacobian& b,double eps);
-        
+    ~Jacobian() = default;
 
-        ~Jacobian();
+    double operator()(unsigned int i, unsigned int j) const;
+    double &operator()(unsigned int i, unsigned int j);
+    unsigned int rows() const;
+    unsigned int columns() const;
 
-        double operator()(unsigned int i,unsigned int j)const;
-        double& operator()(unsigned int i,unsigned int j);
-        unsigned int rows()const;
-        unsigned int columns()const;
+    friend void SetToZero(Jacobian &jac);
 
-        friend void SetToZero(Jacobian& jac);
+    friend bool changeRefPoint(const Jacobian &src1, const Vector &base_AB, Jacobian &dest);
+    friend bool changeBase(const Jacobian &src1, const Rotation &rot, Jacobian &dest);
+    friend bool changeRefFrame(const Jacobian &src1, const Frame &frame, Jacobian &dest);
 
-        friend bool changeRefPoint(const Jacobian& src1, const Vector& base_AB, Jacobian& dest);
-        friend bool changeBase(const Jacobian& src1, const Rotation& rot, Jacobian& dest);
-        friend bool changeRefFrame(const Jacobian& src1,const Frame& frame, Jacobian& dest);
+    Twist getColumn(unsigned int i) const;
+    void setColumn(unsigned int i, const Twist &t);
 
-        Twist getColumn(unsigned int i) const;
-        void setColumn(unsigned int i,const Twist& t);
+    void changeRefPoint(const Vector &base_AB);
+    void changeBase(const Rotation &rot);
+    void changeRefFrame(const Frame &frame);
+};
 
-        void changeRefPoint(const Vector& base_AB);
-        void changeBase(const Rotation& rot);
-        void changeRefFrame(const Frame& frame);
+bool changeRefPoint(const Jacobian &src1, const Vector &base_AB, Jacobian &dest);
+bool changeBase(const Jacobian &src1, const Rotation &rot, Jacobian &dest);
+bool changeRefFrame(const Jacobian &src1, const Frame &frame, Jacobian &dest);
 
-
-    };
-
-    bool changeRefPoint(const Jacobian& src1, const Vector& base_AB, Jacobian& dest);
-    bool changeBase(const Jacobian& src1, const Rotation& rot, Jacobian& dest);
-    bool changeRefFrame(const Jacobian& src1,const Frame& frame, Jacobian& dest);
-
-
-}
+} // namespace KDL
 
 #endif

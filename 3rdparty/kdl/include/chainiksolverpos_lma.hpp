@@ -30,13 +30,14 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "chain.hpp"
 
 #include "chainiksolver.hpp"
-// [REDUNDANT] #include "chain.hpp"
-#include <Eigen/Dense>
 
-namespace KDL
-{
+#include <Eigen/Cholesky>
+#include <Eigen/SVD>
+
+namespace KDL {
 
 /**
  * \brief Solver for the inverse position kinematics that uses Levenberg-Marquardt.
@@ -61,44 +62,42 @@ namespace KDL
 
  * \ingroup KinematicFamily
  */
-class ChainIkSolverPos_LMA : public KDL::ChainIkSolverPos
-{
+class ChainIkSolverPos_LMA : public KDL::ChainIkSolverPos {
 private:
-	typedef double ScalarType;
-    typedef Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> MatrixXq;
-    typedef Eigen::Matrix<ScalarType,Eigen::Dynamic,1> VectorXq;
-public:
+    typedef double ScalarType;
+    typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixXq;
+    typedef Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> VectorXq;
 
+public:
     static const int E_GRADIENT_JOINTS_TOO_SMALL = -100;
     static const int E_INCREMENT_JOINTS_TOO_SMALL = -101;
 
     /**
-	 * \brief constructs an ChainIkSolverPos_LMA solver.
-	 *
-	 * The default parameters are chosen to be applicable to industrial-size robots
-	 * (e.g. 0.5 to 3 meters range in task space), with an accuracy that is more then
-	 * sufficient for typical industrial applications.
-	 *
-	 * Weights are applied in task space, i.e. the kinematic solver minimizes:
-	 * \f$ E = \Delta \mathbf{x}^T \mathbf{L} \mathbf{L}^T \Delta \mathbf{x} \f$, with \f$\mathbf{L}\f$ a diagonal matrix.
-	 *
-	 * \param _chain specifies the kinematic chain.
-	 * \param _l specifies the "square root" of the weight (diagonal) matrix in task space. This diagonal matrix is specified as a vector.
-	 * \param _eps specifies the desired accuracy in task space; <B>after</B> weighing with
-	 *        the weight matrix, it is applied on \f$E\f$.
-	 * \param _maxiter specifies the maximum number of iterations.
-	 * \param _eps_joints specifies that the algorithm has to stop when the computed joint angle increments are
-	 *        smaller then _eps_joints.  This is to avoid unnecessary computations up to _maxiter when the joint angle
-	 *        increments are so small that they effectively (in floating point) do not change the joint angles any more.  The default
-	 *        is a few digits above numerical accuracy.
+     * \brief constructs an ChainIkSolverPos_LMA solver.
+     *
+     * The default parameters are chosen to be applicable to industrial-size robots
+     * (e.g. 0.5 to 3 meters range in task space), with an accuracy that is more then
+     * sufficient for typical industrial applications.
+     *
+     * Weights are applied in task space, i.e. the kinematic solver minimizes:
+     * \f$ E = \Delta \mathbf{x}^T \mathbf{L} \mathbf{L}^T \Delta \mathbf{x} \f$, with \f$\mathbf{L}\f$ a diagonal matrix.
+     *
+     * \param _chain specifies the kinematic chain.
+     * \param _l specifies the "square root" of the weight (diagonal) matrix in task space. This diagonal matrix is specified as a vector.
+     * \param _eps specifies the desired accuracy in task space; <B>after</B> weighing with
+     *        the weight matrix, it is applied on \f$E\f$.
+     * \param _maxiter specifies the maximum number of iterations.
+     * \param _eps_joints specifies that the algorithm has to stop when the computed joint angle increments are
+     *        smaller then _eps_joints.  This is to avoid unnecessary computations up to _maxiter when the joint angle
+     *        increments are so small that they effectively (in floating point) do not change the joint angles any more.  The default
+     *        is a few digits above numerical accuracy.
      */
     ChainIkSolverPos_LMA(
-    		const KDL::Chain& _chain,
-		const Eigen::Matrix<double,6,1>& _l,
-    		double _eps=1E-5,
-    		int _maxiter=500,
-    		double _eps_joints=1E-15
-    );
+        const KDL::Chain &_chain,
+        const Eigen::Matrix<double, 6, 1> &_l,
+        double _eps = 1E-5,
+        int _maxiter = 500,
+        double _eps_joints = 1E-15);
 
     /**
      * \brief identical the full constructor for ChainIkSolverPos_LMA, but provides for a default weight matrix.
@@ -106,11 +105,10 @@ public:
      *  \f$\mathbf{L} = \mathrm{diag}\left( \begin{bmatrix} 1 & 1 & 1 & 0.01 & 0.01 & 0.01 \end{bmatrix} \right) \f$.
      */
     ChainIkSolverPos_LMA(
-    		const KDL::Chain& _chain,
-    		double _eps=1E-5,
-    		int _maxiter=500,
-    		double _eps_joints=1E-15
-    );
+        const KDL::Chain &_chain,
+        double _eps = 1E-5,
+        int _maxiter = 500,
+        double _eps_joints = 1E-15);
 
     /**
      * \brief computes the inverse position kinematics.
@@ -123,7 +121,7 @@ public:
      *         E_INCREMENT_JOINTS_TOO_SMALL if joint position increments are to small,
      *         E_MAX_ITER_EXCEEDED if number of iterations is exceeded.
      */
-    virtual int CartToJnt(const KDL::JntArray& q_init, const KDL::Frame& T_base_goal, KDL::JntArray& q_out);
+    virtual int CartToJnt(const KDL::JntArray &q_init, const KDL::Frame &T_base_goal, KDL::JntArray &q_out);
 
     /**
      * \brief destructor.
@@ -135,35 +133,27 @@ public:
      *
      * Only exposed for test and diagnostic purposes.
      */
-    void compute_fwdpos(const VectorXq& q);
+    void compute_fwdpos(const VectorXq &q);
 
     /**
      * \brief for internal use only.
      * Only exposed for test and diagnostic purposes.
      * compute_fwdpos(q) should always have been called before.
      */
-    void compute_jacobian(const VectorXq& q);
-
-    /**
-     * \brief for internal use only.
-     * Only exposed for test and diagnostic purposes.
-     */
-    void display_jac(const KDL::JntArray& jval);
+    void compute_jacobian(const VectorXq &q);
 
     /// @copydoc KDL::SolverI::updateInternalDataStructures
     void updateInternalDataStructures();
 
     /// @copydoc KDL::SolverI::strError()
-    virtual const char* strError(const int error) const;
+    virtual const char *strError(const int error) const;
 
 private:
-    const KDL::Chain& chain;
+    const KDL::Chain &chain;
     unsigned int nj;
     unsigned int ns;
 
 public:
-
-
     /**
      * \brief contains the last number of  iterations for an execution of CartToJnt.
      */
@@ -209,26 +199,19 @@ public:
      */
     KDL::Frame T_base_head;
 
-    /**
-     * \brief display information on each iteration step to the console.
-     */
-    bool display_information;
 private:
     // additional specification of the inverse position kinematics problem:
     unsigned int maxiter;
     double eps;
     double eps_joints;
-    Eigen::Matrix<ScalarType,6,1> L;
-
-
+    Eigen::Matrix<ScalarType, 6, 1> L;
 
     // state of compute_fwdpos and compute_jacobian:
     std::vector<KDL::Frame> T_base_jointroot;
     std::vector<KDL::Frame> T_base_jointtip;
-					// need 2 vectors because of the somewhat strange definition of segment.hpp
-					// you could also recompute jointtip out of jointroot,
-    				// but then you'll need more expensive cos/sin functions.
-
+    // need 2 vectors because of the somewhat strange definition of segment.hpp
+    // you could also recompute jointtip out of jointroot,
+    // but then you'll need more expensive cos/sin functions.
 
     // the following are state of CartToJnt that is pre-allocated:
 
@@ -242,15 +225,6 @@ private:
     VectorXq original_Aii;
 };
 
-
-
-
-
 } // namespace KDL
-
-
-
-
-
 
 #endif

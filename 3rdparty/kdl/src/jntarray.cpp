@@ -22,8 +22,6 @@
 #include "jntarray.hpp"
 
 namespace KDL {
-JntArray::JntArray() {
-}
 
 JntArray::JntArray(unsigned int _size) : data(_size) {
     data.setZero();
@@ -35,9 +33,6 @@ JntArray::JntArray(const JntArray &arg) : data(arg.data) {
 JntArray &JntArray::operator=(const JntArray &arg) {
     data = arg.data;
     return *this;
-}
-
-JntArray::~JntArray() {
 }
 
 void JntArray::resize(unsigned int newSize) {

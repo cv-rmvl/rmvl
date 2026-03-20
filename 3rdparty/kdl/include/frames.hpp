@@ -124,12 +124,8 @@
 #ifndef KDL_FRAMES_H
 #define KDL_FRAMES_H
 
-
-#include "utilities/kdl-config.h"
 #include "utilities/utility.h"
 #include "utilities/hash_combine.h"
-
-#include <functional>
 
 /////////////////////////////////////////////////////////////
 
@@ -1253,9 +1249,7 @@ IMETHOD Twist addDelta(const Twist& a,const Twist&da,double dt=1);
  */
 IMETHOD Wrench addDelta(const Wrench& a,const Wrench&da,double dt=1);
 
-#ifdef KDL_INLINE
 #include "frames.inl"
-#endif
 
 }
 

@@ -26,49 +26,46 @@
 
 //------- class for only the Rotational Inertia --------
 
-namespace KDL
-{
-    //Forward declaration
-    class RigidBodyInertia;
+namespace KDL {
+// Forward declaration
+class RigidBodyInertia;
 
-	class RotationalInertia{
-    public:
-              
-        explicit RotationalInertia(double Ixx=0,double Iyy=0,double Izz=0,double Ixy=0,double Ixz=0,double Iyz=0);
-        
-        static inline RotationalInertia Zero(){
-            return RotationalInertia(0,0,0,0,0,0);
-        };
+class RotationalInertia {
+public:
+    explicit RotationalInertia(double Ixx = 0, double Iyy = 0, double Izz = 0, double Ixy = 0, double Ixz = 0, double Iyz = 0);
 
-        friend RotationalInertia operator*(double a, const RotationalInertia& I);
-        friend RotationalInertia operator+(const RotationalInertia& Ia, const RotationalInertia& Ib);
+    static inline RotationalInertia Zero() {
+        return RotationalInertia(0, 0, 0, 0, 0, 0);
+    };
 
-        /**
-         * This function calculates the angular momentum resulting from a rotational velocity omega
-         */
-        KDL::Vector operator*(const KDL::Vector& omega) const;
-        
-        ~RotationalInertia();
+    friend RotationalInertia operator*(double a, const RotationalInertia &I);
+    friend RotationalInertia operator+(const RotationalInertia &Ia, const RotationalInertia &Ib);
 
-        friend class RigidBodyInertia;
-        ///Scalar product
-        friend RigidBodyInertia operator*(double a,const RigidBodyInertia& I);
-        ///addition
-        friend RigidBodyInertia operator+(const RigidBodyInertia& Ia,const RigidBodyInertia& Ib);
-        ///calculate spatial momentum
-        friend Wrench operator*(const RigidBodyInertia& I,const Twist& t);
-        ///coordinate system transform Ia = T_a_b*Ib with T_a_b the frame from a to b
-        friend RigidBodyInertia operator*(const Frame& T,const RigidBodyInertia& I);
-        ///base frame orientation change Ia = R_a_b*Ib with R_a_b the rotation for frame from a to b
-        friend RigidBodyInertia operator*(const Rotation& R,const RigidBodyInertia& I);
+    /**
+     * This function calculates the angular momentum resulting from a rotational velocity omega
+     */
+    KDL::Vector operator*(const KDL::Vector &omega) const;
 
-        double data[9];
-	};
+    ~RotationalInertia() = default;
 
-    RotationalInertia operator*(double a, const RotationalInertia& I);
-    RotationalInertia operator+(const RotationalInertia& Ia, const RotationalInertia& Ib);
+    friend class RigidBodyInertia;
+    /// Scalar product
+    friend RigidBodyInertia operator*(double a, const RigidBodyInertia &I);
+    /// addition
+    friend RigidBodyInertia operator+(const RigidBodyInertia &Ia, const RigidBodyInertia &Ib);
+    /// calculate spatial momentum
+    friend Wrench operator*(const RigidBodyInertia &I, const Twist &t);
+    /// coordinate system transform Ia = T_a_b*Ib with T_a_b the frame from a to b
+    friend RigidBodyInertia operator*(const Frame &T, const RigidBodyInertia &I);
+    /// base frame orientation change Ia = R_a_b*Ib with R_a_b the rotation for frame from a to b
+    friend RigidBodyInertia operator*(const Rotation &R, const RigidBodyInertia &I);
 
-}
+    double data[9];
+};
+
+RotationalInertia operator*(double a, const RotationalInertia &I);
+RotationalInertia operator+(const RotationalInertia &Ia, const RotationalInertia &Ib);
+
+} // namespace KDL
 
 #endif
-

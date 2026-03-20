@@ -15,7 +15,40 @@
 
 #include "robot_impl.hpp"
 
-namespace rm::lpss {
+namespace rm {
+
+namespace msg {
+
+msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2) noexcept {
+    return {q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+            q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
+            q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
+            q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z};
+}
+
+msg::Vector3 rotate(const msg::Quaternion &q, const msg::Vector3 &v) noexcept {
+    const double tx = 2.0 * (q.y * v.z - q.z * v.y);
+    const double ty = 2.0 * (q.z * v.x - q.x * v.z);
+    const double tz = 2.0 * (q.x * v.y - q.y * v.x);
+    return {
+        v.x + q.w * tx + (q.y * tz - q.z * ty),
+        v.y + q.w * ty + (q.z * tx - q.x * tz),
+        v.z + q.w * tz + (q.x * ty - q.y * tx)};
+}
+
+msg::Pose operator*(const msg::Transform &t, const msg::Pose &p) noexcept {
+    auto rotated = rotate(t.rotation, {p.position.x, p.position.y, p.position.z});
+    return {{t.translation.x + rotated.x, t.translation.y + rotated.y, t.translation.z + rotated.z}, t.rotation * p.orientation};
+}
+
+msg::Transform operator*(const msg::Transform &t1, const msg::Transform &t2) noexcept {
+    auto rotated = rotate(t1.rotation, t2.translation);
+    return {{t1.translation.x + rotated.x, t1.translation.y + rotated.y, t1.translation.z + rotated.z}, t1.rotation * t2.rotation};
+}
+
+} // namespace msg
+
+namespace lpss {
 
 /**
  * @brief 从 RPY 角（固定轴 XYZ）计算四元数
@@ -77,28 +110,6 @@ static std::string read_file_content(std::string_view path) {
 
     content.resize(read);
     return content;
-}
-
-msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2) {
-    return {q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
-            q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
-            q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
-            q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z};
-}
-
-msg::Vector3 rotate(const msg::Quaternion &q, const msg::Vector3 &v) {
-    const double tx = 2.0 * (q.y * v.z - q.z * v.y);
-    const double ty = 2.0 * (q.z * v.x - q.x * v.z);
-    const double tz = 2.0 * (q.x * v.y - q.y * v.x);
-    return {
-        v.x + q.w * tx + (q.y * tz - q.z * ty),
-        v.y + q.w * ty + (q.z * tx - q.x * tz),
-        v.z + q.w * tz + (q.x * ty - q.y * tx)};
-}
-
-msg::Transform operator*(const msg::Transform &t1, const msg::Transform &t2) {
-    auto rotated = rotate(t1.rotation, t2.translation);
-    return {{t1.translation.x + rotated.x, t1.translation.y + rotated.y, t1.translation.z + rotated.z}, t1.rotation * t2.rotation};
 }
 
 void URDFModel::clear() {
@@ -186,7 +197,10 @@ void URDFModel::parse(std::string_view urdf_str) {
             limit->QueryDoubleAttribute("upper", &ji.upper);
             limit->QueryDoubleAttribute("velocity", &ji.max_velocity);
             limit->QueryDoubleAttribute("effort", &ji.max_effort);
-        }
+            if (ji.max_velocity <= 0.0)
+                ji.max_velocity = 3.14;
+        } else
+            ji.max_velocity = 3.14;
 
         std::size_t idx = joints.size();
         joint_index[ji.name] = idx;
@@ -258,7 +272,7 @@ msg::TransformStamped computeJointTransform(const JointInfo &joint, double q) {
                           rpy2quat(joint.origin_rpy[0], joint.origin_rpy[1], joint.origin_rpy[2])};
 
     // Step 2: 关节运动引起的附加变换
-    msg::Transform joint_tf{};
+    msg::Transform joint_tf{{0, 0, 0}, {0, 0, 0, 1}};
     switch (joint.type) {
     case JointType::Revolute:
     case JointType::Continuous:
@@ -395,8 +409,8 @@ int64_t estimateDuration(const double *q_start, const double *q_end, const std::
         if (dq < 1e-12)
             continue;
 
-        const double v = j->max_velocity * velocity_scale;
-        const double a = j->max_acceleration * acceleration_scale;
+        const double v = std::max(j->max_velocity * velocity_scale, 1e-6);
+        const double a = std::max(j->max_acceleration * acceleration_scale, 1e-6);
 
         // 速度约束: kv * dq / T <= v  =>  T >= kv * dq / v
         const double t_vel = kv * dq / v;
@@ -412,7 +426,7 @@ int64_t estimateDuration(const double *q_start, const double *q_end, const std::
     return static_cast<int64_t>(std::ceil(t_max * 1000.0));
 }
 
-void RobotPlanner::setMaxVelocityScalingFactor(double factor) {
+void RobotPlanner::setMaxVelocityScalingFactor(double factor) noexcept {
     _impl->velocity_scale = std::clamp(factor, 0.01, 1.0);
 }
 
@@ -420,7 +434,7 @@ double RobotPlanner::getMaxVelocityScalingFactor() const noexcept {
     return _impl->velocity_scale;
 }
 
-void RobotPlanner::setMaxAccelerationScalingFactor(double factor) {
+void RobotPlanner::setMaxAccelerationScalingFactor(double factor) noexcept {
     _impl->acceleration_scale = std::clamp(factor, 0.01, 1.0);
 }
 
@@ -504,7 +518,7 @@ using namespace std::chrono_literals;
 
 RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period)
     : _node(node), _planner(planner), _urdf_pub(node.createPublisher<msg::URDF>(std::string(name) + "/robot_description")),
-      _tf_pub(node.createPublisher<msg::TF>(std::string(name) + "/tf")) {
+      _tf_pub(node.createPublisher<msg::TF>(std::string(name) + "/tf")), _traj_pub(node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory")) {
     _tf_thread = std::thread([this, period] {
         while (true) {
             {
@@ -535,6 +549,21 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
             _urdf_pub.publish(current_urdf);
         }
     });
+    _traj_thread = std::thread([this] {
+        while (true) {
+            {
+                std::unique_lock lk(_shutdown_mtx);
+                if (_shutdown_cv.wait_for(lk, 100ms, [this] { return !_running; }))
+                    break;
+            }
+            msg::JointTrajectory current_traj;
+            {
+                std::lock_guard lk(_mtx);
+                current_traj = _traj_cache;
+            }
+            _traj_pub.publish(current_traj);
+        }
+    });
 }
 
 RobotStatePublisher::~RobotStatePublisher() {
@@ -547,9 +576,21 @@ RobotStatePublisher::~RobotStatePublisher() {
         _tf_thread.join();
     if (_urdf_thread.joinable())
         _urdf_thread.join();
-
+    if (_traj_thread.joinable())
+        _traj_thread.join();
     _node.get().destroyPublisher(_tf_pub);
     _node.get().destroyPublisher(_urdf_pub);
+    _node.get().destroyPublisher(_traj_pub);
+}
+
+void RobotStatePublisher::updateTrajectory(msg::JointTrajectory &&traj) noexcept {
+    std::lock_guard lk(_mtx);
+    _traj_cache = std::move(traj);
+}
+
+void RobotStatePublisher::updateTrajectory(const msg::JointTrajectory &traj) noexcept {
+    std::lock_guard lk(_mtx);
+    _traj_cache = traj;
 }
 
 #if __cplusplus >= 202002L
@@ -560,10 +601,12 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
     : _node(node), _planner(planner) {
     _urdf_pub = node.createPublisher<msg::URDF>(std::string(name) + "/robot_description");
     _tf_pub = node.createPublisher<msg::TF>(std::string(name) + "/tf");
-    _urdf_timer = node.createTimer(std::chrono::milliseconds(period), [this] {
+    _traj_pub = node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory");
+    _low_timer = node.createTimer(std::chrono::milliseconds(period), [this] {
         _urdf_pub->publish(_planner.get().urdf());
+        _traj_pub->publish(_traj_cache);
     });
-    _tf_timer = node.createTimer(1s, [this] {
+    _high_timer = node.createTimer(1s, [this] {
         _tf_pub->publish(_planner.get().tf());
     });
 }
@@ -571,10 +614,13 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
 RobotStatePublisher::~RobotStatePublisher() {
     _node.get().destroyPublisher(_tf_pub);
     _node.get().destroyPublisher(_urdf_pub);
+    _node.get().destroyPublisher(_traj_pub);
 }
 
 } // namespace async
 
 #endif
 
-} // namespace rm::lpss
+} // namespace lpss
+
+} // namespace rm

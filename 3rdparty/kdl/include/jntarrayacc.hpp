@@ -22,8 +22,6 @@
 #ifndef KDL_JNTARRAYACC_HPP
 #define KDL_JNTARRAYACC_HPP
 
-// [REDUNDANT] #include "utilities/utility.h"
-// [REDUNDANT] #include "jntarray.hpp"
 #include "jntarrayvel.hpp"
 #include "frameacc.hpp"
 
