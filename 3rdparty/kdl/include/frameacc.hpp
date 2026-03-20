@@ -233,9 +233,7 @@ public:
     friend class FrameAcc;
 };
 
-#ifdef KDL_INLINE
 #include "frameacc.inl"
-#endif
 
 } // namespace KDL
 

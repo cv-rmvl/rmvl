@@ -12,9 +12,9 @@
 #include <chrono>
 #include <thread>
 
-#include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include "fmt/base.h"
 #include "rmvl/io/ipc.hpp"
 
 using namespace rm;
@@ -73,7 +73,7 @@ struct TestData {
     char msg[16]{};
 
     bool operator==(const TestData &other) const {
-        return id == other.id && std::abs(value - other.value) < 1e-6 && std::strncmp(msg, other.msg, 16) == 0;
+        return id == other.id && std::abs(value - other.value) < 1e-6 && strncmp(msg, other.msg, 16) == 0;
     }
 };
 
@@ -219,7 +219,7 @@ TEST(IO_ipc, atomic_shm_concurrency_io_mpmc) {
                     char expected_msg[16]{};
                     fmt::format_to_n(expected_msg, sizeof(expected_msg), "P{}-{}", p_id, seq_id);
 
-                    if (std::strncmp(current_data.msg, expected_msg, 16) != 0) {
+                    if (strncmp(current_data.msg, expected_msg, 16) != 0) {
                         ADD_FAILURE() << "Data torn detected! ID: " << current_data.id
                                       << ", Msg: " << current_data.msg
                                       << ", Expected: " << expected_msg;

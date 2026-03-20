@@ -11,13 +11,16 @@
 
 #include "robot_impl.hpp"
 
+#ifdef RMVL_LPSS_WITH_KDL
+#include "chainiksolverpos_lma.hpp"
+#endif
+
 namespace rm::lpss {
 
 #ifdef RMVL_LPSS_WITH_KDL
 
-bool RobotPlanner::Impl::buildChain(std::string_view frame, KDL::Chain &chain,
-                                    std::vector<const JointInfo *> &path) const {
-    // DFS从根连杆出发，找到通往目标连杆 frame 的关节路径，记录在 path 中
+bool RobotPlanner::Impl::buildChain(std::string_view frame, KDL::Chain &chain, std::vector<const JointInfo *> &path) const {
+    // DFS 从根连杆出发，找到通往目标连杆 frame 的关节路径，记录在 path 中
     std::function<bool(const std::string &)> dfs = [&](const std::string &cur) -> bool {
         if (cur == frame)
             return true;
@@ -36,6 +39,9 @@ bool RobotPlanner::Impl::buildChain(std::string_view frame, KDL::Chain &chain,
 
     if (!dfs(model.root_link))
         return false;
+
+    if (path.empty())
+        return true;
 
     /**
      * @brief 首段 fixed segment 承载根关节的 origin 偏移
@@ -125,8 +131,8 @@ msg::JointTrajectory RobotPlanner::plan(std::string_view frame, const msg::Pose 
     traj.joint_names = _impl->joint_state.name;
 
     // 从URDF建运动链，找不到目标连杆则返回空轨迹
-    KDL::Chain chain;
-    std::vector<const JointInfo *> path;
+    KDL::Chain chain{};
+    std::vector<const JointInfo *> path{};
     if (!_impl->buildChain(frame, chain, path) || chain.getNrOfJoints() == 0)
         return traj;
 

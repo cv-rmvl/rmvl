@@ -14,6 +14,7 @@
 #include "rmvl/lpss/node.hpp"
 
 #include "rmvlmsg/geometry/pose.hpp"
+#include "rmvlmsg/geometry/transform.hpp"
 #include "rmvlmsg/motion/joint_trajectory.hpp"
 #include "rmvlmsg/motion/tf.hpp"
 #include "rmvlmsg/motion/urdf.hpp"
@@ -29,24 +30,24 @@ namespace rm {
 //! @brief 机器人运动学模型、状态发布、轨迹规划等功能扩展
 //! @details 该模块提供了
 //! - 机器人运动学模型规划器 lpss::RobotPlanner ，支持 URDF 解析、正/逆运动学求解、轨迹规划等功能
-//! - 机器人状态发布者，通过传入 lpss::RobotPlanner 对象和 lpss::Node （或 lpss::async::Node ）节点对象周期性发布 TF 和 URDF 消息，供其他模块订阅使用
-//! - 相关消息类型转换函数，如四元数乘法、变换合并等
+//! - 机器人状态发布者，通过传入 lpss::RobotPlanner 对象和 lpss::Node （或 lpss::async::Node ）节点对象周期性发布 TF、URDF 和 JointTrajectory 消息，一般在调试时供其他模块订阅使用
+//! - 相关消息类型转换函数，如四元数乘法、位姿变换、复合 SE(3) 变换等
 //! @image html lpss/robotmodel.svg "机器人功能扩展模块示意图" width=75%
 //! @}
 
-namespace lpss {
+namespace msg {
 
 //! @addtogroup lpss_robot
 //! @{
 
 /**
- * @brief 四元数乘法：q1 * q2
+ * @brief 四元数乘法：\f$q_1\times q_2\f$
  *
  * @param[in] q1 msg::Quaternion 表示的四元数 1
  * @param[in] q2 msg::Quaternion 表示的四元数 2
  * @return 四元数乘积
  */
-msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2);
+msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2) noexcept;
 
 /**
  * @brief 对向量执行旋转操作
@@ -55,19 +56,37 @@ msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2);
  * @param[in] v msg::Vector3 表示的向量
  * @return msg::Vector3 表示的旋转后的向量
  */
-msg::Vector3 rotate(const msg::Quaternion &q, const msg::Vector3 &v);
+msg::Vector3 rotate(const msg::Quaternion &q, const msg::Vector3 &v) noexcept;
 
 /**
- * @brief 合并两个变换
+ * @brief 位姿变换
+ * @details 将位姿 \f$p\f$ 从坐标系 \f$A\f$ 变换到坐标系 \f$B\f$，变换关系由 \f$T\f$ 定义，即 \f$B\f$ 相对于 \f$A\f$ 的变换。
+ * @param[in] t msg::Transform 表示的变换
+ * @param[in] p msg::Pose 表示的位姿
+ * @return msg::Pose 表示的变换后的位姿
+ */
+msg::Pose operator*(const msg::Transform &t, const msg::Pose &p) noexcept;
+
+/**
+ * @brief 合并两个 SE(3) 变换
  * @details 具体来说符合以下规则：
- * - 在最初的坐标系下应用 t2 变换，再在原来的坐标系下应用 t1 变换，等价于在最初的坐标系下应用 t1 * t2 变换，即 “复合变换”
- * - 在最初的坐标系下应用 t1 变换，再在 t1 变换后的坐标系下应用 t2 变换，等价于在最初的坐标系下应用 t1 * t2 变换，即 “相对于坐标系的变换”
+ * - 在最初的坐标系下应用 \f$T_2\f$ 变换，再在原来的坐标系下应用 \f$T_1\f$ 变换，等价于在最初的坐标系下应用 \f$T_1T_2\f$ 变换，即 “复合变换”
+ * - 在最初的坐标系下应用 \f$T_1\f$ 变换，再在 \f$T_1\f$ 变换后的坐标系下应用 \f$T_2\f$ 变换，等价于在最初的坐标系下应用 \f$T_1T_2\f$ 变换，即 “相对于坐标系的变换”
  *
  * @param[in] t1 msg::Transform 表示的变换 1
  * @param[in] t2 msg::Transform 表示的变换 2
  * @return msg::Transform 表示的合并后的变换
  */
-msg::Transform operator*(const msg::Transform &t1, const msg::Transform &t2);
+msg::Transform operator*(const msg::Transform &t1, const msg::Transform &t2) noexcept;
+
+//! @} lpss_robot
+
+} // namespace msg
+
+namespace lpss {
+
+//! @addtogroup lpss_robot
+//! @{
 
 //! 机器人规划模块，提供 URDF 解析、正/逆运动学求解、轨迹规划等运动学功能
 class RobotPlanner {
@@ -132,7 +151,7 @@ public:
      * - 若目标位姿超出工作空间或逆运动学不收敛，返回空轨迹。
      *
      * @param[in] frame 目标连杆名称（末端执行器所在连杆）
-     * @param[in] target 目标位姿（位置 + 四元数姿态）
+     * @param[in] target 相对于根连杆（一般是 `base_link`）的目标位姿，由 `msg::Pose` 表示
      * @return 关节轨迹，IK 失败或连杆不存在时返回空轨迹
      */
     msg::JointTrajectory plan(std::string_view frame, const msg::Pose &target) const;
@@ -144,7 +163,7 @@ public:
      * - 若某段逆运动学失败，返回已成功规划的部分轨迹。
      *
      * @param[in] frame 目标连杆名称（末端执行器所在连杆）
-     * @param[in] waypoints 途经位姿列表，按顺序依次到达
+     * @param[in] waypoints 途经位姿列表，按顺序依次到达，每个位姿均相对于根连杆（一般是 `base_link`）
      * @return 关节轨迹，连杆不存在时返回空轨迹
      */
     msg::JointTrajectory plan(std::string_view frame, const std::vector<msg::Pose> &waypoints) const;
@@ -163,7 +182,7 @@ public:
      *
      * @param[in] factor 速度缩放因子，将被截断到\f$(0,1]\f$范围
      */
-    void setMaxVelocityScalingFactor(double factor);
+    void setMaxVelocityScalingFactor(double factor) noexcept;
 
     /**
      * @brief 获取当前最大速度缩放因子
@@ -177,7 +196,7 @@ public:
      *
      * @param[in] factor 加速度缩放因子，将被截断到\f$(0,1]\f$范围
      */
-    void setMaxAccelerationScalingFactor(double factor);
+    void setMaxAccelerationScalingFactor(double factor) noexcept;
 
     /**
      * @brief 获取当前最大加速度缩放因子
@@ -212,21 +231,40 @@ public:
     RobotStatePublisher(const RobotStatePublisher &) = delete;
     RobotStatePublisher &operator=(const RobotStatePublisher &) = delete;
 
+    /**
+     * @brief 更新轨迹显示，发布 JointTrajectory 消息以供可视化工具订阅
+     *
+     * @param[in] traj 需要发布的关节轨迹消息
+     */
+    void updateTrajectory(msg::JointTrajectory &&traj) noexcept;
+
+    /**
+     * @brief 更新轨迹显示，发布 JointTrajectory 消息以供可视化工具订阅
+     *
+     * @param[in] traj 需要发布的关节轨迹消息
+     */
+    void updateTrajectory(const msg::JointTrajectory &traj) noexcept;
+
     //! 获取同步互斥锁的引用，调用者在修改 RobotPlanner 状态时需加锁
-    std::mutex &mutex() noexcept { return _mtx; }
+    inline std::mutex &mutex() noexcept { return _mtx; }
 
 private:
     bool _running{true};
     std::reference_wrapper<Node> _node;
     std::reference_wrapper<RobotPlanner> _planner;
 
+    msg::JointTrajectory _traj_cache{}; //!< 轨迹缓存
+
     Publisher<msg::URDF> _urdf_pub;
     Publisher<msg::TF> _tf_pub;
+    Publisher<msg::JointTrajectory> _traj_pub;
+
+    std::mutex _shutdown_mtx;
+    std::condition_variable _shutdown_cv;
 
     std::thread _tf_thread;
     std::thread _urdf_thread;
-    std::mutex _shutdown_mtx;
-    std::condition_variable _shutdown_cv;
+    std::thread _traj_thread;
     std::mutex _mtx;
 };
 
@@ -245,6 +283,8 @@ namespace async {
  */
 class RobotStatePublisher {
 public:
+    using ptr = std::shared_ptr<RobotStatePublisher>;
+
     /**
      * @brief 构造异步状态发布者
      * @details 基于事件循环定时器，周期性发布 TF 和 URDF 数据。
@@ -261,14 +301,45 @@ public:
     RobotStatePublisher(const RobotStatePublisher &) = delete;
     RobotStatePublisher &operator=(const RobotStatePublisher &) = delete;
 
+    /**
+     * @brief 更新轨迹显示，发布 JointTrajectory 消息以供可视化工具订阅
+     *
+     * @param[in] traj 需要发布的关节轨迹消息
+     */
+    void updateTrajectory(msg::JointTrajectory &&traj) noexcept { _traj_cache = std::move(traj); }
+
+    /**
+     * @brief 更新轨迹显示，发布 JointTrajectory 消息以供可视化工具订阅
+     *
+     * @param[in] traj 需要发布的关节轨迹消息
+     */
+    void updateTrajectory(const msg::JointTrajectory &traj) noexcept { _traj_cache = traj; }
+
+    /**
+     * @brief 构造异步状态发布者共享指针
+     * @see RobotStatePublisher::RobotStatePublisher
+     *
+     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf` 和 `<name>/robot_description`
+     * @param[in] node LPSS 节点
+     * @param[in] planner 机器人规划器对象，发布者将从中获取 TF 和 URDF 数据
+     * @param[in] period TF 消息发布周期（单位：毫秒），URDF、Trajectory 消息发布周期将固定设置为 1s
+     * @return RobotStatePublisher 共享指针
+     */
+    static inline ptr create(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period) {
+        return std::make_shared<RobotStatePublisher>(name, node, planner, period);
+    }
+
 private:
     std::reference_wrapper<Node> _node;
     std::reference_wrapper<RobotPlanner> _planner;
 
+    msg::JointTrajectory _traj_cache{}; //!< 轨迹缓存
+
     Publisher<msg::URDF>::ptr _urdf_pub{};
     Publisher<msg::TF>::ptr _tf_pub{};
-    Timer::ptr _urdf_timer{};
-    Timer::ptr _tf_timer{};
+    Publisher<msg::JointTrajectory>::ptr _traj_pub{};
+    Timer::ptr _low_timer{};
+    Timer::ptr _high_timer{};
 };
 
 //! @} lpss_robot

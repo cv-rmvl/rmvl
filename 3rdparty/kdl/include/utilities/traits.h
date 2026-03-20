@@ -1,9 +1,6 @@
 #ifndef KDLPV_TRAITS_H 
 #define KDLPV_TRAITS_H 
 
-#include "utility.h"
-
- 
 // forwards declarations :
 namespace KDL {
    class Frame;

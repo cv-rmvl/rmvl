@@ -15,10 +15,7 @@
 
 #ifdef RMVL_LPSS_WITH_KDL
 #include "chain.hpp"
-#include "chainiksolverpos_lma.hpp"
-#include "frames.hpp"
-#include "joint.hpp"
-#include "segment.hpp"
+#include "jntarray.hpp"
 #endif
 
 namespace rm::lpss {

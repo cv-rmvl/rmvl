@@ -32,12 +32,6 @@ target_include_directories(
   
 target_link_libraries(kdl PUBLIC Eigen3::Eigen)
 
-# if(RMVL_GNU OR RMVL_CLANG OR RMVL_APPLECLANG)
-#   target_compile_options(kdl PRIVATE -w)
-# elseif(RMVL_MSVC)
-#   target_compile_options(kdl PRIVATE /W0)
-# endif()
-
 # ----------------------------------------------------------------------------
 #   安装
 # ----------------------------------------------------------------------------
