@@ -23,7 +23,7 @@ rmvl_add_module(
 )
 if(WITH_EIGEN3)
   rmvl_link_libraries(lpss PUBLIC kdl)
-  target_compile_definitions(rmvl_lpss PUBLIC RMVL_LPSS_WITH_KDL)
+  rmvl_compile_definitions(lpss PUBLIC RMVL_LPSS_WITH_KDL)
 endif()
 
 # --------------------------------------------------------------------------

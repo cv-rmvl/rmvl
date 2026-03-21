@@ -32,7 +32,11 @@ find_library(
 )
 
 if(NOT TARGET optcamsdk)
-  add_library(optcamsdk SHARED IMPORTED)
+  if(BUILD_WORLD)
+    add_library(optcamsdk SHARED IMPORTED GLOBAL)
+  else()
+    add_library(optcamsdk SHARED IMPORTED)
+  endif()
   set_target_properties(optcamsdk PROPERTIES
     IMPORTED_LOCATION "${OPTCameraSDK_LIB}"
     INTERFACE_INCLUDE_DIRECTORIES "${OPTCameraSDK_INCLUDE_DIR}"

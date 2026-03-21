@@ -29,7 +29,11 @@ if(UNIX)
   )
 
   if(NOT TARGET mvsdk)
-    add_library(mvsdk SHARED IMPORTED)
+    if(BUILD_WORLD)
+      add_library(mvsdk SHARED IMPORTED GLOBAL)
+    else()
+      add_library(mvsdk SHARED IMPORTED)
+    endif()
     set_target_properties(mvsdk PROPERTIES
       IMPORTED_LOCATION "${MvSDK_LIB}"
       INTERFACE_INCLUDE_DIRECTORIES "${MvSDK_INCLUDE_DIR}"
@@ -71,7 +75,11 @@ elseif(WIN32)
   )
 
   if(NOT TARGET mvsdk)
-    add_library(mvsdk SHARED IMPORTED GLOBAL)
+    if(BUILD_WORLD)
+      add_library(mvsdk SHARED IMPORTED GLOBAL)
+    else()
+      add_library(mvsdk SHARED IMPORTED)
+    endif()
     set_target_properties(mvsdk PROPERTIES
       IMPORTED_IMPLIB "${MvSDK_LIB}"
       IMPORTED_LOCATION "${MvSDK_DLL}"

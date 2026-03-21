@@ -220,7 +220,7 @@ endforeach()
 string(REGEX REPLACE "rmvl_" " " main_modules ${RMVL_MAIN_MODULES_BUILD})
 
 status("")
-status("  RMVL main modules:")
+status("  RMVL main modules:"       BUILD_WORLD THEN "world" ELSE "")
 status("     To be built:"          ${main_modules})
 foreach(m ${RMVL_MAIN_MODULE})
   if("${${m}_modules}" STREQUAL "")
