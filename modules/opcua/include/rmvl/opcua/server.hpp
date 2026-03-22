@@ -163,16 +163,16 @@ public:
     /**
      * @brief 启动服务器并阻塞
      * @note
-     * - 当 `rm::para::opcua_param.SERVER_WAIT` 为 `false` 时，该函数会立即返回，因此可在多线程环境下使用
+     * - 当 `rm::para::opcua_param.SERVER_WAIT` 为 `false` 时，该函数会立即返回，表示非阻塞轮询
      * @note
      * - 创建单线程事件循环，并在此事件循环中不断处理网络事件
      */
     void spin();
 
     /**
-     * @brief 单次处理网络层中的重复回调和事件（单次启动服务器）
+     * @brief 单次处理网络层中的重复回调和事件（单次处理服务器的 `epoll` 或者 `IOCP`）
      * @note
-     * - 当 `rm::para::opcua_param.SERVER_WAIT` 为 `false` 时，该函数会立即返回，因此可在多线程环境下使用
+     * - 当 `rm::para::opcua_param.SERVER_WAIT` 为 `false` 时，该函数会立即返回，表示非阻塞轮询
      * @note
      * - 这一部分可以在事件驱动的单线程架构中由外部主循环驱动
      */
