@@ -15,12 +15,10 @@
 
 #include "rmvl/io/serial.hpp"
 
-namespace rm
-{
+namespace rm {
 
 //! 海康机器人光源控制器
-class HikLightController::Impl
-{
+class HikLightController::Impl {
 public:
     Impl(const LightConfig &cfg, std::string_view id);
 
@@ -28,19 +26,19 @@ public:
     Impl(Impl &&) = default;
 
     //! 光源控制器是否打开
-    inline bool isOpened() const { return _sp != nullptr && _sp->isOpened(); }
+    inline bool isOpened() const noexcept { return _sp != nullptr && _sp->isOpened(); }
 
     //! 设置为常亮模式，即打开全部通道
-    bool open();
+    bool open() noexcept;
 
     //! 设置为常灭模式，即关闭全部通道
-    bool close();
+    bool close() noexcept;
 
     //! 获取指定通道的光源亮度
-    int get(int chn) const;
+    int get(int chn) const noexcept;
 
     //! 设置指定通道的光源亮度
-    bool set(int chn, int val);
+    bool set(int chn, int val) noexcept;
 
 private:
     std::unique_ptr<SerialPort> _sp{}; //!< 串口对象
