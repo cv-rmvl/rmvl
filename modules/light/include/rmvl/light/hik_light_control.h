@@ -45,21 +45,21 @@ public:
     //! @endcond
 
     //! 光源控制器是否打开
-    RMVL_W bool isOpened() const;
+    RMVL_W bool isOpened() const noexcept;
 
     /**
      * @brief 设置为常亮模式，即打开全部通道
      *
      * @return 指定通道是否打开成功？
      */
-    RMVL_W bool open();
+    RMVL_W bool open() noexcept;
 
     /**
      * @brief 设置为常灭模式，即关闭全部通道
      *
      * @return 指定通道是否关闭成功？
      */
-    RMVL_W bool close();
+    RMVL_W bool close() noexcept;
 
     /**
      * @brief 获取指定通道的光源亮度
@@ -67,7 +67,7 @@ public:
      * @param[in] chn 指定通道，范围: `1 ~ 8`
      * @return 若读取成功，返回 \f$[0, 255]\f$ 的值，否则返回 \f$-1\f$
      */
-    RMVL_W int get(int chn) const;
+    RMVL_W int get(int chn) const noexcept;
 
     /**
      * @brief 设置指定通道的光源亮度
@@ -76,7 +76,7 @@ public:
      * @param[in] val 指定通道的光源亮度
      * @return 是否设置成功？
      */
-    RMVL_W bool set(int chn, int val);
+    RMVL_W bool set(int chn, int val) noexcept;
 };
 
 //! @} hik_light_control
