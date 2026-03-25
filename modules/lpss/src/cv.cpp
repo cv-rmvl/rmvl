@@ -31,7 +31,7 @@ msg::Vector3 to_msg(const cv::Vec3d &vec) { return {vec[0], vec[1], vec[2]}; }
 
 cv::Quatd from_msg(const msg::Quaternion &quat_msg) { return {quat_msg.w, quat_msg.x, quat_msg.y, quat_msg.z}; }
 
-msg::Quaternion to_msg(const cv::Quatd &quat) { return {quat.w, quat.x, quat.y, quat.z}; }
+msg::Quaternion to_msg(const cv::Quatd &quat) { return {quat.x, quat.y, quat.z, quat.w}; }
 
 cv::Affine3d from_msg(const msg::Transform &tf_msg) {
     cv::Quatd quat = from_msg(tf_msg.rotation);
