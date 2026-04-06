@@ -225,7 +225,7 @@ void Node::redp_listener(DgramSocket redp_socket) {
     }
 }
 
-static bool is_same_node(const Guid &lhs, const Guid &rhs) { return lhs.fields.host == rhs.fields.host && lhs.fields.pid == rhs.fields.pid; }
+static bool is_same_node(const Guid &lhs, const Guid &rhs) { return lhs.host() == rhs.host() && lhs.pid() == rhs.pid(); }
 
 void Node::heartbeat_detect() {
     while (_running.load(std::memory_order_acquire)) {

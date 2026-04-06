@@ -26,12 +26,6 @@
 
 namespace rm::lpss {
 
-Guid::Guid(uint32_t h, uint16_t p, uint16_t e) {
-    fields.host = h;
-    fields.pid = p;
-    fields.entity = e;
-}
-
 std::string RNDPMessage::serialize() const noexcept {
     const uint8_t num = static_cast<uint8_t>(locators.size());
     const size_t msg_size = RNDP_HEADER_SIZE + num * sizeof(Locator) + 1 + name.length();
@@ -107,7 +101,7 @@ REDPMessage REDPMessage::deserialize(const char *data) noexcept {
     ::memcpy(&res.endpoint_guid.full, data + 4, sizeof(res.endpoint_guid.full));
     res.action = static_cast<Action>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b01);
     res.type = static_cast<Type>(*reinterpret_cast<const uint8_t *>(data + 4 + sizeof(res.endpoint_guid.full)) & 0b10);
-    
+
     // REDP 负载
     res.port = ntohs(*reinterpret_cast<const uint16_t *>(data + REDP_HEADER_SIZE));
     uint8_t topic_size = *reinterpret_cast<const uint8_t *>(data + REDP_HEADER_SIZE + 2);
@@ -139,12 +133,9 @@ std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid() {
         // 选取最优接口为 GUID MAC 和 basic_mac
         const auto &primary_iface = candidate_interfaces.front();
         auto basic_mac = primary_iface.address();
-        res.fields.host = (static_cast<uint32_t>(basic_mac[2]) << 24) |
-                          (static_cast<uint32_t>(basic_mac[3]) << 16) |
-                          (static_cast<uint32_t>(basic_mac[4]) << 8) |
-                          static_cast<uint32_t>(basic_mac[5]);
-        res.fields.pid = static_cast<uint16_t>(processId());
-        res.fields.entity = 0;
+        res.set_host((static_cast<uint32_t>(basic_mac[2]) << 24) | (static_cast<uint32_t>(basic_mac[3]) << 16) |
+                     (static_cast<uint32_t>(basic_mac[4]) << 8) | static_cast<uint32_t>(basic_mac[5]));
+        res.set_pid(static_cast<uint16_t>(processId()));
         // 收集 IP
         for (const auto &iface : candidate_interfaces) {
             auto nets = iface.ipv4();
@@ -152,7 +143,7 @@ std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid() {
         }
     } else {
         WARNING_("[LPSS Node] No valid network interface found, using 00:00:00:00:00:00 as MAC address");
-        res.fields.pid = static_cast<uint16_t>(processId());
+        res.set_pid(static_cast<uint16_t>(processId()));
     }
     return {res, networks};
 }
