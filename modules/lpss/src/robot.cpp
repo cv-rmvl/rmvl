@@ -519,6 +519,9 @@ using namespace std::chrono_literals;
 RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period)
     : _node(node), _planner(planner), _urdf_pub(node.createPublisher<msg::URDF>(std::string(name) + "/robot_description")),
       _tf_pub(node.createPublisher<msg::TF>(std::string(name) + "/tf")), _traj_pub(node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory")) {
+    if (_urdf_pub.invalid() || _tf_pub.invalid() || _traj_pub.invalid())
+        RMVL_Error(RMVL_StsError, "Failed to create publishers for RobotStatePublisher");
+
     _tf_thread = std::thread([this, period] {
         while (true) {
             {
@@ -602,6 +605,8 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
     _urdf_pub = node.createPublisher<msg::URDF>(std::string(name) + "/robot_description");
     _tf_pub = node.createPublisher<msg::TF>(std::string(name) + "/tf");
     _traj_pub = node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory");
+    if (!_urdf_pub || !_tf_pub || !_traj_pub || _urdf_pub->invalid() || _tf_pub->invalid() || _traj_pub->invalid())
+        RMVL_Error(RMVL_StsError, "Failed to create publishers for RobotStatePublisher");
     _low_timer = node.createTimer(std::chrono::milliseconds(period), [this] {
         _urdf_pub->publish(_planner.get().urdf());
         _traj_pub->publish(_traj_cache);

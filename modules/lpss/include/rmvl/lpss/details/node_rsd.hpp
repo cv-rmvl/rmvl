@@ -26,24 +26,45 @@ namespace rm::lpss {
 //! @cond
 
 //! GUID
-union Guid {
-    uint64_t full;
+class Guid {
+public:
+    uint64_t full{};
 
-    struct {
-        uint32_t host : 32;   //!< 主机 ID (MAC 低 4 字节)
-        uint16_t pid : 16;    //!< 进程 ID
-        uint16_t entity : 16; //!< 实体 ID
-    } fields;
+    //! 获取 Host LowMAC（高 32 位）
+    uint32_t host() const noexcept { return full >> 32; }
+    //! 获取 Process ID（中 16 位）
+    uint16_t pid() const noexcept { return (full >> 16) & 0xffff; }
+    //! 获取 Entity ID（低 16 位）
+    uint16_t entity() const noexcept { return full & 0xffff; }
+
+    /**
+     * @brief 设置 Host LowMAC（高 32 位）
+     * 
+     * @param[in] h LowMAC 地址，通常取自网络接口的 MAC 地址的低 4 字节
+     */
+    void set_host(uint32_t h) { full = (static_cast<uint64_t>(h) << 32) | (full & 0xffffffff); }
+    
+    /**
+     * @brief 设置 Process ID（中 16 位）
+     * 
+     * @param[in] p 进程 ID
+     */
+    void set_pid(uint16_t p) { full = (full & 0xffffffff0000ffffULL) | (static_cast<uint64_t>(p) << 16); }
+
+    /**
+     * @brief 设置 Entity ID（低 16 位）
+     * 
+     * @param[in] e Entity ID
+     */
+    void set_entity(uint16_t e) { full = (full & 0xffffffffffff0000ULL) | e; }
 
     // 构造函数
-    Guid() : full(0) {}
+    Guid() = default;
     Guid(uint64_t val) : full(val) {}
-    Guid(uint32_t h, uint16_t p, uint16_t e);
+    Guid(uint32_t h, uint16_t p, uint16_t e) { full = (static_cast<uint64_t>(h) << 32) | (static_cast<uint64_t>(p) << 16) | e; }
 
     // 运算符重载
     inline bool operator==(const Guid &oth) const { return full == oth.full; }
-    inline bool operator!=(const Guid &oth) const { return full != oth.full; }
-    inline bool operator<(const Guid &oth) const { return full < oth.full; }
 };
 
 //! GUID 哈希函数对象
