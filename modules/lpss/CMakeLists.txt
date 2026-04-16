@@ -19,7 +19,7 @@ endforeach()
 rmvl_add_module(
   lpss
   DEPENDS io
-  EXTERNAL tinyxml2
+  EXTERNAL tinyxml2 json
 )
 
 # --------------------------------------------------------------------------

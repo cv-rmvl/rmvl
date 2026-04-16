@@ -42,6 +42,15 @@ TEST(LPSS_serialization, string) {
     EXPECT_EQ(dst.data, "Hello, LPSS!");
 }
 
+TEST(LPSS_serialization, string_json) {
+    msg::String msg;
+    msg.data = "Hello, LPSS!";
+
+    auto j = rm::json::parse(msg.json());
+
+    EXPECT_EQ(j["data"].get<std::string>(), "Hello, LPSS!");
+}
+
 TEST(LPSS_serialization, int32) {
     msg::Int32 msg;
     msg.data = 42;
@@ -64,6 +73,19 @@ TEST(LPSS_serialization, header) {
     EXPECT_EQ(dst.seq, 1);
     EXPECT_EQ(dst.frame_id, "base_link");
     EXPECT_EQ(dst.stamp, 123456);
+}
+
+TEST(LPSS_serialization, header_json) {
+    msg::Header msg;
+    msg.seq = 1;
+    msg.frame_id = "base_link";
+    msg.stamp = 123456;
+
+    auto j = rm::json::parse(msg.json());
+
+    EXPECT_EQ(j["seq"].get<uint32_t>(), 1u);
+    EXPECT_EQ(j["frame_id"].get<std::string>(), "base_link");
+    EXPECT_EQ(j["stamp"].get<int64_t>(), 123456);
 }
 
 TEST(LPSS_serialization, quaternion) {
@@ -119,6 +141,35 @@ TEST(LPSS_serialization, joint) {
     EXPECT_DOUBLE_EQ(dst.effort[0], 0.01);
     EXPECT_DOUBLE_EQ(dst.effort[1], 0.02);
     EXPECT_DOUBLE_EQ(dst.effort[2], 0.03);
+}
+
+TEST(LPSS_serialization, joint_json) {
+    msg::JointState msg;
+    msg.header.seq = 10;
+    msg.header.frame_id = "robot_arm";
+    msg.header.stamp = 999;
+    msg.name = {"joint1", "joint2"};
+    msg.position = {0.5, 1.5};
+    msg.velocity = {-0.1, -0.2};
+    msg.effort = {10.0, 20.0};
+
+    auto j = rm::json::parse(msg.json());
+
+    EXPECT_EQ(j["header"]["seq"].get<uint32_t>(), 10u);
+    EXPECT_EQ(j["header"]["frame_id"].get<std::string>(), "robot_arm");
+    EXPECT_EQ(j["header"]["stamp"].get<int64_t>(), 999);
+    ASSERT_EQ(j["name"].size(), 2u);
+    EXPECT_EQ(j["name"][0].get<std::string>(), "joint1");
+    EXPECT_EQ(j["name"][1].get<std::string>(), "joint2");
+    ASSERT_EQ(j["position"].size(), 2u);
+    EXPECT_DOUBLE_EQ(j["position"][0].get<double>(), 0.5);
+    EXPECT_DOUBLE_EQ(j["position"][1].get<double>(), 1.5);
+    ASSERT_EQ(j["velocity"].size(), 2u);
+    EXPECT_DOUBLE_EQ(j["velocity"][0].get<double>(), -0.1);
+    EXPECT_DOUBLE_EQ(j["velocity"][1].get<double>(), -0.2);
+    ASSERT_EQ(j["effort"].size(), 2u);
+    EXPECT_DOUBLE_EQ(j["effort"][0].get<double>(), 10.0);
+    EXPECT_DOUBLE_EQ(j["effort"][1].get<double>(), 20.0);
 }
 
 TEST(LPSS_serialization, joint_with_names) {
