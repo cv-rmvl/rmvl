@@ -533,6 +533,7 @@ function(rmvl_generate_msg file)
   # Parse msg file content
   set(type_and_ids)
   set(constexpr_fields_cpp)
+  set(json_fields)
   string(REPLACE "\n" ";" MSG_LINES ${MSG_CONTENT})
     
   foreach(line ${MSG_LINES})
@@ -614,6 +615,7 @@ function(rmvl_generate_msg file)
       endif()
 
       list(APPEND type_and_ids "${base_type}@${field_name}@${array_info}")
+      list(APPEND json_fields "${field_name}")
     endif()
   endforeach()
 
@@ -789,6 +791,15 @@ function(rmvl_generate_msg file)
   endforeach()
 
   # Append constexpr fields to type_and_ids_cpp
+  list(JOIN json_fields ", " json_field_list)
+  if(json_field_list)
+    set(json_define_cpp "\n    NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(${CLASS_NAME}, ${json_field_list})\n")
+    set(json_return_stmt "return rm::json(*this).dump();")
+  else()
+    set(json_define_cpp "")
+    set(json_return_stmt "return \"{}\";")
+  endif()
+
   if(constexpr_fields_cpp)
     if(type_and_ids_cpp)
       string(APPEND type_and_ids_cpp "\n")

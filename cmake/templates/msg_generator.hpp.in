@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 @MSG_EXTRA_HEADERS@
 //! LPSS 消息类型命名空间
 namespace rm::msg {
@@ -31,6 +33,7 @@ namespace rm::msg {
 class @CLASS_NAME@ {
 public:
 @type_and_ids_cpp@
+@json_define_cpp@
 
     static constexpr const char msg_type[] = "@CLASS_NAME_COMMENT@"; //!< 消息类型字符串常量
 
@@ -40,6 +43,9 @@ public:
      * @return 序列化后的字符串 
      */
     std::string serialize() const noexcept;
+
+    //! 将消息序列化为 JSON 字符串
+    std::string json() const noexcept;
 
     /**
      * @brief 消息反序列化

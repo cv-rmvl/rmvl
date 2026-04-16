@@ -19,7 +19,7 @@ endforeach()
 rmvl_add_module(
   lpss
   DEPENDS io
-  EXTERNAL tinyxml2
+  EXTERNAL tinyxml2 json
 )
 if(WITH_EIGEN3)
   rmvl_link_libraries(lpss PUBLIC kdl)
