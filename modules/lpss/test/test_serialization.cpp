@@ -63,44 +63,42 @@ TEST(LPSS_serialization, int32) {
 
 TEST(LPSS_serialization, header) {
     msg::Header msg;
-    msg.seq = 1;
     msg.frame_id = "base_link";
-    msg.stamp = 123456;
+    msg.stamp = {123456, 789};
 
     auto str = msg.serialize();
 
     auto dst = msg::Header::deserialize(str.data());
-    EXPECT_EQ(dst.seq, 1);
     EXPECT_EQ(dst.frame_id, "base_link");
-    EXPECT_EQ(dst.stamp, 123456);
+    EXPECT_EQ(dst.stamp.sec, 123456);
+    EXPECT_EQ(dst.stamp.nsec, 789);
 }
 
 TEST(LPSS_serialization, header_json) {
     msg::Header msg;
-    msg.seq = 1;
     msg.frame_id = "base_link";
-    msg.stamp = 123456;
+    msg.stamp = {123456, 789};
 
     auto j = rm::json::parse(msg.json());
 
-    EXPECT_EQ(j["seq"].get<uint32_t>(), 1u);
     EXPECT_EQ(j["frame_id"].get<std::string>(), "base_link");
-    EXPECT_EQ(j["stamp"].get<int64_t>(), 123456);
+    EXPECT_EQ(j["stamp"]["sec"].get<int32_t>(), 123456);
+    EXPECT_EQ(j["stamp"]["nsec"].get<uint32_t>(), 789);
 }
 
 TEST(LPSS_serialization, quaternion) {
     msg::Quaternion msg;
-    msg.x = 0.7;
+    msg.x = 0.7071;
     msg.y = 0.0;
-    msg.z = 0.7;
+    msg.z = 0.7071;
     msg.w = 0.0;
 
     auto str = msg.serialize();
 
     auto dst = msg::Quaternion::deserialize(str.data());
-    EXPECT_DOUBLE_EQ(dst.x, 0.7);
+    EXPECT_DOUBLE_EQ(dst.x, 0.7071);
     EXPECT_DOUBLE_EQ(dst.y, 0.0);
-    EXPECT_DOUBLE_EQ(dst.z, 0.7);
+    EXPECT_DOUBLE_EQ(dst.z, 0.7071);
     EXPECT_DOUBLE_EQ(dst.w, 0.0);
 }
 
@@ -121,7 +119,6 @@ TEST(LPSS_serialization, vector3) {
 TEST(LPSS_serialization, joint) {
     msg::JointState msg;
     msg.header.frame_id = "joint_frame";
-    msg.header.stamp = 100;
     msg.position = {1.0, 2.0, 3.0};
     msg.velocity = {0.1, 0.2, 0.3};
     msg.effort = {0.01, 0.02, 0.03};
@@ -131,7 +128,6 @@ TEST(LPSS_serialization, joint) {
     auto dst = msg::JointState::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "joint_frame");
-    EXPECT_EQ(dst.header.stamp, 100);
     EXPECT_DOUBLE_EQ(dst.position[0], 1.0);
     EXPECT_DOUBLE_EQ(dst.position[1], 2.0);
     EXPECT_DOUBLE_EQ(dst.position[2], 3.0);
@@ -145,9 +141,7 @@ TEST(LPSS_serialization, joint) {
 
 TEST(LPSS_serialization, joint_json) {
     msg::JointState msg;
-    msg.header.seq = 10;
     msg.header.frame_id = "robot_arm";
-    msg.header.stamp = 999;
     msg.name = {"joint1", "joint2"};
     msg.position = {0.5, 1.5};
     msg.velocity = {-0.1, -0.2};
@@ -155,9 +149,7 @@ TEST(LPSS_serialization, joint_json) {
 
     auto j = rm::json::parse(msg.json());
 
-    EXPECT_EQ(j["header"]["seq"].get<uint32_t>(), 10u);
     EXPECT_EQ(j["header"]["frame_id"].get<std::string>(), "robot_arm");
-    EXPECT_EQ(j["header"]["stamp"].get<int64_t>(), 999);
     ASSERT_EQ(j["name"].size(), 2u);
     EXPECT_EQ(j["name"][0].get<std::string>(), "joint1");
     EXPECT_EQ(j["name"][1].get<std::string>(), "joint2");
@@ -174,9 +166,7 @@ TEST(LPSS_serialization, joint_json) {
 
 TEST(LPSS_serialization, joint_with_names) {
     msg::JointState msg;
-    msg.header.seq = 10;
     msg.header.frame_id = "robot_arm";
-    msg.header.stamp = 999;
     msg.name = {"joint1", "joint2", "joint3"};
     msg.position = {0.5, 1.5, 2.5};
     msg.velocity = {-0.1, -0.2, -0.3};
@@ -185,9 +175,7 @@ TEST(LPSS_serialization, joint_with_names) {
     auto str = msg.serialize();
     auto dst = msg::JointState::deserialize(str.data());
 
-    EXPECT_EQ(dst.header.seq, 10);
     EXPECT_EQ(dst.header.frame_id, "robot_arm");
-    EXPECT_EQ(dst.header.stamp, 999);
     ASSERT_EQ(dst.name.size(), 3u);
     EXPECT_EQ(dst.name[0], "joint1");
     EXPECT_EQ(dst.name[1], "joint2");
@@ -209,13 +197,11 @@ TEST(LPSS_serialization, joint_with_names) {
 TEST(LPSS_serialization, joint_empty_arrays) {
     msg::JointState msg;
     msg.header.frame_id = "empty";
-    msg.header.stamp = 0;
 
     auto str = msg.serialize();
     auto dst = msg::JointState::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "empty");
-    EXPECT_EQ(dst.header.stamp, 0);
     EXPECT_TRUE(dst.name.empty());
     EXPECT_TRUE(dst.position.empty());
     EXPECT_TRUE(dst.velocity.empty());
@@ -225,7 +211,6 @@ TEST(LPSS_serialization, joint_empty_arrays) {
 TEST(LPSS_serialization, joint_different_array_sizes) {
     msg::JointState msg;
     msg.header.frame_id = "flex";
-    msg.header.stamp = 42;
     msg.name = {"a", "bb", "ccc", "dddd", "eeeee"};
     msg.position = {1.0, 2.0};
     msg.velocity = {3.0};
@@ -235,7 +220,6 @@ TEST(LPSS_serialization, joint_different_array_sizes) {
     auto dst = msg::JointState::deserialize(str.data());
 
     EXPECT_EQ(dst.header.frame_id, "flex");
-    EXPECT_EQ(dst.header.stamp, 42);
     ASSERT_EQ(dst.name.size(), 5u);
     EXPECT_EQ(dst.name[0], "a");
     EXPECT_EQ(dst.name[1], "bb");
@@ -253,7 +237,6 @@ TEST(LPSS_serialization, joint_different_array_sizes) {
 TEST(LPSS_serialization, joint_compact_size) {
     msg::JointState msg;
     msg.header.frame_id = "sz";
-    msg.header.stamp = 1;
     msg.name = {"x"};
     msg.position = {1.0, 2.0};
     msg.velocity = {};
@@ -266,7 +249,6 @@ TEST(LPSS_serialization, joint_compact_size) {
 TEST(LPSS_serialization, imu) {
     msg::Imu msg;
     msg.header.frame_id = "imu_frame";
-    msg.header.stamp = 123;
     msg.orientation = {0.0, 0.0, 0.0, 1.0};
     msg.angular_velocity = {0.1, 0.2, 0.3};
     msg.linear_acceleration = {9.8, 0.0, 0.0};

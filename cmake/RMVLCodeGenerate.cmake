@@ -586,7 +586,8 @@ function(rmvl_generate_msg file)
       set(field_name ${CMAKE_MATCH_3})
 
       # Handle default std types
-      if(base_type STREQUAL "Header" OR base_type STREQUAL "ColorRGBA")
+      set(_std_types Header ColorRGBA time)
+      if(base_type IN_LIST _std_types)
         set(base_type "std/${base_type}")
       endif()
       # Handle 'folder/type' format
@@ -648,8 +649,6 @@ function(rmvl_generate_msg file)
       set(cpp_base_type "float")
     elseif(type STREQUAL "float64")
       set(cpp_base_type "double")
-    elseif(type STREQUAL "time")
-      set(cpp_base_type "int64_t")
     elseif(type MATCHES "^int(8|16|32|64)$")
       set(cpp_base_type "${type}_t")
     elseif(type MATCHES "^uint(8|16|32|64)$")

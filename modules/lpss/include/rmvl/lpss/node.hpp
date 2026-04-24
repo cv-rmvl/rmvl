@@ -16,6 +16,8 @@
 #include <shared_mutex>
 #include <thread>
 
+#include "rmvlmsg/std/time.hpp"
+
 #if __cplusplus >= 202002L
 #include "rmvl/io/async.hpp"
 #endif
@@ -221,6 +223,92 @@ protected:
     //! 已发现的 Readers 列表
     std::unordered_map<std::string, DiscoveredReaderStorageInfo> _discovered_readers{};
 };
+
+//! 获取 LPSS 消息表示的 Epoch 时间
+msg::Time now() noexcept;
+
+} // namespace lpss
+
+namespace msg {
+
+Time operator+(Time t1, Time t2) noexcept;
+Time operator-(Time t1, Time t2) noexcept;
+
+template <typename Rep, typename Period>
+inline Time operator+(Time t, std::chrono::duration<Rep, Period> d) noexcept {
+    const int64_t ns = static_cast<int64_t>(t.sec) * 1'000'000'000ll + static_cast<int64_t>(t.nsec) +
+                       static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
+    int64_t sec = ns / 1'000'000'000ll;
+    int64_t nsec = ns % 1'000'000'000ll;
+    if (nsec < 0) {
+        --sec;
+        nsec += 1'000'000'000ll;
+    }
+    return {static_cast<int32_t>(sec), static_cast<uint32_t>(nsec)};
+}
+
+template <typename Rep, typename Period>
+inline Time operator+(std::chrono::duration<Rep, Period> d, Time t) noexcept { return t + d; }
+
+template <typename Rep, typename Period>
+inline Time operator-(Time t, std::chrono::duration<Rep, Period> d) noexcept {
+    const int64_t ns = static_cast<int64_t>(t.sec) * 1'000'000'000ll + static_cast<int64_t>(t.nsec) -
+                       static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
+    int64_t sec = ns / 1'000'000'000ll;
+    int64_t nsec = ns % 1'000'000'000ll;
+    if (nsec < 0) {
+        --sec;
+        nsec += 1'000'000'000ll;
+    }
+    return {static_cast<int32_t>(sec), static_cast<uint32_t>(nsec)};
+}
+
+inline bool operator<(Time t1, Time t2) noexcept { return (t1.sec < t2.sec) || (t1.sec == t2.sec && t1.nsec < t2.nsec); }
+inline bool operator>(Time t1, Time t2) noexcept { return t2 < t1; }
+inline bool operator==(Time t1, Time t2) noexcept { return t1.sec == t2.sec && t1.nsec == t2.nsec; }
+inline bool operator!=(Time t1, Time t2) noexcept { return !(t1 == t2); }
+inline bool operator<=(Time t1, Time t2) noexcept { return !(t1 > t2); }
+inline bool operator>=(Time t1, Time t2) noexcept { return !(t1 < t2); }
+
+template <typename Rep, typename Period>
+inline bool operator<(Time t, std::chrono::duration<Rep, Period> d) noexcept {
+    return static_cast<int64_t>(t.sec) * 1'000'000'000ll + static_cast<int64_t>(t.nsec) < static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
+}
+
+template <typename Rep, typename Period>
+inline bool operator<(std::chrono::duration<Rep, Period> d, Time t) noexcept {
+    return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count()) < static_cast<int64_t>(t.sec) * 1'000'000'000ll + static_cast<int64_t>(t.nsec);
+}
+
+template <typename Rep, typename Period>
+inline bool operator==(Time t, std::chrono::duration<Rep, Period> d) noexcept {
+    const int64_t tns = static_cast<int64_t>(t.sec) * 1'000'000'000ll + static_cast<int64_t>(t.nsec);
+    const int64_t dns = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
+    return tns == dns;
+}
+
+template <typename Rep, typename Period>
+inline bool operator>(std::chrono::duration<Rep, Period> d, Time t) noexcept { return t < d; }
+template <typename Rep, typename Period>
+inline bool operator<=(std::chrono::duration<Rep, Period> d, Time t) noexcept { return !(d > t); }
+template <typename Rep, typename Period>
+inline bool operator>=(std::chrono::duration<Rep, Period> d, Time t) noexcept { return !(d < t); }
+template <typename Rep, typename Period>
+inline bool operator==(std::chrono::duration<Rep, Period> d, Time t) noexcept { return t == d; }
+template <typename Rep, typename Period>
+inline bool operator!=(std::chrono::duration<Rep, Period> d, Time t) noexcept { return !(d == t); }
+template <typename Rep, typename Period>
+inline bool operator>(Time t, std::chrono::duration<Rep, Period> d) noexcept { return d < t; }
+template <typename Rep, typename Period>
+inline bool operator<=(Time t, std::chrono::duration<Rep, Period> d) noexcept { return !(t > d); }
+template <typename Rep, typename Period>
+inline bool operator>=(Time t, std::chrono::duration<Rep, Period> d) noexcept { return !(t < d); }
+template <typename Rep, typename Period>
+inline bool operator!=(Time t, std::chrono::duration<Rep, Period> d) noexcept { return !(t == d); }
+
+} // namespace msg
+
+namespace lpss {
 
 #if __cplusplus >= 202002L
 

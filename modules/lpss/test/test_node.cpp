@@ -11,13 +11,13 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/core/timer.hpp"
 #include "rmvl/io/socket.hpp"
 #include "rmvl/lpss/node.hpp"
 
 namespace rm_test {
 
 using namespace rm;
+using namespace std::chrono_literals;
 
 TEST(LPSS_node, guid_create) {
     lpss::Node nd1("node1", 0);
@@ -31,8 +31,8 @@ TEST(LPSS_node, same_domain_discover) {
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     auto [data, addr, port] = sock.read();
-    auto start_time = Time::now();
-    while (data.empty() && Time::now() - start_time < 50)
+    auto start_time = lpss::now();
+    while (data.empty() && lpss::now() - start_time < 50ms)
         std::tie(data, addr, port) = sock.read();
     EXPECT_FALSE(data.empty());
 }
@@ -42,8 +42,8 @@ TEST(LPSS_node, diff_domain_issolate) {
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     auto [data, addr, port] = sock.read();
-    auto start_time = Time::now();
-    while (data.empty() && Time::now() - start_time < 50)
+    auto start_time = lpss::now();
+    while (data.empty() && lpss::now() - start_time < 50ms)
         std::tie(data, addr, port) = sock.read();
     EXPECT_TRUE(data.empty());
 }
@@ -53,8 +53,8 @@ TEST(LPSS_node, diff_domain_discover) {
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7501), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     auto [data, addr, port] = sock.read();
-    auto start_time = Time::now();
-    while (data.empty() && Time::now() - start_time < 50)
+    auto start_time = lpss::now();
+    while (data.empty() && lpss::now() - start_time < 50ms)
         std::tie(data, addr, port) = sock.read();
     EXPECT_FALSE(data.empty());
 }

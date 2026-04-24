@@ -23,7 +23,9 @@
 
 using namespace std::chrono_literals;
 
-namespace rm::lpss {
+namespace rm {
+
+namespace lpss {
 
 std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid();
 Locator selectBestLocator(std::array<uint8_t, 4> target_ip, const RNDPMessage &rndp_msg);
@@ -269,4 +271,36 @@ void Node::heartbeat_detect() {
     }
 }
 
-} // namespace rm::lpss
+msg::Time now() noexcept {
+    auto now = std::chrono::system_clock::now().time_since_epoch();
+    return msg::Time{static_cast<int32_t>(std::chrono::duration_cast<std::chrono::seconds>(now).count()),
+                     static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(now).count() % 1'000'000'000ll)};
+}
+
+} // namespace lpss
+
+namespace msg {
+
+Time operator+(Time t1, Time t2) noexcept {
+    int32_t sec_sum = t1.sec + t2.sec;
+    uint32_t nsec_sum = t1.nsec + t2.nsec;
+    if (nsec_sum >= 1'000'000'000) {
+        sec_sum += 1;
+        nsec_sum -= 1'000'000'000;
+    }
+    return {sec_sum, nsec_sum};
+}
+
+Time operator-(Time t1, Time t2) noexcept {
+    int32_t sec_diff = t1.sec - t2.sec;
+    int64_t nsec_diff = static_cast<int64_t>(t1.nsec) - static_cast<int64_t>(t2.nsec);
+    if (nsec_diff < 0) {
+        sec_diff -= 1;
+        nsec_diff += 1'000'000'000;
+    }
+    return {sec_diff, static_cast<uint32_t>(nsec_diff)};
+}
+
+} // namespace msg
+
+} // namespace rm

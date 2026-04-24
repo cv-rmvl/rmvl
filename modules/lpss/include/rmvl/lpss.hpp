@@ -12,7 +12,7 @@
 #pragma once
 
 /**
- * @defgroup lpss 轻量发布订阅服务
+ * @defgroup lpss 轻量发布订阅服务及其相关组件
  * @{
  * @brief 轻量发布订阅服务，提供节点自动发现与消息发布订阅功能
  * @details
