@@ -20,7 +20,7 @@ RMVL 最初是面向 RoboMaster 赛事的视觉库，现在此之上逐步完善
 
 * VSCode 扩展插件
 
-  * 名称: RMVL Parameters amd CMake
+  * 名称: RMVL CMake and IDL
 
   * 仓库: <https://github.com/cv-rmvl/rmvl-vscode-extension>
 

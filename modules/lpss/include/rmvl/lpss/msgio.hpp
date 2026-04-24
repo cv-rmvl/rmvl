@@ -1,7 +1,7 @@
 /**
  * @file msgio.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief LPSS 消息格式化输出工具
+ * @brief LPSS 消息格式化输出工具，通过包含此头文件，即可使用 fmt 库的格式化语法直接格式化输出 LPSS 消息类型
  * @version 1.0
  * @date 2026-03-20
  *
@@ -21,6 +21,8 @@
 #include "rmvlmsg/geometry/twist.hpp"
 #include "rmvlmsg/geometry/vector3.hpp"
 #include "rmvlmsg/geometry/wrench.hpp"
+
+//! @cond
 
 namespace rm::lpss::helper {
 
@@ -195,3 +197,5 @@ struct fmt::formatter<rm::msg::Wrench> : rm::lpss::helper::DecimalPrecisionSpec 
         return fmt::format_to(out, "]]");
     }
 };
+
+//! @endcond

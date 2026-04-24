@@ -12,9 +12,11 @@ class DoxygenAwesomeInteractiveToc {
     static topOffset = 38
     static hideMobileMenu = true
     static headers = []
+    static throttledUpdate = null
 
     static init() {
         window.addEventListener("load", () => {
+            DoxygenAwesomeInteractiveToc.headers = []
             let toc = document.querySelector(".contents > .toc")
             if (toc) {
                 toc.classList.add("interactive")
@@ -30,14 +32,27 @@ class DoxygenAwesomeInteractiveToc {
                 })
 
                 document.querySelectorAll(".contents > .toc > ul a").forEach((node) => {
-                    let id = node.getAttribute("href").substring(1)
+                    let href = node.getAttribute("href")
+                    if (!href || !href.startsWith("#")) {
+                        return
+                    }
+                    let id = href.substring(1)
+                    let headerNode = document.getElementById(id)
+                    if (!headerNode) {
+                        return
+                    }
                     DoxygenAwesomeInteractiveToc.headers.push({
                         node: node,
-                        headerNode: document.getElementById(id)
+                        headerNode: headerNode
                     })
-
-                    document.getElementById("doc-content")?.addEventListener("scroll", this.throttle(DoxygenAwesomeInteractiveToc.update, 100))
                 })
+
+                // Doxygen scroll container differs by layout (treeview on/off), so listen to both.
+                DoxygenAwesomeInteractiveToc.throttledUpdate ??= this.throttle(DoxygenAwesomeInteractiveToc.update, 100)
+                document.getElementById("doc-content")?.addEventListener("scroll", DoxygenAwesomeInteractiveToc.throttledUpdate, { passive: true })
+                window.addEventListener("scroll", DoxygenAwesomeInteractiveToc.throttledUpdate, { passive: true })
+                window.addEventListener("resize", DoxygenAwesomeInteractiveToc.throttledUpdate, { passive: true })
+
                 DoxygenAwesomeInteractiveToc.update()
             }
         })
