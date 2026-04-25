@@ -76,7 +76,10 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 
 @ref detector (**detector**) —— 识别、检测器是功能模块中最重要的部分，也是视觉图像处理的第一步。它负责对输入图像进行识别并加以处理，提取出目标轮廓、特征点等信息，并结合已知的部分数据组件，按顺序依次构建各种新的数据组件。识别得到的各种图像以及提取到的特征和组合体均可自行保存。
 
-![图 1 装甲识别模块](extra/detector.jpg)
+<div style="width: 50%; margin: 0.8em auto; text-align: center;">
+  <img src="detector.jpg" alt="装甲识别模块" style="display: block; width: 100%; height: auto; margin: 0 auto; filter: none;" />
+  <div style="margin-top: 0.4em;">图 1 装甲识别模块</div>
+</div>
 
 @ref compensator (**compensator**) —— 补偿器通常是功能模块中的第一个用于修正数据组件的算法模块，<span style="color: green">主要在 RoboMaster 赛事中使用</span>。补偿器主要负责修正弹道下坠的影响。计算得到的子弹飞行时间 `tof` 以及补偿增量 `compensation` 均可自行保存。
 
@@ -84,13 +87,16 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
   
 <center>
 
-![图 2 能量机关预测模块](extra/predictor.png)
+<img src="predictor.png" alt="能量机关预测模块" width="80%" />
 
 </center>
 
 @ref decider (**decider**) —— 在经过识别、补偿和预测 3 个步骤后，需要使用特定的策略来获得当前时刻的最优目标，结合前三个步骤的信息（包含识别模块信息 `DetectInfo` 、补偿模块信息 `CompensateInfo` 、预测模块信息 `PredictInfo` ）导出到决策模块信息 `rm::DecideInfo` 中。
 
-![图 3 整车状态决策模块](extra/decider.jpg)
+<div style="width: 50%; margin: 0.8em auto; text-align: center;">
+  <img src="decider.jpg" alt="整车状态决策模块" style="display: block; width: 100%; height: auto; margin: 0 auto; filter: none;" />
+  <div style="margin-top: 0.4em;">图 3 整车状态决策模块</div>
+</div>
 
 该文档的后续章节描述了每个模块的功能。但首先，请确保了解 RMVL 的设计理念以及 API 概念。
 
