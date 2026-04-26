@@ -15,10 +15,12 @@
 
 #include "rmvlmsg/geometry/pose.hpp"
 #include "rmvlmsg/geometry/transform.hpp"
+#include "rmvlmsg/sensor/joint_state.hpp"
 #include "rmvlmsg/motion/joint_trajectory.hpp"
 #include "rmvlmsg/motion/tf.hpp"
 #include "rmvlmsg/motion/urdf.hpp"
-#include "rmvlmsg/sensor/joint_state.hpp"
+
+#include "ctl/base.hpp"
 
 namespace rm {
 
@@ -32,7 +34,7 @@ namespace rm {
 //! - 机器人运动学模型规划器 lpss::RobotPlanner ，支持 URDF 解析、正/逆运动学求解、轨迹规划等功能
 //! - 机器人状态发布者，通过传入 lpss::RobotPlanner 对象和 lpss::Node （或 lpss::async::Node ）节点对象周期性发布 TF、URDF 和 JointTrajectory 消息，一般在调试时供其他模块订阅使用
 //! - 相关消息类型转换函数，如四元数乘法、位姿变换、复合 SE(3) 变换等
-//! @image html lpss/robotmodel.svg "机器人功能扩展模块示意图" width=75%
+//! <center><img src="robotmodel.png" alt="机器人功能扩展模块示意图" width="65%" /></center>
 //! @}
 
 namespace msg {
@@ -207,6 +209,52 @@ public:
 protected:
     class Impl;
     std::unique_ptr<Impl> _impl{};
+};
+
+//! 机器人控制模块
+class RobotController {
+public:
+    /**
+     * @brief 构造机器人控制器
+     *
+     * @param[in] joint_names 机器人关节名称列表，必须是 RobotPlanner 管理的关节集合的非空子集
+     * @param[in] ctl_law 控制律对象指针，默认为单位传递函数配合位置映射
+     */
+    RobotController(const std::vector<std::string> &joint_names, ctl::ControlLawBase::ptr ctl_law = ctl::UnitTF::create(ctl::basic_pos_imapping, ctl::basic_pos_omapping));
+
+    /**
+     * @brief 提交待执行关节轨迹
+     * @details 将自动完成轨迹校验，包括：
+     * - 关节名校验：\f$S_{C}\subseteq S_{P}\f$，其中 \f$S_{C}\f$ 是控制器管理的关节集合，\f$S_{P}\f$ 是轨迹中出现的关节集合
+     * - 时间轴校验：`points[i].time_from_start` 必须严格递增
+     * - 维度校验：每个轨迹点的位置/速度/加速度向量长度与关节数量一致（字段为空则按策略补全）
+     *
+     * @param[in] traj 输入关节轨迹
+     * @return 是否成功提交，失败时一般是由于轨迹校验未通过
+     */
+    bool submit(const msg::JointTrajectory &traj);
+
+    //! 重置控制器状态，清空轨迹缓存，用于设置新轨迹前的状态清理
+    void reset() noexcept;
+
+    /**
+     * @brief 采样并得到控制系统的输入值
+     *
+     * @param[in] feedback 当前反馈状态，具体是否需要传入由控制律实现决定
+     * @return msg::JointState
+     */
+    msg::JointState sample(const msg::JointState &feedback = {}) noexcept;
+
+private:
+    //! 受控关节信息结构体
+    struct ControlledJointInfo {
+        std::string name;  //!< 关节名称
+        std::size_t remap; //!< 轨迹关节名到受控关节名的索引映射
+    };
+
+    std::vector<ControlledJointInfo> _ctl_joints{}; //!< 受控关节
+    msg::JointTrajectory _traj_cache{};             //!< 轨迹缓存
+    ctl::ControlLawBase::ptr _ctl_law{};            //!< 控制律对象
 };
 
 /**

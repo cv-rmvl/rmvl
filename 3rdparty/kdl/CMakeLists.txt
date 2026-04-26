@@ -17,9 +17,8 @@ configure_file(
 #   编译
 # ----------------------------------------------------------------------------
 aux_source_directory(src kdl_srcs)
-aux_source_directory(src/utilities kdl_utility_srcs)
 
-add_library(kdl ${kdl_srcs} ${kdl_utility_srcs})
+add_library(kdl ${kdl_srcs})
 
 target_include_directories(
   kdl PUBLIC

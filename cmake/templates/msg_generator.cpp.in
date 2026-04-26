@@ -8,6 +8,9 @@
  *
  */
 
+#include <algorithm>
+#include <numeric>
+
 #include "@MSG_INCLUDE_CONTENT@"
 
 namespace rm::msg {
@@ -20,7 +23,7 @@ std::string @CLASS_NAME@::serialize() const noexcept {
 }
 
 std::string @CLASS_NAME@::json() const noexcept {
-    @json_return_stmt@
+@json_return_stmt@
 }
 
 @CLASS_NAME@ @CLASS_NAME@::deserialize(const char *const str) noexcept {

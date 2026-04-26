@@ -28,8 +28,6 @@
 #include "frames.hpp"
 #include "utilities/utility.h"
 
-#include <algorithm>
-
 namespace KDL {
 
 void Frame::Make4x4(double *d) {

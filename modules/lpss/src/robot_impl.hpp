@@ -85,8 +85,7 @@ msg::TransformStamped computeJointTransform(const JointInfo &joint, double q);
  * @param[in] n_seg 插值段数
  * @return traj 轨迹
  */
-std::vector<msg::JointTrajectoryPoint> interpolate(const double *q_start, const double *q_end, std::size_t n,
-                                                   int64_t t_start, int64_t duration, std::size_t n_seg);
+std::vector<msg::JointTrajectoryPoint> interpolate(const double *q_start, const double *q_end, std::size_t n, int64_t t_start, int64_t duration, std::size_t n_seg);
 
 /**
  * @brief 五次多项式轨迹插值
@@ -97,9 +96,7 @@ std::vector<msg::JointTrajectoryPoint> interpolate(const double *q_start, const 
  * @param[in] n_seg 插值段数
  * @return traj 轨迹
  */
-inline std::vector<msg::JointTrajectoryPoint> interpolate(const std::vector<double> &q_start,
-                                                          const std::vector<double> &q_end,
-                                                          int64_t t_start, int64_t duration, std::size_t n_seg) {
+inline std::vector<msg::JointTrajectoryPoint> interpolate(const std::vector<double> &q_start, const std::vector<double> &q_end, int64_t t_start, int64_t duration, std::size_t n_seg) {
     return interpolate(q_start.data(), q_end.data(), q_start.size(), t_start, duration, n_seg);
 }
 

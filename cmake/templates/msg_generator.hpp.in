@@ -10,7 +10,10 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
+#include <array>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 @MSG_EXTRA_HEADERS@
 //! LPSS 消息类型命名空间
@@ -28,7 +31,6 @@ namespace rm::msg {
 class @CLASS_NAME@ {
 public:
 @type_and_ids_cpp@
-@json_define_cpp@
 
     static constexpr const char msg_type[] = "@CLASS_NAME_COMMENT@"; //!< 消息类型字符串常量
 

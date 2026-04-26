@@ -118,9 +118,28 @@ bool RobotPlanner::Impl::solveIK(const KDL::Chain &chain,
     KDL::Frame t_goal(KDL::Rotation::Quaternion(q.x, q.y, q.z, q.w),
                       KDL::Vector(p.x, p.y, p.z));
 
-    // DOF < 6 时只约束位置，忽略姿态，避免低自由度机械臂无解
+    // DOF < 6 时默认只约束位置，忽略姿态，避免低自由度机械臂无解
+    // 但单自由度旋转链（如转台）常见需求是“只给姿态目标”，此时应启用姿态约束
     Eigen::Matrix<double, 6, 1> L;
-    L << 1, 1, 1, (dof >= 6 ? 1.0 : 0.0), (dof >= 6 ? 1.0 : 0.0), (dof >= 6 ? 1.0 : 0.0);
+    if (dof >= 6) {
+        L = Eigen::Matrix<double, 6, 1>::Ones();
+    } else {
+        bool single_rotational_dof = (dof == 1);
+        if (single_rotational_dof) {
+            for (const auto *j : path) {
+                if (j->type == JointType::Fixed)
+                    continue;
+                if (j->type != JointType::Revolute && j->type != JointType::Continuous) {
+                    single_rotational_dof = false;
+                    break;
+                }
+            }
+        }
+        if (single_rotational_dof)
+            L << 0, 0, 0, 1, 1, 1; // 单自由度旋转链只约束姿态
+        else
+            L << 1, 1, 1, 0, 0, 0;
+    }
     KDL::ChainIkSolverPos_LMA ik_solver(chain, L, 1e-5, 5000);
     q_out.resize(dof);
     return ik_solver.CartToJnt(q_init, t_goal, q_out) >= 0;

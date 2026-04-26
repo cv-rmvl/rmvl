@@ -25,7 +25,6 @@
 #include "kdl-config.h"
 #include <cassert>
 #include <cmath>
-#include <cstdlib>
 
 /////////////////////////////////////////////////////////////
 // configurable options for the frames library.
@@ -155,31 +154,30 @@ public:
  * If you want to explicitly declare internal linkage, use "static".
  */
 //!
-extern int STREAMBUFFERSIZE;
+
+
+inline int STREAMBUFFERSIZE = 10000;
 
 //! maximal length of a file name
-extern int MAXLENFILENAME;
+inline int MAXLENFILENAME = 255;
 
 //! the value of pi
-extern const double PI;
+constexpr double PI = 3.141592653589793238462643383279502884; // PI
 
 //! the value of pi/2
-extern const double PI_2;
+constexpr double PI_2 = 1.570796326794896619231321691639751442; // PI/2
 
 //! the value of pi/4
-extern const double PI_4;
+constexpr double PI_4= 0.785398163397448309615660845819875721; // PI/4
 
 //! the value pi/180
-extern const double deg2rad;
+constexpr double deg2rad= 0.017453292519943295769236907684886127; // PI/180
 
 //! the value 180/pi
-extern const double rad2deg;
+constexpr double rad2deg= 57.29577951308232087679815481410517033; // 180/PI
 
 //! default precision while comparing with Equal(..,..) functions. Initialized at 0.0000001.
-extern double epsilon;
-
-//! the number of derivatives used in the RN-... objects.
-extern int VSIZE;
+inline double epsilon = 1e-6;
 
 #ifndef _MFC_VER
 #undef max

@@ -10,7 +10,10 @@
  */
 
 #include <algorithm> // for clamp in Windows
+#include <limits>
 
+#include "rmvl/lpss/ctl/base.hpp"
+#include "rmvl/lpss/robot.hpp"
 #include "tinyxml2/tinyxml2.h"
 
 #include "robot_impl.hpp"
@@ -310,9 +313,8 @@ void RobotPlanner::Impl::updateTF() {
     }
 }
 
-std::vector<msg::JointTrajectoryPoint> interpolate(
-    const double *q_start, const double *q_end, std::size_t n,
-    int64_t t_start, int64_t duration, std::size_t n_seg) {
+std::vector<msg::JointTrajectoryPoint> interpolate(const double *q_start, const double *q_end, std::size_t n,
+                                                   int64_t t_start, int64_t duration, std::size_t n_seg) {
     const double T = duration * 1e-3;
 
     std::vector<msg::JointTrajectoryPoint> res{};
@@ -514,6 +516,137 @@ msg::Pose RobotPlanner::linkpose(std::string_view link_name) const {
     return pose;
 }
 
+RobotController::RobotController(const std::vector<std::string> &joint_names, ctl::ControlLawBase::ptr ctl_law) : _ctl_law(std::move(ctl_law)) {
+    _ctl_joints.reserve(joint_names.size());
+    for (const auto &name : joint_names)
+        _ctl_joints.push_back({name, _ctl_joints.size()});
+}
+
+bool RobotController::submit(const msg::JointTrajectory &traj) {
+    // 关节名校验
+    if (traj.joint_names.empty() || traj.points.empty())
+        return false;
+    for (auto &[name, remap_idx] : _ctl_joints) {
+        auto it = std::find(traj.joint_names.begin(), traj.joint_names.end(), name);
+        if (it == traj.joint_names.end()) {
+            _ctl_joints.clear();
+            return false;
+        }
+        remap_idx = std::distance(traj.joint_names.begin(), it);
+    }
+    // 时间校验
+    if (!std::is_sorted(traj.points.begin(), traj.points.end(), [](const auto &a, const auto &b) { return a.time_from_start < b.time_from_start; }))
+        return false;
+    // 维度校验
+    const auto dof = _ctl_joints.size();
+    for (const auto &pt : traj.points)
+        if (pt.positions.size() != dof || (!pt.velocities.empty() && pt.velocities.size() != dof) || (!pt.accelerations.empty() && pt.accelerations.size() != dof))
+            return false;
+
+    _traj_cache = traj;
+    _traj_cache.header.stamp = now();
+    return true;
+}
+
+void RobotController::reset() noexcept {
+    _traj_cache = {};
+    for (auto &joint : _ctl_joints)
+        joint.remap = _ctl_joints.size(); // 设为无效索引
+    _ctl_law->reset();
+}
+
+msg::JointState RobotController::sample(const msg::JointState &feedback) noexcept {
+    // 计算当前时间
+    auto now_time = now();
+    const auto to_ms = [](const msg::Time &t) noexcept {
+        return static_cast<int64_t>(t.sec) * 1000 + static_cast<int64_t>(t.nsec) / 1000000;
+    };
+
+    const auto now_ms = to_ms(now_time);
+    const auto start_ms = to_ms(_traj_cache.header.stamp);
+    const auto elapsed_ms = std::max<int64_t>(0, now_ms - start_ms);
+
+    const auto dof = _ctl_joints.size();
+    msg::JointState desired{};
+    desired.header.stamp = now_time;
+    desired.name.reserve(dof);
+    desired.position.assign(dof, 0.0);
+    desired.velocity.assign(dof, 0.0);
+    desired.effort.assign(dof, 0.0);
+    for (const auto &joint : _ctl_joints)
+        desired.name.push_back(joint.name);
+
+    const auto assign_from_point = [&](const msg::JointTrajectoryPoint &pt) {
+        for (std::size_t i = 0; i < dof; ++i) {
+            const auto remap = _ctl_joints[i].remap;
+            if (remap < pt.positions.size())
+                desired.position[i] = pt.positions[remap];
+            if (remap < pt.velocities.size())
+                desired.velocity[i] = pt.velocities[remap];
+            if (remap < pt.effort.size())
+                desired.effort[i] = pt.effort[remap];
+        }
+    };
+
+    if (_traj_cache.points.empty()) {
+        if (!feedback.name.empty()) {
+            desired = feedback;
+            desired.velocity.assign(desired.velocity.size(), 0.0);
+            desired.effort.assign(desired.effort.size(), 0.0);
+            return desired;
+        }
+        return {};
+    }
+    const auto &pts = _traj_cache.points;
+    if (elapsed_ms <= pts.front().time_from_start)
+        assign_from_point(pts.front());
+    else if (elapsed_ms >= pts.back().time_from_start) {
+        assign_from_point(pts.back());
+        desired.velocity.assign(desired.velocity.size(), 0.0);
+        desired.effort.assign(desired.effort.size(), 0.0);
+    } else {
+        const auto it_hi = std::upper_bound(pts.begin(), pts.end(), elapsed_ms, [](int64_t t, const msg::JointTrajectoryPoint &pt) {
+            return t < pt.time_from_start;
+        });
+        const auto &p1 = *it_hi;
+        const auto &p0 = *(it_hi - 1);
+        const auto dt = p1.time_from_start - p0.time_from_start;
+        const double ratio = (dt > 0) ? std::clamp(static_cast<double>(elapsed_ms - p0.time_from_start) / static_cast<double>(dt), 0.0, 1.0) : 0.0;
+
+        for (std::size_t i = 0; i < dof; ++i) {
+            const auto remap = _ctl_joints[i].remap;
+            // 位置插值
+            if (remap < p0.positions.size() && remap < p1.positions.size())
+                desired.position[i] = p0.positions[remap] + (p1.positions[remap] - p0.positions[remap]) * ratio;
+            // 速度插值
+            if (remap < p0.velocities.size() && remap < p1.velocities.size())
+                desired.velocity[i] = p0.velocities[remap] + (p1.velocities[remap] - p0.velocities[remap]) * ratio;
+            else if (remap < p0.velocities.size())
+                desired.velocity[i] = p0.velocities[remap];
+            else if (remap < p1.velocities.size())
+                desired.velocity[i] = p1.velocities[remap];
+            // 转矩插值
+            if (remap < p0.effort.size() && remap < p1.effort.size())
+                desired.effort[i] = p0.effort[remap] + (p1.effort[remap] - p0.effort[remap]) * ratio;
+            else if (remap < p0.effort.size())
+                desired.effort[i] = p0.effort[remap];
+            else if (remap < p1.effort.size())
+                desired.effort[i] = p1.effort[remap];
+        }
+    }
+
+    // 应用控制律
+    msg::JointState cmd{};
+    const auto ctl_time_ms = static_cast<int32_t>(std::clamp<int64_t>(elapsed_ms, std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max()));
+    auto res = _ctl_law->compute(desired, feedback, ctl_time_ms, cmd);
+    if (res != ctl::ControlStatus::Ok) {
+        cmd = !feedback.name.empty() ? feedback : desired;
+        cmd.effort.assign(cmd.effort.size(), 0.0);
+        cmd.velocity.assign(cmd.velocity.size(), 0.0);
+    }
+    return cmd;
+}
+
 using namespace std::chrono_literals;
 
 RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period)
@@ -556,7 +689,7 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
         while (true) {
             {
                 std::unique_lock lk(_shutdown_mtx);
-                if (_shutdown_cv.wait_for(lk, 100ms, [this] { return !_running; }))
+                if (_shutdown_cv.wait_for(lk, 1s, [this] { return !_running; }))
                     break;
             }
             msg::JointTrajectory current_traj;
@@ -607,11 +740,11 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
     _traj_pub = node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory");
     if (!_urdf_pub || !_tf_pub || !_traj_pub || _urdf_pub->invalid() || _tf_pub->invalid() || _traj_pub->invalid())
         RMVL_Error(RMVL_StsError, "Failed to create publishers for RobotStatePublisher");
-    _low_timer = node.createTimer(std::chrono::milliseconds(period), [this] {
+    _low_timer = node.createTimer(1s, [this] {
         _urdf_pub->publish(_planner.get().urdf());
         _traj_pub->publish(_traj_cache);
     });
-    _high_timer = node.createTimer(1s, [this] {
+    _high_timer = node.createTimer(std::chrono::milliseconds(period), [this] {
         _tf_pub->publish(_planner.get().tf());
     });
 }

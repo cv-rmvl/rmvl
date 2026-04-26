@@ -11,6 +11,8 @@
 
 #include <gtest/gtest.h>
 
+#include "nlohmann/json.hpp"
+
 #include "rmvlmsg/std/bool.hpp"
 #include "rmvlmsg/std/string.hpp"
 #include "rmvlmsg/std/int32.hpp"

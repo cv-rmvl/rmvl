@@ -35,6 +35,7 @@
 - @subpage tutorial_modules_opcua
 - @subpage tutorial_modules_mqtt
 - @subpage tutorial_modules_lpss
+  - @subpage tutorial_modules_lpss_robotpln 、 @subpage tutorial_modules_lpss_robotctl 以及 @subpage tutorial_modules_lpss_robotdemo
 
 #### 硬件设备支持库
 

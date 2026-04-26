@@ -7,7 +7,7 @@
 
 @version 1.0
 
-@prev_tutorial{tutorial_modules_lpss}
+@prev_tutorial{tutorial_modules_lpss_robotdemo}
 
 @next_tutorial{tutorial_modules_light}
 

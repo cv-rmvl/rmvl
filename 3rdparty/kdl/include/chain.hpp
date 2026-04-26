@@ -23,7 +23,6 @@
 #define KDL_CHAIN_HPP
 
 #include "segment.hpp"
-#include <string>
 
 namespace KDL {
     /**

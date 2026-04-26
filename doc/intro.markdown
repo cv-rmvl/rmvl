@@ -88,6 +88,7 @@ RMVL 具有模块化结构，这意味着该软件包包含了多个共享或静
 <center>
 
 <img src="predictor.png" alt="能量机关预测模块" width="80%" />
+<div style="margin-top: 0.4em;">图 2 能量机关预测模块</div>
 
 </center>
 
