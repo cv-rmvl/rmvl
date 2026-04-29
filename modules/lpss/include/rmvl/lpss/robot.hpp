@@ -220,7 +220,7 @@ public:
      * @param[in] joint_names 机器人关节名称列表，必须是 RobotPlanner 管理的关节集合的非空子集
      * @param[in] ctl_law 控制律对象指针，默认为单位传递函数配合位置映射
      */
-    RobotController(const std::vector<std::string> &joint_names, ctl::ControlLawBase::ptr ctl_law = ctl::UnitTF::create(ctl::basic_pos_imapping, ctl::basic_pos_omapping));
+    RobotController(const std::vector<std::string> &joint_names, ctl::ControlLawBase::ptr ctl_law = ctl::UnitTF::create());
 
     /**
      * @brief 提交待执行关节轨迹

@@ -68,7 +68,10 @@ void basic_eff_omapping(std::vector<double> cmd_in, msg::JointState &cmd_out) no
 /**
  * @brief 【控制律组件】控制律基类，供 RobotController 组合调用
  * @details 控制律组件主要描述了如下图所示的控制计算逻辑
- *          <center><img src="ctllaw.png" alt="控制律组件框图" width="25%" /></center>
+ *          <center><img src="ctllaw.png" alt="控制律组件框图" width="20%" /></center>
+ *          其中 \f$X_{\mathrm{ref}}\f$ 和 \f$X_{\mathrm{fb}}\f$ 分别是从输入采样映射函数提取的期望状态 `desired` 和反馈状态向量 `fb`，\f$G_c(s)\f$
+ *          是控制律组件实际实现的传递函数，\f$X_{\mathrm{out}}\f$ 是控制律计算得到的控制命令向量，输出采样映射函数将其写回 `command`
+ *          的对应字段。用户可以通过组合不同的输入/输出映射函数和控制律组件实现来构建适合自己系统的控制方案。
  */
 class ControlLawBase {
 public:
@@ -139,7 +142,7 @@ public:
     //! @endcond
 
     //! 创建单位传递函数控制律对象
-    static ControlLawBase::ptr create(InSampleMapping imapping, OutSampleMapping omapping) noexcept {
+    static ControlLawBase::ptr create(InSampleMapping imapping = basic_pos_imapping, OutSampleMapping omapping = basic_pos_omapping) noexcept {
         return std::make_unique<UnitTF>(imapping, omapping);
     }
 
