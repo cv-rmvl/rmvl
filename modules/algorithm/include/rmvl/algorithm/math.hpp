@@ -16,14 +16,14 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rmvl/core/util.hpp"
+
 #ifdef HAVE_OPENCV
 #include <opencv2/core/matx.hpp>
 #else
 #include <algorithm>
 #include <memory>
 #endif // HAVE_OPENCV
-
-#include "rmvl/core/util.hpp"
 
 namespace rm {
 
