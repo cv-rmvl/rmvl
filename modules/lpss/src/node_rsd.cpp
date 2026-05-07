@@ -40,7 +40,7 @@ std::string RNDPMessage::serialize() const noexcept {
     // RNDP 数据
     auto p_locator = reinterpret_cast<Locator *>(rndp_msg.data() + RNDP_HEADER_SIZE);
     for (const auto &loc : locators) {
-        p_locator = new (p_locator) Locator{static_cast<uint16_t>(::htons(loc.port)), loc.addr};
+        p_locator = new (p_locator) Locator{static_cast<uint16_t>(htons(loc.port)), loc.addr};
         ++p_locator;
     }
 
@@ -62,7 +62,7 @@ RNDPMessage RNDPMessage::deserialize(const char *data) noexcept {
 
     for (size_t i = 0; i < num; ++i) {
         Locator locator = *reinterpret_cast<const Locator *>(data + RNDP_HEADER_SIZE + i * sizeof(Locator));
-        locator.port = ::ntohs(locator.port);
+        locator.port = ntohs(locator.port);
         res.locators.emplace_back(locator);
     }
 
