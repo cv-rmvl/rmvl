@@ -12,6 +12,10 @@
 #include <algorithm> // for clamp in Windows
 #include <limits>
 
+#ifndef RMVL_LPSS_WITH_KDL
+#include <cmath>
+#endif
+
 #include "rmvl/lpss/ctl/base.hpp"
 #include "rmvl/lpss/robot.hpp"
 #include "tinyxml2/tinyxml2.h"
