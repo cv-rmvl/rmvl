@@ -23,7 +23,7 @@ RMVL 说明文档 {#mainpage}
 
 - @ref tutorial_rdt
 
-  使用 `rdt` 进行 RMVL 安装及其相关模块的开发、调试<span style="color: red">（Linux 平台下强烈推荐）</span>
+  使用 `rdt` 进行 RMVL 一键安装及其相关模块的开发、调试<span style="color: red">（Linux 平台下强烈推荐）</span>
 
 - @ref tutorial_extra_upper_base
 
