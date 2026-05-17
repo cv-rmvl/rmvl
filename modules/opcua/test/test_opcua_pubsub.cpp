@@ -9,8 +9,8 @@
  *
  */
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
 #include "rmvl/opcua/publisher.hpp"
 #include "rmvl/opcua/subscriber.hpp"
@@ -19,26 +19,25 @@
 
 #include <gtest/gtest.h>
 
-namespace rm_test
-{
+namespace rm_test {
 
+using namespace rm::ua;
 using namespace std::chrono_literals;
 
-TEST(OPC_UA_PubSub, pubsub_config)
-{
+TEST(OPC_UA_PubSub, pubsub_config) {
     // 创建发布者
-    rm::OpcuaPublisher pub("NumberPub", "opc.udp://224.0.1.22", 8000);
+    Publisher pub("NumberPub", "opc.udp://224.0.1.22", 8000);
     uaCreateVariable(test_double, 3.1);
     auto node_id = pub.addVariableNode(test_double);
-    std::thread t1(&rm::OpcuaPublisher::spin, &pub);
+    std::thread t1(&Publisher::spin, &pub);
     EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 50));
 
     // 创建订阅者
-    rm::OpcuaSubscriber sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
-    std::thread t2(&rm::OpcuaSubscriber::spin, &sub);
-    rm::Variable double_demo_var = 0.0;
+    Subscriber sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
+    std::thread t2(&Subscriber::spin, &sub);
+    Variable double_demo_var = 0.0;
     double_demo_var.browse_name = "DoubleDemo";
-    auto meta_data = rm::FieldMetaData::makeFrom(double_demo_var);
+    auto meta_data = FieldMetaData::makeFrom(double_demo_var);
     auto nodes = sub.subscribe("NumberPub", {meta_data});
     EXPECT_EQ(nodes.size(), 1);
 

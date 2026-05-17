@@ -25,7 +25,7 @@
 #include <rmvl/rmvl_modules.hpp>
 
 #ifdef HAVE_RMVL_OPCUA
-////////////////// OpcuaClient/OpcuaServer //////////////////
+////////////////// Client/Server //////////////////
 #include "opcua/client.hpp"
 #include "opcua/server.hpp"
 ///////////////////// Pub/Sub /////////////////////

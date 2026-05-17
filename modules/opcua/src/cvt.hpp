@@ -14,32 +14,31 @@
 #include "rmvl/opcua/method.hpp"
 #include "rmvl/opcua/variable.hpp"
 
-namespace rm::helper
-{
+namespace rm::ua::helper {
 
 /**
- * @brief `rm::Variable` 转化为 `UA_Variant`
+ * @brief `Variable` 转化为 `UA_Variant`
  *
  * @warning 此方法一般不直接使用
- * @param[in] val `rm::Variable` 表示的变量
+ * @param[in] val `Variable` 表示的变量
  * @return `UA_Variant` 表示变量节点的内置数据
  */
 UA_Variant cvtVariable(const Variable &val) noexcept;
 
 /**
- * @brief `UA_Variant` 转化为 `rm::Variable`
+ * @brief `UA_Variant` 转化为 `Variable`
  *
  * @warning 此方法一般不直接使用
  * @param[in] p_val `UA_Variant` 表示的变量
- * @return 用 `rm::Variable` 表示的变量节点
+ * @return 用 `Variable` 表示的变量节点
  */
 Variable cvtVariable(const UA_Variant &p_val) noexcept;
 
 /**
- * @brief `rm::VariableType` 转化为 `UA_Variant`
+ * @brief `VariableType` 转化为 `UA_Variant`
  *
  * @warning 此方法一般不直接使用
- * @param[in] vtype `rm::VariableType` 表示的变量类型
+ * @param[in] vtype `VariableType` 表示的变量类型
  * @return 用 `UA_Variant` 表示的变量类型节点的内置数据
  */
 UA_Variant cvtVariable(const VariableType &vtype) noexcept;
@@ -53,4 +52,4 @@ UA_Variant cvtVariable(const VariableType &vtype) noexcept;
  */
 UA_Argument cvtArgument(const Argument &arg) noexcept;
 
-} // namespace rm::helper
+} // namespace rm::ua::helper

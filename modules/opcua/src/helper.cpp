@@ -18,7 +18,7 @@
 
 #include "cvt.hpp"
 
-namespace rm {
+namespace rm::ua {
 
 const std::unordered_map<std::type_index, UA_UInt32> DataType::_map =
     {{std::type_index(typeid(bool)), UA_TYPES_BOOLEAN},
@@ -504,4 +504,4 @@ UA_Argument cvtArgument(const Argument &arg) noexcept {
 
 } // namespace helper
 
-} // namespace rm
+} // namespace rm::ua

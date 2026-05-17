@@ -12,19 +12,6 @@ rmvl_add_module(
 )
 
 # ----------------------------------------------------------------------------
-#  Build Python bindings
-# ----------------------------------------------------------------------------
-if(BUILD_PYTHON)
-  foreach(m utilities variable method event object view client server)
-    list(APPEND opcua_inc rmvl/opcua/${m}.hpp)
-  endforeach()
-  rmvl_generate_python(opcua
-    FILES ${opcua_inc} rmvlpara/opcua.hpp
-    DEPENDS opcua
-  )
-endif()
-
-# ----------------------------------------------------------------------------
 #  Build the test program
 # ----------------------------------------------------------------------------
 if(BUILD_TESTS AND WITH_OPEN62541)

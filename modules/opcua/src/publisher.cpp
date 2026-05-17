@@ -25,13 +25,13 @@
 
 #include "rmvlpara/opcua.hpp"
 
-namespace rm {
+namespace rm::ua {
 
 /************************************************************************************/
 /************************************** 发布者 **************************************/
 
-OpcuaPublisher::OpcuaPublisher(std::string_view pub_name, const std::string &addr, uint16_t port,
-                               const std::vector<UserConfig> &users) : OpcuaServer(port, pub_name, users), _name(pub_name) {
+Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_t port,
+                     const std::vector<UserConfig> &users) : Server(port, pub_name, users), _name(pub_name) {
     //////////////////// 添加连接配置 ////////////////////
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
@@ -72,10 +72,10 @@ static inline UA_DataSetFieldConfig getPDS(const PublishedDataSet &pd) {
     return dsf_config;
 }
 
-bool OpcuaPublisher::publish(const std::vector<PublishedDataSet> &datas, double duration) {
+bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double duration) {
     ////////////////////// 前置条件 //////////////////////
     if (_server == nullptr)
-        RMVL_Error(RMVL_StsNullPtr, "OpcuaServer is nullptr.");
+        RMVL_Error(RMVL_StsNullPtr, "Server is nullptr.");
     if (UA_NodeId_isNull(&_connection_id))
         return false;
 
@@ -133,6 +133,6 @@ bool OpcuaPublisher::publish(const std::vector<PublishedDataSet> &datas, double 
     return true;
 }
 
-} // namespace rm
+} // namespace rm::ua
 
 #endif // UA_ENABLE_PUBSUB

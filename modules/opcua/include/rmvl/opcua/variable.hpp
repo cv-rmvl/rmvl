@@ -18,7 +18,7 @@
 
 #include "utilities.hpp"
 
-namespace rm {
+namespace rm::ua {
 
 //! @addtogroup opcua
 //! @{
@@ -29,9 +29,9 @@ enum AccessLevel : uint8_t {
 };
 
 //! OPC UA 变量类型
-class RMVL_EXPORTS_W VariableType final {
+class VariableType final {
 public:
-    RMVL_W VariableType() = default;
+    VariableType() = default;
 
     /**
      * @brief 单值构造，设置默认值
@@ -47,7 +47,7 @@ public:
      *
      * @param[in] str 字符串
      */
-    RMVL_W VariableType(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(-1) {}
+    VariableType(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(-1) {}
 
     /**
      * @brief 字符串字面量构造
@@ -87,7 +87,7 @@ public:
      * @return Tp 该数据类型的数据
      */
     template <typename Tp>
-    static inline Tp cast(const rm::VariableType &val) { return std::any_cast<Tp>(val.data()); }
+    static inline Tp cast(const VariableType &val) { return std::any_cast<Tp>(val.data()); }
 
     /**
      * @brief 将变量节点转化为指定类型的数据
@@ -99,20 +99,16 @@ public:
     inline Tp cast() const { return std::any_cast<Tp>(this->data()); }
 
     //! 获取数据类型
-    RMVL_W inline DataType getDataType() const { return _data_type; }
+    inline DataType getDataType() const { return _data_type; }
 
     //! 判断变量类型节点是否为空 @note 未初始化、空列表则为空
-    RMVL_W constexpr bool empty() const { return _size == 0; }
+    constexpr bool empty() const { return _size == 0; }
 
     //! 获取大小 @note 未初始化、空列表则返回 `0`，标量则返回 `-1`
-    RMVL_W inline int size() const { return _size; }
-
-    RMVL_W_SUBST("VT")
-    RMVL_W_SUBST("VT_List")
-    RMVL_W_SUBST("VT_cast")
+    inline int size() const { return _size; }
 
     //! 命名空间索引，默认为 `1`
-    RMVL_W_RW uint16_t ns{1U};
+    uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -121,7 +117,7 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
      */
-    RMVL_W_RW std::string browse_name{};
+    std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -130,9 +126,9 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
      */
-    RMVL_W_RW std::string display_name{};
+    std::string display_name{};
     //! 变量类型的描述 - `zh-CN`
-    RMVL_W_RW std::string description{};
+    std::string description{};
 
 private:
     //! 默认数据
@@ -144,9 +140,9 @@ private:
 };
 
 //! OPC UA 变量
-class RMVL_EXPORTS_W Variable final {
+class Variable final {
 public:
-    RMVL_W Variable() = default;
+    Variable() = default;
 
     /**
      * @brief 单值构造
@@ -162,7 +158,7 @@ public:
      *
      * @param[in] str 字符串
      */
-    RMVL_W Variable(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(-1) {}
+    Variable(const std::string &str) : _value(str), _data_type(DataType(typeid(std::string))), _size(-1) {}
 
     /**
      * @brief 字符串字面量构造
@@ -194,10 +190,10 @@ public:
     /**
      * @brief 从变量类型创建新的变量节点
      *
-     * @param[in] vtype 既存的待作为变量节点类型信息的使用 `rm::VariableType` 表示的变量类型
+     * @param[in] vtype 既存的待作为变量节点类型信息的使用 `VariableType` 表示的变量类型
      * @return 新的变量节点
      */
-    RMVL_W static inline Variable makeFrom(const VariableType &vtype) { return Variable(vtype); }
+    static inline Variable makeFrom(const VariableType &vtype) { return Variable(vtype); }
 
     /**
      * @brief 比较两个变量是否相等，当且仅当两个变量的数据类型、维数、数据值均相等时返回
@@ -206,19 +202,19 @@ public:
      * @param[in] val 另一个变量
      * @return 是否相等
      */
-    RMVL_W bool operator==(const Variable &val) const;
+    bool operator==(const Variable &val) const;
 
     /**
      * @brief 比较两个变量是否不等
-     * @see rm::Variable::operator==()
+     * @see Variable::operator==()
      *
      * @param[in] val 另一个变量
      * @return 是否不等
      */
-    RMVL_W bool operator!=(const Variable &val) const { return !(*this == val); }
+    bool operator!=(const Variable &val) const { return !(*this == val); }
 
     //! 判断变量节点是否为空 @note 未初始化、空列表则为空
-    RMVL_W bool empty() const { return _size == 0; }
+    bool empty() const { return _size == 0; }
 
     //! 获取数据
     inline const auto &data() const { return _value; }
@@ -231,7 +227,7 @@ public:
      * @return Tp 该数据类型的数据
      */
     template <typename Tp>
-    static inline Tp cast(const rm::Variable &val) { return std::any_cast<Tp>(val.data()); }
+    static inline Tp cast(const Variable &val) { return std::any_cast<Tp>(val.data()); }
 
     /**
      * @brief 将变量节点转化为指定类型的数据
@@ -254,30 +250,26 @@ public:
     operator std::vector<Tp>() const { return std::any_cast<std::vector<Tp>>(_value); }
 
     /**
-     * @brief 获取用 `rm::VariableType` 表示的变量类型
-     * - 添加至 `rm::OpcuaServer` 时表示采用 `BaseDataVariableType` 作为其变量类型
+     * @brief 获取用 `VariableType` 表示的变量类型
+     * - 添加至 `rm::Server` 时表示采用 `BaseDataVariableType` 作为其变量类型
      * - 作为变量类型节点、变量节点之间链接的依据
      *
      * @return 变量类型
      */
-    RMVL_W inline const VariableType type() const { return _type; }
+    inline const VariableType type() const { return _type; }
 
     //! 获取形如 `UA_TYPES_<xxx>` 的数据类型
-    RMVL_W inline DataType getDataType() const { return _data_type; }
+    inline DataType getDataType() const { return _data_type; }
 
     //! 获取大小 @note 未初始化、空列表则返回 `0`，标量则返回 `-1`
-    RMVL_W inline int size() const { return _size; }
-
-    RMVL_W_SUBST("V")
-    RMVL_W_SUBST("V_List")
-    RMVL_W_SUBST("V_cast")
+    inline int size() const { return _size; }
 
 private:
     explicit Variable(const VariableType &vtype) : _type(vtype), _value(vtype.data()), _data_type(vtype.getDataType()), _size(vtype.size()) {}
 
 public:
     //! 命名空间索引，默认为 `1`
-    RMVL_W_RW uint16_t ns{1U};
+    uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -288,7 +280,7 @@ public:
      * @brief
      * - 仅用于标识服务器上的变量节点，不参与变量的比较
      */
-    RMVL_W_RW std::string browse_name{};
+    std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -299,11 +291,11 @@ public:
      * @brief
      * - 仅用于标识服务器上的变量节点，不参与变量的比较
      */
-    RMVL_W_RW std::string display_name{};
+    std::string display_name{};
     //! 变量的描述
-    RMVL_W_RW std::string description{};
+    std::string description{};
     //! 访问性
-    RMVL_W_RW uint8_t access_level{3U};
+    uint8_t access_level{3U};
 
 private:
     //! 变量类型
@@ -323,7 +315,7 @@ private:
  * @param[in] ... 构造列表
  */
 #define uaCreateVariableType(val, ...)  \
-    rm::VariableType val = __VA_ARGS__; \
+    VariableType val = __VA_ARGS__; \
     val.browse_name = val.display_name = val.description = #val
 
 /**
@@ -333,7 +325,7 @@ private:
  * @param[in] ... 构造列表
  */
 #define uaCreateVariable(val, ...)  \
-    rm::Variable val = __VA_ARGS__; \
+    Variable val = __VA_ARGS__; \
     val.browse_name = val.display_name = val.description = #val
 
 //! 变量列表别名
@@ -363,9 +355,9 @@ using DataSourceWrite = std::function<void(const NodeId &, const Variable &)>;
  * @note
  * - 数据源变量节点会把每次 IO 都绑定到各自的回调函数中，即可以重定向到一个实际的物理过程中，从而跟服务器本身的数据读写脱离关系
  */
-struct RMVL_EXPORTS_W_AG DataSourceVariable {
+struct DataSourceVariable {
     //! 命名空间索引，默认为 `1`
-    RMVL_W_RW uint16_t ns{1U};
+    uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -374,7 +366,7 @@ struct RMVL_EXPORTS_W_AG DataSourceVariable {
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
      */
-    RMVL_W_RW std::string browse_name{};
+    std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -383,29 +375,29 @@ struct RMVL_EXPORTS_W_AG DataSourceVariable {
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
      */
-    RMVL_W_RW std::string display_name{};
+    std::string display_name{};
     //! 变量的描述
-    RMVL_W_RW std::string description{};
+    std::string description{};
     //! 访问性，默认为只读
-    RMVL_W_RW uint8_t access_level{1U};
+    uint8_t access_level{1U};
 
     /**
      * @brief 数据源 Read 回调函数
      *
      * @param[in] nd `const rm::NodeId &` 类型节点 ID
-     * @return `rm::Variable`
+     * @return `Variable`
      */
-    RMVL_W_RW DataSourceRead on_read{};
+    DataSourceRead on_read{};
 
     /**
      * @brief 数据源 Write 回调函数
      *
      * @param[in] nd `const rm::NodeId &` 类型节点 ID
-     * @param[in] value `const rm::Variable &` 类型变量
+     * @param[in] value `const Variable &` 类型变量
      */
-    RMVL_W_RW DataSourceWrite on_write{};
+    DataSourceWrite on_write{};
 };
 
 //! @} opcua
 
-} // namespace rm
+} // namespace rm::ua
