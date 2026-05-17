@@ -19,12 +19,15 @@
 #include <iphlpapi.h>
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
+#undef min
+#undef max
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <netpacket/packet.h>
+#include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
 #endif
@@ -446,6 +449,46 @@ static _dgram_sendto_res parse_sendto(std::string_view addr, const Endpoint &end
     return res;
 }
 
+static constexpr size_t MAX_IOVEC = 64;
+
+#ifdef _WIN32
+static size_t build_write_wsabuf(const std::vector<std::string_view> &buffers, WSABUF *wsabufs) noexcept {
+    size_t count = std::min(buffers.size(), MAX_IOVEC);
+    for (size_t i = 0; i < count; ++i) {
+        wsabufs[i].buf = const_cast<char *>(buffers[i].data());
+        wsabufs[i].len = static_cast<ULONG>(buffers[i].size());
+    }
+    return count;
+}
+
+static size_t build_read_wsabuf(const std::vector<std::string> &buffers, WSABUF *wsabufs) noexcept {
+    size_t count = std::min(buffers.size(), MAX_IOVEC);
+    for (size_t i = 0; i < count; ++i) {
+        wsabufs[i].buf = const_cast<char *>(buffers[i].data());
+        wsabufs[i].len = static_cast<ULONG>(buffers[i].size());
+    }
+    return count;
+}
+#else
+static size_t build_write_iovec(const std::vector<std::string_view> &buffers, iovec *iov) noexcept {
+    size_t count = std::min(buffers.size(), MAX_IOVEC);
+    for (size_t i = 0; i < count; ++i) {
+        iov[i].iov_base = const_cast<char *>(buffers[i].data());
+        iov[i].iov_len = buffers[i].size();
+    }
+    return count;
+}
+
+static size_t build_read_iovec(const std::vector<std::string> &buffers, iovec *iov) noexcept {
+    size_t count = std::min(buffers.size(), MAX_IOVEC);
+    for (size_t i = 0; i < count; ++i) {
+        iov[i].iov_base = const_cast<char *>(buffers[i].data());
+        iov[i].iov_len = buffers[i].size();
+    }
+    return count;
+}
+#endif
+
 static std::tuple<std::string, std::string, uint16_t> fdrecvfrom(SocketFd fd) {
     std::string buf;
     buf.resize(65536);
@@ -512,6 +555,108 @@ bool DgramSocket::write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, s
     return n == static_cast<decltype(n)>(data.size());
 }
 
+bool DgramSocket::multiwrite(std::string_view addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) noexcept {
+    if (_fd == INVALID_SOCKET_FD || buffers.empty())
+        return false;
+    auto [dst_storage, addr_len] = parse_sendto(addr, endpoint);
+    size_t expected = 0;
+    for (const auto &buf : buffers)
+        expected += buf.size();
+
+#ifdef _WIN32
+    WSABUF wsabufs[MAX_IOVEC];
+    DWORD count = static_cast<DWORD>(build_write_wsabuf(buffers, wsabufs));
+    DWORD sent = 0;
+    if (WSASendTo((SOCKET)_fd, wsabufs, count, &sent, 0, reinterpret_cast<const sockaddr *>(&dst_storage), addr_len, nullptr, nullptr) != SOCKET_ERROR) {
+        return static_cast<size_t>(sent) == expected;
+    }
+    return false;
+#else
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_write_iovec(buffers, iov);
+
+    msghdr msg{};
+    msg.msg_name = &dst_storage;
+    msg.msg_namelen = addr_len;
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::sendmsg(_fd, &msg, 0);
+    return n >= 0 && static_cast<size_t>(n) == expected;
+#endif
+}
+
+std::tuple<size_t, std::string, uint16_t> DgramSocket::read_to(char *buf, size_t size) noexcept {
+    if (_fd == INVALID_SOCKET_FD || !buf || size == 0)
+        return {0, "", 0};
+    sockaddr_storage sender_addr{};
+    socklen_t addr_len = sizeof(sender_addr);
+    auto n = ::recvfrom(_fd, buf, size, 0, reinterpret_cast<sockaddr *>(&sender_addr), &addr_len);
+    if (n > 0) {
+        auto [sender_ip_str, sender_port] = parse_recvfrom(sender_addr);
+        return {static_cast<size_t>(n), sender_ip_str, sender_port};
+    }
+    return {0, "", 0};
+}
+
+std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::multiread(const std::vector<size_t> &sizes) {
+    if (sizes.empty())
+        return {{}, "", 0};
+
+    std::vector<std::string> result(sizes.size());
+    size_t total_expected = 0;
+    for (size_t i = 0; i < sizes.size(); ++i) {
+        result[i].resize(sizes[i]);
+        total_expected += sizes[i];
+    }
+
+    sockaddr_storage sender_addr{};
+    size_t bytes_read = 0;
+
+#ifdef _WIN32
+    WSABUF wsabufs[MAX_IOVEC];
+    DWORD count = static_cast<DWORD>(build_read_wsabuf(result, wsabufs));
+    DWORD flags = 0, received = 0;
+    int addr_len = sizeof(sender_addr);
+    if (WSARecvFrom((SOCKET)_fd, wsabufs, count, &received, &flags, reinterpret_cast<sockaddr *>(&sender_addr), &addr_len, nullptr, nullptr) != SOCKET_ERROR) {
+        bytes_read = received;
+    }
+#else
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_read_iovec(result, iov);
+
+    msghdr msg{};
+    msg.msg_name = &sender_addr;
+    msg.msg_namelen = sizeof(sender_addr);
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::recvmsg(_fd, &msg, 0);
+    if (n > 0)
+        bytes_read = static_cast<size_t>(n);
+#endif
+
+    if (bytes_read == 0)
+        return {{}, "", 0};
+
+    if (bytes_read < total_expected) {
+        size_t current_read = 0;
+        for (size_t i = 0; i < sizes.size(); ++i) {
+            if (current_read + sizes[i] <= bytes_read) {
+                current_read += sizes[i];
+            } else if (current_read < bytes_read) {
+                result[i].resize(bytes_read - current_read);
+                current_read = bytes_read;
+            } else {
+                result[i].clear();
+            }
+        }
+    }
+
+    auto [ip, port] = parse_recvfrom(sender_addr);
+    return {result, ip, port};
+}
+
 Endpoint DgramSocket::endpoint() const { return _endpoint(_fd); }
 
 std::string StreamSocket::read() noexcept {
@@ -532,6 +677,97 @@ std::string StreamSocket::read() noexcept {
 bool StreamSocket::write(std::string_view data) noexcept {
     auto n = ::send(_fd, data.data(), data.size(), 0);
     return n == static_cast<decltype(n)>(data.size());
+}
+
+bool StreamSocket::multiwrite(const std::vector<std::string_view> &buffers) noexcept {
+    if (_fd == INVALID_SOCKET_FD || buffers.empty())
+        return false;
+    size_t expected = 0;
+    for (const auto &buf : buffers)
+        expected += buf.size();
+
+#ifdef _WIN32
+    WSABUF wsabufs[MAX_IOVEC];
+    DWORD count = static_cast<DWORD>(build_write_wsabuf(buffers, wsabufs));
+    DWORD sent = 0;
+    if (WSASend((SOCKET)_fd, wsabufs, count, &sent, 0, nullptr, nullptr) != SOCKET_ERROR) {
+        return static_cast<size_t>(sent) == expected;
+    }
+    return false;
+#else
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_write_iovec(buffers, iov);
+
+    msghdr msg{};
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::sendmsg(_fd, &msg, 0);
+    return n >= 0 && static_cast<size_t>(n) == expected;
+#endif
+}
+
+size_t StreamSocket::read_to(char *buf, size_t size) noexcept {
+    if (_fd == INVALID_SOCKET_FD || !buf || size == 0)
+        return 0;
+#ifdef _WIN32
+    auto n = ::recv(_fd, buf, static_cast<int>(size), 0);
+#else
+    auto n = ::recv(_fd, buf, size, 0);
+#endif
+    return n > 0 ? static_cast<size_t>(n) : 0;
+}
+
+std::vector<std::string> StreamSocket::multiread(const std::vector<size_t> &sizes) {
+    if (sizes.empty())
+        return {};
+
+    std::vector<std::string> result(sizes.size());
+    size_t total_expected = 0;
+    for (size_t i = 0; i < sizes.size(); ++i) {
+        result[i].resize(sizes[i]);
+        total_expected += sizes[i];
+    }
+
+    size_t bytes_read = 0;
+
+#ifdef _WIN32
+    WSABUF wsabufs[MAX_IOVEC];
+    DWORD count = static_cast<DWORD>(build_read_wsabuf(result, wsabufs));
+    DWORD flags = 0, received = 0;
+    if (WSARecv((SOCKET)_fd, wsabufs, count, &received, &flags, nullptr, nullptr) != SOCKET_ERROR) {
+        bytes_read = received;
+    }
+#else
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_read_iovec(result, iov);
+
+    msghdr msg{};
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::recvmsg(_fd, &msg, 0);
+    if (n > 0)
+        bytes_read = static_cast<size_t>(n);
+#endif
+
+    if (bytes_read == 0)
+        return {};
+
+    if (bytes_read < total_expected) {
+        size_t current_read = 0;
+        for (size_t i = 0; i < sizes.size(); ++i) {
+            if (current_read + sizes[i] <= bytes_read) {
+                current_read += sizes[i];
+            } else if (current_read < bytes_read) {
+                result[i].resize(bytes_read - current_read);
+                current_read = bytes_read;
+            } else {
+                result[i].clear();
+            }
+        }
+    }
+    return result;
 }
 
 void StreamSocket::close() noexcept {
@@ -740,7 +976,7 @@ void DgramSocket::SocketReadAwaiter::await_suspend(std::coroutine_handle<> handl
     buf.len = static_cast<ULONG>(sizeof(_ovl->buf));
     DWORD flags = 0;
 
-    if (WSARecvFrom(reinterpret_cast<SOCKET>(_fd), &buf, 1, nullptr, &flags, reinterpret_cast<sockaddr *>(p_addr),
+    if (WSARecvFrom((SOCKET)_fd, &buf, 1, nullptr, &flags, reinterpret_cast<sockaddr *>(p_addr),
                     p_addr_len, &_ovl->ov, nullptr) == SOCKET_ERROR) {
         DWORD error = WSAGetLastError();
         if (error != ERROR_IO_PENDING)
@@ -774,12 +1010,148 @@ void DgramSocket::SocketWriteAwaiter::await_suspend(std::coroutine_handle<> hand
 
     // 准备目标地址
     auto [dst_storage, addr_len] = parse_sendto(_addr, _endpoint);
-    if (WSASendTo(reinterpret_cast<SOCKET>(_fd), &buf, 1, nullptr, 0, reinterpret_cast<const sockaddr *>(&dst_storage),
+    if (WSASendTo((SOCKET)_fd, &buf, 1, nullptr, 0, reinterpret_cast<const sockaddr *>(&dst_storage),
                   addr_len, &_ovl->ov, nullptr) == SOCKET_ERROR) {
         DWORD error = WSAGetLastError();
         if (error != ERROR_IO_PENDING)
             RMVL_Error_(RMVL_StsBadArg, "WSASendTo failed with error: %lu", error);
     }
+}
+
+void DgramSocket::SocketMultiReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+
+    auto *p_addr = new (_ovl->info) sockaddr_storage{};
+    auto *p_addr_len = new (p_addr + 1) socklen_t{sizeof(sockaddr_storage)};
+
+    DWORD count = static_cast<DWORD>(build_read_wsabuf(_results, _wsabufs.data()));
+    DWORD flags = 0, received = 0;
+
+    if (WSARecvFrom((SOCKET)_fd, _wsabufs.data(), count, &received, &flags,
+                    reinterpret_cast<sockaddr *>(p_addr), p_addr_len, &_ovl->ov, nullptr) == SOCKET_ERROR) {
+        DWORD error = WSAGetLastError();
+        if (error != ERROR_IO_PENDING)
+            ERROR_("WSARecvFrom (Scatter) failed with error: %lu", error);
+    }
+}
+
+std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::SocketMultiReadAwaiter::await_resume() noexcept {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
+        WARNING_("GetOverlappedResult failed with error: %lu", GetLastError());
+        return {{}, "", 0};
+    }
+    if (bytes_transferred > 0) {
+        auto *p_addr = reinterpret_cast<sockaddr_storage *>(_ovl->info);
+        auto [sender_ip_str, sender_port] = parse_recvfrom(*p_addr);
+
+        size_t current_read = 0;
+        for (size_t i = 0; i < _sizes.size(); ++i) {
+            if (current_read + _sizes[i] <= bytes_transferred) {
+                current_read += _sizes[i];
+            } else if (current_read < bytes_transferred) {
+                _results[i].resize(bytes_transferred - current_read);
+                current_read = bytes_transferred;
+            } else {
+                _results[i].clear();
+            }
+        }
+        return {_results, sender_ip_str, sender_port};
+    }
+    return {{}, "", 0};
+}
+
+void DgramSocket::SocketMultiWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+
+    DWORD count = static_cast<DWORD>(build_write_wsabuf(_buffers, _wsabufs.data()));
+    auto [dst_storage, addr_len] = parse_sendto(_addr, _endpoint);
+    DWORD sent = 0;
+
+    if (WSASendTo((SOCKET)_fd, _wsabufs.data(), count, &sent, 0,
+                  reinterpret_cast<const sockaddr *>(&dst_storage), addr_len,
+                  &_ovl->ov, nullptr) == SOCKET_ERROR) {
+        DWORD error = WSAGetLastError();
+        if (error != ERROR_IO_PENDING)
+            RMVL_Error_(RMVL_StsBadArg, "WSASendTo (Gather) failed: %lu", error);
+    }
+}
+
+bool DgramSocket::SocketMultiWriteAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
+        return false;
+    }
+    size_t expected = 0;
+    for (const auto &buf : _buffers)
+        expected += buf.size();
+    return static_cast<size_t>(bytes_transferred) == expected;
+}
+
+void StreamSocket::SocketMultiReadAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+
+    DWORD count = static_cast<DWORD>(build_read_wsabuf(_results, _wsabufs.data()));
+    DWORD flags = 0, received = 0;
+
+    if (WSARecv((SOCKET)_fd, _wsabufs.data(), count, &received, &flags, &_ovl->ov, nullptr) == SOCKET_ERROR) {
+        DWORD error = WSAGetLastError();
+        if (error != ERROR_IO_PENDING)
+            ERROR_("WSARecv (Scatter) failed with error: %lu", error);
+    }
+}
+
+std::vector<std::string> StreamSocket::SocketMultiReadAwaiter::await_resume() noexcept {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
+        WARNING_("GetOverlappedResult failed with error: %lu", GetLastError());
+        return {};
+    }
+
+    size_t current_read = 0;
+    for (size_t i = 0; i < _sizes.size(); ++i) {
+        if (current_read + _sizes[i] <= bytes_transferred) {
+            current_read += _sizes[i];
+        } else if (current_read < bytes_transferred) {
+            _results[i].resize(bytes_transferred - current_read);
+            current_read = bytes_transferred;
+        } else {
+            _results[i].clear();
+        }
+    }
+    return _results;
+}
+
+void StreamSocket::SocketMultiWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    _ovl = std::make_unique<IocpOverlapped>(handle);
+
+    DWORD count = static_cast<DWORD>(build_write_wsabuf(_buffers, _wsabufs.data()));
+    DWORD sent = 0;
+
+    if (WSASend((SOCKET)_fd, _wsabufs.data(), count, &sent, 0, &_ovl->ov, nullptr) == SOCKET_ERROR) {
+        DWORD error = WSAGetLastError();
+        if (error != ERROR_IO_PENDING)
+            RMVL_Error_(RMVL_StsBadArg, "WSASend (Gather) failed: %lu", error);
+    }
+}
+
+bool StreamSocket::SocketMultiWriteAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    DWORD bytes_transferred = 0;
+    if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
+        return false;
+    }
+    size_t expected = 0;
+    for (const auto &buf : _buffers)
+        expected += buf.size();
+    return static_cast<size_t>(bytes_transferred) == expected;
 }
 
 Listener::Listener(IOContext &io_context, const Endpoint &endpoint) : ::rm::Listener(endpoint, true), _ctx(io_context) {
@@ -968,6 +1340,110 @@ bool DgramSocket::SocketWriteAwaiter::await_resume() {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     return fdsendto(_fd, _addr, _endpoint, _data);
+}
+
+std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::SocketMultiReadAwaiter::await_resume() noexcept {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_read_iovec(_results, iov);
+
+    sockaddr_storage sender_addr{};
+    msghdr msg{};
+    msg.msg_name = &sender_addr;
+    msg.msg_namelen = sizeof(sender_addr);
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::recvmsg(_fd, &msg, 0);
+    if (n > 0) {
+        auto [sender_ip_str, sender_port] = parse_recvfrom(sender_addr);
+
+        size_t bytes_transferred = static_cast<size_t>(n);
+        size_t current_read = 0;
+        for (size_t i = 0; i < _sizes.size(); ++i) {
+            if (current_read + _sizes[i] <= bytes_transferred) {
+                current_read += _sizes[i];
+            } else if (current_read < bytes_transferred) {
+                _results[i].resize(bytes_transferred - current_read);
+                current_read = bytes_transferred;
+            } else {
+                _results[i].clear();
+            }
+        }
+        return {_results, sender_ip_str, sender_port};
+    }
+    return {{}, "", 0};
+}
+
+bool DgramSocket::SocketMultiWriteAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+
+    auto [dst_storage, addr_len] = parse_sendto(_addr, _endpoint);
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_write_iovec(_buffers, iov);
+
+    msghdr msg{};
+    msg.msg_name = &dst_storage;
+    msg.msg_namelen = addr_len;
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::sendmsg(_fd, &msg, 0);
+    size_t expected = 0;
+    for (const auto &buf : _buffers)
+        expected += buf.size();
+    return n >= 0 && static_cast<size_t>(n) == expected;
+}
+
+std::vector<std::string> StreamSocket::SocketMultiReadAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_read_iovec(_results, iov);
+
+    msghdr msg{};
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::recvmsg(_fd, &msg, 0);
+    if (n > 0) {
+        size_t bytes_transferred = static_cast<size_t>(n);
+        size_t current_read = 0;
+        for (size_t i = 0; i < _sizes.size(); ++i) {
+            if (current_read + _sizes[i] <= bytes_transferred) {
+                current_read += _sizes[i];
+            } else if (current_read < bytes_transferred) {
+                _results[i].resize(bytes_transferred - current_read);
+                current_read = bytes_transferred;
+            } else {
+                _results[i].clear();
+            }
+        }
+        return _results;
+    }
+    return {};
+}
+
+bool StreamSocket::SocketMultiWriteAwaiter::await_resume() {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
+
+    iovec iov[MAX_IOVEC];
+    size_t iov_cnt = build_write_iovec(_buffers, iov);
+
+    msghdr msg{};
+    msg.msg_iov = iov;
+    msg.msg_iovlen = iov_cnt;
+
+    ssize_t n = ::sendmsg(_fd, &msg, 0);
+    size_t expected = 0;
+    for (const auto &buf : _buffers)
+        expected += buf.size();
+    return n >= 0 && static_cast<size_t>(n) == expected;
 }
 
 Sender::Sender(IOContext &io_context, const ip::Protocol &protocol) : ::rm::Sender(protocol, true), _ctx(io_context) {}
