@@ -11,50 +11,50 @@
 
 #include <gtest/gtest.h>
 
-#include "rmvl/opcua/object.hpp"
+#include "rmvl/opcua/variable.hpp"
 
-namespace rm_test
-{
+namespace rm_test {
 
-TEST(OPC_UA_AddressSpace, Variable)
-{
+using namespace rm::ua;
+
+TEST(OPC_UA_AddressSpace, Variable) {
     // 单值构造
-    rm::Variable val1 = 42;
+    Variable val1 = 42;
     EXPECT_EQ(val1.size(), -1);
-    EXPECT_EQ(val1.getDataType(), rm::tpInt32);
+    EXPECT_EQ(val1.getDataType(), tpInt32);
 
-    rm::Variable val2 = 3.1415;
+    Variable val2 = 3.1415;
     EXPECT_EQ(val2.size(), -1);
-    EXPECT_EQ(val2.getDataType(), rm::tpDouble);
+    EXPECT_EQ(val2.getDataType(), tpDouble);
 
-    rm::Variable val3 = false;
+    Variable val3 = false;
     EXPECT_EQ(val3.size(), -1);
-    EXPECT_EQ(val3.getDataType(), rm::tpBoolean);
+    EXPECT_EQ(val3.getDataType(), tpBoolean);
 
-    rm::Variable val4 = "test";
+    Variable val4 = "test";
     EXPECT_EQ(val4.size(), -1);
-    EXPECT_EQ(val4.getDataType(), rm::tpString);
+    EXPECT_EQ(val4.getDataType(), tpString);
 
-    rm::Variable val5 = std::string("test");
+    Variable val5 = std::string("test");
     EXPECT_EQ(val5.size(), -1);
-    EXPECT_EQ(val5.getDataType(), rm::tpString);
+    EXPECT_EQ(val5.getDataType(), tpString);
 
     // 列表构造
-    rm::Variable arr1 = {1, 2, 3};
+    Variable arr1 = {1, 2, 3};
     EXPECT_EQ(arr1.size(), 3);
-    EXPECT_EQ(arr1.getDataType(), rm::tpInt32);
+    EXPECT_EQ(arr1.getDataType(), tpInt32);
 
-    rm::Variable arr2 = {3.142, 2.718, 1.414};
+    Variable arr2 = {3.142, 2.718, 1.414};
     EXPECT_EQ(arr2.size(), 3);
-    EXPECT_EQ(arr2.getDataType(), rm::tpDouble);
+    EXPECT_EQ(arr2.getDataType(), tpDouble);
 
-    rm::Variable arr3 = std::vector{1, 2, 3};
+    Variable arr3 = std::vector{1, 2, 3};
     EXPECT_EQ(arr3.size(), 3);
-    EXPECT_EQ(arr3.getDataType(), rm::tpInt32);
+    EXPECT_EQ(arr3.getDataType(), tpInt32);
 
-    rm::Variable arr4 = {1};
+    Variable arr4 = {1};
     EXPECT_EQ(arr4.size(), 1);
-    EXPECT_EQ(arr4.getDataType(), rm::tpInt32);
+    EXPECT_EQ(arr4.getDataType(), tpInt32);
 
     // 单值比较
     EXPECT_EQ(val1, 42);
@@ -69,41 +69,40 @@ TEST(OPC_UA_AddressSpace, Variable)
     EXPECT_EQ(arr2, arr);
 }
 
-TEST(OPC_UA_AddressSpace, VariableType)
-{
+TEST(OPC_UA_AddressSpace, VariableType) {
     // 单值构造
-    rm::VariableType vt1 = 42;
+    VariableType vt1 = 42;
     EXPECT_EQ(vt1.size(), -1);
-    EXPECT_EQ(vt1.getDataType(), rm::tpInt32);
+    EXPECT_EQ(vt1.getDataType(), tpInt32);
 
-    rm::VariableType vt2 = 3.1415;
+    VariableType vt2 = 3.1415;
     EXPECT_EQ(vt2.size(), -1);
-    EXPECT_EQ(vt2.getDataType(), rm::tpDouble);
+    EXPECT_EQ(vt2.getDataType(), tpDouble);
 
-    rm::VariableType vt3 = false;
+    VariableType vt3 = false;
     EXPECT_EQ(vt3.size(), -1);
-    EXPECT_EQ(vt3.getDataType(), rm::tpBoolean);
+    EXPECT_EQ(vt3.getDataType(), tpBoolean);
 
-    rm::VariableType vt4 = "test";
+    VariableType vt4 = "test";
     EXPECT_EQ(vt4.size(), -1);
-    EXPECT_EQ(vt4.getDataType(), rm::tpString);
+    EXPECT_EQ(vt4.getDataType(), tpString);
 
-    rm::VariableType vt5 = std::string("test");
+    VariableType vt5 = std::string("test");
     EXPECT_EQ(vt5.size(), -1);
-    EXPECT_EQ(vt5.getDataType(), rm::tpString);
+    EXPECT_EQ(vt5.getDataType(), tpString);
 
     // 列表构造
-    rm::VariableType at1 = {1, 2, 3};
+    VariableType at1 = {1, 2, 3};
     EXPECT_EQ(at1.size(), 3);
-    EXPECT_EQ(at1.getDataType(), rm::tpInt32);
+    EXPECT_EQ(at1.getDataType(), tpInt32);
 
-    rm::VariableType at2 = {3.142, 2.718, 1.414};
+    VariableType at2 = {3.142, 2.718, 1.414};
     EXPECT_EQ(at2.size(), 3);
-    EXPECT_EQ(at2.getDataType(), rm::tpDouble);
+    EXPECT_EQ(at2.getDataType(), tpDouble);
 
-    rm::VariableType at3 = std::vector{1, 2, 3};
+    VariableType at3 = std::vector{1, 2, 3};
     EXPECT_EQ(at3.size(), 3);
-    EXPECT_EQ(at3.getDataType(), rm::tpInt32);
+    EXPECT_EQ(at3.getDataType(), tpInt32);
 }
 
 } // namespace rm_test

@@ -18,7 +18,7 @@
 #include "variable.hpp"
 #include "view.hpp"
 
-namespace rm {
+namespace rm::ua {
 
 //! @addtogroup opcua
 //! @{
@@ -26,18 +26,18 @@ namespace rm {
 //! @example samples/opcua/opcua_client.cpp OPC UA 客户端例程
 
 //! OPC UA 客户端视图
-class RMVL_EXPORTS_W OpcuaClientView {
+class ClientView {
 public:
-    RMVL_W OpcuaClientView() = default;
+    ClientView() = default;
 
     /**
      * @brief 创建不占有生命周期的 OPC UA 客户端视图，在 OPC UA 方法节点中使用特别有效
      *
      * @param[in] client OPC UA 客户端指针
      */
-    OpcuaClientView(UA_Client *client) : _client(client) {}
+    ClientView(UA_Client *client) : _client(client) {}
 
-    OpcuaClientView &operator=(UA_Client *const client) {
+    ClientView &operator=(UA_Client *const client) {
         _client = client;
         return *this;
     }
@@ -71,15 +71,15 @@ public:
      * // 等效于 auto node = src_nd | cli.node("person") | cli.node("name");
      * @endcode
      */
-    RMVL_W NodeId find(std::string_view browse_path, const NodeId &src_nd = nodeObjectsFolder) const noexcept;
+    NodeId find(std::string_view browse_path, const NodeId &src_nd = nodeObjectsFolder) const noexcept;
 
     /**
      * @brief 从指定的变量节点读数据
      *
      * @param[in] nd 既存的变量节点的 `NodeId`
-     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     * @return 读出的用 `Variable` 表示的数据，未成功读取则返回空
      */
-    RMVL_W Variable read(const NodeId &nd) const;
+    Variable read(const NodeId &nd) const;
 
     /**
      * @brief 给指定的变量节点写数据
@@ -88,7 +88,7 @@ public:
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    RMVL_W bool write(const NodeId &nd, const Variable &val) const;
+    bool write(const NodeId &nd, const Variable &val) const;
 
 private:
     UA_Client *_client{nullptr}; //!< 客户端指针
@@ -100,7 +100,7 @@ private:
  * @param[in] client_view 客户端视图，指代当前客户端
  * @param[in] value 数据发生变更后的变量
  */
-using DataChangeNotificationCallback = std::function<void(OpcuaClientView, const Variable &)>;
+using DataChangeNotificationCallback = std::function<void(ClientView, const Variable &)>;
 
 /**
  * @brief 事件通知回调函数
@@ -108,10 +108,10 @@ using DataChangeNotificationCallback = std::function<void(OpcuaClientView, const
  * @param[in] client_view 客户端视图，指代当前客户端
  * @param[in] event_fields 事件数据
  */
-using EventNotificationCallback = std::function<void(OpcuaClientView, const std::vector<Variable> &)>;
+using EventNotificationCallback = std::function<void(ClientView, const std::vector<Variable> &)>;
 
 //! OPC UA 客户端
-class RMVL_EXPORTS_W OpcuaClient {
+class Client {
 public:
     /****************************** 通用配置 ******************************/
 
@@ -121,24 +121,23 @@ public:
      * @param[in] address 连接地址，形如 `opc.tcp://127.0.0.1:4840`
      * @param[in] user 用户信息
      */
-    RMVL_W OpcuaClient(std::string_view address, const UserConfig &user = {});
+    Client(std::string_view address, const UserConfig &user = {});
 
     //! @cond
-    OpcuaClient(const OpcuaClient &) = delete;
-    OpcuaClient(OpcuaClient &&) = default;
+    Client(const Client &) = delete;
+    Client(Client &&) = default;
 
-    OpcuaClient &operator=(const OpcuaClient &) = delete;
-    OpcuaClient &operator=(OpcuaClient &&) = default;
+    Client &operator=(const Client &) = delete;
+    Client &operator=(Client &&) = default;
     //! @endcond
 
     //! 断开与服务器的连接，并释放资源
-    ~OpcuaClient();
+    ~Client();
 
-    RMVL_W_SUBST("Cli")
-    operator OpcuaClientView() const { return _client; }
+    operator ClientView() const { return _client; }
 
     //! 是否成功创建客户端并成功连接到服务器
-    RMVL_W inline bool ok() const { return _client != nullptr; }
+    inline bool ok() const { return _client != nullptr; }
 
     /**
      * @brief 在网络上监听并处理到达的异步响应，同时进行内部维护、安全通道的更新和订阅管理
@@ -152,10 +151,10 @@ public:
      * @brief
      * - 处理当前已到来的事件，等效于 ROS/ROS2 工具包中的 `ros::spinOnce()` 以及 `rclcpp::spin_some()`
      */
-    RMVL_W void spinOnce() const;
+    void spinOnce() const;
 
     //! 断开与服务器的连接
-    RMVL_W bool shutdown();
+    bool shutdown();
 
     /****************************** 路径搜索 ******************************/
 
@@ -185,7 +184,7 @@ public:
      * // 等效于 auto node = src_nd | cli.node("person") | cli.node("name");
      * @endcode
      */
-    RMVL_W NodeId find(std::string_view browse_path, const NodeId &src_nd = nodeObjectsFolder) const noexcept;
+    NodeId find(std::string_view browse_path, const NodeId &src_nd = nodeObjectsFolder) const noexcept;
 
     /****************************** 功能配置 ******************************/
 
@@ -193,9 +192,9 @@ public:
      * @brief 从指定的变量节点读数据
      *
      * @param[in] node 既存的变量节点的 `NodeId`
-     * @return 读出的用 `rm::Variable` 表示的数据，未成功读取则返回空
+     * @return 读出的用 `Variable` 表示的数据，未成功读取则返回空
      */
-    RMVL_W Variable read(const NodeId &node) const;
+    Variable read(const NodeId &node) const;
 
     /**
      * @brief 给指定的变量节点写数据
@@ -204,7 +203,7 @@ public:
      * @param[in] val 待写入的数据
      * @return 是否写入成功
      */
-    RMVL_W bool write(const NodeId &node, const Variable &val) const;
+    bool write(const NodeId &node, const Variable &val) const;
 
     /**
      * @brief 在客户端调用指定对象节点中的方法
@@ -216,7 +215,7 @@ public:
      * @retval oargs 输出参数列表
      * @return 是否成功完成当前操作，以及输出参数列表
      */
-    RMVL_W std::pair<bool, Variables> call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const;
+    std::pair<bool, Variables> call(const NodeId &obj_nd, std::string_view name, const Variables &inputs) const;
 
     /**
      * @brief 直接以底层数据调用指定对象节点中的方法
@@ -240,7 +239,7 @@ public:
      * @retval oargs 输出参数列表
      * @return 是否成功完成当前操作，以及输出参数列表
      */
-    RMVL_W std::pair<bool, Variables> call(std::string_view name, const Variables &inputs) const { return call(nodeObjectsFolder, name, inputs); }
+    std::pair<bool, Variables> call(std::string_view name, const Variables &inputs) const { return call(nodeObjectsFolder, name, inputs); }
 
     /**
      * @brief 直接以底层数据调用 ObjectsFolder 中的方法
@@ -267,7 +266,7 @@ public:
      * auto [res, outputs] = cli.findcall("person/set_age", {18});
      * @endcode
      */
-    RMVL_W std::pair<bool, Variables> findcall(std::string_view name, const Variables &inputs) const;
+    std::pair<bool, Variables> findcall(std::string_view name, const Variables &inputs) const;
 
     /**
      * @brief 支持路径搜索的调用方法
@@ -291,7 +290,7 @@ public:
      * @param[in] view `rm::View` 表示的视图
      * @return 添加至服务器后，对应视图节点的唯一标识 `NodeId`
      */
-    RMVL_W NodeId addViewNode(const View &view) const;
+    NodeId addViewNode(const View &view) const;
 
     /**
      * @brief 创建变量节点监视项，以实现订阅节点的功能
@@ -306,7 +305,7 @@ public:
      * @param[in] q_size 通知存放的队列大小，若队列已满，新的通知会覆盖旧的通知，默认为 `10`
      * @return 变量节点监视创建成功？
      */
-    RMVL_W bool monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32_t q_size = 10);
+    bool monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32_t q_size = 10);
 
     /**
      * @brief 创建事件监视项，以实现事件的订阅功能
@@ -315,7 +314,7 @@ public:
      * @param[in] on_event 事件回调函数
      * @return 事件监视创建成功？
      */
-    RMVL_W bool monitor(const std::vector<std::string> &names, EventNotificationCallback on_event);
+    bool monitor(const std::vector<std::string> &names, EventNotificationCallback on_event);
 
     /**
      * @brief 移除监视项
@@ -323,7 +322,7 @@ public:
      * @param[in] nd 待移除监视项的节点号
      * @return 是否成功移除监视项
      */
-    RMVL_W bool remove(NodeId nd);
+    bool remove(NodeId nd);
 
 private:
     //! 客户端指针
@@ -337,7 +336,7 @@ private:
 };
 
 //! OPC UA 客户端定时器
-class RMVL_EXPORTS_W OpcuaClientTimer final {
+class ClientTimer final {
 public:
     /**
      * @brief 创建 OPC UA 客户端定时器
@@ -346,28 +345,28 @@ public:
      * @param[in] period 定时器周期，单位：毫秒 `ms`
      * @param[in] callback 定时器回调函数
      */
-    RMVL_W OpcuaClientTimer(OpcuaClientView cv, double period, std::function<void()> callback);
+    ClientTimer(ClientView cv, double period, std::function<void()> callback);
 
     //! @cond
-    OpcuaClientTimer(const OpcuaClientTimer &) = delete;
-    OpcuaClientTimer(OpcuaClientTimer &&) = default;
+    ClientTimer(const ClientTimer &) = delete;
+    ClientTimer(ClientTimer &&) = default;
 
-    OpcuaClientTimer &operator=(const OpcuaClientTimer &) = delete;
-    OpcuaClientTimer &operator=(OpcuaClientTimer &&) = default;
+    ClientTimer &operator=(const ClientTimer &) = delete;
+    ClientTimer &operator=(ClientTimer &&) = default;
     //! @endcond
 
     //! 释放资源，并取消定时器
-    ~OpcuaClientTimer() { cancel(); }
+    ~ClientTimer() { cancel(); }
 
     //! 取消定时器
-    RMVL_W void cancel();
+    void cancel();
 
 private:
-    OpcuaClientView _cv;       //!< 客户端视图
+    ClientView _cv;       //!< 客户端视图
     std::function<void()> _cb; //!< 定时器回调函数
     uint64_t _id{};            //!< 定时器 ID
 };
 
 //! @} opcua
 
-} // namespace rm
+} // namespace rm::ua

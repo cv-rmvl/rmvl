@@ -23,10 +23,10 @@
 #include "rmvl/core/util.hpp"
 #include "rmvl/opcua/utilities.hpp"
 
-namespace rm {
+namespace rm::ua {
 
-OpcuaSubscriber::OpcuaSubscriber(std::string_view sub_name, const std::string &addr, uint16_t port,
-                                 const std::vector<UserConfig> &users) : OpcuaServer(port, sub_name, users), _name(sub_name) {
+Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint16_t port,
+                       const std::vector<UserConfig> &users) : Server(port, sub_name, users), _name(sub_name) {
     //////////////////// 添加连接配置 ////////////////////
     UA_PubSubConnectionConfig connect_config{};
     std::string cn_name_str = _name + "Connection";
@@ -43,7 +43,7 @@ OpcuaSubscriber::OpcuaSubscriber(std::string_view sub_name, const std::string &a
     }
 }
 
-std::vector<NodeId> OpcuaSubscriber::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields) {
+std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std::vector<FieldMetaData> &fields) {
     //////////////// 添加 ReaderGroup (RG) ///////////////
     UA_ReaderGroupConfig rg_config{};
     std::string pub_name_str = pub_name + "ReaderGroup";
@@ -135,6 +135,6 @@ std::vector<NodeId> OpcuaSubscriber::subscribe(const std::string &pub_name, cons
     return retval;
 }
 
-} // namespace rm
+} // namespace rm::ua
 
 #endif // UA_ENABLE_PUBSUB

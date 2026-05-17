@@ -23,11 +23,11 @@
 
 #include "cvt.hpp"
 
-namespace rm {
+namespace rm::ua {
 
 ///////////////////////// 基本配置 /////////////////////////
 
-OpcuaServer::OpcuaServer(uint16_t port, std::string_view name, const std::vector<UserConfig> &users) {
+Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users) {
     UA_ServerConfig init_config{};
     // 修改日志
     static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_srv{
@@ -84,20 +84,20 @@ OpcuaServer::OpcuaServer(uint16_t port, std::string_view name, const std::vector
         ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
 }
 
-OpcuaServer::OpcuaServer(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : OpcuaServer(port, name, users) {
+Server::Server(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users) {
     if (on_config != nullptr)
         on_config(_server);
 }
 
-void OpcuaServer::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
+void Server::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
 
-void OpcuaServer::spin() {
+void Server::spin() {
     _running.store(true, std::memory_order_release);
     while (_running.load(std::memory_order_acquire))
         UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT);
 }
 
-OpcuaServer::~OpcuaServer() {
+Server::~Server() {
     shutdown();
     UA_Server_run_shutdown(_server);
     UA_Server_delete(_server);
@@ -129,12 +129,12 @@ static bool serverWrite(UA_Server *p_server, const NodeId &nd, const Variable &v
 
 ///////////////////////// 节点配置 /////////////////////////
 
-NodeId OpcuaServer::find(std::string_view browse_path, const NodeId &src_nd) const noexcept {
-    rm::OpcuaServerView sv{_server};
+NodeId Server::find(std::string_view browse_path, const NodeId &src_nd) const noexcept {
+    ServerView sv{_server};
     return sv.find(browse_path, src_nd);
 }
 
-NodeId OpcuaServer::addVariableTypeNode(const VariableType &vtype) {
+NodeId Server::addVariableTypeNode(const VariableType &vtype) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_VariableTypeAttributes attr = UA_VariableTypeAttributes_default;
@@ -162,7 +162,7 @@ NodeId OpcuaServer::addVariableTypeNode(const VariableType &vtype) {
     return retval;
 }
 
-NodeId OpcuaServer::addVariableNode(const Variable &val, const NodeId &parent_nd) noexcept {
+NodeId Server::addVariableNode(const Variable &val, const NodeId &parent_nd) noexcept {
     RMVL_DbgAssert(_server != nullptr);
 
     // 变量节点属性 `UA_VariableAttributes`
@@ -204,22 +204,22 @@ NodeId OpcuaServer::addVariableNode(const Variable &val, const NodeId &parent_nd
     return retval;
 }
 
-Variable OpcuaServer::read(const NodeId &node) const { return serverRead(_server, node); }
-bool OpcuaServer::write(const NodeId &node, const Variable &val) { return serverWrite(_server, node, val); }
+Variable Server::read(const NodeId &node) const { return serverRead(_server, node); }
+bool Server::write(const NodeId &node, const Variable &val) { return serverWrite(_server, node, val); }
 
 static void value_cb_before_read(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeid,
                                  void *context, const UA_NumericRange *, const UA_DataValue *value) {
-    auto &on_read = reinterpret_cast<OpcuaServer::ValueCallbackWrapper *>(context)->first;
+    auto &on_read = reinterpret_cast<Server::ValueCallbackWrapper *>(context)->first;
     on_read(server, *nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
 }
 
 static void value_cb_after_write(UA_Server *server, const UA_NodeId *, void *, const UA_NodeId *nodeId,
                                  void *context, const UA_NumericRange *, const UA_DataValue *data) {
-    auto &on_write = reinterpret_cast<OpcuaServer::ValueCallbackWrapper *>(context)->second;
+    auto &on_write = reinterpret_cast<Server::ValueCallbackWrapper *>(context)->second;
     on_write(server, *nodeId, data->hasValue ? helper::cvtVariable(data->value) : Variable{});
 }
 
-bool OpcuaServer::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) noexcept {
+bool Server::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRead before_read, ValueCallbackAfterWrite after_write) noexcept {
     RMVL_DbgAssert(_server != nullptr);
     // 设置节点上下文
     auto context = std::make_unique<ValueCallbackWrapper>(std::forward<ValueCallbackBeforeRead>(before_read),
@@ -240,7 +240,7 @@ bool OpcuaServer::addVariableNodeValueCallback(NodeId nd, ValueCallbackBeforeRea
 
 static UA_StatusCode datasource_cb_on_read(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
                                            UA_Boolean, const UA_NumericRange *, UA_DataValue *value) {
-    auto on_read = reinterpret_cast<OpcuaServer::DataSourceCallbackWrapper *>(context)->first;
+    auto on_read = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->first;
     if (on_read == nullptr)
         return UA_STATUSCODE_BADNOTSUPPORTED;
     auto retval = on_read(*nodeid);
@@ -253,14 +253,14 @@ static UA_StatusCode datasource_cb_on_read(UA_Server *, const UA_NodeId *, void 
 
 static UA_StatusCode datasource_cb_on_write(UA_Server *, const UA_NodeId *, void *, const UA_NodeId *nodeid, void *context,
                                             const UA_NumericRange *, const UA_DataValue *value) {
-    auto on_write = reinterpret_cast<OpcuaServer::DataSourceCallbackWrapper *>(context)->second;
+    auto on_write = reinterpret_cast<Server::DataSourceCallbackWrapper *>(context)->second;
     if (on_write == nullptr)
         return UA_STATUSCODE_BADNOTSUPPORTED;
     on_write(*nodeid, value->hasValue ? helper::cvtVariable(value->value) : Variable{});
     return value->hasValue ? UA_STATUSCODE_GOOD : UA_STATUSCODE_BADNOTFOUND;
 }
 
-NodeId OpcuaServer::addDataSourceVariableNode(const DataSourceVariable &val, NodeId parent_nd) noexcept {
+NodeId Server::addDataSourceVariableNode(const DataSourceVariable &val, NodeId parent_nd) noexcept {
     RMVL_DbgAssert(_server != nullptr);
 
     // 设置变量节点属性
@@ -305,7 +305,7 @@ static UA_StatusCode method_cb(UA_Server *, const UA_NodeId *, void *, const UA_
     }
 }
 
-NodeId OpcuaServer::addMethodNode(const Method &method, const NodeId &parent_nd) {
+NodeId Server::addMethodNode(const Method &method, const NodeId &parent_nd) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_MethodAttributes attr = UA_MethodAttributes_default;
@@ -343,7 +343,7 @@ NodeId OpcuaServer::addMethodNode(const Method &method, const NodeId &parent_nd)
     return retval;
 }
 
-bool OpcuaServer::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_method) {
+bool Server::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_method) {
     RMVL_DbgAssert(_server != nullptr);
     auto context = std::make_unique<MethodCallback>(on_method);
     if (UA_Server_setNodeContext(_server, nd, context.get())) {
@@ -359,7 +359,7 @@ bool OpcuaServer::setMethodNodeCallBack(const NodeId &nd, MethodCallback on_meth
     return true;
 }
 
-NodeId OpcuaServer::addObjectTypeNode(const ObjectType &otype) {
+NodeId Server::addObjectTypeNode(const ObjectType &otype) {
     RMVL_DbgAssert(_server != nullptr);
 
     // 定义对象类型节点
@@ -424,7 +424,7 @@ NodeId OpcuaServer::addObjectTypeNode(const ObjectType &otype) {
     return retval;
 }
 
-NodeId OpcuaServer::addObjectNode(const Object &obj, NodeId parent_nd) {
+NodeId Server::addObjectNode(const Object &obj, NodeId parent_nd) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_ObjectAttributes attr{UA_ObjectAttributes_default};
@@ -432,7 +432,7 @@ NodeId OpcuaServer::addObjectNode(const Object &obj, NodeId parent_nd) {
     attr.description = UA_LOCALIZEDTEXT(helper::zh_CN(), helper::to_char(obj.description));
     // 获取对象类型节点
     ObjectType obj_type = obj.type();
-    const rm::ObjectType *current = &obj_type;
+    const ObjectType *current = &obj_type;
     NodeId type_id{nodeBaseObjectType};
     std::stack<std::string> base_stack;
     while (current != nullptr && !current->empty()) {
@@ -474,7 +474,7 @@ NodeId OpcuaServer::addObjectNode(const Object &obj, NodeId parent_nd) {
     return retval;
 }
 
-NodeId OpcuaServer::addViewNode(const View &view) {
+NodeId Server::addViewNode(const View &view) {
     RMVL_DbgAssert(_server != nullptr);
 
     // 准备数据
@@ -504,7 +504,7 @@ NodeId OpcuaServer::addViewNode(const View &view) {
     return retval;
 }
 
-NodeId OpcuaServer::addEventTypeNode(const EventType &etype) {
+NodeId Server::addEventTypeNode(const EventType &etype) {
     RMVL_DbgAssert(_server != nullptr);
 
     UA_NodeId retval;
@@ -549,14 +549,14 @@ NodeId OpcuaServer::addEventTypeNode(const EventType &etype) {
     return retval;
 }
 
-bool OpcuaServer::triggerEvent(const Event &event) const {
-    rm::OpcuaServerView sv{_server};
+bool Server::triggerEvent(const Event &event) const {
+    ServerView sv{_server};
     return sv.triggerEvent(event);
 }
 
 //////////////////////// 服务端视图 ////////////////////////
 
-NodeId OpcuaServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept {
+NodeId ServerView::find(std::string_view browse_path, const NodeId &src_nd) const noexcept {
     RMVL_DbgAssert(_server != nullptr);
 
     auto paths = str::split(browse_path, "/");
@@ -571,10 +571,10 @@ NodeId OpcuaServerView::find(std::string_view browse_path, const NodeId &src_nd)
     return retval;
 }
 
-Variable OpcuaServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
-bool OpcuaServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
+Variable ServerView::read(const NodeId &nd) const { return serverRead(_server, nd); }
+bool ServerView::write(const NodeId &nd, const Variable &val) const { return serverWrite(_server, nd, val); }
 
-bool OpcuaServerView::triggerEvent(const Event &event) const {
+bool ServerView::triggerEvent(const Event &event) const {
     RMVL_DbgAssert(_server != nullptr);
 
     NodeId type_id = nodeBaseEventType | node(event.type().browse_name);
@@ -618,11 +618,11 @@ bool OpcuaServerView::triggerEvent(const Event &event) const {
 /////////////////////// 服务器定时器 ///////////////////////
 
 static void timer_cb(UA_Server *p_server, void *data) {
-    auto &func = *reinterpret_cast<std::function<void(OpcuaServerView)> *>(data);
+    auto &func = *reinterpret_cast<std::function<void(ServerView)> *>(data);
     func(p_server);
 }
 
-OpcuaServerTimer::OpcuaServerTimer(OpcuaServerView sv, double period, std::function<void(OpcuaServerView)> callback) : _sv(sv), _cb(callback) {
+ServerTimer::ServerTimer(ServerView sv, double period, std::function<void(ServerView)> callback) : _sv(sv), _cb(callback) {
     auto status = UA_Server_addRepeatedCallback(_sv.get(), timer_cb, &_cb, period, &_id);
     if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add repeated callback: %s", UA_StatusCode_name(status));
@@ -630,11 +630,11 @@ OpcuaServerTimer::OpcuaServerTimer(OpcuaServerView sv, double period, std::funct
     }
 }
 
-void OpcuaServerTimer::cancel() {
+void ServerTimer::cancel() {
     if (_id != 0) {
         UA_Server_removeCallback(_sv.get(), _id);
         _id = 0;
     }
 }
 
-} // namespace rm
+} // namespace rm::ua

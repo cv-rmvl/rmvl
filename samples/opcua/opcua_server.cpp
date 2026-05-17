@@ -4,7 +4,7 @@
 
 using namespace rm;
 
-OpcuaServer server(4840, "RMVL Server Demo");
+ua::Server server(4840, "RMVL Server Demo");
 
 static void onHandle(int) { server.shutdown(); }
 
@@ -41,7 +41,7 @@ static void show() {
     printf("%s", data);
 }
 
-static std::string nodestr(const NodeId &node) { return "ns=" + std::to_string(node.ns) + "," + "s=" + std::to_string(node.id); }
+static std::string nodestr(const ua::NodeId &node) { return "ns=" + std::to_string(node.ns) + "," + "s=" + std::to_string(node.id); }
 
 /**
  * @brief 更新表格
@@ -73,15 +73,15 @@ int main() {
     clearSreen();
     show();
 
-    Variable value_1 = 42;
+    ua::Variable value_1 = 42;
     value_1.display_name = "Value 1";
     value_1.browse_name = "value_1";
-    Variable value_2 = 3.14;
+    ua::Variable value_2 = 3.14;
     value_2.display_name = "Value 2";
     value_2.browse_name = "value_2";
 
     std::string last_call = "-- None --";
-    Method add = [&](const NodeId &, const Variables &iargs) -> std::pair<bool, Variables> {
+    ua::Method add = [&](const ua::NodeId &, const ua::Variables &iargs) -> std::pair<bool, ua::Variables> {
         int num1 = iargs[0], num2 = iargs[1];
         int res = num1 + num2;
         last_call = "Result: " + std::to_string(res);
@@ -89,8 +89,8 @@ int main() {
     };
     add.display_name = "Add";
     add.browse_name = "add";
-    add.iargs = {{"num1", tpInt32}, {"num2", tpInt32}};
-    add.oargs = {{"result", tpInt32}};
+    add.iargs = {{"num1", ua::tpInt32}, {"num2", ua::tpInt32}};
+    add.oargs = {{"result", ua::tpInt32}};
     auto nd_value_1 = server.addVariableNode(value_1);
     auto nd_value_2 = server.addVariableNode(value_2);
     auto nd_add = server.addMethodNode(add);
@@ -105,7 +105,7 @@ int main() {
     update(3, 2, add.display_name);
     update(3, 3, add.browse_name);
 
-    OpcuaServerTimer timer(server, 50, [&](OpcuaServerView sv) {
+    ua::ServerTimer timer(server, 50, [&](ua::ServerView sv) {
         auto value_1 = sv.read(sv.find("value_1"));
         update(1, 4, std::to_string(value_1.cast<int>()));
         auto value_2 = sv.read(sv.find("value_2"));

@@ -13,15 +13,15 @@
 
 #include "utilities.hpp"
 
-namespace rm {
+namespace rm::ua {
 
 //! @addtogroup opcua
 //! @{
 
 //! OPC UA 视图
-class RMVL_EXPORTS_W View final {
+class View final {
 public:
-    RMVL_W View() = default;
+    View() = default;
 
     /**
      * @brief 添加节点 ID
@@ -36,14 +36,13 @@ public:
      * @param[in] nds 既存的待添加的节点 ID
      */
     template <typename... NodeId_>
-    RMVL_W_SUBST("View_Add")
     inline void add(NodeId_ &&...nds) { (..., _nodes.emplace_back(nds)); }
 
     //! 获取节点 ID 列表
-    RMVL_W inline const std::vector<NodeId> &data() const { return _nodes; }
+    inline const std::vector<NodeId> &data() const { return _nodes; }
 
     //! 命名空间索引，默认为 `1`
-    RMVL_W_RW uint16_t ns{1U};
+    uint16_t ns{1U};
 
     /**
      * @brief 浏览名称 BrowseName
@@ -54,7 +53,7 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称不能重复
      */
-    RMVL_W_RW std::string browse_name{};
+    std::string browse_name{};
 
     /**
      * @brief 展示名称 DisplayName
@@ -63,9 +62,9 @@ public:
      * @brief
      * - 同一个命名空间 `ns` 下该名称可以相同
      */
-    RMVL_W_RW std::string display_name{};
+    std::string display_name{};
     //! 视图的描述 - `zh-CN`
-    RMVL_W_RW std::string description{};
+    std::string description{};
 
 private:
     std::vector<NodeId> _nodes; //!< 视图下的节点 ID 列表
@@ -73,4 +72,4 @@ private:
 
 //! @} opcua
 
-} // namespace rm
+} // namespace rm::ua
