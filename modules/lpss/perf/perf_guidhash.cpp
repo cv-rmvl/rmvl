@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "rmvl/lpss/node_rsd.hpp"
+#include "rmvl/lpss/details/node_rsd.hpp"
 
 using namespace rm;
 

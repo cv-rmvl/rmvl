@@ -13,7 +13,11 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "async.hpp"
 
@@ -267,10 +271,6 @@ private:
     std::array<uint8_t, 6> _addr{}; //!< MAC 地址
 };
 
-#if __cplusplus >= 202002L
-
-#endif
-
 //! 端点
 class Endpoint {
 public:
@@ -392,6 +392,37 @@ public:
      * @return 是否写入成功
      */
     bool write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) noexcept;
+
+    /**
+     * @brief 同步多缓冲区写入（Scatter/Gather I/O ）
+     * @param[in] addr 目标地址
+     * @param[in] endpoint 目标端点
+     * @param[in] buffers 待写入的多个数据视图
+     * @return 是否写入成功
+     */
+    bool multiwrite(std::string_view addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) noexcept;
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
+    bool multiwrite(std::string_view addr, const Endpoint &endpoint, Args &&...args) noexcept {
+        return multiwrite(addr, endpoint, std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
+    }
+
+    /**
+     * @brief 同步多缓冲区读取（Scatter Read）
+     * @param[in] sizes 预期读取的各分片数据大小
+     * @return 读取到的数据分片数组，发送方 IP，发送方端口
+     */
+    std::tuple<std::vector<std::string>, std::string, uint16_t> multiread(const std::vector<size_t> &sizes);
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
+    std::tuple<std::vector<std::string>, std::string, uint16_t> multiread(Args... sizes) {
+        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
+    }
+
+    /**
+     * @brief 同步读取数据到预分配内存中
+     */
+    std::tuple<size_t, std::string, uint16_t> read_to(char *buf, size_t size) noexcept;
 
 protected:
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 会话文件描述符
@@ -525,6 +556,39 @@ public:
      * @return 是否写入成功
      */
     bool write(std::string_view data) noexcept;
+
+    /**
+     * @brief 同步多缓冲区写入（Scatter/Gather I/O ）
+     * @param[in] buffers 待写入的多个数据视图
+     * @return 是否全部写入成功
+     */
+    bool multiwrite(const std::vector<std::string_view> &buffers) noexcept;
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
+    bool multiwrite(Args &&...args) noexcept {
+        return multiwrite(std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
+    }
+
+    /**
+     * @brief 同步多缓冲区读取（Scatter Read）
+     * @note 所见即所得，库内部开辟内存
+     * @param[in] sizes 预期读取的各分片数据大小
+     * @return 读取到的数据分片数组（遇到异常或断开时，返回的 vector 会少于期望分片或包含空串）
+     */
+    std::vector<std::string> multiread(const std::vector<size_t> &sizes);
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
+    std::vector<std::string> multiread(Args... sizes) {
+        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
+    }
+
+    /**
+     * @brief 同步读取数据到指定预分配内存中
+     * @param[out] buf 预分配内存的首地址
+     * @param[in] size 预期读取的字节数
+     * @return 实际读取的字节数
+     */
+    size_t read_to(char *buf, size_t size) noexcept;
 
     //! 手动关闭 Socket 会话，一般情况无需调用，除非需要提前释放资源
     void close() noexcept;
@@ -733,6 +797,63 @@ public:
      */
     SocketWriteAwaiter write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) { return {_ctx, _fd, addr, endpoint, data}; }
 
+    class SocketMultiReadAwaiter final : public AsyncReadAwaiter {
+    public:
+        SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
+            : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
+            for (size_t i = 0; i < _sizes.size(); ++i) {
+                _results[i].resize(_sizes[i]);
+            }
+        }
+        //! @cond
+#ifdef _WIN32
+        void await_suspend(std::coroutine_handle<> handle);
+#endif
+        std::tuple<std::vector<std::string>, std::string, uint16_t> await_resume() noexcept;
+        //! @endcond
+    private:
+        std::vector<size_t> _sizes;
+        std::vector<std::string> _results;
+#ifdef _WIN32
+        std::array<WSABUF, 64> _wsabufs{}; // 与协程帧同寿命，避免内核悬挂指针
+#endif
+    };
+    SocketMultiReadAwaiter multiread(const std::vector<size_t> &sizes) { return {_ctx, _fd, sizes}; }
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
+    SocketMultiReadAwaiter multiread(Args... sizes) {
+        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
+    }
+
+    class SocketMultiWriteAwaiter final : public AsyncWriteAwaiter {
+    public:
+        SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, std::string_view addr, const Endpoint &ep, const std::vector<std::string_view> &buffers)
+            : AsyncWriteAwaiter(ctx, FileDescriptor(fd), ""), _addr(addr), _endpoint(ep), _buffers(buffers) {}
+        //! @cond
+#ifdef _WIN32
+        void await_suspend(std::coroutine_handle<> handle);
+        bool await_resume();
+#else
+        bool await_resume();
+#endif
+        //! @endcond
+    private:
+        std::string _addr;
+        Endpoint _endpoint;
+        std::vector<std::string_view> _buffers;
+#ifdef _WIN32
+        std::array<WSABUF, 64> _wsabufs{};
+#endif
+    };
+    SocketMultiWriteAwaiter multiwrite(std::string_view addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) {
+        return {_ctx, _fd, addr, endpoint, buffers};
+    }
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
+    SocketMultiWriteAwaiter multiwrite(std::string_view addr, const Endpoint &endpoint, Args &&...args) {
+        return multiwrite(addr, endpoint, std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
+    }
+
 private:
     IOContextRef _ctx; //!< 异步 I/O 执行上下文
 };
@@ -879,6 +1000,61 @@ public:
      * @return 是否写入成功
      */
     SocketWriteAwaiter write(std::string_view data) { return {_ctx, _fd, data}; }
+
+    class SocketMultiReadAwaiter final : public AsyncReadAwaiter {
+    public:
+        SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
+            : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
+            for (size_t i = 0; i < _sizes.size(); ++i) {
+                _results[i].resize(_sizes[i]);
+            }
+        }
+        //! @cond
+#ifdef _WIN32
+        void await_suspend(std::coroutine_handle<> handle);
+        std::vector<std::string> await_resume() noexcept;
+#else
+        std::vector<std::string> await_resume();
+#endif
+        //! @endcond
+    private:
+        std::vector<size_t> _sizes;
+        std::vector<std::string> _results;
+#ifdef _WIN32
+        std::array<WSABUF, 64> _wsabufs{};
+#endif
+    };
+    SocketMultiReadAwaiter multiread(const std::vector<size_t> &sizes) { return {_ctx, _fd, sizes}; }
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
+    SocketMultiReadAwaiter multiread(Args... sizes) {
+        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
+    }
+
+    class SocketMultiWriteAwaiter final : public AsyncWriteAwaiter {
+    public:
+        SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, const std::vector<std::string_view> &buffers)
+            : AsyncWriteAwaiter(ctx, FileDescriptor(fd), ""), _buffers(buffers) {}
+        //! @cond
+#ifdef _WIN32
+        void await_suspend(std::coroutine_handle<> handle);
+        bool await_resume();
+#else
+        bool await_resume();
+#endif
+        //! @endcond
+    private:
+        std::vector<std::string_view> _buffers;
+#ifdef _WIN32
+        std::array<WSABUF, 64> _wsabufs{};
+#endif
+    };
+    SocketMultiWriteAwaiter multiwrite(const std::vector<std::string_view> &buffers) { return {_ctx, _fd, buffers}; }
+
+    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
+    SocketMultiWriteAwaiter multiwrite(Args &&...args) {
+        return multiwrite(std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
+    }
 
 private:
     IOContextRef _ctx; //!< 异步 I/O 执行上下文
