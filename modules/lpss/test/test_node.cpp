@@ -30,33 +30,33 @@ TEST(LPSS_node, same_domain_discover) {
     lpss::Node nd("node3");
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    auto [data, addr, port] = sock.read();
+    auto recvdata = sock.read();
     auto start_time = lpss::now();
-    while (data.empty() && lpss::now() - start_time < 50ms)
-        std::tie(data, addr, port) = sock.read();
-    EXPECT_FALSE(data.empty());
+    while (recvdata.data.empty() && lpss::now() - start_time < 50ms)
+        recvdata = sock.read();
+    EXPECT_FALSE(recvdata.data.empty());
 }
 
 TEST(LPSS_node, diff_domain_issolate) {
     lpss::Node nd( "node4", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    auto [data, addr, port] = sock.read();
+    auto recvdata = sock.read();
     auto start_time = lpss::now();
-    while (data.empty() && lpss::now() - start_time < 50ms)
-        std::tie(data, addr, port) = sock.read();
-    EXPECT_TRUE(data.empty());
+    while (recvdata.data.empty() && lpss::now() - start_time < 50ms)
+        recvdata = sock.read();
+    EXPECT_TRUE(recvdata.data.empty());
 }
 
 TEST(LPSS_node, diff_domain_discover) {
     lpss::Node nd("node5", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7501), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    auto [data, addr, port] = sock.read();
+    auto recvdata = sock.read();
     auto start_time = lpss::now();
-    while (data.empty() && lpss::now() - start_time < 50ms)
-        std::tie(data, addr, port) = sock.read();
-    EXPECT_FALSE(data.empty());
+    while (recvdata.data.empty() && lpss::now() - start_time < 50ms)
+        recvdata = sock.read();
+    EXPECT_FALSE(recvdata.data.empty());
 }
 
 } // namespace rm_test
