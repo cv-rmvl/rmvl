@@ -12,14 +12,14 @@ wget https://cv-rmvl.github.io/install -qO - | bash
 `rdt` 的使用非常简单，安装完成后在终端输入以下命令即可查看帮助文档：
 
 ```bash
-rmvl help
+rdt help
 ```
 
 `rdt` 的 CLI 核心命令包括：
 
-- rmvl：包含 `create`、`dev`、`update` 等子命令，主要用于 RMVL 项目的创建、构建、开发和更新。
+- rdt：包含 `create`、`dev`、`update` 等子命令，主要用于 RMVL 项目的创建、构建、开发和更新。
 
-  详细内容可参考 @subpage tutorial_rdt_rmvl 。
+  详细内容可参考 @subpage tutorial_rdt_rdt 。
 
 - lpss：包含 `node`、`topic`、`interface` 等子命令，主要用于 LPSS 相关的节点、话题、接口等资源的管理和调试。
 
