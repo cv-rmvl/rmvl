@@ -114,13 +114,13 @@ TEST(IO_socket, sync_udp_socket_nonblocking) {
         auto socket = listener.create();
         EXPECT_EQ(socket.endpoint().port(), 10905);
 
-        auto [msg, sender_ip, sender_port] = socket.read();
-        while (msg.empty())
-            std::tie(msg, sender_ip, sender_port) = socket.read();
-        EXPECT_EQ(msg, "Hello, UDP Socket!");
-        EXPECT_EQ(sender_ip, "127.0.0.1");
-        EXPECT_NE(sender_port, 0);
-        EXPECT_NE(sender_port, 10905);
+        auto recvdata = socket.read();
+        while (recvdata.data.empty())
+            recvdata = socket.read();
+        EXPECT_EQ(recvdata.data, "Hello, UDP Socket!");
+        EXPECT_EQ(recvdata.addr, "127.0.0.1");
+        EXPECT_NE(recvdata.port, 0);
+        EXPECT_NE(recvdata.port, 10905);
     });
 
     auto client_thrd = std::thread([&]() {

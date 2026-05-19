@@ -452,6 +452,7 @@ static _dgram_sendto_res parse_sendto(std::string_view addr, const Endpoint &end
 static constexpr size_t MAX_IOVEC = 64;
 
 #ifdef _WIN32
+
 static size_t build_write_wsabuf(const std::vector<std::string_view> &buffers, WSABUF *wsabufs) noexcept {
     size_t count = std::min(buffers.size(), MAX_IOVEC);
     for (size_t i = 0; i < count; ++i) {
@@ -469,7 +470,9 @@ static size_t build_read_wsabuf(const std::vector<std::string> &buffers, WSABUF 
     }
     return count;
 }
+
 #else
+
 static size_t build_write_iovec(const std::vector<std::string_view> &buffers, iovec *iov) noexcept {
     size_t count = std::min(buffers.size(), MAX_IOVEC);
     for (size_t i = 0; i < count; ++i) {
@@ -487,9 +490,10 @@ static size_t build_read_iovec(const std::vector<std::string> &buffers, iovec *i
     }
     return count;
 }
+
 #endif
 
-static std::tuple<std::string, std::string, uint16_t> fdrecvfrom(SocketFd fd) {
+static RecvData fdrecvfrom(SocketFd fd) {
     std::string buf;
     buf.resize(65536);
     sockaddr_storage sender_addr{};
@@ -529,7 +533,7 @@ Endpoint _endpoint(SocketFd fd) {
     }
 }
 
-std::tuple<std::string, std::string, uint16_t> DgramSocket::read() noexcept {
+RecvData DgramSocket::read() noexcept {
     RMVL_DbgAssert(_fd != INVALID_SOCKET_FD);
     return fdrecvfrom(_fd);
 }
@@ -572,7 +576,7 @@ bool DgramSocket::multiwrite(std::string_view addr, const Endpoint &endpoint, co
     }
     return false;
 #else
-    iovec iov[MAX_IOVEC];
+    iovec iov[MAX_IOVEC]{};
     size_t iov_cnt = build_write_iovec(buffers, iov);
 
     msghdr msg{};
@@ -586,7 +590,7 @@ bool DgramSocket::multiwrite(std::string_view addr, const Endpoint &endpoint, co
 #endif
 }
 
-std::tuple<size_t, std::string, uint16_t> DgramSocket::read_to(char *buf, size_t size) noexcept {
+RecvtoData DgramSocket::read_to(char *buf, size_t size) noexcept {
     if (_fd == INVALID_SOCKET_FD || !buf || size == 0)
         return {0, "", 0};
     sockaddr_storage sender_addr{};
@@ -599,7 +603,7 @@ std::tuple<size_t, std::string, uint16_t> DgramSocket::read_to(char *buf, size_t
     return {0, "", 0};
 }
 
-std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::multiread(const std::vector<size_t> &sizes) {
+MultiRecvData DgramSocket::multiread(const std::vector<size_t> &sizes) {
     if (sizes.empty())
         return {{}, "", 0};
 
@@ -622,7 +626,7 @@ std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::multire
         bytes_read = received;
     }
 #else
-    iovec iov[MAX_IOVEC];
+    iovec iov[MAX_IOVEC]{};
     size_t iov_cnt = build_read_iovec(result, iov);
 
     msghdr msg{};
@@ -695,7 +699,7 @@ bool StreamSocket::multiwrite(const std::vector<std::string_view> &buffers) noex
     }
     return false;
 #else
-    iovec iov[MAX_IOVEC];
+    iovec iov[MAX_IOVEC]{};
     size_t iov_cnt = build_write_iovec(buffers, iov);
 
     msghdr msg{};
@@ -739,7 +743,7 @@ std::vector<std::string> StreamSocket::multiread(const std::vector<size_t> &size
         bytes_read = received;
     }
 #else
-    iovec iov[MAX_IOVEC];
+    iovec iov[MAX_IOVEC]{};
     size_t iov_cnt = build_read_iovec(result, iov);
 
     msghdr msg{};
@@ -954,6 +958,18 @@ DgramSocket::SocketWriteAwaiter::SocketWriteAwaiter(IOContext &ctx, SocketFd fd,
     _addr = buf;
 }
 
+DgramSocket::SocketMultiReadAwaiter::SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
+    : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
+    for (size_t i = 0; i < _sizes.size(); ++i)
+        _results[i].resize(_sizes[i]);
+}
+
+StreamSocket::SocketMultiReadAwaiter::SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
+    : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
+    for (size_t i = 0; i < _sizes.size(); ++i)
+        _results[i].resize(_sizes[i]);
+}
+
 #ifdef _WIN32
 
 DgramSocket::DgramSocket(IOContext &io_context, SocketFd fd) : ::rm::DgramSocket(fd), _ctx(io_context) {
@@ -984,7 +1000,7 @@ void DgramSocket::SocketReadAwaiter::await_suspend(std::coroutine_handle<> handl
     }
 }
 
-std::tuple<std::string, std::string, uint16_t> DgramSocket::SocketReadAwaiter::await_resume() noexcept {
+RecvData DgramSocket::SocketReadAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     DWORD bytes_transferred = 0;
     if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
@@ -1036,7 +1052,7 @@ void DgramSocket::SocketMultiReadAwaiter::await_suspend(std::coroutine_handle<> 
     }
 }
 
-std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::SocketMultiReadAwaiter::await_resume() noexcept {
+MultiRecvData DgramSocket::SocketMultiReadAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     DWORD bytes_transferred = 0;
     if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
@@ -1330,7 +1346,7 @@ StreamSocket Connector::ConnectAwaiter::await_resume() noexcept {
 
 DgramSocket::DgramSocket(IOContext &io_context, SocketFd fd) : ::rm::DgramSocket(fd), _ctx(io_context) {}
 
-std::tuple<std::string, std::string, uint16_t> DgramSocket::SocketReadAwaiter::await_resume() noexcept {
+RecvData DgramSocket::SocketReadAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
     return fdrecvfrom(_fd);
@@ -1342,7 +1358,7 @@ bool DgramSocket::SocketWriteAwaiter::await_resume() {
     return fdsendto(_fd, _addr, _endpoint, _data);
 }
 
-std::tuple<std::vector<std::string>, std::string, uint16_t> DgramSocket::SocketMultiReadAwaiter::await_resume() noexcept {
+MultiRecvData DgramSocket::SocketMultiReadAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
 

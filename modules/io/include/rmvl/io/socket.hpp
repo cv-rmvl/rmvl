@@ -12,9 +12,6 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
-#include <string>
-#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -323,6 +320,27 @@ private:
 
 #endif
 
+//! Socket 读取结果结构体
+struct RecvData {
+    std::string data; //!< 读取的数据
+    std::string addr; //!< 发送方地址
+    uint16_t port;    //!< 发送方端口
+};
+
+//! Socket 读取结果结构体
+struct RecvtoData {
+    size_t bytes;     //!< 实际读取的字节数
+    std::string addr; //!< 发送方地址
+    uint16_t port;    //!< 发送方端口
+};
+
+//! Socket 多缓冲区读取结果结构体
+struct MultiRecvData {
+    std::vector<std::string> data; //!< 读取的数据分片数组
+    std::string addr;              //!< 发送方地址
+    uint16_t port;                 //!< 发送方端口
+};
+
 //! 由 rm::Listener 或 rm::Sender 建立的数据报式 Socket 会话
 class DgramSocket {
 public:
@@ -363,7 +381,7 @@ public:
      * @retval addr 发送方地址
      * @retval port 发送方端口
      */
-    std::tuple<std::string, std::string, uint16_t> read() noexcept;
+    RecvData read() noexcept;
 
     /**
      * @brief 同步写入数据到的 Socket 中（阻塞）
@@ -394,7 +412,12 @@ public:
     bool write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) noexcept;
 
     /**
-     * @brief 同步多缓冲区写入（Scatter/Gather I/O ）
+     * @brief 同步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = socket.multiwrite("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), {"Hello,", " ", "World!"});
+     * @endcode
+     *
      * @param[in] addr 目标地址
      * @param[in] endpoint 目标端点
      * @param[in] buffers 待写入的多个数据视图
@@ -402,27 +425,42 @@ public:
      */
     bool multiwrite(std::string_view addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) noexcept;
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
+    /**
+     * @brief 同步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = socket.multiwrite("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello,", " ", "World!");
+     * @endcode
+     *
+     * @tparam Args 可变参数包，要求每个参数都能构造为 `std::string_view`
+     * @param[in] addr 目标地址
+     * @param[in] endpoint 目标端点
+     * @param[in] args 待写入的多个数据参数包
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
     bool multiwrite(std::string_view addr, const Endpoint &endpoint, Args &&...args) noexcept {
-        return multiwrite(addr, endpoint, std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
+        return multiwrite(addr, endpoint, std::vector{std::string_view(std::forward<Args>(args))...});
     }
 
     /**
-     * @brief 同步多缓冲区读取（Scatter Read）
+     * @brief 同步多缓冲区读取
+     *
      * @param[in] sizes 预期读取的各分片数据大小
      * @return 读取到的数据分片数组，发送方 IP，发送方端口
      */
-    std::tuple<std::vector<std::string>, std::string, uint16_t> multiread(const std::vector<size_t> &sizes);
+    MultiRecvData multiread(const std::vector<std::size_t> &sizes);
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
-    std::tuple<std::vector<std::string>, std::string, uint16_t> multiread(Args... sizes) {
-        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
-    }
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...)>>
+    MultiRecvData multiread(Args... sizes) { return multiread(std::vector{static_cast<size_t>(sizes)...}); }
 
     /**
      * @brief 同步读取数据到预分配内存中
+     *
+     * @param[in] buf 预分配内存的首地址
+     * @param[in] size 预期读取的字节数
+     * @return 实际读取的字节数，发送方 IP，发送方端口
      */
-    std::tuple<size_t, std::string, uint16_t> read_to(char *buf, size_t size) noexcept;
+    RecvtoData read_to(char *buf, size_t size) noexcept;
 
 protected:
     SocketFd _fd{INVALID_SOCKET_FD}; //!< 会话文件描述符
@@ -558,32 +596,53 @@ public:
     bool write(std::string_view data) noexcept;
 
     /**
-     * @brief 同步多缓冲区写入（Scatter/Gather I/O ）
+     * @brief 同步多缓冲区写入
+     *
      * @param[in] buffers 待写入的多个数据视图
      * @return 是否全部写入成功
      */
     bool multiwrite(const std::vector<std::string_view> &buffers) noexcept;
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
-    bool multiwrite(Args &&...args) noexcept {
-        return multiwrite(std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
-    }
+    /**
+     * @brief 同步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = socket.multiwrite("Hello,", " ", "World!");
+     * @endcode
+     *
+     * @tparam Args 可变参数包，要求每个参数都能构造为 `std::string_view`
+     * @param[in] args 待写入的多个数据参数包
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
+    bool multiwrite(Args &&...args) noexcept { return multiwrite(std::vector{std::string_view(std::forward<Args>(args))...}); }
 
     /**
-     * @brief 同步多缓冲区读取（Scatter Read）
-     * @note 所见即所得，库内部开辟内存
+     * @brief 同步多缓冲区读取
+     * @code {.cpp}
+     * // 使用示例
+     * auto data_parts = socket.multiread({5, 10, 15});
+     * @endcode
      * @param[in] sizes 预期读取的各分片数据大小
      * @return 读取到的数据分片数组（遇到异常或断开时，返回的 vector 会少于期望分片或包含空串）
      */
     std::vector<std::string> multiread(const std::vector<size_t> &sizes);
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
-    std::vector<std::string> multiread(Args... sizes) {
-        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
-    }
+    /**
+     * @brief 同步多缓冲区读取
+     * @code {.cpp}
+     * // 使用示例
+     * auto data_parts = socket.multiread(5, 10, 15);
+     * @endcode
+     *
+     * @tparam Args
+     * @param[in] sizes 预期读取的各分片数据大小
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...)>>
+    std::vector<std::string> multiread(Args... sizes) { return multiread(std::vector{static_cast<size_t>(sizes)...}); }
 
     /**
      * @brief 同步读取数据到指定预分配内存中
+     *
      * @param[out] buf 预分配内存的首地址
      * @param[in] size 预期读取的字节数
      * @return 实际读取的字节数
@@ -713,7 +772,7 @@ public:
 #ifdef _WIN32
         void await_suspend(std::coroutine_handle<> handle);
 #endif
-        std::tuple<std::string, std::string, uint16_t> await_resume() noexcept;
+        RecvData await_resume() noexcept;
         //! @endcond
     };
 
@@ -797,34 +856,50 @@ public:
      */
     SocketWriteAwaiter write(std::array<uint8_t, 4> addr, const Endpoint &endpoint, std::string_view data) { return {_ctx, _fd, addr, endpoint, data}; }
 
+    //! 数据报式 Socket 多缓冲区异步读等待器
     class SocketMultiReadAwaiter final : public AsyncReadAwaiter {
     public:
-        SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
-            : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
-            for (size_t i = 0; i < _sizes.size(); ++i) {
-                _results[i].resize(_sizes[i]);
-            }
-        }
+        SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes);
         //! @cond
 #ifdef _WIN32
         void await_suspend(std::coroutine_handle<> handle);
 #endif
-        std::tuple<std::vector<std::string>, std::string, uint16_t> await_resume() noexcept;
+        MultiRecvData await_resume() noexcept;
         //! @endcond
     private:
         std::vector<size_t> _sizes;
         std::vector<std::string> _results;
 #ifdef _WIN32
-        std::array<WSABUF, 64> _wsabufs{}; // 与协程帧同寿命，避免内核悬挂指针
+        std::array<WSABUF, 64> _wsabufs{};
 #endif
     };
+
+    /**
+     * @brief 异步多缓冲区读取
+     * @code {.cpp}
+     * // 使用示例
+     * auto [data_parts, addr, port] = co_await socket.multiread({5, 10, 15});
+     * @endcode
+     *
+     * @param[in] sizes 预期读取的各分片数据大小
+     * @return 读取到的数据分片数组，发送方 IP，发送方端口
+     */
     SocketMultiReadAwaiter multiread(const std::vector<size_t> &sizes) { return {_ctx, _fd, sizes}; }
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
-    SocketMultiReadAwaiter multiread(Args... sizes) {
-        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
-    }
+    /**
+     * @brief 异步多缓冲区读取
+     * @code {.cpp}
+     * // 使用示例
+     * auto [data_parts, addr, port] = co_await socket.multiread(5, 10, 15);
+     * @endcode
+     *
+     * @tparam Args 可变参数包，要求每个参数都能转换为 `size_t`
+     * @param[in] sizes 预期读取的各分片数据大小
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...)>>
+    SocketMultiReadAwaiter multiread(Args... sizes) { return multiread(std::vector{static_cast<size_t>(sizes)...}); }
 
+    //! 数据报式 Socket 多缓冲区异步写等待器
     class SocketMultiWriteAwaiter final : public AsyncWriteAwaiter {
     public:
         SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, std::string_view addr, const Endpoint &ep, const std::vector<std::string_view> &buffers)
@@ -845,13 +920,35 @@ public:
         std::array<WSABUF, 64> _wsabufs{};
 #endif
     };
+
+    /**
+     * @brief 异步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = co_await socket.multiwrite("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), {"Hello", ", ", "World!"});
+     * @endcode
+     *
+     * @param[in] addr 目标地址
+     * @param[in] endpoint 目标端点
+     * @param[in] buffers 待写入的多个数据视图
+     * @return 是否写入成功
+     */
     SocketMultiWriteAwaiter multiwrite(std::string_view addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) {
         return {_ctx, _fd, addr, endpoint, buffers};
     }
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
+    /**
+     * @brief 异步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = co_await socket.multiwrite("192.168.1.100", rm::Endpoint(rm::ip::udp::v4(), 12345), "Hello", ", ", "World!");
+     * @endcode
+     *
+     * @tparam Args 可变参数包，要求每个参数都能构造为 `std::string_view`
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
     SocketMultiWriteAwaiter multiwrite(std::string_view addr, const Endpoint &endpoint, Args &&...args) {
-        return multiwrite(addr, endpoint, std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
+        return multiwrite(addr, endpoint, std::vector{std::string_view(std::forward<Args>(args))...});
     }
 
 private:
@@ -1001,14 +1098,10 @@ public:
      */
     SocketWriteAwaiter write(std::string_view data) { return {_ctx, _fd, data}; }
 
+    //! 流式 Socket 多缓冲区异步读等待器
     class SocketMultiReadAwaiter final : public AsyncReadAwaiter {
     public:
-        SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
-            : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
-            for (size_t i = 0; i < _sizes.size(); ++i) {
-                _results[i].resize(_sizes[i]);
-            }
-        }
+        SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes);
         //! @cond
 #ifdef _WIN32
         void await_suspend(std::coroutine_handle<> handle);
@@ -1024,13 +1117,33 @@ public:
         std::array<WSABUF, 64> _wsabufs{};
 #endif
     };
+
+    /**
+     * @brief 异步多缓冲区读取
+     * @code {.cpp}
+     * // 使用示例
+     * auto data_parts = co_await socket.multiread({5, 10, 15});
+     * @endcode
+     *
+     * @param[in] sizes 预期读取的各分片数据大小
+     * @return 读取到的数据分片数组（遇到异常或断开时，返回的 vector 会少于期望分片或包含空串）
+     */
     SocketMultiReadAwaiter multiread(const std::vector<size_t> &sizes) { return {_ctx, _fd, sizes}; }
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...), int> = 0>
-    SocketMultiReadAwaiter multiread(Args... sizes) {
-        return multiread(std::vector<size_t>{static_cast<size_t>(sizes)...});
-    }
+    /**
+     * @brief 异步多缓冲区读取
+     * @code {.cpp}
+     * // 使用示例
+     * auto data_parts = co_await socket.multiread(5, 10, 15);
+     * @endcode
+     *
+     * @tparam Args 可变参数包，要求每个参数都能转换为 `size_t`
+     * @param[in] sizes 预期读取的各分片数据大小
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_convertible_v<Args, size_t> && ...)>>
+    SocketMultiReadAwaiter multiread(Args... sizes) { return multiread(std::vector{static_cast<size_t>(sizes)...}); }
 
+    //! 流式 Socket 多缓冲区异步写等待器
     class SocketMultiWriteAwaiter final : public AsyncWriteAwaiter {
     public:
         SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, const std::vector<std::string_view> &buffers)
@@ -1049,12 +1162,31 @@ public:
         std::array<WSABUF, 64> _wsabufs{};
 #endif
     };
+
+    /**
+     * @brief 异步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = co_await socket.multiwrite({"Hello", ", ", "World!"});
+     * @endcode
+     *
+     * @param[in] buffers 待写入的多个数据视图
+     * @return 是否写入成功
+     */
     SocketMultiWriteAwaiter multiwrite(const std::vector<std::string_view> &buffers) { return {_ctx, _fd, buffers}; }
 
-    template <typename... Args, typename std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...), int> = 0>
-    SocketMultiWriteAwaiter multiwrite(Args &&...args) {
-        return multiwrite(std::vector<std::string_view>{std::string_view(std::forward<Args>(args))...});
-    }
+    /**
+     * @brief 异步多缓冲区写入
+     * @code {.cpp}
+     * // 使用示例
+     * bool success = co_await socket.multiwrite("Hello", ", ", "World!");
+     * @endcode
+     *
+     * @tparam Args 可变参数包，要求每个参数都能构造为 `std::string_view`
+     * @param[in] args 待写入的多个数据参数包
+     */
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
+    SocketMultiWriteAwaiter multiwrite(Args &&...args) { return multiwrite(std::vector{std::string_view(std::forward<Args>(args))...}); }
 
 private:
     IOContextRef _ctx; //!< 异步 I/O 执行上下文
