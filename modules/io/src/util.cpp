@@ -10,6 +10,7 @@
  */
 
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <sstream>
 
@@ -17,6 +18,20 @@
 #include "rmvl/io/util.hpp"
 
 namespace rm {
+
+static bool readFloatToken(std::istream &is, float &value) noexcept {
+    std::string token;
+    if (!(is >> token))
+        return false;
+    while (!token.empty() && (token.back() == ',' || std::isspace(static_cast<unsigned char>(token.back()))))
+        token.pop_back();
+    try {
+        value = std::stof(token);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
 
 void ImuData::write(std::ostream &os, const ImuData &data) noexcept {
     os << data.translation.x << ", " << data.translation.y << ", " << data.translation.z << ", "
@@ -26,15 +41,11 @@ void ImuData::write(std::ostream &os, const ImuData &data) noexcept {
 }
 
 void ImuData::read(std::istream &is, ImuData &data) noexcept {
-    std::string tstr[6];
-    std::for_each(tstr, tstr + 6, [&is](std::string &s) { is >> s; });
-    size_t t_idx = 0;
-    reflect::for_each(data.translation, [&](auto &&val) { val = std::stof(tstr[t_idx++]); });
-
-    std::string rstr[6];
-    std::for_each(rstr, rstr + 6, [&is](std::string &s) { is >> s; });
-    size_t r_idx = 0;
-    reflect::for_each(data.rotation, [&](auto &&val) { val = std::stof(rstr[r_idx++]); });
+    bool ok = true;
+    reflect::for_each(data.translation, [&](auto &&val) { ok = ok && readFloatToken(is, val); });
+    reflect::for_each(data.rotation, [&](auto &&val) { ok = ok && readFloatToken(is, val); });
+    if (!ok)
+        is.setstate(std::ios::failbit);
 }
 
 void ImuData::write(std::string_view output_file, const std::vector<ImuData> &datas) noexcept {
@@ -51,10 +62,11 @@ std::vector<ImuData> ImuData::read(std::string_view input_file) noexcept {
         return {};
     std::vector<ImuData> datas;
     datas.reserve(1000);
-    while (!ifs.eof()) {
+    while (ifs) {
         ImuData d;
         read(ifs, d);
-        datas.push_back(d);
+        if (ifs)
+            datas.push_back(d);
     }
     ifs.close();
     return datas;
@@ -62,6 +74,8 @@ std::vector<ImuData> ImuData::read(std::string_view input_file) noexcept {
 
 void writeCorners(std::ostream &out, const std::vector<std::vector<std::array<float, 2>>> &corners) {
     std::for_each(corners.begin(), corners.end(), [&out](const auto &corner) {
+        if (corner.empty())
+            return;
         std::for_each(corner.begin(), corner.end() - 1, [&out](const auto &p) {
             out << p[0] << ", " << p[1] << ", ";
         });
@@ -77,12 +91,14 @@ void readCorners(std::istream &in, std::vector<std::vector<std::array<float, 2>>
             break;
         std::vector<std::array<float, 2>> corner;
         std::istringstream iss(line);
-        while (!iss.eof()) {
-            std::string point[2];
-            iss >> point[0] >> point[1];
-            corner.push_back({std::stof(point[0]), std::stof(point[1])});
+        while (iss) {
+            float point[2]{};
+            if (!readFloatToken(iss, point[0]) || !readFloatToken(iss, point[1]))
+                break;
+            corner.push_back({point[0], point[1]});
         }
-        corners.emplace_back(std::move(corner));
+        if (!corner.empty())
+            corners.emplace_back(std::move(corner));
     }
 }
 

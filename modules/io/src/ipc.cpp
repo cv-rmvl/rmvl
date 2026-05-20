@@ -24,6 +24,7 @@
 #endif
 
 #include <cstring>
+#include <utility>
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/io/ipc.hpp"
@@ -109,14 +110,45 @@ PipeClient::PipeClient(std::string_view name, bool ov) {
 }
 
 PipeServer::~PipeServer() {
+    if (_fd == INVALID_HANDLE_VALUE)
+        return;
     if (!DisconnectNamedPipe(_fd))
         ERROR_("Failed to disconnect named pipe");
     closePipe(_fd);
+    _fd = INVALID_HANDLE_VALUE;
 }
 
 PipeClient::~PipeClient() {
-    if (_fd != INVALID_HANDLE_VALUE)
+    if (_fd != INVALID_HANDLE_VALUE) {
         closePipe(_fd);
+        _fd = INVALID_HANDLE_VALUE;
+    }
+}
+
+PipeServer::PipeServer(PipeServer &&other) noexcept
+    : _name(std::exchange(other._name, {})), _fd(std::exchange(other._fd, INVALID_HANDLE_VALUE)) {}
+
+PipeServer &PipeServer::operator=(PipeServer &&other) noexcept {
+    if (this != &other) {
+        if (_fd != INVALID_HANDLE_VALUE) {
+            DisconnectNamedPipe(_fd);
+            closePipe(_fd);
+        }
+        _name = std::exchange(other._name, {});
+        _fd = std::exchange(other._fd, INVALID_HANDLE_VALUE);
+    }
+    return *this;
+}
+
+PipeClient::PipeClient(PipeClient &&other) noexcept : _fd(std::exchange(other._fd, INVALID_HANDLE_VALUE)) {}
+
+PipeClient &PipeClient::operator=(PipeClient &&other) noexcept {
+    if (this != &other) {
+        if (_fd != INVALID_HANDLE_VALUE)
+            closePipe(_fd);
+        _fd = std::exchange(other._fd, INVALID_HANDLE_VALUE);
+    }
+    return *this;
 }
 
 SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size) {
@@ -146,6 +178,31 @@ SHMBase::~SHMBase() {
         UnmapViewOfFile(_ptr);
     if (_fd != nullptr)
         CloseHandle(_fd);
+    _ptr = nullptr;
+    _fd = nullptr;
+    _is_creator = false;
+}
+
+SHMBase::SHMBase(SHMBase &&other) noexcept
+    : _size(std::exchange(other._size, 0)),
+      _name(std::exchange(other._name, {})),
+      _ptr(std::exchange(other._ptr, nullptr)),
+      _fd(std::exchange(other._fd, nullptr)),
+      _is_creator(std::exchange(other._is_creator, false)) {}
+
+SHMBase &SHMBase::operator=(SHMBase &&other) noexcept {
+    if (this != &other) {
+        if (_ptr != nullptr)
+            UnmapViewOfFile(_ptr);
+        if (_fd != nullptr)
+            CloseHandle(_fd);
+        _size = std::exchange(other._size, 0);
+        _name = std::exchange(other._name, {});
+        _ptr = std::exchange(other._ptr, nullptr);
+        _fd = std::exchange(other._fd, nullptr);
+        _is_creator = std::exchange(other._is_creator, false);
+    }
+    return *this;
 }
 
 #else
@@ -181,14 +238,46 @@ PipeServer::PipeServer(std::string_view name, bool) : _name("/tmp/"s + name.data
 }
 
 PipeServer::~PipeServer() {
-    if (_fd != -1)
+    if (_fd != -1) {
         ::close(_fd);
+        _fd = -1;
+    }
+    if (!_name.empty())
+        ::unlink(_name.c_str());
 }
 
 PipeClient::PipeClient(std::string_view name, bool) : _fd(::open(("/tmp/"s + name.data()).c_str(), O_RDWR)) {}
 PipeClient::~PipeClient() {
-    if (_fd != -1)
+    if (_fd != -1) {
         ::close(_fd);
+        _fd = -1;
+    }
+}
+
+PipeServer::PipeServer(PipeServer &&other) noexcept
+    : _name(std::exchange(other._name, {})), _fd(std::exchange(other._fd, INVALID_FD)) {}
+
+PipeServer &PipeServer::operator=(PipeServer &&other) noexcept {
+    if (this != &other) {
+        if (_fd != -1)
+            ::close(_fd);
+        if (!_name.empty())
+            ::unlink(_name.c_str());
+        _name = std::exchange(other._name, {});
+        _fd = std::exchange(other._fd, INVALID_FD);
+    }
+    return *this;
+}
+
+PipeClient::PipeClient(PipeClient &&other) noexcept : _fd(std::exchange(other._fd, INVALID_FD)) {}
+
+PipeClient &PipeClient::operator=(PipeClient &&other) noexcept {
+    if (this != &other) {
+        if (_fd != -1)
+            ::close(_fd);
+        _fd = std::exchange(other._fd, INVALID_FD);
+    }
+    return *this;
 }
 
 SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(name.find('/') == 0 ? std::string(name) : "/"s.append(name)) {
@@ -243,12 +332,39 @@ SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(n
 }
 
 SHMBase::~SHMBase() {
-    if (_ptr != MAP_FAILED)
+    if (_ptr != nullptr && _ptr != MAP_FAILED)
         munmap(_ptr, _size);
     if (_fd != -1)
         close(_fd);
     if (_is_creator)
         ::shm_unlink(_name.c_str());
+    _ptr = nullptr;
+    _fd = -1;
+    _is_creator = false;
+}
+
+SHMBase::SHMBase(SHMBase &&other) noexcept
+    : _size(std::exchange(other._size, 0)),
+      _name(std::exchange(other._name, {})),
+      _ptr(std::exchange(other._ptr, nullptr)),
+      _fd(std::exchange(other._fd, INVALID_FD)),
+      _is_creator(std::exchange(other._is_creator, false)) {}
+
+SHMBase &SHMBase::operator=(SHMBase &&other) noexcept {
+    if (this != &other) {
+        if (_ptr != nullptr && _ptr != MAP_FAILED)
+            munmap(_ptr, _size);
+        if (_fd != -1)
+            close(_fd);
+        if (_is_creator)
+            ::shm_unlink(_name.c_str());
+        _size = std::exchange(other._size, 0);
+        _name = std::exchange(other._name, {});
+        _ptr = std::exchange(other._ptr, nullptr);
+        _fd = std::exchange(other._fd, INVALID_FD);
+        _is_creator = std::exchange(other._is_creator, false);
+    }
+    return *this;
 }
 
 #endif
@@ -308,6 +424,21 @@ bool MqClient::write(std::string_view, uint32_t) noexcept { return false; }
 MqServer::~MqServer() {}
 MqClient::~MqClient() {}
 
+MqServer::MqServer(MqServer &&other) noexcept : _name(std::exchange(other._name, {})), _mq(std::exchange(other._mq, INVALID_HANDLE_VALUE)) {}
+MqServer &MqServer::operator=(MqServer &&other) noexcept {
+    if (this != &other) {
+        _name = std::exchange(other._name, {});
+        _mq = std::exchange(other._mq, INVALID_HANDLE_VALUE);
+    }
+    return *this;
+}
+MqClient::MqClient(MqClient &&other) noexcept : _mq(std::exchange(other._mq, INVALID_HANDLE_VALUE)) {}
+MqClient &MqClient::operator=(MqClient &&other) noexcept {
+    if (this != &other)
+        _mq = std::exchange(other._mq, INVALID_HANDLE_VALUE);
+    return *this;
+}
+
 #else
 
 MqServer::MqServer(std::string_view name) : _name(name) {
@@ -324,9 +455,26 @@ MqServer::MqServer(std::string_view name) : _name(name) {
 }
 
 MqServer::~MqServer() {
-    if (_mq >= 0)
+    if (_mq >= 0) {
         mq_close(_mq);
-    mq_unlink(_name.data());
+        _mq = -1;
+    }
+    if (!_name.empty())
+        mq_unlink(_name.data());
+}
+
+MqServer::MqServer(MqServer &&other) noexcept : _name(std::exchange(other._name, {})), _mq(std::exchange(other._mq, INVALID_FD)) {}
+
+MqServer &MqServer::operator=(MqServer &&other) noexcept {
+    if (this != &other) {
+        if (_mq >= 0)
+            mq_close(_mq);
+        if (!_name.empty())
+            mq_unlink(_name.data());
+        _name = std::exchange(other._name, {});
+        _mq = std::exchange(other._mq, INVALID_FD);
+    }
+    return *this;
 }
 
 MqClient::MqClient(std::string_view name) : _mq(mq_open(name.data(), O_RDWR)) {
@@ -337,8 +485,21 @@ MqClient::MqClient(std::string_view name) : _mq(mq_open(name.data(), O_RDWR)) {
 }
 
 MqClient::~MqClient() {
-    if (_mq >= 0)
+    if (_mq >= 0) {
         mq_close(_mq);
+        _mq = -1;
+    }
+}
+
+MqClient::MqClient(MqClient &&other) noexcept : _mq(std::exchange(other._mq, INVALID_FD)) {}
+
+MqClient &MqClient::operator=(MqClient &&other) noexcept {
+    if (this != &other) {
+        if (_mq >= 0)
+            mq_close(_mq);
+        _mq = std::exchange(other._mq, INVALID_FD);
+    }
+    return *this;
 }
 
 static std::string mqRead(int mq) noexcept {
