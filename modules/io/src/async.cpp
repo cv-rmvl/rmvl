@@ -50,6 +50,15 @@ void IOContext::run() {
             task->handle().resume();
             if (!task->handle().done())
                 unfinish.insert({task->handle().address(), std::move(task)});
+            else {
+                try {
+                    task->rethrow_if_exception();
+                } catch (const std::exception &e) {
+                    WARNING_("Unhandled async task exception: %s", e.what());
+                } catch (...) {
+                    WARNING_("Unhandled async task exception");
+                }
+            }
         }
         // 处理 IO 事件
         constexpr std::size_t MAX_EVENTS = 256;
@@ -285,6 +294,15 @@ void IOContext::run() {
             task->handle().resume();
             if (!task->handle().done())
                 unfinish.insert({task->handle().address(), std::move(task)});
+            else {
+                try {
+                    task->rethrow_if_exception();
+                } catch (const std::exception &e) {
+                    WARNING_("Unhandled async task exception: %s", e.what());
+                } catch (...) {
+                    WARNING_("Unhandled async task exception");
+                }
+            }
         }
         // 处理 IO 事件
         constexpr std::size_t MAX_EVENTS = 256;
@@ -353,11 +371,7 @@ void AsyncWriteAwaiter::await_suspend(std::coroutine_handle<> handle) {
 bool AsyncWriteAwaiter::await_resume() {
     RMVL_DbgAssert(_fd >= 0);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-#if _WIN32
-    ssize_t n = ::write(_fd, _data.data(), static_cast<int>(_data.size()));
-#else
     ssize_t n = ::write(_fd, _data.data(), _data.size());
-#endif
     return n == static_cast<ssize_t>(_data.size());
 }
 

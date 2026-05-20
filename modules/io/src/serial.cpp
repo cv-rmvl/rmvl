@@ -16,6 +16,8 @@
 #include <unistd.h>
 #endif
 
+#include <utility>
+
 #if __cplusplus >= 202002L
 
 #ifndef _WIN32
@@ -30,9 +32,28 @@
 
 namespace rm {
 
-SerialPort::~SerialPort() = default;
+SerialPort::~SerialPort() { close(); }
 
 SerialPort::SerialPort(std::string_view device, BaudRate rate, SerialReadMode mode) : _device(device), _baud_rate(rate), _read_mode(mode) { open(); }
+
+SerialPort::SerialPort(SerialPort &&other) noexcept
+    : _fd(std::exchange(other._fd, INVALID_FD)),
+      _is_open(std::exchange(other._is_open, false)),
+      _device(std::move(other._device)),
+      _baud_rate(other._baud_rate),
+      _read_mode(other._read_mode) {}
+
+SerialPort &SerialPort::operator=(SerialPort &&other) noexcept {
+    if (this != &other) {
+        close();
+        _fd = std::exchange(other._fd, INVALID_FD);
+        _is_open = std::exchange(other._is_open, false);
+        _device = std::move(other._device);
+        _baud_rate = other._baud_rate;
+        _read_mode = other._read_mode;
+    }
+    return *this;
+}
 
 static unsigned int getBaudRate(BaudRate baud_rate) {
 #ifdef _WIN32
@@ -59,6 +80,7 @@ bool SerialPort::read(std::string &data) {
 
 void SerialPort::open() {
     INFO_("Opening the serial port: %s", _device.c_str());
+    close();
     _fd = CreateFileA(
         _device.c_str(),
         GENERIC_READ | GENERIC_WRITE,
@@ -108,8 +130,9 @@ void SerialPort::open() {
 }
 
 void SerialPort::close() {
-    if (_is_open)
+    if (_is_open && _fd != INVALID_HANDLE_VALUE)
         CloseHandle(_fd);
+    _fd = INVALID_HANDLE_VALUE;
     _is_open = false;
 }
 
@@ -147,6 +170,7 @@ long int SerialPort::fdread(void *data, std::size_t len) {
 
 void SerialPort::open() {
     INFO_("Opening the serial port: %s", _device.c_str());
+    close();
     _fd = ::open(_device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (_fd < 0) {
         ERROR_("Failed to open the serial port.");
@@ -183,8 +207,9 @@ void SerialPort::open() {
 }
 
 void SerialPort::close() {
-    if (_is_open)
+    if (_is_open && _fd >= 0)
         ::close(_fd);
+    _fd = INVALID_FD;
     _is_open = false;
 }
 
@@ -240,13 +265,23 @@ SerialPort::SerialPort(IOContext &io_context, std::string_view device, BaudRate 
 }
 
 std::string SerialPort::SerialReadAwaiter::await_resume() noexcept {
+    DWORD bytes_transferred{};
+    if (!_ovl || !GetOverlappedResult(_fd, &_ovl->ov, &bytes_transferred, false)) {
+        WARNING_("Serial read failed, error code: %lu", GetLastError());
+        return {};
+    }
     PurgeComm(_fd, PURGE_RXCLEAR);
-    return _ovl ? _ovl->buf : std::string{};
+    return std::string(_ovl->buf, bytes_transferred);
 }
 
 bool SerialPort::SerialWriteAwaiter::await_resume() noexcept {
+    DWORD bytes_transferred{};
+    if (!_ovl || !GetOverlappedResult(_fd, &_ovl->ov, &bytes_transferred, false)) {
+        WARNING_("Serial write failed, error code: %lu", GetLastError());
+        return false;
+    }
     PurgeComm(_fd, PURGE_TXCLEAR);
-    return _ovl != nullptr;
+    return bytes_transferred == _data.size();
 }
 
 #else
