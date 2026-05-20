@@ -402,18 +402,28 @@ URLParseInfo parseURL(std::string_view url) {
 
     // 查找路径部分
     auto path_start = url.find('/');
+    auto query_start = url.find('?');
+    if (query_start != std::string_view::npos && path_start != std::string_view::npos && query_start < path_start)
+        path_start = std::string_view::npos;
     std::string_view host_part;
     if (path_start != std::string_view::npos) {
         host_part = url.substr(0, path_start);
         path = url.substr(path_start);
     } else {
-        host_part = url;
+        host_part = query_start == std::string_view::npos ? url : url.substr(0, query_start);
         path = "/";
     }
 
     // 查找端口部分
-    auto port_start = host_part.find(':');
-    if (port_start != std::string_view::npos) {
+    auto port_start = host_part.rfind(':');
+    if (!host_part.empty() && host_part.front() == '[') {
+        auto ipv6_end = host_part.find(']');
+        hostname = ipv6_end == std::string_view::npos ? host_part : host_part.substr(1, ipv6_end - 1);
+        if (ipv6_end != std::string_view::npos && ipv6_end + 1 < host_part.size() && host_part[ipv6_end + 1] == ':') {
+            auto port_str = host_part.substr(ipv6_end + 2);
+            port = static_cast<uint16_t>(std::stoi(std::string(port_str)));
+        }
+    } else if (port_start != std::string_view::npos) {
         hostname = host_part.substr(0, port_start);
         auto port_str = host_part.substr(port_start + 1);
         port = static_cast<uint16_t>(std::stoi(std::string(port_str)));
@@ -421,9 +431,8 @@ URLParseInfo parseURL(std::string_view url) {
         hostname = host_part;
 
     // 查找查询参数部分
-    auto query_start = url.find('?');
     if (query_start != std::string_view::npos) {
-        path = url.substr(path_start, query_start - path_start);
+        path = path_start == std::string_view::npos ? "/" : std::string(url.substr(path_start, query_start - path_start));
         auto query_str = url.substr(query_start + 1);
         query = str::split(query_str, "&");
     }

@@ -104,7 +104,9 @@ class Promise<void> : public BasicPromise {
 public:
     auto get_return_object() noexcept { return std::coroutine_handle<Promise>::from_promise(*this); }
     FinalAwaiter<void> final_suspend() noexcept { return {}; }
-    void return_void() {
+    void return_void() noexcept {}
+
+    void get() {
         if (_exception)
             std::rethrow_exception(_exception);
     }
@@ -131,11 +133,11 @@ struct TaskAwaiter {
         self.promise().previous = handle;
         return self;
     }
-    Tp await_resume() noexcept {
+    Tp await_resume() {
         if constexpr (!std::is_void_v<Tp>)
             return self.promise().get();
         else
-            return;
+            self.promise().get();
     }
 
     handle_t self{};
@@ -154,13 +156,21 @@ public:
     Task &operator=(const Task &) = delete;
 
     Task(Task &&other) noexcept : _handle(other._handle) { other._handle = nullptr; }
-    Task &operator=(Task &&other) noexcept = default;
+    Task &operator=(Task &&other) noexcept {
+        if (this != &other) {
+            _handle ? _handle.destroy() : void(0);
+            _handle = other._handle;
+            other._handle = nullptr;
+        }
+        return *this;
+    }
 
     TaskAwaiter<Tp> operator co_await() noexcept { return TaskAwaiter<Tp>{_handle}; }
 
     ~Task() { _handle ? _handle.destroy() : void(0); }
 
     std::coroutine_handle<> handle() const noexcept { return _handle; }
+    promise_type &promise() const noexcept { return _handle.promise(); }
 
 private:
     handle_t _handle{};
@@ -170,7 +180,7 @@ private:
 template <typename Callable, typename... Args>
 concept InvokableTask = requires(Callable &&c, Args &&...args) {
     typename std::invoke_result_t<Callable, Args...>::promise_type;
-    { std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...) };
+    {std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
 };
 
 //! 异步 I/O 执行上下文，负责管理 IO 事件循环和协程任务的调度
@@ -201,7 +211,7 @@ public:
      * - 带捕获列表的 lambda 也可以作为 `fn`，但极易引起悬垂引用的未定义行为
      */
     template <typename Callable, typename... Args>
-        requires InvokableTask<Callable, Args...>
+    requires InvokableTask<Callable, Args...>
     void spawn(Callable &&fn, Args &&...args) {
         using Tp = typename std::invoke_result_t<Callable, Args...>::value_type;
         _ready.emplace(std::make_unique<TaskWrapper<Tp>>(std::invoke(std::forward<Callable>(fn), std::forward<Args>(args)...)));
@@ -225,6 +235,7 @@ private:
 
         virtual ~BasicTask() = default;
         virtual std::coroutine_handle<> handle() const noexcept = 0;
+        virtual void rethrow_if_exception() = 0;
     };
 
     template <typename Tp>
@@ -233,6 +244,12 @@ private:
 
         explicit TaskWrapper(Task<Tp> &&t) : task(std::move(t)) {}
         std::coroutine_handle<> handle() const noexcept override { return task.handle(); }
+        void rethrow_if_exception() override {
+            if constexpr (std::is_void_v<Tp>)
+                task.promise().get();
+            else
+                static_cast<void>(task.promise().get());
+        }
 
         Task<Tp> task{};
     };
@@ -261,7 +278,7 @@ using IOContextRef = std::reference_wrapper<IOContext>;
  * - 异步 I/O 执行上下文 IOContext::spawn
  */
 template <typename Callable, typename... Args>
-    requires InvokableTask<Callable, Args...>
+requires InvokableTask<Callable, Args...>
 inline void co_spawn(IOContext &ctx, Callable &&fn, Args &&...args) {
     ctx.spawn(std::forward<Callable>(fn), std::forward<Args>(args)...);
 }
@@ -272,7 +289,7 @@ inline void co_spawn(IOContext &ctx, Callable &&fn, Args &&...args) {
 struct IocpOverlapped {
     OVERLAPPED ov{};
     std::coroutine_handle<> handle{};
-    char info[256]{}; //! 附加信息存储区
+    char info[256]{};  //! 附加信息存储区
     char buf[65536]{}; //! 实际发生传输的数据
 
     IocpOverlapped(std::coroutine_handle<> h) : handle(h) {}

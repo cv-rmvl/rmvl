@@ -60,9 +60,9 @@ public:
 
     //! @cond
     SerialPort(const SerialPort &) = delete;
-    SerialPort(SerialPort &&) = default;
+    SerialPort(SerialPort &&other) noexcept;
     SerialPort &operator=(const SerialPort &) = delete;
-    SerialPort &operator=(SerialPort &&) = default;
+    SerialPort &operator=(SerialPort &&other) noexcept;
     ~SerialPort();
     //! @endcond
 

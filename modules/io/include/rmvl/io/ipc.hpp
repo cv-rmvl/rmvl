@@ -26,9 +26,9 @@ namespace rm {
 class RMVL_EXPORTS_W PipeServer {
 public:
     PipeServer(const PipeServer &) = delete;
-    PipeServer(PipeServer &&) = default;
+    PipeServer(PipeServer &&other) noexcept;
     PipeServer &operator=(const PipeServer &) = delete;
-    PipeServer &operator=(PipeServer &&) = default;
+    PipeServer &operator=(PipeServer &&other) noexcept;
     ~PipeServer();
 
     /**
@@ -74,16 +74,16 @@ protected:
     PipeServer(std::string_view name, bool ov);
 
     std::string _name;    //!< 命名管道名称
-    FileDescriptor _fd{}; //!< 文件句柄
+    FileDescriptor _fd{INVALID_FD}; //!< 文件句柄
 };
 
 //! 命名管道客户端
 class RMVL_EXPORTS_W PipeClient {
 public:
     PipeClient(const PipeClient &) = delete;
-    PipeClient(PipeClient &&) = default;
+    PipeClient(PipeClient &&other) noexcept;
     PipeClient &operator=(const PipeClient &) = delete;
-    PipeClient &operator=(PipeClient &&) = default;
+    PipeClient &operator=(PipeClient &&other) noexcept;
     ~PipeClient();
 
     /**
@@ -125,7 +125,7 @@ public:
 protected:
     PipeClient(std::string_view name, bool ov);
 
-    FileDescriptor _fd{}; //!< 文件句柄
+    FileDescriptor _fd{INVALID_FD}; //!< 文件句柄
 };
 
 //! 消息队列服务端
@@ -139,9 +139,9 @@ public:
     RMVL_W MqServer(std::string_view name);
 
     MqServer(const MqServer &) = delete;
-    MqServer(MqServer &&) = default;
+    MqServer(MqServer &&other) noexcept;
     MqServer &operator=(const MqServer &) = delete;
-    MqServer &operator=(MqServer &&) = default;
+    MqServer &operator=(MqServer &&other) noexcept;
     ~MqServer();
 
     /**
@@ -176,7 +176,7 @@ public:
 
 protected:
     std::string _name{};  //!< 消息队列名称
-    FileDescriptor _mq{}; //!< 消息队列描述符句柄
+    FileDescriptor _mq{INVALID_FD}; //!< 消息队列描述符句柄
 };
 
 //! 消息队列客户端
@@ -190,9 +190,9 @@ public:
     RMVL_W MqClient(std::string_view name);
 
     MqClient(const MqClient &) = delete;
-    MqClient(MqClient &&) = default;
+    MqClient(MqClient &&other) noexcept;
     MqClient &operator=(const MqClient &) = delete;
-    MqClient &operator=(MqClient &&) = default;
+    MqClient &operator=(MqClient &&other) noexcept;
     ~MqClient();
 
     /**
@@ -227,9 +227,9 @@ public:
 
 protected:
 #ifdef _WIN32
-    HANDLE _mq{}; //!< 消息队列句柄
+    HANDLE _mq{INVALID_HANDLE_VALUE}; //!< 消息队列句柄
 #else
-    int _mq{}; //!< 消息队列描述符
+    int _mq{INVALID_FD}; //!< 消息队列描述符
 #endif
 };
 
@@ -246,9 +246,9 @@ public:
     ~SHMBase();
 
     SHMBase(const SHMBase &) = delete;
-    SHMBase(SHMBase &&) = default;
+    SHMBase(SHMBase &&other) noexcept;
     SHMBase &operator=(const SHMBase &) = delete;
-    SHMBase &operator=(SHMBase &&) = default;
+    SHMBase &operator=(SHMBase &&other) noexcept;
 
     /**
      * @brief 获取共享内存映射指针
@@ -271,7 +271,11 @@ private:
     std::size_t _size{};     //!< 共享内存大小
     std::string _name{};     //!< 共享内存名称
     void *_ptr{nullptr};     //!< 共享内存映射指针
-    FileDescriptor _fd{};    //!< 共享内存文件描述符
+#ifdef _WIN32
+    FileDescriptor _fd{nullptr};    //!< 共享内存文件描述符
+#else
+    FileDescriptor _fd{INVALID_FD}; //!< 共享内存文件描述符
+#endif
     bool _is_creator{false}; //!< 是否为创建者
 };
 

@@ -1266,18 +1266,21 @@ public:
     //! 连接等待器
     class ConnectAwaiter : public AsyncWriteAwaiter {
     public:
-        ConnectAwaiter(IOContext &ctx, SocketFd fd, const Endpoint &ep, std::string_view url)
-            : AsyncWriteAwaiter(ctx, FileDescriptor(fd), url), _ctx(ctx), _endpoint(ep) {}
+        ConnectAwaiter(IOContext &ctx, SocketFd &fd, const Endpoint &ep, std::string_view url)
+            : AsyncWriteAwaiter(ctx, FileDescriptor(fd), url), _ctx(ctx), _owner_fd(fd), _endpoint(ep) {}
 
         //! @cond
 #ifdef _WIN32
         void await_suspend(std::coroutine_handle<> handle);
+#else
+        bool await_suspend(std::coroutine_handle<> handle);
 #endif
         StreamSocket await_resume() noexcept;
         //! @endcond
 
     private:
         IOContextRef _ctx;  //!< 异步 I/O 执行上下文
+        SocketFd &_owner_fd; //!< 连接器持有的 Socket 描述符
         Endpoint _endpoint; //!< 端点
     };
 

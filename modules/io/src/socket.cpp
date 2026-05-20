@@ -451,6 +451,14 @@ static _dgram_sendto_res parse_sendto(std::string_view addr, const Endpoint &end
 
 static constexpr size_t MAX_IOVEC = 64;
 
+static size_t expected_iovec_bytes(const std::vector<std::string_view> &buffers) noexcept {
+    size_t expected = 0;
+    const size_t count = std::min(buffers.size(), MAX_IOVEC);
+    for (size_t i = 0; i < count; ++i)
+        expected += buffers[i].size();
+    return expected;
+}
+
 #ifdef _WIN32
 
 static size_t build_write_wsabuf(const std::vector<std::string_view> &buffers, WSABUF *wsabufs) noexcept {
@@ -563,9 +571,7 @@ bool DgramSocket::multiwrite(std::string_view addr, const Endpoint &endpoint, co
     if (_fd == INVALID_SOCKET_FD || buffers.empty())
         return false;
     auto [dst_storage, addr_len] = parse_sendto(addr, endpoint);
-    size_t expected = 0;
-    for (const auto &buf : buffers)
-        expected += buf.size();
+    size_t expected = expected_iovec_bytes(buffers);
 
 #ifdef _WIN32
     WSABUF wsabufs[MAX_IOVEC];
@@ -686,9 +692,7 @@ bool StreamSocket::write(std::string_view data) noexcept {
 bool StreamSocket::multiwrite(const std::vector<std::string_view> &buffers) noexcept {
     if (_fd == INVALID_SOCKET_FD || buffers.empty())
         return false;
-    size_t expected = 0;
-    for (const auto &buf : buffers)
-        expected += buf.size();
+    size_t expected = expected_iovec_bytes(buffers);
 
 #ifdef _WIN32
     WSABUF wsabufs[MAX_IOVEC];
@@ -823,11 +827,6 @@ DgramSocket Sender::create() {
     return DgramSocket(fd);
 }
 
-StreamSocket &StreamSocket::operator=(StreamSocket &&other) noexcept {
-    _fd = std::exchange(other._fd, INVALID_SOCKET_FD);
-    return *this;
-}
-
 #ifdef _WIN32
 Acceptor::Acceptor(const Endpoint &ep, bool blocking, bool ov) : _endpoint(ep) {
     SocketEnv::ensure_init();
@@ -885,6 +884,7 @@ Connector::Connector(const Endpoint &ep, std::string_view url, bool blocking, bo
 
 StreamSocket Connector::connect() {
     int sfd = fdconnect(static_cast<int>(_fd), _endpoint, _url);
+    _fd = INVALID_SOCKET_FD;
     return StreamSocket(sfd);
 }
 
@@ -900,6 +900,33 @@ static bool valid(SocketFd fd) {
         return false;
     return fcntl(fd, F_GETFD) != -1;
 #endif
+}
+
+static void close_socket(SocketFd &fd) noexcept {
+    if (!valid(fd))
+        return;
+#ifdef _WIN32
+    ::closesocket(fd);
+#else
+    ::close(fd);
+#endif
+    fd = INVALID_SOCKET_FD;
+}
+
+static bool fill_sockaddr(const Endpoint &ep, std::string_view url, sockaddr_storage &storage, socklen_t &addr_len) {
+    if (ep.family() == AF_INET) {
+        auto *addr = reinterpret_cast<sockaddr_in *>(&storage);
+        addr->sin_family = AF_INET;
+        addr->sin_port = htons(ep.port());
+        return inet_pton(AF_INET, url.data(), &addr->sin_addr) == 1 ? (addr_len = sizeof(sockaddr_in), true) : false;
+    }
+    if (ep.family() == AF_INET6) {
+        auto *addr = reinterpret_cast<sockaddr_in6 *>(&storage);
+        addr->sin6_family = AF_INET6;
+        addr->sin6_port = htons(ep.port());
+        return inet_pton(AF_INET6, url.data(), &addr->sin6_addr) == 1 ? (addr_len = sizeof(sockaddr_in6), true) : false;
+    }
+    return false;
 }
 
 #ifdef _WIN32
@@ -929,6 +956,22 @@ Acceptor::~Acceptor() { valid(_fd) ? ::close(_fd) : 0; }
 Connector::~Connector() { valid(_fd) ? ::close(_fd) : 0; }
 
 #endif
+
+DgramSocket &DgramSocket::operator=(DgramSocket &&other) noexcept {
+    if (this != &other) {
+        close_socket(_fd);
+        _fd = std::exchange(other._fd, INVALID_SOCKET_FD);
+    }
+    return *this;
+}
+
+StreamSocket &StreamSocket::operator=(StreamSocket &&other) noexcept {
+    if (this != &other) {
+        close_socket(_fd);
+        _fd = std::exchange(other._fd, INVALID_SOCKET_FD);
+    }
+    return *this;
+}
 
 #ifdef __MSVC__
 #pragma endregion
@@ -1102,9 +1145,7 @@ bool DgramSocket::SocketMultiWriteAwaiter::await_resume() {
     if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
         return false;
     }
-    size_t expected = 0;
-    for (const auto &buf : _buffers)
-        expected += buf.size();
+    size_t expected = expected_iovec_bytes(_buffers);
     return static_cast<size_t>(bytes_transferred) == expected;
 }
 
@@ -1164,9 +1205,7 @@ bool StreamSocket::SocketMultiWriteAwaiter::await_resume() {
     if (!GetOverlappedResult((HANDLE)_fd, &_ovl->ov, &bytes_transferred, FALSE)) {
         return false;
     }
-    size_t expected = 0;
-    for (const auto &buf : _buffers)
-        expected += buf.size();
+    size_t expected = expected_iovec_bytes(_buffers);
     return static_cast<size_t>(bytes_transferred) == expected;
 }
 
@@ -1336,6 +1375,7 @@ void Connector::ConnectAwaiter::await_suspend(std::coroutine_handle<> handle) {
 StreamSocket Connector::ConnectAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     SOCKET sfd = (SOCKET)_fd;
+    _owner_fd = INVALID_SOCKET_FD;
     // 更新 socket 上下文
     if (setsockopt(sfd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0) == SOCKET_ERROR)
         WARNING_("setsockopt SO_UPDATE_CONNECT_CONTEXT failed: %d", WSAGetLastError());
@@ -1408,9 +1448,7 @@ bool DgramSocket::SocketMultiWriteAwaiter::await_resume() {
     msg.msg_iovlen = iov_cnt;
 
     ssize_t n = ::sendmsg(_fd, &msg, 0);
-    size_t expected = 0;
-    for (const auto &buf : _buffers)
-        expected += buf.size();
+    size_t expected = expected_iovec_bytes(_buffers);
     return n >= 0 && static_cast<size_t>(n) == expected;
 }
 
@@ -1456,15 +1494,13 @@ bool StreamSocket::SocketMultiWriteAwaiter::await_resume() {
     msg.msg_iovlen = iov_cnt;
 
     ssize_t n = ::sendmsg(_fd, &msg, 0);
-    size_t expected = 0;
-    for (const auto &buf : _buffers)
-        expected += buf.size();
+    size_t expected = expected_iovec_bytes(_buffers);
     return n >= 0 && static_cast<size_t>(n) == expected;
 }
 
-Sender::Sender(IOContext &io_context, const ip::Protocol &protocol) : ::rm::Sender(protocol, true), _ctx(io_context) {}
+Sender::Sender(IOContext &io_context, const ip::Protocol &protocol) : ::rm::Sender(protocol, false), _ctx(io_context) {}
 
-Listener::Listener(IOContext &io_context, const Endpoint &endpoint) : ::rm::Listener(endpoint, true), _ctx(io_context) {}
+Listener::Listener(IOContext &io_context, const Endpoint &endpoint) : ::rm::Listener(endpoint, false), _ctx(io_context) {}
 
 StreamSocket::StreamSocket(IOContext &io_context, SocketFd fd) : ::rm::StreamSocket(fd), _ctx(io_context) {}
 
@@ -1496,7 +1532,7 @@ bool StreamSocket::SocketWriteAwaiter::await_resume() {
     return n == static_cast<ssize_t>(_data.size());
 }
 
-Acceptor::Acceptor(IOContext &io_context, const Endpoint &endpoint) : ::rm::Acceptor(endpoint, true), _ctx(io_context) {}
+Acceptor::Acceptor(IOContext &io_context, const Endpoint &endpoint) : ::rm::Acceptor(endpoint, false), _ctx(io_context) {}
 
 StreamSocket Acceptor::AcceptAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
@@ -1505,12 +1541,40 @@ StreamSocket Acceptor::AcceptAwaiter::await_resume() noexcept {
     return StreamSocket(_ctx, sfd);
 }
 
-Connector::Connector(IOContext &io_context, const Endpoint &endpoint, std::string_view url) : ::rm::Connector(endpoint, url, true), _ctx(io_context) {}
+Connector::Connector(IOContext &io_context, const Endpoint &endpoint, std::string_view url) : ::rm::Connector(endpoint, url, false), _ctx(io_context) {}
+
+bool Connector::ConnectAwaiter::await_suspend(std::coroutine_handle<> handle) {
+    RMVL_DbgAssert(_fd != INVALID_FD);
+    sockaddr_storage remote{};
+    socklen_t addr_len{};
+    if (!fill_sockaddr(_endpoint, _data, remote, addr_len))
+        RMVL_Error(RMVL_StsBadArg, "Invalid socket address");
+
+    if (::connect(_fd, reinterpret_cast<sockaddr *>(&remote), addr_len) == 0)
+        return false;
+    if (errno != EINPROGRESS)
+        RMVL_Error_(RMVL_StsError, "Connection failed, error code: %d", error_code());
+
+    epoll_event ev{};
+    ev.events = EPOLLOUT;
+    ev.data.ptr = handle.address();
+    if (epoll_ctl(_aioh, EPOLL_CTL_ADD, _fd, &ev) == -1)
+        RMVL_Error_(RMVL_StsBadArg, "Failed to add fd to epoll: %s", strerror(errno));
+    return true;
+}
 
 StreamSocket Connector::ConnectAwaiter::await_resume() noexcept {
     RMVL_DbgAssert(_fd != INVALID_FD);
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
-    int sfd = fdconnect(_fd, _endpoint, _data);
+    int error{};
+    socklen_t len = sizeof(error);
+    if (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &error, &len) == -1 || error != 0) {
+        if (error != 0)
+            errno = error;
+        WARNING_("Connection failed, error code: %d", error_code());
+        return StreamSocket(_ctx, INVALID_SOCKET_FD);
+    }
+    int sfd = std::exchange(_owner_fd, INVALID_SOCKET_FD);
     return StreamSocket(_ctx, sfd);
 }
 
