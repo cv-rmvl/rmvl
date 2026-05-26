@@ -121,6 +121,16 @@ endforeach()
 # =============================================================
 #  Other configurations
 # =============================================================
+# cpp standard
+set(CMAKE_CXX_STANDARD @CMAKE_CXX_STANDARD@)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(MSVC)
+  add_compile_options("/Zc:__cplusplus")
+endif()
+
+# character encoding
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
 # use rmvl functions and macros
 set(codegen_template_path "${CMAKE_CURRENT_LIST_DIR}/templates" CACHE INTERNAL "CodeGenerate template path")
 include(${CMAKE_CURRENT_LIST_DIR}/RMVLUtils.cmake)
