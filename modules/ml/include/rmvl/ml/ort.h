@@ -125,7 +125,7 @@ public:
      * @brief 推理结果转换
      *
      * @param[in] result 使用 `std::any` 表示的推理结果
-     * @return 转换后的推理结果，为 `std::pair<int, float>` 类型，表示分类结果及其置信度
+     * @return 转换后的推理结果，为 `std::pair<std::size_t, float>` 类型，表示分类结果及其置信度
      */
     RMVL_W static std::pair<int, float> cast(const std::any &result) { return std::any_cast<std::pair<int, float>>(result); }
 
