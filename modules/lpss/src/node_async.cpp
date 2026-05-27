@@ -29,9 +29,6 @@ using namespace std::chrono_literals;
 
 namespace rm::lpss {
 
-std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid();
-Locator selectBestLocator(std::array<uint8_t, 4> target_ip, const RNDPMessage &rndp_msg);
-
 namespace async {
 
 rm::async::Task<> Node::rndp_multicast(std::vector<ip::Networkv4> networks, std::string node_name) {
