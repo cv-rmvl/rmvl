@@ -42,6 +42,10 @@
 #include "rmvl/opcua.hpp"
 #endif // HAVE_RMVL_OPCUA
 
+#ifdef HAVE_RMVL_LPSS
+#include "rmvl/lpss.hpp"
+#endif // HAVE_RMVL_LPSS
+
 /////////////////////////////////////
 ///////     extra modules     ///////
 /////////////////////////////////////

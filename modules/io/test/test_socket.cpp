@@ -22,6 +22,17 @@ namespace rm_test {
 
 using namespace std::chrono_literals;
 
+TEST(IO_socket, network_interface_mtu) {
+    auto interfaces = NetworkInterface::list();
+    if (interfaces.empty())
+        GTEST_SKIP() << "No network interface is available";
+
+    bool has_valid_mtu{};
+    for (const auto &iface : interfaces)
+        has_valid_mtu = has_valid_mtu || iface.mtu() > 0U;
+    EXPECT_TRUE(has_valid_mtu);
+}
+
 TEST(IO_socket, sync_tcp_socket) {
     Acceptor acceptor(Endpoint(ip::tcp::v4(), 10800));
     Connector connector(Endpoint(ip::tcp::v4(), 10800), "127.0.0.1");

@@ -35,6 +35,10 @@
 #include "rmvlpara/light.hpp"
 #endif // HAVE_RMVL_LIGHT
 
+#ifdef HAVE_RMVL_LPSS
+#include "rmvlpara/lpss.hpp"
+#endif // HAVE_RMVL_LPSS
+
 /////////////////////////////////////
 ///////     extra modules     ///////
 /////////////////////////////////////
