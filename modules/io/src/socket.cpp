@@ -27,6 +27,7 @@
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <netpacket/packet.h>
+#include <sys/ioctl.h>
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -79,6 +80,7 @@ std::vector<NetworkInterface> NetworkInterface::list() noexcept {
 
         NetworkInterface iface{};
         iface._name = adapter->AdapterName;
+        iface._mtu = adapter->Mtu;
         std::copy(adapter->PhysicalAddress, adapter->PhysicalAddress + 6, iface._addr.begin());
 
         // 设置 flag
@@ -180,6 +182,7 @@ std::vector<NetworkInterface> NetworkInterface::list() noexcept {
     if (getifaddrs(&ifaddr_list) == -1)
         return {};
 
+    int ioctl_fd = ::socket(AF_INET, SOCK_DGRAM, 0);
     for (auto *ifa = ifaddr_list; ifa != nullptr; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr == nullptr)
             continue;
@@ -188,6 +191,12 @@ std::vector<NetworkInterface> NetworkInterface::list() noexcept {
         auto &iface = interfaces[ifa->ifa_name];
         if (iface._name.empty()) {
             iface._name = ifa->ifa_name;
+            if (ioctl_fd >= 0) {
+                ifreq req{};
+                std::snprintf(req.ifr_name, sizeof(req.ifr_name), "%s", ifa->ifa_name);
+                if (::ioctl(ioctl_fd, SIOCGIFMTU, &req) == 0)
+                    iface._mtu = static_cast<uint32_t>(req.ifr_mtu);
+            }
             // 设置 flag
             if (ifa->ifa_flags & IFF_UP)
                 iface._flag |= NetworkInterfaceFlag::Up;
@@ -223,6 +232,8 @@ std::vector<NetworkInterface> NetworkInterface::list() noexcept {
     }
 
     freeifaddrs(ifaddr_list);
+    if (ioctl_fd >= 0)
+        ::close(ioctl_fd);
     std::vector<NetworkInterface> res{};
     res.reserve(interfaces.size());
     for (auto const &[name, iface] : interfaces)

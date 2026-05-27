@@ -226,31 +226,34 @@ public:
     const std::array<uint8_t, 6> &address() const noexcept { return _addr; }
 
     //! 获取接口名称
-    std::string name() const noexcept { return _name; }
+    inline std::string name() const noexcept { return _name; }
 
     //! 获取接口类型
-    NetworkInterfaceType type() const noexcept { return _type; }
+    inline NetworkInterfaceType type() const noexcept { return _type; }
+
+    //! 获取网络接口最大传输单元（MTU），单位为字节
+    inline uint32_t mtu() const noexcept { return _mtu; }
 
     //! 获取接口功能与状态标志
-    uint8_t flag() const noexcept { return _flag; }
+    inline uint8_t flag() const noexcept { return _flag; }
 
     //! 接口是否启用
-    bool up() const noexcept { return (_flag & NetworkInterfaceFlag::Up) != 0; }
+    inline bool up() const noexcept { return (_flag & NetworkInterfaceFlag::Up) != 0; }
 
     //! 是否为回环接口
-    bool loopback() const noexcept { return (_flag & NetworkInterfaceFlag::Loopback) != 0; }
+    inline bool loopback() const noexcept { return (_flag & NetworkInterfaceFlag::Loopback) != 0; }
 
     //! 是否支持广播
-    bool broadcast() const noexcept { return (_flag & NetworkInterfaceFlag::Broadcast) != 0; }
+    inline bool broadcast() const noexcept { return (_flag & NetworkInterfaceFlag::Broadcast) != 0; }
 
     //! 是否为点对点接口
-    bool p2p() const noexcept { return (_flag & NetworkInterfaceFlag::P2P) != 0; }
+    inline bool p2p() const noexcept { return (_flag & NetworkInterfaceFlag::P2P) != 0; }
 
     //! 是否支持多播
-    bool multicast() const noexcept { return (_flag & NetworkInterfaceFlag::Multicast) != 0; }
+    inline bool multicast() const noexcept { return (_flag & NetworkInterfaceFlag::Multicast) != 0; }
 
     //! 接口是否正在运行
-    bool running() const noexcept { return (_flag & NetworkInterfaceFlag::Running) != 0; }
+    inline bool running() const noexcept { return (_flag & NetworkInterfaceFlag::Running) != 0; }
 
     //! 获取 MAC 地址的字符串表示形式
     std::string to_string() const;
@@ -264,6 +267,7 @@ public:
 private:
     std::string _name{};            //!< 接口名称
     NetworkInterfaceType _type{};   //!< 驱动类型
+    uint32_t _mtu{};                //!< 最大传输单元（字节）
     uint8_t _flag{};                //!< 功能与状态标志
     std::array<uint8_t, 6> _addr{}; //!< MAC 地址
 };
@@ -1279,9 +1283,9 @@ public:
         //! @endcond
 
     private:
-        IOContextRef _ctx;  //!< 异步 I/O 执行上下文
+        IOContextRef _ctx;   //!< 异步 I/O 执行上下文
         SocketFd &_owner_fd; //!< 连接器持有的 Socket 描述符
-        Endpoint _endpoint; //!< 端点
+        Endpoint _endpoint;  //!< 端点
     };
 
     /**
