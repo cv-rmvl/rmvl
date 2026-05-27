@@ -11,6 +11,7 @@
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/ml/ort.h"
+#include <cstddef>
 
 namespace rm
 {
@@ -101,7 +102,7 @@ std::any ClassificationNet::postProcess(const std::vector<Ort::Value> &output_te
     const float *output = output_tensor.GetTensorData<float>();
     std::size_t size{output_tensor.GetTensorTypeAndShapeInfo().GetElementCount()};
     auto maxit = std::max_element(output, output + size);
-    return std::make_pair(maxit - output, *maxit);
+    return std::make_pair(static_cast<std::size_t>(maxit - output), *maxit);
 }
 
 } // namespace rm
