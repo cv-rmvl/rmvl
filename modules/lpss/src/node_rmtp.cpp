@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "rmvl/lpss/details/node_rsd.hpp"
+#include "rmvl/lpss/details/node_rmtp.hpp"
 
 namespace rm::lpss {
 

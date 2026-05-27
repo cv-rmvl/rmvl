@@ -9,7 +9,6 @@
  *
  */
 
-#include <cstdint>
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -18,10 +17,8 @@
 #include <arpa/inet.h>
 #endif
 
-#include <algorithm>
 #include <cstring>
 
-#include "rmvl/core/util.hpp"
 #include "rmvl/lpss/details/node_rsd.hpp"
 
 namespace rm::lpss {
@@ -112,41 +109,6 @@ REDPMessage REDPMessage::deserialize(const char *data) noexcept {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-std::pair<Guid, std::vector<ip::Networkv4>> generateNodeGuid() {
-    Guid res{};
-    auto interfaces = NetworkInterface::list();
-    std::vector<NetworkInterface> candidate_interfaces;
-
-    for (const auto &iface : interfaces)
-        if (iface.up() && iface.running() && !iface.loopback() && iface.multicast())
-            candidate_interfaces.push_back(iface);
-
-    // 按类型优先级和名称排序
-    std::sort(candidate_interfaces.begin(), candidate_interfaces.end(), [](const NetworkInterface &a, const NetworkInterface &b) {
-        return a.type() != b.type() ? a.type() < b.type() : a.name() < b.name();
-    });
-
-    std::vector<ip::Networkv4> networks{};
-    networks.reserve(candidate_interfaces.size());
-    if (!candidate_interfaces.empty()) {
-        // 选取最优接口为 GUID MAC 和 basic_mac
-        const auto &primary_iface = candidate_interfaces.front();
-        auto basic_mac = primary_iface.address();
-        res.set_host((static_cast<uint32_t>(basic_mac[2]) << 24) | (static_cast<uint32_t>(basic_mac[3]) << 16) |
-                     (static_cast<uint32_t>(basic_mac[4]) << 8) | static_cast<uint32_t>(basic_mac[5]));
-        res.set_pid(static_cast<uint16_t>(processId()));
-        // 收集 IP
-        for (const auto &iface : candidate_interfaces) {
-            auto nets = iface.ipv4();
-            networks.insert(networks.end(), std::make_move_iterator(nets.begin()), std::make_move_iterator(nets.end()));
-        }
-    } else {
-        WARNING_("[LPSS Node] No valid network interface found, using 00:00:00:00:00:00 as MAC address");
-        res.set_pid(static_cast<uint16_t>(processId()));
-    }
-    return {res, networks};
-}
 
 void sendREDPMessage(Locator loc, const REDPMessage &msg) {
     static DgramSocket redp_sender = Sender(ip::udp::v4()).create();
