@@ -303,6 +303,28 @@ TEST(IO_socket, sync_udp_multiwrite_multiread) {
     client_thrd.join();
 }
 
+TEST(IO_socket, sync_udp_array_multiwrite_multiread) {
+    auto server_ep = Endpoint(ip::udp::v4(), 11113);
+    auto listener = Listener(server_ep);
+    auto sender = Sender(ip::udp::v4());
+
+    auto server_thrd = std::thread([&]() {
+        auto socket = listener.create();
+        auto [msgs, sender_ip, sender_port] = socket.multiread(5, 5);
+        ASSERT_EQ(msgs.size(), 2);
+        EXPECT_EQ(msgs[0], "Hello");
+        EXPECT_EQ(msgs[1], "World");
+    });
+
+    auto client_thrd = std::thread([&]() {
+        auto socket = sender.create();
+        EXPECT_TRUE(socket.multiwrite(std::array<uint8_t, 4>{127, 0, 0, 1}, server_ep, "Hello", "World"));
+    });
+
+    server_thrd.join();
+    client_thrd.join();
+}
+
 TEST(IO_socket, sync_udp_multiwrite_read) {
     auto server_ep = Endpoint(ip::udp::v4(), 11106);
     auto listener = Listener(server_ep);
@@ -537,6 +559,35 @@ TEST(IO_socket, async_udp_multiwrite_multiread) {
     auto client = [&]() -> async::Task<> {
         auto socket = sender.create();
         EXPECT_TRUE(co_await socket.multiwrite("127.0.0.1", server_ep, "Hello", "World"));
+        io_context.stop();
+    };
+
+    co_spawn(io_context, server);
+    co_spawn(io_context, client);
+    io_context.run();
+}
+
+TEST(IO_socket, async_udp_array_multiwrite_multiread) {
+    auto io_context = async::IOContext{};
+    auto server_ep = Endpoint(ip::udp::v4(), 11114);
+    auto listener = async::Listener(io_context, server_ep);
+    auto sender = async::Sender(io_context, ip::udp::v4());
+
+    auto server = [&]() -> async::Task<> {
+        auto socket = listener.create();
+        auto [msgs, ip, port] = co_await socket.multiread(5, 5);
+
+        EXPECT_EQ(msgs.size(), 2);
+        if (msgs.size() != 2)
+            co_return;
+
+        EXPECT_EQ(msgs[0], "Hello");
+        EXPECT_EQ(msgs[1], "World");
+    };
+
+    auto client = [&]() -> async::Task<> {
+        auto socket = sender.create();
+        EXPECT_TRUE(co_await socket.multiwrite(std::array<uint8_t, 4>{127, 0, 0, 1}, server_ep, "Hello", "World"));
         io_context.stop();
     };
 

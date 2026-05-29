@@ -12,6 +12,9 @@
 #include "rmvl/io/socket.hpp"
 #include "rmvl/core/util.hpp"
 
+#include <cerrno>
+#include <cstring>
+
 #ifdef _WIN32
 #include <MSWSock.h>
 #include <WS2tcpip.h>
@@ -603,8 +606,23 @@ bool DgramSocket::multiwrite(std::string_view addr, const Endpoint &endpoint, co
     msg.msg_iovlen = iov_cnt;
 
     ssize_t n = ::sendmsg(_fd, &msg, 0);
-    return n >= 0 && static_cast<size_t>(n) == expected;
+    if (n < 0) {
+        WARNING_("UDP sendmsg failed, errno=%d: %s", errno, std::strerror(errno));
+        return false;
+    }
+    if (static_cast<size_t>(n) != expected) {
+        WARNING_("UDP sendmsg short write: %zd/%zu bytes", n, expected);
+        return false;
+    }
+    return true;
 #endif
+}
+
+bool DgramSocket::multiwrite(std::array<uint8_t, 4> addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) noexcept {
+    char addr_str[INET_ADDRSTRLEN]{};
+    if (::inet_ntop(AF_INET, addr.data(), addr_str, sizeof(addr_str)) == nullptr)
+        return false;
+    return multiwrite(addr_str, endpoint, buffers);
 }
 
 RecvtoData DgramSocket::read_to(char *buf, size_t size) noexcept {
@@ -1016,6 +1034,14 @@ DgramSocket::SocketMultiReadAwaiter::SocketMultiReadAwaiter(IOContext &ctx, Sock
     : AsyncReadAwaiter(ctx, FileDescriptor(fd)), _sizes(sizes), _results(sizes.size()) {
     for (size_t i = 0; i < _sizes.size(); ++i)
         _results[i].resize(_sizes[i]);
+}
+
+DgramSocket::SocketMultiWriteAwaiter::SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, std::array<uint8_t, 4> addr, const Endpoint &ep,
+                                                              const std::vector<std::string_view> &buffers)
+    : AsyncWriteAwaiter(ctx, FileDescriptor(fd), ""), _endpoint(ep), _buffers(buffers) {
+    char buf[INET_ADDRSTRLEN]{};
+    inet_ntop(AF_INET, addr.data(), buf, sizeof(buf));
+    _addr = buf;
 }
 
 StreamSocket::SocketMultiReadAwaiter::SocketMultiReadAwaiter(IOContext &ctx, SocketFd fd, const std::vector<size_t> &sizes)
@@ -1460,7 +1486,15 @@ bool DgramSocket::SocketMultiWriteAwaiter::await_resume() {
 
     ssize_t n = ::sendmsg(_fd, &msg, 0);
     size_t expected = expected_iovec_bytes(_buffers);
-    return n >= 0 && static_cast<size_t>(n) == expected;
+    if (n < 0) {
+        WARNING_("Async UDP sendmsg failed, errno=%d: %s", errno, std::strerror(errno));
+        return false;
+    }
+    if (static_cast<size_t>(n) != expected) {
+        WARNING_("Async UDP sendmsg short write: %zd/%zu bytes", n, expected);
+        return false;
+    }
+    return true;
 }
 
 std::vector<std::string> StreamSocket::SocketMultiReadAwaiter::await_resume() {
@@ -1505,6 +1539,8 @@ bool StreamSocket::SocketMultiWriteAwaiter::await_resume() {
     msg.msg_iovlen = iov_cnt;
 
     ssize_t n = ::sendmsg(_fd, &msg, 0);
+    if (n < 0)
+        WARNING_("sendmsg failed, errno=%d: %s", errno, strerror(errno));
     size_t expected = expected_iovec_bytes(_buffers);
     return n >= 0 && static_cast<size_t>(n) == expected;
 }

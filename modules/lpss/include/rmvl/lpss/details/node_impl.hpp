@@ -27,6 +27,10 @@ void Publisher<MsgType>::publish(const MsgType &msg) {
 
 template <typename MsgType>
 Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
+    if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
+        WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
     if (_local_writers.find(std::string(topic)) != _local_writers.end())
         return nullptr;
     Guid pub_guid = _uid;
@@ -55,6 +59,10 @@ Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
 
 template <typename MsgType, typename SubscribeMsgCallback, typename Enable>
 Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept {
+    if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
+        WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
     if (_local_readers.find(std::string(topic)) != _local_readers.end())
         return nullptr;
     Guid sub_guid = _uid;
@@ -122,6 +130,10 @@ void Publisher<MsgType>::publish(const MsgType &msg) {
 
 template <typename MsgType>
 typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) noexcept {
+    if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
+        WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
     if (_local_writers.find(std::string(topic)) != _local_writers.end())
         return nullptr;
     Guid pub_guid = _uid;
@@ -143,6 +155,10 @@ typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) n
 
 template <typename MsgType, typename SubscribeMsgCallback, typename Enable>
 typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic, SubscribeMsgCallback callback) noexcept {
+    if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
+        WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
     if (_local_readers.find(std::string(topic)) != _local_readers.end())
         return nullptr;
     Guid sub_guid = _uid;

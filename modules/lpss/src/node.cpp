@@ -17,8 +17,9 @@
 #include <arpa/inet.h>
 #endif
 
-#include "rmvl/lpss/node.hpp"
+#include <algorithm>
 
+#include "rmvl/lpss/node.hpp"
 #include "rmvlpara/lpss.hpp"
 
 using namespace std::chrono_literals;

@@ -11,9 +11,14 @@
 
 #pragma once
 
+#include <atomic>
+#include <chrono>
+#include <map>
 #include <memory>
+#include <optional>
 #include <shared_mutex>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "node_util.hpp"
@@ -21,6 +26,38 @@
 namespace rm::lpss {
 
 //! @cond
+
+//! MTP 数据发送目标
+struct MTPWriterTarget {
+    Locator locator{};  //!< 目标定位器
+    uint32_t mtu{1500}; //!< 发送目标对应的本地接口 MTU
+};
+
+//! MTP 重组缓存索引
+struct MTPAsmKey {
+    std::string addr{};
+    uint16_t port{};
+    uint16_t sequence{};
+
+    bool operator==(const MTPAsmKey &other) const noexcept { return addr == other.addr && port == other.port && sequence == other.sequence; }
+};
+
+struct MTPAsmKeyHash {
+    std::size_t operator()(const MTPAsmKey &key) const noexcept {
+        std::size_t seed = std::hash<std::string>{}(key.addr);
+        seed ^= static_cast<std::size_t>(key.port) + 0x9e3779b9U + (seed << 6) + (seed >> 2);
+        seed ^= static_cast<std::size_t>(key.sequence) + 0x9e3779b9U + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+//! MTP 未完成载荷
+struct MTPAsm {
+    uint32_t total_size{};
+    std::map<uint16_t, std::string> fragments{};
+    std::size_t bytes{};
+    std::chrono::steady_clock::time_point updated{};
+};
 
 /**
  * @brief 数据写入器基类
@@ -78,7 +115,8 @@ protected:
     //! 保护目标列表的读写锁
     std::shared_mutex _mtx;
     //! 目标 UDPv4 定位器缓存集合
-    std::unordered_map<Guid, Locator, GuidHash> _udpv4_targets;
+    std::unordered_map<Guid, MTPWriterTarget, GuidHash> _udpv4_targets;
+    std::atomic_uint16_t _sequence{}; //!< MTP 发送序列号
 };
 
 //! 发现的发布者端点存储信息
@@ -123,11 +161,13 @@ public:
     inline uint16_t port() const noexcept { return _port; }
 
 protected:
-    uint16_t _port{};         //!< 监听端口
-    Guid _guid;               //!< 读取器所属实体 GUID
-    DgramSocket _udpv4;       //!< UDPv4 通道
-    std::string_view _type{}; //!< 消息类型
-    std::string _topic{};     //!< 监听话题
+    uint16_t _port{};                                             //!< 监听端口
+    Guid _guid;                                                   //!< 读取器所属实体 GUID
+    DgramSocket _udpv4;                                           //!< UDPv4 通道
+    std::string_view _type{};                                     //!< 消息类型
+    std::string _topic{};                                         //!< 监听话题
+    std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{}; //!< MTP 重组缓存
+    std::size_t _asm_bytes{};                                     //!< 待重组载荷占用字节数
 };
 
 /**
@@ -237,7 +277,10 @@ protected:
     std::string _topic{};           //!< 写入话题
 
     //! 目标 UDPv4 定位器缓存集合
-    std::unordered_map<Guid, Locator, GuidHash> _udpv4_targets;
+    std::unordered_map<Guid, MTPWriterTarget, GuidHash> _udpv4_targets;
+    std::atomic_uint16_t _sequence{};       //!< MTP 发送序列号
+    std::optional<std::string> _pending{};  //!< 发送中收到的最新待发送消息
+    bool _sending{};                        //!< 是否已有发送协程正在运行
 };
 
 /**
@@ -277,11 +320,13 @@ public:
     inline uint16_t port() const noexcept { return _port; }
 
 protected:
-    uint16_t _port{};              //!< 监听端口
-    Guid _guid;                    //!< 读取器所属实体 GUID
-    rm::async::DgramSocket _udpv4; //!< UDPv4 通道
-    std::string_view _type{};      //!< 消息类型
-    std::string _topic{};          //!< 监听话题
+    uint16_t _port{};                                             //!< 监听端口
+    Guid _guid;                                                   //!< 读取器所属实体 GUID
+    rm::async::DgramSocket _udpv4;                                //!< UDPv4 通道
+    std::string_view _type{};                                     //!< 消息类型
+    std::string _topic{};                                         //!< 监听话题
+    std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{}; //!< MTP 重组缓存
+    std::size_t _asm_bytes{};                                     //!< 待重组载荷占用字节数
 };
 
 /**

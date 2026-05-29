@@ -96,7 +96,7 @@ public:
      * @param[in] topic 话题名称
      * @param[in] reader 底层数据读取器
      */
-    Subscriber(std::string_view topic, DataReaderBase::ptr reader) : _topic(topic), _reader(std::move(reader)) {}
+    Subscriber(std::string_view topic, DataReaderBase::ptr reader) : _reader(std::move(reader)), _topic(topic) {}
     //! @endcond
 
     //! 判断订阅者是否无效
