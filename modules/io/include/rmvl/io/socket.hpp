@@ -430,6 +430,16 @@ public:
     bool multiwrite(std::string_view addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) noexcept;
 
     /**
+     * @brief 同步多缓冲区写入到 IPv4 的 Socket 中（阻塞）
+     *
+     * @param[in] addr 使用数组形式表示的 IPv4 目标地址
+     * @param[in] endpoint 目标端点
+     * @param[in] buffers 待写入的多个数据视图
+     * @return 是否写入成功
+     */
+    bool multiwrite(std::array<uint8_t, 4> addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) noexcept;
+
+    /**
      * @brief 同步多缓冲区写入
      * @code {.cpp}
      * // 使用示例
@@ -443,6 +453,11 @@ public:
      */
     template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
     bool multiwrite(std::string_view addr, const Endpoint &endpoint, Args &&...args) noexcept {
+        return multiwrite(addr, endpoint, std::vector{std::string_view(std::forward<Args>(args))...});
+    }
+
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
+    bool multiwrite(std::array<uint8_t, 4> addr, const Endpoint &endpoint, Args &&...args) noexcept {
         return multiwrite(addr, endpoint, std::vector{std::string_view(std::forward<Args>(args))...});
     }
 
@@ -908,6 +923,7 @@ public:
     public:
         SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, std::string_view addr, const Endpoint &ep, const std::vector<std::string_view> &buffers)
             : AsyncWriteAwaiter(ctx, FileDescriptor(fd), ""), _addr(addr), _endpoint(ep), _buffers(buffers) {}
+        SocketMultiWriteAwaiter(IOContext &ctx, SocketFd fd, std::array<uint8_t, 4> addr, const Endpoint &ep, const std::vector<std::string_view> &buffers);
         //! @cond
 #ifdef _WIN32
         void await_suspend(std::coroutine_handle<> handle);
@@ -941,6 +957,10 @@ public:
         return {_ctx, _fd, addr, endpoint, buffers};
     }
 
+    SocketMultiWriteAwaiter multiwrite(std::array<uint8_t, 4> addr, const Endpoint &endpoint, const std::vector<std::string_view> &buffers) {
+        return {_ctx, _fd, addr, endpoint, buffers};
+    }
+
     /**
      * @brief 异步多缓冲区写入
      * @code {.cpp}
@@ -952,6 +972,11 @@ public:
      */
     template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
     SocketMultiWriteAwaiter multiwrite(std::string_view addr, const Endpoint &endpoint, Args &&...args) {
+        return multiwrite(addr, endpoint, std::vector{std::string_view(std::forward<Args>(args))...});
+    }
+
+    template <typename... Args, typename Enable = std::enable_if_t<(sizeof...(Args) > 0) && (std::is_constructible_v<std::string_view, Args> && ...)>>
+    SocketMultiWriteAwaiter multiwrite(std::array<uint8_t, 4> addr, const Endpoint &endpoint, Args &&...args) {
         return multiwrite(addr, endpoint, std::vector{std::string_view(std::forward<Args>(args))...});
     }
 
