@@ -136,6 +136,23 @@ TEST(LPSS_node, mtp_writer_reader_fragmented_payload) {
     EXPECT_EQ(received, payload);
 }
 
+TEST(LPSS_node, mtp_writer_reader_shm_payload_on_same_host) {
+    lpss::Guid writer_guid{0x12345678, 1, 1};
+    lpss::Guid reader_guid{0x12345678, 2, 1};
+    lpss::DataReaderBase reader(reader_guid, msg::String::msg_type, "/mtp");
+    TestDataWriter writer(writer_guid, msg::String::msg_type, "/mtp");
+    reader.add(writer.guid());
+    writer.add(reader.guid(), {reader.port(), {127, 0, 0, 1}});
+
+    std::string payload(4096, 's');
+    std::string received{};
+    std::thread reader_thread([&]() { received = reader.read(); });
+    writer.write(payload);
+    reader_thread.join();
+
+    EXPECT_EQ(received, payload);
+}
+
 TEST(LPSS_node, mtp_reassembles_out_of_order_and_ignores_duplicates) {
     lpss::DataReaderBase reader(lpss::Guid{1}, msg::String::msg_type, "/mtp");
     auto sender = Sender(ip::udp::v4()).create();
@@ -222,6 +239,29 @@ TEST(LPSS_node, async_mtp_writer_reader_fragmented_payload) {
     writer.addWithMtu(lpss::Guid{3}, {reader.port(), {127, 0, 0, 1}}, 512);
 
     std::string payload(4096, 'x');
+    std::string received{};
+    auto read = [&]() -> rm::async::Task<> {
+        received = co_await reader.read();
+        io_context.stop();
+    };
+    auto write = [&]() -> rm::async::Task<> { co_await writer.write(payload); };
+
+    co_spawn(io_context, read);
+    co_spawn(io_context, write);
+    io_context.run();
+    EXPECT_EQ(received, payload);
+}
+
+TEST(LPSS_node, async_mtp_writer_reader_shm_payload_on_same_host) {
+    rm::async::IOContext io_context{};
+    lpss::Guid writer_guid{0x12345678, 3, 1};
+    lpss::Guid reader_guid{0x12345678, 4, 1};
+    lpss::async::DataReaderBase reader(io_context, reader_guid, msg::String::msg_type, "/mtp");
+    TestAsyncDataWriter writer(io_context, writer_guid, msg::String::msg_type, "/mtp");
+    reader.add(writer.guid());
+    writer.add(reader.guid(), {reader.port(), {127, 0, 0, 1}});
+
+    std::string payload(4096, 's');
     std::string received{};
     auto read = [&]() -> rm::async::Task<> {
         received = co_await reader.read();

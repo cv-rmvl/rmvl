@@ -70,6 +70,13 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
     // 注册本地 DataReader
     DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(sub_guid, topic, callback);
     {
+        std::shared_lock lk(_discovered_mtx);
+        auto it = _discovered_writers.find(std::string(topic));
+        if (it != _discovered_writers.end())
+            for (const auto &writer_guid : it->second.writers)
+                reader->add(writer_guid);
+    }
+    {
         std::lock_guard lk(_local_mtx);
         _local_readers[std::string(topic)] = reader;
     }
@@ -165,6 +172,10 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
     sub_guid.set_entity(_next_eid++);
     // 注册本地 DataReader
     DataReaderBase::ptr reader = std::make_shared<DataReader<MsgType>>(_ctx, sub_guid, topic, std::move(callback));
+    auto writer_it = _discovered_writers.find(std::string(topic));
+    if (writer_it != _discovered_writers.end())
+        for (const auto &writer_guid : writer_it->second.writers)
+            reader->add(writer_guid);
     _local_readers[std::string(topic)] = reader;
     // 向已发现的节点发送 addReader 的 EDP 消息
     REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port(), reader->msgtype());

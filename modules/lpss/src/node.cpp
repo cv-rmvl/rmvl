@@ -257,6 +257,17 @@ void Node::redp_listener(DgramSocket redp_socket) {
                     it->second->remove(msg.endpoint_guid);
             }
         }
+        // Writer
+        else {
+            std::lock_guard lk(_local_mtx);
+            auto it = _local_readers.find(msg.topic);
+            if (it != _local_readers.end()) {
+                if (msg.action == REDPMessage::Action::Add)
+                    it->second->add(msg.endpoint_guid);
+                else // Remove
+                    it->second->remove(msg.endpoint_guid);
+            }
+        }
     }
 }
 
@@ -296,6 +307,15 @@ void Node::heartbeat_detect() {
                         is_same_node(map_it->first, dead_guid) ? map_it = reader_storage.readers.erase(map_it) : ++map_it;
                     reader_storage.readers.empty() ? it = _discovered_readers.erase(it) : ++it;
                 }
+            }
+        }
+        if (!timeout_guids.empty()) {
+            std::lock_guard lk(_local_mtx);
+            for (const auto &dead_guid : timeout_guids) {
+                for (const auto &[topic, writer] : _local_writers)
+                    writer->remove(dead_guid);
+                for (const auto &[topic, reader] : _local_readers)
+                    reader->remove(dead_guid);
             }
         }
 
