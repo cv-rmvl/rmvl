@@ -22,8 +22,6 @@
 #include <iphlpapi.h>
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
-#undef min
-#undef max
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>

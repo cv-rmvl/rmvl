@@ -72,7 +72,7 @@ constexpr auto BROADCAST_IP = "239.255.0.5";
 
 //! 定位器
 struct Locator {
-    uint16_t port{};               //!< REDP 端口号
+    uint16_t port{};               //!< 端口号
     std::array<uint8_t, 4> addr{}; //!< 地址
 
     bool invalid() const noexcept { return port == 0 && addr == std::array<uint8_t, 4>{}; }

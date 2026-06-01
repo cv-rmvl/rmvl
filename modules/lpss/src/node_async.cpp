@@ -143,6 +143,14 @@ rm::async::Task<> Node::redp_listener(rm::async::DgramSocket redp_socket) {
                 else // Remove
                     it->second->remove(msg.endpoint_guid);
             }
+        } else { // Writer
+            auto it = _local_readers.find(msg.topic);
+            if (it != _local_readers.end()) {
+                if (msg.action == REDPMessage::Action::Add)
+                    it->second->add(msg.endpoint_guid);
+                else // Remove
+                    it->second->remove(msg.endpoint_guid);
+            }
         }
     }
 }
@@ -176,6 +184,14 @@ rm::async::Task<> Node::heartbeat_detect() {
                         is_same_node(map_it->first, dead_guid) ? map_it = reader_storage.readers.erase(map_it) : ++map_it;
                     reader_storage.readers.empty() ? it = _discovered_readers.erase(it) : ++it;
                 }
+            }
+        }
+        if (!guid_ready_to_erase.empty()) {
+            for (const auto &dead_guid : guid_ready_to_erase) {
+                for (const auto &[topic, writer] : _local_writers)
+                    writer->remove(dead_guid);
+                for (const auto &[topic, reader] : _local_readers)
+                    reader->remove(dead_guid);
             }
         }
 

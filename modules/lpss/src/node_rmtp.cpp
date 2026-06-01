@@ -20,17 +20,13 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
+#include <mutex>
 #include <optional>
 #include <vector>
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/lpss/details/node_rmtp.hpp"
 #include "rmvlpara/lpss.hpp"
-
-#ifdef _WIN32
-#undef min
-#undef max
-#endif
 
 namespace rm::lpss {
 
@@ -41,10 +37,32 @@ constexpr std::size_t MAX_UDP_PAYLOAD = 65507;
 constexpr std::size_t IPV4_UDP_HEADER_SIZE = 20 + 8;
 constexpr uint32_t DEFAULT_MTU = 1500;
 constexpr uint8_t NAME_SIZE_MASK = 0x3f;
+constexpr std::string_view MTP_SHM_NOTIFY = "MSHM";
 
 using AssemblyMap = std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash>;
 
+//! 计算 MTP 消息头部大小
 std::size_t mtp_header_size(std::string_view type, std::string_view topic) noexcept { return MTP_FIXED_HEADER_SIZE + topic.size() + type.size(); }
+//! 判断两个 GUID 是否属于同一主机
+bool same_host(const Guid &lhs, const Guid &rhs) noexcept { return lhs.host() == rhs.host(); }
+//! 判断两个 GUID 是否属于同一节点
+bool same_node(const Guid &lhs, const Guid &rhs) noexcept { return lhs.host() == rhs.host() && lhs.pid() == rhs.pid(); }
+
+template <typename Map>
+void erase_endpoint_or_node(Map &map, const Guid &guid) {
+    if (map.erase(guid) != 0)
+        return;
+    for (auto it = map.begin(); it != map.end();)
+        same_node(it->first, guid) ? it = map.erase(it) : ++it;
+}
+
+std::string shm_channel_name(const Guid &writer, const Guid &reader) {
+    return "lpss_mtp_" + std::to_string(writer.full) + "_" + std::to_string(reader.full);
+}
+
+std::shared_ptr<LatestBytesSHM> create_shm_channel(std::string_view name) {
+    return std::make_shared<LatestBytesSHM>(name, static_cast<std::size_t>(para::lpss_param.MTP_REASSEMBLY_MAX_BYTES));
+}
 
 uint8_t prefix_length(const std::array<uint8_t, 4> &mask) noexcept {
     uint8_t count{};
@@ -332,6 +350,15 @@ std::optional<std::string> accept_fragment(std::string_view header, std::string_
     return result;
 }
 
+std::optional<std::string> read_shm_sources(std::unordered_map<Guid, MTPShmSource, GuidHash> &sources) {
+    for (auto &[guid, source] : sources) {
+        std::string data{};
+        if (source.shm && source.shm->read(data, source.sequence))
+            return data;
+    }
+    return std::nullopt;
+}
+
 template <typename SendCallback>
 void sendMTPMessage(std::string_view data, std::string_view type, std::string_view topic, uint16_t sequence,
                     const std::vector<MTPWriterTarget> &targets, SendCallback &&send) {
@@ -340,6 +367,7 @@ void sendMTPMessage(std::string_view data, std::string_view type, std::string_vi
         return;
     }
     const auto header_size = mtp_header_size(type, topic);
+    // 检验分片次数有无超过 uint16_t 上限
     for (const auto &target : targets) {
         auto capacity = fragment_capacity(target.mtu, header_size);
         if (capacity == 0) {
@@ -377,24 +405,43 @@ DataWriterBase::DataWriterBase(const Guid &guid, std::string_view type, std::str
 
 void DataWriterBase::add(const Guid &guid, Locator loc) noexcept {
     std::lock_guard lk(_mtx);
-    // UDPv4 通道
-    _udpv4_targets[guid] = {loc, outbound_mtu(loc)};
+    if (same_host(_guid, guid)) {
+        auto name = shm_channel_name(_guid, guid);
+        _shm_targets[guid] = {name, loc, create_shm_channel(name)};
+        _udpv4_targets.erase(guid);
+    } else {
+        _udpv4_targets[guid] = {loc, outbound_mtu(loc)};
+        _shm_targets.erase(guid);
+    }
 }
 
 void DataWriterBase::remove(const Guid &guid) noexcept {
     std::lock_guard lk(_mtx);
-    // UDPv4 通道
-    _udpv4_targets.erase(guid);
+    erase_endpoint_or_node(_udpv4_targets, guid);
+    erase_endpoint_or_node(_shm_targets, guid);
 }
 
 void DataWriterBase::write(std::string data) noexcept {
     std::vector<MTPWriterTarget> targets{};
+    std::vector<MTPShmTarget> shm_targets{};
     {
         std::shared_lock lk(_mtx);
         targets.reserve(_udpv4_targets.size());
         for (const auto &[guid, target] : _udpv4_targets)
             targets.push_back(target);
+        shm_targets.reserve(_shm_targets.size());
+        for (const auto &[guid, target] : _shm_targets)
+            shm_targets.push_back(target);
     }
+
+    for (const auto &target : shm_targets) {
+        if (!target.shm || !target.shm->write(data)) {
+            WARNING_("[LPSS MTP] Failed to write an MTP SHM message");
+            continue;
+        }
+        _socket.write(target.locator.addr, Endpoint(ip::udp::v4(), target.locator.port), MTP_SHM_NOTIFY);
+    }
+
     auto sequence = _sequence.fetch_add(1, std::memory_order_relaxed);
     sendMTPMessage(data, _type, _topic, sequence, targets, [this](const Locator &loc, std::string_view header, std::string_view payload) {
         if (!_socket.multiwrite(loc.addr, Endpoint(ip::udp::v4(), loc.port), header, payload))
@@ -408,10 +455,36 @@ DataReaderBase::DataReaderBase(const Guid &guid, std::string_view type, std::str
     _port = ep.port();
 }
 
+void DataReaderBase::add(const Guid &guid) noexcept {
+    if (!same_host(_guid, guid))
+        return;
+    std::lock_guard lk(_shm_mtx);
+    auto name = shm_channel_name(guid, _guid);
+    _shm_sources[guid] = {name, create_shm_channel(name), 0};
+}
+
+void DataReaderBase::remove(const Guid &guid) noexcept {
+    std::lock_guard lk(_shm_mtx);
+    erase_endpoint_or_node(_shm_sources, guid);
+}
+
 std::string DataReaderBase::read() noexcept {
     while (true) {
+        {
+            std::lock_guard lk(_shm_mtx);
+            auto message = read_shm_sources(_shm_sources);
+            if (message)
+                return std::move(*message);
+        }
+
         auto header_size = mtp_header_size(_type, _topic);
         auto [parts, addr, port] = _udpv4.multiread(header_size, MAX_UDP_PAYLOAD - header_size);
+        {
+            std::lock_guard lk(_shm_mtx);
+            auto message = read_shm_sources(_shm_sources);
+            if (message)
+                return std::move(*message);
+        }
         if (parts.size() != 2)
             continue;
         auto message = accept_fragment(parts[0], parts[1], addr, port, _type, _topic, _asms, _asm_bytes);
@@ -428,13 +501,19 @@ DataWriterBase::DataWriterBase(rm::async::IOContext &io_context, const Guid &gui
     : _guid(guid), _socket(rm::async::Sender(io_context, ip::udp::v4()).create()), _type(type), _topic(topic) {}
 
 void DataWriterBase::add(const Guid &guid, Locator loc) noexcept {
-    // UDPv4 通道
-    _udpv4_targets[guid] = {loc, outbound_mtu(loc)};
+    if (same_host(_guid, guid)) {
+        auto name = shm_channel_name(_guid, guid);
+        _shm_targets[guid] = {name, loc, create_shm_channel(name)};
+        _udpv4_targets.erase(guid);
+    } else {
+        _udpv4_targets[guid] = {loc, outbound_mtu(loc)};
+        _shm_targets.erase(guid);
+    }
 }
 
 void DataWriterBase::remove(const Guid &guid) noexcept {
-    // UDPv4 通道
-    _udpv4_targets.erase(guid);
+    erase_endpoint_or_node(_udpv4_targets, guid);
+    erase_endpoint_or_node(_shm_targets, guid);
 }
 
 rm::async::Task<> DataWriterBase::write(std::string data) noexcept {
@@ -453,6 +532,10 @@ rm::async::Task<> DataWriterBase::write(std::string data) noexcept {
             targets.reserve(_udpv4_targets.size());
             for (const auto &[guid, target] : _udpv4_targets)
                 targets.push_back(target);
+            std::vector<MTPShmTarget> shm_targets{};
+            shm_targets.reserve(_shm_targets.size());
+            for (const auto &[guid, target] : _shm_targets)
+                shm_targets.push_back(target);
 
             auto sequence = _sequence.fetch_add(1, std::memory_order_relaxed);
             auto header_size = mtp_header_size(_type, _topic);
@@ -474,6 +557,14 @@ rm::async::Task<> DataWriterBase::write(std::string data) noexcept {
             }
 
             if (can_send) {
+                for (const auto &target : shm_targets) {
+                    if (!target.shm || !target.shm->write(current)) {
+                        WARNING_("[LPSS MTP] Failed to write an MTP SHM message");
+                        continue;
+                    }
+                    co_await _socket.write(target.locator.addr, Endpoint(ip::udp::v4(), target.locator.port), MTP_SHM_NOTIFY);
+                }
+
                 auto total_size = static_cast<uint32_t>(current.size());
                 auto header = MTPHeader::create(_type, _topic, sequence, total_size);
                 for (const auto &target : targets) {
@@ -508,10 +599,30 @@ DataReaderBase::DataReaderBase(rm::async::IOContext &io_context, const Guid &gui
     _port = ep.port();
 }
 
+void DataReaderBase::add(const Guid &guid) noexcept {
+    if (!same_host(_guid, guid))
+        return;
+    auto name = shm_channel_name(guid, _guid);
+    _shm_sources[guid] = {name, create_shm_channel(name), 0};
+}
+
+void DataReaderBase::remove(const Guid &guid) noexcept { erase_endpoint_or_node(_shm_sources, guid); }
+
 rm::async::Task<std::string> DataReaderBase::read() noexcept {
     while (true) {
+        auto shm_message = read_shm_sources(_shm_sources);
+        if (shm_message) {
+            std::string result = std::move(*shm_message);
+            co_return result;
+        }
+
         auto header_size = mtp_header_size(_type, _topic);
         auto [parts, addr, port] = co_await _udpv4.multiread(header_size, MAX_UDP_PAYLOAD - header_size);
+        shm_message = read_shm_sources(_shm_sources);
+        if (shm_message) {
+            std::string result = std::move(*shm_message);
+            co_return result;
+        }
         if (parts.size() != 2)
             continue;
         auto message = accept_fragment(parts[0], parts[1], addr, port, _type, _topic, _asms, _asm_bytes);

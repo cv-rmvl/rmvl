@@ -383,11 +383,6 @@ std::vector<msg::JointTrajectoryPoint> interpolate(const double *q_start, const 
     return res;
 }
 
-#ifdef _WIN32
-#undef max
-#undef min
-#endif
-
 int64_t estimateDuration(const double *q_start, const double *q_end, const std::vector<const JointInfo *> &joints,
                          double velocity_scale, double acceleration_scale) {
     velocity_scale = std::clamp(velocity_scale, 0.01, 1.0);

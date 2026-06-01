@@ -23,7 +23,9 @@
 #endif
 #endif
 
+#include <algorithm>
 #include <cstring>
+#include <limits>
 #include <utility>
 
 #include "rmvl/core/util.hpp"
@@ -368,6 +370,88 @@ SHMBase &SHMBase::operator=(SHMBase &&other) noexcept {
 }
 
 #endif
+
+struct LatestBytesSHM::Layout {
+    uint32_t magic{};
+    uint32_t capacity{};
+    alignas(64) std::atomic_flag writer_mtx = ATOMIC_FLAG_INIT;
+    alignas(64) std::atomic_uint64_t seq{0};
+    alignas(64) std::atomic_size_t size{0};
+
+    char *payload() noexcept { return reinterpret_cast<char *>(this + 1); }
+    const char *payload() const noexcept { return reinterpret_cast<const char *>(this + 1); }
+};
+
+static constexpr uint32_t LATEST_BYTES_SHM_MAGIC = 0x4c425348U; // "LBSH"
+
+LatestBytesSHM::LatestBytesSHM(std::string_view name, std::size_t capacity)
+    : SHMBase(name, sizeof(Layout) + capacity), _capacity(capacity) {
+    auto layout = static_cast<Layout *>(data());
+    if (!layout)
+        return;
+    if (isCreator()) {
+        new (layout) Layout();
+        layout->magic = LATEST_BYTES_SHM_MAGIC;
+        layout->capacity = static_cast<uint32_t>(std::min<std::size_t>(capacity, std::numeric_limits<uint32_t>::max()));
+    } else if (layout->magic != LATEST_BYTES_SHM_MAGIC || layout->capacity != capacity) {
+        ERROR_("LatestBytesSHM layout mismatch");
+    }
+}
+
+bool LatestBytesSHM::write(std::string_view data) noexcept {
+    auto layout = static_cast<Layout *>(this->data());
+    if (!layout || layout->magic != LATEST_BYTES_SHM_MAGIC || data.size() > _capacity)
+        return false;
+
+    while (layout->writer_mtx.test_and_set(std::memory_order_acquire))
+        std::this_thread::yield();
+
+    uint64_t s = layout->seq.load(std::memory_order_relaxed);
+    if ((s & 1U) != 0)
+        ++s;
+    layout->seq.store(s + 1, std::memory_order_release);
+    layout->size.store(data.size(), std::memory_order_relaxed);
+    std::memcpy(layout->payload(), data.data(), data.size());
+    layout->seq.store(s + 2, std::memory_order_release);
+
+    layout->writer_mtx.clear(std::memory_order_release);
+    return true;
+}
+
+bool LatestBytesSHM::read(std::string &data, uint64_t &last_sequence) noexcept {
+    auto layout = static_cast<const Layout *>(this->data());
+    if (!layout || layout->magic != LATEST_BYTES_SHM_MAGIC)
+        return false;
+
+    int retry{};
+    while (true) {
+        uint64_t s1 = layout->seq.load(std::memory_order_acquire);
+        if (s1 == 0 || (s1 & 1U) != 0 || s1 == last_sequence)
+            return false;
+
+        auto size = layout->size.load(std::memory_order_acquire);
+        if (size > _capacity)
+            return false;
+
+        std::string current(size, '\0');
+        std::memcpy(current.data(), layout->payload(), size);
+        std::atomic_thread_fence(std::memory_order_acquire);
+
+        uint64_t s2 = layout->seq.load(std::memory_order_relaxed);
+        if (s1 == s2) {
+            data = std::move(current);
+            last_sequence = s1;
+            return true;
+        }
+        if (retry++ > 100)
+            std::this_thread::yield();
+    }
+}
+
+bool LatestBytesSHM::empty() const noexcept {
+    auto layout = static_cast<const Layout *>(this->data());
+    return !layout || layout->magic != LATEST_BYTES_SHM_MAGIC || layout->seq.load(std::memory_order_relaxed) == 0;
+}
 
 std::string PipeServer::read() noexcept { return readPipe(_fd); }
 bool PipeServer::write(std::string_view data) noexcept { return writePipe(_fd, data); }

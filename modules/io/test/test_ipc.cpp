@@ -66,6 +66,27 @@ TEST(IO_ipc, shm_base) {
     EXPECT_STREQ(buffer, str2);
 }
 
+TEST(IO_ipc, latest_bytes_shm_keep_latest) {
+    auto now = std::chrono::system_clock::now().time_since_epoch().count();
+    auto shm_name = "/rmvl_test_latest_bytes_" + std::to_string(now);
+
+    LatestBytesSHM writer(shm_name, 1024);
+    LatestBytesSHM reader(shm_name, 1024);
+    uint64_t sequence{};
+    std::string output{};
+
+    EXPECT_TRUE(writer.write("first"));
+    EXPECT_TRUE(writer.write("second"));
+    EXPECT_TRUE(reader.read(output, sequence));
+    EXPECT_EQ(output, "second");
+    EXPECT_FALSE(reader.read(output, sequence));
+
+    EXPECT_TRUE(writer.write(std::string(1024, 'x')));
+    EXPECT_TRUE(reader.read(output, sequence));
+    EXPECT_EQ(output, std::string(1024, 'x'));
+    EXPECT_FALSE(writer.write(std::string(1025, 'x')));
+}
+
 // 定义一个简单的测试数据结构
 struct TestData {
     int id{};

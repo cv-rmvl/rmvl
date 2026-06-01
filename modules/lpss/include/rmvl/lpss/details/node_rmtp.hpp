@@ -21,6 +21,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "rmvl/io/ipc.hpp"
+
 #include "node_util.hpp"
 
 namespace rm::lpss {
@@ -31,6 +33,20 @@ namespace rm::lpss {
 struct MTPWriterTarget {
     Locator locator{};  //!< 目标定位器
     uint32_t mtu{1500}; //!< 发送目标对应的本地接口 MTU
+};
+
+//! MTP 共享内存写入目标
+struct MTPShmTarget {
+    std::string name{};                     //!< 共享内存通道名称
+    Locator locator{};                      //!< 目标定位器，用于发送唤醒通知
+    std::shared_ptr<LatestBytesSHM> shm{};  //!< 最新字节流共享内存
+};
+
+//! MTP 共享内存读取源
+struct MTPShmSource {
+    std::string name{};                    //!< 共享内存通道名称
+    std::shared_ptr<LatestBytesSHM> shm{}; //!< 最新字节流共享内存
+    uint64_t sequence{};                   //!< 最近读取到的共享内存序列号
 };
 
 //! MTP 重组缓存索引
@@ -116,6 +132,8 @@ protected:
     std::shared_mutex _mtx;
     //! 目标 UDPv4 定位器缓存集合
     std::unordered_map<Guid, MTPWriterTarget, GuidHash> _udpv4_targets;
+    //! 目标共享内存通道缓存集合
+    std::unordered_map<Guid, MTPShmTarget, GuidHash> _shm_targets;
     std::atomic_uint16_t _sequence{}; //!< MTP 发送序列号
 };
 
@@ -160,6 +178,20 @@ public:
     //! 获取监听的端口
     inline uint16_t port() const noexcept { return _port; }
 
+    /**
+     * @brief 添加数据写入端点
+     *
+     * @param[in] guid 写入端点所属实体 GUID
+     */
+    void add(const Guid &guid) noexcept;
+
+    /**
+     * @brief 移除数据写入端点
+     *
+     * @param[in] guid 写入端点所属实体 GUID
+     */
+    void remove(const Guid &guid) noexcept;
+
 protected:
     uint16_t _port{};                                             //!< 监听端口
     Guid _guid;                                                   //!< 读取器所属实体 GUID
@@ -168,6 +200,8 @@ protected:
     std::string _topic{};                                         //!< 监听话题
     std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{}; //!< MTP 重组缓存
     std::size_t _asm_bytes{};                                     //!< 待重组载荷占用字节数
+    std::shared_mutex _shm_mtx{};                                  //!< 保护共享内存读取源
+    std::unordered_map<Guid, MTPShmSource, GuidHash> _shm_sources{}; //!< 共享内存读取源缓存集合
 };
 
 /**
@@ -278,6 +312,8 @@ protected:
 
     //! 目标 UDPv4 定位器缓存集合
     std::unordered_map<Guid, MTPWriterTarget, GuidHash> _udpv4_targets;
+    //! 目标共享内存通道缓存集合
+    std::unordered_map<Guid, MTPShmTarget, GuidHash> _shm_targets;
     std::atomic_uint16_t _sequence{};       //!< MTP 发送序列号
     std::optional<std::string> _pending{};  //!< 发送中收到的最新待发送消息
     bool _sending{};                        //!< 是否已有发送协程正在运行
@@ -319,6 +355,20 @@ public:
     //! 获取监听的端口
     inline uint16_t port() const noexcept { return _port; }
 
+    /**
+     * @brief 添加数据写入端点
+     *
+     * @param[in] guid 写入端点所属实体 GUID
+     */
+    void add(const Guid &guid) noexcept;
+
+    /**
+     * @brief 移除数据写入端点
+     *
+     * @param[in] guid 写入端点所属实体 GUID
+     */
+    void remove(const Guid &guid) noexcept;
+
 protected:
     uint16_t _port{};                                             //!< 监听端口
     Guid _guid;                                                   //!< 读取器所属实体 GUID
@@ -327,6 +377,7 @@ protected:
     std::string _topic{};                                         //!< 监听话题
     std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{}; //!< MTP 重组缓存
     std::size_t _asm_bytes{};                                     //!< 待重组载荷占用字节数
+    std::unordered_map<Guid, MTPShmSource, GuidHash> _shm_sources{}; //!< 共享内存读取源缓存集合
 };
 
 /**

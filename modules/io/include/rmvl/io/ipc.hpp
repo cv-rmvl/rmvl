@@ -279,6 +279,45 @@ private:
     bool _is_creator{false}; //!< 是否为创建者
 };
 
+//! 最新字节流共享内存对象
+class LatestBytesSHM : public SHMBase {
+public:
+    /**
+     * @brief 构造或连接到一个最新字节流共享内存对象
+     *
+     * @param[in] name 共享内存名称
+     * @param[in] capacity 最大字节容量
+     */
+    RMVL_W LatestBytesSHM(std::string_view name, std::size_t capacity);
+
+    /**
+     * @brief 写入最新字节流
+     *
+     * @param[in] data 待写入的数据
+     * @return 是否写入成功
+     */
+    RMVL_W bool write(std::string_view data) noexcept;
+
+    /**
+     * @brief 读取自 last_sequence 之后的最新字节流
+     *
+     * @param[out] data 读取到的数据
+     * @param[in,out] last_sequence 上次成功读取到的序列号
+     * @return 是否读取到新数据
+     */
+    RMVL_W bool read(std::string &data, uint64_t &last_sequence) noexcept;
+
+    //! 判断是否为空（从未写入过）
+    RMVL_W bool empty() const noexcept;
+
+    //! 获取最大字节容量
+    std::size_t capacity() const noexcept { return _capacity; }
+
+private:
+    struct Layout;
+    std::size_t _capacity{};
+};
+
 /**
  * @brief MPMC 原子共享内存对象
  *

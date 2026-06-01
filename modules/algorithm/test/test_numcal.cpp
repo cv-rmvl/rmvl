@@ -67,7 +67,8 @@ TEST(Algorithm_cal, numcal_nonlinear_solver) {
 
 TEST(Algorithm_cal, numcal_runge_kutta_ode) {
     auto f = [](double, const std::valarray<double> &xs) { return -2 * xs[0] - 2; }; // e^{-2x} - 1
-    rm::Odes fs = {f};
+    rm::Odes fs;
+    fs.emplace_back(f);
 
     rm::RungeKutta rkb(fs, {0.0, 2.0 / 3.0}, {0.25, 0.75}, {{0.0, 0.0}, {2.0 / 3.0, 0.0}});
     rkb.init(0, {0});
@@ -93,7 +94,9 @@ TEST(Algorithm_cal, numcal_runge_kutta_ode) {
 TEST(Algorithm_cal, numcal_runge_kutta_odes) {
     rm::Ode dot_x1 = [](double t, const std::valarray<double> &x) { return 2 * x[1] + t; };
     rm::Ode dot_x2 = [](double, const std::valarray<double> &x) { return -x[0] - 3 * x[1]; };
-    rm::Odes fs = {dot_x1, dot_x2};
+    rm::Odes fs;
+    fs.emplace_back(dot_x1);
+    fs.emplace_back(dot_x2);
     //     ┌  3/4 ┐          ┌  2 ┐         ┌  3/2 ┐    ┌ -7/4 ┐
     // X = │      │e^{-2t} + │    │e^{-t} + │      │t + │      │
     //     └ -3/4 ┘          └ -1 ┘         └ -1/2 ┘    └  3/4 ┘
@@ -117,7 +120,8 @@ TEST(Algorithm_cal, numcal_runge_kutta_odes) {
 #if __cpp_lib_generator >= 202207L
 TEST(Algorithm_cal, numcal_runge_kutta_ode_generator) {
     auto f = [](double, const std::valarray<double> &) { return 1; }; // x + 1
-    rm::Odes fs = {f};
+    rm::Odes fs{};
+    fs.emplace_back(f);
 
     rm::RungeKutta2 rk2(fs);
     rk2.init(0, {1});
