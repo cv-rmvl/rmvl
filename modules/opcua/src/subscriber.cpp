@@ -35,7 +35,12 @@ Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint1
     connect_config.enabled = UA_TRUE;
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(addr))};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
+#if OPCUA_VERSION >= 10500
+    connect_config.publisherId.idType = UA_PUBLISHERIDTYPE_UINT32;
+    connect_config.publisherId.id.uint32 = UA_UInt32_random();
+#else
     connect_config.publisherId.uint32 = UA_UInt32_random();
+#endif
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add connection, \"%s\"", UA_StatusCode_name(status));
@@ -64,7 +69,12 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
     std::string dsr_name = pub_name + "DataSetReader";
     dsr_config.name = UA_STRING(helper::to_char(dsr_name));
     UA_UInt16 publisher_id = _strhash(pub_name + "Connection") % 0x4000u;
+#if OPCUA_VERSION >= 10500
+    dsr_config.publisherId.idType = UA_PUBLISHERIDTYPE_UINT16;
+    dsr_config.publisherId.id.uint16 = publisher_id;
+#else
     UA_Variant_setScalar(&dsr_config.publisherId, &publisher_id, &UA_TYPES[UA_TYPES_UINT16]);
+#endif
     dsr_config.writerGroupId = 0x4000u + _strhash(pub_name + "WriterGroup") % 0x4000u;
     dsr_config.dataSetWriterId = 0x8000u + _strhash(pub_name + "DataSetWriter") % 0x4000u;
 
@@ -103,7 +113,11 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
         return {};
     }
     // 根据数据集元数据 DataSetMetaData 的字段创建 FieldTargetVariable
+#if OPCUA_VERSION >= 10500
+    std::vector<UA_FieldTargetDataType> target_vars(fields.size());
+#else
     std::vector<UA_FieldTargetVariable> target_vars(fields.size());
+#endif
     std::vector<NodeId> retval;
     retval.reserve(fields.size());
     for (size_t i = 0; i < fields.size(); i++) {
@@ -122,9 +136,15 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
             ERROR_("Failed to add variable node, \"%s\"", UA_StatusCode_name(status));
             continue;
         }
+#if OPCUA_VERSION >= 10500
+        UA_FieldTargetDataType_init(&target_vars[i]);
+        target_vars[i].attributeId = UA_ATTRIBUTEID_VALUE;
+        target_vars[i].targetNodeId = node_id;
+#else
         UA_FieldTargetDataType_init(&target_vars[i].targetVariable);
         target_vars[i].targetVariable.attributeId = UA_ATTRIBUTEID_VALUE;
         target_vars[i].targetVariable.targetNodeId = node_id;
+#endif
         retval.push_back(node_id);
     }
     status = UA_Server_DataSetReader_createTargetVariables(_server, _dsr_id, target_vars.size(), target_vars.data());

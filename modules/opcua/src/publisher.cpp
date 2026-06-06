@@ -42,8 +42,13 @@ Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(url_str))};
     UA_Variant_setScalar(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
     // 用哈希值作为发布者 ID
+#if OPCUA_VERSION >= 10500
+    connect_config.publisherId.idType = UA_PUBLISHERIDTYPE_UINT16;
+    connect_config.publisherId.id.uint16 = _strhash(_name + "Connection") % 0x4000u;
+#else
     connect_config.publisherIdType = UA_PUBLISHERIDTYPE_UINT16;
     connect_config.publisherId.uint16 = _strhash(_name + "Connection") % 0x4000u;
+#endif
     auto status = UA_Server_addPubSubConnection(_server, &connect_config, &_connection_id);
     if (status != UA_STATUSCODE_GOOD) {
         ERROR_("Failed to add connection, \"%s\"", UA_StatusCode_name(status));
