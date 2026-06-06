@@ -9,11 +9,48 @@
  */
 
 #include <algorithm>
+#include <cstring>
 #include <numeric>
 
 #include "@MSG_INCLUDE_CONTENT@"
 
 namespace rm::msg {
+
+namespace {
+
+template <typename Tp>
+void append_scalar(std::string &dst, const Tp &value) noexcept {
+    const auto offset = dst.size();
+    dst.resize(offset + sizeof(Tp));
+    std::memcpy(dst.data() + offset, &value, sizeof(Tp));
+}
+
+template <typename Tp>
+void append_array(std::string &dst, const Tp *data, std::size_t count) noexcept {
+    const auto size = count * sizeof(Tp);
+    const auto offset = dst.size();
+    dst.resize(offset + size);
+    if (size != 0)
+        std::memcpy(dst.data() + offset, data, size);
+}
+
+template <typename Tp>
+Tp read_scalar(const char *&src) noexcept {
+    Tp value{};
+    std::memcpy(&value, src, sizeof(Tp));
+    src += sizeof(Tp);
+    return value;
+}
+
+template <typename Tp>
+void read_array(const char *&src, Tp *data, std::size_t count) noexcept {
+    const auto size = count * sizeof(Tp);
+    if (size != 0)
+        std::memcpy(data, src, size);
+    src += size;
+}
+
+} // namespace
 
 std::string @CLASS_NAME@::serialize() const noexcept {
     std::string _res_;
