@@ -182,6 +182,36 @@ TEST(LPSS_ctl, robot_controller_with_unitTF) {
     EXPECT_NEAR(cmd.position[1], 0.0, kEps);
 }
 
+TEST(LPSS_ctl, robot_controller_remaps_trajectory_joints) {
+    auto ctl_law = ctl::UnitTF::create(ctl::basic_pos_imapping, ctl::basic_pos_omapping);
+
+    RobotController controller({"joint2", "joint1"}, std::move(ctl_law));
+
+    msg::JointTrajectory traj{};
+    traj.joint_names = {"joint1", "joint_extra", "joint2"};
+
+    msg::JointTrajectoryPoint pt{};
+    pt.time_from_start = 100;
+    pt.positions = {1.0, 99.0, 2.0};
+    pt.velocities = {0.1, 9.9, 0.2};
+    pt.accelerations = {0.01, 0.99, 0.02};
+    pt.effort = {10.0, 990.0, 20.0};
+
+    traj.points = {pt};
+
+    ASSERT_TRUE(controller.submit(traj));
+
+    msg::JointState feedback{};
+    feedback.name = {"joint2", "joint1"};
+    feedback.position = {0.0, 0.0};
+
+    auto cmd = controller.sample(feedback);
+    ASSERT_EQ(cmd.position.size(), 2u);
+    EXPECT_EQ(cmd.name, std::vector<std::string>({"joint2", "joint1"}));
+    EXPECT_NEAR(cmd.position[0], 2.0, kEps);
+    EXPECT_NEAR(cmd.position[1], 1.0, kEps);
+}
+
 TEST(LPSS_ctl, robot_controller_velocity_tracking) {
     // 创建 PID 控制器用于速度跟踪
     std::vector<double> kp = {1.0};

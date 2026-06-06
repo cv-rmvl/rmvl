@@ -344,14 +344,15 @@ std::optional<std::string> accept_fragment(std::string_view header, std::string_
 
     std::string result{};
     result.reserve(total);
-    for (const auto &[fragment_id, part] : assembly.fragments)
-        result.append(part);
+    for (const auto &map : assembly.fragments)
+        result.append(map.second);
     removeAsm(asms, asm_bytes, it);
     return result;
 }
 
 std::optional<std::string> read_shm_sources(std::unordered_map<Guid, MTPShmSource, GuidHash> &sources) {
-    for (auto &[guid, source] : sources) {
+    for (auto &source_map : sources) {
+        auto &source = source_map.second;
         std::string data{};
         if (source.shm && source.shm->read(data, source.sequence))
             return data;
@@ -427,11 +428,11 @@ void DataWriterBase::write(std::string data) noexcept {
     {
         std::shared_lock lk(_mtx);
         targets.reserve(_udpv4_targets.size());
-        for (const auto &[guid, target] : _udpv4_targets)
-            targets.push_back(target);
+        for (const auto &udpv4_target : _udpv4_targets)
+            targets.push_back(udpv4_target.second);
         shm_targets.reserve(_shm_targets.size());
-        for (const auto &[guid, target] : _shm_targets)
-            shm_targets.push_back(target);
+        for (const auto &shm_target : _shm_targets)
+            shm_targets.push_back(shm_target.second);
     }
 
     for (const auto &target : shm_targets) {

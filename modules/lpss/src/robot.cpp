@@ -525,21 +525,22 @@ bool RobotController::submit(const msg::JointTrajectory &traj) {
     // 关节名校验
     if (traj.joint_names.empty() || traj.points.empty())
         return false;
-    for (auto &[name, remap_idx] : _ctl_joints) {
-        auto it = std::find(traj.joint_names.begin(), traj.joint_names.end(), name);
+    for (auto &joint : _ctl_joints) {
+        auto it = std::find(traj.joint_names.begin(), traj.joint_names.end(), joint.name);
         if (it == traj.joint_names.end()) {
             _ctl_joints.clear();
             return false;
         }
-        remap_idx = std::distance(traj.joint_names.begin(), it);
+        joint.remap = std::distance(traj.joint_names.begin(), it);
     }
     // 时间校验
     if (!std::is_sorted(traj.points.begin(), traj.points.end(), [](const auto &a, const auto &b) { return a.time_from_start < b.time_from_start; }))
         return false;
     // 维度校验
-    const auto dof = _ctl_joints.size();
+    const auto traj_dof = traj.joint_names.size();
     for (const auto &pt : traj.points)
-        if (pt.positions.size() != dof || (!pt.velocities.empty() && pt.velocities.size() != dof) || (!pt.accelerations.empty() && pt.accelerations.size() != dof))
+        if (pt.positions.size() != traj_dof || (!pt.velocities.empty() && pt.velocities.size() != traj_dof) ||
+            (!pt.accelerations.empty() && pt.accelerations.size() != traj_dof) || (!pt.effort.empty() && pt.effort.size() != traj_dof))
             return false;
 
     _traj_cache = traj;
