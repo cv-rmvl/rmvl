@@ -105,9 +105,9 @@ void Node::shutdown() noexcept {
     // 向所有已发现节点单播 REDP 消息
     {
         std::shared_lock lk(_nodes_mtx);
-        for (const auto &[guid, node_info] : _discovered_nodes)
+        for (const auto &discovered_node : _discovered_nodes)
             for (const auto &msg : redp_msgs)
-                sendREDPMessage(node_info.ctrl_loc, msg);
+                sendREDPMessage(discovered_node.second.ctrl_loc, msg);
     }
     // 移除本地注册的 Writers/Readers
     {
