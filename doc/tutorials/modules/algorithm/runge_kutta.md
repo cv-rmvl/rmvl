@@ -39,7 +39,7 @@
 
 \f$\text{(1-3)}\f$在控制系统中能够经常遇见，这种表示一个在时刻\f$t_0\f$带有初始条件的 2 阶线性系统，对于一般的（非线性）方程组，我们可以表示为
 
-\f[\def\rkf#1{\dot x_{#1}=f_{#1}(t,x_1,x_2,\cdots,x_k),\quad x_{#1}(t_0)=x_{#1}^{(0)}}\rkf1\\\rkf2\\\vdots\\\rkf k\f]
+\f[\def\rkf#1{\dot x_{#1}=f_{#1}(t,x_1,x_2,\cdots,x_k),\quad x_{#1}(t_0)=x_{#1}^{(0)}}\begin{gathered}\rkf1\\\rkf2\\\vdots\\\rkf k\end{gathered}\f]
 
 即\f[\dot{\boldsymbol x}=\boldsymbol F(t,\boldsymbol x),\quad\boldsymbol x(t_0)=\boldsymbol x^{(0)}\tag{1-4a}\f]
 
@@ -100,15 +100,15 @@ x_{n+1}\approx x(t_{n+1})&=x(t_n)+x'(t_n)h+x''(t_n)\frac{h^2}2+\cdots\\&=x_n+h\d
 
 这里，\f$f(x,y)=x^3+y^3+1,\ x_n=nh+x_0=0.1n+0=0.1n\quad(n=0,1,\cdots,8),\ y_0=0\f$。由 Euler 公式计算可得
 
-\f[\def\hf#1#2{y_{#1}+h(x_{#1}^3+y_{#1}^3+1)=#2}
-y(0.1)\approx y_1=\hf0{0.100000}\\
-y(0.2)\approx y_2=\hf1{0.200200}\\
-y(0.3)\approx y_3=\hf2{0.301802}\\
-y(0.4)\approx y_4=\hf3{0.407249}\\
-y(0.5)\approx y_5=\hf4{0.520403}\\
-y(0.6)\approx y_6=\hf5{0.646995}\\
-y(0.7)\approx y_7=\hf6{0.795680}\\
-y(0.8)\approx y_8=\hf7{0.980355}\f]
+\f[\def\hf#1#2{y_{#1}+h(x_{#1}^3+y_{#1}^3+1)=#2}\begin{gathered}
+y(0.1)\approx y_1&=\hf0{0.100000}\\
+y(0.2)\approx y_2&=\hf1{0.200200}\\
+y(0.3)\approx y_3&=\hf2{0.301802}\\
+y(0.4)\approx y_4&=\hf3{0.407249}\\
+y(0.5)\approx y_5&=\hf4{0.520403}\\
+y(0.6)\approx y_6&=\hf5{0.646995}\\
+y(0.7)\approx y_7&=\hf6{0.795680}\\
+y(0.8)\approx y_8&=\hf7{0.980355}\end{gathered}\f]
 
 #### 2.3 局部阶段误差
 

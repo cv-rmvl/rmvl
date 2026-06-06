@@ -31,15 +31,15 @@
 
 例如 Windows 平台可以使用以下命令：
 
-```bash
-rmvl_hik_lightctl COM1
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_hik_lightctl</span> COM1</div>
+</div>
 
 而 Linux 平台可以使用以下命令：
 
-```bash
-rmvl_hik_lightctl /dev/ttyUSB0
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_hik_lightctl</span> /dev/ttyUSB0</div>
+</div>
 
 在建立连接之后，可以输入 `help`、`h`、`usage` 或 `?` 来查看帮助信息，可以输入 `exit`、`quit` 或 `q` 来退出程序，具体的帮助信息如下：
 

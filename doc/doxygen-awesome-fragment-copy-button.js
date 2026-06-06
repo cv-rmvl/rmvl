@@ -46,7 +46,14 @@ class DoxygenAwesomeFragmentCopyButton extends HTMLElement {
         content.querySelectorAll(".lineno, .ttc").forEach((node) => {
             node.remove()
         })
-        let textContent = content.textContent
+        const lines = content.querySelectorAll(".line")
+        let textContent = ""
+        if (lines.length > 0) {
+            textContent = Array.from(lines).map((line) => line.textContent).join("\n")
+        } else {
+            textContent = content.textContent
+        }
+        textContent = textContent.replace(/\u00a0/g, " ")
         // remove trailing newlines that appear in file listings
         let numberOfTrailingNewlines = 0
         while (textContent.charAt(textContent.length - (numberOfTrailingNewlines + 1)) == '\n') {

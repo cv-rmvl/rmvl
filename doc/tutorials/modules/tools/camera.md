@@ -306,9 +306,9 @@ RMVL 提供了全局的相机参数对象： rm::para::camera_param ，详情可
 
 单相机例程，打开终端，输入以下命令
 
-```bash
-rmvl_mv_mono
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_mono</span></div>
+</div>
 
 相机按照连续采样、`cvtColor` 处理方式运行，程序运行中，`cv::waitKey(1)` 接受到 `s` 键被按下时，可将参数保存到 `out_para.yml` 文件中。
 
@@ -318,9 +318,9 @@ rmvl_mv_mono
 
 多相机例程，打开终端，输入以下命令
 
-```bash
-rmvl_mv_multi
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_multi</span></div>
+</div>
 
 相机按照连续采样、`cvtColor` 处理方式运行，程序会枚举所有的相机设备，并可视化的显示出来，指定一个序列号来启动某一相机。
 
@@ -332,15 +332,15 @@ rmvl_mv_multi
 
 相机录屏例程，打开终端，输入以下命令
 
-```bash
-rmvl_mv_writer
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_writer</span></div>
+</div>
 
 相机按照连续采样、`cvtColor` 处理方式运行，`-o` 可指定输出文件名，否则默认输出到 `ts.avi`，例如
 
-```bash
-rmvl_mv_writer -o=aaa.avi
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_writer</span> <span class="comment">-o=aaa.avi</span></div>
+</div>
 
 程序运行过程中，相机参数会自动从 `out_para.yml` 中加载，若没有则会按照默认值运行。
 
@@ -348,21 +348,21 @@ rmvl_mv_writer -o=aaa.avi
 
 MvCamera 相机自动标定程序，打开终端，输入以下命令
 
-```bash
-rmvl_mv_auto_calib -w=<?> -h=<?> -s=<?> -d=<?> -n=<?>
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_auto_calib</span> <span class="comment">-w=<?> -h=<?> -s=<?> -d=<?> -n=<?></span></div>
+</div>
 
 `<?>` 表示可调节，具体帮助可直接执行以下命令
 
-```bash
-rmvl_mv_calibration -help
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_calibration</span> <span class="comment">-help</span></div>
+</div>
 
 另外还有相机手动标定程序，可执行以下命令
 
-```bash
-rmvl_mv_manual_calib
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">rmvl_mv_manual_calib</span></div>
+</div>
 
 ## 4 使用 Demo
 

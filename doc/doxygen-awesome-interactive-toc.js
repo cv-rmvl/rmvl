@@ -11,20 +11,21 @@ Copyright (c) 2022 - 2025 jothepro
 class DoxygenAwesomeInteractiveToc {
     static topOffset = 38
     static scrollTopThreshold = 220
+    static scrollTopIdleDelay = 1500
     static hideMobileMenu = true
     static headers = []
     static scrollTopButton = null
-    static throttledUpdate = null
+    static scrollTopIdleTimer = null
+    static viewportUpdatePending = false
 
     static init() {
         window.addEventListener("load", () => {
             DoxygenAwesomeInteractiveToc.headers = []
 
             DoxygenAwesomeInteractiveToc.initScrollTopButton()
-            DoxygenAwesomeInteractiveToc.throttledUpdate ??= this.throttle(DoxygenAwesomeInteractiveToc.handleViewportChange, 100)
-            document.getElementById("doc-content")?.addEventListener("scroll", DoxygenAwesomeInteractiveToc.throttledUpdate, { passive: true })
-            window.addEventListener("scroll", DoxygenAwesomeInteractiveToc.throttledUpdate, { passive: true })
-            window.addEventListener("resize", DoxygenAwesomeInteractiveToc.throttledUpdate, { passive: true })
+            document.getElementById("doc-content")?.addEventListener("scroll", DoxygenAwesomeInteractiveToc.requestViewportUpdate, { passive: true })
+            window.addEventListener("scroll", DoxygenAwesomeInteractiveToc.requestViewportUpdate, { passive: true })
+            window.addEventListener("resize", DoxygenAwesomeInteractiveToc.requestViewportUpdate, { passive: true })
 
             let toc = document.querySelector(".contents > .toc")
             if (toc) {
@@ -69,10 +70,13 @@ class DoxygenAwesomeInteractiveToc {
         const button = document.createElement("button")
         button.type = "button"
         button.classList.add("scroll-top-button")
-        button.setAttribute("aria-label", "返回顶部")
-        button.setAttribute("title", "返回顶部")
-        const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M342.6 73.4C330.1 60.9 309.8 60.9 297.3 73.4L137.3 233.4C124.8 245.9 124.8 266.2 137.3 278.7C149.8 291.2 170.1 291.2 182.6 278.7L288 173.3L288 544C288 561.7 302.3 576 320 576C337.7 576 352 561.7 352 544L352 173.3L457.4 278.7C469.9 291.2 490.2 291.2 502.7 278.7C515.2 266.2 515.2 245.9 502.7 233.4L342.7 73.4z"/></svg>`
-        button.innerHTML = `<span class="scroll-top-button-icon" aria-hidden="true">${svg}</span>`
+        button.innerHTML = `
+            <svg class="scroll-top-button-progress" viewBox="0 0 64 64" aria-hidden="true">
+                <circle class="scroll-top-button-progress-track" cx="32" cy="32" r="29.5"></circle>
+                <circle class="scroll-top-button-progress-value" cx="32" cy="32" r="29.5" pathLength="100"></circle>
+            </svg>
+            <span class="scroll-top-button-percent">0%</span>
+        `
         button.addEventListener("click", (event) => {
             event.preventDefault()
             DoxygenAwesomeInteractiveToc.scrollToTop()
@@ -80,11 +84,24 @@ class DoxygenAwesomeInteractiveToc {
 
         document.body.appendChild(button)
         DoxygenAwesomeInteractiveToc.scrollTopButton = button
+        DoxygenAwesomeInteractiveToc.updateScrollTopButton()
     }
 
     static handleViewportChange() {
         DoxygenAwesomeInteractiveToc.update()
-        DoxygenAwesomeInteractiveToc.updateScrollTopButtonVisibility()
+        DoxygenAwesomeInteractiveToc.updateScrollTopButton()
+    }
+
+    static requestViewportUpdate() {
+        if (DoxygenAwesomeInteractiveToc.viewportUpdatePending) {
+            return
+        }
+
+        DoxygenAwesomeInteractiveToc.viewportUpdatePending = true
+        window.requestAnimationFrame(() => {
+            DoxygenAwesomeInteractiveToc.viewportUpdatePending = false
+            DoxygenAwesomeInteractiveToc.handleViewportChange()
+        })
     }
 
     static getScrollTop() {
@@ -94,17 +111,63 @@ class DoxygenAwesomeInteractiveToc {
         )
     }
 
-    static updateScrollTopButtonVisibility() {
+    static getScrollProgress() {
+        const documentElement = document.documentElement
+        const body = document.body
+        const windowScrollTop = window.pageYOffset || documentElement.scrollTop || body.scrollTop || 0
+        const windowScrollableHeight = Math.max(
+            documentElement.scrollHeight,
+            body.scrollHeight
+        ) - window.innerHeight
+        const docContent = document.getElementById("doc-content")
+        const docContentScrollableHeight = docContent ? docContent.scrollHeight - docContent.clientHeight : 0
+        const windowProgress = windowScrollableHeight > 0 ? windowScrollTop / windowScrollableHeight : 0
+        const docContentProgress = docContentScrollableHeight > 0 ? docContent.scrollTop / docContentScrollableHeight : 0
+
+        return Math.min(1, Math.max(0, windowProgress, docContentProgress))
+    }
+
+    static updateScrollTopButton() {
         const button = DoxygenAwesomeInteractiveToc.scrollTopButton
         if (!button) {
             return
         }
 
+        const progress = DoxygenAwesomeInteractiveToc.getScrollProgress()
+        const percent = Math.round(progress * 100)
+        const progressValue = button.querySelector(".scroll-top-button-progress-value")
+        const progressText = button.querySelector(".scroll-top-button-percent")
+
+        if (progressValue) {
+            progressValue.style.strokeDashoffset = 100 - percent
+        }
+        if (progressText) {
+            progressText.textContent = `${percent}%`
+        }
+
         if (DoxygenAwesomeInteractiveToc.getScrollTop() > DoxygenAwesomeInteractiveToc.scrollTopThreshold) {
             button.classList.add("visible")
+            DoxygenAwesomeInteractiveToc.hideScrollTopButtonAfterIdle()
         } else {
             button.classList.remove("visible")
+            DoxygenAwesomeInteractiveToc.clearScrollTopIdleTimer()
         }
+    }
+
+    static hideScrollTopButtonAfterIdle() {
+        DoxygenAwesomeInteractiveToc.clearScrollTopIdleTimer()
+        DoxygenAwesomeInteractiveToc.scrollTopIdleTimer = window.setTimeout(() => {
+            DoxygenAwesomeInteractiveToc.scrollTopButton?.classList.remove("visible")
+        }, DoxygenAwesomeInteractiveToc.scrollTopIdleDelay)
+    }
+
+    static clearScrollTopIdleTimer() {
+        if (!DoxygenAwesomeInteractiveToc.scrollTopIdleTimer) {
+            return
+        }
+
+        window.clearTimeout(DoxygenAwesomeInteractiveToc.scrollTopIdleTimer)
+        DoxygenAwesomeInteractiveToc.scrollTopIdleTimer = null
     }
 
     static scrollToTop() {
@@ -127,13 +190,4 @@ class DoxygenAwesomeInteractiveToc {
         active?.classList.remove("aboveActive")
     }
 
-    static throttle(func, delay) {
-        let lastCall = 0;
-        return function (...args) {
-            const now = new Date().getTime();
-            if (now - lastCall < delay) return;
-            lastCall = now;
-            return setTimeout(() => { func(...args) }, delay);
-        };
-    }
 }
