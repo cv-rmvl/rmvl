@@ -15,10 +15,9 @@
 #include <string_view>
 #include <typeindex>
 #include <unordered_map>
-#include <vector>
 
 #include <open62541/nodeids.h>
-#include <open62541/types_generated_handling.h>
+#include <open62541/types_generated.h>
 
 struct UA_Server;
 struct UA_Client;

@@ -582,6 +582,48 @@ bool ServerView::triggerEvent(const Event &event) const {
         ERROR_("Failed to find the event type ID during triggering event");
         return false;
     }
+
+#if OPCUA_VERSION >= 10500
+    UA_KeyValueMap event_fields = UA_KEYVALUEMAP_NULL;
+    std::vector<std::string> event_field_paths;
+    event_field_paths.reserve(event.data().size() + 1);
+    auto set_event_field = [&](uint16_t ns, std::string_view browse_name, const void *value, const UA_DataType *type) {
+        event_field_paths.emplace_back("/");
+        event_field_paths.back() += browse_name;
+        auto status = UA_KeyValueMap_setScalar(&event_fields, UA_QUALIFIEDNAME(ns, helper::to_char(event_field_paths.back())), value, type);
+        if (status != UA_STATUSCODE_GOOD)
+            ERROR_("Failed to set event field %s: %s", event_field_paths.back().c_str(), UA_StatusCode_name(status));
+        return status;
+    };
+
+    UA_String source_name = UA_STRING(helper::to_char(event.source_name));
+    auto status = set_event_field(0, "SourceName", &source_name, &UA_TYPES[UA_TYPES_STRING]);
+    if (status != UA_STATUSCODE_GOOD) {
+        UA_KeyValueMap_clear(&event_fields);
+        return false;
+    }
+
+    for (const auto &[browse_name, prop] : event.data()) {
+        UA_Int32 prop_value = static_cast<UA_Int32>(prop);
+        status = set_event_field(event.ns, browse_name, &prop_value, &UA_TYPES[UA_TYPES_INT32]);
+        if (status != UA_STATUSCODE_GOOD) {
+            UA_KeyValueMap_clear(&event_fields);
+            return false;
+        }
+    }
+
+    UA_LocalizedText evt_msg = UA_LOCALIZEDTEXT(helper::en_US(), helper::to_char(event.message));
+    UA_ByteString event_id;
+    UA_ByteString_init(&event_id);
+    status = UA_Server_createEvent(_server, nodeServer, type_id, event.severity, evt_msg,
+                                   &event_fields, nullptr, &event_id);
+    UA_KeyValueMap_clear(&event_fields);
+    UA_ByteString_clear(&event_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to create event: %s", UA_StatusCode_name(status));
+        return false;
+    }
+#else
     // 创建事件
     UA_NodeId event_id;
     auto status = UA_Server_createEvent(_server, type_id, &event_id);
@@ -612,6 +654,7 @@ bool ServerView::triggerEvent(const Event &event) const {
         ERROR_("Failed to trigger event: %s", UA_StatusCode_name(status));
         return false;
     }
+#endif
     return true;
 }
 

@@ -12,6 +12,8 @@
 #pragma once
 
 #include <array>
+#include <string>
+#include <vector>
 
 #include <open62541/client_subscriptions.h>
 
@@ -109,6 +111,11 @@ using DataChangeNotificationCallback = std::function<void(ClientView, const Vari
  * @param[in] event_fields 事件数据
  */
 using EventNotificationCallback = std::function<void(ClientView, const std::vector<Variable> &)>;
+
+struct EventNotificationCallbackWrapper {
+    std::vector<std::string> names;
+    EventNotificationCallback callback;
+};
 
 //! OPC UA 客户端
 class Client {
@@ -332,7 +339,7 @@ private:
     //! 数据变更通知回调函数
     std::vector<std::unique_ptr<DataChangeNotificationCallback>> _dccb_gc{};
     //! 事件通知回调函数
-    std::vector<std::unique_ptr<EventNotificationCallback>> _encb_gc{};
+    std::vector<std::unique_ptr<EventNotificationCallbackWrapper>> _encb_gc{};
 };
 
 //! OPC UA 客户端定时器

@@ -13,6 +13,7 @@
 #include <open62541/client_config_default.h>
 #include <open62541/client_highlevel.h>
 #include <open62541/plugin/log_stdout.h>
+#include <open62541/util.h>
 
 #include "rmvl/core/str.hpp"
 #include "rmvl/core/util.hpp"
@@ -278,13 +279,42 @@ bool Client::monitor(NodeId nd, DataChangeNotificationCallback on_change, uint32
     return true;
 }
 
+#if OPCUA_VERSION >= 10500
+static const UA_Variant *get_event_field(const UA_KeyValueMap &event_fields, const std::string &name) {
+    uint16_t ns = (name == "SourceName" || name == "Message" || name == "Severity") ? 0 : 1;
+    std::vector<std::pair<uint16_t, std::string>> keys;
+    keys.reserve(6);
+    keys.emplace_back(0, "/" + name);
+    keys.emplace_back(ns, "/" + name);
+    keys.emplace_back(0, "/" + std::to_string(ns) + ":" + name);
+    keys.emplace_back(ns, "/" + std::to_string(ns) + ":" + name);
+    keys.emplace_back(ns, name);
+    keys.emplace_back(0, name);
+    for (auto &[key_ns, key_name] : keys) {
+        if (auto field = UA_KeyValueMap_get(&event_fields, UA_QUALIFIEDNAME(key_ns, helper::to_char(key_name))))
+            return field;
+    }
+    return nullptr;
+}
+
+static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, void *context, const UA_KeyValueMap event_fields) {
+    auto &event_cb = *reinterpret_cast<EventNotificationCallbackWrapper *>(context);
+    std::vector<Variable> datas(event_cb.names.size());
+    for (size_t i = 0; i < event_cb.names.size(); ++i) {
+        if (auto field = get_event_field(event_fields, event_cb.names[i]))
+            datas[i] = helper::cvtVariable(*field);
+    }
+    event_cb.callback(client, datas);
+}
+#else
 static void event_notify_cb(UA_Client *client, UA_UInt32, void *, UA_UInt32, void *context, size_t events_num, UA_Variant *event_fields) {
-    auto &on_event = *reinterpret_cast<EventNotificationCallback *>(context);
+    auto &event_cb = *reinterpret_cast<EventNotificationCallbackWrapper *>(context);
     std::vector<Variable> datas(events_num);
     for (size_t i = 0; i < events_num; ++i)
         datas[i] = helper::cvtVariable(event_fields[i]);
-    on_event(client, datas);
+    event_cb.callback(client, datas);
 }
+#endif
 
 bool Client::monitor(const std::vector<std::string> &names, EventNotificationCallback on_event) {
     RMVL_DbgAssert(_client != nullptr);
@@ -323,7 +353,9 @@ bool Client::monitor(const std::vector<std::string> &names, EventNotificationCal
     request_item.requestedParameters.filter.content.decoded.data = &filter;
     request_item.requestedParameters.filter.content.decoded.type = &UA_TYPES[UA_TYPES_EVENTFILTER];
     // 创建事件监视器
-    auto context = std::make_unique<EventNotificationCallback>(on_event);
+    auto context = std::make_unique<EventNotificationCallbackWrapper>();
+    context->names = names;
+    context->callback = on_event;
     UA_MonitoredItemCreateResult result = UA_Client_MonitoredItems_createEvent(
         _client, sub_resp.subscriptionId, UA_TIMESTAMPSTORETURN_BOTH, request_item, context.get(), event_notify_cb, nullptr);
     if (result.statusCode != UA_STATUSCODE_GOOD) {
