@@ -226,6 +226,6 @@ int main() {
 
 可以使用 TCP 连接工具（如 `netcat`）进行测试：
 
-```bash
-nc localhost 8080
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">nc</span> localhost 8080</div>
+</div>

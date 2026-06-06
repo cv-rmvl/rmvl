@@ -25,8 +25,8 @@ Run In 是一个用于快速进入 RMVL 编译镜像的工具，它可以根据 
 <div class="fragment">
 <div class="line"><span class="keywordflow">docker</span> <span class="keywordflow">run</span> <span class="comment">-it --rm </span>\\</div>
 <div class="line">&nbsp;&nbsp;<span class="comment">-v</span> /path/to/rmvl:/path/to/rmvl \\</div>
-<div class="line">&nbsp;&nbsp;<span class="comment">-v</span> /path/to/rmvl/build/docker_images/\<name\>:/path/to/rmvl/build \\</div>
-<div class="line">&nbsp;&nbsp;<span class="comment">-w</span> /path/to/rmvl [options] \<image\> [cmd]</div>
+<div class="line">&nbsp;&nbsp;<span class="comment">-v</span> /path/to/rmvl/build/docker_images/&lt;name&gt;:/path/to/rmvl/build \\</div>
+<div class="line">&nbsp;&nbsp;<span class="comment">-w</span> /path/to/rmvl [options] &lt;image&gt; [cmd]</div>
 </div>
 
 上文的 `name`、`options`、`image` 和 `cmd` 都需要在 `images.yml` 的编译镜像 YAML 配置文件中定义，其中

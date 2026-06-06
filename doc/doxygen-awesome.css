@@ -157,6 +157,8 @@ html {
     --webkit-scrollbar-padding: 4px;
     --webkit-scrollbar-color: var(--separator-color);
 
+    --scroll-top-button-progress-color: #6aa1b7;
+
     --animation-duration: .12s
 }
 
@@ -230,6 +232,8 @@ html {
         --fragment-linenumber-color: #cccccc;
         --fragment-linenumber-background: #35393c;
         --fragment-linenumber-border: #1f1f1f;
+
+        --scroll-top-button-progress-color: #86c8df;
     }
 }
 
@@ -293,6 +297,8 @@ html.dark-mode {
     --fragment-linenumber-color: #cccccc;
     --fragment-linenumber-background: #35393c;
     --fragment-linenumber-border: #1f1f1f;
+
+    --scroll-top-button-progress-color: #86c8df;
 }
 
 body {
@@ -1175,6 +1181,11 @@ blockquote p {
     color: var(--primary-dark-color);
 }
 
+.paramopts, .paramopts em {
+    font-weight: 400;
+    color: var(--fragment-comment);
+}
+
 .paramname > code {
     border: 0;
 }
@@ -1183,6 +1194,15 @@ table.params .paramname {
     font-weight: 600;
     font-family: var(--font-family-monospace);
     font-size: var(--code-font-size);
+    padding-right: var(--spacing-small);
+    line-height: var(--table-line-height);
+}
+
+table.params .paramopts {
+    font-weight: 400;
+    font-family: var(--font-family-monospace);
+    font-size: var(--code-font-size);
+    color: var(--fragment-comment);
     padding-right: var(--spacing-small);
     line-height: var(--table-line-height);
 }
@@ -3059,70 +3079,85 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
 
 .scroll-top-button {
     position: fixed;
-    right: max(25px, env(safe-area-inset-right));
-    bottom: max(40px, env(safe-area-inset-bottom));
-    width: 40px;
-    height: 40px;
+    right: max(20px, env(safe-area-inset-right));
+    bottom: max(45px, env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid currentColor;
+    padding: 0;
+    border: 0;
     border-radius: 999px;
     background: var(--page-background-color);
-    color: var(--primary-color);
-    box-shadow: var(--box-shadow);
+    color: var(--page-foreground-color);
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     z-index: 1000;
     opacity: 0;
-    transform: translateY(12px) scale(0.92);
+    transform: none;
     pointer-events: none;
-    transition: opacity var(--animation-duration) ease-in-out,
-                transform var(--animation-duration) ease-in-out,
-                color var(--animation-duration) ease-in-out,
-                background-color var(--animation-duration) ease-in-out;
 }
 
 .scroll-top-button.visible {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
     pointer-events: auto;
 }
 
-.scroll-top-button:hover {
-    color: var(--primary-dark-color);
-    transform: translateY(0) scale(1.03);
+@keyframes scroll-top-button-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-.scroll-top-button:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
+.scroll-top-button-progress {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
 }
 
-.scroll-top-button-icon {
-    display: inline-flex;
-    line-height: 0;
+.scroll-top-button-progress-track,
+.scroll-top-button-progress-value {
+    fill: none;
+    stroke-width: 5;
 }
 
-.scroll-top-button-icon svg {
-    width: 22px;
-    height: 22px;
-    display: block;
+.scroll-top-button-progress-track {
+    stroke: transparent;
+}
+
+.scroll-top-button-progress-value {
+    stroke: var(--scroll-top-button-progress-color);
+    stroke-linecap: butt;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+}
+
+.scroll-top-button-percent {
+    position: relative;
+    color: var(--page-foreground-color);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
 }
 
 @media screen and (max-width: 767px) {
     .scroll-top-button {
         right: max(12px, env(safe-area-inset-right));
         bottom: max(12px, env(safe-area-inset-bottom));
-        width: 42px;
-        height: 42px;
+        width: 60px;
+        height: 60px;
     }
 
-    .scroll-top-button-icon {
-        display: inline-flex;
-    }
-
-    .scroll-top-button-icon svg {
-        width: 20px;
-        height: 20px;
+    .scroll-top-button-percent {
+        font-size: 18px;
     }
 }

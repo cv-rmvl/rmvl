@@ -144,9 +144,9 @@ int main(int argc, char *argv[]) {
 
 会得到如下输出：
 
-```html
-<html><body><h1>Hello, World!</h1></body></html>
-```
+<div class="fragment">
+<div class="line"><span class="comment">&lt;</span><span class="keywordtype">html</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">body</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">h1</span><span class="comment">&gt;</span>Hello, World!<span class="comment">&lt;</span><span class="keywordtype">/h1</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">/body</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">/html</span><span class="comment">&gt;</span></div>
+</div>
 
 同时，可以配合 `jq` 工具测试 JSON API：
 

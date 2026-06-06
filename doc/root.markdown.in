@@ -3,6 +3,10 @@ RMVL 说明文档 {#mainpage}
 
 @tableofcontents
 
+#### 快速开始
+
+@ref tutorial_rdt —— 使用 `rdt` 进行 RMVL 一键安装及其相关模块的开发、调试
+
 #### 相关模块
 
 - @ref intro
@@ -15,15 +19,11 @@ RMVL 说明文档 {#mainpage}
   - Message modules. @ref rmvlmsg
 - @ref citelist
 
-#### 快速开始
+#### 深入了解
 
 - @ref tutorial_install
 
   手动安装依赖、项目配置、编译安装
-
-- @ref tutorial_rdt
-
-  使用 `rdt` 进行 RMVL 一键安装及其相关模块的开发、调试<span style="color: red">（Linux 平台下强烈推荐）</span>
 
 - @ref tutorial_extra_upper_base
 

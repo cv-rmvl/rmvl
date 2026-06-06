@@ -35,6 +35,10 @@ TAB_SIZE               = 4
 ALIASES                += add_checkbox_y="@htmlonly[block] <input type='checkbox' checked='checked' disabled>"
 ALIASES                += add_checkbox_n="@htmlonly[block] <input type='checkbox' disabled>"
 ALIASES                += end_checkbox=" </br> @endhtmlonly"
+ALIASES                += dl_begin{1}="<dl class=\"params\"><dt>\1</dt><dd><table class=\"params\">"
+ALIASES                += dl_item{2}="<tr><td class=\"paramname\">\1</td><td>\2</td></tr>"
+ALIASES                += dl_item{3}="<tr><td class=\"paramname\">\1</td><td class=\"paramopts\">\2</td><td>\3</td></tr>"
+ALIASES                += dl_end="</table></dd></dl>"
 ALIASES                += prev_tutorial{1}="**上一篇教程：**\ref \1 \n"
 ALIASES                += next_tutorial{1}="**下一篇教程：**\ref \1 \n"
 OPTIMIZE_OUTPUT_FOR_C  = NO
@@ -266,7 +270,7 @@ EXTERNAL_GROUPS        = YES
 EXTERNAL_PAGES         = YES
 DIA_PATH               =
 HIDE_UNDOC_RELATIONS   = NO
-HAVE_DOT               = YES
+HAVE_DOT               = @CMAKE_DOXYGEN_HAVE_DOT@
 DOT_NUM_THREADS        = 0
 DOT_FONTPATH           =
 CLASS_GRAPH            = YES
@@ -283,7 +287,7 @@ GRAPHICAL_HIERARCHY    = YES
 DIRECTORY_GRAPH        = YES
 DOT_IMAGE_FORMAT       = svg
 INTERACTIVE_SVG        = YES
-DOT_PATH               =
+DOT_PATH               = @CMAKE_DOXYGEN_DOT_PATH@
 DOTFILE_DIRS           =
 MSCFILE_DIRS           =
 DIAFILE_DIRS           =
@@ -293,7 +297,6 @@ PLANTUML_INCLUDE_PATH  =
 PLANTUMLFILE_DIRS      =
 DOT_GRAPH_MAX_NODES    = 50
 MAX_DOT_GRAPH_DEPTH    = 0
-DOT_MULTI_TARGETS      = NO
 GENERATE_LEGEND        = YES
 DOT_CLEANUP            = YES
 PAGE_OUTLINE_PANEL     = NO

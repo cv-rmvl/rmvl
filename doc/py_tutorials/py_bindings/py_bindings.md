@@ -18,27 +18,27 @@ RMVL-Python 绑定功能 {#tutorial_py_table_of_contents_bindings}
 
 首先，需要安装 Python 3 和 Pybind11。在 **Debian** 以及 **Ubuntu** 上可以通过 APT 包管理工具安装
 
-```bash
-sudo apt install python3-dev pybind11-dev
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">sudo</span> <span class="keywordflow">apt</span> install python3-dev pybind11-dev</div>
+</div>
 
 也可以通过 `pip` 安装 Pybind11
 
-```bash
-pip install pybind11
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">pip</span> install pybind11</div>
+</div>
 
 在 **Windows** 上，需要提前准备好 Python 3 的环境，Pybind11 就可以直接通过 `pip` 进行安装
 
-```bash
-pip install pybind11
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">pip</span> install pybind11</div>
+</div>
 
 ### 启用 RMVL-Python 绑定功能
 
 RMVL 使用 CMake 进行构建，要启用 RMVL-Python 绑定功能，需要在 CMake 配置阶段设置 `BUILD_PYTHON` 为 `ON`。这样 RMVL 就会在构建时生成 Python 绑定。
 
-```bash
-cd build
-cmake -DBUILD_PYTHON=ON ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cd</span> build</div>
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> BUILD_PYTHON=ON ..</div>
+</div>

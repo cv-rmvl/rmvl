@@ -20,17 +20,17 @@ RMVL 的编译、配置选项 {#tutorial_configuration_options}
 
 可以使用 CMake 工具打印所有可用选项：
 
-```shell
-cd build
-# 初始化配置
-cmake ..
-# 打印所有选项
-cmake -L ..
-# 打印所有选项并显示帮助信息
-cmake -LH ..
-# 打印包含高级变量的所有选项
-cmake -LA ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cd</span> build</div>
+<div class="line"><span class="comment"># 初始化配置</span></div>
+<div class="line"><span class="keywordflow">cmake</span> ..</div>
+<div class="line"><span class="comment"># 打印所有选项</span></div>
+<div class="line"><span class="keywordflow">cmake</span> -L ..</div>
+<div class="line"><span class="comment"># 打印所有选项并显示帮助信息</span></div>
+<div class="line"><span class="keywordflow">cmake</span> -LH ..</div>
+<div class="line"><span class="comment"># 打印包含高级变量的所有选项</span></div>
+<div class="line"><span class="keywordflow">cmake</span> -LA ..</div>
+</div>
 
 最常见以及最有用的选项一般均以 `BUILD_`、`WITH_`、`RMVL_`、`ENABLE_` 开头。
 
@@ -42,17 +42,17 @@ cmake -LA ..
 
 在某些平台上（例如 Linux），必须在配置阶段设置构建类型：
 
-```shell
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-cmake --build .
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> CMAKE_BUILD_TYPE=Debug ..</div>
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">--build</span> .</div>
+</div>
 
 在其他平台上，不同类型的构建可以在同一个构建目录下生成（例如Visual Studio，XCode）：
 
-```shell
-cmake <options> ..
-cmake --build . --config Debug
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> CMAKE_BUILD_TYPE=Debug ..</div>
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">--build</span> . <span class="comment">--config</span> Debug</div>
+</div>
 
 @see
 - [Build type in CMake documents](https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html) 
@@ -64,9 +64,9 @@ cmake --build . --config Debug
 
 示例:
 
-```shell
-cmake -DBUILD_SHARED_LIBS=ON ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> BUILD_SHARED_LIBS=ON ..</div>
+</div>
 
 @see
 - [Static library in Wiki](https://en.wikipedia.org/wiki/Static_library)
@@ -82,27 +82,27 @@ cmake -DBUILD_SHARED_LIBS=ON ..
 
 对应的 CMake 选项:
 
-```shell
-cmake \
-  -DBUILD_TESTS=ON \
-  -DBUILD_PERF_TESTS=ON \
-  ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> \\</div>
+<div class="line">&nbsp;&nbsp;<span class="comment">-D</span> BUILD_TESTS=ON \\</div>
+<div class="line">&nbsp;&nbsp;<span class="comment">-D</span> BUILD_PERF_TESTS=ON \\</div>
+<div class="line">&nbsp;&nbsp;..</div>
+</div>
 
 ### 2.4 构建有限的模块集
 
 每个模块都是 modules 目录的一个子目录。可以禁用一个模块：
 
-```shell
-cmake -DBUILD_rmvl_armor_detector=OFF ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-D</span> BUILD_rmvl_armor_detector=OFF ..</div>
+</div>
 
 ## 3 功能特性
 
 有许多可选的依赖关系和特性可以打开或关闭，CMake 有一个特殊的选项，允许打印所有可用的配置参数：
 
-```shell
-cmake -LH ..
-```
+<div class="fragment">
+<div class="line"><span class="keywordflow">cmake</span> <span class="comment">-LH</span> ..</div>
+</div>
 
 此外，CMake 在运行后也会通过一系列的 `message()` 命令输出到终端或 GUI 界面，可在此界面查看部分配置情况。

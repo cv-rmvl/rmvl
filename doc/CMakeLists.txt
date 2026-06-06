@@ -35,10 +35,32 @@ string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_EXAMPLE_PATH "${example_path}")
 set(CMAKE_DOXYGEN_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 set(CMAKE_EXTRA_BIB_FILES "${bibfile}")
 
+find_package(Perl QUIET)
+find_program(CMAKE_DOXYGEN_BIBTEX_EXECUTABLE bibtex)
+if(NOT Perl_FOUND OR NOT CMAKE_DOXYGEN_BIBTEX_EXECUTABLE)
+  message(FATAL_ERROR
+    "Doxygen citations require Perl and BibTeX. Please install Perl and a TeX distribution "
+    "that provides the 'bibtex' command before building documentation.\n"
+    "On Debian/Ubuntu, run: sudo apt install --no-install-recommends texlive-binaries")
+endif()
+
+find_program(CMAKE_DOXYGEN_DOT_EXECUTABLE dot)
+if(CMAKE_DOXYGEN_DOT_EXECUTABLE)
+  get_filename_component(CMAKE_DOXYGEN_DOT_PATH "${CMAKE_DOXYGEN_DOT_EXECUTABLE}" DIRECTORY)
+  set(CMAKE_DOXYGEN_HAVE_DOT YES)
+else()
+  set(CMAKE_DOXYGEN_DOT_PATH "")
+  set(CMAKE_DOXYGEN_HAVE_DOT NO)
+  message(WARNING "Graphviz dot not found. Doxygen graphs will not be generated.")
+endif()
+
 list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/rmvl-logo-small.png")
+
+# doxygen-awesome
 foreach(m darkmode-toggle fragment-copy-button interactive-toc paragraph-link tabs)
   list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/doxygen-awesome-${m}.js")
 endforeach()
+
 string(REPLACE ";" " \\\n" CMAKE_DOXYGEN_HTML_FILES "${CMAKE_DOXYGEN_HTML_FILES}")
 
 set(
@@ -59,7 +81,7 @@ foreach(m ${RMVL_EXTRA_MODULE} ${RMVL_MAIN_MODULE})
   set(one_ref "\t- ${m}. @ref ${m}\n")
   list(FIND RMVL_MAIN_MODULE ${m} _pos)
   if(${_pos} EQUAL -1)
-    set(refs_extra "${refs_extra}${one_ref}")
+    set(refs_extra "rm_${refs_extra}${one_ref}")
   else()
     set(refs_modules "${refs_modules}${one_ref}")
   endif()
@@ -91,6 +113,21 @@ if(DOXYGEN_FOUND)
   )
   
   if(BUILD_PYTHON)
+    execute_process(
+      COMMAND ${Python3_EXECUTABLE} -c "import bs4"
+      RESULT_VARIABLE RMVL_PYTHON_BS4_RESULT
+      OUTPUT_QUIET
+      ERROR_QUIET
+    )
+    if(NOT RMVL_PYTHON_BS4_RESULT EQUAL 0)
+      message(FATAL_ERROR
+        "Python module 'bs4' was not found. It is required to inject Python "
+        "signatures into Doxygen documentation when BUILD_PYTHON is enabled.\n"
+        "Install it with one of:\n"
+        "  ${Python3_EXECUTABLE} -m pip install beautifulsoup4\n"
+        "  sudo apt install python3-bs4")
+    endif()
+
     macro(add_fns ns fn arg ret)
       if(NOT "${tmp_fns}" STREQUAL "")
         set(tmp_fns "${tmp_fns}#")
