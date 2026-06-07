@@ -3081,8 +3081,8 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
     position: fixed;
     right: max(20px, env(safe-area-inset-right));
     bottom: max(45px, env(safe-area-inset-bottom));
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 50px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3151,13 +3151,7 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
 
 @media screen and (max-width: 767px) {
     .scroll-top-button {
-        right: max(12px, env(safe-area-inset-right));
-        bottom: max(12px, env(safe-area-inset-bottom));
-        width: 60px;
-        height: 60px;
-    }
-
-    .scroll-top-button-percent {
-        font-size: 18px;
+        right: max(15px, env(safe-area-inset-right));
+        bottom: max(30px, env(safe-area-inset-bottom));
     }
 }
