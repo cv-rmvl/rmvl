@@ -60,9 +60,10 @@ html {
     /* The content is centered and constraint in it's width. To make the content fill the whole page, set the variable to auto.*/
     --content-maxwidth: 1050px;
     --table-line-height: 24px;
-    --toc-sticky-top: var(--spacing-medium);
+    --top-sticky-offset: 80px;
+    --toc-sticky-top: calc(var(--top-sticky-offset) + var(--spacing-medium));
     --toc-width: 200px;
-    --toc-max-height: calc(100vh - 2 * var(--spacing-medium) - 85px);
+    --toc-max-height: calc(100vh - var(--toc-sticky-top) - var(--spacing-medium));
 
     /* colors for various content boxes: @warning, @note, @deprecated @bug */
     --warning-color: #faf3d8;
@@ -158,6 +159,7 @@ html {
     --webkit-scrollbar-color: var(--separator-color);
 
     --scroll-top-button-progress-color: #6aa1b7;
+    --scroll-top-button-icon-color: #3c3c438f;
 
     --animation-duration: .12s
 }
@@ -234,6 +236,7 @@ html {
         --fragment-linenumber-border: #1f1f1f;
 
         --scroll-top-button-progress-color: #86c8df;
+        --scroll-top-button-icon-color: #ebebf561;
     }
 }
 
@@ -299,6 +302,7 @@ html.dark-mode {
     --fragment-linenumber-border: #1f1f1f;
 
     --scroll-top-button-progress-color: #86c8df;
+    --scroll-top-button-icon-color: #ebebf561;
 }
 
 body {
@@ -340,7 +344,7 @@ a:hover {
 }
 
 a.anchor {
-    scroll-margin-top: var(--spacing-large);
+    scroll-margin-top: var(--top-sticky-offset);
     display: block;
 }
 
@@ -351,8 +355,9 @@ a.anchor {
 #top {
     background: var(--header-background);
     border-bottom: 1px solid var(--separator-color);
-    position: relative;
-    z-index: 99;
+    position: sticky;
+    top: 0;
+    z-index: 200;
 }
 
 @media screen and (min-width: 768px) {
@@ -379,6 +384,10 @@ a.anchor {
 }
 
 @media screen and (max-width: 767px) {
+    html {
+        --top-sticky-offset: 112px;
+    }
+
     #titlearea {
         padding-bottom: var(--spacing-small);
     }
@@ -2720,11 +2729,13 @@ doxygen-awesome-dark-mode-toggle:active > svg {
 }
 
 doxygen-awesome-dark-mode-toggle:hover {
-    background-color: rgba(0,0,0,.03);
+    background-color: rgba(0,0,0,.03) !important;
+    border-radius: var(--searchbar-border-radius) !important;
 }
 
 html.dark-mode doxygen-awesome-dark-mode-toggle:hover {
-    background-color: rgba(0,0,0,.18);
+    background-color: rgba(0,0,0,.18) !important;
+    border-radius: var(--searchbar-border-radius) !important;
 }
 
 /*
@@ -3097,6 +3108,7 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
     opacity: 0;
     transform: none;
     pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .scroll-top-button.visible {
@@ -3141,12 +3153,43 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
 }
 
 .scroll-top-button-percent {
-    position: relative;
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--page-foreground-color);
     font-size: 14px;
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.scroll-top-button-icon {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--scroll-top-button-icon-color);
+    line-height: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.scroll-top-button-icon svg {
+    display: block;
+    fill: currentColor;
+}
+
+.scroll-top-button.idle .scroll-top-button-percent {
+    opacity: 0;
+}
+
+.scroll-top-button.idle .scroll-top-button-icon {
+    opacity: 1;
 }
 
 @media screen and (max-width: 767px) {

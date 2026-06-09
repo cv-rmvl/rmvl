@@ -57,7 +57,7 @@ endif()
 list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/rmvl-logo-small.png")
 
 # doxygen-awesome
-foreach(m darkmode-toggle fragment-copy-button interactive-toc paragraph-link tabs)
+foreach(m darkmode-toggle github-link fragment-copy-button interactive-toc paragraph-link tabs)
   list(APPEND CMAKE_DOXYGEN_HTML_FILES "${CMAKE_CURRENT_LIST_DIR}/doxygen-awesome-${m}.js")
 endforeach()
 
