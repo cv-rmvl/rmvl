@@ -9,15 +9,20 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#else
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include "rmvl/algorithm/math.hpp"
 #include "rmvlpara/feature/anchor.h"
 
 #include "anchor_def.hpp"
 
-namespace rm
-{
+namespace rm {
 
 /**
  * @brief 获取矩形轮廓特征的中心点
@@ -25,8 +30,7 @@ namespace rm
  * @param[in] curve_points 多边形拟合得到的角点
  * @return 中心点
  */
-static cv::Point2f getSquareCenter(const std::vector<cv::Point2f> &curve_points)
-{
+static cv::Point2f getSquareCenter(const std::vector<cv::Point2f> &curve_points) {
     RMVL_DbgAssert(curve_points.size() == 4);
     return ((curve_points[0].x * curve_points[2].y - curve_points[0].y * curve_points[2].x) * (curve_points[1] - curve_points[3]) -
             (curve_points[1].x * curve_points[3].y - curve_points[1].y * curve_points[3].x) * (curve_points[0] - curve_points[2])) /
@@ -40,8 +44,7 @@ static cv::Point2f getSquareCenter(const std::vector<cv::Point2f> &curve_points)
  * @param[in] curve_points 多边形拟合得到的角点
  * @return 有序角点
  */
-static std::vector<cv::Point2f> getSqaureOrderCorners(const std::vector<cv::Point2f> &curve_points)
-{
+static std::vector<cv::Point2f> getSqaureOrderCorners(const std::vector<cv::Point2f> &curve_points) {
     RMVL_DbgAssert(curve_points.size() == 4);
     auto it = std::min_element(curve_points.begin(), curve_points.end(), [](const cv::Point2f &lhs, const cv::Point2f &rhs) {
         return lhs.x < rhs.x;
@@ -56,8 +59,7 @@ static std::vector<cv::Point2f> getSqaureOrderCorners(const std::vector<cv::Poin
     return retval;
 }
 
-std::optional<SquareInfo> createAnchorFromSqaureContour(const std::vector<cv::Point> &contour)
-{
+std::optional<SquareInfo> createAnchorFromSqaureContour(const std::vector<cv::Point> &contour) {
     if (contour.size() < 5)
         return std::nullopt;
 

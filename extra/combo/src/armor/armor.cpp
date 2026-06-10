@@ -9,7 +9,13 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include "opencv2/geometry/3d.hpp"
+#else
 #include <opencv2/calib3d.hpp>
+#endif
 
 #include "rmvl/algorithm/transform.hpp"
 #include "rmvl/combo/armor.h"
@@ -186,6 +192,7 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
     // 匹配大小装甲板
     ArmorSizeType armor_size{};
     if (armor_size_type == ArmorSizeType::UNKNOWN) {
+#ifdef HAVE_OPENCV_ML
         if (_svm != nullptr) {
             cv::Matx15f test_sample = {combo_ratio,   // 装甲板长宽比
                                        width_ratio,   // 灯条宽度比
@@ -193,6 +200,7 @@ std::shared_ptr<Armor> Armor::make_combo(LightBlob::ptr p_left, LightBlob::ptr p
             auto res = _svm->predict(test_sample);
             armor_size = (res == 1) ? ArmorSizeType::SMALL : ArmorSizeType::BIG;
         }
+#endif
         // 装甲板长宽比例符合
         if (combo_ratio < para::armor_param.MAX_SMALL_COMBO_RATIO)
             armor_size = ArmorSizeType::SMALL;
@@ -241,5 +249,13 @@ combo::ptr Armor::clone(int64_t tick) {
     retval->_tick = tick;
     return retval;
 }
+
+#ifdef HAVE_OPENCV_ML
+void Armor::loadSVM(const std::string &path) { _svm = cv::ml::SVM::load(path); }
+#else
+void Armor::loadSVM(const std::string &) {
+    RMVL_Error(RMVL_StsError, "cv::ml module is not available, if your OpenCV is 5.x or above, please add opencv_contrib to your OpenCV build and recompile; if your OpenCV is 4.x, please recompile OpenCV with the ml module");
+}
+#endif
 
 } // namespace rm

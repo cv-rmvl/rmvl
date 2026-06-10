@@ -11,16 +11,12 @@
 
 #include "anchor_def.hpp"
 
-namespace rm
-{
+namespace rm {
 
-Anchor::ptr Anchor::make_feature(const std::vector<cv::Point> &contour, AnchorType type)
-{
-    if (type == AnchorType::Circle)
-    {
+Anchor::ptr Anchor::make_feature(const std::vector<cv::Point> &contour, AnchorType type) {
+    if (type == AnchorType::Circle) {
         auto circle_info = createAnchorFromCircleContour(contour);
-        if (circle_info.has_value())
-        {
+        if (circle_info.has_value()) {
             auto value = circle_info.value();
             auto retval = std::make_shared<Anchor>();
             auto &state = retval->_state;
@@ -29,15 +25,11 @@ Anchor::ptr Anchor::make_feature(const std::vector<cv::Point> &contour, AnchorTy
             retval->_center = value.center;
             retval->_width = retval->_height = value.radius * 2;
             return retval;
-        }
-        else
+        } else
             return nullptr;
-    }
-    else if (type == AnchorType::Square)
-    {
+    } else if (type == AnchorType::Square) {
         auto square_info = createAnchorFromSqaureContour(contour);
-        if (square_info.has_value())
-        {
+        if (square_info.has_value()) {
             auto value = std::move(square_info.value());
             auto retval = std::make_shared<Anchor>();
             auto &state = retval->_state;
@@ -47,15 +39,11 @@ Anchor::ptr Anchor::make_feature(const std::vector<cv::Point> &contour, AnchorTy
             retval->_corners = value.corners;
             retval->_angle = value.angle;
             return retval;
-        }
-        else
+        } else
             return nullptr;
-    }
-    else if (type == AnchorType::Cross)
-    {
+    } else if (type == AnchorType::Cross) {
         auto cross_info = createAnchorFromCrossContour(contour);
-        if (cross_info.has_value())
-        {
+        if (cross_info.has_value()) {
             auto value = cross_info.value();
             auto retval = std::make_shared<Anchor>();
             auto &state = retval->_state;
@@ -65,17 +53,14 @@ Anchor::ptr Anchor::make_feature(const std::vector<cv::Point> &contour, AnchorTy
             retval->_corners = value.corners;
             retval->_angle = value.angle;
             return retval;
-        }
-        else
+        } else
             return nullptr;
     }
     return nullptr;
 }
 
-std::string_view Anchor::to_string(AnchorType type)
-{
-    switch (type)
-    {
+std::string_view Anchor::to_string(AnchorType type) {
+    switch (type) {
     case AnchorType::Circle:
         return "circle";
     case AnchorType::Square:
@@ -87,8 +72,7 @@ std::string_view Anchor::to_string(AnchorType type)
     }
 }
 
-AnchorType Anchor::from_string(std::string_view type)
-{
+AnchorType Anchor::from_string(std::string_view type) {
     if (type == "circle")
         return AnchorType::Circle;
     if (type == "square")

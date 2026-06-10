@@ -9,15 +9,20 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#else
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include "rmvl/algorithm/math.hpp"
 #include "rmvlpara/feature/anchor.h"
 
 #include "anchor_def.hpp"
 
-namespace rm
-{
+namespace rm {
 
 /**
  * @brief 获取十字交叉轮廓特征的角点
@@ -26,8 +31,7 @@ namespace rm
  * @param[in] center 中心点
  * @return 角点
  */
-static std::vector<cv::Point2f> getCrossCorners(const std::vector<cv::Point> &contour, const cv::Point2f &center)
-{
+static std::vector<cv::Point2f> getCrossCorners(const std::vector<cv::Point> &contour, const cv::Point2f &center) {
     // 寻找最远的一个点
     cv::Point2f p0 = *std::max_element(contour.begin(), contour.end(), [&center](const cv::Point &lhs, const cv::Point &rhs) {
         return getDistance(lhs, center) < getDistance(rhs, center);
@@ -66,8 +70,7 @@ static std::vector<cv::Point2f> getCrossCorners(const std::vector<cv::Point> &co
  * @param[in] corners 角点
  * @return 中心点
  */
-static cv::Point2f getCrossCenter(const std::vector<cv::Point2f> &corners)
-{
+static cv::Point2f getCrossCenter(const std::vector<cv::Point2f> &corners) {
     RMVL_DbgAssert(corners.size() == 4);
     return ((corners[0].x * corners[2].y - corners[0].y * corners[2].x) * (corners[1] - corners[3]) -
             (corners[1].x * corners[3].y - corners[1].y * corners[3].x) * (corners[0] - corners[2])) /
@@ -75,8 +78,7 @@ static cv::Point2f getCrossCenter(const std::vector<cv::Point2f> &corners)
             (corners[1].x - corners[3].x) * (corners[0].y - corners[2].y));
 }
 
-std::optional<CrossInfo> createAnchorFromCrossContour(const std::vector<cv::Point> &contour)
-{
+std::optional<CrossInfo> createAnchorFromCrossContour(const std::vector<cv::Point> &contour) {
     if (contour.size() < 10)
         return std::nullopt;
     cv::Moments m = cv::moments(contour);

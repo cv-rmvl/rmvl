@@ -9,18 +9,22 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#else
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/feature/rune_target.h"
 
 #include "rmvlpara/feature/rune_target.h"
 
-namespace rm
-{
+namespace rm {
 
-std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point> &contour, bool is_active)
-{
+std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point> &contour, bool is_active) {
     if (contour.size() < 5)
         return nullptr;
     // init
@@ -30,8 +34,7 @@ std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point
     float height = std::min(rotated_rect.size.width, rotated_rect.size.height);
     float ratio = width / height;
     DEBUG_INFO_("target 1.ratio : %f", ratio);
-    if (ratio > para::rune_target_param.MAX_RATIO || ratio < para::rune_target_param.MIN_RATIO)
-    {
+    if (ratio > para::rune_target_param.MAX_RATIO || ratio < para::rune_target_param.MIN_RATIO) {
         DEBUG_WARNING_("target 1.ratio : fail");
         return nullptr;
     }
@@ -42,8 +45,7 @@ std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point
     float rect_area = rotated_rect.size.area(); // 矩形面积
     float area_ratio = contour_area / rect_area;
     DEBUG_INFO_("target 2.area_ratio : %f", area_ratio);
-    if (area_ratio > para::rune_target_param.MAX_AREA_RATIO || area_ratio < para::rune_target_param.MIN_AREA_RATIO)
-    {
+    if (area_ratio > para::rune_target_param.MAX_AREA_RATIO || area_ratio < para::rune_target_param.MIN_AREA_RATIO) {
         DEBUG_WARNING_("target 2.area_ratio : fail");
         return nullptr;
     }
@@ -54,8 +56,7 @@ std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point
     float area_peri_ratio = contour_area / (perimeter * perimeter);
     DEBUG_INFO_("target 3.area_peri_ratio : %f", area_peri_ratio);
     if (area_peri_ratio > para::rune_target_param.MAX_AREA_PERI_RATIO ||
-        area_peri_ratio < para::rune_target_param.MIN_AREA_PERI_RATIO)
-    {
+        area_peri_ratio < para::rune_target_param.MIN_AREA_PERI_RATIO) {
         DEBUG_WARNING_("target 3.area_peri_ratio : fail");
         return nullptr;
     }
@@ -63,8 +64,7 @@ std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point
 
     // ---------------------- 绝对面积判断 ----------------------
     DEBUG_INFO_("target 4.contour_area : %f", contour_area);
-    if (contour_area < para::rune_target_param.MIN_AREA)
-    {
+    if (contour_area < para::rune_target_param.MIN_AREA) {
         DEBUG_WARNING_("target 4.contour_area : fail");
         return nullptr;
     }
@@ -90,8 +90,7 @@ std::shared_ptr<RuneTarget> RuneTarget::make_feature(const std::vector<cv::Point
     return retval;
 }
 
-RuneTarget::RuneTarget(const cv::Point &center, bool is_active) : _is_active(is_active)
-{
+RuneTarget::RuneTarget(const cv::Point &center, bool is_active) : _is_active(is_active) {
     _center = center;
     _angle = 0.f;
     _width = 16.f;

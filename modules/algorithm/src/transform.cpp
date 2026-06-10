@@ -11,15 +11,19 @@
 
 #ifdef HAVE_OPENCV
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include "opencv2/geometry/3d.hpp"
+#else
 #include <opencv2/calib3d.hpp>
+#endif
 
 #include "rmvl/algorithm/transform.hpp"
 
-namespace rm
-{
+namespace rm {
 
-cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f center)
-{
+cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f center) {
     cv::Matx31f tf_point;
     cv::Matx33f cameraMatrix_inverse = cameraMatrix.inv();
     tf_point(0) = center.x;
@@ -32,8 +36,7 @@ cv::Point2f calculateRelativeAngle(const cv::Matx33f &cameraMatrix, cv::Point2f 
             rad2deg(atanf(tf_result(1)))};
 }
 
-cv::Point2f calculateRelativeCenter(const cv::Matx33f &cameraMatrix, cv::Point2f angle)
-{
+cv::Point2f calculateRelativeCenter(const cv::Matx33f &cameraMatrix, cv::Point2f angle) {
     float yaw = tanf(deg2rad(angle.x));
     float pitch = tanf(deg2rad(angle.y));
     cv::Matx31f center_vector;
@@ -45,8 +48,7 @@ cv::Point2f calculateRelativeCenter(const cv::Matx33f &cameraMatrix, cv::Point2f
     return {result(0), result(1)};
 }
 
-cv::Vec2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const cv::Vec3f &center3d)
-{
+cv::Vec2f cameraConvertToPixel(const cv::Matx33f &cameraMatrix, const cv::Matx51f &distCoeffs, const cv::Vec3f &center3d) {
     std::vector<cv::Point3f> world_center3ds(1);
     cv::Vec3f center_tvec = center3d;
     cv::Vec3f center_rvec = {0, 0, 1}; // (1, 0, 0) 或 (0, 1, 0) 均可
