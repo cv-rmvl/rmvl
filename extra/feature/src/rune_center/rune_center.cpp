@@ -9,18 +9,22 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#else
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include "rmvl/core/util.hpp"
 #include "rmvl/feature/rune_center.h"
 
 #include "rmvlpara/feature/rune_center.h"
 
-namespace rm
-{
+namespace rm {
 
-RuneCenter::ptr RuneCenter::make_feature(const cv::Point2f &center)
-{
+RuneCenter::ptr RuneCenter::make_feature(const cv::Point2f &center) {
     auto retval = std::make_shared<RuneCenter>();
     // 初始化构造形状信息
     retval->_center = center;
@@ -32,8 +36,7 @@ RuneCenter::ptr RuneCenter::make_feature(const cv::Point2f &center)
     return retval;
 }
 
-RuneCenter::ptr RuneCenter::make_feature(const std::vector<cv::Point> &contour)
-{
+RuneCenter::ptr RuneCenter::make_feature(const std::vector<cv::Point> &contour) {
     if (contour.size() < 6)
         return nullptr;
     // init
@@ -41,8 +44,7 @@ RuneCenter::ptr RuneCenter::make_feature(const std::vector<cv::Point> &contour)
 
     // 1.绝对面积判断
     DEBUG_INFO_("center 1.rotated_rect_area : %f", rotated_rect.size.area());
-    if (rotated_rect.size.area() < para::rune_center_param.MIN_AREA || rotated_rect.size.area() > para::rune_center_param.MAX_AREA)
-    {
+    if (rotated_rect.size.area() < para::rune_center_param.MIN_AREA || rotated_rect.size.area() > para::rune_center_param.MAX_AREA) {
         DEBUG_WARNING_("center 1.rotated_rect_area : fail");
         return nullptr;
     }
@@ -53,8 +55,7 @@ RuneCenter::ptr RuneCenter::make_feature(const std::vector<cv::Point> &contour)
     float height = std::min(rotated_rect.size.width, rotated_rect.size.height);
     float ratio = width / height;
     DEBUG_INFO_("center 2.center_ratio : %f", ratio);
-    if (ratio > para::rune_center_param.MAX_RATIO || ratio < para::rune_center_param.MIN_RATIO)
-    {
+    if (ratio > para::rune_center_param.MAX_RATIO || ratio < para::rune_center_param.MIN_RATIO) {
         DEBUG_WARNING_("center 2.center_ratio : fail");
         return nullptr;
     }

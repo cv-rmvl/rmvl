@@ -9,20 +9,23 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#else
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include "rmvl/algorithm/math.hpp"
 #include "rmvl/feature/light_blob.h"
 
 #include "rmvlpara/feature/light_blob.h"
 
-namespace rm
-{
+namespace rm {
 
-static void calcAccurateInfo(float lw_ratio, const std::vector<cv::Point> &contour, float angle,
-                             cv::Point2f &top, cv::Point2f &bottom, cv::Point2f &center,
-                             float &width, float &height, std::vector<cv::Point2f> &corners)
-{
+static void calcAccurateInfo(float lw_ratio, const std::vector<cv::Point> &contour, float angle, cv::Point2f &top, cv::Point2f &bottom,
+                             cv::Point2f &center, float &width, float &height, std::vector<cv::Point2f> &corners) {
     // angle 向量
     const float rad_angle = deg2rad(angle);
     const float cos_angle = std::cos(rad_angle);
@@ -32,15 +35,13 @@ static void calcAccurateInfo(float lw_ratio, const std::vector<cv::Point> &conto
     up_contour.reserve(contour.size() >> 1);
     down_contour.reserve(contour.size() >> 1);
     float height_bias = 0.25f * height * cos_angle;
-    for (auto &point : contour)
-    {
+    for (auto &point : contour) {
         if (point.y < center.y - height_bias)
             up_contour.emplace_back(point);
         else if (point.y > center.y + height_bias)
             down_contour.emplace_back(point);
     }
-    if (lw_ratio < para::light_blob_param.RATIO_THRESHOLD)
-    {
+    if (lw_ratio < para::light_blob_param.RATIO_THRESHOLD) {
         cv::Vec4f line_vec = {sin_angle, -cos_angle, center.x, center.y};
         top = *min_element(up_contour.begin(), up_contour.end(), [&](const cv::Point &lhs, const cv::Point &rhs) {
             return getDistance(line_vec, lhs, false) < getDistance(line_vec, rhs, false);
@@ -48,9 +49,7 @@ static void calcAccurateInfo(float lw_ratio, const std::vector<cv::Point> &conto
         bottom = *min_element(down_contour.begin(), down_contour.end(), [&](const cv::Point &lhs, const cv::Point &rhs) {
             return getDistance(line_vec, lhs, false) < getDistance(line_vec, rhs, false);
         });
-    }
-    else
-    {
+    } else {
         // 寻找上下顶点
         cv::Vec4f line_vec = {cos_angle, sin_angle, center.x, center.y}; // 方向为角度向量的法向量
         top = *max_element(up_contour.begin(), up_contour.end(), [&](const cv::Point &lhs, const cv::Point &rhs) {
@@ -75,8 +74,7 @@ static void calcAccurateInfo(float lw_ratio, const std::vector<cv::Point> &conto
                bottom + cv::Point2f(half_w * cos_angle, half_w * sin_angle)};
 }
 
-LightBlob::ptr LightBlob::make_feature(const std::vector<cv::Point> &contour)
-{
+LightBlob::ptr LightBlob::make_feature(const std::vector<cv::Point> &contour) {
     // init
     if (contour.size() < 6)
         return nullptr;
@@ -96,15 +94,13 @@ LightBlob::ptr LightBlob::make_feature(const std::vector<cv::Point> &contour)
     if (rotated_rect.size.height < para::light_blob_param.MIN_LENGTH)
         return nullptr;
     //  判断为远处灯条
-    if (rotated_rect.size.height < para::light_blob_param.CLOSE_LENGTH)
-    {
+    if (rotated_rect.size.height < para::light_blob_param.CLOSE_LENGTH) {
         // 比例判断
         if (lw_ratio > para::light_blob_param.MAX_FAR_RATIO || lw_ratio < para::light_blob_param.MIN_FAR_RATIO)
             return nullptr;
     }
     // 判断为近处灯条
-    else
-    {
+    else {
         // 比例判断
         if (lw_ratio > para::light_blob_param.MAX_CLOSE_RATIO)
             return nullptr;
@@ -134,8 +130,7 @@ LightBlob::ptr LightBlob::make_feature(const std::vector<cv::Point> &contour)
     return retval;
 }
 
-LightBlob::ptr LightBlob::make_feature(const cv::Point2f &top, const cv::Point2f &bottom, float width)
-{
+LightBlob::ptr LightBlob::make_feature(const cv::Point2f &top, const cv::Point2f &bottom, float width) {
     // 顶点筛选
     if (std::isnan(top.x) || std::isnan(top.y) || top.x < -10000.f || top.x > 10000.f || top.y < -10000.f || top.y > 10000.f)
         return nullptr;

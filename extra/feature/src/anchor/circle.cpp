@@ -9,20 +9,23 @@
  *
  */
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#else
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include "anchor_def.hpp"
 #include "rmvlpara/feature/anchor.h"
 
-namespace rm
-{
+namespace rm {
 
 // 判断椭圆拟合的平均拟合精度
-static double fitEllipseAccuracy(const std::vector<cv::Point> &contour, const cv::RotatedRect &rrect)
-{
+static double fitEllipseAccuracy(const std::vector<cv::Point> &contour, const cv::RotatedRect &rrect) {
     double totalError{};
-    for (const auto &point : contour)
-    {
+    for (const auto &point : contour) {
         // 将点转换到椭圆坐标系中
         cv::Point2f center = rrect.center;
         double angle = rrect.angle * CV_PI / 180.0;
@@ -44,8 +47,7 @@ static double fitEllipseAccuracy(const std::vector<cv::Point> &contour, const cv
     return totalError / (contour.size() + 1);
 }
 
-std::optional<CircleInfo> createAnchorFromCircleContour(const std::vector<cv::Point> &contour)
-{
+std::optional<CircleInfo> createAnchorFromCircleContour(const std::vector<cv::Point> &contour) {
     // 椭圆拟合
     if (contour.size() < 5)
         return std::nullopt;

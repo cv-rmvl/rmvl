@@ -15,14 +15,12 @@
 
 #include "rmvl/feature/anchor.h"
 
-namespace rm
-{
+namespace rm {
 
 /////////////////////////////// 圆形特征点 ///////////////////////////////
 
 // 圆形特征
-struct CircleInfo
-{
+struct CircleInfo {
     cv::Point2f center{};  // 中心点
     float radius{};        // 半径
     double eccentricity{}; // 离心率
@@ -34,8 +32,7 @@ std::optional<CircleInfo> createAnchorFromCircleContour(const std::vector<cv::Po
 /////////////////////////////// 矩形特征点 ///////////////////////////////
 
 // 矩形特征
-struct SquareInfo
-{
+struct SquareInfo {
     cv::Point2f center{};               // 中心点
     float length{};                     // 边长
     std::vector<cv::Point2f> corners{}; // 轮廓
@@ -48,8 +45,7 @@ std::optional<SquareInfo> createAnchorFromSqaureContour(const std::vector<cv::Po
 ///////////////////////////// 十字交叉特征点 /////////////////////////////
 
 // 十字交叉特征
-struct CrossInfo
-{
+struct CrossInfo {
     cv::Point2f center{};               // 中心点
     float length{};                     // 长度
     std::vector<cv::Point2f> corners{}; // 轮廓

@@ -9,8 +9,6 @@
  *
  */
 
-#include <unordered_set>
-
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/core/util.hpp"

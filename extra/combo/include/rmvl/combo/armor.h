@@ -11,13 +11,16 @@
 
 #pragma once
 
+#include <opencv2/opencv_modules.hpp>
+
+#ifdef HAVE_OPENCV_ML
 #include <opencv2/ml.hpp>
+#endif
 
 #include "combo.h"
 #include "rmvl/feature/light_blob.h"
 
-namespace rm
-{
+namespace rm {
 
 //! @addtogroup combo_armor
 //! @{
@@ -26,16 +29,14 @@ namespace rm
 //! @example samples/detector/hik/sample_hik_armor_size_classify.cpp 大小装甲板分类例程
 
 //! 装甲板大小类型
-enum class ArmorSizeType : uint8_t
-{
+enum class ArmorSizeType : uint8_t {
     UNKNOWN, //!< 未知
     SMALL,   //!< 小装甲板
     BIG      //!< 大装甲板
 };
 
 //! 机器人类型
-enum class RobotType : uint8_t
-{
+enum class RobotType : uint8_t {
     UNKNOWN,    //!< 未知
     HERO,       //!< 英雄机器人
     ENGINEER,   //!< 工程机器人
@@ -53,8 +54,7 @@ enum class RobotType : uint8_t
  * - 特征包括 `[0]`: 左灯条，`[1]`: 右灯条
  * - 角点为 `[0]`: 左灯条下顶点，`[1]`: 左灯条上顶点，`[2]`: 右灯条上顶点，`[3]`: 右灯条下顶点
  */
-class RMVL_EXPORTS_W_DES Armor final : public combo
-{
+class RMVL_EXPORTS_W_DES Armor final : public combo {
 public:
     using ptr = std::shared_ptr<Armor>;
     using const_ptr = std::shared_ptr<const Armor>;
@@ -92,7 +92,7 @@ public:
      *
      * @param[in] path *.xml 文件路径
      */
-    RMVL_W static inline void loadSVM(const std::string &path) { _svm = cv::ml::SVM::load(path); }
+    RMVL_W static void loadSVM(const std::string &path);
 
     /**
      * @brief 装甲板相机外参从 IMU 坐标系转化为相机坐标系
@@ -160,10 +160,14 @@ private:
 
     cv::Vec2f _pose; //!< 装甲板姿态法向量
 
+#ifdef HAVE_OPENCV_ML
     static cv::Ptr<cv::ml::SVM> _svm; //!< 大小装甲板二分类 SVM
+#endif
 };
 
+#ifdef HAVE_OPENCV_ML
 inline cv::Ptr<cv::ml::SVM> Armor::_svm = nullptr;
+#endif
 
 /**
  * @brief 装甲板大小类型转为字符串
