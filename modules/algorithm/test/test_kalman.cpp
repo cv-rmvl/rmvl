@@ -121,17 +121,9 @@ TEST(Algorithm_cal, ekf) {
     cv::Matx<double, 5, 1> x{};
 
     for (int i = 0; i <= 200; i++) {
-        // 预测部分，并获取先验状态估计
-        ekf.setJa({1, 0, 0, 0, 0,
-                   0, 1, 0, 0, 0,
-                   0, 0, 1, t, 0,
-                   0, 0, 0, 1, 0,
-                   0, 0, 0, 0, 1});
-        auto x_ = ekf.predict();
+        // 预测部分，并获取先验状态估计（弃值）
+        ekf.predict();
         // 更新部分，并获取后验状态估计
-        ekf.setJh({1, 0, -x_(4) * std::sin(x_(2)), 0, std::cos(x_(2)),
-                   0, 1, x_(4) * std::cos(x_(2)), 0, std::sin(x_(2)),
-                   0, 0, 1, 0, 0});
         x = ekf.correct({500 + 200 * std::cos(0.02 * i) + err(ng), // 以 20 为半径，0.02/T 的角速度运动（图像上是顺时针），并加上噪声
                          500 + 200 * std::sin(0.02 * i) + err(ng),
                          0.02 * i + 0.01 * err(ng)});
@@ -140,6 +132,43 @@ TEST(Algorithm_cal, ekf) {
     EXPECT_NEAR(x(1), 500, 1);
     EXPECT_NEAR(x(2), 4, 0.1); // 0.02 * 200
     EXPECT_NEAR(x(3), 2, 0.1); // 0.02 / 0.01
+}
+
+// 二维匀速圆周运动 IEKF 测试
+TEST(Algorithm_cal, iekf) {
+    std::default_random_engine ng;
+    std::normal_distribution<double> err{0, 1};
+
+    rm::IEKF53d iekf;
+    iekf.init({0, 0, 0, 0, 150}, 1e5);
+    iekf.setQ(1e-1 * cv::Matx<double, 5, 5>::eye());
+    iekf.setR(cv::Matx33d::diag({1e-3, 1e-3, 1e-3}));
+    double t{0.01};
+    iekf.setFa([=](const cv::Matx<double, 5, 1> &x) -> cv::Matx<double, 5, 1> {
+        return {x(0),
+                x(1),
+                x(2) + x(3) * t,
+                x(3),
+                x(4)};
+    });
+    iekf.setFh([=](const cv::Matx<double, 5, 1> &x) -> cv::Matx<double, 3, 1> {
+        return {x(0) + x(4) * std::cos(x(2)),
+                x(1) + x(4) * std::sin(x(2)),
+                x(2)};
+    });
+
+    cv::Matx<double, 5, 1> x{};
+
+    for (int i = 0; i <= 200; i++) {
+        iekf.predict();
+        x = iekf.correct({500 + 200 * std::cos(0.02 * i) + err(ng),
+                          500 + 200 * std::sin(0.02 * i) + err(ng),
+                          0.02 * i + 0.01 * err(ng)});
+    }
+    EXPECT_NEAR(x(0), 500, 1);
+    EXPECT_NEAR(x(1), 500, 1);
+    EXPECT_NEAR(x(2), 4, 0.1);
+    EXPECT_NEAR(x(3), 2, 0.1);
 }
 
 } // namespace rm_test

@@ -15,15 +15,19 @@
 
 #include <gtest/gtest.h>
 
+#include <opencv2/core/version.hpp>
+
+#if CV_VERSION_MAJOR >= 5
+#include <opencv2/geometry/2d.hpp>
+#endif
+
 #include <opencv2/imgproc.hpp>
 
 #include "rmvl/feature/anchor.h"
 
-namespace rm_test
-{
+namespace rm_test {
 
-static std::vector<std::vector<cv::Point>> getContours()
-{
+static std::vector<std::vector<cv::Point>> getContours() {
     auto src = cv::Mat(cv::Size(640, 480), CV_8UC1, cv::Scalar(0, 0, 0));
     // Square
     cv::rectangle(src, {90, 180}, {190, 260}, cv::Scalar(255, 255, 255), -1);
@@ -54,8 +58,7 @@ static std::vector<std::vector<cv::Point>> getContours()
     return contours;
 }
 
-TEST(BuildAnchorTest, BuildCircle)
-{
+TEST(BuildAnchorTest, BuildCircle) {
     auto contours = getContours();
     auto &sqaure_contour = contours[0];
     auto &circle_contour = contours[1];
@@ -69,8 +72,7 @@ TEST(BuildAnchorTest, BuildCircle)
     EXPECT_EQ(p_circle_3, nullptr);
 }
 
-TEST(BuildAnchorTest, BuildSqaure)
-{
+TEST(BuildAnchorTest, BuildSqaure) {
     auto contours = getContours();
     auto &sqaure_contour = contours[0];
     auto &circle_contour = contours[1];
@@ -85,8 +87,7 @@ TEST(BuildAnchorTest, BuildSqaure)
     EXPECT_EQ(p_sqaure_3, nullptr);
 }
 
-TEST(BuildAnchorTest, BuildCross)
-{
+TEST(BuildAnchorTest, BuildCross) {
     auto contours = getContours();
     auto &sqaure_contour = contours[0];
     auto &circle_contour = contours[1];
