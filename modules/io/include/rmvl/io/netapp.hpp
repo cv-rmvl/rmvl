@@ -224,7 +224,7 @@ struct RMVL_EXPORTS_W_AG Response {
 using ResponseMiddleware = std::function<void(const Request &, Response &)>;
 
 /**
- * @brief 静态路由中间件，处理对指定 URL 路径的静态文件请求
+ * @brief 【中间件】静态路由，处理对指定 URL 路径的静态文件请求
  *
  * @param[in] url URL 路径前缀，例如 `/static`
  * @param[in] root 静态文件根目录，例如 `./public`
@@ -239,7 +239,7 @@ using ResponseMiddleware = std::function<void(const Request &, Response &)>;
 RMVL_EXPORTS_W ResponseMiddleware statics(std::string_view url, std::string_view root);
 
 /**
- * @brief 跨域资源共享 CORS 中间件，为响应添加 CORS 头部信息
+ * @brief 【中间件】跨域资源共享 CORS，为响应添加 CORS 头部信息
  *
  * @code {.cpp}
  * // 在 Web 应用程序框架中使用
@@ -307,6 +307,19 @@ inline Response post(std::string_view url, std::string_view body, const std::vec
 inline Response del(std::string_view url, const std::vector<std::string> &querys = {},
                     const std::unordered_map<std::string, std::string> &heads = {}) {
     return request(HTTPMethod::Delete, url, querys, heads);
+}
+
+/**
+ * @brief 发出同步 OPTIONS 请求
+ *
+ * @param[in] url 请求的 URL
+ * @param[in] querys 可选的 URL 参数列表
+ * @param[in] heads 可选的请求头列表
+ * @return Response 响应报文
+ */
+inline Response options(std::string_view url, const std::vector<std::string> &querys = {},
+                        const std::unordered_map<std::string, std::string> &heads = {}) {
+    return request(HTTPMethod::Options, url, querys, heads);
 }
 
 //! @} io_net
@@ -433,6 +446,14 @@ public:
     void del(std::string_view uri, RouteHandler callback) { _deletes.emplace_back(uri, std::move(callback)); }
 
     /**
+     * @brief Options 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Options 响应回调
+     */
+    void options(std::string_view uri, RouteHandler callback) { _options.emplace_back(uri, std::move(callback)); }
+
+    /**
      * @brief WebSocket 路由
      *
      * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:room"
@@ -445,6 +466,7 @@ private:
     std::vector<RouteEntry> _posts{};   //!< POST 请求路由列表
     std::vector<RouteEntry> _heads{};   //!< HEAD 请求路由列表
     std::vector<RouteEntry> _deletes{}; //!< DELETE 请求路由列表
+    std::vector<RouteEntry> _options{}; //!< OPTIONS 请求路由列表
     std::vector<WSRouteEntry> _wss{};   //!< WebSocket 路由列表
 };
 
@@ -599,6 +621,14 @@ public:
      * @param[in] callback Delete 响应回调
      */
     void del(std::string_view uri, RouteHandler callback) { _router._deletes.emplace_back(uri, callback); }
+
+    /**
+     * @brief Options 请求路由
+     *
+     * @param[in] uri 统一资源标识符，支持路径参数，如 "/api/:name"
+     * @param[in] callback Options 响应回调
+     */
+    void options(std::string_view uri, RouteHandler callback) { _router._options.emplace_back(uri, callback); }
 
     /**
      * @brief WebSocket 路由

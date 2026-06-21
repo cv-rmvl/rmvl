@@ -170,6 +170,30 @@ TEST(IO_netapp, webapp_router) {
     io_context.run();
 }
 
+TEST(IO_netapp, webapp_cors_options) {
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+
+    app.use(cors());
+    app.get("/", [](const Request &, Response &res) { res.send("root"); });
+
+    app.listen(10804);
+    co_spawn(io_context, &async::Webapp::spin, &app);
+
+    auto thrd = std::jthread([&]() {
+        // 发出 OPTIONS 预检请求
+        auto res = requests::options("http://127.0.0.1:10804/");
+        EXPECT_EQ(res.state, 204);
+        EXPECT_EQ(res.heads["Access-Control-Allow-Origin"], "*");
+        EXPECT_NE(res.heads["Access-Control-Allow-Methods"].find("OPTIONS"), std::string::npos);
+        EXPECT_EQ(res.heads["Content-Length"], "0");
+
+        app.stop();
+        io_context.stop();
+    });
+    io_context.run();
+}
+
 #endif
 
 } // namespace rm_test
