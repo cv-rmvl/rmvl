@@ -25,3 +25,9 @@ jobs:
   build-u24-arm:
     name: Ubuntu 24.04 support for aarch64
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u24arm.yml@v1
+  build-u26:
+    name: Ubuntu 26.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u26.yml@v1
+  build-u26-arm:
+    name: Ubuntu 26.04 support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u26arm.yml@v1
