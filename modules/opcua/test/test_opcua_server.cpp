@@ -246,7 +246,11 @@ TEST(OPC_UA_Server, trigger_event) {
 TEST(OPC_UA_Server, function_ptr) {
     Server srv(testnum, 4865);
     srv.spinOnce();
+#if OPCUA_VERSION >= 10500
+    auto id = nodeObjectsFolder | srv.node("TestNumber", 2);
+#else
     auto id = srv.find("TestNumber");
+#endif
     EXPECT_FALSE(id.empty());
 }
 

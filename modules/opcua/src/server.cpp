@@ -27,7 +27,9 @@ namespace rm::ua {
 
 ///////////////////////// 基本配置 /////////////////////////
 
-Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users) {
+Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(nullptr, port, name, users) {}
+
+Server::Server(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) {
     UA_ServerConfig init_config{};
     // 修改日志
     static const std::unordered_map<para::LogLevel, UA_LogLevel> loglvl_srv{
@@ -60,6 +62,10 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     config->publishingIntervalLimits.min = 2.0;
 
     if (!users.empty()) {
+#if OPCUA_VERSION >= 10500
+        // Minimal 配置仅提供 SecurityPolicy#None；显式用户名登录需要允许该策略传递密码
+        config->allowNonePolicyPassword = true;
+#endif
         std::vector<UA_UsernamePasswordLogin> usr_passwd;
         usr_passwd.reserve(users.size());
         for (const auto &[id, passwd] : users) {
@@ -71,6 +77,13 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
         // 修改访问控制
         config->accessControl.clear(&config->accessControl);
         UA_AccessControl_default(config, false, nullptr, usr_passwd.size(), usr_passwd.data());
+#if OPCUA_VERSION >= 10500
+        // 1.5.x 在端点中缓存访问控制插件提供的用户令牌策略，替换访问控制后需重建端点
+        UA_Array_delete(config->endpoints, config->endpointsSize, &UA_TYPES[UA_TYPES_ENDPOINTDESCRIPTION]);
+        config->endpoints = nullptr;
+        config->endpointsSize = 0;
+        UA_ServerConfig_addAllEndpoints(config);
+#endif
     }
 
     // 设置垃圾回收容量
@@ -78,15 +91,17 @@ Server::Server(uint16_t port, std::string_view name, const std::vector<UserConfi
     _dscb_gc.reserve(16);
     _mcb_gc.reserve(16);
 
+    // 在启动网络层前完成用户提供的地址空间配置
+    if (on_config != nullptr) {
+        const UA_StatusCode retval = on_config(_server);
+        if (retval != UA_STATUSCODE_GOOD)
+            ERROR_("Failed to configure server: %s", UA_StatusCode_name(retval));
+    }
+
     // 启动网络层
     UA_StatusCode retval = UA_Server_run_startup(_server);
     if (retval != UA_STATUSCODE_GOOD)
         ERROR_("Failed to initialize server: %s", UA_StatusCode_name(retval));
-}
-
-Server::Server(UA_StatusCode (*on_config)(UA_Server *), uint16_t port, std::string_view name, const std::vector<UserConfig> &users) : Server(port, name, users) {
-    if (on_config != nullptr)
-        on_config(_server);
 }
 
 void Server::spinOnce() { UA_Server_run_iterate(_server, para::opcua_param.SERVER_WAIT); }
