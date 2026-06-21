@@ -24,6 +24,12 @@ jobs:
   build-u24-arm:
     name: Ubuntu 24.04 support for aarch64
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u24arm.yml@v1
+  build-u26:
+    name: Ubuntu 26.04 support for amd64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u26.yml@v1
+  build-u26-arm:
+    name: Ubuntu 26.04 support for aarch64
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u26arm.yml@v1
   build-win:
     name: Windows support for amd64
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-win.yml@v1
@@ -50,6 +56,14 @@ jobs:
     name: Package Ubuntu 24.04 arm64
     needs: build-u24-arm
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-package-u24arm.yml@v1
+  package-u26:
+    name: Package Ubuntu 26.04
+    needs: build-u26
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-package-u26.yml@v1
+  package-u26-arm:
+    name: Package Ubuntu 26.04 arm64
+    needs: build-u26-arm
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-package-u26arm.yml@v1
   package-win:
     name: Package Windows
     needs: build-win
@@ -66,6 +80,8 @@ jobs:
       - package-u22-arm
       - package-u24
       - package-u24-arm
+      - package-u26
+      - package-u26-arm
       - package-win
       - package-win-arm
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-release-assets.yml@v1
