@@ -37,7 +37,11 @@ Publisher::Publisher(std::string_view pub_name, const std::string &addr, uint16_
     std::string cn_name_str = _name + "Connection";
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
     connect_config.transportProfileUri = UA_STRING(const_cast<char *>("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp"));
+#if OPCUA_VERSION >= 10500
+    connect_config.enabled = UA_FALSE;
+#else
     connect_config.enabled = UA_TRUE;
+#endif
     std::string url_str = addr + ":" + std::to_string(port);
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(url_str))};
     UA_Variant_setScalar(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
@@ -118,12 +122,6 @@ bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double durat
         ERROR_("Failed to add writer group, \"%s\"", UA_StatusCode_name(status));
         return false;
     }
-    status = UA_Server_setWriterGroupOperational(_server, _wg_id);
-    if (status != UA_STATUSCODE_GOOD) {
-        ERROR_("Failed to set writer group operational, \"%s\"",
-               UA_StatusCode_name(status));
-        return false;
-    }
     ////////////// 添加 DataSetWriter (DSW) //////////////
     UA_DataSetWriterConfig dsw_config{};
     std::string dsw_name_str = _name + "DataSetWriter";
@@ -135,6 +133,26 @@ bool Publisher::publish(const std::vector<PublishedDataSet> &datas, double durat
         ERROR_("Failed to add dataset writer, \"%s\"", UA_StatusCode_name(status));
         return false;
     }
+#if OPCUA_VERSION >= 10500
+    status = UA_Server_enablePubSubConnection(_server, _connection_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to enable connection, \"%s\"", UA_StatusCode_name(status));
+        return false;
+    }
+#endif
+    status = UA_Server_setWriterGroupOperational(_server, _wg_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to set writer group operational, \"%s\"",
+               UA_StatusCode_name(status));
+        return false;
+    }
+#if OPCUA_VERSION >= 10500
+    status = UA_Server_enableDataSetWriter(_server, _dsw_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to enable dataset writer, \"%s\"", UA_StatusCode_name(status));
+        return false;
+    }
+#endif
     return true;
 }
 

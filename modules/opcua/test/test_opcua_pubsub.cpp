@@ -30,20 +30,33 @@ TEST(OPC_UA_PubSub, pubsub_config) {
     uaCreateVariable(test_double, 3.1);
     auto node_id = pub.addVariableNode(test_double);
     std::thread t1(&Publisher::spin, &pub);
+    std::this_thread::sleep_for(50ms);
     EXPECT_TRUE(pub.publish({{"DoubleDemo", node_id}}, 50));
 
     // 创建订阅者
     Subscriber sub("NumberSub", "opc.udp://224.0.1.22:8000", 8001);
     std::thread t2(&Subscriber::spin, &sub);
+    std::this_thread::sleep_for(50ms);
     Variable double_demo_var = 0.0;
     double_demo_var.browse_name = "DoubleDemo";
     auto meta_data = FieldMetaData::makeFrom(double_demo_var);
     auto nodes = sub.subscribe("NumberPub", {meta_data});
-    EXPECT_EQ(nodes.size(), 1);
+    if (nodes.size() != 1) {
+        pub.shutdown();
+        sub.shutdown();
+        t1.join();
+        t2.join();
+        FAIL() << "Expected one subscribed node, got " << nodes.size();
+    }
 
     pub.write(node_id, 3.4);
-    std::this_thread::sleep_for(100ms);
-    auto sub_val = sub.read(nodes[0]);
+    Variable sub_val;
+    for (int i = 0; i < 20; ++i) {
+        std::this_thread::sleep_for(25ms);
+        sub_val = sub.read(nodes[0]);
+        if (sub_val.cast<double>() == 3.4)
+            break;
+    }
     EXPECT_EQ(sub_val.cast<double>(), 3.4);
 
     pub.shutdown();

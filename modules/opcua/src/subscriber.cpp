@@ -32,7 +32,11 @@ Subscriber::Subscriber(std::string_view sub_name, const std::string &addr, uint1
     std::string cn_name_str = _name + "Connection";
     connect_config.name = UA_STRING(helper::to_char(cn_name_str));
     connect_config.transportProfileUri = UA_STRING(const_cast<char *>("http://opcfoundation.org/UA-Profile/Transport/pubsub-udp-uadp"));
+#if OPCUA_VERSION >= 10500
+    connect_config.enabled = UA_FALSE;
+#else
     connect_config.enabled = UA_TRUE;
+#endif
     UA_NetworkAddressUrlDataType address_url{UA_STRING_NULL, UA_STRING(helper::to_char(addr))};
     UA_Variant_setScalarCopy(&connect_config.address, &address_url, &UA_TYPES[UA_TYPES_NETWORKADDRESSURLDATATYPE]);
 #if OPCUA_VERSION >= 10500
@@ -58,12 +62,6 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
         ERROR_("Failed to add reader group, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
-    status = UA_Server_setReaderGroupOperational(_server, _rg_id);
-    if (status != UA_STATUSCODE_GOOD) {
-        ERROR_("Failed to set reader group operational, \"%s\"", UA_StatusCode_name(status));
-        return {};
-    }
-
     ////////////// 添加 DataSetReader (DSR) //////////////
     UA_DataSetReaderConfig dsr_config{};
     std::string dsr_name = pub_name + "DataSetReader";
@@ -152,6 +150,26 @@ std::vector<NodeId> Subscriber::subscribe(const std::string &pub_name, const std
         ERROR_("Failed to create target variables, \"%s\"", UA_StatusCode_name(status));
         return {};
     }
+    // 完成读取组配置后再切换至 Operational
+#if OPCUA_VERSION >= 10500
+    status = UA_Server_enablePubSubConnection(_server, _connection_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to enable connection, \"%s\"", UA_StatusCode_name(status));
+        return {};
+    }
+#endif
+    status = UA_Server_setReaderGroupOperational(_server, _rg_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to set reader group operational, \"%s\"", UA_StatusCode_name(status));
+        return {};
+    }
+#if OPCUA_VERSION >= 10500
+    status = UA_Server_enableDataSetReader(_server, _dsr_id);
+    if (status != UA_STATUSCODE_GOOD) {
+        ERROR_("Failed to enable dataset reader, \"%s\"", UA_StatusCode_name(status));
+        return {};
+    }
+#endif
     return retval;
 }
 

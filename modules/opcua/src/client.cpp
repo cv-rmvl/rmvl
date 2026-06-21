@@ -50,6 +50,10 @@ Client::Client(std::string_view address, const UserConfig &usr) {
 
     // 其余配置
     init_config.timeout = para::opcua_param.CONNECT_TIMEOUT;
+#if OPCUA_VERSION >= 10500
+    if (!usr.id.empty() && !usr.passwd.empty())
+        init_config.allowNonePolicyPassword = true;
+#endif
 
     _client = UA_Client_newWithConfig(&init_config);
 
