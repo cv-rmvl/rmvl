@@ -374,11 +374,16 @@ ResponseMiddleware statics(std::string_view url_path, std::string_view root) {
 }
 
 ResponseMiddleware cors() {
-    return [](const Request &, Response &res) {
+    return [](const Request &req, Response &res) {
         res.heads["Access-Control-Allow-Origin"] = "*";
         res.heads["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
         res.heads["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
         res.heads["Access-Control-Max-Age"] = "86400";
+        if (req.method == HTTPMethod::Options) {
+            res.state = 204;
+            res.message = "No Content";
+            res.heads["Content-Length"] = "0";
+        }
     };
 }
 
