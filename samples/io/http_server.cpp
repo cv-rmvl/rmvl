@@ -16,15 +16,16 @@ int main(int argc, char *argv[]) {
 #if __cplusplus >= 202002L
     async::IOContext io_context{};
     async::Webapp app(io_context);
+    async::HttpServer server(app);
 
     app.use(cors());
     app.use(statics("/", "./"));
 
-    app.listen(port, [=]() {
+    server.listen(port, [=]() {
         printf("HTTP Server is listening on %d\n", port);
     });
 
-    co_spawn(io_context, &async::Webapp::spin, &app);
+    co_spawn(io_context, &async::HttpServer::spin, &server);
     io_context.run();
 
 #else

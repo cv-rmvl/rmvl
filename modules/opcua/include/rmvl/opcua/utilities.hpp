@@ -22,7 +22,10 @@
 struct UA_Server;
 struct UA_Client;
 
-namespace rm::ua {
+namespace rm {
+
+//! OPC UA 相关地址空间类型、函数定义
+namespace ua {
 
 #define OPCUA_VERSION UA_OPEN62541_VER_MAJOR * 10000 + UA_OPEN62541_VER_MINOR * 100 + UA_OPEN62541_VER_PATCH
 
@@ -220,4 +223,6 @@ NodeId operator|(NodeId origin, FindNodeInClient &&fnic);
 
 //! @} opcua
 
-} // namespace rm::ua
+} // namespace ua
+
+} // namespace rm

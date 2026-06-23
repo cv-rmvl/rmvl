@@ -367,6 +367,15 @@ else()
   option(WITH_ONNXRUNTIME "Enable onnxruntime support (dep: opencv)" OFF)
 endif()
 
+# openssl
+find_package(OpenSSL QUIET)
+if(OpenSSL_FOUND)
+  option(WITH_OPENSSL "Enable openssl support" ON)
+else()
+  unset(WITH_OPENSSL CACHE)
+  option(WITH_OPENSSL "Enable openssl support" OFF)
+endif()
+
 # Install SDK libraries, need to define ${sdk}_FOUND and ${sdk}_LIB before use
 function(rmvl_install_sdk sdk)
   # Handle the installation of the include directory

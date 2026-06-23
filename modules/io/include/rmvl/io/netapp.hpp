@@ -13,12 +13,14 @@
 
 #if __cplusplus >= 202002L
 #include <regex>
+#include <variant>
 #endif
 
 #include <nlohmann/json.hpp>
 
 #include "rmvl/core/rmvldef.hpp"
 #include "socket.hpp"
+#include "ssl.hpp"
 
 namespace rm {
 
@@ -333,11 +335,47 @@ using RouteHandler = std::function<void(const Request &, Response &)>;
 
 namespace async {
 class Webapp;
+class HttpServer;
+class HttpsServer;
+
+/**
+ * @brief Web 应用传输流
+ *
+ * @details 统一封装普通 TCP 流与 TLS 安全流，供 HTTP 和 WebSocket 请求处理复用。
+ */
+class WebStream {
+public:
+    explicit WebStream(StreamSocket socket) : _stream(std::move(socket)) {}
+    explicit WebStream(SSLStream stream) : _stream(std::move(stream)) {}
+
+    WebStream(const WebStream &) = delete;
+    WebStream(WebStream &&) noexcept = default;
+
+    WebStream &operator=(const WebStream &) = delete;
+    WebStream &operator=(WebStream &&) noexcept = default;
+
+    ~WebStream() = default;
+
+    //! 异步读取数据
+    Task<std::string> read();
+
+    //! 异步写入数据
+    Task<bool> write(std::string_view data);
+
+    //! 关闭传输流
+    void close() noexcept;
+
+    //! 传输流是否失效
+    [[nodiscard]] bool invalid() const noexcept;
+
+private:
+    std::variant<StreamSocket, SSLStream> _stream;
+};
 
 //! WebSocket 连接对象接口
 class WebSocket {
 public:
-    explicit WebSocket(StreamSocket socket) : _sock(std::move(socket)) {}
+    explicit WebSocket(WebStream socket) : _sock(std::move(socket)) {}
     ~WebSocket() = default;
 
     /**
@@ -354,7 +392,7 @@ public:
     bool is_open() const noexcept { return _active && !_sock.invalid(); }
 
 private:
-    StreamSocket _sock;
+    WebStream _sock;
     bool _active{true};
 };
 
@@ -364,8 +402,9 @@ using WebSocketHandler = std::function<Task<>(WebSocket &, const Request &)>;
 } // namespace async
 
 /**
- * @brief HTTP 路由器
- * 目前支持的 HTTP 方法包括 GET、POST、HEAD 和 DELETE
+ * @brief HTTP 与 WebSocket 请求路由
+ * - 目前支持的 HTTP 方法包括 GET、POST、HEAD、DELETE 和 OPTIONS
+ * - 同时支持以 coroutine 方式处理的 WebSocket 路由
  */
 class Router final {
     friend class async::Webapp;
@@ -548,6 +587,9 @@ inline Task<Response> del(IOContext &io_context, std::string_view url, const std
  * 3. 目前支持的方法与 rm::Router 一致
  */
 class Webapp final {
+    friend class HttpServer;
+    friend class HttpsServer;
+
 public:
     /**
      * @brief 创建 Web 应用程序实例
@@ -585,6 +627,7 @@ public:
      * @param[in] port 监听的端口号
      * @param[in] callback 启动后调用的回调函数
      */
+    [[deprecated("Use async::HttpServer::listen() or async::HttpsServer::listen()")]]
     void listen(uint16_t port, std::function<void()> callback = nullptr) {
         _port = port;
         _listen = std::move(callback);
@@ -643,13 +686,109 @@ public:
      *
      * @return rm::async::Task<> 异步任务
      */
-    [[nodiscard]] Task<> spin();
+    [[deprecated("Use async::HttpServer::spin() or async::HttpsServer::spin()")]]
+    [[nodiscard]]
+    Task<> spin();
 
     /**
      * @brief 启动 Socket 监听任务循环，不启用 SIGINT 信号处理
-     * 
+     *
      * @return Task<> 异步任务
      */
+    [[deprecated("Use async::HttpServer::spinWithoutSigint() or async::HttpsServer::spinWithoutSigint()")]]
+    [[nodiscard]]
+    Task<> spinWithoutSigint();
+
+    //! 是否正在运行
+    [[nodiscard]] bool running() const noexcept { return _running.load(std::memory_order_acquire); }
+
+    //! 停止运行
+    void stop() noexcept { _running.store(false, std::memory_order_release); }
+
+private:
+    Task<> on_sigint();
+    Task<> legacy_spin_impl();
+    Task<> handle_client(WebStream socket);
+
+    std::atomic_bool _running{false}; //!< 运行标志位
+
+    IOContextRef _ctx;                       //!< 异步 I/O 执行上下文
+    uint16_t _port{};                        //!< 监听端口
+    std::function<void()> _listen{};         //!< 启动后调用的回调函数
+    std::vector<ResponseMiddleware> _mwfs{}; //!< 响应中间件列表
+    Router _router{};                        //!< 路由器
+};
+
+/**
+ * @brief HTTP 服务器
+ *
+ * @details 负责 TCP 监听和连接调度，应用路由与中间件由 Webapp 提供。
+ */
+class HttpServer final {
+public:
+    //! 创建 HTTP 服务器
+    explicit HttpServer(Webapp &app) : _app(app), _ctx(app._ctx) {}
+
+    HttpServer(const HttpServer &) = delete;
+    HttpServer &operator=(const HttpServer &) = delete;
+    HttpServer(HttpServer &&) noexcept = delete;
+    HttpServer &operator=(HttpServer &&) noexcept = delete;
+    ~HttpServer();
+
+    //! 监听指定端口
+    void listen(uint16_t port, std::function<void()> callback = nullptr) {
+        _port = port;
+        _listen = std::move(callback);
+    }
+
+    //! 启动监听任务循环
+    [[nodiscard]] Task<> spin();
+
+    //! 启动监听任务循环，不启用 SIGINT 信号处理
+    [[nodiscard]] Task<> spinWithoutSigint();
+
+    //! 是否正在运行
+    [[nodiscard]] bool running() const noexcept { return _running.load(std::memory_order_acquire); }
+
+    //! 停止运行
+    void stop() noexcept { _running.store(false, std::memory_order_release); }
+
+private:
+    Task<> on_sigint();
+
+    std::atomic_bool _running{false}; //!< 运行标志位
+    std::reference_wrapper<Webapp> _app;
+    IOContextRef _ctx;
+    uint16_t _port{};
+    std::function<void()> _listen{};
+};
+
+/**
+ * @brief HTTPS 服务器
+ *
+ * @details 接受 TCP 连接后执行服务端 TLS 握手，再将安全流交给 Webapp 处理。
+ */
+class HttpsServer final {
+public:
+    //! 创建 HTTPS 服务器
+    HttpsServer(Webapp &app, SSLContext &ssl_context) : _app(app), _ctx(app._ctx), _ssl_ctx(ssl_context) {}
+
+    HttpsServer(const HttpsServer &) = delete;
+    HttpsServer &operator=(const HttpsServer &) = delete;
+    HttpsServer(HttpsServer &&) noexcept = delete;
+    HttpsServer &operator=(HttpsServer &&) noexcept = delete;
+    ~HttpsServer();
+
+    //! 监听指定端口
+    void listen(uint16_t port, std::function<void()> callback = nullptr) {
+        _port = port;
+        _listen = std::move(callback);
+    }
+
+    //! 启动监听任务循环
+    [[nodiscard]] Task<> spin();
+
+    //! 启动监听任务循环，不启用 SIGINT 信号处理
     [[nodiscard]] Task<> spinWithoutSigint();
 
     //! 是否正在运行
@@ -663,12 +802,11 @@ private:
     Task<> handle_client(StreamSocket socket);
 
     std::atomic_bool _running{false}; //!< 运行标志位
-
-    IOContextRef _ctx;                       //!< 异步 I/O 执行上下文
-    uint16_t _port{};                        //!< 监听端口
-    std::function<void()> _listen{};         //!< 启动后调用的回调函数
-    std::vector<ResponseMiddleware> _mwfs{}; //!< 响应中间件列表
-    Router _router{};                        //!< 路由器
+    std::reference_wrapper<Webapp> _app;
+    IOContextRef _ctx;
+    SSLContextRef _ssl_ctx;
+    uint16_t _port{};
+    std::function<void()> _listen{};
 };
 
 //! @} io_net

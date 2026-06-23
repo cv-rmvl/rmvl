@@ -8,6 +8,11 @@ rmvl_add_module(io
   EXTERNAL json fmt
 )
 
+if(WITH_OPENSSL)
+  rmvl_link_libraries(io PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+  rmvl_compile_definitions(io PUBLIC HAVE_OPENSSL)
+endif()
+
 # for glibc < 2.34
 if(UNIX)
   rmvl_link_libraries(io PRIVATE rt)
@@ -17,7 +22,7 @@ endif()
 #  Build Python bindings
 # ----------------------------------------------------------------------------
 if(BUILD_PYTHON)
-  foreach(m util ipc serial netapp)
+  foreach(m util ipc serial netapp ssl)
     list(APPEND io_inc rmvl/io/${m}.hpp)
   endforeach()
   rmvl_generate_python(io
@@ -35,6 +40,10 @@ if(BUILD_TESTS)
     io Unit
     DEPENDS io
     EXTERNAL GTest::gtest_main
+  )
+  target_compile_definitions(
+    rmvl_io_test PRIVATE
+    RMVL_IO_TEST_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/data"
   )
 endif(BUILD_TESTS)
 

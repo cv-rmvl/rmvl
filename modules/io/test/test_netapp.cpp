@@ -9,8 +9,6 @@
  *
  */
 
-#include <chrono>
-
 #include <gtest/gtest.h>
 
 #include "rmvl/io/netapp.hpp"
@@ -69,6 +67,8 @@ using namespace std::literals::chrono_literals;
 TEST(IO_netapp, webapp_basic) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
+    async::HttpServer server(app);
+    std::atomic_bool ready{}; // 仅用于保证请求发生在服务器启动之后
 
     app.use(cors());
     app.get("/", [](const Request &, Response &res) {
@@ -103,10 +103,14 @@ TEST(IO_netapp, webapp_basic) {
         auto id = req.params.at("id");
         res.send("Deleted item with id " + id);
     });
-    app.listen(10802);
-    co_spawn(io_context, &async::Webapp::spin, &app);
+    server.listen(10802, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpServer::spin, &server);
 
     auto thrd = std::jthread([&]() {
+        ready.wait(false, std::memory_order_acquire);
         // Get /str
         auto res = requests::get("http://127.0.0.1:10802/str");
         EXPECT_EQ(res.state, 200);
@@ -129,7 +133,7 @@ TEST(IO_netapp, webapp_basic) {
         EXPECT_EQ(res.state, 200);
         EXPECT_EQ(res.body, "Deleted item with id 123");
 
-        app.stop();
+        server.stop();
         io_context.stop();
     });
     io_context.run();
@@ -138,6 +142,8 @@ TEST(IO_netapp, webapp_basic) {
 TEST(IO_netapp, webapp_router) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
+    async::HttpServer server(app);
+    std::atomic_bool ready{}; // 仅用于保证请求发生在服务器启动之后
 
     auto api_router = Router{};
     api_router.get("/status", [](const Request &, Response &res) {
@@ -150,10 +156,14 @@ TEST(IO_netapp, webapp_router) {
     });
 
     app.use("/api", api_router);
-    app.listen(10803);
-    co_spawn(io_context, &async::Webapp::spin, &app);
+    server.listen(10803, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpServer::spin, &server);
 
     auto thrd = std::jthread([&]() {
+        ready.wait(false, std::memory_order_acquire);
         // Get /api/status
         auto res = requests::get("http://127.0.0.1:10803/api/status");
         EXPECT_EQ(res.state, 200);
@@ -164,7 +174,7 @@ TEST(IO_netapp, webapp_router) {
         EXPECT_EQ(res.state, 200);
         EXPECT_EQ(res.body, "hello");
 
-        app.stop();
+        server.stop();
         io_context.stop();
     });
     io_context.run();
@@ -173,14 +183,20 @@ TEST(IO_netapp, webapp_router) {
 TEST(IO_netapp, webapp_cors_options) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
+    async::HttpServer server(app);
+    std::atomic_bool ready{}; // 仅用于保证请求发生在服务器启动之后
 
     app.use(cors());
     app.get("/", [](const Request &, Response &res) { res.send("root"); });
 
-    app.listen(10804);
-    co_spawn(io_context, &async::Webapp::spin, &app);
+    server.listen(10804, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpServer::spin, &server);
 
     auto thrd = std::jthread([&]() {
+        ready.wait(false, std::memory_order_acquire);
         // 发出 OPTIONS 预检请求
         auto res = requests::options("http://127.0.0.1:10804/");
         EXPECT_EQ(res.state, 204);
@@ -188,7 +204,54 @@ TEST(IO_netapp, webapp_cors_options) {
         EXPECT_NE(res.heads["Access-Control-Allow-Methods"].find("OPTIONS"), std::string::npos);
         EXPECT_EQ(res.heads["Content-Length"], "0");
 
-        app.stop();
+        server.stop();
+        io_context.stop();
+    });
+    io_context.run();
+}
+
+TEST(IO_netapp, webapp_https) {
+    const std::string cert = RMVL_IO_TEST_DATA_PATH "/lo.crt";
+    const std::string key = RMVL_IO_TEST_DATA_PATH "/lo.key";
+
+    SSLContext server_context = SSLContext::server();
+    ASSERT_TRUE(server_context.load_cert(cert, key)) << server_context.lasterr();
+
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+    async::HttpsServer server(app, server_context);
+    std::atomic_bool ready{};
+
+    app.get("/", [](const Request &, Response &res) { res.send("secure"); });
+    server.listen(10805, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpsServer::spin, &server);
+
+    auto thrd = std::jthread([&] {
+        ready.wait(false, std::memory_order_acquire);
+        SSLContext client_context = SSLContext::client();
+        client_context.set_verify_mode(SSLVerifyMode::Peer);
+        bool loaded = client_context.load_ca(cert);
+        EXPECT_TRUE(loaded) << client_context.lasterr();
+
+        if (loaded) {
+            Connector connector(Endpoint(ip::tcp::v4(), 10805), "127.0.0.1");
+            SSLStream stream(connector.connect(), client_context);
+            bool connected = stream.handshake("127.0.0.1");
+            EXPECT_TRUE(connected) << stream.lasterr();
+            bool written = connected && stream.write("GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+            EXPECT_TRUE(written);
+            if (written) {
+                auto response = Response::parse(stream.read());
+                EXPECT_EQ(response.state, 200);
+                EXPECT_EQ(response.body, "secure");
+            }
+            stream.close();
+        }
+
+        server.stop();
         io_context.stop();
     });
     io_context.run();

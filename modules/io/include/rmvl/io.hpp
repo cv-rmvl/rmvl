@@ -38,3 +38,4 @@
 #include "io/netapp.hpp"
 #include "io/serial.hpp"
 #include "io/socket.hpp"
+#include "io/ssl.hpp"
