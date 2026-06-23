@@ -362,6 +362,9 @@ public:
     //! 会话是否失效
     [[nodiscard]] bool invalid() const noexcept { return _fd == INVALID_SOCKET_FD; }
 
+    //! 获取底层 Socket 描述符
+    [[nodiscard]] SocketFd native_handle() const noexcept { return _fd; }
+
     /**
      * @brief 设置 Socket 选项
      *
@@ -579,6 +582,9 @@ public:
 
     //! 会话是否失效
     [[nodiscard]] bool invalid() const noexcept { return _fd == INVALID_SOCKET_FD; }
+
+    //! 获取底层 Socket 描述符
+    [[nodiscard]] SocketFd native_handle() const noexcept { return _fd; }
 
     /**
      * @brief 设置 Socket 选项
@@ -1126,6 +1132,12 @@ public:
      * @return 是否写入成功
      */
     SocketWriteAwaiter write(std::string_view data) { return {_ctx, _fd, data}; }
+
+    //! 获取所属异步 I/O 执行上下文
+    [[nodiscard]] IOContext &context() noexcept { return _ctx; }
+
+    //! 获取所属异步 I/O 执行上下文
+    [[nodiscard]] const IOContext &context() const noexcept { return _ctx; }
 
     //! 流式 Socket 多缓冲区异步读等待器
     class SocketMultiReadAwaiter final : public AsyncReadAwaiter {

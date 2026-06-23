@@ -16,7 +16,8 @@
 相关类
 - 请求、响应结构： rm::Request 及 rm::Response
 - 请求工具： rm::requests::request 及 rm::async::requests::request
-- 后端框架： rm::async::Webapp
+- 后端应用： rm::async::Webapp
+- HTTP/HTTPS 服务器： rm::async::HttpServer 及 rm::async::HttpsServer
 
 ### 1 HTTP 数据结构
 
@@ -39,7 +40,7 @@ rm::Response 还提供了多种简化生成响应的成员函数，如 `send`、
 设计理念参考 Python 的 requests 库，提供了极其简洁易用的接口，这里给出一个简单的 GET 请求示例：
 
 ```cpp
-#include <rmvl/io/webapp.hpp>
+#include <rmvl/io/netapp.hpp>
 
 using namespace rm;
 
@@ -56,19 +57,21 @@ int main() {
 
 ### 3 Web 后端框架
 
-RMVL 提供了 HTTP 的后端应用框架 rm::async::Webapp 。这是 @ref io 的集大成者，设计理念参考 JavaScript 的 Express 框架，这里给出一个简单的 Web 服务器示例：
+RMVL 提供了后端应用框架 rm::async::Webapp ，以及负责传输层监听的 rm::async::HttpServer 和 rm::async::HttpsServer 。设计参考 Express JS，具体来说，Webapp 负责路由与中间件，服务器对象负责 HTTP 或 HTTPS 监听，同一个 Webapp 可以交给不同类型的服务器。
+
+#### 3.1 HTTP 服务器
+
+rm::async::Webapp 和 rm::Router 提供了 GET、POST、DELETE 等相关方法用于定义路由，并且 rm::async::Webapp 可以使用 `use` 方法挂载中间件或挂载由 rm::Router 定义的子路由。
 
 ```cpp
 // demo.cpp
-#include <iostream>
-
-#include "rmvl/io/netapp.hpp"
+#include <rmvl/io/netapp.hpp>
 
 using namespace rm;
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <port>" << std::endl;
+        printf("Usage: %s <port>\n", argv[0]);
         return 1;
     }
 
@@ -78,6 +81,7 @@ int main(int argc, char *argv[]) {
 
     // 创建后端应用
     async::Webapp app(io_context);
+    async::HttpServer server(app);
 
     // 定义路由：以 GET 方法响应根路径请求
     app.get("/", [](const Request &req, Response &res) {
@@ -113,12 +117,12 @@ int main(int argc, char *argv[]) {
     app.use("/api", api_router);
 
     // 监听指定端口
-    app.listen(port, [&]() {
-        std::cout << "Server is running on port " << port << std::endl;
+    server.listen(port, [&]() {
+        printf("Server is running on port %d\n", port);
     });
 
     // 生成协程任务并执行
-    co_spawn(io_context, &async::Webapp::spin, &app);
+    co_spawn(io_context, &async::HttpServer::spin, &server);
     io_context.run();
 }
 ```
@@ -128,6 +132,20 @@ int main(int argc, char *argv[]) {
 <div class="fragment">
 <div class="line"><span class="keywordflow">g++</span> demo.cpp <span class="comment">-std=c++20</span> <span class="comment">-I</span> /usr/local/include/RMVL <span class="comment">-l</span> rmvl_io <span class="comment">-l</span> rmvl_core <span class="comment">-o</span> demo</div>
 <div class="line"><span class="comment"># 如果使用的是 Windows 系统，可能需要额外链接 ws2_32 库</span></div>
+</div>
+
+@note 当然，也可以自行编写 CMakeLists.txt 文件，采用 CMake 构建系统进行构建，具体的 CMakeLists.txt 内容可参考如下内容：
+<div class="fragment">
+<div class="line"><span class="keyword">cmake_minimum_required</span>(VERSION 3.16)</div>
+<div class="line"><span class="keyword">project</span>(Demo)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">find_package</span>(RMVL REQUIRED)</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">rmvl_add_exe</span>(</div>
+<div class="line">&nbsp;&nbsp;demo</div>
+<div class="line">&nbsp;&nbsp;<span class="v">SOURCES</span> demo.cpp</div>
+<div class="line">&nbsp;&nbsp;<span class="v">DEPENDS</span> io</div>
+<div class="line"><span class="keyword"></span>)</div>
 </div>
 
 编译后，在终端输入
@@ -148,18 +166,39 @@ int main(int argc, char *argv[]) {
 <div class="line"><span class="comment">&lt;</span><span class="keywordtype">html</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">body</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">h1</span><span class="comment">&gt;</span>Hello, World!<span class="comment">&lt;</span><span class="keywordtype">/h1</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">/body</span><span class="comment">&gt;</span><span class="comment">&lt;</span><span class="keywordtype">/html</span><span class="comment">&gt;</span></div>
 </div>
 
-同时，可以配合 `jq` 工具测试 JSON API：
+@note rm::async::Webapp 虽然也提供了 `listen` 方法，但该方法仅用于快速测试，实际生产环境推荐使用 rm::async::HttpServer 或 rm::async::HttpsServer 进行监听。
+
+#### 3.2 HTTPS 服务器
+
+HTTPS 与 HTTP 使用相同的 Webapp，只需要将 rm::async::HttpServer 替换为 rm::async::HttpsServer ，并提供服务端的 rm::SSLContext 即可，示例代码如下：
+
+```cpp
+async::IOContext io_context{};
+async::Webapp app(io_context);
+
+app.get("/", [](const Request &, Response &res) {
+    res.send("Hello, HTTPS!");
+});
+
+SSLContext ssl_context = SSLContext::server();
+if (!ssl_context.load_cert("server.crt", "server.key")) {
+    printf("%s\n", ssl_context.lasterr().c_str());
+    return 1;
+}
+
+async::HttpsServer server(app, ssl_context);
+server.listen(8443, [] {
+    printf("HTTPS server is listening on 8443\n");
+});
+
+co_spawn(io_context, &async::HttpsServer::spin, &server);
+io_context.run();
+```
+
+SSLContext 必须比 HttpsServer 和所有活动 TLS 连接存活得更久。证书自动续期后，需要重新加载 SSLContext 或重启/重载服务进程，才能让新连接使用更新后的证书。 使用命令行直接编译 HTTPS 程序时，还需要链接 OpenSSL 的 ssl 和 crypto 库；使用 CMake 链接 rmvl_io 目标时会自动传递该依赖。
+
+测试自签名证书时可以使用：
 
 <div class="fragment">
-<div class="line"><span class="keywordflow">curl</span> <span class="comment">-s</span> <span class="stringliteral">"http://localhost:8080/api"</span> | <span class="keywordflow">jq</span>
-</div>
-</div>
-
-会得到如下输出：
-
-<div class="fragment">
-<div class="line">{</div>
-<div class="line">&nbsp;&nbsp;<span class="keywordtype">"key"</span>: <span class="stringliteral">"value"</span>,</div>
-<div class="line">&nbsp;&nbsp;<span class="keywordtype">"message"</span>: <span class="stringliteral">"This is a test API."</span></div>
-<div class="line">}</div>
+<div class="line"><span class="keywordflow">curl</span> <span class="comment">-k</span> <span class="stringliteral">"https://127.0.0.1:8443/"</span></div>
 </div>

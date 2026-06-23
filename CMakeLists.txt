@@ -177,6 +177,7 @@ status("     Eigen3:"               WITH_EIGEN3 THEN "YES (ver ${EIGEN3_VERSION_
 status("     onnxruntime:"          WITH_ONNXRUNTIME THEN "YES (ver ${Ort_VERSION})" ELSE NO)
 status("     apriltag:"             WITH_APRILTAG THEN YES ELSE NO)
 status("     open62541:"            WITH_OPEN62541 THEN "YES (ver ${open62541_VERSION})" ELSE NO)
+status("     OpenSSL:"              WITH_OPENSSL THEN "YES (ver ${OPENSSL_VERSION})" ELSE NO)
 
 # =============================== SDK ===============================
 status("")

@@ -603,6 +603,26 @@ bool Router::RoutePattern::match(std::string_view path, std::unordered_map<std::
 
 namespace async {
 
+Task<std::string> WebStream::read() {
+    if (auto socket = std::get_if<StreamSocket>(&_stream))
+        co_return co_await socket->read();
+    co_return co_await std::get<SSLStream>(_stream).read();
+}
+
+Task<bool> WebStream::write(std::string_view data) {
+    if (auto socket = std::get_if<StreamSocket>(&_stream))
+        co_return co_await socket->write(data);
+    co_return co_await std::get<SSLStream>(_stream).write(data);
+}
+
+void WebStream::close() noexcept {
+    std::visit([](auto &stream) { stream.close(); }, _stream);
+}
+
+bool WebStream::invalid() const noexcept {
+    return std::visit([](const auto &stream) { return stream.invalid(); }, _stream);
+}
+
 Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::string_view url, const std::vector<std::string> &querys,
                                  const std::unordered_map<std::string, std::string> &heads, std::string_view body) {
     Response response{};
@@ -779,7 +799,7 @@ Task<> Webapp::on_sigint() {
     _ctx.get().stop();
 }
 
-Task<> Webapp::handle_client(StreamSocket socket) {
+Task<> Webapp::handle_client(WebStream socket) {
     std::string request_str = co_await socket.read();
     if (request_str.empty())
         co_return;
@@ -850,10 +870,14 @@ Task<> Webapp::handle_client(StreamSocket socket) {
 
 Task<> Webapp::spin() {
     co_spawn(_ctx, &Webapp::on_sigint, this);
-    co_await spinWithoutSigint();
+    co_await legacy_spin_impl();
 }
 
 Task<> Webapp::spinWithoutSigint() {
+    co_await legacy_spin_impl();
+}
+
+Task<> Webapp::legacy_spin_impl() {
     auto acceptor = async::Acceptor(_ctx, Endpoint(ip::tcp::v4(), _port));
     // execute listen callback
     if (_listen)
@@ -866,7 +890,88 @@ Task<> Webapp::spinWithoutSigint() {
             ERROR_("Failed to accept connection");
             continue;
         }
-        co_spawn(_ctx, &Webapp::handle_client, this, std::move(socket));
+        co_spawn(_ctx, &Webapp::handle_client, this, WebStream(std::move(socket)));
+    }
+}
+
+HttpServer::~HttpServer() {
+    if (_running) {
+        stop();
+        _ctx.get().stop();
+    }
+}
+
+Task<> HttpServer::on_sigint() {
+    Signal sig(_ctx, SIGINT);
+    co_await sig.wait();
+    printf("\nReceived interrupt signal, stopping HTTP server...\n");
+    stop();
+    _ctx.get().stop();
+}
+
+Task<> HttpServer::spin() {
+    co_spawn(_ctx, &HttpServer::on_sigint, this);
+    co_await spinWithoutSigint();
+}
+
+Task<> HttpServer::spinWithoutSigint() {
+    auto acceptor = async::Acceptor(_ctx, Endpoint(ip::tcp::v4(), _port));
+    if (_listen)
+        _listen();
+
+    _running.store(true, std::memory_order_release);
+    while (_running.load(std::memory_order_acquire)) {
+        auto socket = co_await acceptor.accept();
+        if (socket.invalid()) {
+            ERROR_("Failed to accept HTTP connection");
+            continue;
+        }
+        co_spawn(_ctx, &Webapp::handle_client, &_app.get(), WebStream(std::move(socket)));
+    }
+}
+
+HttpsServer::~HttpsServer() {
+    if (_running) {
+        stop();
+        _ctx.get().stop();
+    }
+}
+
+Task<> HttpsServer::on_sigint() {
+    Signal sig(_ctx, SIGINT);
+    co_await sig.wait();
+    printf("\nReceived interrupt signal, stopping HTTPS server...\n");
+    stop();
+    _ctx.get().stop();
+}
+
+Task<> HttpsServer::handle_client(StreamSocket socket) {
+    SSLStream stream(std::move(socket), _ssl_ctx);
+    if (!co_await stream.accept()) {
+        WARNING_("TLS handshake failed: %s", stream.lasterr().c_str());
+        co_return;
+    }
+    co_await _app.get().handle_client(WebStream(std::move(stream)));
+}
+
+Task<> HttpsServer::spin() {
+    co_spawn(_ctx, &HttpsServer::on_sigint, this);
+    co_await spinWithoutSigint();
+}
+
+Task<> HttpsServer::spinWithoutSigint() {
+    auto acceptor = async::Acceptor(_ctx, Endpoint(ip::tcp::v4(), _port));
+    if (_listen)
+        _listen();
+
+    _running.store(true, std::memory_order_release);
+    while (_running.load(std::memory_order_acquire)) {
+        auto socket = co_await acceptor.accept();
+        if (socket.invalid()) {
+            ERROR_("Failed to accept HTTPS connection");
+            continue;
+        }
+        co_spawn(_ctx, &HttpsServer::handle_client, this, std::move(socket));
     }
 }
 

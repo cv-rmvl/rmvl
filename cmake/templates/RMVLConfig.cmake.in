@@ -92,6 +92,12 @@ if(WITH_OPENCV)
   endif()
 endif()
 
+# 3rdparty: openssl
+option(WITH_OPENSSL "Enable openssl support" @WITH_OPENSSL@)
+if(WITH_OPENSSL AND NOT TARGET OpenSSL::SSL)
+  find_package(OpenSSL REQUIRED)
+endif()
+
 @RMVL_MODULES_3RD_CONFIGCMAKE@
 # Export configuration
 if(NOT TARGET rmvl_core)
