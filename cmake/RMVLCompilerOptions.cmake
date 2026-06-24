@@ -493,7 +493,7 @@ if(BUILD_PYTHON)
     )
     configure_file(
       "${CMAKE_CURRENT_LIST_DIR}/templates/python/rmvl_init.pyi"
-      "${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.pyi"
+      "${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.base.pyi"
       @ONLY
     )
     if(BUILD_DOCS)

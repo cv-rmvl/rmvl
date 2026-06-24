@@ -97,6 +97,9 @@ add_subdirectory(modules)
 if(BUILD_EXTRA)
   add_subdirectory(extra)
 endif()
+if(BUILD_PYTHON)
+  rmvl_finalize_python_generation()
+endif()
 
 # ----------------------------------------------------------------------------
 #  RMVL Examples

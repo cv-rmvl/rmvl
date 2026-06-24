@@ -154,7 +154,7 @@ def split_parameters(params: str) -> Tuple[List[str], List[str], List[str]]:
     return type_names, param_names, default_values
 
 
-types = {
+BASE_TYPES = {
     "auto": "Any",
     "any": "Any",
     # fundamental types
@@ -177,6 +177,33 @@ types = {
     "Point": "Tuple",
     "Vec": "Tuple",
 }
+types = BASE_TYPES.copy()
+
+
+def load_misc(path: Union[str, None]) -> Union[Dict, None]:
+    """Load miscellaneous binding configuration once per generator process."""
+    if not path:
+        return None
+    with open(path, "r") as file:
+        return json.load(file)
+
+
+def resolve_misc(misc: Union[str, Dict, None]) -> Union[Dict, None]:
+    """Accept both the historical file-path API and preloaded configuration."""
+    return load_misc(misc) if isinstance(misc, str) else misc
+
+
+def write_if_different(path: str, content: str) -> None:
+    """Avoid touching generated files when their contents did not change."""
+    if os.path.exists(path):
+        with open(path, "r") as file:
+            if file.read() == content:
+                return
+    output_dir = os.path.dirname(path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    with open(path, "w") as file:
+        file.write(content)
 
 
 def remove_cvref(s: str) -> str:
@@ -370,7 +397,7 @@ def type_convert(cpp_type: str) -> str:
     return cpp_type
 
 
-def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
+def generate_python_binding(lines: List[str], misc: Union[str, Dict, None]) -> str:
     """
     ### Generate py binding code from C++ header file
     #### Parameters
@@ -379,6 +406,7 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
     `(str)`: generated py binding code
     """
 
+    misc = resolve_misc(misc)
     binding_code: List[str] = []
     # To store functions for overload detection
     class_content: List[str] = []
@@ -501,26 +529,24 @@ def generate_python_binding(lines: List[str], misc: Union[str, None]) -> str:
             mch = re_match("subst", line)
             if mch and misc:
                 alias_str = mch.group(1)
-                with open(misc, "r") as f:
-                    json_content: dict = json.load(f)
-                    if cur_class:
-                        if alias_str not in json_content:
-                            class_content.append(
-                                f'        // No binding information for "{alias_str}"'
-                            )
-                        else:
-                            bind_alias = json_content[alias_str].get("bind", [])
-                            for bind_alias_each in bind_alias:
-                                class_content.append(f"        {bind_alias_each}")
+                if cur_class:
+                    if alias_str not in misc:
+                        class_content.append(
+                            f'        // No binding information for "{alias_str}"'
+                        )
                     else:
-                        if alias_str not in json_content:
-                            binding_code.append(
-                                f'    // No binding information for "{alias_str}"'
-                            )
-                        else:
-                            bind_alias = json_content[alias_str].get("bind", [])
-                            for bind_alias_each in bind_alias:
-                                binding_code.append(f"    {bind_alias_each}")
+                        bind_alias = misc[alias_str].get("bind", [])
+                        for bind_alias_each in bind_alias:
+                            class_content.append(f"        {bind_alias_each}")
+                else:
+                    if alias_str not in misc:
+                        binding_code.append(
+                            f'    // No binding information for "{alias_str}"'
+                        )
+                    else:
+                        bind_alias = misc[alias_str].get("bind", [])
+                        for bind_alias_each in bind_alias:
+                            binding_code.append(f"    {bind_alias_each}")
 
         # Class method with 'RMVL_W[_xxx]' macro
         elif line.startswith("RMVL_W") and cur_class:
@@ -799,7 +825,7 @@ def generate_comment(comments: List[str]) -> List[str]:
 
 
 def generate_pyi(
-    lines: List[str], doc: Union[str, None], misc: Union[str, None]
+    lines: List[str], doc: Union[str, None], misc: Union[str, Dict, None]
 ) -> str:
     """
     ### Generate .pyi file content and documents configurations from C++ header file
@@ -810,6 +836,7 @@ def generate_pyi(
     `(str)`: generated .pyi file content
     """
 
+    misc = resolve_misc(misc)
     pyi_content: List[str] = []
     # To store current comment
     in_comment = False
@@ -943,26 +970,24 @@ def generate_pyi(
             mch = re_match("subst", line)
             if mch and misc:
                 alias_str = mch.group(1)
-                with open(misc, "r") as f:
-                    json_content: dict[str, dict] = json.load(f)
-                    if cur_class:
-                        if alias_str not in json_content:
-                            class_content.append(
-                                f'    # No binding information for "{alias_str}"'
-                            )
-                        else:
-                            bind_alias = json_content[alias_str].get("pyi", [])
-                            for bind_alias_each in bind_alias:
-                                class_content.append(f"    {bind_alias_each}")
+                if cur_class:
+                    if alias_str not in misc:
+                        class_content.append(
+                            f'    # No binding information for "{alias_str}"'
+                        )
                     else:
-                        if alias_str not in json_content:
-                            pyi_content.append(
-                                f'# No binding information for "{alias_str}"'
-                            )
-                        else:
-                            bind_alias = json_content[alias_str].get("pyi", [])
-                            for bind_alias_each in bind_alias:
-                                pyi_content.append(f"{bind_alias_each}")
+                        bind_alias = misc[alias_str].get("pyi", [])
+                        for bind_alias_each in bind_alias:
+                            class_content.append(f"    {bind_alias_each}")
+                else:
+                    if alias_str not in misc:
+                        pyi_content.append(
+                            f'# No binding information for "{alias_str}"'
+                        )
+                    else:
+                        bind_alias = misc[alias_str].get("pyi", [])
+                        for bind_alias_each in bind_alias:
+                            pyi_content.append(f"{bind_alias_each}")
         # Class method with 'RMVL_W[_xxx]' macro
         elif line.startswith("RMVL_W") and cur_class:
             # Constructor
@@ -1117,22 +1142,23 @@ def test():
     file = "modules/algorithm/include/rmvl/algorithm/numcal.hpp"
     with open(file, "r") as file:
         lines = file.readlines()
-    print(generate_pyi(lines))
+    print(generate_pyi(lines, None, None))
     exit()
 
 
 if __name__ == "__main__":
-    # test()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "input",
+        nargs="+",
         type=str,
-        help="Input file path containing C++ header file content",
+        help="Input C++ headers or typing fragments",
     )
     parser.add_argument(
         "mode",
         type=str,
-        help="'bind' for python binding code, 'pyi' for python interface file and doc config file",
+        choices=("bind", "pyi", "all", "docs", "aggregate"),
+        help="Content to generate",
     )
     parser.add_argument(
         "--doc", type=str, help="path of the documents configuration file"
@@ -1140,16 +1166,57 @@ if __name__ == "__main__":
     parser.add_argument(
         "--misc", type=str, help="path of the miscellaneous configuration file"
     )
+    parser.add_argument("--bind-output", type=str, help="generated binding fragment")
+    parser.add_argument("--pyi-output", type=str, help="generated typing file")
+    parser.add_argument("--base", type=str, help="base typing file for aggregation")
+    parser.add_argument("--module-name", type=str, help="module heading for typing output")
 
     args = parser.parse_args()
-    file = args.input
-    with open(file, "r") as file:
-        lines = file.readlines()
+    if args.mode == "aggregate":
+        if not args.base or not args.pyi_output:
+            parser.error("aggregate mode requires --base and --pyi-output")
+        with open(args.base, "r") as file:
+            content = file.read()
+        for path in args.input:
+            with open(path, "r") as file:
+                content += file.read()
+        write_if_different(args.pyi_output, content)
+        raise SystemExit(0)
 
-    if args.mode == "bind":
-        binding_code = generate_python_binding(lines, args.misc)
-    elif args.mode == "pyi":
-        binding_code = generate_pyi(lines, args.doc, args.misc)
-    else:
-        raise ValueError("\033[31;1mInvalid mode\033[0m. Use 'bind' or 'pyi'")
-    print(binding_code)
+    header_lines = []
+    for path in args.input:
+        with open(path, "r") as file:
+            header_lines.append(file.readlines())
+    misc = load_misc(args.misc)
+
+    if args.mode in ("bind", "all"):
+        binding_chunks = []
+        for lines in header_lines:
+            types.clear()
+            types.update(BASE_TYPES)
+            binding_chunks.append(generate_python_binding(lines, misc))
+        binding_code = "\n".join(binding_chunks)
+        if args.bind_output:
+            write_if_different(args.bind_output, binding_code + "\n")
+        elif args.mode == "bind":
+            print(binding_code)
+
+    if args.mode in ("pyi", "all", "docs"):
+        pyi_chunks = []
+        for lines in header_lines:
+            types.clear()
+            types.update(BASE_TYPES)
+            pyi_chunks.append(generate_pyi(lines, args.doc, misc))
+        pyi_code = "\n".join(pyi_chunks)
+        if args.module_name:
+            pyi_code = (
+                "# ========== DO NOT MODIFY THIS FILE ! ==========\n"
+                f"# {args.module_name} module\n"
+                "# ===============================================\n"
+                f"{pyi_code}\n"
+            )
+        if args.mode != "docs":
+            if args.pyi_output:
+                write_if_different(args.pyi_output, pyi_code + "\n")
+            elif args.mode == "pyi":
+                print(pyi_code)

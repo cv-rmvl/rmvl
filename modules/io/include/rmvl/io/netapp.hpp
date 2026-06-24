@@ -229,14 +229,14 @@ using ResponseMiddleware = std::function<void(const Request &, Response &)>;
  * @brief 【中间件】静态路由，处理对指定 URL 路径的静态文件请求
  *
  * @param[in] url URL 路径前缀，例如 `/static`
- * @param[in] root 静态文件根目录，例如 `./public`
+ * @param[in] root 静态文件根目录，例如 `./public/`
  *
  * @code {.cpp}
  * // 在 Web 应用程序框架中使用
  * auto app = async::Webapp(io_context);
- * app.use(statics("/static", "./public"));
+ * app.use(statics("/static", "./public/"));
  * @endcode
- * @note 静态路由仅在未处理请求时有效，若有对应的路由表达成匹配，则静态路由中间件不会被调用
+ * @warning 静态路由仅在未处理请求时有效，若有对应的路由表匹配成功，则静态路由中间件不会被调用
  */
 RMVL_EXPORTS_W ResponseMiddleware statics(std::string_view url, std::string_view root);
 
@@ -573,6 +573,20 @@ inline Task<Response> del(IOContext &io_context, std::string_view url, const std
     co_return co_await request(io_context, HTTPMethod::Delete, url, querys, heads);
 }
 
+/**
+ * @brief 发出异步 OPTIONS 请求
+ *
+ * @param[in] io_context 异步 I/O 执行上下文
+ * @param[in] url 请求的 URL
+ * @param[in] querys 可选的 URL 参数列表
+ * @param[in] heads 可选的请求头列表
+ * @return rm::async::Task<Response>
+ */
+inline Task<Response> options(IOContext &io_context, std::string_view url, const std::vector<std::string> &querys = {},
+                              const std::unordered_map<std::string, std::string> &heads = {}) {
+    co_return co_await request(io_context, HTTPMethod::Options, url, querys, heads);
+}
+
 //! @} io_net
 
 } // namespace requests
@@ -729,11 +743,13 @@ public:
     //! 创建 HTTP 服务器
     explicit HttpServer(Webapp &app) : _app(app), _ctx(app._ctx) {}
 
+    //! @cond
     HttpServer(const HttpServer &) = delete;
     HttpServer &operator=(const HttpServer &) = delete;
     HttpServer(HttpServer &&) noexcept = delete;
     HttpServer &operator=(HttpServer &&) noexcept = delete;
     ~HttpServer();
+    //! @endcond
 
     //! 监听指定端口
     void listen(uint16_t port, std::function<void()> callback = nullptr) {
@@ -773,11 +789,13 @@ public:
     //! 创建 HTTPS 服务器
     HttpsServer(Webapp &app, SSLContext &ssl_context) : _app(app), _ctx(app._ctx), _ssl_ctx(ssl_context) {}
 
+    //! @cond
     HttpsServer(const HttpsServer &) = delete;
     HttpsServer &operator=(const HttpsServer &) = delete;
     HttpsServer(HttpsServer &&) noexcept = delete;
     HttpsServer &operator=(HttpsServer &&) noexcept = delete;
     ~HttpsServer();
+    //! @endcond
 
     //! 监听指定端口
     void listen(uint16_t port, std::function<void()> callback = nullptr) {
