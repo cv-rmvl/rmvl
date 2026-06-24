@@ -24,10 +24,14 @@ namespace rm {
 //! @{
 
 #ifdef _WIN32
+//! Socket 文件描述符类型
 using SocketFd = SOCKET;
+//! 无效的 Socket 文件描述符
 constexpr SocketFd INVALID_SOCKET_FD = INVALID_SOCKET;
 #else
+//! Socket 文件描述符类型
 using SocketFd = int;
+//! 无效的 Socket 文件描述符
 constexpr SocketFd INVALID_SOCKET_FD = -1;
 #endif
 

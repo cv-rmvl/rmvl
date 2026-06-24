@@ -1,38 +1,10 @@
 # =====================================================================================
 # Python 代码生成模块，包含以下功能：
 #
-#   1. _pygen: Python 内容生成
-#   2. rmvl_generate_python: 根据给定目标生成 Python 绑定代码与接口文件
+#   1. rmvl_generate_python: 根据给定目标生成 Python 绑定代码与接口文件
+#   2. rmvl_finalize_python_generation: 聚合 Python 接口与文档配置
 #
 # =====================================================================================
-
-# ----------------------------------------------------------------------------
-#   Python 内容生成
-#   用法:
-#     _pygen(<headers> <mode> <outputs>)
-#   示例:
-#     _pygen("${pybind_headers}" "bind" RMVL_PYBIND_CONTENTS)
-#     _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS [DOC_PATH <file path>])
-# ----------------------------------------------------------------------------
-function(_pygen headers mode outputs)
-  cmake_parse_arguments("PYDOC" "" "DOC_PATH" "" ${ARGN})
-  set(pydoc_path "")
-  if(PYDOC_DOC_PATH)
-    set(pydoc_path "--doc=${PYDOC_DOC_PATH}")
-  endif()
-  set(misc_path "")
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/misc/python.json")
-    set(misc_path "--misc=${CMAKE_CURRENT_SOURCE_DIR}/misc/python.json")
-  endif()
-  foreach(header ${headers})
-    execute_process(
-      COMMAND ${RMVL_PYTHON_EXECUTABLE} ${pybind_ws}/rmvl_pygen.py ${header} ${mode} ${pydoc_path} ${misc_path}
-      OUTPUT_VARIABLE py_output
-    )
-    set(ret_outputs "${ret_outputs}\n${py_output}")
-  endforeach()
-  set(${outputs} "${ret_outputs}" PARENT_SCOPE)
-endfunction()
 
 # ----------------------------------------------------------------------------
 #   根据给定目标生成 Python 绑定代码与接口文件
@@ -64,6 +36,7 @@ function(rmvl_generate_python _name)
 
   set(pybind_ws "${PROJECT_SOURCE_DIR}/cmake/templates/python")
   set(pybind_inc "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  set(pygen_script "${pybind_ws}/rmvl_pygen.py")
 
   # obtain the header files
   unset(pybind_headers)
@@ -97,15 +70,55 @@ function(rmvl_generate_python _name)
     set(PREBIND_CONTENTS "////////// No prebind contents //////////")
   endif()
   
-  # generate wrapper code for python
+  # Configure a stable wrapper and generate its contents during the build.
   set(RMVL_PYBIND_NAME "rm_${_name}_py")
-  _pygen("${pybind_headers}" "bind" RMVL_PYBIND_CONTENTS)
+  set(pybind_fragment "${RMVL_PYBIND_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.inc")
+  set(pyi_fragment "${RMVL_PYTHON_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.typing.inc")
+  set(RMVL_PYBIND_CONTENTS "#include \"${RMVL_PYBIND_NAME}.inc\"")
   configure_file(
     ${pybind_ws}/rmvl_pybind.cpp.in
     ${RMVL_PYBIND_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.cpp
     @ONLY
   )
-  pybind11_add_module(${RMVL_PYBIND_NAME} ${RMVL_PYBIND_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.cpp)
+
+  set(pygen_misc_args "")
+  set(pygen_misc_depends "")
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/misc/python.json")
+    set(pygen_misc "${CMAKE_CURRENT_SOURCE_DIR}/misc/python.json")
+    list(APPEND pygen_misc_args "--misc=${pygen_misc}")
+    list(APPEND pygen_misc_depends "${pygen_misc}")
+  endif()
+  add_custom_command(
+    OUTPUT "${pybind_fragment}" "${pyi_fragment}"
+    COMMAND ${RMVL_PYTHON_EXECUTABLE} "${pygen_script}"
+            ${pybind_headers} all
+            "--bind-output=${pybind_fragment}"
+            "--pyi-output=${pyi_fragment}"
+            "--module-name=${_name}"
+            ${pygen_misc_args}
+    DEPENDS ${pybind_headers} "${pygen_script}" ${pygen_misc_depends}
+    COMMENT "Generating Python bindings and typing for ${_name}"
+    VERBATIM
+  )
+  set_source_files_properties(
+    "${pybind_fragment}" "${pyi_fragment}"
+    PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE
+  )
+  set(pygen_target "${RMVL_PYBIND_NAME}_codegen")
+  add_custom_target(
+    ${pygen_target}
+    DEPENDS "${pybind_fragment}" "${pyi_fragment}"
+  )
+  pybind11_add_module(
+    ${RMVL_PYBIND_NAME}
+    ${RMVL_PYBIND_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.cpp
+    "${pybind_fragment}"
+  )
+  add_dependencies(${RMVL_PYBIND_NAME} ${pygen_target})
+
+  set_property(GLOBAL APPEND PROPERTY RMVL_PYTHON_TYPING_FRAGMENTS "${pyi_fragment}")
+  set_property(GLOBAL APPEND PROPERTY RMVL_PYTHON_CODEGEN_TARGETS "${pygen_target}")
+  set_property(GLOBAL APPEND PROPERTY RMVL_PYTHON_HEADERS ${pybind_headers})
 
   add_custom_target(${RMVL_PYBIND_NAME}_msg ALL
     COMMENT "Python bindings for '${_name}' generated."
@@ -127,17 +140,8 @@ function(rmvl_generate_python _name)
     LIBRARY_OUTPUT_DIRECTORY ${RMVL_PYTHON_OUTPUT_DIR}
   )
   
-  # generate python interface file
-  if(BUILD_DOCS)
-    _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS DOC_PATH ${RMVL_PYDOC_OUTPUT_DIR})
-  else()
-    _pygen("${pybind_headers}" "pyi" RMVL_PYI_CONTENTS)
-  endif()
-
   # generate __init__.py, rmvl_typing.pyi and submodules *.pyi file content
   file(APPEND ${RMVL_PYTHON_OUTPUT_DIR}/__init__.py "from .${RMVL_PYBIND_NAME} import *\n")
-  set(rmvl_typing_content "# ========== DO NOT MODIFY THIS FILE ! ==========\n# ${_name} module\n# ===============================================\n${RMVL_PYI_CONTENTS}\n")
-  file(APPEND ${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.pyi "${rmvl_typing_content}")
   set(pyi_content "# DO NOT MODIFY THIS FILE !\nfrom .rmvl_typing import *")
   file(WRITE ${RMVL_PYTHON_OUTPUT_DIR}/${RMVL_PYBIND_NAME}.pyi "${pyi_content}")
 
@@ -151,4 +155,46 @@ function(rmvl_generate_python _name)
     LIBRARY DESTINATION ${RMVL_PYTHON_INSTALL_PATH}
   )
   message(STATUS "${msg_prefix} - done")
+endfunction()
+
+# ----------------------------------------------------------------------------
+#   Finalize generated Python files after all modules have been visited.
+# ----------------------------------------------------------------------------
+function(rmvl_finalize_python_generation)
+  get_property(pyi_fragments GLOBAL PROPERTY RMVL_PYTHON_TYPING_FRAGMENTS)
+  get_property(pygen_targets GLOBAL PROPERTY RMVL_PYTHON_CODEGEN_TARGETS)
+  if(NOT pyi_fragments)
+    return()
+  endif()
+
+  set(pygen_script "${PROJECT_SOURCE_DIR}/cmake/templates/python/rmvl_pygen.py")
+  set(pyi_base "${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.base.pyi")
+  set(pyi_output "${RMVL_PYTHON_OUTPUT_DIR}/rmvl_typing.pyi")
+  # CMake 3.16 Makefiles cannot consume a generated file rule from another
+  # directory. Depend on per-module codegen targets instead of the fragments.
+  add_custom_target(rmvl_python_typing ALL
+    COMMAND ${RMVL_PYTHON_EXECUTABLE} "${pygen_script}"
+            ${pyi_fragments} aggregate
+            "--base=${pyi_base}"
+            "--pyi-output=${pyi_output}"
+    DEPENDS "${pyi_base}" "${pygen_script}"
+    BYPRODUCTS "${pyi_output}"
+    COMMENT "Aggregating Python typing declarations"
+    VERBATIM
+  )
+  add_dependencies(rmvl_python_typing ${pygen_targets})
+
+  if(BUILD_DOCS)
+    get_property(pybind_headers GLOBAL PROPERTY RMVL_PYTHON_HEADERS)
+    list(REMOVE_DUPLICATES pybind_headers)
+    execute_process(
+      COMMAND ${RMVL_PYTHON_EXECUTABLE} "${pygen_script}"
+              ${pybind_headers} docs "--doc=${RMVL_PYDOC_OUTPUT_DIR}"
+      RESULT_VARIABLE pygen_result
+      ERROR_VARIABLE pygen_error
+    )
+    if(NOT pygen_result EQUAL 0)
+      message(FATAL_ERROR "Failed to generate Python documentation configuration: ${pygen_error}")
+    endif()
+  endif()
 endfunction()

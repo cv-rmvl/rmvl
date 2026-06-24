@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <functional>
-
 #include "socket.hpp"
 
 namespace rm {
@@ -47,13 +45,14 @@ class SSLContext {
 public:
     //! 创建 TLS 上下文
     explicit SSLContext(SSLMode mode = SSLMode::Client);
+
+    //! @cond
     SSLContext(const SSLContext &) = delete;
     SSLContext(SSLContext &&) noexcept = default;
-
     SSLContext &operator=(const SSLContext &) = delete;
     SSLContext &operator=(SSLContext &&) noexcept = default;
-
     ~SSLContext() = default;
+    //! @endcond
 
     //! 当前构建是否启用了 OpenSSL
     static bool available() noexcept;
@@ -121,13 +120,14 @@ class SSLStream {
 public:
     //! 由已有 TCP 流式 Socket 创建 TLS 流
     SSLStream(StreamSocket socket, SSLContext &ctx);
+
+    //! @cond
     SSLStream(const SSLStream &) = delete;
     SSLStream(SSLStream &&) noexcept = default;
-
     SSLStream &operator=(const SSLStream &) = delete;
     SSLStream &operator=(SSLStream &&) noexcept = default;
-
     ~SSLStream();
+    //! @endcond
 
     //! TLS 流是否失效
     [[nodiscard]] bool invalid() const noexcept { return _ssl == nullptr || _socket.invalid(); }
@@ -213,13 +213,14 @@ class SSLStream : public ::rm::SSLStream {
 public:
     //! 由异步 TCP 流式 Socket 创建异步 TLS 流
     SSLStream(StreamSocket socket, SSLContext &ctx);
+
+    //! @cond
     SSLStream(const SSLStream &) = delete;
     SSLStream(SSLStream &&) noexcept = default;
-
     SSLStream &operator=(const SSLStream &) = delete;
     SSLStream &operator=(SSLStream &&) noexcept = default;
-
     ~SSLStream() = default;
+    //! @endcond
 
     //! 获取最近一次错误信息
     [[nodiscard]] std::string lasterr() const { return _lasterr.empty() ? ::rm::SSLStream::lasterr() : _lasterr; }
