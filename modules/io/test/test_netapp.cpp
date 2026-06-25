@@ -14,7 +14,16 @@
 #include "rmvl/io/netapp.hpp"
 
 #if __cplusplus >= 202002L
+#include <fstream>
 #include <thread>
+#ifdef _WIN32
+#include <direct.h>
+#include <process.h>
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 #endif
 
 using namespace rm;
@@ -63,6 +72,36 @@ TEST(IO_netapp, basic_http) {
 #if __cplusplus >= 202002L
 
 using namespace std::literals::chrono_literals;
+
+static int make_dir(const std::string &path) {
+#ifdef _WIN32
+    return _mkdir(path.c_str());
+#else
+    return mkdir(path.c_str(), 0777);
+#endif
+}
+
+static int remove_dir(const std::string &path) {
+#ifdef _WIN32
+    return _rmdir(path.c_str());
+#else
+    return rmdir(path.c_str());
+#endif
+}
+
+static int process_id() {
+#ifdef _WIN32
+    return _getpid();
+#else
+    return getpid();
+#endif
+}
+
+static std::string join_path(const std::string &lhs, const std::string &rhs) {
+    if (lhs.empty() || lhs.back() == '/' || lhs.back() == '\\')
+        return lhs + rhs;
+    return lhs + "/" + rhs;
+}
 
 TEST(IO_netapp, webapp_basic) {
     async::IOContext io_context{};
@@ -208,6 +247,84 @@ TEST(IO_netapp, webapp_cors_options) {
         io_context.stop();
     });
     io_context.run();
+}
+
+TEST(IO_netapp, webapp_static_directory_index) {
+    const char *tmp = std::getenv(
+#ifdef _WIN32
+        "TEMP"
+#else
+        "TMPDIR"
+#endif
+    );
+    std::string root = join_path(tmp ? tmp :
+#ifdef _WIN32
+                                     "."
+#else
+                                     "/tmp"
+#endif
+                                 ,
+                                 "rmvl_static_index_test_" + std::to_string(process_id()));
+    std::string docs = join_path(root, "docs");
+    std::string empty = join_path(root, "empty");
+
+    std::remove(join_path(root, "index.html").c_str());
+    std::remove(join_path(docs, "index.html").c_str());
+    remove_dir(docs);
+    remove_dir(empty);
+    remove_dir(root);
+
+    make_dir(root);
+    make_dir(docs);
+    make_dir(empty);
+    {
+        std::ofstream(join_path(root, "index.html")) << "root index";
+        std::ofstream(join_path(docs, "index.html")) << "docs index";
+    }
+
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+    async::HttpServer server(app);
+    std::atomic_bool ready{}; // 仅用于保证请求发生在服务器启动之后
+
+    app.use(statics("/", root));
+    server.listen(10806, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpServer::spin, &server);
+
+    auto thrd = std::jthread([&]() {
+        ready.wait(false, std::memory_order_acquire);
+
+        auto res = requests::get("http://127.0.0.1:10806/");
+        EXPECT_EQ(res.state, 200);
+        EXPECT_EQ(res.body, "root index");
+
+        res = requests::get("http://127.0.0.1:10806/docs/");
+        EXPECT_EQ(res.state, 200);
+        EXPECT_EQ(res.body, "docs index");
+
+        res = requests::get("http://127.0.0.1:10806/docs");
+        EXPECT_EQ(res.state, 301);
+        EXPECT_EQ(res.heads["Location"], "/docs/");
+        EXPECT_EQ(res.heads["Content-Length"], "0");
+        EXPECT_TRUE(res.body.empty());
+
+        res = requests::get("http://127.0.0.1:10806/empty/");
+        EXPECT_EQ(res.state, 404);
+        EXPECT_EQ(res.heads["Content-Length"], "0");
+        EXPECT_TRUE(res.body.empty());
+
+        server.stop();
+        io_context.stop();
+    });
+    io_context.run();
+    std::remove(join_path(root, "index.html").c_str());
+    std::remove(join_path(docs, "index.html").c_str());
+    remove_dir(docs);
+    remove_dir(empty);
+    remove_dir(root);
 }
 
 TEST(IO_netapp, webapp_https) {
