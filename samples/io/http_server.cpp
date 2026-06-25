@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     app.use(statics("/", "./"));
 
     server.listen(port, [=]() {
-        printf("HTTP Server is listening on %d\n", port);
+        printf("服务器运行至 \033[32mhttp://localhost:%d\033[0m\n", port);
     });
 
     co_spawn(io_context, &async::HttpServer::spin, &server);

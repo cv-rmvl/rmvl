@@ -22,6 +22,8 @@
 #include <unistd.h>
 #endif
 
+#include <sys/stat.h> // Windows CRT also supports this header
+
 #include <chrono>
 #include <csignal>
 #include <fstream>
@@ -77,6 +79,26 @@ static std::string get_date_str(std::chrono::system_clock::time_point date) {
     char buffer[64]{};
     std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", &tm);
     return buffer;
+}
+
+static bool is_regular_file(const std::string &path) {
+#ifdef _WIN32
+    struct _stat st {};
+    return _stat(path.c_str(), &st) == 0 && (st.st_mode & _S_IFREG);
+#else
+    struct stat st {};
+    return stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
+#endif
+}
+
+static bool is_directory(const std::string &path) {
+#ifdef _WIN32
+    struct _stat st {};
+    return _stat(path.c_str(), &st) == 0 && (st.st_mode & _S_IFDIR);
+#else
+    struct stat st {};
+    return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+#endif
 }
 
 ////////////////////////////// 请求解析、生成 //////////////////////////////
@@ -301,19 +323,34 @@ Response &Response::send(std::string_view str) {
 }
 
 Response &Response::sendFile(std::string_view file) {
-    std::ifstream ifs(file.data(), std::ios::binary);
-    if (!ifs) {
+    auto not_found = [this]() -> Response & {
         state = 404;
         message = "Not Found";
+        body.clear();
+        heads["Content-Length"] = "0";
+        heads["Content-Type"] = "text/html; charset=utf-8";
         return *this;
-    }
+    };
+
+    std::string file_path(file);
+    if (!is_regular_file(file_path))
+        return not_found();
+
+    std::ifstream ifs(file_path, std::ios::binary);
+    if (!ifs)
+        return not_found();
+
     ifs.seekg(0, std::ios::end);
     auto file_size = ifs.tellg();
+    if (file_size < 0)
+        return not_found();
+
     ifs.seekg(0, std::ios::beg);
-    body.resize(file_size);
-    ifs.read(body.data(), file_size);
+    body.resize(static_cast<std::size_t>(file_size));
+    if (!body.empty())
+        ifs.read(body.data(), file_size);
     heads["Content-Length"] = std::to_string(body.size());
-    auto ext = file.substr(file.find_last_of('.') + 1);
+    auto ext = std::string_view(file_path).substr(file_path.find_last_of('.') + 1);
     if (ext == "js")
         heads["Content-Type"] = "application/javascript; charset=utf-8";
     else if (ext == "css")
@@ -352,14 +389,28 @@ ResponseMiddleware statics(std::string_view url_path, std::string_view root) {
         // 检查请求 URI 是否以指定的 url_path 开头
         if (req.uri.find(url_path) == 0) {
             std::string relative_path = std::string(req.uri.substr(url_path.size()));
+            while (!relative_path.empty() && relative_path.front() == '/')
+                relative_path.erase(0, 1);
             if (relative_path.empty())
                 relative_path = "index.html";
-            std::string file_path = root + relative_path;
 
-            if (file_path.find("..") != std::string::npos) {
+            if (relative_path.find("..") != std::string::npos) {
                 res.state = 403;
                 res.message = "Forbidden";
                 return;
+            }
+            std::string file_path = root;
+            if (!file_path.empty() && file_path.back() != '/' && file_path.back() != '\\')
+                file_path += '/';
+            file_path += relative_path;
+            if (is_directory(file_path)) {
+                if (req.uri.empty() || req.uri.back() != '/') {
+                    res.redirect(301, req.uri + "/");
+                    return;
+                }
+                if (!file_path.empty() && file_path.back() != '/' && file_path.back() != '\\')
+                    file_path += '/';
+                file_path += "index.html";
             }
             std::string_view file_path_view(file_path);
             auto file_path_size = file_path_view.size();
@@ -863,9 +914,11 @@ Task<> Webapp::handle_client(WebStream socket) {
         DEBUG_ERROR_("%s %s failed, execute bad_request", get_str_from(req.method), req.uri.c_str());
         bad_request(req, res);
     }
+    res.heads["Connection"] = "close";
     auto res_str = res.generate();
     if (!co_await socket.write(res_str))
         printf("Failed to send response\n");
+    socket.close();
 }
 
 Task<> Webapp::spin() {
