@@ -331,11 +331,138 @@ static std::pair<std::valarray<double>, double> fmincon_exterior(FuncNd func, co
     return fminunc(farg, x0, options);
 }
 
+// 序列二次规划：BFGS 近似 Hessian，活动集求解线性化约束 QP
+static std::pair<std::valarray<double>, double> fmincon_sqp(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options) {
+#ifdef HAVE_OPENCV
+    const int n = static_cast<int>(x0.size());
+    std::valarray<double> x{x0};
+    cv::Mat H = cv::Mat::eye(n, n, CV_64FC1);
+    const double active_tol = std::sqrt(options.tol);
+
+    auto violation = [&](const std::valarray<double> &at) {
+        double ret{};
+        if (ceq != nullptr)
+            for (double v : ceq(at))
+                ret += std::abs(v);
+        if (c != nullptr)
+            for (double v : c(at))
+                ret += std::max(v, 0.0);
+        return ret;
+    };
+    // Exact penalty merit function used by the globalization line search.
+    constexpr double penalty = 100.0;
+    auto merit = [&](const std::valarray<double> &at) { return func(at) + penalty * violation(at); };
+
+    for (int iter = 0; iter < options.max_iter; ++iter) {
+        const auto g = grad(func, x, options.diff_mode, options.dx);
+        const auto hv = ceq != nullptr ? ceq(x) : std::valarray<double>{};
+        const auto cval = c != nullptr ? c(x) : std::valarray<double>{};
+        const cv::Mat Jh = ceq != nullptr ? jacobian(ceq, x, options.diff_mode, options.dx) : cv::Mat(0, n, CV_64FC1);
+        const cv::Mat Jc = c != nullptr ? jacobian(c, x, options.diff_mode, options.dx) : cv::Mat(0, n, CV_64FC1);
+
+        std::vector<int> active;
+        for (int i = 0; i < static_cast<int>(cval.size()); ++i)
+            if (cval[static_cast<std::size_t>(i)] >= -active_tol)
+                active.push_back(i);
+
+        cv::Mat step, multipliers;
+        // Add constraints violated by the QP step until its linearization is feasible.
+        while (true) {
+            const int m_eq = Jh.rows, m = m_eq + static_cast<int>(active.size());
+            cv::Mat K = cv::Mat::zeros(n + m, n + m, CV_64FC1);
+            H.copyTo(K(cv::Rect(0, 0, n, n)));
+            cv::Mat rhs = cv::Mat::zeros(n + m, 1, CV_64FC1);
+            for (int i = 0; i < n; ++i)
+                rhs.at<double>(i) = -g[static_cast<std::size_t>(i)];
+            for (int i = 0; i < m_eq; ++i) {
+                rhs.at<double>(n + i) = -hv[static_cast<std::size_t>(i)];
+                for (int j = 0; j < n; ++j)
+                    K.at<double>(n + i, j) = K.at<double>(j, n + i) = Jh.at<double>(i, j);
+            }
+            for (int k = 0; k < static_cast<int>(active.size()); ++k) {
+                const int row = active[static_cast<std::size_t>(k)], ki = n + m_eq + k;
+                rhs.at<double>(ki) = -cval[static_cast<std::size_t>(row)];
+                for (int j = 0; j < n; ++j)
+                    K.at<double>(ki, j) = K.at<double>(j, ki) = Jc.at<double>(row, j);
+            }
+            cv::Mat solution;
+            if (!cv::solve(K, rhs, solution, cv::DECOMP_SVD))
+                break;
+            step = solution.rowRange(0, n).clone();
+            multipliers = solution.rowRange(n, n + m).clone();
+
+            // A negative multiplier means that an active inequality blocks a
+            // descent direction into the feasible region, so release it.
+            int remove = -1;
+            double most_negative = -options.tol;
+            for (int k = 0; k < static_cast<int>(active.size()); ++k) {
+                const double lambda = multipliers.at<double>(m_eq + k);
+                if (lambda < most_negative)
+                    most_negative = lambda, remove = k;
+            }
+            if (remove >= 0) {
+                active.erase(active.begin() + remove);
+                continue;
+            }
+
+            int add = -1;
+            double worst = options.tol;
+            for (int i = 0; i < Jc.rows; ++i) {
+                if (std::find(active.begin(), active.end(), i) != active.end())
+                    continue;
+                const double v = cval[static_cast<std::size_t>(i)] + Jc.row(i).dot(step.t());
+                if (v > worst)
+                    worst = v, add = i;
+            }
+            if (add < 0)
+                break;
+            active.push_back(add);
+        }
+        if (step.empty())
+            break;
+
+        std::valarray<double> p(static_cast<std::size_t>(n));
+        for (int i = 0; i < n; ++i)
+            p[static_cast<std::size_t>(i)] = step.at<double>(i);
+        if (normL2(p) < options.tol && violation(x) < options.tol)
+            break;
+
+        const double phi0 = merit(x);
+        double alpha = 1.0;
+        std::valarray<double> xnext = x + alpha * p;
+        while (alpha > 1e-8 && merit(xnext) > phi0 - 1e-4 * alpha * normL2(p) * normL2(p)) {
+            alpha *= 0.5;
+            xnext = x + alpha * p;
+        }
+
+        const auto gnext = grad(func, xnext, options.diff_mode, options.dx);
+        const std::valarray<double> s = xnext - x, y = gnext - g;
+        cv::Mat sm(n, 1, CV_64FC1), ym(n, 1, CV_64FC1);
+        for (int i = 0; i < n; ++i)
+            sm.at<double>(i) = s[static_cast<std::size_t>(i)], ym.at<double>(i) = y[static_cast<std::size_t>(i)];
+        const double ys = ym.dot(sm), sHs = sm.dot(H * sm);
+        if (ys > 1e-12 && sHs > 1e-12)
+            H += ym * ym.t() / ys - H * sm * sm.t() * H / sHs;
+        else
+            H = cv::Mat::eye(n, n, CV_64FC1);
+        x = std::move(xnext);
+        if (normL2(s) < options.tol && violation(x) < options.tol)
+            break;
+    }
+    return {x, func(x)};
+#else
+    RMVL_Error(RMVL_StsBadFunc, "SQP method requires OpenCV and Eigen3, please recompile RMVL.");
+    return {};
+#endif
+}
+
 std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options) {
     RMVL_DbgAssert(x0.size() > 0);
 
     if (options.cons_mode == ConsMode::Lagrange)
         return fmincon_lagrange(func, x0, ceq, options);
+    else if (options.cons_mode == ConsMode::SQP)
+        return fmincon_sqp(func, x0, c, ceq, options);
     else
         return fmincon_exterior(func, x0, c, ceq, options);
 }

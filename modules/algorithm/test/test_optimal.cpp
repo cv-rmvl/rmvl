@@ -100,6 +100,37 @@ TEST(Algorithm_cal, optimal_fmincon_lagrange) {
     EXPECT_NEAR(fval, 12, 1e-4);
 }
 
+TEST(Algorithm_cal, optimal_fmincon_sqp_equation_con) {
+    rm::OptimalOptions options;
+    options.cons_mode = rm::ConsMode::SQP;
+    options.tol = 1e-7;
+    auto [x, fval] = rm::fmincon(quadratic, {0, 0}, {}, ceq, options);
+    EXPECT_NEAR(x[0], 6, 1e-4);
+    EXPECT_NEAR(x[1], 4, 1e-4);
+    EXPECT_NEAR(fval, 12, 1e-4);
+}
+
+TEST(Algorithm_cal, optimal_fmincon_sqp_inequality_con) {
+    rm::OptimalOptions options;
+    options.cons_mode = rm::ConsMode::SQP;
+    options.tol = 1e-7;
+    auto [x, fval] = rm::fmincon(quadratic, {0, 0}, cle, {}, options);
+    EXPECT_NEAR(x[0], 8, 1e-4);
+    EXPECT_NEAR(x[1], 6, 1e-4);
+    EXPECT_NEAR(fval, 8, 1e-4);
+}
+
+TEST(Algorithm_cal, optimal_fmincon_sqp_active_inequality_con) {
+    rm::OptimalOptions options;
+    options.cons_mode = rm::ConsMode::SQP;
+    options.tol = 1e-7;
+    rm::FuncNds c = [](const std::valarray<double> &x) { return std::valarray<double>{x[0] + x[1] - 10}; };
+    auto [x, fval] = rm::fmincon(quadratic, {0, 0}, c, {}, options);
+    EXPECT_NEAR(x[0], 6, 1e-4);
+    EXPECT_NEAR(x[1], 4, 1e-4);
+    EXPECT_NEAR(fval, 12, 1e-4);
+}
+
 static inline std::valarray<double> lsq_linear(const std::valarray<double> &x) { return {x[0] + x[1] - 6,
                                                                                          x[0] - x[1] - 4}; }
 

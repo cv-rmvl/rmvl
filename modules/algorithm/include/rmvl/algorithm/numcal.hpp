@@ -316,6 +316,7 @@ enum class FminMode : uint8_t {
 enum class ConsMode : uint8_t {
     Exterior, //!< 外罚函数法
     Lagrange, //!< 拉格朗日乘子法（仅支持等式约束）
+    SQP,      //!< 序列二次规划法 \cite sqpnp_terzakis20 \cite sqp_nocedal99
 };
 
 //! 最小二乘求解模式
@@ -398,6 +399,7 @@ RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fminunc(FuncNd func, con
  * @param[in] options options 优化选项，可供设置的有 `cons_mode`、`max_iter`、`tol` 和 `dx`，当
  *                    `cons_mode == ConsMode::Exterior` 时，`fmin_mode` 也可供设置
  * @note 当 `cons_mode == ConsMode::Lagrange` 时，参数 `c` 被忽略
+ * @note `ConsMode::Lagrange` 和 `ConsMode::SQP` 需要 OpenCV 和 Eigen3
  * @return `[x, fval]` 最小值点和最小值
  */
 RMVL_EXPORTS_W std::pair<std::valarray<double>, double> fmincon(FuncNd func, const std::valarray<double> &x0, FuncNds c, FuncNds ceq, const OptimalOptions &options = {});
