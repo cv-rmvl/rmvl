@@ -339,6 +339,9 @@ public:
 
     virtual ~DataReaderBase() = default;
 
+    //! 停止上层读取任务，基础读取器无需处理
+    virtual void stop() noexcept {}
+
     //! 获取监听话题的消息类型
     inline std::string_view msgtype() const noexcept { return _type; }
 
@@ -403,8 +406,11 @@ public:
  * @tparam MsgType 消息类型
  */
 template <typename MsgType>
-class DataReader : public DataReaderBase {
+class DataReader : public DataReaderBase, public std::enable_shared_from_this<DataReader<MsgType>> {
 public:
+    using ptr = std::shared_ptr<DataReader<MsgType>>;
+    using CallbackType = std::function<void(const MsgType &)>;
+
     /**
      * @brief 创建数据读取器
      *
@@ -413,20 +419,30 @@ public:
      * @param[in] callback 消息回调函数
      */
     template <typename Callback, typename = std::enable_if_t<std::is_invocable_v<Callback, const MsgType &>>>
-    DataReader(rm::async::IOContext &io_context, const Guid &guid, std::string_view topic, Callback callback) : DataReaderBase(io_context, guid, MsgType::msg_type, topic) {
-        co_spawn(io_context, &DataReader<MsgType>::read_task<Callback>, this, std::move(callback));
-    }
+    DataReader(rm::async::IOContext &io_context, const Guid &guid, std::string_view topic, Callback callback)
+        : DataReaderBase(io_context, guid, MsgType::msg_type, topic), _ctx(io_context), _callback(std::move(callback)) {}
+
+    //! @cond
+    void start() { co_spawn(_ctx, &DataReader<MsgType>::read_task, this->shared_from_this()); }
+    //! @endcond
+
+    void stop() noexcept override { _running.store(false, std::memory_order_release); }
 
 private:
-    template <typename Callback, typename = std::enable_if_t<std::is_invocable_v<Callback, const MsgType &>>>
-    rm::async::Task<> read_task(Callback cb) {
-        while (true) {
+    rm::async::Task<> read_task() {
+        while (_running.load(std::memory_order_acquire)) {
             auto data = co_await this->read();
+            if (!_running.load(std::memory_order_acquire))
+                co_return;
             if (data.empty())
                 continue;
-            cb(MsgType::deserialize(data.data()));
+            _callback(MsgType::deserialize(data.data()));
         }
     }
+
+    rm::async::IOContextRef _ctx;
+    CallbackType _callback;
+    std::atomic_bool _running{true};
 };
 
 } // namespace async

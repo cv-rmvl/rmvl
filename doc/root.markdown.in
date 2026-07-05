@@ -15,8 +15,8 @@ RMVL 说明文档 {#mainpage}
 @refs_modules@
 @refs_extra@
 - Code generation contents. 代码生成相关内容
-  - Parameter modules. @ref rmvlpara
-  - Message modules. @ref rmvlmsg
+@refs_codegen@
+
 - @ref citelist
 
 #### 深入了解

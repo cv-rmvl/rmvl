@@ -59,6 +59,15 @@
  * @}
  */
 
+/**
+ * @defgroup rmvlsrv 服务模块
+ * @{
+ * @brief RMVL 服务模块
+ * @details
+ * 该模块包含了 RMVL 中提供的所有服务类，包含 `std` 和 `sensor` 共 2 个服务分组，提供了常用类型的请求与响应的序列化与反序列化功能
+ * @}
+ */
+
 #include <rmvl/rmvl_modules.hpp>
 
 // 通用

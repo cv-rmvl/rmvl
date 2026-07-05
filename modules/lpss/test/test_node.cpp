@@ -19,7 +19,10 @@
 
 #include "rmvl/io/socket.hpp"
 #include "rmvl/lpss/node.hpp"
+
 #include "rmvlmsg/std/string.hpp"
+#include "rmvlsrv/std/set_bool.hpp"
+
 #include "rmvlpara/lpss.hpp"
 
 namespace rm_test {
@@ -30,7 +33,7 @@ using namespace std::chrono_literals;
 namespace {
 
 std::string mtpFragment(std::string_view topic, std::string_view type, uint16_t sequence, uint16_t fragment_id, uint32_t total_size,
-                         std::string_view payload, bool set_ignored_length_bits = false) {
+                        std::string_view payload, bool set_ignored_length_bits = false) {
     std::string header{"MT02"};
     uint8_t topic_size = static_cast<uint8_t>(topic.size());
     uint8_t type_size = static_cast<uint8_t>(type.size());
@@ -101,7 +104,7 @@ TEST(LPSS_node, same_domain_discover) {
 }
 
 TEST(LPSS_node, diff_domain_issolate) {
-    lpss::Node nd( "node4", 1);
+    lpss::Node nd("node4", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
     auto recvdata = sock.read();
@@ -311,6 +314,81 @@ TEST(LPSS_node, async_mtp_rejects_oversized_topic) {
     lpss::async::Node node("async_mtp_limits", 12);
     auto publisher = node.createPublisher<msg::String>(std::string(64, 't'));
     EXPECT_EQ(publisher, nullptr);
+}
+
+TEST(LPSS_node, async_subscriber_shared_lifetime) {
+    lpss::async::Node node("async_subscriber_lifetime", 44);
+    auto subscriber = node.createSubscriber<msg::String>("/lifetime", [](const msg::String &) {});
+    ASSERT_NE(subscriber, nullptr);
+    EXPECT_FALSE(subscriber->invalid());
+
+    node.destroySubscriber(subscriber);
+    EXPECT_TRUE(subscriber->invalid());
+}
+
+TEST(LPSS_node, async_service_client_creation) {
+    lpss::async::Node node("service_creation", 43);
+    auto service = node.createService<srv::SetBool>("/set_enabled", [](const srv::SetBool::Request &request) {
+        return srv::SetBool::Response{true, request.data ? "enabled" : "disabled"};
+    });
+    auto client = node.createClient<srv::SetBool>("/set_enabled");
+
+    ASSERT_NE(service, nullptr);
+    ASSERT_NE(client, nullptr);
+    EXPECT_FALSE(service->invalid());
+    EXPECT_FALSE(client->invalid());
+    EXPECT_EQ(node.createClient<srv::SetBool>("/set_enabled"), nullptr);
+}
+
+TEST(LPSS_node, stp_round_trip) {
+    srv::SetBool::Request request{};
+    request.data = true;
+    lpss::stp::Header header{lpss::Guid{0x12345678, 7, 9}, 42};
+    auto data = lpss::stp::pack(header, request);
+    auto decoded = lpss::stp::unpack<srv::SetBool::Request>(data);
+
+    ASSERT_TRUE(decoded.has_value());
+    EXPECT_EQ(decoded->header.client_guid, header.client_guid);
+    EXPECT_EQ(decoded->header.sequence, 42u);
+    EXPECT_TRUE(decoded->message.data);
+    EXPECT_FALSE(lpss::stp::unpack<srv::SetBool::Request>(std::string(lpss::stp::HEADER_SIZE - 1, '\0')).has_value());
+}
+
+TEST(LPSS_node, async_service_client_local_call) {
+    rm::async::IOContext io_context{};
+    const auto request_topic = lpss::srv2topic::request("/set_enabled");
+    const auto response_topic = lpss::srv2topic::response("/set_enabled");
+    auto request_reader = std::make_shared<lpss::async::DataReaderBase>(io_context, lpss::Guid{0x12345678, 1, 1}, srv::SetBool::Request::msg_type, request_topic);
+    auto response_writer = std::make_shared<lpss::async::DataWriterBase>(io_context, lpss::Guid{0x12345678, 1, 2}, srv::SetBool::Response::msg_type, response_topic);
+    auto request_writer = std::make_shared<lpss::async::DataWriterBase>(io_context, lpss::Guid{0x12345678, 2, 1}, srv::SetBool::Request::msg_type, request_topic);
+    auto response_reader = std::make_shared<lpss::async::DataReaderBase>(io_context, lpss::Guid{0x12345678, 2, 2}, srv::SetBool::Response::msg_type, response_topic);
+    request_reader->add(request_writer->guid());
+    request_writer->add(request_reader->guid(), {request_reader->port(), {127, 0, 0, 1}});
+    response_reader->add(response_writer->guid());
+    response_writer->add(response_reader->guid(), {response_reader->port(), {127, 0, 0, 1}});
+
+    auto service = std::make_shared<lpss::async::Service<srv::SetBool>>(
+        io_context, "/set_enabled", request_reader, response_writer, [](const srv::SetBool::Request &request) {
+            return srv::SetBool::Response{request.data, request.data ? "enabled" : "disabled"};
+        });
+    auto client = std::make_shared<lpss::async::Client<srv::SetBool>>(io_context, "/set_enabled", request_writer, response_reader);
+    service->_delay_start();
+    client->_delay_start();
+
+    srv::SetBool::Request request{};
+    request.data = true;
+    std::optional<srv::SetBool::Response> result{};
+    auto call = [](lpss::async::Client<srv::SetBool>::ptr client, srv::SetBool::Request request,
+                   std::optional<srv::SetBool::Response> *result, rm::async::IOContext *ctx) -> rm::async::Task<> {
+        *result = co_await client->call(request, 500ms);
+        ctx->stop();
+    };
+    co_spawn(io_context, call, client, request, &result, &io_context);
+    io_context.run();
+
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->success);
+    EXPECT_EQ(result->message, "enabled");
 }
 
 #endif

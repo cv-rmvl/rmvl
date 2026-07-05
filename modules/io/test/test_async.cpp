@@ -46,6 +46,11 @@ async::Task<> task(int &v) {
     co_return;
 }
 
+async::Task<> stop_context(async::IOContext &ctx) {
+    ctx.stop();
+    co_return;
+}
+
 // 嵌套异步任务无调度测试
 TEST(IO_async, nested_task) {
     int val{};
@@ -76,6 +81,50 @@ TEST(IO_async, io_context) {
     EXPECT_EQ(v, 0);
     io_context.run();
     EXPECT_EQ(v, 42);
+}
+
+TEST(IO_async, spawn_defers_callable_invocation_until_run) {
+    async::IOContext io_context;
+    bool invoked{};
+    auto make_task = [&]() {
+        invoked = true;
+        return stop_context(io_context);
+    };
+
+    io_context.spawn(make_task);
+    EXPECT_FALSE(invoked);
+    io_context.run();
+    EXPECT_TRUE(invoked);
+}
+
+namespace {
+
+struct LifetimeProbe {
+    async::IOContext &ctx;
+    bool &ran;
+
+    async::Task<> run() {
+        ran = true;
+        ctx.stop();
+        co_return;
+    }
+};
+
+} // namespace
+
+TEST(IO_async, spawn_retains_shared_member_target) {
+    async::IOContext io_context;
+    bool ran{};
+    auto probe = std::make_shared<LifetimeProbe>(LifetimeProbe{io_context, ran});
+    std::weak_ptr<LifetimeProbe> weak = probe;
+
+    co_spawn(io_context, &LifetimeProbe::run, probe);
+    probe.reset();
+    EXPECT_FALSE(weak.expired());
+    io_context.run();
+
+    EXPECT_TRUE(ran);
+    EXPECT_TRUE(weak.expired());
 }
 
 TEST(IO_async, timer_sleep) {

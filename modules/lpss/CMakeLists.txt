@@ -13,6 +13,15 @@ foreach(dir std geometry sensor motion viz)
   endforeach()
 endforeach()
 
+# srv
+foreach(dir std sensor)
+  file(GLOB srv_files "${CMAKE_CURRENT_LIST_DIR}/srv/${dir}/*.srv")
+  foreach(srv_file ${srv_files})
+    get_filename_component(srv_name ${srv_file} NAME_WE)
+    rmvl_generate_srv(${dir}/${srv_name})
+  endforeach()
+endforeach()
+
 # --------------------------------------------------------------------------
 #  Create module
 # --------------------------------------------------------------------------

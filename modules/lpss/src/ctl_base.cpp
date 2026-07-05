@@ -13,9 +13,7 @@
 
 namespace rm::lpss::ctl {
 
-// ============================================================================
 // 输入采样映射实现
-// ============================================================================
 
 void basic_pos_imapping(const msg::JointState &d_in, const msg::JointState &fb_in,
                         std::vector<double> &d_out, std::vector<double> &fb_out) noexcept {

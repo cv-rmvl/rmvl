@@ -19,6 +19,10 @@
 #include "rmvlmsg/sensor/imu.hpp"
 #include "rmvlmsg/sensor/joint_state.hpp"
 #include "rmvlmsg/geometry/polygon.hpp"
+#include "rmvlsrv/sensor/set_camera_info.hpp"
+#include "rmvlsrv/std/empty.hpp"
+#include "rmvlsrv/std/set_bool.hpp"
+#include "rmvlsrv/std/trigger.hpp"
 
 namespace rm_test {
 
@@ -319,6 +323,65 @@ TEST(LPSS_serialization, polygon_compact_size) {
 
     auto str = msg.serialize();
     EXPECT_EQ(str.size(), msg.compact_size());
+}
+
+TEST(LPSS_serialization, empty_service) {
+    srv::Empty::Request request{};
+    srv::Empty::Response response{};
+    auto request_data = request.serialize();
+    auto response_data = response.serialize();
+
+    EXPECT_TRUE(request_data.empty());
+    EXPECT_TRUE(response_data.empty());
+    EXPECT_EQ(request.compact_size(), 0u);
+    EXPECT_EQ(response.compact_size(), 0u);
+    EXPECT_EQ(srv::Empty::Request::deserialize(request_data.data()).compact_size(), 0u);
+    EXPECT_EQ(srv::Empty::Response::deserialize(response_data.data()).compact_size(), 0u);
+}
+
+TEST(LPSS_serialization, set_bool_service) {
+    srv::SetBool::Request request{};
+    request.data = true;
+    auto request_data = request.serialize();
+    auto decoded_request = srv::SetBool::Request::deserialize(request_data.data());
+    EXPECT_TRUE(decoded_request.data);
+    EXPECT_EQ(request_data.size(), request.compact_size());
+
+    srv::SetBool::Response response{};
+    response.success = true;
+    response.message = "enabled";
+    auto response_data = response.serialize();
+    auto decoded_response = srv::SetBool::Response::deserialize(response_data.data());
+    EXPECT_TRUE(decoded_response.success);
+    EXPECT_EQ(decoded_response.message, "enabled");
+    EXPECT_EQ(response_data.size(), response.compact_size());
+}
+
+TEST(LPSS_serialization, trigger_service) {
+    srv::Trigger::Response response{};
+    response.success = false;
+    response.message = "not ready";
+    auto data = response.serialize();
+    auto decoded = srv::Trigger::Response::deserialize(data.data());
+
+    EXPECT_FALSE(decoded.success);
+    EXPECT_EQ(decoded.message, "not ready");
+}
+
+TEST(LPSS_serialization, nested_message_service) {
+    srv::SetCameraInfo::Request request{};
+    request.camera_info.header.frame_id = "camera";
+    request.camera_info.width = 1920;
+    request.camera_info.height = 1080;
+    request.camera_info.K[0] = 1000.0;
+    auto data = request.serialize();
+    auto decoded = srv::SetCameraInfo::Request::deserialize(data.data());
+
+    EXPECT_EQ(decoded.camera_info.header.frame_id, "camera");
+    EXPECT_EQ(decoded.camera_info.width, 1920u);
+    EXPECT_EQ(decoded.camera_info.height, 1080u);
+    EXPECT_DOUBLE_EQ(decoded.camera_info.K[0], 1000.0);
+    EXPECT_EQ(data.size(), request.compact_size());
 }
 
 } // namespace rm_test
