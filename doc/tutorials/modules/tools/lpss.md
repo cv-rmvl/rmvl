@@ -14,7 +14,7 @@
 
 ------
 
-相关模块： @ref lpss ， @ref tutorial_table_of_content_rmvlmsg
+相关模块： @ref lpss ， @ref tutorial_table_of_content_rmvlmsg ， @ref tutorial_table_of_content_rmvlsrv
 
 ## 1 机制
 
@@ -238,6 +238,12 @@ MTP 标准使用二进制直接序列化 / 反序列化的方式，不区分端�
 
 RMVL 内置了一些常用的消息类型，用户可以直接使用这些消息类型，而无需自行定义和生成代码。同时，RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，可以辅助用户完成自定义消息类型的代码生成过程，详情可参考 @ref tutorial_table_of_content_rmvlmsg 。
 
+#### 1.3.3 服务传输协议
+
+异步 Service/Client 使用两个保留话题复用现有 EDP 和 MTP：`lq/&lt;service&gt;` 传输请求，`lr/&lt;service&gt;` 传输响应。STP（Service Transport Protocol）在业务消息前添加客户端端点 GUID 和 64 位调用序列号；该整体作为 MTP Payload 发送，因此 MTP 仍统一负责 UDP 分片重组以及 SHM/UDP 通道选择。
+
+Service/Client 首版仅在 C++20 异步接口中提供。每个 Client 同时只允许一个未完成调用；服务回调用于短时操作并按请求顺序执行。
+
 ## 2 同步模式使用示例
 
 LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。每个节点内部维护了众多线程，以下示例展示了如何使用 LPSS 创建发布者与订阅者。
@@ -384,6 +390,52 @@ int main() {
     return 0;
 }
 ```
+
+### 3.3 异步 Service/Client 示例
+
+服务由 `*.srv` 文件定义，定义及代码生成方式参见 @ref tutorial_table_of_content_rmvlsrv 。以下示例使用内置的 `std/SetBool` 服务：
+
+```cpp
+#include <fmt/format.h>
+#include <rmvl/lpss/node.hpp>
+#include <rmvlsrv/std/set_bool.hpp>
+
+using namespace rm;
+using namespace std::chrono_literals;
+
+class SetBoolServer : public lpss::async::Node {
+public:
+    SetBoolServer() : Node("set_bool_server") {
+        _service = createService<srv::SetBool>("/set_enabled", [](const srv::SetBool::Request &request) {
+            return srv::SetBool::Response{true, request.data ? "enabled" : "disabled"};
+        });
+    }
+
+private:
+    lpss::async::Service<srv::SetBool>::ptr _service;
+};
+
+class SetBoolClient : public lpss::async::Node {
+public:
+    SetBoolClient() : Node("set_bool_client") {
+        _client = createClient<srv::SetBool>("/set_enabled");
+        co_spawn(_ctx, &SetBoolClient::request, this);
+    }
+
+private:
+    rm::async::Task<> request() {
+        srv::SetBool::Request request{};
+        request.data = true;
+        if (auto response = co_await _client->call(request, 1s))
+            fmt::println("{}", response->message);
+        shutdown();
+    }
+
+    lpss::async::Client<srv::SetBool>::ptr _client;
+};
+```
+
+服务端与客户端分别运行各自节点的 `spin()`。`call()` 返回可等待任务；超时或同一 Client 上发生并发调用时返回 `std::nullopt`。
 
 ## 4 创建自定义消息类型
 

@@ -94,6 +94,14 @@ if(refs_modules)
   set(refs_modules "- Main modules. 主要模块\n${refs_modules}")
 endif()
 
+set(codegen_contents "Parameter:para" "Message:msg" "Service:srv")
+foreach(kv ${codegen_contents})
+  string(REPLACE ":" ";" kv ${kv})
+  list(GET kv 0 name)
+  list(GET kv 1 suffix)
+  set(refs_codegen "${refs_codegen}  - ${name} modules - @ref rmvl${suffix}\n")
+endforeach()
+
 # writing file
 configure_file(${RMVL_DOXYFILE_IN} ${doxyfile} @ONLY)
 configure_file(root.markdown.in ${rootfile} @ONLY)

@@ -1,7 +1,7 @@
 扩展模块使用教程 {#tutorial_table_of_content_extra}
 ============
 
-@prev_tutorial{tutorial_table_of_content_rmvlpara}
+@prev_tutorial{tutorial_table_of_content_rmvlsrv}
 
 @tableofcontents
 

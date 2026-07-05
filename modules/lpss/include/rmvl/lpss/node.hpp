@@ -19,8 +19,8 @@
 #include "rmvl/io/async.hpp"
 #endif
 
-#include "details/node_rsd.hpp"
 #include "details/node_rmtp.hpp"
+#include "details/node_rsd.hpp"
 
 namespace rm {
 
@@ -397,6 +397,90 @@ private:
     std::string _topic;           //!< 话题名称
 };
 
+/**
+ * @brief 异步服务端代理
+ *
+ * @tparam SrvType 服务类型，需提供 `Request` 和 `Response` 类型别名
+ */
+template <typename SrvType>
+class Service final : public std::enable_shared_from_this<Service<SrvType>> {
+    friend class Node;
+
+public:
+    using ptr = std::shared_ptr<Service<SrvType>>;
+    using Request = typename SrvType::Request;
+    using Response = typename SrvType::Response;
+    using Callback = std::function<Response(const Request &)>;
+
+    //! @cond
+    Service(rm::async::IOContext &io_context, std::string_view service, DataReaderBase::ptr request_reader, DataWriterBase::ptr response_writer, Callback callback)
+        : _ctx(io_context), _lq_reader(std::move(request_reader)), _lr_writer(std::move(response_writer)), _service(service), _callback(std::move(callback)) {}
+
+    void _delay_start();
+    //! @endcond
+
+    //! 判断服务端是否无效
+    bool invalid() const noexcept { return !_lq_reader || !_lr_writer; }
+
+private:
+    rm::async::Task<> serve();
+
+    rm::async::IOContextRef _ctx;
+    DataReaderBase::ptr _lq_reader;
+    DataWriterBase::ptr _lr_writer;
+    std::string _service;
+    Callback _callback;
+    bool _started{};
+};
+
+/**
+ * @brief 异步客户端代理
+ *
+ * @tparam SrvType 服务类型，需提供 `Request` 和 `Response` 类型别名
+ * @note 首版仅允许每个客户端同时存在一个未完成调用，并发调用会返回 `std::nullopt`
+ */
+template <typename SrvType>
+class Client final : public std::enable_shared_from_this<Client<SrvType>> {
+    friend class Node;
+
+public:
+    using ptr = std::shared_ptr<Client<SrvType>>;
+    using Request = typename SrvType::Request;
+    using Response = typename SrvType::Response;
+
+    //! @cond
+    Client(rm::async::IOContext &io_context, std::string_view service, DataWriterBase::ptr request_writer, DataReaderBase::ptr response_reader)
+        : _ctx(io_context), _request_writer(std::move(request_writer)), _response_reader(std::move(response_reader)), _service(service) {}
+    void _delay_start();
+    //! @endcond
+
+    //! 判断客户端是否无效
+    bool invalid() const noexcept { return !_request_writer || !_response_reader; }
+
+    /**
+     * @brief 调用服务并异步等待响应
+     *
+     * @param[in] request 请求消息
+     * @param[in] timeout 超时时间
+     * @return 成功时返回响应，并发调用或等待超时时返回 `std::nullopt`
+     */
+    template <typename Rep, typename Period>
+    rm::async::Task<std::optional<Response>> call(const Request &request, std::chrono::duration<Rep, Period> timeout);
+
+private:
+    rm::async::Task<> receive();
+
+    rm::async::IOContextRef _ctx;
+    DataWriterBase::ptr _request_writer;
+    DataReaderBase::ptr _response_reader;
+    std::string _service;
+    bool _started{};
+    uint16_t _next_sequence{};
+    uint16_t _waiting_sequence{};
+    bool _calling{};
+    std::optional<Response> _response{};
+};
+
 //! 异步定时器代理
 class Timer : public rm::async::Timer {
 public:
@@ -455,6 +539,26 @@ public:
      */
     template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
     typename Subscriber<MsgType>::ptr createSubscriber(std::string_view topic, SubscribeMsgCallback callback) noexcept;
+
+    /**
+     * @brief 创建异步服务端
+     *
+     * @tparam SrvType 服务类型
+     * @param[in] service 服务名称
+     * @param[in] callback 请求处理回调，返回对应响应
+     */
+    template <typename SrvType, typename ServiceCallback,
+              typename = std::enable_if_t<std::is_invocable_r_v<typename SrvType::Response, ServiceCallback, const typename SrvType::Request &>>>
+    typename Service<SrvType>::ptr createService(std::string_view service, ServiceCallback callback) noexcept;
+
+    /**
+     * @brief 创建异步客户端
+     *
+     * @tparam SrvType 服务类型
+     * @param[in] service 服务名称
+     */
+    template <typename SrvType>
+    typename Client<SrvType>::ptr createClient(std::string_view service) noexcept;
 
     /**
      * @brief 销毁发布者

@@ -3,7 +3,7 @@
 
 @prev_tutorial{tutorial_table_of_content_rmvlpara}
 
-@next_tutorial{tutorial_table_of_content_extra}
+@next_tutorial{tutorial_table_of_content_rmvlsrv}
 
 @tableofcontents
 
@@ -13,7 +13,7 @@
 
 ### 1 概述
 
-RMVL 消息描述文件（`*.msg`）用于定义消息的数据结构和字段类型，类似于 ROS 消息定义文件。通过定义消息描述文件，用户可以方便地在 RMVL 中进行数据传输，这在分布式系统、网络通信中尤为重要。 RMVL 提供了一套简洁的消息定义语法，与 ROS/ROS 2 的定义语法大致兼容，同样支持多种数据类型和较为复杂的数据结构。
+RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型，类似于 ROS 消息定义文件。通过定义消息描述文件，用户可以方便地在 RMVL 中进行数据传输，这在分布式系统、网络通信中尤为重要。 RMVL 提供了一套简洁的消息定义语法，与 ROS/ROS 2 的定义语法大致兼容，同样支持多种数据类型和较为复杂的数据结构。
 
 ### 2 内置消息类型
 
@@ -463,3 +463,5 @@ RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，用于生成消息类型�
 <div class="line">&nbsp;&nbsp;<span class="keyword">MODULE</span> sub</div>
 <div class="line">)</div>
 </div>
+
+生成的消息类型位于 rm::msg 命名空间。

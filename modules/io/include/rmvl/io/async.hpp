@@ -180,8 +180,26 @@ private:
 template <typename Callable, typename... Args>
 concept InvokableTask = requires(Callable &&c, Args &&...args) {
     typename std::invoke_result_t<Callable, Args...>::promise_type;
-    {std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...)};
+    { std::invoke(std::forward<Callable>(c), std::forward<Args>(args)...) };
 };
+
+//! @cond
+
+namespace details {
+
+template <typename Tp, typename Callable, typename... Args>
+Task<Tp> spawn_task(Callable callable, Args... args) {
+    if constexpr (std::is_void_v<Tp>) {
+        co_await std::invoke(std::move(callable), std::move(args)...);
+        co_return;
+    } else {
+        co_return co_await std::invoke(std::move(callable), std::move(args)...);
+    }
+}
+
+} // namespace details
+
+//! @endcond
 
 //! 异步 I/O 执行上下文，负责管理 IO 事件循环和协程任务的调度
 class IOContext {
@@ -208,13 +226,16 @@ public:
      *
      * @note
      * - `fn` 必须是一个返回 `Task<Tp>` 的协程函数
-     * - 带捕获列表的 lambda 也可以作为 `fn`，但极易引起悬垂引用的未定义行为
+     * - 可调用对象和参数会复制或移动到调度任务中，需要传递引用时请使用 `std::ref`
+     * - 捕获引用的 lambda 仍需保证被引用对象存活到任务结束
      */
     template <typename Callable, typename... Args>
-    requires InvokableTask<Callable, Args...>
+        requires InvokableTask<std::decay_t<Callable>, std::decay_t<Args>...>
     void spawn(Callable &&fn, Args &&...args) {
-        using Tp = typename std::invoke_result_t<Callable, Args...>::value_type;
-        _ready.emplace(std::make_unique<TaskWrapper<Tp>>(std::invoke(std::forward<Callable>(fn), std::forward<Args>(args)...)));
+        using Fn = std::decay_t<Callable>;
+        using Tp = typename std::invoke_result_t<Fn, std::decay_t<Args>...>::value_type;
+        _ready.emplace(std::make_unique<TaskWrapper<Tp>>(
+            details::spawn_task<Tp>(Fn(std::forward<Callable>(fn)), std::decay_t<Args>(std::forward<Args>(args))...)));
     }
 
     //! 获取异步 I/O 句柄
@@ -276,9 +297,11 @@ using IOContextRef = std::reference_wrapper<IOContext>;
  *
  * @see
  * - 异步 I/O 执行上下文 IOContext::spawn
+ *
+ * @note 可调用对象和参数会复制或移动到调度任务中，需要传递引用时请使用 `std::ref`
  */
 template <typename Callable, typename... Args>
-requires InvokableTask<Callable, Args...>
+    requires InvokableTask<std::decay_t<Callable>, std::decay_t<Args>...>
 inline void co_spawn(IOContext &ctx, Callable &&fn, Args &&...args) {
     ctx.spawn(std::forward<Callable>(fn), std::forward<Args>(args)...);
 }
