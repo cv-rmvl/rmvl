@@ -174,6 +174,9 @@ install(FILES
   # *.msg
   "${cmake_dir}/templates/msg_generator.cpp.in"
   "${cmake_dir}/templates/msg_generator.hpp.in"
+  # *.srv
+  "${cmake_dir}/templates/srv_generator.cpp.in"
+  "${cmake_dir}/templates/srv_generator.hpp.in"
   DESTINATION "${RMVL_CONFIG_INSTALL_PATH}/templates"
 )
 
