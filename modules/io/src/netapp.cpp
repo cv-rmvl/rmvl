@@ -83,20 +83,20 @@ static std::string get_date_str(std::chrono::system_clock::time_point date) {
 
 static bool is_regular_file(const std::string &path) {
 #ifdef _WIN32
-    struct _stat st {};
+    struct _stat st{};
     return _stat(path.c_str(), &st) == 0 && (st.st_mode & _S_IFREG);
 #else
-    struct stat st {};
+    struct stat st{};
     return stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
 #endif
 }
 
 static bool is_directory(const std::string &path) {
 #ifdef _WIN32
-    struct _stat st {};
+    struct _stat st{};
     return _stat(path.c_str(), &st) == 0 && (st.st_mode & _S_IFDIR);
 #else
-    struct stat st {};
+    struct stat st{};
     return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
 #endif
 }
@@ -566,7 +566,9 @@ Response requests::request(HTTPMethod method, std::string_view url, const std::v
     Response response{};
     // 解析 URL
     auto [scheme, hostname, port, path, all_querys] = parseURL(url);
-    auto [ip, isv6] = parseDNS(hostname);
+    auto dns_info = parseDNS(hostname);
+    auto ip = std::get<0>(dns_info);
+    auto isv6 = std::get<1>(dns_info);
     // 构建完整的路径（包含查询参数）
     std::string full_path = path;
     all_querys.insert(all_querys.end(), querys.begin(), querys.end());
@@ -680,7 +682,9 @@ Task<Response> requests::request(IOContext &io_context, HTTPMethod method, std::
 
     // 解析 URL
     auto [scheme, hostname, port, path, all_querys] = parseURL(url);
-    auto [ip, isv6] = parseDNS(hostname);
+    auto dns_info = parseDNS(hostname);
+    auto ip = std::get<0>(dns_info);
+    auto isv6 = std::get<1>(dns_info);
     // 构建完整的路径（包含查询参数）
     std::string full_path = path;
     all_querys.insert(all_querys.end(), querys.begin(), querys.end());

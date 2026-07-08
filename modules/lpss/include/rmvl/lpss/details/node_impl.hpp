@@ -26,7 +26,7 @@ void Publisher<MsgType>::publish(const MsgType &msg) {
     _writer->write(msg.serialize());
 }
 
-template <typename MsgType>
+template <typename MsgType, typename Enable>
 Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
     if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
         WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
@@ -136,7 +136,7 @@ void Publisher<MsgType>::publish(const MsgType &msg) {
     co_spawn(_ctx, &DataWriterBase::write, _writer, msg.serialize());
 }
 
-template <typename MsgType>
+template <typename MsgType, typename Enable>
 typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) noexcept {
     if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
         WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
@@ -204,7 +204,8 @@ rm::async::Task<> Service<SrvType>::serve() {
         if (!request)
             continue;
         try {
-            auto response = _callback(request->message);
+            Response response{};
+            _callback(request->message, response);
             co_await _lr_writer->write(stp::pack(request->header, response));
         } catch (...) {
             WARNING_("[LPSS Service] Service callback for '%s' threw an exception", _service.c_str());
@@ -298,7 +299,7 @@ typename Service<SrvType>::ptr Node::createService(std::string_view service, Ser
     return result;
 }
 
-template <typename SrvType>
+template <typename SrvType, typename Enable>
 typename Client<SrvType>::ptr Node::createClient(std::string_view service) noexcept {
     using Request = typename SrvType::Request;
     using Response = typename SrvType::Response;
