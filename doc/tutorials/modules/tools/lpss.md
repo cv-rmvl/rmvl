@@ -238,17 +238,23 @@ MTP 标准使用二进制直接序列化 / 反序列化的方式，不区分端�
 
 RMVL 内置了一些常用的消息类型，用户可以直接使用这些消息类型，而无需自行定义和生成代码。同时，RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，可以辅助用户完成自定义消息类型的代码生成过程，详情可参考 @ref tutorial_table_of_content_rmvlmsg 。
 
-#### 1.3.3 服务传输协议
+### 1.4 高层设施
 
-异步 Service/Client 使用两个保留话题复用现有 EDP 和 MTP：`lq/&lt;service&gt;` 传输请求，`lr/&lt;service&gt;` 传输响应。STP（Service Transport Protocol）在业务消息前添加客户端端点 GUID 和 64 位调用序列号；该整体作为 MTP Payload 发送，因此 MTP 仍统一负责 UDP 分片重组以及 SHM/UDP 通道选择。
+#### 1.4.1 Service/Client 模型
 
-Service/Client 首版仅在 C++20 异步接口中提供。每个 Client 同时只允许一个未完成调用；服务回调用于短时操作并按请求顺序执行。
+Service/Client 是架设在既有发布订阅框架之上的高层服务模型，用于表达“一次请求对应一次响应”的远程调用关系。它并不绕过前文介绍的节点发现、端点发现和 MTP 数据传输，而是复用这些底层能力：创建 Service 时会在内部创建请求订阅端和响应发布端，创建 Client 时会在内部创建请求发布端和响应订阅端。
 
-## 2 同步模式使用示例
+异步 Service/Client 使用两个保留话题承载服务请求和响应：`lq/&lt;service&gt;` 传输请求，`lr/&lt;service&gt;` 传输响应。STP（Service Transport Protocol）在业务消息前添加客户端端点 GUID 和调用序列号；该整体作为 MTP Payload 发送，因此 MTP 仍统一负责 UDP 分片重组以及 SHM/UDP 通道选择。
 
-LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。每个节点内部维护了众多线程，以下示例展示了如何使用 LPSS 创建发布者与订阅者。
+Service/Client 仅在 C++20 异步接口中提供。每个 Client 同时只允许一个未完成调用；服务回调用于短时操作并按请求顺序执行。服务类型由 `*.srv` 文件定义，定义及代码生成方式参见 @ref tutorial_table_of_content_rmvlsrv 。
 
-### 2.1 创建简单的发布者与订阅者
+## 2 发布订阅模型使用方法
+
+LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。本节分别展示同步模式和异步模式下的发布订阅用法。
+
+### 2.1 同步模式使用示例
+
+同步模式下，每个节点内部维护了必要的工作线程。以下示例展示了如何使用 LPSS 创建发布者与订阅者。
 
 #### 2.1.1 发布者示例
 
@@ -319,11 +325,11 @@ int main() {
 
 @warning 订阅者的回调函数是在 LPSS 内部的线程中执行的，如果用户定义了多个订阅者，这些订阅者的回调函数可能会在不同的线程中并发执行。因此，用户在编写回调函数时<u><i><b>需要注意线程安全问题</b></i></u>，避免在回调函数中使用非线程安全的资源，或者使用适当的同步机制来保护共享资源，如果想避免这一问题，可以考虑使用下文异步模式的发布订阅服务。
 
-## 3 异步模式使用示例
+### 2.2 异步模式使用示例
 
 LPSS 同样支持异步模式的发布订阅服务，均定义在 `::rm::lpss::async` 命名空间中。内部使用 coroutine + epoll/IOCP 的方式创建发布者与订阅者，实现更加灵活的数据通信，但需要 C++20 的支持，详情请参见 @ref tutorial_modules_coro 。下面的示例展示了如何使用异步模式创建发布者与订阅者。
 
-### 3.1 异步发布者示例
+#### 2.2.1 异步发布者示例
 
 异步模式的 LPSS 节点增加了定时器功能，可以方便地实现周期性任务。下面的示例展示了如何创建一个异步发布者，该发布者每隔 20 毫秒发布一次包含递增计数值的字符串消息。
 
@@ -360,7 +366,7 @@ int main() {
 }
 ```
 
-### 3.2 异步订阅者示例
+#### 2.2.2 异步订阅者示例
 
 下面展示了如何创建一个异步订阅者，该订阅者订阅 `/topic` 话题的字符串消息，并在收到消息时打印消息内容。
 
@@ -391,51 +397,67 @@ int main() {
 }
 ```
 
-### 3.3 异步 Service/Client 示例
+## 3 服务/客户端模型使用方法
 
-服务由 `*.srv` 文件定义，定义及代码生成方式参见 @ref tutorial_table_of_content_rmvlsrv 。以下示例使用内置的 `std/SetBool` 服务：
+Service/Client 模型用于表达带响应的服务调用关系，均定义在 `::rm::lpss::async` 命名空间中。以下示例使用内置的 `std/SetBool` 服务，服务端和客户端分别放在两个源文件中运行。
+
+### 3.1 服务端示例
+
+在 `server.cpp` 中创建服务端节点。服务端收到请求后返回是否成功以及提示信息。
 
 ```cpp
-#include <fmt/format.h>
 #include <rmvl/lpss/node.hpp>
 #include <rmvlsrv/std/set_bool.hpp>
 
 using namespace rm;
-using namespace std::chrono_literals;
 
-class SetBoolServer : public lpss::async::Node {
-public:
-    SetBoolServer() : Node("set_bool_server") {
-        _service = createService<srv::SetBool>("/set_enabled", [](const srv::SetBool::Request &request) {
-            return srv::SetBool::Response{true, request.data ? "enabled" : "disabled"};
-        });
-    }
-
-private:
-    lpss::async::Service<srv::SetBool>::ptr _service;
-};
-
-class SetBoolClient : public lpss::async::Node {
-public:
-    SetBoolClient() : Node("set_bool_client") {
-        _client = createClient<srv::SetBool>("/set_enabled");
-        co_spawn(_ctx, &SetBoolClient::request, this);
-    }
-
-private:
-    rm::async::Task<> request() {
-        srv::SetBool::Request request{};
-        request.data = true;
-        if (auto response = co_await _client->call(request, 1s))
-            fmt::println("{}", response->message);
-        shutdown();
-    }
-
-    lpss::async::Client<srv::SetBool>::ptr _client;
-};
+int main() {
+    // 创建 LPSS 异步节点
+    auto node = lpss::async::Node("set_bool_server");
+    // 创建服务，服务名为 /set_enabled，服务类型为 std/SetBool
+    auto service = node.createService<srv::SetBool>("/set_enabled", [](const srv::SetBool::Request &request, srv::SetBool::Response &response) {
+        response.success = true;
+        response.message = request.data ? "enabled" : "disabled";
+    });
+    node.spin();
+}
 ```
 
-服务端与客户端分别运行各自节点的 `spin()`。`call()` 返回可等待任务；超时或同一 Client 上发生并发调用时返回 `std::nullopt`。
+### 3.2 客户端示例
+
+在 `client.cpp` 中创建客户端节点。`call()` 返回可等待的异步任务，超时或同一 Client 上发生并发调用时返回 `std::nullopt`。下面的示例不额外派生节点类，而是像 ROS 2 minimal client 一样在 `main()` 中创建节点、客户端和请求任务。
+
+```cpp
+#include <fmt/format.h>
+
+#include <rmvl/lpss/node.hpp>
+#include <rmvlsrv/std/set_bool.hpp>
+
+using namespace rm;
+
+rm::async::Task<> request(lpss::async::Node &node, lpss::async::Client<srv::SetBool>::ptr client) {
+    srv::SetBool::Request request{};
+    request.data = true;
+
+    auto response = co_await client->call(request);
+    if (response)
+        fmt::println("{}", response->message);
+    else
+        fmt::println("service call timeout");
+    node.shutdown();
+}
+
+int main() {
+    lpss::async::Node node("set_bool_client");
+    auto client = node.createClient<srv::SetBool>("/set_enabled");
+    // 生成异步请求任务
+    node.create_task(request, std::ref(node), client);
+
+    node.spin();
+}
+```
+
+运行时，先启动 `server.cpp` 对应的服务端程序，再启动 `client.cpp` 对应的客户端程序即可。
 
 ## 4 创建自定义消息类型
 

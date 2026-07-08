@@ -11,6 +11,10 @@
 
 #pragma once
 
+#include <thread>
+
+namespace rm {
+
 /**
  * @brief MPMC 原子共享内存对象
  *
@@ -142,3 +146,5 @@ bool RingBufferSlotSHM<T, Capacity, Enable>::read(T &value) noexcept {
             current_head = buf->head.load(std::memory_order_relaxed);
     }
 }
+
+} // namespace rm

@@ -32,6 +32,29 @@ namespace lpss {
 
 class Node;
 
+//! 判断类型是否为 RMVL 消息类型，要求类型中存在 `msg_type` 字符数组常量
+template <typename Tp, typename = void>
+struct is_msg : std::false_type {};
+
+template <typename Tp>
+struct is_msg<Tp, std::void_t<decltype(Tp::msg_type)>>
+    : std::bool_constant<std::is_array_v<decltype(Tp::msg_type)> && std::is_same_v<std::remove_cv_t<std::remove_extent_t<decltype(Tp::msg_type)>>, char>> {};
+
+//! `is_msg` 的便捷变量模板
+template <typename Tp>
+constexpr bool is_msg_v = is_msg<Tp>::value;
+
+//! 判断类型是否为 RMVL 服务类型，要求类型中包含符合消息类型约束的 `Request` 和 `Response`
+template <typename Tp, typename = void>
+struct is_srv : std::false_type {};
+
+template <typename Tp>
+struct is_srv<Tp, std::enable_if_t<is_msg_v<typename Tp::Request> && is_msg_v<typename Tp::Response>>> : std::true_type {};
+
+//! `is_srv` 的便捷变量模板
+template <typename Tp>
+constexpr bool is_srv_v = is_srv<Tp>::value;
+
 /**
  * @brief 发布者代理
  *
@@ -136,7 +159,7 @@ public:
      * @param[in] topic 话题名称
      * @return Publisher<MsgType> 发布者对象
      */
-    template <typename MsgType>
+    template <typename MsgType, typename = std::enable_if_t<is_msg_v<MsgType>>>
     Publisher<MsgType> createPublisher(std::string_view topic) noexcept;
 
     /**
@@ -148,7 +171,7 @@ public:
      * @param[in] callback 订阅回调函数
      * @return Subscriber<MsgType> 订阅者对象
      */
-    template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
+    template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<is_msg_v<MsgType> && std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
     Subscriber<MsgType> createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept;
 
     /**
@@ -410,7 +433,7 @@ public:
     using ptr = std::shared_ptr<Service<SrvType>>;
     using Request = typename SrvType::Request;
     using Response = typename SrvType::Response;
-    using Callback = std::function<Response(const Request &)>;
+    using Callback = std::function<void(const Request &, Response &)>;
 
     //! @cond
     Service(rm::async::IOContext &io_context, std::string_view service, DataReaderBase::ptr request_reader, DataWriterBase::ptr response_writer, Callback callback)
@@ -461,11 +484,11 @@ public:
      * @brief 调用服务并异步等待响应
      *
      * @param[in] request 请求消息
-     * @param[in] timeout 超时时间
+     * @param[in] timeout 超时时间，默认 30 秒
      * @return 成功时返回响应，并发调用或等待超时时返回 `std::nullopt`
      */
     template <typename Rep, typename Period>
-    rm::async::Task<std::optional<Response>> call(const Request &request, std::chrono::duration<Rep, Period> timeout);
+    rm::async::Task<std::optional<Response>> call(const Request &request, std::chrono::duration<Rep, Period> timeout = std::chrono::seconds(30));
 
 private:
     rm::async::Task<> receive();
@@ -525,7 +548,7 @@ public:
      * @param[in] topic 话题名称
      * @return 发布者对象的智能指针
      */
-    template <typename MsgType>
+    template <typename MsgType, typename = std::enable_if_t<is_msg_v<MsgType>>>
     typename Publisher<MsgType>::ptr createPublisher(std::string_view topic) noexcept;
 
     /**
@@ -537,7 +560,7 @@ public:
      * @param[in] callback 订阅回调函数
      * @return 订阅者对象的智能指针
      */
-    template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
+    template <typename MsgType, typename SubscribeMsgCallback, typename = std::enable_if_t<is_msg_v<MsgType> && std::is_invocable_v<SubscribeMsgCallback, const MsgType &>>>
     typename Subscriber<MsgType>::ptr createSubscriber(std::string_view topic, SubscribeMsgCallback callback) noexcept;
 
     /**
@@ -545,10 +568,10 @@ public:
      *
      * @tparam SrvType 服务类型
      * @param[in] service 服务名称
-     * @param[in] callback 请求处理回调，返回对应响应
+     * @param[in] callback 请求处理回调，形如 `void(const Request &, Response &)`
      */
     template <typename SrvType, typename ServiceCallback,
-              typename = std::enable_if_t<std::is_invocable_r_v<typename SrvType::Response, ServiceCallback, const typename SrvType::Request &>>>
+              typename = std::enable_if_t<is_srv_v<SrvType> && std::is_invocable_r_v<void, ServiceCallback, const typename SrvType::Request &, typename SrvType::Response &>>>
     typename Service<SrvType>::ptr createService(std::string_view service, ServiceCallback callback) noexcept;
 
     /**
@@ -557,7 +580,7 @@ public:
      * @tparam SrvType 服务类型
      * @param[in] service 服务名称
      */
-    template <typename SrvType>
+    template <typename SrvType, typename = std::enable_if_t<is_srv_v<SrvType>>>
     typename Client<SrvType>::ptr createClient(std::string_view service) noexcept;
 
     /**
@@ -593,6 +616,19 @@ public:
 
     //! 运行异步 IO 上下文
     void spin() { _ctx.run(); }
+
+    /**
+     * @brief 生成异步任务，并添加到当前节点的调度器
+     *
+     * @param[in] fn 协程函数
+     * @param[in] args 协程函数参数
+     * @remark rm::lpss::async::Client::call 等方法需要在协程中调用，可以使用此方法生成异步任务
+     */
+    template <typename Callable, typename... Args>
+        requires rm::async::InvokableTask<std::decay_t<Callable>, std::decay_t<Args>...>
+    void create_task(Callable &&fn, Args &&...args) {
+        co_spawn(_ctx, std::forward<Callable>(fn), std::forward<Args>(args)...);
+    }
 
     //! 手动停止节点运行 @note 推荐使用析构函数自动清理资源并停止节点，除非在多线程环境中需要提前停止节点以释放资源
     void shutdown() noexcept;

@@ -11,8 +11,6 @@
 
 #pragma once
 
-#include <thread>
-
 #include "rmvl/core/rmvldef.hpp"
 
 #include "async.hpp"
@@ -435,7 +433,11 @@ using RingBufferSlotSHM64 = RingBufferSlotSHM<T, 64>;
 
 //! @} io_ipc
 
+} // namespace rm
+
 #include "details/shm.hpp"
+
+namespace rm {
 
 #if __cplusplus >= 202002L
 

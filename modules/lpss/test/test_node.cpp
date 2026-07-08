@@ -328,8 +328,9 @@ TEST(LPSS_node, async_subscriber_shared_lifetime) {
 
 TEST(LPSS_node, async_service_client_creation) {
     lpss::async::Node node("service_creation", 43);
-    auto service = node.createService<srv::SetBool>("/set_enabled", [](const srv::SetBool::Request &request) {
-        return srv::SetBool::Response{true, request.data ? "enabled" : "disabled"};
+    auto service = node.createService<srv::SetBool>("/set_enabled", [](const srv::SetBool::Request &request, srv::SetBool::Response &response) {
+        response.success = true;
+        response.message = request.data ? "enabled" : "disabled";
     });
     auto client = node.createClient<srv::SetBool>("/set_enabled");
 
@@ -368,8 +369,9 @@ TEST(LPSS_node, async_service_client_local_call) {
     response_writer->add(response_reader->guid(), {response_reader->port(), {127, 0, 0, 1}});
 
     auto service = std::make_shared<lpss::async::Service<srv::SetBool>>(
-        io_context, "/set_enabled", request_reader, response_writer, [](const srv::SetBool::Request &request) {
-            return srv::SetBool::Response{request.data, request.data ? "enabled" : "disabled"};
+        io_context, "/set_enabled", request_reader, response_writer, [](const srv::SetBool::Request &request, srv::SetBool::Response &response) {
+            response.success = request.data;
+            response.message = request.data ? "enabled" : "disabled";
         });
     auto client = std::make_shared<lpss::async::Client<srv::SetBool>>(io_context, "/set_enabled", request_writer, response_reader);
     service->_delay_start();
