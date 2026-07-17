@@ -641,7 +641,7 @@ public:
      * @param[in] port 监听的端口号
      * @param[in] callback 启动后调用的回调函数
      */
-    [[deprecated("Use async::HttpServer::listen() or async::HttpsServer::listen()")]]
+    [[deprecated("Use HttpServer::listen or HttpsServer::listen instead")]]
     void listen(uint16_t port, std::function<void()> callback = nullptr) {
         _port = port;
         _listen = std::move(callback);
@@ -700,7 +700,7 @@ public:
      *
      * @return rm::async::Task<> 异步任务
      */
-    [[deprecated("Use async::HttpServer::spin() or async::HttpsServer::spin()")]]
+    [[deprecated("Use HttpServer::spin or HttpsServer::spin instead")]]
     [[nodiscard]]
     Task<> spin();
 
@@ -709,7 +709,7 @@ public:
      *
      * @return Task<> 异步任务
      */
-    [[deprecated("Use async::HttpServer::spinWithoutSigint() or async::HttpsServer::spinWithoutSigint()")]]
+    [[deprecated("Use HttpServer::spinWithoutSigint or HttpsServer::spinWithoutSigint instead")]]
     [[nodiscard]]
     Task<> spinWithoutSigint();
 

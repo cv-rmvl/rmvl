@@ -327,6 +327,53 @@ TEST(IO_netapp, webapp_static_directory_index) {
     remove_dir(root);
 }
 
+TEST(IO_netapp, webapp_fragmented_request) {
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+    async::HttpServer server(app);
+    std::atomic_bool ready{};
+    const std::string body(128 * 1024, 'x');
+
+    app.post("/upload", [&](const Request &req, Response &res) {
+        res.send(req.body == body ? "complete" : "incomplete");
+    });
+    server.listen(10807, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpServer::spin, &server);
+
+    auto thrd = std::jthread([&] {
+        ready.wait(false, std::memory_order_acquire);
+
+        Request request{};
+        request.method = HTTPMethod::Post;
+        request.uri = "/upload";
+        request.host = "127.0.0.1";
+        request.connection = "close";
+        request.body = body;
+        auto raw = request.generate();
+        EXPECT_NE(raw.find("Content-Length: " + std::to_string(body.size()) + "\r\n"), std::string::npos);
+
+        Connector connector(Endpoint(ip::tcp::v4(), 10807), "127.0.0.1");
+        auto socket = connector.connect();
+        bool written = socket.write(std::string_view(raw).substr(0, 17));
+        for (size_t pos = 17; written && pos < raw.size(); pos += 4096)
+            written = socket.write(std::string_view(raw).substr(pos, std::min<size_t>(4096, raw.size() - pos)));
+        EXPECT_TRUE(written);
+
+        if (written) {
+            auto response = Response::parse(socket.read());
+            EXPECT_EQ(response.state, 200);
+            EXPECT_EQ(response.body, "complete");
+        }
+        socket.close();
+        server.stop();
+        io_context.stop();
+    });
+    io_context.run();
+}
+
 TEST(IO_netapp, webapp_https) {
     const std::string cert = RMVL_IO_TEST_DATA_PATH "/lo.crt";
     const std::string key = RMVL_IO_TEST_DATA_PATH "/lo.key";
