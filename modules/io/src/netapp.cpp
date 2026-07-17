@@ -24,10 +24,11 @@
 
 #include <sys/stat.h> // Windows CRT also supports this header
 
+#include <charconv>
 #include <chrono>
 #include <csignal>
 #include <fstream>
-#include <tuple>
+#include <optional>
 
 #include "rmvl/core/str.hpp"
 #include "rmvl/core/util.hpp"
@@ -39,6 +40,19 @@
 namespace rm {
 
 //////////////////////////////// 基本功能 //////////////////////////////////
+
+static constexpr bool ascii_iequal(std::string_view lhs, std::string_view rhs) noexcept {
+    if (lhs.size() != rhs.size())
+        return false;
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        auto lower = [](char ch) {
+            return ch >= 'A' && ch <= 'Z' ? static_cast<char>(ch + ('a' - 'A')) : ch;
+        };
+        if (lower(lhs[i]) != lower(rhs[i]))
+            return false;
+    }
+    return true;
+}
 
 static constexpr HTTPMethod get_method_from(std::string_view str) {
     if (str == "GET")
@@ -194,6 +208,14 @@ std::string Request::generate() const {
         str.append("Accept-Language: ").append(accept_language).append("\r\n");
     if (!connection.empty())
         str.append("Connection: ").append(connection).append("\r\n");
+
+    bool has_content_length = false;
+    for (const auto &[key, value] : heads) {
+        str.append(key).append(": ").append(value).append("\r\n");
+        has_content_length |= ascii_iequal(key, "Content-Length");
+    }
+    if (!body.empty() && !has_content_length)
+        str.append("Content-Length: ").append(std::to_string(body.size())).append("\r\n");
 
     str.append("\r\n").append(body);
     return str;
@@ -555,6 +577,8 @@ static std::string _generate(HTTPMethod method, std::string_view full_path, uint
             req.accept_language = value;
         else if (key == "Connection")
             req.connection = value;
+        else
+            req.heads[key] = value;
     }
     // 设置请求体
     req.body = body;
@@ -655,6 +679,71 @@ bool Router::RoutePattern::match(std::string_view path, std::unordered_map<std::
 }
 
 namespace async {
+
+struct HTTPRequestBoundary {
+    std::optional<size_t> size{};
+    bool invalid{};
+};
+
+static HTTPRequestBoundary get_http_request_boundary(std::string_view data) {
+    auto head_end = data.find("\r\n\r\n");
+    if (head_end == std::string_view::npos)
+        return {};
+
+    size_t content_length{};
+    bool has_content_length{};
+    auto line_start = data.find("\r\n");
+    if (line_start == std::string_view::npos || line_start > head_end)
+        return {{}, true};
+    line_start += 2;
+
+    while (line_start < head_end) {
+        auto line_end = data.find("\r\n", line_start);
+        if (line_end == std::string_view::npos || line_end > head_end)
+            return {{}, true};
+        auto line = data.substr(line_start, line_end - line_start);
+        auto colon = line.find(':');
+        if (colon != std::string_view::npos && ascii_iequal(line.substr(0, colon), "Content-Length")) {
+            auto value = line.substr(colon + 1);
+            while (!value.empty() && (value.front() == ' ' || value.front() == '\t'))
+                value.remove_prefix(1);
+            while (!value.empty() && (value.back() == ' ' || value.back() == '\t'))
+                value.remove_suffix(1);
+
+            size_t parsed{};
+            auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+            if (value.empty() || ec != std::errc{} || ptr != value.data() + value.size() ||
+                (has_content_length && parsed != content_length))
+                return {{}, true};
+            content_length = parsed;
+            has_content_length = true;
+        }
+        line_start = line_end + 2;
+    }
+
+    constexpr size_t separator_size = 4;
+    if (content_length > std::numeric_limits<size_t>::max() - head_end - separator_size)
+        return {{}, true};
+    return {head_end + separator_size + content_length, false};
+}
+
+static Task<std::string> read_http_request(WebStream &socket) {
+    std::string request;
+    while (true) {
+        auto chunk = co_await socket.read();
+        if (chunk.empty())
+            co_return {};
+        request.append(chunk);
+
+        auto boundary = get_http_request_boundary(request);
+        if (boundary.invalid)
+            co_return {};
+        if (boundary.size && request.size() >= *boundary.size) {
+            request.resize(*boundary.size);
+            co_return request;
+        }
+    }
+}
 
 Task<std::string> WebStream::read() {
     if (auto socket = std::get_if<StreamSocket>(&_stream))
@@ -855,7 +944,7 @@ Task<> Webapp::on_sigint() {
 }
 
 Task<> Webapp::handle_client(WebStream socket) {
-    std::string request_str = co_await socket.read();
+    std::string request_str = co_await read_http_request(socket);
     if (request_str.empty())
         co_return;
     auto req = Request::parse(request_str);
@@ -885,7 +974,10 @@ Task<> Webapp::handle_client(WebStream socket) {
         if (matched && req.heads.count("Sec-WebSocket-Key")) {
             std::string accept_key = ws_helper::generate_accept_key(req.heads["Sec-WebSocket-Key"]);
             // 发送握手响应
-            res.status(101).set("Upgrade", "websocket").set("Connection", "Upgrade").set("Sec-WebSocket-Accept", accept_key);
+            res.status(101)
+                .set("Upgrade", "websocket")
+                .set("Connection", "Upgrade")
+                .set("Sec-WebSocket-Accept", accept_key);
             if (co_await socket.write(res.generate())) {
                 DEBUG_PASS_("WebSocket Upgrade: %s", req.uri.c_str());
                 auto ws = WebSocket(std::move(socket));

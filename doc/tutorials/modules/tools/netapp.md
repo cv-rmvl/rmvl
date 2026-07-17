@@ -168,6 +168,77 @@ int main(int argc, char *argv[]) {
 
 @note rm::async::Webapp 虽然也提供了 `listen` 方法，但该方法仅用于快速测试，实际生产环境推荐使用 rm::async::HttpServer 或 rm::async::HttpsServer 进行监听。
 
+##### WebSocket 支持
+
+rm::async::Webapp 支持通过 `ws` 方法注册 WebSocket 路由。WebSocket 路由的回调函数是一个协程函数，在 HTTP Upgrade 握手成功后被调用，回调中可以通过 rm::async::WebSocket 的 `recv` 和 `send` 方法接收、发送文本消息。
+
+下面的例子创建了一个简单的 Echo WebSocket 服务，客户端向 `/ws/echo` 发送文本消息后，服务端会原样返回。
+
+```cpp
+// ws_demo.cpp
+#include <rmvl/io/netapp.hpp>
+
+using namespace rm;
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: %s <port>\n", argv[0]);
+        return 1;
+    }
+
+    uint16_t port = static_cast<uint16_t>(std::atoi(argv[1]));
+
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+    async::HttpServer server(app);
+
+    app.get("/", [](const Request &, Response &res) {
+        res.send("WebSocket echo server is running.");
+    });
+
+    app.ws("/ws/echo", [](async::WebSocket &ws, const Request &) -> async::Task<> {
+        while (ws.is_open()) {
+            std::string msg = co_await ws.recv();
+            if (msg.empty())
+                break;
+            co_await ws.send(msg);
+        }
+    });
+
+    server.listen(port, [&]() {
+        printf("WebSocket server is running on port %d\n", port);
+    });
+
+    co_spawn(io_context, &async::HttpServer::spin, &server);
+    io_context.run();
+}
+```
+
+编译方式与前面的 HTTP 服务示例相同。运行后，可以使用 `wscat` 等 WebSocket 客户端进行测试：
+
+<div class="fragment">
+<div class="line"><span class="keywordflow">./ws_demo</span> 8080</div>
+<div class="line"><span class="keywordflow">wscat</span> <span class="comment">-c</span> <span class="stringliteral">"ws://127.0.0.1:8080/ws/echo"</span></div>
+</div>
+
+在客户端输入任意文本并回车，即可看到服务端返回相同的文本内容。
+
+WebSocket 路由同样支持路径参数，参数会写入 `Request::params`，例如：
+
+```cpp
+app.ws("/ws/:room", [](async::WebSocket &ws, const Request &req) -> async::Task<> {
+    const auto room = req.params.at("room");
+    while (ws.is_open()) {
+        std::string msg = co_await ws.recv();
+        if (msg.empty())
+            break;
+        co_await ws.send("[" + room + "] " + msg);
+    }
+});
+```
+
+@note 当前 WebSocket 接口面向文本消息，`recv` 在连接关闭或收到关闭帧时返回空字符串；若业务需要发送空字符串，请在应用层自行约定消息格式。
+
 #### 3.2 HTTPS 服务器
 
 HTTPS 与 HTTP 使用相同的 Webapp，只需要将 rm::async::HttpServer 替换为 rm::async::HttpsServer ，并提供服务端的 rm::SSLContext 即可，示例代码如下：
@@ -202,3 +273,5 @@ SSLContext 必须比 HttpsServer 和所有活动 TLS 连接存活得更久。证
 <div class="fragment">
 <div class="line"><span class="keywordflow">curl</span> <span class="comment">-k</span> <span class="stringliteral">"https://127.0.0.1:8443/"</span></div>
 </div>
+
+对于 `wss`，即 TLS 加密的 WebSocket，若使用 HTTPS 服务器，WebSocket 路由的注册方式不变，只需要将服务端换成 rm::async::HttpsServer，客户端使用 `wss://` 地址连接即可。
