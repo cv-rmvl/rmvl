@@ -24,6 +24,7 @@
 #endif
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <limits>
 #include <utility>
@@ -38,6 +39,7 @@
 namespace rm {
 
 using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 /////////////////////////////// Pipe ///////////////////////////////
 
@@ -293,12 +295,19 @@ SHMBase::SHMBase(std::string_view name, std::size_t size) : _size(size), _name(n
             ERROR_("Failed to open existing shared memory: %s", strerror(errno));
             return;
         }
+        // shm_open 创建的对象会在 ftruncate 完成前对其他进程可见。并发连接方可能暂时观察到大小为 0，需要等待创建方完成初始化。
         struct stat st{};
-        if (::fstat(_fd, &st) == -1) {
-            ERROR_("Failed to get shared memory status: %s", strerror(errno));
-            ::close(_fd);
-            _fd = -1;
-            return;
+        const auto deadline = std::chrono::steady_clock::now() + 100ms;
+        while (true) {
+            if (::fstat(_fd, &st) == -1) {
+                ERROR_("Failed to get shared memory status: %s", strerror(errno));
+                ::close(_fd);
+                _fd = -1;
+                return;
+            }
+            if (st.st_size != 0 || std::chrono::steady_clock::now() >= deadline)
+                break;
+            std::this_thread::yield();
         }
         if (static_cast<size_t>(st.st_size) != size) {
             ERROR_("Shared memory size mismatch: expected %zu, got %ld", size, st.st_size);
@@ -372,7 +381,7 @@ SHMBase &SHMBase::operator=(SHMBase &&other) noexcept {
 #endif
 
 struct LatestBytesSHM::Layout {
-    uint32_t magic{};
+    std::atomic_uint32_t magic{0};
     uint32_t capacity{};
     alignas(64) std::atomic_flag writer_mtx = ATOMIC_FLAG_INIT;
     alignas(64) std::atomic_uint64_t seq{0};
@@ -391,16 +400,25 @@ LatestBytesSHM::LatestBytesSHM(std::string_view name, std::size_t capacity)
         return;
     if (isCreator()) {
         new (layout) Layout();
-        layout->magic = LATEST_BYTES_SHM_MAGIC;
         layout->capacity = static_cast<uint32_t>(std::min<std::size_t>(capacity, std::numeric_limits<uint32_t>::max()));
-    } else if (layout->magic != LATEST_BYTES_SHM_MAGIC || layout->capacity != capacity) {
-        ERROR_("LatestBytesSHM layout mismatch");
+        layout->magic.store(LATEST_BYTES_SHM_MAGIC, std::memory_order_release);
+    } else {
+        // ftruncate 完成后，创建方仍需构造布局头。等待其发布 magic，避免并发连接方把尚未初始化的合法共享内存误判为布局不匹配。
+        constexpr auto init_timeout = 100ms;
+        const auto deadline = std::chrono::steady_clock::now() + init_timeout;
+        auto magic = layout->magic.load(std::memory_order_acquire);
+        while (magic == 0 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::yield();
+            magic = layout->magic.load(std::memory_order_acquire);
+        }
+        if (magic != LATEST_BYTES_SHM_MAGIC || layout->capacity != capacity)
+            ERROR_("LatestBytesSHM layout mismatch");
     }
 }
 
 bool LatestBytesSHM::write(std::string_view data) noexcept {
     auto layout = static_cast<Layout *>(this->data());
-    if (!layout || layout->magic != LATEST_BYTES_SHM_MAGIC || data.size() > _capacity)
+    if (!layout || layout->magic.load(std::memory_order_acquire) != LATEST_BYTES_SHM_MAGIC || data.size() > _capacity)
         return false;
 
     while (layout->writer_mtx.test_and_set(std::memory_order_acquire))
@@ -420,7 +438,7 @@ bool LatestBytesSHM::write(std::string_view data) noexcept {
 
 bool LatestBytesSHM::read(std::string &data, uint64_t &last_sequence) noexcept {
     auto layout = static_cast<const Layout *>(this->data());
-    if (!layout || layout->magic != LATEST_BYTES_SHM_MAGIC)
+    if (!layout || layout->magic.load(std::memory_order_acquire) != LATEST_BYTES_SHM_MAGIC)
         return false;
 
     int retry{};
@@ -450,7 +468,8 @@ bool LatestBytesSHM::read(std::string &data, uint64_t &last_sequence) noexcept {
 
 bool LatestBytesSHM::empty() const noexcept {
     auto layout = static_cast<const Layout *>(this->data());
-    return !layout || layout->magic != LATEST_BYTES_SHM_MAGIC || layout->seq.load(std::memory_order_relaxed) == 0;
+    return !layout || layout->magic.load(std::memory_order_acquire) != LATEST_BYTES_SHM_MAGIC ||
+           layout->seq.load(std::memory_order_relaxed) == 0;
 }
 
 std::string PipeServer::read() noexcept { return readPipe(_fd); }

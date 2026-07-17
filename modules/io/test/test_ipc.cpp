@@ -87,6 +87,41 @@ TEST(IO_ipc, latest_bytes_shm_keep_latest) {
     EXPECT_FALSE(writer.write(std::string(1025, 'x')));
 }
 
+TEST(IO_ipc, latest_bytes_shm_concurrent_construction) {
+    constexpr std::size_t CAPACITY = 16 * 1024 * 1024;
+
+    for (int i = 0; i < 100; ++i) {
+        auto now = std::chrono::system_clock::now().time_since_epoch().count();
+        auto shm_name = "/rmvl_test_latest_bytes_concurrent_" + std::to_string(now) + "_" + std::to_string(i);
+        std::unique_ptr<LatestBytesSHM> first{};
+        std::unique_ptr<LatestBytesSHM> second{};
+        std::atomic_bool start{};
+
+        auto first_thread = std::thread([&]() {
+            while (!start.load(std::memory_order_acquire))
+                std::this_thread::yield();
+            first = std::make_unique<LatestBytesSHM>(shm_name, CAPACITY);
+        });
+        auto second_thread = std::thread([&]() {
+            while (!start.load(std::memory_order_acquire))
+                std::this_thread::yield();
+            second = std::make_unique<LatestBytesSHM>(shm_name, CAPACITY);
+        });
+
+        start.store(true, std::memory_order_release);
+        first_thread.join();
+        second_thread.join();
+
+        ASSERT_NE(first, nullptr);
+        ASSERT_NE(second, nullptr);
+        ASSERT_TRUE(first->write("concurrent initialization"));
+        uint64_t sequence{};
+        std::string output{};
+        ASSERT_TRUE(second->read(output, sequence));
+        EXPECT_EQ(output, "concurrent initialization");
+    }
+}
+
 // 定义一个简单的测试数据结构
 struct TestData {
     int id{};
