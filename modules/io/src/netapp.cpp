@@ -54,6 +54,24 @@ static constexpr bool ascii_iequal(std::string_view lhs, std::string_view rhs) n
     return true;
 }
 
+static constexpr bool ascii_icontains(std::string_view value, std::string_view token) noexcept {
+    if (token.empty())
+        return true;
+    if (value.size() < token.size())
+        return false;
+    for (size_t i = 0; i <= value.size() - token.size(); ++i)
+        if (ascii_iequal(value.substr(i, token.size()), token))
+            return true;
+    return false;
+}
+
+static const std::string *find_header(const Request &req, std::string_view name) noexcept {
+    for (const auto &[key, value] : req.heads)
+        if (ascii_iequal(key, name))
+            return &value;
+    return nullptr;
+}
+
 static constexpr HTTPMethod get_method_from(std::string_view str) {
     if (str == "GET")
         return HTTPMethod::Get;
@@ -164,15 +182,15 @@ Request Request::parse(std::string_view str) {
         // 重新拼接 value（允许 value 中再出现 ':'）
         std::string value(line.substr(req_head_strs[0].size() + 1));
         ltrim(value);
-        if (req_head_strs[0] == "Host")
+        if (ascii_iequal(req_head_strs[0], "Host"))
             req.host = value;
-        else if (req_head_strs[0] == "Content-Type")
+        else if (ascii_iequal(req_head_strs[0], "Content-Type"))
             req.content_type = value;
-        else if (req_head_strs[0] == "Accept")
+        else if (ascii_iequal(req_head_strs[0], "Accept"))
             req.accept = value;
-        else if (req_head_strs[0] == "Accept-Language")
+        else if (ascii_iequal(req_head_strs[0], "Accept-Language"))
             req.accept_language = value;
-        else if (req_head_strs[0] == "Connection")
+        else if (ascii_iequal(req_head_strs[0], "Connection"))
             req.connection = value;
         else
             req.heads[std::string(req_head_strs[0])] = value;
@@ -952,9 +970,10 @@ Task<> Webapp::handle_client(WebStream socket) {
 
     // 检测是否为 ws 升级请求
     bool is_ws_upgrade{};
+    const auto upgrade = find_header(req, "Upgrade");
+    const auto websocket_key = find_header(req, "Sec-WebSocket-Key");
     if (req.method == HTTPMethod::Get &&
-        req.connection.find("Upgrade") != std::string::npos &&
-        req.heads.contains("Upgrade") && req.heads["Upgrade"] == "websocket") {
+        ascii_icontains(req.connection, "upgrade") && upgrade && ascii_iequal(*upgrade, "websocket")) {
         is_ws_upgrade = true;
     }
 
@@ -971,8 +990,8 @@ Task<> Webapp::handle_client(WebStream socket) {
             }
         }
 
-        if (matched && req.heads.count("Sec-WebSocket-Key")) {
-            std::string accept_key = ws_helper::generate_accept_key(req.heads["Sec-WebSocket-Key"]);
+        if (matched && websocket_key) {
+            std::string accept_key = ws_helper::generate_accept_key(*websocket_key);
             // 发送握手响应
             res.status(101)
                 .set("Upgrade", "websocket")

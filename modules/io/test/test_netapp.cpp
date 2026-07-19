@@ -178,6 +178,41 @@ TEST(IO_netapp, webapp_basic) {
     io_context.run();
 }
 
+TEST(IO_netapp, websocket_header_case_insensitive) {
+    async::IOContext io_context{};
+    async::Webapp app(io_context);
+    async::HttpServer server(app);
+    std::atomic_bool ready{};
+
+    app.ws("/ws", [](async::WebSocket &, const Request &) -> async::Task<> {
+        co_return;
+    });
+    server.listen(10808, [&] {
+        ready.store(true, std::memory_order_release);
+        ready.notify_one();
+    });
+    co_spawn(io_context, &async::HttpServer::spin, &server);
+
+    auto thrd = std::jthread([&]() {
+        ready.wait(false, std::memory_order_acquire);
+        const std::unordered_map<std::string, std::string> heads{
+            {"Connection", "keep-alive, uPgRaDe"},
+            {"uPgRaDe", "WebSocket"},
+            {"sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ=="},
+            {"sec-websocket-version", "13"},
+        };
+        auto res = requests::get("http://127.0.0.1:10808/ws", {}, heads);
+        EXPECT_EQ(res.state, 101);
+        EXPECT_EQ(res.heads["Upgrade"], "websocket");
+        EXPECT_EQ(res.heads["Connection"], "Upgrade");
+        EXPECT_EQ(res.heads["Sec-WebSocket-Accept"], "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+
+        server.stop();
+        io_context.stop();
+    });
+    io_context.run();
+}
+
 TEST(IO_netapp, webapp_router) {
     async::IOContext io_context{};
     async::Webapp app(io_context);
