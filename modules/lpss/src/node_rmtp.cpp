@@ -601,13 +601,19 @@ DataReaderBase::DataReaderBase(rm::async::IOContext &io_context, const Guid &gui
 }
 
 void DataReaderBase::add(const Guid &guid) noexcept {
+    _matched_writers.insert(guid);
     if (!same_host(_guid, guid))
         return;
     auto name = shm_channel_name(guid, _guid);
     _shm_sources[guid] = {name, create_shm_channel(name), 0};
 }
 
-void DataReaderBase::remove(const Guid &guid) noexcept { erase_endpoint_or_node(_shm_sources, guid); }
+void DataReaderBase::remove(const Guid &guid) noexcept {
+    if (_matched_writers.erase(guid) == 0)
+        for (auto it = _matched_writers.begin(); it != _matched_writers.end();)
+            same_node(*it, guid) ? it = _matched_writers.erase(it) : ++it;
+    erase_endpoint_or_node(_shm_sources, guid);
+}
 
 rm::async::Task<std::string> DataReaderBase::read() noexcept {
     while (true) {

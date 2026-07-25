@@ -379,15 +379,22 @@ TEST(LPSS_node, async_service_client_local_call) {
 
     srv::SetBool::Request request{};
     request.data = true;
+    bool service_ready{};
     std::optional<srv::SetBool::Response> result{};
-    auto call = [](lpss::async::Client<srv::SetBool>::ptr client, srv::SetBool::Request request,
+    auto call = [](lpss::async::Client<srv::SetBool>::ptr client, srv::SetBool::Request request, bool *service_ready,
                    std::optional<srv::SetBool::Response> *result, rm::async::IOContext *ctx) -> rm::async::Task<> {
+        *service_ready = co_await client->wait(100ms);
+        if (!*service_ready) {
+            ctx->stop();
+            co_return;
+        }
         *result = co_await client->call(request, 500ms);
         ctx->stop();
     };
-    co_spawn(io_context, call, client, request, &result, &io_context);
+    co_spawn(io_context, call, client, request, &service_ready, &result, &io_context);
     io_context.run();
 
+    EXPECT_TRUE(service_ready);
     ASSERT_TRUE(result.has_value());
     EXPECT_TRUE(result->success);
     EXPECT_EQ(result->message, "enabled");

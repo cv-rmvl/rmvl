@@ -37,9 +37,9 @@ struct MTPWriterTarget {
 
 //! MTP 共享内存写入目标
 struct MTPShmTarget {
-    std::string name{};                     //!< 共享内存通道名称
-    Locator locator{};                      //!< 目标定位器，用于发送唤醒通知
-    std::shared_ptr<LatestBytesSHM> shm{};  //!< 最新字节流共享内存
+    std::string name{};                    //!< 共享内存通道名称
+    Locator locator{};                     //!< 目标定位器，用于发送唤醒通知
+    std::shared_ptr<LatestBytesSHM> shm{}; //!< 最新字节流共享内存
 };
 
 //! MTP 共享内存读取源
@@ -193,14 +193,14 @@ public:
     void remove(const Guid &guid) noexcept;
 
 protected:
-    uint16_t _port{};                                             //!< 监听端口
-    Guid _guid;                                                   //!< 读取器所属实体 GUID
-    DgramSocket _udpv4;                                           //!< UDPv4 通道
-    std::string_view _type{};                                     //!< 消息类型
-    std::string _topic{};                                         //!< 监听话题
-    std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{}; //!< MTP 重组缓存
-    std::size_t _asm_bytes{};                                     //!< 待重组载荷占用字节数
-    std::shared_mutex _shm_mtx{};                                  //!< 保护共享内存读取源
+    uint16_t _port{};                                                //!< 监听端口
+    Guid _guid;                                                      //!< 读取器所属实体 GUID
+    DgramSocket _udpv4;                                              //!< UDPv4 通道
+    std::string_view _type{};                                        //!< 消息类型
+    std::string _topic{};                                            //!< 监听话题
+    std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{};    //!< MTP 重组缓存
+    std::size_t _asm_bytes{};                                        //!< 待重组载荷占用字节数
+    std::shared_mutex _shm_mtx{};                                    //!< 保护共享内存读取源
     std::unordered_map<Guid, MTPShmSource, GuidHash> _shm_sources{}; //!< 共享内存读取源缓存集合
 };
 
@@ -282,6 +282,9 @@ public:
     //! 获取写入话题的消息类型
     inline std::string_view msgtype() const noexcept { return _type; }
 
+    //! 是否已匹配数据接收端点
+    inline bool matched() const noexcept { return !_udpv4_targets.empty() || !_shm_targets.empty(); }
+
     /**
      * @brief 添加数据接收端点
      *
@@ -314,9 +317,9 @@ protected:
     std::unordered_map<Guid, MTPWriterTarget, GuidHash> _udpv4_targets;
     //! 目标共享内存通道缓存集合
     std::unordered_map<Guid, MTPShmTarget, GuidHash> _shm_targets;
-    std::atomic_uint16_t _sequence{};       //!< MTP 发送序列号
-    std::optional<std::string> _pending{};  //!< 发送中收到的最新待发送消息
-    bool _sending{};                        //!< 是否已有发送协程正在运行
+    std::atomic_uint16_t _sequence{};      //!< MTP 发送序列号
+    std::optional<std::string> _pending{}; //!< 发送中收到的最新待发送消息
+    bool _sending{};                       //!< 是否已有发送协程正在运行
 };
 
 /**
@@ -358,6 +361,9 @@ public:
     //! 获取监听的端口
     inline uint16_t port() const noexcept { return _port; }
 
+    //! 是否已匹配数据写入端点
+    inline bool matched() const noexcept { return !_matched_writers.empty(); }
+
     /**
      * @brief 添加数据写入端点
      *
@@ -373,13 +379,14 @@ public:
     void remove(const Guid &guid) noexcept;
 
 protected:
-    uint16_t _port{};                                             //!< 监听端口
-    Guid _guid;                                                   //!< 读取器所属实体 GUID
-    rm::async::DgramSocket _udpv4;                                //!< UDPv4 通道
-    std::string_view _type{};                                     //!< 消息类型
-    std::string _topic{};                                         //!< 监听话题
-    std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{}; //!< MTP 重组缓存
-    std::size_t _asm_bytes{};                                     //!< 待重组载荷占用字节数
+    uint16_t _port{};                                                //!< 监听端口
+    Guid _guid;                                                      //!< 读取器所属实体 GUID
+    rm::async::DgramSocket _udpv4;                                   //!< UDPv4 通道
+    std::string_view _type{};                                        //!< 消息类型
+    std::string _topic{};                                            //!< 监听话题
+    std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{};    //!< MTP 重组缓存
+    std::size_t _asm_bytes{};                                        //!< 待重组载荷占用字节数
+    std::unordered_set<Guid, GuidHash> _matched_writers{};           //!< 已匹配数据写入端点
     std::unordered_map<Guid, MTPShmSource, GuidHash> _shm_sources{}; //!< 共享内存读取源缓存集合
 };
 
