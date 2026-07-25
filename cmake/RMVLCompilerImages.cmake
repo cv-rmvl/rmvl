@@ -43,7 +43,7 @@ foreach(line ${parse_result})
 
   math(EXPR img_num "${img_num} + 1")
   add_custom_command(
-    TARGET run_in_list
+    TARGET run_in_list POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --blue "${img_num}. run_in_${name}: ${description}"
     COMMAND ${CMAKE_COMMAND} -E echo "   image: ${image}"
     COMMAND ${CMAKE_COMMAND} -E echo "   options: ${options}"

@@ -215,14 +215,11 @@ static void sendStopMessage(const std::unordered_map<Guid, NodeStorageInfo, Guid
             sendREDPMessage(node_info.ctrl_loc, msg);
 }
 
-rm::async::Task<> Node::on_sigint() {
-    rm::async::Signal sig(_ctx, SIGINT);
+rm::async::Task<> Node::on_shutdown_signal(int signum) {
+    rm::async::Signal sig(_ctx, signum);
     co_await sig.wait();
-    printf("\nReceived interrupt signal, stopping node...\n");
-    sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
-    _local_readers.clear();
-    _local_writers.clear();
-    _ctx.stop();
+    printf("\nReceived %s, stopping node...\n", signum == SIGINT ? "SIGINT" : "SIGTERM");
+    shutdown();
 }
 
 Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_id), _rndp_writer(rm::async::Sender(_ctx, ip::udp::v4()).create()) {
@@ -252,11 +249,14 @@ Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_
     // 启动心跳检测协程任务
     co_spawn(_ctx, &Node::heartbeat_detect, this);
 
-    // 启动 SIGINT 信号处理协程任务
-    co_spawn(_ctx, &Node::on_sigint, this);
+    // 启动正常退出信号处理协程任务
+    co_spawn(_ctx, &Node::on_shutdown_signal, this, SIGINT);
+    co_spawn(_ctx, &Node::on_shutdown_signal, this, SIGTERM);
 }
 
 void Node::shutdown() noexcept {
+    if (!_running.exchange(false, std::memory_order_acq_rel))
+        return;
     sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
     _local_readers.clear();
     _local_writers.clear();

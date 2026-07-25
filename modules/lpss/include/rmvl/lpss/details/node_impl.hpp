@@ -235,6 +235,21 @@ rm::async::Task<> Client<SrvType>::receive() {
 
 template <typename SrvType>
 template <typename Rep, typename Period>
+rm::async::Task<bool> Client<SrvType>::wait(std::chrono::duration<Rep, Period> timeout) {
+    if (invalid())
+        co_return false;
+
+    rm::async::Timer timer(_ctx);
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while ((!_request_writer->matched() || !_response_reader->matched()) &&
+           std::chrono::steady_clock::now() < deadline)
+        co_await timer.sleep_for(std::chrono::milliseconds(1));
+
+    co_return _request_writer->matched() && _response_reader->matched();
+}
+
+template <typename SrvType>
+template <typename Rep, typename Period>
 auto Client<SrvType>::call(const Request &request, std::chrono::duration<Rep, Period> timeout) -> rm::async::Task<std::optional<Response>> {
     if (invalid() || _calling)
         co_return std::nullopt;

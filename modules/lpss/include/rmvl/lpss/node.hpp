@@ -481,6 +481,15 @@ public:
     bool invalid() const noexcept { return !_request_writer || !_response_reader; }
 
     /**
+     * @brief 等待服务端上线
+     *
+     * @param[in] timeout 最大等待时间
+     * @return 服务端在超时前上线返回 `true`，否则返回 `false`
+    */
+    template <typename Rep, typename Period>
+    rm::async::Task<bool> wait(std::chrono::duration<Rep, Period> timeout);
+
+    /**
      * @brief 调用服务并异步等待响应
      *
      * @param[in] request 请求消息
@@ -646,14 +655,14 @@ private:
     //! 心跳检测
     rm::async::Task<> heartbeat_detect();
 
-    //! 处理 SIGINT 信号
-    rm::async::Task<> on_sigint();
+    //! 处理要求节点正常退出的信号
+    rm::async::Task<> on_shutdown_signal(int signum);
 
 protected:
     rm::async::IOContext _ctx{}; //!< 异步 IO 上下文
 
 private:
-    bool _running{true};   //!< 运行状态
+    std::atomic_bool _running{true}; //!< 运行状态
     uint16_t _next_eid{1}; //!< 用于生成实体 ID 的计数器
 
     uint16_t _rndp_port{}; //!< RNDP 广播端口号
