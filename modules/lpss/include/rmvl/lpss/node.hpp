@@ -496,7 +496,7 @@ public:
      * @param[in] timeout 超时时间，默认 30 秒
      * @return 成功时返回响应，并发调用或等待超时时返回 `std::nullopt`
      */
-    template <typename Rep, typename Period>
+    template <typename Rep = std::chrono::seconds::rep, typename Period = std::chrono::seconds::period>
     rm::async::Task<std::optional<Response>> call(const Request &request, std::chrono::duration<Rep, Period> timeout = std::chrono::seconds(30));
 
 private:
