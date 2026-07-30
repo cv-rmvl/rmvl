@@ -447,6 +447,9 @@ public:
     class TimerAwaiter : public AsyncIOAwaiter {
     public:
         TimerAwaiter(IOContext &ctx, FileDescriptor fd, double duration) : AsyncIOAwaiter(ctx, fd), _duration(duration) {}
+#ifdef _WIN32
+        ~TimerAwaiter();
+#endif
 
         //! @cond
         void await_suspend(std::coroutine_handle<> handle);
