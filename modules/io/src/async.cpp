@@ -148,11 +148,20 @@ struct TimerContext {
     IocpOverlapped *ovl{};
 };
 
-void CALLBACK timer_callback(PTP_CALLBACK_INSTANCE, PVOID context, PTP_TIMER timer) {
+void CALLBACK timer_callback(PTP_CALLBACK_INSTANCE, PVOID context, PTP_TIMER) {
     auto timer_context = reinterpret_cast<TimerContext *>(context);
     // 手动投递完成包
     PostQueuedCompletionStatus(timer_context->aioh, 0, 0, &timer_context->ovl->ov);
+}
+
+Timer::TimerAwaiter::~TimerAwaiter() {
+    if (_fd == INVALID_FD)
+        return;
+    auto timer = reinterpret_cast<PTP_TIMER>(_fd);
+    SetThreadpoolTimer(timer, nullptr, 0, 0);
+    WaitForThreadpoolTimerCallbacks(timer, TRUE);
     CloseThreadpoolTimer(timer);
+    _fd = INVALID_FD;
 }
 
 void Timer::TimerAwaiter::await_suspend(std::coroutine_handle<> handle) {
@@ -161,7 +170,8 @@ void Timer::TimerAwaiter::await_suspend(std::coroutine_handle<> handle) {
     auto timer_ctx = new (_ovl->info) TimerContext{_aioh, _ovl.get()};
     _fd = CreateThreadpoolTimer(timer_callback, timer_ctx, nullptr);
     if (_fd == nullptr) {
-        handle.resume();
+        _fd = INVALID_FD;
+        PostQueuedCompletionStatus(_aioh, 0, 0, &_ovl->ov);
         return;
     }
 

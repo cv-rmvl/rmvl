@@ -7,6 +7,10 @@ RMVL Dev Tools（简称 `rdt`）是一个 CLI 命令行工具，能够极大幅�
 <div class="fragment">
 <div class="line"><span class="keywordflow">wget</span> https://cv-rmvl.github.io/install <span class="comment">-qO</span> - | <span class="keywordflow">bash</span></div>
 </div>
+Windows 用户可以使用如下的一键安装命令，在开始菜单找到 Windows Powershell 后点击进入，或者按下 `Win+X` 唤起对话框，按下 `I` 进入 Windows Powershell，输入以下内容，根据提示操作即可完成 RMVL 以及 rdt 工具的安装：
+<div class="fragment">
+<div class="line"><span class="keywordflow">irm</span> https://cv-rmvl.github.io/install-win <span class="comment">|</span> <span class="keywordflow">iex</span></div>
+</div>
 
 `rdt` 的使用非常简单，安装完成后在终端输入以下命令即可查看帮助文档：
 
