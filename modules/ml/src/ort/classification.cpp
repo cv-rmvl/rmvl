@@ -66,7 +66,14 @@ static void imageToVector(const cv::Mat &input_image, float mean, float std, std
             p_input_array[h * W + w] = (input_image.at<uchar>(h, w) / 255.f - mean) / std;
 }
 
-std::vector<Ort::Value> ClassificationNet::preProcess(const std::vector<cv::Mat> &images, const PreprocessOptions &options)
+std::pair<int, float> ClassificationNet::inference(const std::vector<cv::Mat> &images, const std::vector<float> &means,
+                                                   const std::vector<float> &stds)
+{
+    return postProcess(run(preProcess(images, means, stds)));
+}
+
+std::vector<Ort::Value> ClassificationNet::preProcess(const std::vector<cv::Mat> &images, const std::vector<float> &means,
+                                                      const std::vector<float> &stds)
 {
     std::size_t input_count = _session->GetInputCount();
     RMVL_Assert(input_count == 1 && images.size() == 1);
@@ -82,11 +89,11 @@ std::vector<Ort::Value> ClassificationNet::preProcess(const std::vector<cv::Mat>
     RMVL_Assert(shape[1] == 3 || shape[1] == 1);
     shape[0] = 1;
     // img -> iarray
-    RMVL_Assert(!options.means.empty() && !options.stds.empty());
+    RMVL_Assert(!means.empty() && !stds.empty());
     if (shape[1] == 3)
-        imageToVector(img, options.means, options.stds, _iarrays.front());
+        imageToVector(img, means, stds, _iarrays.front());
     else
-        imageToVector(img, options.means.front(), options.stds.front(), _iarrays.front());
+        imageToVector(img, means.front(), stds.front(), _iarrays.front());
     // 更新每个输入层的数据
     input_tensors.emplace_back(Ort::Value::CreateTensor<float>(
         _memory_info, _iarrays.front().data(), _iarrays.front().size(), shape.data(), shape.size()));
@@ -94,14 +101,14 @@ std::vector<Ort::Value> ClassificationNet::preProcess(const std::vector<cv::Mat>
     return input_tensors;
 }
 
-std::any ClassificationNet::postProcess(const std::vector<Ort::Value> &output_tensors, const PostprocessOptions &)
+std::pair<int, float> ClassificationNet::postProcess(const std::vector<Ort::Value> &output_tensors)
 {
     RMVL_Assert(output_tensors.size() == 1);
     auto &output_tensor = output_tensors.front();
     const float *output = output_tensor.GetTensorData<float>();
     std::size_t size{output_tensor.GetTensorTypeAndShapeInfo().GetElementCount()};
     auto maxit = std::max_element(output, output + size);
-    return std::make_pair(static_cast<std::size_t>(maxit - output), *maxit);
+    return std::make_pair(static_cast<int>(maxit - output), *maxit);
 }
 
 } // namespace rm

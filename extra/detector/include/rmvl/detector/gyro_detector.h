@@ -40,7 +40,7 @@ class RMVL_EXPORTS_W GyroDetector final {
     ImuData _imu_data; //!< 每一帧对应的 IMU 数据
     int _armor_num;    //!< 默认装甲板数目
 
-    std::unique_ptr<OnnxNet> _ort;
+    std::unique_ptr<ClassificationNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
 
 public:

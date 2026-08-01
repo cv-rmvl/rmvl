@@ -58,15 +58,11 @@ OnnxNet::OnnxNet(std::string_view model_path, OrtProvider prov) : _memory_info(O
 #endif
 }
 
-std::vector<Ort::Value> OnnxNet::preProcess(const std::vector<cv::Mat> &, const PreprocessOptions &) { return {}; }
-std::any OnnxNet::postProcess(const std::vector<Ort::Value> &, const PostprocessOptions &) { return {}; }
-
-std::any OnnxNet::inference(const std::vector<cv::Mat> &images, const PreprocessOptions &preop, const PostprocessOptions &postop)
+std::vector<Ort::Value> OnnxNet::run(const std::vector<Ort::Value> &input_tensors)
 {
     RMVL_Assert(_session != nullptr);
-    auto itensors = preProcess(images, preop);
 #if ORT_API_VERSION < 12
-    return postProcess(_session->Run(Ort::RunOptions{nullptr}, _inames.data(), itensors.data(), itensors.size(), _onames.data(), _onames.size()), postop);
+    return _session->Run(Ort::RunOptions{nullptr}, _inames.data(), input_tensors.data(), input_tensors.size(), _onames.data(), _onames.size());
 #else
     std::vector<const char *> input_names(_inames.size());
     for (std::size_t i = 0; i < _inames.size(); i++)
@@ -74,7 +70,7 @@ std::any OnnxNet::inference(const std::vector<cv::Mat> &images, const Preprocess
     std::vector<const char *> output_names(_onames.size());
     for (std::size_t i = 0; i < _onames.size(); i++)
         output_names[i] = _onames[i].get();
-    return postProcess(_session->Run(Ort::RunOptions{nullptr}, input_names.data(), itensors.data(), itensors.size(), output_names.data(), output_names.size()), postop);
+    return _session->Run(Ort::RunOptions{nullptr}, input_names.data(), input_tensors.data(), input_tensors.size(), output_names.data(), output_names.size());
 #endif
 }
 
