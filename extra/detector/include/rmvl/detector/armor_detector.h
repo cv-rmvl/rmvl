@@ -12,8 +12,8 @@
 #pragma once
 
 #include "rmvl/combo/armor.h"
-#include "rmvl/tracker/tracker.h"
 #include "rmvl/ml/ort.h"
+#include "rmvl/tracker/tracker.h"
 
 namespace rm {
 
@@ -39,7 +39,7 @@ struct RMVL_EXPORTS_W_AG ArmorDetectorInfo {
 class RMVL_EXPORTS_W ArmorDetector final {
     double _tick;      //!< 每一帧对应的时间点
     ImuData _imu_data; //!< 每一帧对应的 IMU 数据
-    std::unique_ptr<OnnxNet> _ort;
+    std::unique_ptr<ClassificationNet> _ort;
     std::unordered_map<int, RobotType> _robot_t;
 
 public:
