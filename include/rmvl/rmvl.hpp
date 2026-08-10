@@ -26,6 +26,10 @@
 #include "rmvl/io.hpp"
 #endif // HAVE_RMVL_IO
 
+#ifdef HAVE_RMVL_LOGGER
+#include "rmvl/logger.hpp"
+#endif // HAVE_RMVL_LOGGER
+
 #ifdef HAVE_RMVL_ML
 #include "rmvl/ml.hpp"
 #endif // HAVE_RMVL_ML

@@ -116,6 +116,13 @@ TEST(IO_socket, sync_udp_socket) {
     client_thrd.join();
 }
 
+TEST(IO_socket, sync_udp_broadcast_option) {
+    auto socket = Sender(ip::udp::v4()).create();
+    ASSERT_FALSE(socket.invalid());
+    EXPECT_NO_THROW(socket.setOption(ip::udp::Broadcast{}));
+    EXPECT_NO_THROW(socket.setOption(ip::udp::Broadcast{false}));
+}
+
 TEST(IO_socket, sync_udp_socket_nonblocking) {
     auto server_ep = Endpoint(ip::udp::v4(), 10905);
     auto listener = Listener(server_ep, false);
