@@ -120,6 +120,7 @@ public:
     explicit Interface(std::array<uint8_t, 4> addr);
 
     //! @cond
+    int level() const;
     int name() const;
     sockopt_data_t data() const;
     unsigned int size() const;
@@ -135,6 +136,7 @@ public:
     explicit Loopback(bool enabled = true);
 
     //! @cond
+    int level() const;
     int name() const;
     sockopt_data_t data() const;
     unsigned int size() const;
@@ -150,6 +152,7 @@ public:
     explicit JoinGroup(std::string_view group);
 
     //! @cond
+    int level() const;
     int name() const;
     sockopt_data_t data() const;
     unsigned int size() const;
@@ -178,6 +181,26 @@ namespace udp {
 Protocol v4();
 //! 构造端点，以表示 IPv6 UDP 协议
 Protocol v6();
+
+//! UDP 广播控制选项
+class Broadcast {
+public:
+    /**
+     * @brief 构造 UDP 广播控制选项
+     * @param[in] enabled 是否允许发送广播数据报
+     */
+    explicit Broadcast(bool enabled = true);
+
+    //! @cond
+    int level() const;
+    int name() const;
+    sockopt_data_t data() const;
+    unsigned int size() const;
+    //! @endcond
+
+private:
+    int _data{};
+};
 
 } // namespace udp
 

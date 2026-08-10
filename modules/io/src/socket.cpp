@@ -315,6 +315,7 @@ namespace multicast {
 // Interface Implementation
 
 Interface::Interface(std::array<uint8_t, 4> addr) { std::copy(addr.begin(), addr.end(), _data); }
+int Interface::level() const { return IPPROTO_IP; }
 int Interface::name() const { return IP_MULTICAST_IF; }
 sockopt_data_t Interface::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
 unsigned int Interface::size() const { return sizeof(_data); }
@@ -322,6 +323,7 @@ unsigned int Interface::size() const { return sizeof(_data); }
 // Loopback Implementation
 
 Loopback::Loopback(bool enabled) : _data(enabled ? 1 : 0) {}
+int Loopback::level() const { return IPPROTO_IP; }
 int Loopback::name() const { return IP_MULTICAST_LOOP; }
 sockopt_data_t Loopback::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
 unsigned int Loopback::size() const { return sizeof(_data); }
@@ -335,6 +337,7 @@ JoinGroup::JoinGroup(std::string_view multicast_addr) {
     memcpy(&_data, &mreq, sizeof(mreq));
 }
 
+int JoinGroup::level() const { return IPPROTO_IP; }
 int JoinGroup::name() const { return IP_ADD_MEMBERSHIP; }
 sockopt_data_t JoinGroup::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
 unsigned int JoinGroup::size() const { return sizeof(_data); }
@@ -353,6 +356,12 @@ namespace udp {
 Protocol v4() { return {AF_INET, SOCK_DGRAM}; }
 Protocol v6() { return {AF_INET6, SOCK_DGRAM}; }
 
+Broadcast::Broadcast(bool enabled) : _data(enabled ? 1 : 0) {}
+int Broadcast::level() const { return SOL_SOCKET; }
+int Broadcast::name() const { return SO_BROADCAST; }
+sockopt_data_t Broadcast::data() const { return reinterpret_cast<sockopt_data_t>(&_data); }
+unsigned int Broadcast::size() const { return sizeof(_data); }
+
 } // namespace udp
 
 } // namespace ip
@@ -360,7 +369,7 @@ Protocol v6() { return {AF_INET6, SOCK_DGRAM}; }
 template <typename SockOpt>
 static void set_fd_option(SocketFd fd, const SockOpt &opt) {
     RMVL_DbgAssert(fd != INVALID_SOCKET_FD);
-    if (setsockopt(fd, IPPROTO_IP, opt.name(), opt.data(), static_cast<socklen_t>(opt.size())) < 0)
+    if (setsockopt(fd, opt.level(), opt.name(), opt.data(), static_cast<socklen_t>(opt.size())) < 0)
         RMVL_Error_(RMVL_StsError, "setsockopt failed, error code: %d", error_code());
 }
 
@@ -370,6 +379,8 @@ template <>
 void DgramSocket::setOption(const ip::multicast::JoinGroup &opt) { set_fd_option(_fd, opt); }
 template <>
 void DgramSocket::setOption(const ip::multicast::Interface &opt) { set_fd_option(_fd, opt); }
+template <>
+void DgramSocket::setOption(const ip::udp::Broadcast &opt) { set_fd_option(_fd, opt); }
 
 #ifdef __MSVC__
 #pragma endregion
