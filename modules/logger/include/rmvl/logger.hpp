@@ -25,13 +25,36 @@
 
 namespace rm {
 
-//! @defgroup logger 日志模块
+//! @defgroup logger 日志
 //! @{
 //! @brief 提供异步、线程安全的多后端日志记录功能
 //! @details
-//! - rm::Logger 负责管理独立的日志级别、异步队列、工作线程和输出后端；LoggerOptions 只保存各后端共用的配置。
-//! - rm::FileSink、rm::SerialSink 和 rm::UDPSink 分别封装对应输出后端的资源与写入行为。
+//! - rm::Logger 负责管理独立的日志级别、异步队列、工作线程和输出后端； LoggerOptions 只保存各后端共用的配置。
+//! - FileSink 、 SerialSink 和 UDPSink 分别封装对应输出后端的资源与写入行为。
 //! - rm::std_logger 是进程内默认 stdout 日志器的懒加载代理，适合无需单独配置后端的通用日志场景。
+//! @par 自定义日志后端
+//! 自定义 Sink 需要在其所在命名空间中提供 `sink_write_invoke` 和 `sink_flush_invoke`，例如：
+//! @code {.cpp}
+//! namespace custom {
+//!
+//! struct BufferSink {
+//!     std::string *buffer;
+//! };
+//!
+//! bool sink_write_invoke(BufferSink &sink, rm::LogLevel, std::string_view record) noexcept {
+//!     sink.buffer->append(record);
+//!     return true;
+//! }
+//!
+//! bool sink_flush_invoke(BufferSink &) noexcept { return true; }
+//!
+//! } // namespace custom
+//!
+//! std::string output;
+//! rm::Logger logger(custom::BufferSink{&output});
+//! logger.info("custom sink: {}", 42);
+//! logger.flush(); // 强制触发持久化
+//! @endcode
 
 //! 日志级别
 enum class LogLevel : uint8_t {
@@ -45,12 +68,19 @@ enum class LogLevel : uint8_t {
 
 /**
  * @brief 日志后端写入定制点
- *
- * @tparam SinkType 日志后端类型
  * @details 自定义日志后端需要通过 ADL 提供返回 bool 的 `sink_write_invoke(SinkType &, LogLevel,
  *          std::string_view)` 重载，即自定义的 `sink_write_invoke` 需要定义在和 SinkType 相同的命名空间中。
  */
 struct sink_write_t {
+    /**
+     * @brief 将一条日志记录写入指定后端
+     *
+     * @tparam SinkType 日志后端类型
+     * @param[in,out] sink 日志后端
+     * @param[in] level 日志级别
+     * @param[in] record 已格式化的完整日志记录
+     * @return 是否写入成功
+     */
     template <typename SinkType>
     bool operator()(SinkType &sink, LogLevel level, std::string_view record) const noexcept(noexcept(sink_write_invoke(sink, level, record))) {
         return sink_write_invoke(sink, level, record);
@@ -59,12 +89,17 @@ struct sink_write_t {
 
 /**
  * @brief 日志后端持久化定制点
- *
- * @tparam SinkType 日志后端类型
  * @details 自定义日志后端需要通过 ADL 提供返回 bool 的 `sink_flush_invoke(SinkType &)`
  *          重载，即自定义的 `sink_flush_invoke` 需要定义在和 SinkType 相同的命名空间中。
  */
 struct sink_flush_t {
+    /**
+     * @brief 将指定后端中尚未持久化的日志刷出
+     *
+     * @tparam SinkType 日志后端类型
+     * @param[in,out] sink 日志后端
+     * @return 是否持久化成功
+     */
     template <typename SinkType>
     bool operator()(SinkType &sink) const noexcept(noexcept(sink_flush_invoke(sink))) {
         return sink_flush_invoke(sink);
@@ -78,37 +113,63 @@ constexpr sink_flush_t sink_flush{};
 
 //! stdout 日志后端
 struct StdoutSink {
+    //! stdout 日志后端写入器
     friend bool sink_write_invoke(StdoutSink &, LogLevel, std::string_view) noexcept;
+    //! stdout 日志后端持久化器
     friend bool sink_flush_invoke(StdoutSink &) noexcept;
 };
 
 //! 文件日志后端
 class FileSink {
 public:
+    /**
+     * @brief 创建文件日志后端
+     * @details 在指定目录生成 `<name>_index` 索引文件和 `<name>_<index>.log` 日志文件。
+     *
+     * @param[in] path 日志文件所在目录
+     * @param[in] name 日志名称，建议不带后缀
+     * @param[in] max_file_size 单个日志文件最大字节数
+     * @param[in] max_files 最大保留文件数，超过后删除最早的日志文件
+     * @note `path` 指定的目录需要预先存在。
+     */
     FileSink(std::string path = ".", std::string name = "rmvl", std::size_t max_file_size = 10U * 1024U * 1024U, std::size_t max_files = 128);
+
+    //! @cond
     FileSink(const FileSink &) = delete;
     FileSink(FileSink &&) noexcept;
     FileSink &operator=(const FileSink &) = delete;
     FileSink &operator=(FileSink &&) noexcept;
     ~FileSink();
+    //! @endcond
 
 private:
     class Impl;
     std::unique_ptr<Impl> _impl;
 
+    //! 文件日志后端写入器
     friend bool sink_write_invoke(FileSink &, LogLevel, std::string_view) noexcept;
+    //! 文件日志后端持久化器
     friend bool sink_flush_invoke(FileSink &) noexcept;
 };
 
 //! 串口日志后端
 class SerialSink {
 public:
+    /**
+     * @brief 创建串口日志后端
+     *
+     * @param[in] device 串口设备名
+     * @param[in] baud_rate 串口波特率
+     */
     SerialSink(std::string device, BaudRate baud_rate = BaudRate::BR_115200);
+
+    //! @cond
     SerialSink(const SerialSink &) = delete;
     SerialSink(SerialSink &&) noexcept;
     SerialSink &operator=(const SerialSink &) = delete;
     SerialSink &operator=(SerialSink &&) noexcept;
     ~SerialSink();
+    //! @endcond
 
 private:
     class Impl;
@@ -121,12 +182,23 @@ private:
 //! UDP 日志后端
 class UDPSink {
 public:
+    /**
+     * @brief 创建 UDP 日志后端
+     * @details 日志记录超过单个 IPv4 UDP 数据报的有效载荷上限时，将按照链路 MTU 拆分为多个数据报发送。
+     *
+     * @param[in] address 目标 IPv4 地址，可以是单播或广播地址
+     * @param[in] port 目标端口
+     * @param[in] mtu 链路最大传输单元
+     */
     UDPSink(std::string address, uint16_t port, std::size_t mtu = 1500);
+
+    //! @cond
     UDPSink(const UDPSink &) = delete;
     UDPSink(UDPSink &&) noexcept;
     UDPSink &operator=(const UDPSink &) = delete;
     UDPSink &operator=(UDPSink &&) noexcept;
     ~UDPSink();
+    //! @endcond
 
 private:
     class Impl;
@@ -211,10 +283,14 @@ public:
     Logger(SinkType sink, LoggerOptions options = {})
         : Logger(std::unique_ptr<details::SinkBase>(std::make_unique<details::Sink<SinkType>>(std::move(sink))), std::move(options)) {}
 
+    //! @cond
     Logger(const Logger &) = delete;
     Logger(Logger &&) = delete;
     Logger &operator=(const Logger &) = delete;
     Logger &operator=(Logger &&) = delete;
+    //! @endcond
+
+    //! 等待工作线程退出，并持久化队列中剩余的日志
     ~Logger();
 
     /**
