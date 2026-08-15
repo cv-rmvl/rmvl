@@ -524,7 +524,7 @@ TEST(LPSS_robotctl, plan_multistep_pose) {
 
     // 时间戳单调递增
     for (std::size_t i = 1; i < traj.points.size(); ++i)
-        EXPECT_GE(traj.points[i].time_from_start, traj.points[i - 1].time_from_start);
+        EXPECT_GE(traj.points[i].time_from_start.nanoseconds, traj.points[i - 1].time_from_start.nanoseconds);
 
     // 验证轨迹终点对应最后一个途经点的 FK 位置
     msg::JointState js_result;
@@ -585,8 +585,8 @@ TEST(LPSS_robotctl, scaling_factor_affects_duration) {
 
     ASSERT_GT(traj_fast.points.size(), 0u);
     ASSERT_GT(traj_slow.points.size(), 0u);
-    EXPECT_GT(traj_slow.points.back().time_from_start,
-              traj_fast.points.back().time_from_start);
+    EXPECT_GT(traj_slow.points.back().time_from_start.nanoseconds,
+              traj_fast.points.back().time_from_start.nanoseconds);
 }
 
 } // namespace rm_test

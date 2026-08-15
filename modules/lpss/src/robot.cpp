@@ -377,7 +377,8 @@ std::vector<msg::JointTrajectoryPoint> interpolate(const double *q_start, const 
             pt.velocities[i] = dq * vs;
             pt.accelerations[i] = dq * as;
         }
-        pt.time_from_start = t_start + static_cast<int64_t>(s * duration);
+        pt.time_from_start.nanoseconds =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(t_start + static_cast<int64_t>(s * duration))).count();
         res.push_back(std::move(pt));
     }
     return res;
@@ -534,7 +535,9 @@ bool RobotController::submit(const msg::JointTrajectory &traj) {
         joint.remap = std::distance(traj.joint_names.begin(), it);
     }
     // 时间校验
-    if (!std::is_sorted(traj.points.begin(), traj.points.end(), [](const auto &a, const auto &b) { return a.time_from_start < b.time_from_start; }))
+    if (!std::is_sorted(traj.points.begin(), traj.points.end(), [](const auto &a, const auto &b) {
+            return a.time_from_start.nanoseconds < b.time_from_start.nanoseconds;
+        }))
         return false;
     // 维度校验
     const auto traj_dof = traj.joint_names.size();
@@ -559,12 +562,11 @@ msg::JointState RobotController::sample(const msg::JointState &feedback) noexcep
     // 计算当前时间
     auto now_time = now();
     const auto to_ms = [](const msg::Time &t) noexcept {
-        return static_cast<int64_t>(t.sec) * 1000 + static_cast<int64_t>(t.nsec) / 1000000;
+        return static_cast<int64_t>(t.sec) * 1000 + static_cast<int64_t>(t.nsec) / 1'000'000;
     };
 
-    const auto now_ms = to_ms(now_time);
-    const auto start_ms = to_ms(_traj_cache.header.stamp);
-    const auto elapsed_ms = std::max<int64_t>(0, now_ms - start_ms);
+    const auto elapsed_ms = std::max<int64_t>(0, to_ms(now_time) - to_ms(_traj_cache.header.stamp));
+    const auto elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(elapsed_ms)).count();
 
     const auto dof = _ctl_joints.size();
     msg::JointState desired{};
@@ -598,20 +600,20 @@ msg::JointState RobotController::sample(const msg::JointState &feedback) noexcep
         return {};
     }
     const auto &pts = _traj_cache.points;
-    if (elapsed_ms <= pts.front().time_from_start)
+    if (elapsed_ns <= pts.front().time_from_start.nanoseconds)
         assign_from_point(pts.front());
-    else if (elapsed_ms >= pts.back().time_from_start) {
+    else if (elapsed_ns >= pts.back().time_from_start.nanoseconds) {
         assign_from_point(pts.back());
         desired.velocity.assign(desired.velocity.size(), 0.0);
         desired.effort.assign(desired.effort.size(), 0.0);
     } else {
-        const auto it_hi = std::upper_bound(pts.begin(), pts.end(), elapsed_ms, [](int64_t t, const msg::JointTrajectoryPoint &pt) {
-            return t < pt.time_from_start;
+        const auto it_hi = std::upper_bound(pts.begin(), pts.end(), elapsed_ns, [](int64_t t, const msg::JointTrajectoryPoint &pt) {
+            return t < pt.time_from_start.nanoseconds;
         });
         const auto &p1 = *it_hi;
         const auto &p0 = *(it_hi - 1);
-        const auto dt = p1.time_from_start - p0.time_from_start;
-        const double ratio = (dt > 0) ? std::clamp(static_cast<double>(elapsed_ms - p0.time_from_start) / static_cast<double>(dt), 0.0, 1.0) : 0.0;
+        const auto dt = p1.time_from_start.nanoseconds - p0.time_from_start.nanoseconds;
+        const double ratio = (dt > 0) ? std::clamp(static_cast<double>(elapsed_ns - p0.time_from_start.nanoseconds) / static_cast<double>(dt), 0.0, 1.0) : 0.0;
 
         for (std::size_t i = 0; i < dof; ++i) {
             const auto remap = _ctl_joints[i].remap;

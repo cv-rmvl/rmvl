@@ -154,12 +154,12 @@ TEST(LPSS_ctl, robot_controller_with_unitTF) {
     traj.joint_names = {"joint1", "joint2"};
 
     msg::JointTrajectoryPoint pt1{};
-    pt1.time_from_start = 0;
+    pt1.time_from_start.nanoseconds = 0;
     pt1.positions = {0.0, 0.0};
     pt1.velocities = {0.0, 0.0};
 
     msg::JointTrajectoryPoint pt2{};
-    pt2.time_from_start = 100; // 100ms
+    pt2.time_from_start.nanoseconds = 100'000'000; // 100ms
     pt2.positions = {1.0, 2.0};
     pt2.velocities = {0.1, 0.2};
 
@@ -191,7 +191,7 @@ TEST(LPSS_ctl, robot_controller_remaps_trajectory_joints) {
     traj.joint_names = {"joint1", "joint_extra", "joint2"};
 
     msg::JointTrajectoryPoint pt{};
-    pt.time_from_start = 100;
+    pt.time_from_start.nanoseconds = 100'000'000;
     pt.positions = {1.0, 99.0, 2.0};
     pt.velocities = {0.1, 9.9, 0.2};
     pt.accelerations = {0.01, 0.99, 0.02};
@@ -227,12 +227,12 @@ TEST(LPSS_ctl, robot_controller_velocity_tracking) {
     traj.joint_names = {"joint1"};
 
     msg::JointTrajectoryPoint pt1{};
-    pt1.time_from_start = 0;
+    pt1.time_from_start.nanoseconds = 0;
     pt1.positions = {0.0};
     pt1.velocities = {1.0}; // 期望速度 1.0 m/s
 
     msg::JointTrajectoryPoint pt2{};
-    pt2.time_from_start = 100;
+    pt2.time_from_start.nanoseconds = 100'000'000;
     pt2.positions = {0.1};
     pt2.velocities = {1.0}; // 保持速度 1.0 m/s
 
