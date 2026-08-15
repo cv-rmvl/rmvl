@@ -14,8 +14,10 @@
 #include "nlohmann/json.hpp"
 
 #include "rmvlmsg/std/bool.hpp"
+#include "rmvlmsg/std/duration.hpp"
 #include "rmvlmsg/std/string.hpp"
 #include "rmvlmsg/std/int32.hpp"
+#include "rmvlmsg/motion/joint_trajectory_point.hpp"
 #include "rmvlmsg/sensor/imu.hpp"
 #include "rmvlmsg/sensor/joint_state.hpp"
 #include "rmvlmsg/geometry/polygon.hpp"
@@ -65,6 +67,29 @@ TEST(LPSS_serialization, int32) {
 
     auto dst = msg::Int32::deserialize(str.data());
     EXPECT_EQ(dst.data, 42);
+}
+
+TEST(LPSS_serialization, duration) {
+    msg::Duration msg;
+    msg.nanoseconds = -1'700'000'000;
+
+    auto str = msg.serialize();
+    auto dst = msg::Duration::deserialize(str.data());
+
+    EXPECT_EQ(str.size(), sizeof(int64_t));
+    EXPECT_EQ(dst.nanoseconds, -1'700'000'000);
+    EXPECT_EQ(rm::json::parse(msg.json())["nanoseconds"].get<int64_t>(), -1'700'000'000);
+}
+
+TEST(LPSS_serialization, builtin_duration) {
+    msg::JointTrajectoryPoint msg;
+    msg.time_from_start.nanoseconds = 123'456'789;
+
+    auto str = msg.serialize();
+    auto dst = msg::JointTrajectoryPoint::deserialize(str.data());
+
+    EXPECT_EQ(dst.time_from_start.nanoseconds, 123'456'789);
+    EXPECT_EQ(rm::json::parse(msg.json())["time_from_start"]["nanoseconds"].get<int64_t>(), 123'456'789);
 }
 
 TEST(LPSS_serialization, header) {

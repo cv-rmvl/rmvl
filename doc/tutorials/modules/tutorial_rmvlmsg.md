@@ -149,6 +149,13 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
     </div></td>
     <td class="markdownTableBodyLeft">表示 64 位无符号整数数据</td>
   </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>Duration</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keywordtype">int64</span> nanoseconds</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">表示纳秒精度的时间间隔；嵌套使用时以小写内置类型 <code>duration</code> 声明</td>
+  </tr>
   </table>
   </div>
 
