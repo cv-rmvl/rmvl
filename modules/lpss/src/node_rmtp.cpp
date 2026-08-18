@@ -456,6 +456,12 @@ DataReaderBase::DataReaderBase(const Guid &guid, std::string_view type, std::str
     _port = ep.port();
 }
 
+void DataReaderBase::stop() noexcept {
+    if (_stopped.exchange(true, std::memory_order_acq_rel))
+        return;
+    _udpv4.write({127, 0, 0, 1}, Endpoint(ip::udp::v4(), _port), std::string_view("\0", 1));
+}
+
 void DataReaderBase::add(const Guid &guid) noexcept {
     if (!same_host(_guid, guid))
         return;
@@ -470,7 +476,7 @@ void DataReaderBase::remove(const Guid &guid) noexcept {
 }
 
 std::string DataReaderBase::read() noexcept {
-    while (true) {
+    while (!_stopped.load(std::memory_order_acquire)) {
         {
             std::lock_guard lk(_shm_mtx);
             auto message = read_shm_sources(_shm_sources);
@@ -480,6 +486,8 @@ std::string DataReaderBase::read() noexcept {
 
         auto header_size = mtp_header_size(_type, _topic);
         auto [parts, addr, port] = _udpv4.multiread(header_size, MAX_UDP_PAYLOAD - header_size);
+        if (_stopped.load(std::memory_order_acquire))
+            return {};
         {
             std::lock_guard lk(_shm_mtx);
             auto message = read_shm_sources(_shm_sources);
@@ -492,6 +500,7 @@ std::string DataReaderBase::read() noexcept {
         if (message)
             return std::move(*message);
     }
+    return {};
 }
 
 #if __cplusplus >= 202002L

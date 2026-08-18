@@ -133,12 +133,13 @@ public:
     URDFModel model{};             //!< URDF 运动学模型
     msg::URDF urdf{};              //!< URDF 原始消息
     msg::JointState joint_state{}; //!< 当前关节状态
-    msg::TF tf{};                  //!< 当前 TF 树
+    msg::TF tf{};                  //!< 当前动态 TF 树
+    msg::TF tf_static{};           //!< 当前静态 TF 树
 
     double velocity_scale{1.0};     //!< 最大速度缩放因子 (0, 1]
     double acceleration_scale{1.0}; //!< 最大加速度缩放因子 (0, 1]
 
-    //! 根据当前 joint_state 计算并更新 TF 树（正运动学）
+    //! 根据当前 joint_state 计算并更新动态与静态 TF 树（正运动学）
     void updateTF();
 
     //! 初始化 joint_state 为零位
