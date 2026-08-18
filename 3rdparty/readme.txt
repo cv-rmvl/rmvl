@@ -44,3 +44,10 @@ nlohmann_json  Description    JSON for modern C++
 fmt            Description    A modern formatting library
                License        fmt is covered by the MIT License, see fmt/LICENSE.rst
                Homepage       https://fmt.dev
+
+rapidyaml      Description    A fast YAML parser and emitter for C++
+               License        rapidyaml and its bundled c4core are covered by the MIT License, see
+                              rapidyaml/LICENSE.txt
+               Homepage       https://github.com/biojppm/rapidyaml
+               CMake options  Always built as a required third-party module; no BUILD_ or WITH_
+                              option is provided
