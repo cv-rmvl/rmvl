@@ -11,6 +11,9 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <thread>
+
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -398,6 +401,27 @@ TEST(LPSS_node, async_service_client_local_call) {
     ASSERT_TRUE(result.has_value());
     EXPECT_TRUE(result->success);
     EXPECT_EQ(result->message, "enabled");
+}
+
+TEST(LPSS_node, async_timer_cancel) {
+    lpss::async::Node node("timer_cancel", 44);
+    std::atomic_uint32_t invoke_count{};
+    auto timer = node.createTimer(1ms, [&invoke_count] { ++invoke_count; });
+    std::thread spin_thread([&node] { node.spin(); });
+
+    const auto deadline = std::chrono::steady_clock::now() + 100ms;
+    while (invoke_count.load() == 0 && std::chrono::steady_clock::now() < deadline)
+        std::this_thread::sleep_for(1ms);
+
+    timer->cancel();
+    const auto count_after_cancel = invoke_count.load();
+    std::this_thread::sleep_for(10ms);
+    node.shutdown();
+    spin_thread.join();
+
+    EXPECT_GT(count_after_cancel, 0u);
+    EXPECT_EQ(invoke_count.load(), count_after_cancel);
+    EXPECT_TRUE(timer->cancelled());
 }
 
 #endif

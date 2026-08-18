@@ -12,6 +12,7 @@
 #pragma once
 
 #include <condition_variable>
+#include <mutex>
 
 #include "rmvlmsg/std/time.hpp"
 
@@ -526,6 +527,36 @@ public:
      */
     Timer(rm::async::IOContext &io_context) : rm::async::Timer(io_context) {}
     //! @endcond
+
+    /**
+     * @brief 取消定时器
+     * @details 返回后不会再执行新的回调；若回调正在其他线程中执行，则等待该回调结束。
+     */
+    void cancel() noexcept {
+        std::lock_guard lock(_callback_mtx);
+        _cancelled = true;
+    }
+
+    //! 判断定时器是否已取消
+    bool cancelled() const noexcept {
+        std::lock_guard lock(_callback_mtx);
+        return _cancelled;
+    }
+
+    //! @cond
+    template <typename Callback>
+    bool invoke(Callback &callback) {
+        std::lock_guard lock(_callback_mtx);
+        if (_cancelled)
+            return false;
+        callback();
+        return true;
+    }
+    //! @endcond
+
+private:
+    mutable std::recursive_mutex _callback_mtx{};
+    bool _cancelled{};
 };
 
 /**

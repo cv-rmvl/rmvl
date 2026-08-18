@@ -21,6 +21,9 @@
 #include "rmvlmsg/sensor/imu.hpp"
 #include "rmvlmsg/sensor/joint_state.hpp"
 #include "rmvlmsg/geometry/polygon.hpp"
+#include "rmvlmsg/geometry/pose_stamped.hpp"
+#include "rmvlmsg/geometry/pose_with_covariance.hpp"
+#include "rmvlmsg/geometry/twist_with_covariance.hpp"
 #include "rmvlsrv/sensor/set_camera_info.hpp"
 #include "rmvlsrv/std/empty.hpp"
 #include "rmvlsrv/std/set_bool.hpp"
@@ -29,6 +32,11 @@
 namespace rm_test {
 
 using namespace rm;
+
+template <typename Message>
+static json jsonRoundTrip(const Message &message) {
+    return json::parse(json::parse(message.json()).dump());
+}
 
 TEST(LPSS_serialization, bool) {
     msg::Bool msg;
@@ -348,6 +356,68 @@ TEST(LPSS_serialization, polygon_compact_size) {
 
     auto str = msg.serialize();
     EXPECT_EQ(str.size(), msg.compact_size());
+}
+
+TEST(LPSS_serialization, pose_stamped) {
+    msg::PoseStamped source;
+    source.header.stamp = {123, 456};
+    source.header.frame_id = "map";
+    source.pose.position = {1.0, -2.0, 3.0};
+    source.pose.orientation = {0.0, 0.0, 0.5, 0.866025403784};
+
+    const auto data = source.serialize();
+    const auto decoded = msg::PoseStamped::deserialize(data.data());
+    EXPECT_EQ(data.size(), source.compact_size());
+    EXPECT_EQ(decoded.header.frame_id, "map");
+    EXPECT_EQ(decoded.header.stamp.sec, 123);
+    EXPECT_EQ(decoded.header.stamp.nsec, 456u);
+    EXPECT_DOUBLE_EQ(decoded.pose.position.y, -2.0);
+    EXPECT_DOUBLE_EQ(decoded.pose.orientation.w, 0.866025403784);
+
+    const auto j = jsonRoundTrip(source);
+    EXPECT_EQ(j["header"]["frame_id"].get<std::string>(), "map");
+    EXPECT_DOUBLE_EQ(j["pose"]["position"]["x"].get<double>(), 1.0);
+}
+
+TEST(LPSS_serialization, pose_with_covariance) {
+    msg::PoseWithCovariance source;
+    source.pose.position.x = 2.5;
+    source.pose.orientation.w = 1.0;
+    source.covariance[0] = 0.04;
+    source.covariance[7] = 0.09;
+    source.covariance[35] = 0.01;
+
+    const auto data = source.serialize();
+    const auto decoded = msg::PoseWithCovariance::deserialize(data.data());
+    EXPECT_EQ(data.size(), source.compact_size());
+    EXPECT_DOUBLE_EQ(decoded.pose.position.x, 2.5);
+    EXPECT_DOUBLE_EQ(decoded.covariance.front(), 0.04);
+    EXPECT_DOUBLE_EQ(decoded.covariance[7], 0.09);
+    EXPECT_DOUBLE_EQ(decoded.covariance.back(), 0.01);
+
+    const auto j = jsonRoundTrip(source);
+    ASSERT_EQ(j["covariance"].size(), 36u);
+    EXPECT_DOUBLE_EQ(j["covariance"][35].get<double>(), 0.01);
+}
+
+TEST(LPSS_serialization, twist_with_covariance) {
+    msg::TwistWithCovariance source;
+    source.twist.linear.x = 1.25;
+    source.twist.angular.z = -0.5;
+    source.covariance[0] = 0.1;
+    source.covariance[35] = 0.2;
+
+    const auto data = source.serialize();
+    const auto decoded = msg::TwistWithCovariance::deserialize(data.data());
+    EXPECT_EQ(data.size(), source.compact_size());
+    EXPECT_DOUBLE_EQ(decoded.twist.linear.x, 1.25);
+    EXPECT_DOUBLE_EQ(decoded.twist.angular.z, -0.5);
+    EXPECT_DOUBLE_EQ(decoded.covariance.front(), 0.1);
+    EXPECT_DOUBLE_EQ(decoded.covariance.back(), 0.2);
+
+    const auto j = jsonRoundTrip(source);
+    ASSERT_EQ(j["covariance"].size(), 36u);
+    EXPECT_DOUBLE_EQ(j["twist"]["angular"]["z"].get<double>(), -0.5);
 }
 
 TEST(LPSS_serialization, empty_service) {

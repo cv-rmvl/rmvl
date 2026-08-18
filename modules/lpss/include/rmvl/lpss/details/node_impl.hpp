@@ -112,6 +112,7 @@ template <typename MsgType>
 void Node::destroySubscriber(Subscriber<MsgType> &sub) {
     if (sub.invalid())
         return;
+    sub._reader->stop();
     // 移除本地 DataReader
     {
         std::lock_guard lk(_local_mtx);
@@ -394,7 +395,8 @@ static rm::async::Task<> timer_task(Timer::ptr timer, std::chrono::duration<Rep,
             if (next_time < std::chrono::steady_clock::now())
                 next_time = std::chrono::steady_clock::now();
             co_await timer->sleep_until(next_time);
-            cb();
+            if (!timer->invoke(cb))
+                break;
         }
     } catch (...) {
     }

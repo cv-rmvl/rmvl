@@ -12,12 +12,10 @@
 #pragma once
 
 #include "rmvl/lpss/node.hpp"
+#include "rmvl/lpss/transform.hpp"
 
-#include "rmvlmsg/geometry/pose.hpp"
-#include "rmvlmsg/geometry/transform.hpp"
 #include "rmvlmsg/sensor/joint_state.hpp"
 #include "rmvlmsg/motion/joint_trajectory.hpp"
-#include "rmvlmsg/motion/tf.hpp"
 #include "rmvlmsg/motion/urdf.hpp"
 
 #include "ctl/base.hpp"
@@ -32,58 +30,10 @@ namespace rm {
 //! @brief 机器人运动学模型、状态发布、轨迹规划等功能扩展
 //! @details 该模块提供了
 //! - 机器人运动学模型规划器 lpss::RobotPlanner ，支持 URDF 解析、正/逆运动学求解、轨迹规划等功能
-//! - 机器人状态发布者，通过传入 lpss::RobotPlanner 对象和 lpss::Node （或 lpss::async::Node ）节点对象周期性发布 TF、URDF 和 JointTrajectory 消息，一般在调试时供其他模块订阅使用
+//! - 机器人状态发布者，通过传入 lpss::RobotPlanner 对象和 lpss::Node （或 lpss::async::Node ）节点对象周期性发布动态 TF、静态 TF、URDF 和 JointTrajectory 消息，一般在调试时供其他模块订阅使用
 //! - 相关消息类型转换函数，如四元数乘法、位姿变换、复合 SE(3) 变换等
 //! <center><img src="robotmodel.png" alt="机器人功能扩展模块示意图" width="65%" /></center>
 //! @}
-
-namespace msg {
-
-//! @addtogroup lpss_robot
-//! @{
-
-/**
- * @brief 四元数乘法：\f$q_1\times q_2\f$
- *
- * @param[in] q1 msg::Quaternion 表示的四元数 1
- * @param[in] q2 msg::Quaternion 表示的四元数 2
- * @return 四元数乘积
- */
-msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2) noexcept;
-
-/**
- * @brief 对向量执行旋转操作
- *
- * @param[in] q msg::Quaternion 表示的旋转四元数
- * @param[in] v msg::Vector3 表示的向量
- * @return msg::Vector3 表示的旋转后的向量
- */
-msg::Vector3 rotate(const msg::Quaternion &q, const msg::Vector3 &v) noexcept;
-
-/**
- * @brief 位姿变换
- * @details 将位姿 \f$p\f$ 从坐标系 \f$A\f$ 变换到坐标系 \f$B\f$，变换关系由 \f$T\f$ 定义，即 \f$B\f$ 相对于 \f$A\f$ 的变换。
- * @param[in] t msg::Transform 表示的变换
- * @param[in] p msg::Pose 表示的位姿
- * @return msg::Pose 表示的变换后的位姿
- */
-msg::Pose operator*(const msg::Transform &t, const msg::Pose &p) noexcept;
-
-/**
- * @brief 合并两个 SE(3) 变换
- * @details 具体来说符合以下规则：
- * - 在最初的坐标系下应用 \f$T_2\f$ 变换，再在原来的坐标系下应用 \f$T_1\f$ 变换，等价于在最初的坐标系下应用 \f$T_1T_2\f$ 变换，即 “复合变换”
- * - 在最初的坐标系下应用 \f$T_1\f$ 变换，再在 \f$T_1\f$ 变换后的坐标系下应用 \f$T_2\f$ 变换，等价于在最初的坐标系下应用 \f$T_1T_2\f$ 变换，即 “相对于坐标系的变换”
- *
- * @param[in] t1 msg::Transform 表示的变换 1
- * @param[in] t2 msg::Transform 表示的变换 2
- * @return msg::Transform 表示的合并后的变换
- */
-msg::Transform operator*(const msg::Transform &t1, const msg::Transform &t2) noexcept;
-
-//! @} lpss_robot
-
-} // namespace msg
 
 namespace lpss {
 
@@ -132,8 +82,11 @@ public:
     //! 获取当前 URDF 消息
     const msg::URDF &urdf() const noexcept;
 
-    //! 获取当前 TF 消息
+    //! 获取当前活动关节组成的动态 TF 消息
     const msg::TF &tf() const noexcept;
+
+    //! 获取固定关节组成的静态 TF 消息
+    const msg::TF &tf_static() const noexcept;
 
     /**
      * @brief 关节空间点到点规划
@@ -258,19 +211,19 @@ private:
 };
 
 /**
- * @brief 机器人状态发布者，周期性发布 TF 和 URDF 消息
+ * @brief 机器人状态发布者，周期性发布动态 TF、静态 TF 和 URDF 消息
  * @details 自动启动后台线程，用户需自行保证 `node` 的生命周期。
  */
 class RobotStatePublisher {
 public:
     /**
      * @brief 构造状态发布者
-     * @details 启动后台线程，周期性发布 TF 和 URDF 数据。调用者修改 @p tf 或 @p urdf 数据时，应先通过 `mutex()` 加锁。
+     * @details 启动后台线程，周期性发布动态 TF、静态 TF 和 URDF 数据。调用者修改 RobotPlanner 状态时，应先通过 `mutex()` 加锁。
      *
-     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf` 和 `<name>/robot_description`
+     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf`、`<name>/tf_static` 和 `<name>/robot_description`
      * @param[in] node LPSS 节点
      * @param[in] planner 机器人规划器对象，发布者将从中获取 TF 和 URDF 数据
-     * @param[in] period TF 消息发布周期（单位：毫秒），URDF 消息发布周期将固定设置为 1s
+     * @param[in] period 动态 TF 消息发布周期（单位：毫秒），必须大于 0；静态 TF 和 URDF 消息发布周期固定为 1s
      */
     RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period);
 
@@ -300,11 +253,13 @@ private:
     bool _running{true};
     std::reference_wrapper<Node> _node;
     std::reference_wrapper<RobotPlanner> _planner;
+    uint32_t _period{};
 
     msg::JointTrajectory _traj_cache{}; //!< 轨迹缓存
 
     Publisher<msg::URDF> _urdf_pub;
-    Publisher<msg::TF> _tf_pub;
+    tf::Broadcaster _tf_broadcaster;
+    tf::StaticBroadcaster _tf_static_broadcaster;
     Publisher<msg::JointTrajectory> _traj_pub;
 
     std::mutex _shutdown_mtx;
@@ -326,7 +281,7 @@ namespace async {
 //! @{
 
 /**
- * @brief 异步机器人状态发布者，基于定时器周期性发布 TF 和 URDF 消息
+ * @brief 异步机器人状态发布者，基于定时器周期性发布动态 TF、静态 TF 和 URDF 消息
  * @details 事件循环仍然由 `node` 管理，需要由用户自行调用 `node.spin()` 来驱动定时器回调的执行。
  */
 class RobotStatePublisher {
@@ -335,12 +290,12 @@ public:
 
     /**
      * @brief 构造异步状态发布者
-     * @details 基于事件循环定时器，周期性发布 TF 和 URDF 数据。
+     * @details 基于事件循环定时器，周期性发布动态 TF、静态 TF 和 URDF 数据。调用者从其他线程修改 RobotPlanner 状态时，应先通过 `mutex()` 加锁。
      *
-     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf` 和 `<name>/robot_description`
+     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf`、`<name>/tf_static` 和 `<name>/robot_description`
      * @param[in] node LPSS 节点
      * @param[in] planner 机器人规划器对象，发布者将从中获取 TF 和 URDF 数据
-     * @param[in] period TF 消息发布周期（单位：毫秒），URDF 消息发布周期将固定设置为 1s
+     * @param[in] period 动态 TF 消息发布周期（单位：毫秒），必须大于 0；静态 TF 和 URDF 消息发布周期固定为 1s
      */
     RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period);
 
@@ -354,23 +309,32 @@ public:
      *
      * @param[in] traj 需要发布的关节轨迹消息
      */
-    void updateTrajectory(msg::JointTrajectory &&traj) noexcept { _traj_cache = std::move(traj); }
+    void updateTrajectory(msg::JointTrajectory &&traj) noexcept {
+        std::lock_guard lock(_mtx);
+        _traj_cache = std::move(traj);
+    }
 
     /**
      * @brief 更新轨迹显示，发布 JointTrajectory 消息以供可视化工具订阅
      *
      * @param[in] traj 需要发布的关节轨迹消息
      */
-    void updateTrajectory(const msg::JointTrajectory &traj) noexcept { _traj_cache = traj; }
+    void updateTrajectory(const msg::JointTrajectory &traj) noexcept {
+        std::lock_guard lock(_mtx);
+        _traj_cache = traj;
+    }
+
+    //! 获取同步互斥锁的引用，从其他线程修改 RobotPlanner 状态时需加锁
+    inline std::mutex &mutex() noexcept { return _mtx; }
 
     /**
      * @brief 构造异步状态发布者共享指针
      * @see RobotStatePublisher::RobotStatePublisher
      *
-     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf` 和 `<name>/robot_description`
+     * @param[in] name 机器人名称，将用于构造发布主题名称前缀，如 `<name>/tf`、`<name>/tf_static` 和 `<name>/robot_description`
      * @param[in] node LPSS 节点
      * @param[in] planner 机器人规划器对象，发布者将从中获取 TF 和 URDF 数据
-     * @param[in] period TF 消息发布周期（单位：毫秒），URDF、Trajectory 消息发布周期将固定设置为 1s
+     * @param[in] period 动态 TF 消息发布周期（单位：毫秒），必须大于 0；静态 TF、URDF 和 Trajectory 消息发布周期固定为 1s
      * @return RobotStatePublisher 共享指针
      */
     static inline ptr create(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period) {
@@ -380,14 +344,17 @@ public:
 private:
     std::reference_wrapper<Node> _node;
     std::reference_wrapper<RobotPlanner> _planner;
+    uint32_t _period{};
 
     msg::JointTrajectory _traj_cache{}; //!< 轨迹缓存
 
     Publisher<msg::URDF>::ptr _urdf_pub{};
-    Publisher<msg::TF>::ptr _tf_pub{};
+    tf::Broadcaster _tf_broadcaster;
+    tf::StaticBroadcaster _tf_static_broadcaster;
     Publisher<msg::JointTrajectory>::ptr _traj_pub{};
     Timer::ptr _low_timer{};
     Timer::ptr _high_timer{};
+    std::mutex _mtx;
 };
 
 //! @} lpss_robot

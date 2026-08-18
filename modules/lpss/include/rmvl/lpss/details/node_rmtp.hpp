@@ -162,6 +162,9 @@ public:
 
     virtual ~DataReaderBase() = default;
 
+    //! 唤醒并停止上层读取线程
+    virtual void stop() noexcept;
+
     //! 获取监听话题的消息类型
     inline std::string_view msgtype() const noexcept { return _type; }
 
@@ -198,6 +201,7 @@ protected:
     DgramSocket _udpv4;                                              //!< UDPv4 通道
     std::string_view _type{};                                        //!< 消息类型
     std::string _topic{};                                            //!< 监听话题
+    std::atomic_bool _stopped{};                                     //!< 是否已停止读取
     std::unordered_map<MTPAsmKey, MTPAsm, MTPAsmKeyHash> _asms{};    //!< MTP 重组缓存
     std::size_t _asm_bytes{};                                        //!< 待重组载荷占用字节数
     std::shared_mutex _shm_mtx{};                                    //!< 保护共享内存读取源
@@ -239,8 +243,10 @@ public:
     template <typename Callback, typename = std::enable_if_t<std::is_invocable_v<Callback, const MsgType &>>>
     DataReader(const Guid &guid, std::string_view topic, Callback callback) : DataReaderBase(guid, MsgType::msg_type, topic) {
         _thrd = std::thread([this, cb = std::move(callback)]() {
-            while (true) {
+            while (_running.load(std::memory_order_acquire)) {
                 auto data = this->read();
+                if (!_running.load(std::memory_order_acquire))
+                    break;
                 if (data.empty())
                     continue;
                 cb(MsgType::deserialize(data.data()));
@@ -248,8 +254,20 @@ public:
         });
     }
 
+    ~DataReader() override {
+        stop();
+        if (_thrd.joinable())
+            _thrd.join();
+    }
+
+    void stop() noexcept override {
+        _running.store(false, std::memory_order_release);
+        DataReaderBase::stop();
+    }
+
 private:
     std::thread _thrd; //!< 读取线程
+    std::atomic_bool _running{true}; //!< 读取线程运行状态
 };
 
 #if __cplusplus >= 202002L

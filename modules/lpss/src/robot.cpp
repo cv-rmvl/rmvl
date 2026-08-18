@@ -16,46 +16,12 @@
 #include <cmath>
 #endif
 
-#include "rmvl/lpss/ctl/base.hpp"
 #include "rmvl/lpss/robot.hpp"
 #include "tinyxml2/tinyxml2.h"
 
 #include "robot_impl.hpp"
 
-namespace rm {
-
-namespace msg {
-
-msg::Quaternion operator*(const msg::Quaternion &q1, const msg::Quaternion &q2) noexcept {
-    return {q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
-            q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
-            q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
-            q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z};
-}
-
-msg::Vector3 rotate(const msg::Quaternion &q, const msg::Vector3 &v) noexcept {
-    const double tx = 2.0 * (q.y * v.z - q.z * v.y);
-    const double ty = 2.0 * (q.z * v.x - q.x * v.z);
-    const double tz = 2.0 * (q.x * v.y - q.y * v.x);
-    return {
-        v.x + q.w * tx + (q.y * tz - q.z * ty),
-        v.y + q.w * ty + (q.z * tx - q.x * tz),
-        v.z + q.w * tz + (q.x * ty - q.y * tx)};
-}
-
-msg::Pose operator*(const msg::Transform &t, const msg::Pose &p) noexcept {
-    auto rotated = rotate(t.rotation, {p.position.x, p.position.y, p.position.z});
-    return {{t.translation.x + rotated.x, t.translation.y + rotated.y, t.translation.z + rotated.z}, t.rotation * p.orientation};
-}
-
-msg::Transform operator*(const msg::Transform &t1, const msg::Transform &t2) noexcept {
-    auto rotated = rotate(t1.rotation, t2.translation);
-    return {{t1.translation.x + rotated.x, t1.translation.y + rotated.y, t1.translation.z + rotated.z}, t1.rotation * t2.rotation};
-}
-
-} // namespace msg
-
-namespace lpss {
+namespace rm::lpss {
 
 /**
  * @brief 从 RPY 角（固定轴 XYZ）计算四元数
@@ -308,12 +274,21 @@ void RobotPlanner::Impl::updateTF() {
         q_map[joint_state.name[i]] = joint_state.position[i];
 
     tf.transforms.clear();
-    tf.transforms.reserve(model.joints.size());
+    tf_static.transforms.clear();
+    tf.transforms.reserve(model.active_joint_indices.size());
+    tf_static.transforms.reserve(model.joints.size() - model.active_joint_indices.size());
+    const auto stamp = now();
     for (const auto &joint : model.joints) {
         double q{};
         if (auto it = q_map.find(joint.name); it != q_map.end())
             q = it->second;
-        tf.transforms.push_back(computeJointTransform(joint, q));
+        auto transform = computeJointTransform(joint, q);
+        if (joint.type == JointType::Fixed) {
+            tf_static.transforms.push_back(std::move(transform));
+        } else {
+            transform.header.stamp = stamp;
+            tf.transforms.push_back(std::move(transform));
+        }
     }
 }
 
@@ -468,6 +443,7 @@ void RobotPlanner::update(const msg::JointState &joint_state) {
 const msg::JointState &RobotPlanner::joints() const noexcept { return _impl->joint_state; }
 const msg::URDF &RobotPlanner::urdf() const noexcept { return _impl->urdf; }
 const msg::TF &RobotPlanner::tf() const noexcept { return _impl->tf; }
+const msg::TF &RobotPlanner::tf_static() const noexcept { return _impl->tf_static; }
 
 msg::JointTrajectory RobotPlanner::plan(const msg::JointState &target) const {
     msg::JointTrajectory traj{};
@@ -493,6 +469,8 @@ msg::Pose RobotPlanner::linkpose(std::string_view link_name) const {
     // child_frame_id -> TransformStamped 的 LUT
     std::unordered_map<std::string, const msg::TransformStamped *> tf_map;
     for (const auto &ts : _impl->tf.transforms)
+        tf_map[ts.child_frame_id] = &ts;
+    for (const auto &ts : _impl->tf_static.transforms)
         tf_map[ts.child_frame_id] = &ts;
 
     // 从目标连杆沿 TF 树向上递推到根连杆，累积变换
@@ -651,17 +629,25 @@ msg::JointState RobotController::sample(const msg::JointState &feedback) noexcep
 
 using namespace std::chrono_literals;
 
+static uint32_t validatePublishPeriod(uint32_t period) {
+    if (period == 0)
+        RMVL_Error(RMVL_StsBadArg, "RobotStatePublisher period must be greater than zero");
+    return period;
+}
+
 RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period)
-    : _node(node), _planner(planner), _urdf_pub(node.createPublisher<msg::URDF>(std::string(name) + "/robot_description")),
-      _tf_pub(node.createPublisher<msg::TF>(std::string(name) + "/tf")), _traj_pub(node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory")) {
-    if (_urdf_pub.invalid() || _tf_pub.invalid() || _traj_pub.invalid())
+    : _node(node), _planner(planner), _period(validatePublishPeriod(period)),
+      _urdf_pub(node.createPublisher<msg::URDF>(std::string(name) + "/robot_description")),
+      _tf_broadcaster(name, node), _tf_static_broadcaster(name, node),
+      _traj_pub(node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory")) {
+    if (_urdf_pub.invalid() || _tf_broadcaster.invalid() || _tf_static_broadcaster.invalid() || _traj_pub.invalid())
         RMVL_Error(RMVL_StsError, "Failed to create publishers for RobotStatePublisher");
 
-    _tf_thread = std::thread([this, period] {
+    _tf_thread = std::thread([this] {
         while (true) {
             {
                 std::unique_lock lk(_shutdown_mtx);
-                if (_shutdown_cv.wait_for(lk, std::chrono::milliseconds(period), [this] { return !_running; }))
+                if (_shutdown_cv.wait_for(lk, std::chrono::milliseconds(_period), [this] { return !_running; }))
                     break;
             }
             msg::TF current_tf;
@@ -669,7 +655,7 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
                 std::lock_guard lk(_mtx);
                 current_tf = _planner.get().tf();
             }
-            _tf_pub.publish(current_tf);
+            _tf_broadcaster.send(current_tf);
         }
     });
     _urdf_thread = std::thread([this] {
@@ -680,11 +666,14 @@ RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, Robo
                     break;
             }
             msg::URDF current_urdf;
+            msg::TF current_tf_static;
             {
                 std::lock_guard lk(_mtx);
                 current_urdf = _planner.get().urdf();
+                current_tf_static = _planner.get().tf_static();
             }
             _urdf_pub.publish(current_urdf);
+            _tf_static_broadcaster.send(current_tf_static);
         }
     });
     _traj_thread = std::thread([this] {
@@ -716,7 +705,6 @@ RobotStatePublisher::~RobotStatePublisher() {
         _urdf_thread.join();
     if (_traj_thread.joinable())
         _traj_thread.join();
-    _node.get().destroyPublisher(_tf_pub);
     _node.get().destroyPublisher(_urdf_pub);
     _node.get().destroyPublisher(_traj_pub);
 }
@@ -736,23 +724,39 @@ void RobotStatePublisher::updateTrajectory(const msg::JointTrajectory &traj) noe
 namespace async {
 
 RobotStatePublisher::RobotStatePublisher(std::string_view name, Node &node, RobotPlanner &planner, uint32_t period)
-    : _node(node), _planner(planner) {
+    : _node(node), _planner(planner), _period(validatePublishPeriod(period)),
+      _tf_broadcaster(name, node), _tf_static_broadcaster(name, node) {
     _urdf_pub = node.createPublisher<msg::URDF>(std::string(name) + "/robot_description");
-    _tf_pub = node.createPublisher<msg::TF>(std::string(name) + "/tf");
     _traj_pub = node.createPublisher<msg::JointTrajectory>(std::string(name) + "/trajectory");
-    if (!_urdf_pub || !_tf_pub || !_traj_pub || _urdf_pub->invalid() || _tf_pub->invalid() || _traj_pub->invalid())
+    if (!_urdf_pub || !_traj_pub || _urdf_pub->invalid() || _tf_broadcaster.invalid() || _tf_static_broadcaster.invalid() || _traj_pub->invalid())
         RMVL_Error(RMVL_StsError, "Failed to create publishers for RobotStatePublisher");
     _low_timer = node.createTimer(1s, [this] {
-        _urdf_pub->publish(_planner.get().urdf());
-        _traj_pub->publish(_traj_cache);
+        msg::URDF current_urdf;
+        msg::TF current_tf_static;
+        msg::JointTrajectory current_traj;
+        {
+            std::lock_guard lock(_mtx);
+            current_urdf = _planner.get().urdf();
+            current_tf_static = _planner.get().tf_static();
+            current_traj = _traj_cache;
+        }
+        _urdf_pub->publish(current_urdf);
+        _tf_static_broadcaster.send(current_tf_static);
+        _traj_pub->publish(current_traj);
     });
-    _high_timer = node.createTimer(std::chrono::milliseconds(period), [this] {
-        _tf_pub->publish(_planner.get().tf());
+    _high_timer = node.createTimer(std::chrono::milliseconds(_period), [this] {
+        msg::TF current_tf;
+        {
+            std::lock_guard lock(_mtx);
+            current_tf = _planner.get().tf();
+        }
+        _tf_broadcaster.send(current_tf);
     });
 }
 
 RobotStatePublisher::~RobotStatePublisher() {
-    _node.get().destroyPublisher(_tf_pub);
+    _low_timer->cancel();
+    _high_timer->cancel();
     _node.get().destroyPublisher(_urdf_pub);
     _node.get().destroyPublisher(_traj_pub);
 }
@@ -761,6 +765,4 @@ RobotStatePublisher::~RobotStatePublisher() {
 
 #endif
 
-} // namespace lpss
-
-} // namespace rm
+} // namespace rm::lpss

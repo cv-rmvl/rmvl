@@ -233,6 +233,31 @@ TEST(LPSS_robotctl, tf_at_zero_position) {
     EXPECT_NEAR(ts1.transform.translation.x, 1.0, kEps);
     EXPECT_NEAR(ts1.transform.translation.y, 0.0, kEps);
     EXPECT_NEAR(ts1.transform.translation.z, 0.0, kEps);
+    EXPECT_TRUE(rp.tf_static().transforms.empty());
+}
+
+TEST(LPSS_robotctl, tf_separates_dynamic_and_static_joints) {
+    auto path = writeTempURDF(k_urdf_with_fixed, "test_tf_static.urdf");
+    RobotPlanner rp(path);
+
+    ASSERT_EQ(rp.tf().transforms.size(), 1u);
+    EXPECT_EQ(rp.tf().transforms.front().child_frame_id, "link1");
+    EXPECT_NE(rp.tf().transforms.front().header.stamp.sec, 0);
+
+    ASSERT_EQ(rp.tf_static().transforms.size(), 1u);
+    const auto &fixed = rp.tf_static().transforms.front();
+    EXPECT_EQ(fixed.header.frame_id, "link1");
+    EXPECT_EQ(fixed.child_frame_id, "tool");
+    EXPECT_EQ(fixed.header.stamp.sec, 0);
+    EXPECT_EQ(fixed.header.stamp.nsec, 0u);
+
+    tf::Buffer buffer;
+    ASSERT_EQ(buffer.set(rp.tf().transforms.front()), tf::Status::Ok);
+    ASSERT_EQ(buffer.setStatic(fixed), tf::Status::Ok);
+    const auto lookup = buffer.lookup("base_link", "tool");
+    ASSERT_TRUE(lookup);
+    EXPECT_NEAR(lookup.transform.transform.translation.x, 0.5, kEps);
+    EXPECT_NEAR(lookup.transform.transform.translation.z, 1.0, kEps);
 }
 
 // ========================== update + 正运动学 ==========================
