@@ -320,6 +320,9 @@ add_subdirectory(${_3rd_dir}/fmt)
 # json (nlohmann_json)
 add_subdirectory(${_3rd_dir}/json)
 
+# rapidyaml
+add_subdirectory(${_3rd_dir}/rapidyaml)
+
 # tinyxml2
 add_subdirectory(${_3rd_dir}/tinyxml2)
 
