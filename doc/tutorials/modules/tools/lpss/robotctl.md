@@ -159,6 +159,8 @@ controller.reset();  // 清空缓存，准备新轨迹
 
 </div>
 
+状态发布者使用机器人名称隔离不同模型的话题。以上示例会周期性发布 `robot/tf` 中的活动关节变换，并以 1 s 周期发布 `robot/tf_static` 中的固定关节变换和 `robot/robot_description`。静态 TF 采用低频重复发布，以保证后启动的 LPSS 订阅者也能获取完整机器人坐标树。
+
 ## 4 工程部署建议
 
 与 `ros2_control` 不同，`RobotController` 不一定需要部署在硬件近端的实时系统中。根据实际应用场景，可以将 `RobotController` 部署在控制端，采样后通过 LPSS 发布订阅机制与硬件执行层设备进行通信，传输实际的关节状态和控制指令，也可以将 `RobotController` 部署在执行端，采样后直接通过本地接口控制电机驱动器。

@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_lpss_robotctl}
 
-@next_tutorial{tutorial_modules_camera}
+@next_tutorial{tutorial_modules_nav}
 
 @tableofcontents
 

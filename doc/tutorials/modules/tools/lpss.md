@@ -248,6 +248,41 @@ Service/Client 是架设在既有发布订阅框架之上的高层服务模型�
 
 Service/Client 仅在 C++20 异步接口中提供。每个 Client 同时只允许一个未完成调用；服务回调用于短时操作并按请求顺序执行。服务类型由 `*.srv` 文件定义，定义及代码生成方式参见 @ref tutorial_table_of_content_rmvlsrv 。
 
+#### 1.4.2 坐标变换系统
+
+`lpss::tf` 提供与 ROS 2 TF2 职责相近的四个组件：`Broadcaster` 发布随时间变化的坐标关系，`StaticBroadcaster` 发布固定坐标关系，`Listener` 订阅两类 TF 并持续写入线程安全的 `Buffer`，`Buffer` 则负责坐标树校验、动态历史缓存、插值和跨坐标系查询。机器人名称同时作为话题隔离前缀，例如名称为 `robot` 时使用 `robot/tf` 和 `robot/tf_static`。
+
+```cpp
+#include <rmvl/lpss/node.hpp>
+#include <rmvl/lpss/transform.hpp>
+
+using namespace rm;
+
+int main() {
+    lpss::Node node("tf_node");
+    lpss::tf::Buffer buffer;
+    lpss::tf::Listener listener("robot", node, buffer);
+    lpss::tf::Broadcaster broadcaster("robot", node);
+    lpss::tf::StaticBroadcaster static_broadcaster("robot", node);
+
+    msg::TransformStamped transform;
+    transform.header.stamp = lpss::now();
+    transform.header.frame_id = "base_link";
+    transform.child_frame_id = "sensor_link";
+    transform.transform.rotation.w = 1.0;
+    broadcaster.send(transform);
+
+    // 查询传感器数据采样时刻的变换；传入零时间 {} 表示路径上的最新公共时间
+    const msg::Time sensor_stamp = transform.header.stamp;
+    auto result = buffer.lookup("base_link", "sensor_link", sensor_stamp);
+    if (!result)
+        return static_cast<int>(result.status);
+    return 0;
+}
+```
+
+`Listener`、`Broadcaster` 和 `StaticBroadcaster` 均由传入的 `Node` 提供通信资源，因此 Node 必须比这些对象存活更久；`Buffer` 也必须比 Listener 存活更久。LPSS 当前没有持久化 QoS，后启动的监听器无法收到此前仅发布一次的静态 TF，因此通用 `StaticBroadcaster` 只负责发布，是否重发由业务层决定；`RobotStatePublisher` 默认每 1 s 重发一次静态 TF。
+
 ## 2 发布订阅模型使用方法
 
 LPSS 提供了简单易用的发布者与订阅者接口，用户可以方便地创建发布者与订阅者，实现节点间的数据通信。本节分别展示同步模式和异步模式下的发布订阅用法。
