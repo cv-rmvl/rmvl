@@ -147,6 +147,10 @@ msg::JointTrajectory traj = planner.plan("end_effector", waypoints);
 
 ```cpp
 msg::Pose link_pose = planner.linkpose("link2");
+
+// 活动关节和固定关节分别存放在动态、静态 TF 消息中
+const msg::TF &tf = planner.tf();
+const msg::TF &tf_static = planner.tf_static();
 ```
 
 ### 2.7 调整执行速度

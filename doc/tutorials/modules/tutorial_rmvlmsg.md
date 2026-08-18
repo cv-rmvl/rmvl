@@ -17,11 +17,11 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
 
 ### 2 内置消息类型
 
-以下是一些常用的内置消息类型，分为 5 个主要分组：`std`、`geometry`、`sensor`、`motion` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
+以下是一些常用的内置消息类型，分为 6 个主要消息分组：`std`、`geometry`、`sensor`、`motion`、`nav` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
 
 <div class="tabbed">
 
-- <b class="tab-title">std 消息分组</b>
+- <b class="tab-title">std</b>
 
   `std` 消息包含了一些基本的数据类型，包含 `Header`、`string` 以及其他基本的数据类型，嵌套使用时<span style="color: green">无需</span>使用 `std/` 前缀，除 `Header` 和 `ColorRGBA` 存储多值的消息类型外，其他均为单值存储。
 
@@ -159,7 +159,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
   </table>
   </div>
 
-- <b class="tab-title">geometry 消息分组</b>
+- <b class="tab-title">geometry</b>
 
   `geometry` 消息用于表示空间中的几何概念，如点、向量、姿态和变换，嵌套使用时<span style="color: red">需要</span>使用 `geometry/` 前缀。
 
@@ -204,6 +204,22 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
     <td class="markdownTableBodyLeft">表示空间中的位姿（位置 + 姿态）</td>
   </tr>
   <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>PoseStamped</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keyword">geometry/Pose</span> pose</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">带时间戳和参考坐标系的位姿；<code>header.frame_id</code> 指定位姿所在坐标系</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyLeft"><code>PoseWithCovariance</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">geometry/Pose</span> pose</div>
+      <div class="line"><span class="keywordtype">float64</span>[36] covariance</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">带 6x6 协方差矩阵的位姿，变量顺序为 x、y、z、roll、pitch、yaw</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyLeft"><code>Quaternion</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">float64</span> x</div>
@@ -227,7 +243,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
       <div class="line"><span class="keywordtype">string</span> child_frame_id</div>
       <div class="line"><span class="keyword">geometry/Transform</span> transform</div>
     </div></td>
-    <td class="markdownTableBodyLeft">带时间戳的坐标变换，表示从 <code>header.frame_id</code> 到 <code>child_frame_id</code> 的变换</td>
+    <td class="markdownTableBodyLeft">带时间戳的坐标变换，表示 <code>child_frame_id</code> 在 <code>header.frame_id</code> 中的位姿，并将子坐标系中的坐标映射到父坐标系</td>
   </tr>
   <tr class="markdownTableRowEven">
     <td class="markdownTableBodyLeft"><code>Twist</code></td>
@@ -238,6 +254,14 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
     <td class="markdownTableBodyLeft">表示物体的线速度和角速度</td>
   </tr>
   <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>TwistWithCovariance</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">geometry/Twist</span> twist</div>
+      <div class="line"><span class="keywordtype">float64</span>[36] covariance</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">带 6x6 协方差矩阵的速度，变量顺序为 x、y、z、roll、pitch、yaw</td>
+  </tr>
+  <tr class="markdownTableRowEven">
     <td class="markdownTableBodyLeft"><code>Vector3</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keywordtype">float64</span> x</div>
@@ -246,7 +270,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
     </div></td>
     <td class="markdownTableBodyLeft">表示空间中的一个 3D 向量</td>
   </tr>
-  <tr class="markdownTableRowEven">
+  <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyLeft"><code>Wrench</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keyword">geometry/Vector3</span> force</div>
@@ -267,7 +291,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
   <div class="line"><span class="keywordtype">string</span> pose_name</div>
   </div>
 
-- <b class="tab-title">sensor 消息分组</b>
+- <b class="tab-title">sensor</b>
 
   `sensor` 消息用于表示来自传感器的原始数据，例如惯性测量单元（IMU）和相机，嵌套使用时<span style="color: red">需要</span>使用 `sensor/` 前缀。
 
@@ -351,7 +375,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
   <div class="line"><span class="keyword">sensor/JointState</span> joint_state</div>
   </div>
 
-- <b class="tab-title">motion 消息分组</b>
+- <b class="tab-title">motion</b>
 
   `motion` 消息用于表示运动相关的数据，例如轨迹、坐标变换树等内容，嵌套使用时<span style="color: red">需要</span>使用 `motion/` 前缀。
 
@@ -378,7 +402,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
       <div class="line"><span class="keywordtype">float64</span>[] velocities</div>
       <div class="line"><span class="keywordtype">float64</span>[] accelerations</div>
       <div class="line"><span class="keywordtype">float64</span>[] effort</div>
-      <div class="line"><span class="keywordtype">int64</span> time_from_start</div>
+      <div class="line"><span class="keywordtype">duration</span> time_from_start</div>
     </div></td>
     <td class="markdownTableBodyLeft">关节轨迹中的单个轨迹点，包含各关节的位置、速度、加速度、力矩以及从轨迹起点到达此点的期望时间</td>
   </tr>
@@ -402,7 +426,83 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
   <div class="line"><span class="keyword">motion/JointTrajectory</span> trajectory</div>
   </div>
 
-- <b class="tab-title">viz 消息分组</b>
+- <b class="tab-title">nav</b>
+
+  `%nav` 消息用于表示移动机器人导航中的里程计、路径和二维占据栅格，嵌套使用时<span style="color: red">需要</span>使用 `nav/` 前缀。
+
+  <div class="full_width_table">
+  <table class="markdownTable">
+  <tr class="markdownTableHead">
+    <th class="markdownTableHeadCenter">类型</th>
+    <th class="markdownTableHeadCenter">*.msg 定义</th>
+    <th class="markdownTableHeadCenter">描述</th>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>Odometry</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keywordtype">string</span> child_frame_id</div>
+      <div class="line"><span class="keyword">geometry/PoseWithCovariance</span> pose</div>
+      <div class="line"><span class="keyword">geometry/TwistWithCovariance</span> twist</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">带协方差的里程计位姿和速度</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyLeft"><code>Path</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keyword">geometry/PoseStamped</span>[] poses</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">在同一参考坐标系中排列的位姿序列</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>MapMetaData</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keywordtype">time</span> map_load_time</div>
+      <div class="line"><span class="keywordtype">float32</span> resolution</div>
+      <div class="line"><span class="keywordtype">uint32</span> width</div>
+      <div class="line"><span class="keywordtype">uint32</span> height</div>
+      <div class="line"><span class="keyword">geometry/Pose</span> origin</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">占据栅格的加载时间、分辨率、尺寸和原点位姿</td>
+  </tr>
+  <tr class="markdownTableRowEven">
+    <td class="markdownTableBodyLeft"><code>OccupancyGrid</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keyword">nav/MapMetaData</span> info</div>
+      <div class="line"><span class="keywordtype">uint64</span> revision</div>
+      <div class="line"><span class="keywordtype">int8</span>[] data</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">带版本号的全量二维占据栅格</td>
+  </tr>
+  <tr class="markdownTableRowOdd">
+    <td class="markdownTableBodyLeft"><code>OccupancyGridUpdate</code></td>
+    <td class="markdownTableBodyLeft"><div class="fragment">
+      <div class="line"><span class="keyword">Header</span> header</div>
+      <div class="line"><span class="keywordtype">uint64</span> base_revision</div>
+      <div class="line"><span class="keywordtype">uint64</span> revision</div>
+      <div class="line"><span class="keywordtype">uint32</span> x</div>
+      <div class="line"><span class="keywordtype">uint32</span> y</div>
+      <div class="line"><span class="keywordtype">uint32</span> width</div>
+      <div class="line"><span class="keywordtype">uint32</span> height</div>
+      <div class="line"><span class="keywordtype">int8</span>[] data</div>
+    </div></td>
+    <td class="markdownTableBodyLeft">基于指定地图版本的矩形栅格增量</td>
+  </tr>
+  </table>
+  </div>
+
+  其中
+
+  - `Odometry.pose` 表示 `child_frame_id` 在 `header.frame_id` 中的位姿
+  - `Odometry.twist` 表示 `child_frame_id` 的速度并采用 `child_frame_id` 表达
+
+  常用组合为 `odom` 和 `base_link`。`Path` 中所有位姿的 `header.frame_id` 必须与路径头一致，路径头时间表示生成时刻，单点时间可用于轨迹时间参数化。
+
+  占据栅格采用 row-major 布局，索引为 `y * width + x`，`origin` 表示栅格 `(0, 0)` 在地图坐标系中的真实位姿，`resolution` 的单位为米/格。`data` 中 `-1` 表示未知、`0` 表示空闲、`100` 表示占据；全量地图要求 `data.size() == width * height`。增量更新还要求矩形完全位于目标地图内且 `base_revision` 等于当前版本，成功应用后版本更新为 `revision`。
+
+- <b class="tab-title">viz</b>
 
   `viz` 消息用于表示可视化相关的数据，例如标记、路径和交互式控制，嵌套使用时<span style="color: red">需要</span>使用 `viz/` 前缀。
 
