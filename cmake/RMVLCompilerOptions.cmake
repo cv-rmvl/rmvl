@@ -12,7 +12,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 # ----------------------------------------------------------------------------
-#   Set encoding format
+#   Set MSVC compatibility options
 # ----------------------------------------------------------------------------
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 if(RMVL_MSVC)
