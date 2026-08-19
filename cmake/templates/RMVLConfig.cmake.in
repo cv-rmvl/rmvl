@@ -127,11 +127,13 @@ endforeach()
 # =============================================================
 #  Other configurations
 # =============================================================
-# cpp standard
 set(CMAKE_CXX_STANDARD @CMAKE_CXX_STANDARD@)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# msvc compatibility options
 if(MSVC)
   add_compile_options("/Zc:__cplusplus")
+  add_compile_definitions("NOMINMAX")
 endif()
 
 # character encoding
