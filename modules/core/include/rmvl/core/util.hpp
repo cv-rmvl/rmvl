@@ -284,6 +284,13 @@ constexpr auto size(size_tag<0>) -> decltype(Tp{}, 0u) { return 0u; }
 
 } // namespace helper
 
+/**
+ * @defgroup core_reflect 聚合体编译期反射
+ * @ingroup core
+ * @brief 提供聚合体成员数量获取、遍历和比较功能
+ * @details 相关接口位于 rm::reflect 命名空间，兼容 C++17 和 C++20。
+ */
+
 //! @addtogroup core_reflect
 //! @{
 
@@ -426,6 +433,12 @@ inline bool equal(const Tp &lhs, const Tp &rhs) {
 //! @} core_reflect
 
 } // namespace reflect
+
+/**
+ * @defgroup core_meta 元编程
+ * @ingroup core
+ * @brief 提供哈希生成相关的 Type Traits
+ */
 
 //! @addtogroup core_meta
 //! @{

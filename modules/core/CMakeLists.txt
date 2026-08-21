@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 find_package(Threads REQUIRED)
 
-rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT})
+rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT} rapidyaml)
 if(WITH_OPENCV)
   rmvl_link_libraries(core PUBLIC ${OpenCV_LIBS})
   if(WIN32)
@@ -16,6 +16,25 @@ endif()
 
 if(WITH_EIGEN3)
   rmvl_link_libraries(core PUBLIC Eigen3::Eigen)
+endif()
+
+# ----------------------------------------------------------------------------
+#  Build the test program
+# ----------------------------------------------------------------------------
+if(BUILD_TESTS)
+  rmvl_add_test(
+    core Unit
+    DEPENDS core
+    EXTERNAL GTest::gtest_main
+  )
+endif()
+
+if(BUILD_PERF_TESTS)
+  rmvl_add_test(
+    core Performance
+    DEPENDS core
+    EXTERNAL benchmark::benchmark_main
+  )
 endif()
 
 # ----------------------------------------------------------------------------

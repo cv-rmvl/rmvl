@@ -15,6 +15,12 @@
 #include <string_view>
 #include <vector>
 
+/**
+ * @defgroup core_str Python 风格的字符串处理
+ * @ingroup core
+ * @brief 提供 split、strip、join 等字符串处理函数
+ */
+
 namespace rm::str
 {
 

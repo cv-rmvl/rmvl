@@ -6,7 +6,7 @@
 @version 1.0
 @brief Epoll / IOCP 基本介绍与协程设施
 
-@prev_tutorial{tutorial_modules_aggregate_reflect}
+@prev_tutorial{tutorial_modules_yaml}
 
 @next_tutorial{tutorial_modules_ipc}
 
