@@ -28,6 +28,18 @@ std::string toString(c4::csubstr value) { return {value.str, value.len}; }
 
 c4::csubstr toSubstr(std::string_view value) noexcept { return {value.data(), value.size()}; }
 
+std::string_view normalizeOpenCvYaml(std::string_view source) noexcept {
+    if (source.rfind("%YAML:", 0) != 0)
+        return source;
+    const auto line_end = source.find('\n');
+    source = line_end == std::string_view::npos ? std::string_view{} : source.substr(line_end + 1);
+    if (source.rfind("---", 0) == 0) {
+        const auto document_end = source.find('\n');
+        source = document_end == std::string_view::npos ? std::string_view{} : source.substr(document_end + 1);
+    }
+    return source;
+}
+
 [[noreturn]] void onBasicError(c4::csubstr message, const c4::yml::ErrorDataBasic &, void *) {
     throw RymlError(toString(message));
 }
@@ -53,6 +65,23 @@ std::string errorMessage(std::string_view action, std::string_view path) {
     message.append(": ");
     message.append(path);
     return message;
+}
+
+bool saveText(std::string_view path, std::string_view source, Error &err) {
+    const std::string file_path(path);
+    std::FILE *file = std::fopen(file_path.c_str(), "wb");
+    if (!file) {
+        err = {ErrorCode::Io, errorMessage("failed to open YAML file", path), 0, 0};
+        return false;
+    }
+    const auto written = source.empty() ? 0 : std::fwrite(source.data(), 1, source.size(), file);
+    const bool stream_error = written != source.size() || std::ferror(file) != 0;
+    const bool close_error = std::fclose(file) != 0;
+    if (stream_error || close_error) {
+        err = {ErrorCode::Io, errorMessage("failed to write YAML file", path), 0, 0};
+        return false;
+    }
+    return true;
 }
 
 } // namespace
@@ -115,6 +144,13 @@ std::string_view Node::scalar() const noexcept {
     if (!isScalar())
         return {};
     const auto value = _impl->tree.val(_id);
+    return {value.str, value.len};
+}
+
+std::string_view Node::tag() const noexcept {
+    if (!valid() || !_impl->tree.has_val_tag(_id))
+        return {};
+    const auto value = _impl->tree.val_tag(_id);
     return {value.str, value.len};
 }
 
@@ -215,6 +251,12 @@ void Node::setScalar(std::string_view value) {
     _impl->tree.set_val(_id, _impl->tree.copy_to_arena(toSubstr(value)));
 }
 
+void Node::setTag(std::string_view value) {
+    if (!valid() || value.empty() || (!isScalar() && !isMap() && !isSequence()))
+        return;
+    _impl->tree.set_val_tag(_id, _impl->tree.copy_to_arena(toSubstr(value)));
+}
+
 bool Node::readBool(bool &value) const noexcept {
     const auto text = scalar();
     if (text == "true" || text == "True" || text == "TRUE" || text == "1") {
@@ -294,6 +336,7 @@ bool Node::writeFloating(double value) {
 
 Result parse(std::string_view source) {
     try {
+        source = normalizeOpenCvYaml(source);
         const auto callbacks = makeCallbacks();
         c4::yml::Tree tree(callbacks);
         tree.reserve(c4::yml::estimate_tree_capacity(toSubstr(source)));
@@ -352,19 +395,26 @@ bool save(std::string_view path, const Node &node, Error &err) {
     }
 
     const auto source = dump(node);
-    const std::string file_path(path);
-    std::FILE *file = std::fopen(file_path.c_str(), "wb");
-    if (!file) {
-        err = {ErrorCode::Io, errorMessage("failed to open YAML file", path), 0, 0};
-        return false;
-    }
-    const auto written = source.empty() ? 0 : std::fwrite(source.data(), 1, source.size(), file);
-    const bool stream_error = written != source.size() || std::ferror(file) != 0;
-    const bool close_error = std::fclose(file) != 0;
-    const bool write_error = stream_error || close_error;
-    if (write_error)
-        err = {ErrorCode::Io, errorMessage("failed to write YAML file", path), 0, 0};
-    return !write_error;
+    return saveText(path, source, err);
 }
+
+#ifdef HAVE_OPENCV
+
+std::string dumpOpenCv(const Node &node) {
+    auto source = dump(node);
+    if (source.empty())
+        return {};
+    source.insert(0, "%YAML:1.0\n---\n");
+    return source;
+}
+
+bool saveOpenCv(std::string_view path, const Node &node) {
+    if (!node.valid())
+        return false;
+    Error err;
+    return saveText(path, dumpOpenCv(node), err);
+}
+
+#endif
 
 } // namespace rm::yaml

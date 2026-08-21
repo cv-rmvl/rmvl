@@ -11,9 +11,8 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-#include <opencv2/core/persistence.hpp>
-
 #include "@para_include_path@"
+#include "rmvl/core/yaml.hpp"
 
 namespace rm::para {
 
@@ -22,24 +21,29 @@ static std::shared_mutex g_paramtx__{};
 @para_source_enum_s2t@
 @para_source_enum_t2s@
 bool @class_name@::read(const std::string &_path__) {
-    std::shared_lock _lk__(g_paramtx__);
-    cv::FileStorage _fs__(_path__, cv::FileStorage::READ);
-    if (!_fs__.isOpened())
+    std::unique_lock _lk__(g_paramtx__);
+    auto _result__ = yaml::load(_path__);
+    if (!_result__)
         return false;
-    cv::FileNode _node__;
+    const auto &_root__ = *_result__;
+    yaml::Node _node__;
+    bool _ok__ = true;
 
 @para_source_read@
-    return true;
+    return _ok__;
 }
 
 bool @class_name@::write(const std::string &_path__) const {
-    std::unique_lock _lk__(g_paramtx__);
-    cv::FileStorage _fs__(_path__, cv::FileStorage::WRITE);
-    if (!_fs__.isOpened())
-        return false;
+    std::shared_lock _lk__(g_paramtx__);
+    auto _root__ = yaml::Node::createMap();
+    bool _ok__ = true;
 
 @para_source_write@
-    return true;
+#ifdef HAVE_OPENCV
+    return _ok__ && yaml::saveOpenCv(_path__, _root__);
+#else
+    return _ok__ && yaml::save(_path__, _root__);
+#endif
 }
 
 } // rm::para

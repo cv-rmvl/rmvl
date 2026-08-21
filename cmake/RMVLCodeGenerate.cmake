@@ -372,16 +372,13 @@ endfunction()
 #     )
 # ----------------------------------------------------------------------------
 function(_type_correct value_type out_value_type)
-  if(NOT WITH_OPENCV)
-    set(cmt_prefix "// ")
-  endif()
   set(retval ${value_type})
   string(REGEX REPLACE "(size_t|string|vector)" "std::\\1" retval "${retval}")
-  string(REGEX REPLACE "(Point|Vec|Mat)" "${cmt_prefix}cv::\\1" retval "${retval}")
-  string(REGEX REPLACE "Matx([1-9])([1-9])f" "${cmt_prefix}Matx<float,\\1,\\2>" retval "${retval}")
-  string(REGEX REPLACE "Matx([1-9])([1-9])d" "${cmt_prefix}Matx<double,\\1,\\2>" retval "${retval}")
-  string(REGEX REPLACE "Vec([1-9])f" "${cmt_prefix}Vec<float,\\1>" retval "${retval}")
-  string(REGEX REPLACE "Vec([1-9])d" "${cmt_prefix}Vec<double,\\1>" retval "${retval}")
+  string(REGEX REPLACE "Matx([1-9])([1-9])f" "Matx<float,\\1,\\2>" retval "${retval}")
+  string(REGEX REPLACE "Matx([1-9])([1-9])d" "Matx<double,\\1,\\2>" retval "${retval}")
+  string(REGEX REPLACE "Vec([1-9])f" "Vec<float,\\1>" retval "${retval}")
+  string(REGEX REPLACE "Vec([1-9])d" "Vec<double,\\1>" retval "${retval}")
+  string(REGEX REPLACE "(Point3|Point|Size|Complex|Rect|Matx|Mat|Vec|Scalar|Range|KeyPoint|DMatch)" "cv::\\1" retval "${retval}")
   set(${out_value_type} ${retval} PARENT_SCOPE)
 endfunction()
 
@@ -406,6 +403,11 @@ function(_parse_assign content_line header_line source_read_line source_write_li
     list(GET ${content_line} 0 type_sym)
     # 修正值类型符号
     _type_correct("${type_sym}" type_sym_correct)
+    if(type_sym MATCHES "Point|Size|Complex|Rect|Matx|Mat|Vec|Scalar|Range|KeyPoint|DMatch")
+      set(is_cv_type TRUE)
+    else()
+      set(is_cv_type FALSE)
+    endif()
     # 获取标识符
     list(GET ${content_line} 1 id_sym)
     # 获取默认值和注释
@@ -440,34 +442,34 @@ function(_parse_assign content_line header_line source_read_line source_write_li
     return()
   endif()
   # 获取 Header 部分的返回值
+  if(is_cv_type)
+    set(ret_header_line "${ret_header_line}#ifdef HAVE_OPENCV\n")
+  endif()
   set(ret_header_line "${ret_header_line}    //! ${comment_sym}\n")
   if("${default_sym}" STREQUAL "")
     set(ret_header_line "${ret_header_line}    RMVL_W_RW ${type_sym_correct} ${id_sym}{};\n")
   else()
     set(ret_header_line "${ret_header_line}    RMVL_W_RW ${type_sym_correct} ${id_sym} = ${default_sym};\n")
   endif()
+  if(is_cv_type)
+    set(ret_header_line "${ret_header_line}#endif // HAVE_OPENCV\n")
+  endif()
   # 获取 Source 部分的返回值
-  set(ret_source_read_line "${ret_source_read_line}    _node__ = _fs__[\"${id_sym}\"];\n")
-  if(type_sym STREQUAL "bool")
-    set(ret_source_read_line "${ret_source_read_line}    if (!_node__.isNone())\n    {\n")
-    set(ret_source_read_line "${ret_source_read_line}        std::string tmp{};\n        _node__ >> tmp;\n")
-    set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = (tmp == \"true\" || tmp == \"1\" || tmp == \"yes\");\n    }\n")
-    set(ret_source_write_line "${ret_source_write_line}    int tmp_${id_sym} = static_cast<int>(${id_sym});\n")
-    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << tmp_${id_sym};\n")
-  elseif(type_sym MATCHES "^uint\\w*|size_t|int[0-9]+_t$")
-    set(ret_source_read_line "${ret_source_read_line}    if (!_node__.isNone())\n    {\n")
-    set(ret_source_read_line "${ret_source_read_line}        int tmp{};\n        _node__ >> tmp;\n")
-    set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = static_cast<${type_sym_correct}>(tmp);\n    }\n")
-    set(ret_source_write_line "${ret_source_write_line}    int tmp_${id_sym} = static_cast<int>(${id_sym});\n")
-    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << tmp_${id_sym};\n")
-  elseif(type_sym MATCHES "int|float|double|string|vector|Point\\w*|Mat\\w*|Vec\\w*|Rect\\w*")
-    set(ret_source_read_line "${ret_source_read_line}    _node__.isNone() ? void(0) : (_node__ >> ${id_sym});\n")
-    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << ${id_sym};\n")
+  if(is_cv_type)
+    set(ret_source_read_line "${ret_source_read_line}#ifdef HAVE_OPENCV\n")
+    set(ret_source_write_line "${ret_source_write_line}#ifdef HAVE_OPENCV\n")
+  endif()
+  set(ret_source_read_line "${ret_source_read_line}    _node__ = _root__[\"${id_sym}\"];\n")
+  if(type_sym MATCHES "bool|int|float|double|string|vector|size_t|Point|Size|Complex|Rect|Mat|Vec|Scalar|Range|KeyPoint|DMatch")
+    set(ret_source_read_line "${ret_source_read_line}    if (_node__.valid())\n        _ok__ = _node__.read(${id_sym}) && _ok__;\n")
+    set(ret_source_write_line "${ret_source_write_line}    _ok__ = _root__.set(\"${id_sym}\", ${id_sym}) && _ok__;\n")
   else()
-    set(ret_source_read_line "${ret_source_read_line}    if (!_node__.isNone())\n    {\n")
-    set(ret_source_read_line "${ret_source_read_line}        std::string tmp{};\n        _node__ >> tmp;\n")
-    set(ret_source_read_line "${ret_source_read_line}        ${id_sym} = s2t_${type_sym}.at(tmp);\n    }\n")
-    set(ret_source_write_line "${ret_source_write_line}    _fs__ << \"${id_sym}\" << t2s_${type_sym}.at(${id_sym});\n")
+    set(ret_source_read_line "${ret_source_read_line}    if (_node__.valid()) {\n        std::string _value__;\n        const auto _valid__ = _node__.read(_value__);\n        const auto _iter__ = _valid__ ? s2t_${type_sym}.find(_value__) : s2t_${type_sym}.end();\n        if (_iter__ == s2t_${type_sym}.end())\n            _ok__ = false;\n        else\n            ${id_sym} = _iter__->second;\n    }\n")
+    set(ret_source_write_line "${ret_source_write_line}    {\n        const auto _iter__ = t2s_${type_sym}.find(${id_sym});\n        if (_iter__ == t2s_${type_sym}.end())\n            _ok__ = false;\n        else\n            _ok__ = _root__.set(\"${id_sym}\", _iter__->second) && _ok__;\n    }\n")
+  endif()
+  if(is_cv_type)
+    set(ret_source_read_line "${ret_source_read_line}#endif // HAVE_OPENCV\n")
+    set(ret_source_write_line "${ret_source_write_line}#endif // HAVE_OPENCV\n")
   endif()
   # 作用域提升
   set(${header_line} "${ret_header_line}" PARENT_SCOPE)
@@ -683,43 +685,31 @@ function(rmvl_generate_para target_name)
   if(PARA_MODULE)
     set(header_ext "h")
     set(para_include_path "rmvlpara/${module_name}/${target_name}.${header_ext}")
-    if(WITH_OPENCV)
-      configure_file(
-        ${codegen_template_path}/para_generator_source.in
-        ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/_rm_codegen_param.cpp
-        @ONLY
-      )
-    endif()
+    configure_file(
+      ${codegen_template_path}/para_generator_source.in
+      ${CMAKE_CURRENT_LIST_DIR}/src/${target_name}/_rm_codegen_param.cpp
+      @ONLY
+    )
   # dosen't have module
   else()
     set(header_ext "hpp")
     set(para_include_path "rmvlpara/${module_name}.${header_ext}")
-    if(WITH_OPENCV)
-      configure_file(
-        ${codegen_template_path}/para_generator_source.in
-        ${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_param.cpp
-        @ONLY
-      )
-    endif()
+    configure_file(
+      ${codegen_template_path}/para_generator_source.in
+      ${CMAKE_CURRENT_LIST_DIR}/src/_rm_codegen_param.cpp
+      @ONLY
+    )
     set(def_new_group "${def_new_group}//! @addtogroup rmvlpara\n//! @{\n")
     set(def_new_group "${def_new_group}//! @defgroup para_${module_name} ${module_name} 的参数模块\n")
     set(def_new_group "${def_new_group}//! @addtogroup para_${module_name}\n//! @{\n")
     set(def_new_group "${def_new_group}//! @brief 与 @ref ${module_name} 相关的参数模块，包含...\n")
     set(def_new_group "${def_new_group}//! @} para_${module_name}\n//! @} rmvlpara\n")
   endif()
-  if(WITH_OPENCV)
-    configure_file(
-      ${codegen_template_path}/para_generator_header.in
-      ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path} 
-      @ONLY
-    )
-  else()
-    configure_file(
-      ${codegen_template_path}/para_generator_header_without_cv.in
-      ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path}
-      @ONLY
-    )
-  endif()
+  configure_file(
+    ${codegen_template_path}/para_generator_header.in
+    ${CMAKE_CURRENT_LIST_DIR}/include/${para_include_path}
+    @ONLY
+  )
   unset(para_include_path)
   message(STATUS "${para_msg} - done")
 endfunction()
