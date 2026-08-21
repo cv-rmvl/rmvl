@@ -91,8 +91,20 @@ endforeach()
 #  Build the test program
 # --------------------------------------------------------------------------
 if(BUILD_TESTS)
-
+  rmvl_add_test(
+    camera Unit
+    DEPENDS camera
+    EXTERNAL GTest::gtest_main
+  )
 endif(BUILD_TESTS)
+
+if(BUILD_PERF_TESTS)
+  rmvl_add_test(
+    camera Performance
+    DEPENDS camera
+    EXTERNAL benchmark::benchmark_main
+  )
+endif()
 
 # --------------------------------------------------------------------------
 #  Build Python bindings

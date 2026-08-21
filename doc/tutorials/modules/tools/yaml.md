@@ -77,7 +77,21 @@ if (!rm::yaml::save("config.yml", root, error))
 
 映射节点保持 YAML 树中的展示顺序。类型转换同时支持以 `std::string` 为键的 `std::map` 和 `std::unordered_map`：前者适合需要稳定排序输出的配置，后者适合不关心顺序的运行时查找。
 
-### 4. 自定义类型
+### 4. OpenCV 类型兼容
+
+启用 OpenCV 后，`rm::yaml` 可直接转换 OpenCV `FileStorage` 使用的类型，包括 `cv::Point`、`cv::Point3`、`cv::Size`、`cv::Rect`、`cv::Vec`、`cv::Scalar`、`cv::Range`、`cv::KeyPoint`、`cv::DMatch`、`cv::Matx` 和 `cv::Mat`，上述类型组成的 `std::vector` 同样受支持。
+
+解析器兼容 OpenCV 使用的 `%YAML:1.0` 文件头以及 `!!opencv-matrix`、`!!opencv-nd-matrix` 标签。矩阵中的 `rows`、`cols`、`sizes`、`dt` 和 `data` 字段会自动转换为对应深度与通道数的矩阵：
+
+```cpp
+auto result = rm::yaml::load("camera.yml");
+auto camera_matrix = (*result)["camera_matrix"].as<cv::Matx33d>();
+auto points = (*result)["points"].as<std::vector<cv::Point2f>>();
+```
+
+普通 `dump()` 和 `save()` 输出标准 YAML。需要让 OpenCV `FileStorage` 继续读取输出文件时，使用 `dumpOpenCv()` 或 `saveOpenCv()` 生成带 OpenCV 文件头和矩阵标签的兼容格式。
+
+### 5. 自定义类型
 
 为用户类型提供 `yaml_encode()` 和 `yaml_decode()` 即可通过 ADL 接入，无需继承基类或注册运行时类型：
 
@@ -104,4 +118,4 @@ root.set("origin", Point{1.5, 2.0});
 auto origin = root["origin"].as<Point>();
 ```
 
-当前支持字符串、布尔值、整数、浮点数、枚举、`std::optional`、`std::vector`、`std::array` 以及字符串键映射。需要访问 YAML tag、anchor 或样式等 rapidyaml 底层特性时，应直接使用 rapidyaml。
+当前支持字符串、布尔值、整数、浮点数、枚举、`std::optional`、`std::vector`、`std::array` 以及字符串键映射。`Node::tag()` 和 `Node::setTag()` 可用于访问 YAML 标签；需要 anchor 或样式等其他 rapidyaml 底层特性时，应直接使用 rapidyaml。

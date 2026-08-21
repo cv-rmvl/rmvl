@@ -222,7 +222,9 @@ RMVL 中，一部分模块（涉及主要模块和扩展模块）的功能在不
 <div class="line"><span class="keyword">inline</span>&nbsp;TestParam test_param;</div>
 </div>
 
-其中包含了运行时参数导入和导出的接口 `read` 和 `write`，以 @ref para_algorithm 为例，`rm::para::AlgorithmParam::read` 用于运行时读取 YAML 文件并配置 algorithm 模块的参数，`rm::para::AlgorithmParam::write` 用于将当前 algorithm 模块的参数写入到 YAML 文件中。
+其中包含了运行时参数导入和导出的接口 `read` 和 `write`，底层使用 @ref core_yaml 完成 YAML 解析与保存。以 @ref para_algorithm 为例，`rm::para::AlgorithmParam::read` 用于运行时读取 YAML 文件并配置 algorithm 模块的参数，`rm::para::AlgorithmParam::write` 用于将当前 algorithm 模块的参数写入到 YAML 文件中。
+
+参数模块不依赖 OpenCV 也能读写基础类型。启用 OpenCV 时，代码生成器通过 `HAVE_OPENCV` 启用对应字段，并兼容 OpenCV `FileStorage` 的 `%YAML:1.0` 文件头、`!!opencv-matrix` 矩阵格式以及 `cv::Point`、`cv::Vec`、`cv::Matx` 等类型。`write` 生成的文件也可继续由 OpenCV `FileStorage` 读取。
 
 用户可以通过使用类似以下的代码完成运行时加载
 
@@ -263,4 +265,4 @@ rm::para::test_param.read(prefix_path + "test.yml");
 
 - `num` 的值会被设置为 `20`
 - `name` 的值会被设置为 `Hello, RMVL`
-- `value` 在 YAML 文件中为设置该值，因此 `value` 的值会保持不变，即为默认的 `4.2`
+- `value` 在 YAML 文件中未设置，因此 `value` 的值会保持不变，即为默认的 `4.2`

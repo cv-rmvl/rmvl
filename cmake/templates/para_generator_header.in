@@ -9,7 +9,15 @@
 
 #pragma once
 
+#include <rmvl/rmvl_modules.hpp>
+
+#ifdef HAVE_OPENCV
+#include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
+#else
+#include <string>
+#include <vector>
+#endif
 
 #include "rmvl/core/rmvldef.hpp"
 
