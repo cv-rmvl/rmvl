@@ -6,7 +6,7 @@
 @version 1.0
 @brief 聚合体的编译期反射，包含 C++17 和 C++20 两个版本的实现原理
 
-@next_tutorial{tutorial_modules_serial}
+@next_tutorial{tutorial_modules_yaml}
 
 @tableofcontents
 

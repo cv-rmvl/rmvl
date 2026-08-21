@@ -15,10 +15,11 @@
 
 #include <chrono>
 
-//! @addtogroup core
-//! @{
-//! @defgroup core_timer 定时、计时模块
-//! @}
+/**
+ * @defgroup core_timer 定时、计时模块
+ * @ingroup core
+ * @brief 提供 Epoch 时间获取和代码执行时间测量功能
+ */
 
 namespace rm {
 

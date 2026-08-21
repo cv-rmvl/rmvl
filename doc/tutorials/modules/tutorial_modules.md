@@ -11,9 +11,10 @@
 
 ### 1 工具类
 
-#### 开发工具
+#### 基础开发工具
 
 - @subpage tutorial_modules_aggregate_reflect
+- @subpage tutorial_modules_yaml
 
 #### 基础通信设施
 
