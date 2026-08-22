@@ -134,6 +134,23 @@ TEST(YAML_OpenCV, empty_and_nd_matrix_round_trip) {
         EXPECT_EQ(decoded->ptr<short>()[i], matrix.ptr<short>()[i]);
 }
 
+TEST(YAML_OpenCV, float16_matrix_round_trip) {
+    const cv::Mat source = (cv::Mat_<float>(1, 4) << 0.5F, -1.25F, 3.0F, 10.5F);
+    cv::Mat matrix;
+    source.convertTo(matrix, CV_16F);
+
+    auto root = Node::createMap();
+    ASSERT_TRUE(root.set("matrix", matrix));
+    const auto decoded = root["matrix"].as<cv::Mat>();
+    ASSERT_TRUE(decoded.has_value());
+    ASSERT_EQ(decoded->type(), CV_16F);
+
+    cv::Mat restored;
+    decoded->convertTo(restored, CV_32F);
+    for (int i = 0; i < restored.cols; ++i)
+        EXPECT_NEAR(restored.at<float>(0, i), source.at<float>(0, i), 1e-3F);
+}
+
 TEST(YAML_OpenCV, read_filestorage_output) {
     cv::FileStorage storage("", cv::FileStorage::WRITE | cv::FileStorage::MEMORY | cv::FileStorage::FORMAT_YAML);
     storage << "point" << cv::Point2f(1.25F, 2.5F);

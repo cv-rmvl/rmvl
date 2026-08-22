@@ -502,12 +502,9 @@ inline bool encodeMatrixData(Node &data, const cv::Mat &matrix) {
     case CV_64F:
         return encodeMatrixData<double>(data, matrix);
     case CV_16F: {
-        data.makeSequence();
-        const auto *values = matrix.ptr<cv::hfloat>();
-        for (std::size_t i = 0; i < matrix.total() * matrix.channels(); ++i)
-            if (!data.push(static_cast<float>(values[i])))
-                return false;
-        return true;
+        cv::Mat converted;
+        matrix.convertTo(converted, CV_32F);
+        return encodeMatrixData<float>(data, converted);
     }
     default:
         return false;
@@ -543,16 +540,11 @@ inline bool decodeMatrixData(const Node &data, cv::Mat &matrix) {
     case CV_64F:
         return decodeMatrixData<double>(data, matrix);
     case CV_16F: {
-        const auto count = matrix.total() * matrix.channels();
-        if (!data.isSequence() || data.size() != count)
+        cv::Mat converted;
+        matrix.convertTo(converted, CV_32F);
+        if (!decodeMatrixData<float>(data, converted))
             return false;
-        auto *values = matrix.ptr<cv::hfloat>();
-        for (std::size_t i = 0; i < count; ++i) {
-            float value{};
-            if (!data[i].read(value))
-                return false;
-            values[i] = cv::hfloat(value);
-        }
+        converted.convertTo(matrix, CV_16F);
         return true;
     }
     default:
