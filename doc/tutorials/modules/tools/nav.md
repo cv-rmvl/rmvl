@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_lpss_robotdemo}
 
-@next_tutorial{tutorial_modules_camera}
+@next_tutorial{tutorial_modules_ort}
 
 @tableofcontents
 
@@ -31,9 +31,7 @@
 
 using namespace rm;
 
-void updateMap(msg::OccupancyGrid full_map,
-               const std::vector<msg::Point> &footprint,
-               const msg::Pose &robot_pose) {
+void updateMap(msg::OccupancyGrid full_map, const std::vector<msg::Point> &footprint, const msg::Pose &robot_pose) {
     nav::GridMap grid(std::move(full_map));
     if (!grid.valid())
         return;

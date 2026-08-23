@@ -6,7 +6,7 @@
 
 @prev_tutorial{tutorial_modules_union_find}
 
-@next_tutorial{tutorial_modules_ort}
+@next_tutorial{tutorial_modules_lpss_robotpln}
 
 @tableofcontents
 
