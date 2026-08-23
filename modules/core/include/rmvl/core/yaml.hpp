@@ -10,25 +10,24 @@
 
 #pragma once
 
-#include <rmvl/rmvl_modules.hpp>
-
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <memory>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <vector>
+
+#include <rmvl/rmvl_modules.hpp>
 
 #ifdef HAVE_OPENCV
-#include <charconv>
-
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/traits.hpp>
-#else
-#include <array>
-#include <string>
 #endif
 
 #include "rmvl/core/rmvldef.hpp"
@@ -362,9 +361,6 @@ RMVL_EXPORTS_W inline bool save(std::string_view path, const Node &node) {
 
 #ifdef HAVE_OPENCV
 
-//! @addtogroup core_yaml
-//! @{
-
 /**
  * @brief 序列化为 OpenCV FileStorage 兼容的 YAML 文本
  *
@@ -381,6 +377,8 @@ RMVL_EXPORTS_W std::string dumpOpenCv(const Node &node);
  * @return 是否保存成功
  */
 RMVL_EXPORTS_W bool saveOpenCv(std::string_view path, const Node &node);
+
+//! @cond
 
 namespace opencv_detail {
 
@@ -403,113 +401,16 @@ bool encodeSequence(Node &node, const T *values, std::size_t size) {
     return true;
 }
 
-inline char depthCode(int depth) noexcept {
-    switch (depth) {
-    case CV_8U:
-        return 'u';
-    case CV_8S:
-        return 'c';
-    case CV_16U:
-        return 'w';
-    case CV_16S:
-        return 's';
-    case CV_32S:
-        return 'i';
-    case CV_32F:
-        return 'f';
-    case CV_64F:
-        return 'd';
-    case CV_16F:
-        return 'h';
-    default:
-        return '\0';
-    }
-}
-
-inline int codeDepth(char code) noexcept {
-    switch (code) {
-    case 'u':
-        return CV_8U;
-    case 'c':
-        return CV_8S;
-    case 'w':
-        return CV_16U;
-    case 's':
-        return CV_16S;
-    case 'i':
-        return CV_32S;
-    case 'f':
-        return CV_32F;
-    case 'd':
-        return CV_64F;
-    case 'h':
-        return CV_16F;
-    default:
-        return -1;
-    }
-}
-
-inline std::string dataType(int type) {
-    const int channels = CV_MAT_CN(type);
-    const char code = depthCode(CV_MAT_DEPTH(type));
-    if (code == '\0' || channels < 1)
-        return {};
-    return channels == 1 ? std::string(1, code) : std::to_string(channels) + code;
-}
-
-inline bool parseDataType(std::string_view value, int &type) noexcept {
-    if (value.empty())
-        return false;
-    int channels = 1;
-    if (value.size() > 1) {
-        const auto result = std::from_chars(value.data(), value.data() + value.size() - 1, channels);
-        if (result.ec != std::errc{} || result.ptr != value.data() + value.size() - 1)
-            return false;
-    }
-    const int depth = codeDepth(value.back());
-    if (depth < 0 || channels < 1 || channels > CV_CN_MAX)
-        return false;
-    type = CV_MAKETYPE(depth, channels);
-    return true;
-}
-
-inline bool matrixTag(const Node &node, bool nd) noexcept {
-    const auto tag = node.tag();
-    if (tag.empty())
-        return true;
-    return tag.find(nd ? "opencv-nd-matrix" : "opencv-matrix") != std::string_view::npos;
-}
+RMVL_EXPORTS std::string dataType(int type);
+RMVL_EXPORTS bool parseDataType(std::string_view value, int &type) noexcept;
+RMVL_EXPORTS bool matrixTag(const Node &node, bool nd) noexcept;
 
 template <typename T>
 bool encodeMatrixData(Node &data, const cv::Mat &matrix) {
     return encodeSequence(data, matrix.ptr<T>(), matrix.total() * matrix.channels());
 }
 
-inline bool encodeMatrixData(Node &data, const cv::Mat &matrix) {
-    switch (matrix.depth()) {
-    case CV_8U:
-        return encodeMatrixData<uchar>(data, matrix);
-    case CV_8S:
-        return encodeMatrixData<schar>(data, matrix);
-    case CV_16U:
-        return encodeMatrixData<ushort>(data, matrix);
-    case CV_16S:
-        return encodeMatrixData<short>(data, matrix);
-    case CV_32S:
-        return encodeMatrixData<int>(data, matrix);
-    case CV_32F:
-        return encodeMatrixData<float>(data, matrix);
-    case CV_64F:
-        return encodeMatrixData<double>(data, matrix);
-    case CV_16F: {
-        cv::Mat converted;
-        matrix.convertTo(converted, CV_32F);
-        return encodeMatrixData<float>(data, converted);
-    }
-    default:
-        return false;
-    }
-}
+RMVL_EXPORTS bool encodeMatrixData(Node &data, const cv::Mat &matrix);
 
 template <typename T>
 bool decodeMatrixData(const Node &data, cv::Mat &matrix) {
@@ -523,36 +424,11 @@ bool decodeMatrixData(const Node &data, cv::Mat &matrix) {
     return true;
 }
 
-inline bool decodeMatrixData(const Node &data, cv::Mat &matrix) {
-    switch (matrix.depth()) {
-    case CV_8U:
-        return decodeMatrixData<uchar>(data, matrix);
-    case CV_8S:
-        return decodeMatrixData<schar>(data, matrix);
-    case CV_16U:
-        return decodeMatrixData<ushort>(data, matrix);
-    case CV_16S:
-        return decodeMatrixData<short>(data, matrix);
-    case CV_32S:
-        return decodeMatrixData<int>(data, matrix);
-    case CV_32F:
-        return decodeMatrixData<float>(data, matrix);
-    case CV_64F:
-        return decodeMatrixData<double>(data, matrix);
-    case CV_16F: {
-        cv::Mat converted;
-        matrix.convertTo(converted, CV_32F);
-        if (!decodeMatrixData<float>(data, converted))
-            return false;
-        converted.convertTo(matrix, CV_16F);
-        return true;
-    }
-    default:
-        return false;
-    }
-}
+RMVL_EXPORTS bool decodeMatrixData(const Node &data, cv::Mat &matrix);
 
 } // namespace opencv_detail
+
+//! @endcond
 
 template <typename T>
 bool yaml_decode(const Node &node, cv::Point_<T> &value) {
@@ -791,7 +667,6 @@ bool yaml_encode(Node &node, const cv::Matx<T, M, N> &value) {
     return yaml_encode(node, cv::Mat(value, true));
 }
 
-//! @} core_yaml
 #endif
 
 //! @cond
