@@ -84,7 +84,117 @@ bool saveText(std::string_view path, std::string_view source, Error &err) {
     return true;
 }
 
+#ifdef HAVE_OPENCV
+
+char depthCode(int depth) noexcept {
+    switch (depth) {
+    case CV_8U: return 'u';
+    case CV_8S: return 'c';
+    case CV_16U: return 'w';
+    case CV_16S: return 's';
+    case CV_32S: return 'i';
+    case CV_32F: return 'f';
+    case CV_64F: return 'd';
+    case CV_16F: return 'h';
+    default: return '\0';
+    }
+}
+
+int codeDepth(char code) noexcept {
+    switch (code) {
+    case 'u': return CV_8U;
+    case 'c': return CV_8S;
+    case 'w': return CV_16U;
+    case 's': return CV_16S;
+    case 'i': return CV_32S;
+    case 'f': return CV_32F;
+    case 'd': return CV_64F;
+    case 'h': return CV_16F;
+    default: return -1;
+    }
+}
+
+#endif
+
 } // namespace
+
+#ifdef HAVE_OPENCV
+
+namespace opencv_detail {
+
+std::string dataType(int type) {
+    const int channels = CV_MAT_CN(type);
+    const char code = depthCode(CV_MAT_DEPTH(type));
+    if (code == '\0' || channels < 1)
+        return {};
+    return channels == 1 ? std::string(1, code) : std::to_string(channels) + code;
+}
+
+bool parseDataType(std::string_view value, int &type) noexcept {
+    if (value.empty())
+        return false;
+    int channels = 1;
+    if (value.size() > 1) {
+        const auto result = std::from_chars(value.data(), value.data() + value.size() - 1, channels);
+        if (result.ec != std::errc{} || result.ptr != value.data() + value.size() - 1)
+            return false;
+    }
+    const int depth = codeDepth(value.back());
+    if (depth < 0 || channels < 1 || channels > CV_CN_MAX)
+        return false;
+    type = CV_MAKETYPE(depth, channels);
+    return true;
+}
+
+bool matrixTag(const Node &node, bool nd) noexcept {
+    const auto tag = node.tag();
+    if (tag.empty())
+        return true;
+    return tag.find(nd ? "opencv-nd-matrix" : "opencv-matrix") != std::string_view::npos;
+}
+
+bool encodeMatrixData(Node &data, const cv::Mat &matrix) {
+    switch (matrix.depth()) {
+    case CV_8U: return encodeMatrixData<uchar>(data, matrix);
+    case CV_8S: return encodeMatrixData<schar>(data, matrix);
+    case CV_16U: return encodeMatrixData<ushort>(data, matrix);
+    case CV_16S: return encodeMatrixData<short>(data, matrix);
+    case CV_32S: return encodeMatrixData<int>(data, matrix);
+    case CV_32F: return encodeMatrixData<float>(data, matrix);
+    case CV_64F: return encodeMatrixData<double>(data, matrix);
+    case CV_16F: {
+        cv::Mat converted;
+        matrix.convertTo(converted, CV_32F);
+        return encodeMatrixData<float>(data, converted);
+    }
+    default: return false;
+    }
+}
+
+bool decodeMatrixData(const Node &data, cv::Mat &matrix) {
+    switch (matrix.depth()) {
+    case CV_8U: return decodeMatrixData<uchar>(data, matrix);
+    case CV_8S: return decodeMatrixData<schar>(data, matrix);
+    case CV_16U: return decodeMatrixData<ushort>(data, matrix);
+    case CV_16S: return decodeMatrixData<short>(data, matrix);
+    case CV_32S: return decodeMatrixData<int>(data, matrix);
+    case CV_32F: return decodeMatrixData<float>(data, matrix);
+    case CV_64F: return decodeMatrixData<double>(data, matrix);
+    case CV_16F: {
+        cv::Mat converted;
+        matrix.convertTo(converted, CV_32F);
+        if (!decodeMatrixData<float>(data, converted))
+            return false;
+        converted.convertTo(matrix, CV_16F);
+        return true;
+    }
+    default: return false;
+    }
+}
+
+} // namespace opencv_detail
+
+#endif
 
 struct Node::Impl {
     c4::yml::Tree tree{makeCallbacks()};
