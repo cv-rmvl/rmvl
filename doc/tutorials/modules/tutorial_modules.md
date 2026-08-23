@@ -33,14 +33,11 @@
 3. 增强系统可靠性：提供消息队列、持久化，支持事务处理，错误处理和恢复机制
 4. 简化开发工作：提供高级编程接口，减少网络编程复杂度，支持多种编程语言和平台
 
+具体的，RMVL 提供了以下通信中间件支持库：
+
 - @subpage tutorial_modules_opcua
 - @subpage tutorial_modules_mqtt
 - @subpage tutorial_modules_lpss
-  - @subpage tutorial_modules_lpss_robotpln 、 @subpage tutorial_modules_lpss_robotctl 以及 @subpage tutorial_modules_lpss_robotdemo
-
-#### 导航
-
-- @subpage tutorial_modules_nav
 
 #### 硬件设备支持库
 
@@ -69,6 +66,11 @@
 
 - @subpage tutorial_modules_union_find
 - @subpage tutorial_modules_ra_heap
+
+#### 控制与规划
+
+- @subpage tutorial_modules_lpss_robotpln 、 @subpage tutorial_modules_lpss_robotctl 以及 @subpage tutorial_modules_lpss_robotdemo
+- @subpage tutorial_modules_nav
 
 #### 机器学习与深度学习支持库
 

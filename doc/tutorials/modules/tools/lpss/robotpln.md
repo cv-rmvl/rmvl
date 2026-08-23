@@ -6,7 +6,7 @@
 @version 1.0
 @brief 本教程介绍了 LPSS 机器人扩展中的运动规划功能，展示了如何使用该功能进行机器人运动规划。
 
-@prev_tutorial{tutorial_modules_lpss}
+@prev_tutorial{tutorial_modules_ra_heap}
 
 @next_tutorial{tutorial_modules_lpss_robotctl}
 
