@@ -317,14 +317,12 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
     <td class="markdownTableBodyLeft"><code>Image</code></td>
     <td class="markdownTableBodyLeft"><div class="fragment">
       <div class="line"><span class="keyword">Header</span> header</div>
-      <div class="line"><span class="keywordtype">uint32</span> height</div>
-      <div class="line"><span class="keywordtype">uint32</span> width</div>
-      <div class="line"><span class="keywordtype">string</span> encoding</div>
-      <div class="line"><span class="keywordtype">uint8</span> is_bigendian</div>
-      <div class="line"><span class="keywordtype">uint32</span> step</div>
+      <div class="line"><span class="keywordtype">int32</span> height</div>
+      <div class="line"><span class="keywordtype">int32</span> width</div>
+      <div class="line"><span class="keywordtype">uint8</span> encoding</div>
       <div class="line"><span class="keywordtype">uint8</span>[] data</div>
     </div></td>
-    <td class="markdownTableBodyLeft">表示图像数据</td>
+    <td class="markdownTableBodyLeft">表示紧密排列的未压缩图像数据，包含 RGB、灰度、Bayer、YUV、16UC1 和 32FC1 等编码</td>
   </tr>
   <tr class="markdownTableRowOdd">
     <td class="markdownTableBodyLeft"><code>Imu</code></td>

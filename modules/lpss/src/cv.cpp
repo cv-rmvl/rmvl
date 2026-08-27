@@ -59,8 +59,10 @@ cv::Mat from_msg(const msg::Image &img_msg) {
         return cv::Mat(img_msg.height, img_msg.width, CV_8UC3, const_cast<uint8_t *>(img_msg.data.data())).clone();
     else if (img_msg.encoding == msg::Image::encoding_rgba8 || img_msg.encoding == msg::Image::encoding_bgra8)
         return cv::Mat(img_msg.height, img_msg.width, CV_8UC4, const_cast<uint8_t *>(img_msg.data.data())).clone();
-    else if (img_msg.encoding == msg::Image::encoding_mono16)
+    else if (img_msg.encoding == msg::Image::encoding_mono16 || img_msg.encoding == msg::Image::encoding_16uc1)
         return cv::Mat(img_msg.height, img_msg.width, CV_16UC1, const_cast<uint8_t *>(img_msg.data.data())).clone();
+    else if (img_msg.encoding == msg::Image::encoding_32fc1)
+        return cv::Mat(img_msg.height, img_msg.width, CV_32FC1, const_cast<uint8_t *>(img_msg.data.data())).clone();
     else if (img_msg.encoding == msg::Image::encoding_bayer_rggb8)
         return cv::Mat(img_msg.height, img_msg.width, CV_8UC1, const_cast<uint8_t *>(img_msg.data.data())).clone();
     else if (img_msg.encoding == msg::Image::encoding_bayer_bggr8)
@@ -78,7 +80,10 @@ cv::Mat from_msg(const msg::Image &img_msg) {
 }
 
 msg::Image to_msg(cv::Mat img, uint8_t encoding) {
-    if (encoding > msg::Image::encoding_yuv420 || img.empty())
+    if (encoding > msg::Image::encoding_32fc1 || img.empty())
+        return msg::Image{};
+    if ((encoding == msg::Image::encoding_16uc1 && img.type() != CV_16UC1) ||
+        (encoding == msg::Image::encoding_32fc1 && img.type() != CV_32FC1))
         return msg::Image{};
 
     msg::Image img_msg{};

@@ -26,9 +26,12 @@ uint8 encoding_bayer_rggb16 = 8
 uint8 encoding_bayer_bggbr16 = 9
 uint8 encoding_yuv422 = 10
 uint8 encoding_yuv420 = 11
+uint8 encoding_16uc1 = 12  # unsigned 16-bit single-channel image, commonly used for depth
+uint8 encoding_32fc1 = 13  # float32 single-channel image, depth values conventionally use metres
 
 uint8 encoding # Encoding of pixels -- channel meaning, ordering
                # contain "rgb8", "bgr8", "mono8", "mono16", "rgba8",
                # "bgra8", "bayer_rggb8", "bayer_bggr8",
                # "bayer_rggb16", "bayer_bggbr16", "yuv422", "yuv420"
+               # "16UC1", "32FC1"
 uint8[] data   # actual matrix data
