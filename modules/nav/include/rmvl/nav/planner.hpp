@@ -44,7 +44,11 @@ enum class PlanningStatus : uint8_t {
  */
 const char *to_string(PlanningStatus status) noexcept;
 
-//! A* 规划配置
+/**
+ * @brief A* 规划配置
+ * @note @p max_cost 必须小于 Cost::Inscribed，@p cost_weight 必须为有限非负数，
+ * @p smoothing_weight 必须位于 [0, 1]。
+ */
 struct AStarOptions {
     bool allow_diagonal{true};             //!< 是否允许八邻域对角移动
     bool allow_corner_cutting{false};       //!< 对角移动时是否允许穿过两个障碍栅格的夹角
@@ -60,7 +64,7 @@ struct AStarOptions {
 struct PlanningResult {
     PlanningStatus status{PlanningStatus::InvalidMap}; //!< 规划状态
     msg::Path path{};                                  //!< 规划成功时的路径
-    double cost{};                                     //!< 搜索得到的累计代价
+    double cost{};                                     //!< 栅格几何移动代价与代价地图惩罚之和
     std::size_t expanded{};                            //!< 搜索过程中展开的栅格数量
 
     //! @return 是否成功获得路径
@@ -73,6 +77,7 @@ struct PlanningResult {
  * - 默认使用八邻域搜索并禁止夹角穿越
  * - 将代价地图中的膨胀代价加入移动代价
  * - 搜索完成后可执行视线简化和受碰撞约束的迭代平滑
+ * - 输出路径点位于栅格中心，首尾保留输入位置，并根据相邻点重新生成平面朝向
  * @note 起点、终点和返回路径均使用代价地图的坐标系。
  */
 class AStarPlanner {
@@ -91,8 +96,8 @@ public:
      * @brief 在代价地图上规划路径
      *
      * @param[in] costmap 已完成图层合成和膨胀的代价地图
-     * @param[in] start 起点位姿，仅使用位置分量
-     * @param[in] goal 终点位姿，仅使用位置分量
+     * @param[in] start 起点位姿，仅使用有限的位置分量，输入朝向不参与搜索
+     * @param[in] goal 终点位姿，仅使用有限的位置分量，输入朝向不参与搜索
      * @return 路径规划结果
      */
     PlanningResult plan(const Costmap &costmap, const msg::Pose &start, const msg::Pose &goal) const;

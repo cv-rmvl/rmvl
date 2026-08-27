@@ -250,7 +250,11 @@ enum Cost : uint8_t {
     Unknown = 255,   //!< 未知空间
 };
 
-//! 分层代价地图配置
+/**
+ * @brief 分层代价地图配置
+ * @note @p lethal_threshold 必须位于 [1, 100]，膨胀半径和内切半径必须为有限非负数，
+ * 且内切半径不能超过膨胀半径。@p cost_scaling_factor 必须为有限非负数。
+ */
 struct CostmapOptions {
     int8_t lethal_threshold{65};      //!< 静态占据值达到该阈值时视为致命障碍
     bool track_unknown{true};         //!< 是否在主代价地图中保留未知空间
@@ -374,7 +378,11 @@ public:
      */
     MapStatus clearRay(double start_x, double start_y, double end_x, double end_y);
 
-    //! 合并静态层和局部障碍层，并根据配置重新计算膨胀代价
+    /**
+     * @brief 合并静态层和局部障碍层，并根据配置重新计算膨胀代价
+     * @note markObstacle()、clearObstacles() 和 clearRay() 只修改局部障碍层。调用本函数前，
+     * at()、collides() 和 message() 仍读取上一次合成的主代价地图。
+     */
     void updateCosts();
 
     /**

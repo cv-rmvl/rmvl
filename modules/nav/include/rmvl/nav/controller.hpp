@@ -43,7 +43,11 @@ enum class TrackingStatus : uint8_t {
  */
 const char *to_string(TrackingStatus status) noexcept;
 
-//! Pure Pursuit 配置
+/**
+ * @brief Pure Pursuit 配置
+ * @note 前视距离、最大角速度、减速距离、航向阈值和航向增益必须为有限正数，
+ * 目标速度和终点容差必须为有限非负数，航向阈值不能超过 π。
+ */
 struct PurePursuitOptions {
     double lookahead_distance{0.6};        //!< 前视距离，单位为米
     double target_speed{0.5};              //!< 目标线速度，单位为米每秒
@@ -69,7 +73,9 @@ struct TrackingResult {
 
 /**
  * @brief Pure Pursuit 二维路径跟踪器
- * @note 当前位姿与路径必须位于同一坐标系；本类不执行 TF 查询。
+ * @details 正常跟踪时输出 @p command.linear.x 和 @p command.angular.z 。当前前视点位于机器人后方，
+ * 或航向误差超过阈值时，输出零线速度并原地转向。
+ * @note 当前位姿与路径必须位于同一坐标系，本类不执行 TF 查询。
  */
 class PurePursuit {
 public:
@@ -96,7 +102,11 @@ private:
     PurePursuitOptions _options{};
 };
 
-//! 预测碰撞刹停配置
+/**
+ * @brief 预测碰撞刹停配置
+ * @note @p prediction_horizon 必须为有限非负数，两个采样步长必须为有限正数。
+ * 预测时长为 0 时只检查机器人当前位姿。
+ */
 struct CollisionStopOptions {
     double prediction_horizon{1.0}; //!< 指令轨迹预测时间，单位为秒
     double linear_step{0.05};       //!< 相邻碰撞检测位姿的最大平移距离，单位为米
@@ -113,6 +123,7 @@ struct CollisionStopResult {
  * @brief 独立的短时预测碰撞刹停过滤器
  * @details 按输入速度积分平面运动轨迹，并使用 Costmap::collides() 检查每个采样位姿。
  * 任何配置、位姿、指令或 footprint 无效时均采用故障安全策略刹停。
+ * 本类只使用线速度的 X、Y 分量和角速度的 Z 分量，不建模加速度、制动距离和动态障碍运动。
  */
 class CollisionStop {
 public:
