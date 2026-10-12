@@ -73,6 +73,13 @@ class DoxygenAwesomeGithubLink {
     }
 
     static ensureLink() {
+        // Doxygen rebuilds the search bar from cached HTML when switching layouts.
+        // Keep the original link and discard any copies restored with that HTML.
+        document.querySelectorAll(`a.${DoxygenAwesomeGithubLink.className}`).forEach(link => {
+            if(link !== DoxygenAwesomeGithubLink.link) {
+                link.remove()
+            }
+        })
         if(!DoxygenAwesomeGithubLink.link) {
             DoxygenAwesomeGithubLink.link = document.createElement("a")
             DoxygenAwesomeGithubLink.link.className = DoxygenAwesomeGithubLink.className
