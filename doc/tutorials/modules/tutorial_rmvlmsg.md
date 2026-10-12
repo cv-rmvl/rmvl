@@ -9,7 +9,12 @@
 
 ------
 
-此模块主要为 @ref lpss 提供支持，详细使用说明请参考 @ref tutorial_modules_lpss 。
+此模块主要为以下模块提供支持：
+
+- @ref lpss
+- @ref nav
+
+详细使用说明请参考 @ref tutorial_modules_lpss 教程。
 
 ### 1 概述
 
@@ -17,7 +22,7 @@ RMVL 消息描述文件 `*.msg` 用于定义消息的数据结构和字段类型
 
 ### 2 内置消息类型
 
-以下是一些常用的内置消息类型，分为 6 个主要消息分组：`std`、`geometry`、`sensor`、`motion`、`nav` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
+以下是一些常用的内置消息类型，分为 6 个主要消息分组：`std`、`geometry`、`sensor`、`motion`、`%nav` 和 `viz`。用户可以根据需要在自定义的 `*.msg` 文件中引用这些内置消息类型。
 
 <div class="tabbed">
 

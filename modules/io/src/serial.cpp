@@ -1,7 +1,7 @@
 /**
  * @file serial.hpp
  * @author zhaoxi (535394140@qq.com)
- * @brief 同步/异步的数据链路层串口通信框架
+ * @brief 同步/异步的串口通信框架
  * @version 1.0
  * @date 2025-07-31
  *
@@ -37,11 +37,8 @@ SerialPort::~SerialPort() { close(); }
 SerialPort::SerialPort(std::string_view device, BaudRate rate, SerialReadMode mode) : _device(device), _baud_rate(rate), _read_mode(mode) { open(); }
 
 SerialPort::SerialPort(SerialPort &&other) noexcept
-    : _fd(std::exchange(other._fd, INVALID_FD)),
-      _is_open(std::exchange(other._is_open, false)),
-      _device(std::move(other._device)),
-      _baud_rate(other._baud_rate),
-      _read_mode(other._read_mode) {}
+    : _fd(std::exchange(other._fd, INVALID_FD)), _is_open(std::exchange(other._is_open, false)),
+      _device(std::move(other._device)), _baud_rate(other._baud_rate), _read_mode(other._read_mode) {}
 
 SerialPort &SerialPort::operator=(SerialPort &&other) noexcept {
     if (this != &other) {

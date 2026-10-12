@@ -9,7 +9,7 @@
 
 ---
 
-此模块主要为 @ref lpss 提供支持，详细使用说明请参考 @ref tutorial_modules_lpss 。
+此模块主要为 @ref lpss 提供支持，详细使用说明请参考 @ref tutorial_modules_lpss 教程。
 
 ### 1 概述
 
@@ -21,7 +21,7 @@ RMVL 服务描述文件 `*.srv` 用于定义一次服务调用的请求和响应
 
 <div class="tabbed">
 
-- <b class="tab-title">std 服务分组</b>
+- <b class="tab-title">std</b>
 
   `std` 服务包含无参数调用、布尔值设置以及通用触发等基础服务。
 
@@ -61,7 +61,7 @@ RMVL 服务描述文件 `*.srv` 用于定义一次服务调用的请求和响应
   </table>
   </div>
 
-- <b class="tab-title">sensor 服务分组</b>
+- <b class="tab-title">sensor</b>
 
   `sensor` 服务用于配置传感器相关的数据和参数。
 

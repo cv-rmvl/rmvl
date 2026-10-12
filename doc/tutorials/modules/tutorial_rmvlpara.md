@@ -97,7 +97,7 @@ RMVL 中，一部分模块（涉及主要模块和扩展模块）的功能在不
 - `rmvl_generate_para`
 - `rmvl_generate_module_para`
 
-#### 3.1 rmvl_generate_para
+#### 3.1 参数代码生成
 
 根据指定的目标名在 param 文件夹下对应的 *.para 参数规范文件和可选的模块名生成对应的 C++ 代码。
 
@@ -141,7 +141,7 @@ RMVL 中，一部分模块（涉及主要模块和扩展模块）的功能在不
 - `include/rmvlpara/mytarget.hpp`
 - `src/para/mytarget.cpp`
 
-#### 3.2 rmvl_generate_module_para
+#### 3.2 参数模块头代码生成
 
 根据给定模块下所有的 para 目标，生成对应的 C++ 代码
 
@@ -248,8 +248,6 @@ rm::para::algorithm_param.read(prefix_path + "algorithm.yml");
 
 <div class="fragment">
 <div class="line"><span class="comment"># test.yml</span></div>
-<div class="line">%YAML:1.0</div>
-<div class="line">\-\-\-</div>
 <div class="line"></div>
 <div class="line"><span class="keywordtype">num</span>: 20</div>
 <div class="line"><span class="keywordtype">name</span>: <span class="stringliteral">"Hello, RMVL"</span></div>
