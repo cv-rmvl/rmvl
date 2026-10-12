@@ -20,17 +20,19 @@
 /**
  * @defgroup rmvlpara 参数模块
  * @brief 提供各模块的参数类、全局参数对象以及 YAML 运行时加载功能
- * @see 在引言中提及了有关 @ref intro_parameters_manager 的内容可供参考
+ * @see 在引言中提及了有关 @ref intro_parameters_manager 的内容可供参考，此外，还可以参考 @ref tutorial_table_of_content_rmvlpara
  */
 
 /**
  * @defgroup rmvlmsg 消息模块
- * @brief 提供 `std`、`geometry`、`sensor`、`motion` 和 `viz` 消息及其序列化功能
+ * @brief 提供 `std`、`geometry`、`sensor`、`motion`、`%nav` 和 `viz` 消息及其序列化功能
+ * @details 详细使用方法可参考 @ref tutorial_table_of_content_rmvlmsg
  */
 
 /**
  * @defgroup rmvlsrv 服务模块
  * @brief 提供 `std` 和 `sensor` 服务的请求、响应及其序列化功能
+ * @details 详细使用方法可参考 @ref tutorial_table_of_content_rmvlsrv
  */
 
 #include <rmvl/rmvl_modules.hpp>
