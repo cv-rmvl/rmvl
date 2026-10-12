@@ -49,6 +49,11 @@ class DoxygenAwesomeDarkModeToggle extends HTMLElement {
                         return
                     }
 
+                    document.querySelectorAll('doxygen-awesome-dark-mode-toggle').forEach(button => {
+                        if (button !== toggleButton) {
+                            button.remove()
+                        }
+                    })
                     searchBox.parentNode.appendChild(toggleButton)
                 }
 
