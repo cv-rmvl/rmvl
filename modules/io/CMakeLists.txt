@@ -15,6 +15,8 @@ endif()
 
 # for glibc < 2.34
 if(UNIX)
+  find_package(Threads REQUIRED)
+  rmvl_link_libraries(io PRIVATE Threads::Threads)
   rmvl_link_libraries(io PRIVATE rt)
 endif()
 
@@ -45,6 +47,21 @@ if(BUILD_TESTS)
     rmvl_io_test PRIVATE
     RMVL_IO_TEST_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/data"
   )
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # Compile the peripheral sources here so wrapping also works with shared builds.
+    add_executable(rmvl_io_peripheral_test
+      test/peripheral/test_peripheral.cpp src/gpio.cpp src/i2c.cpp src/can.cpp)
+    if(BUILD_WORLD)
+      target_link_libraries(rmvl_io_peripheral_test PRIVATE rmvl_world)
+    else()
+      target_link_libraries(rmvl_io_peripheral_test PRIVATE rmvl_io)
+    endif()
+    target_link_libraries(rmvl_io_peripheral_test PRIVATE GTest::gtest_main Threads::Threads)
+    target_link_options(rmvl_io_peripheral_test PRIVATE
+      -Wl,--wrap=ioctl -Wl,--wrap=if_nametoindex -Wl,--wrap=socket
+      -Wl,--wrap=bind -Wl,--wrap=setsockopt -Wl,--wrap=send -Wl,--wrap=recv)
+    gtest_discover_tests(rmvl_io_peripheral_test TEST_PREFIX "io_peripheral." PROPERTIES TIMEOUT 10)
+  endif()
 endif(BUILD_TESTS)
 
 if(BUILD_PERF_TESTS)
