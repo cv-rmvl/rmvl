@@ -21,6 +21,7 @@
 - @subpage tutorial_modules_coro
 - @subpage tutorial_modules_ipc
 - @subpage tutorial_modules_serial
+- @subpage tutorial_modules_peripheral
 - @subpage tutorial_modules_socket
 - @subpage tutorial_modules_netapp
 

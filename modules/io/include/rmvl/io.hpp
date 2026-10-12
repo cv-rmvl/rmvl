@@ -30,6 +30,8 @@
 //!   @{
 //!     @brief 提供跨平台的同步异步 Socket 通信、HTTP 请求、HTTP Web 后端框架功能
 //!   @} io_net
+//!   @defgroup io_peripheral Linux 外设 IO
+//!   @brief GPIO、I²C 和 SocketCAN 同步与异步接口
 //! @} io
 
 #include "io/util.hpp"
@@ -39,3 +41,6 @@
 #include "io/serial.hpp"
 #include "io/socket.hpp"
 #include "io/ssl.hpp"
+#include "io/gpio.hpp"
+#include "io/i2c.hpp"
+#include "io/can.hpp"

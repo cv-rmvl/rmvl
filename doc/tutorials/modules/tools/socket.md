@@ -5,7 +5,7 @@
 @date 2025/09/25
 @version 1.0
 
-@prev_tutorial{tutorial_modules_serial}
+@prev_tutorial{tutorial_modules_peripheral}
 
 @next_tutorial{tutorial_modules_netapp}
 

@@ -8,7 +8,7 @@
 
 @prev_tutorial{tutorial_modules_ipc}
 
-@next_tutorial{tutorial_modules_socket}
+@next_tutorial{tutorial_modules_peripheral}
 
 @tableofcontents
 
@@ -98,7 +98,7 @@ SerialPort &operator<<(const AggregateOrStringT &data);  // (7) 串口写入操�
 
 **写数据（视觉端 → 电控端）**
 
-SerialPort 的通信协议一般就是指数据链路层的协议，采用封装成帧的方式，由于终端设备输出缓冲区可在写入数据前被清空，因此 rm::SerialPort 的 `write` 方法不设置任何帧头帧尾。
+SerialPort 的通信协议一般就是指访问数据的规则，采用封装成帧的方式，由于终端设备输出缓冲区可在写入数据前被清空，因此 rm::SerialPort 的 `write` 方法不设置任何帧头帧尾。
 
 **读数据（电控端 → 视觉端）**
 
