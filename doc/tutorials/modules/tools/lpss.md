@@ -22,6 +22,16 @@
 
 Lightweight Pub/Sub Service (LPSS)，即轻量发布订阅服务，通过模仿 ROS 2(DDS) 的去中心化设计，以数据为核心，使用扁平化POD（Plain Old Data）的序列化与反序列化方式，提供两层的服务发现机制，建立起数据输出端（发布者）与输入端（订阅者）之间的 UDPv4 单播或 SHM 共享内存的实时通信。
 
+**当前版本**
+
+<div class="full_width_table">
+|  协议  |  版本  |   特殊说明   |
+| :----: | :----: | :----------: |
+|  NDP   |  ND01  |      ——      |
+|  EDP   |  ED01  |      ——      |
+|  MTP   |  MT02  | 无法向下兼容 |
+</div>
+
 ### 1.2 服务发现
 
 LPSS 标准提供
@@ -115,7 +125,7 @@ RNDP 同样满足以上 NDP 标准，具体的信息格式如下所示：
 
 即 Endpoint Discovery Protocol(EDP)， @ref lpss 提供的 REDP 是通信端点发现协议的 RMVL 实现，EDP 标准的数据包格式如下所示：
 
-> EDP 包含 \f$14\f$ 字节的 Header 头部信息和 \f$2+n\f$ 字节的 Data 数据信息，Header 头部信息用于标识数据包、承载 GUID、状态标志以及话题大小。Data 数据信息用于存储 MTP 阶段实际通信时 UDPv4 通道的端口号和话题名称，其中话题名称也作为 SHM 通道的共享内存名称。
+> EDP 包含 \f$14\f$ 字节的 Header 头部信息和 \f$2+n\f$ 字节的 Data 数据信息，Header 头部信息用于标识数据包、承载 GUID、状态标志以及话题大小。Data 数据信息用于存储 MTP 阶段实际通信时 UDPv4 通道的端口号和话题名称。RMTP 的 SHM 通道由发布端与订阅端的 GUID 共同标识，具体见下文的数据传输部分。
 >
 > 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 EDP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\sim7\f$ 字节为 GUID 的低 4 字节主 MAC 地址，选取依据同 NDP；第 \f$8\sim9\f$ 字节为 GUID 的 PID 部分；第 \f$10\sim11\f$ 字节为 GUID 的 Entity ID 部分，每个节点中的发布者、订阅者将有不同的 Entity ID；第 \f$12\f$ 字节为单字节无符号整数表示的 Status 状态标志，用于标记本次操作属于添加、移除发布者、订阅者，第 \f$13\f$ 字节为单字节无符号整数表示的 TopicSize，表示话题名称的字节大小。
 > 2. 后续的 Data 数据信息部分，第 \f$0\sim1\f$ 字节为 Locator 的 Port 部分，表示实际通信时 UDPv4 通道的端口号，采用大端序存储；第 \f$2\sim(2+\text{TopicSize})\f$ 字节为 TopicName 部分，表示话题名称的字符串内容，采用 UTF-8 编码存储。
@@ -188,53 +198,51 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
 
 #### 1.3.1 话题消息传输协议
 
-即 Message Transfer Protocol， @ref lpss 提供的 RMTP 是话题消息传输协议的 RMVL 实现，MTP 标准的数据包格式如下所示：
+即 Message Transfer Protocol， @ref lpss 提供的 RMTP 是话题消息传输协议的 RMVL 实现。跨主机时使用 UDPv4 单播，同一主机内优先使用 SHM 共享内存。
 
-> 一个完整的 MTP 数据包含 \f$6+M+N\f$ 字节的 Header 头部信息和剩下的 Payload 负载信息，Header 头部信息用于标识数据包，以及提供话题、消息类型相关信息，Payload 负载用于存储后续实际通信时的数据内容。
->
-> 1. 其中，Header 头部信息的第 \f$0\sim3\f$ 字节为 MTP 标识符，<u>可自行定义</u>，建议使用 ASCII 字符来表示，第 \f$4\f$ 字节为话题字符串长度 TopicSize，记作 \f$M\f$；第 \f$5\sim4+M\f$ 字节为话题名称字符串；第 \f$5+M\f$ 字节为消息类型字符串长度 TypeSize，记作 \f$N\f$，第 \f$6+M\sim5+M+N\f$ 字节为消息类型字符串。
-> 2. 后续的 Payload 负载信息部分，由序列化与反序列化的具体协议提供支持。
+**UDP 报文格式**
 
-RMTP 同样满足以上 MTP 标准，具体的信息格式如下所示：
+每个 MT02 数据报由 Header 和当前分片的 Payload 组成。设话题名称的 UTF-8 字节数为 \f$M\f$，消息类型名称的字节数为 \f$N\f$，Header 长度为 \f$H=16+M+N\f$ 字节。即使消息不需要分片，也使用相同的头部格式。
 
-<div class="full_width_table">
-<table class="markdownTable">
-<tr class="markdownTableHead">
-  <th class="markdownTableHeadCenter">0 byte</th>
-  <th class="markdownTableHeadCenter">1 byte</th>
-  <th class="markdownTableHeadCenter">2 byte</th>
-  <th class="markdownTableHeadCenter">3 byte</th>
-  <th class="markdownTableHeadCenter">4 byte</th>
-  <th class="markdownTableHeadCenter">5 byte</th>
-  <th class="markdownTableHeadCenter">...</th>
-  <th class="markdownTableHeadCenter">4+M byte</th>
-</tr>
-<tr class="markdownTableRowOdd">
-  <td class="markdownTableBodyCenter"><code>'M'</code></td>
-  <td class="markdownTableBodyCenter"><code>'T'</code></td>
-  <td class="markdownTableBodyCenter"><code>'0'</code></td>
-  <td class="markdownTableBodyCenter"><code>'1'</code></td>
-  <td class="markdownTableBodyCenter">TopicSize</td>
-  <td class="markdownTableBodyCenter" colspan="3">Topic</td>
-</tr>
-<tr class="markdownTableRowEven">
-  <th class="markdownTableHeadCenter">5+M byte</th>
-  <th class="markdownTableHeadCenter">6+M byte</th>
-  <th class="markdownTableHeadCenter">...</th>
-  <th class="markdownTableHeadCenter">5+M+N byte</th>
-  <th class="markdownTableHeadCenter">...</th>
-</tr>
-<tr class="markdownTableRowOdd">
-  <td class="markdownTableBodyCenter">TypeSize</td>
-  <td class="markdownTableBodyCenter" colspan="3">Type</td>
-  <td class="markdownTableBodyCenter">Payload</td>
-</tr>
-</table>
-</div>
+| 字节偏移 | 长度（字节） | 字段 | 含义 |
+| :--- | :--- | :--- | :--- |
+| 0 | 4 | Magic | 固定 ASCII 标识 `MT02` |
+| 4 | 1 | TopicSize | 低 6 位表示 \f$M\f$，发送时高 2 位为 0 |
+| 5 | \f$M\f$ | Topic | 话题名称，不包含字符串终止符 |
+| \f$5+M\f$ | 1 | TypeSize | 低 6 位表示 \f$N\f$，发送时高 2 位为 0 |
+| \f$6+M\f$ | \f$N\f$ | Type | 消息类型名称，不包含字符串终止符 |
+| \f$6+M+N\f$ | 2 | Sequence | 消息序列号，同一条消息的所有分片使用相同序列号 |
+| \f$8+M+N\f$ | 2 | FragmentId | 分片编号，从 0 开始连续递增 |
+| \f$10+M+N\f$ | 4 | TotalSize | 完整消息的序列化载荷总字节数，不包含各分片头部 |
+| \f$14+M+N\f$ | 2 | PayloadSize | 当前分片的载荷字节数 |
+| \f$16+M+N\f$ | PayloadSize | Payload | 当前分片的序列化数据 |
+
+话题名称和消息类型名称均不能超过 63 字节。Sequence、FragmentId、TotalSize 和 PayloadSize 使用大端序（网络字节序），Payload 的编码则由消息的序列化实现决定。
+
+**分片与重组**
+
+发送端根据出站接口的 MTU 计算每个分片可承载的数据量，扣除 IPv4、UDP 和 MT02 头部后分片发送。单条消息最多使用 65536 个分片，Sequence 为 16 位无符号整数，递增后循环使用。
+
+接收端以来源 IP、来源端口和 Sequence 区分待重组的消息，校验话题、类型、分片长度和总长度，并按 FragmentId 排序。只有分片编号从 0 开始连续、累加载荷长度等于 TotalSize 时，才交给消息反序列化处理。空载荷使用 FragmentId、TotalSize、PayloadSize 均为 0 的单个数据报。
+
+重组过程受以下参数限制：
+
+- `rm::para::lpss_param.MTP_FRAGMENT_TIMEOUT`：未完成消息自最近一次分片更新起的超时时间，默认为 1000 ms，接收后续数据报时清理超时记录。
+- `rm::para::lpss_param.MTP_REASSEMBLY_MAX_BYTES`：每个读取器缓存的分片载荷总字节数上限，默认为 16777216 字节（16 MiB），单条消息的 TotalSize 也不能超过该值。缓存不足时会移除其他较旧的重组记录。
+
+@note MT02 提供分片重组，不提供 ACK 或超时重传。缺少分片的消息不会交给订阅回调，也不保证所有发布消息都能到达。
+
+**同机共享内存通道**
+
+同机端点匹配后，RMTP 根据发布端与订阅端的 GUID 创建独立的 `LatestBytesSHM` 通道，共享内存名称为 `lpss_mtp_<writer_guid>_<reader_guid>`，其中 GUID 使用完整 64 位值的十进制表示。共享内存直接保存序列化后的完整载荷，不套用上述 UDP 分片头部。
+
+发布端写入共享内存后，向订阅端的数据端口发送内容为 `MSHM` 的 UDP 通知，唤醒接收端读取。接收端通过共享内存序列号判断是否有新数据。该通道只保留最新值，连续发布时尚未读取的旧值可能被覆盖，不是逐条消息队列。共享内存的载荷容量使用 `MTP_REASSEMBLY_MAX_BYTES`。
 
 #### 1.3.2 序列化与反序列化
 
-MTP 标准使用二进制直接序列化 / 反序列化的方式，不区分端序（这会降低一部分兼容性，但在主流架构以及 OS 上均一致），因此数据在发布者与订阅者之间的传输效率非常高。此外 RMVL 提供了消息类型的自动代码生成工具，用户可以通过定义消息类型的 `*.msg` 文件，使用 RMVL 提供的代码生成工具生成对应的 C++ 代码文件，从而简化消息类型的创建过程。
+RMVL 自动生成的消息代码使用紧凑二进制序列化 / 反序列化，按字段写入数据，不传输 C++ 对象的内存填充。标量数据使用本机字节序，通信双方需要使用兼容的消息定义和数据表示。这与 MT02 头部使用网络字节序是两回事。
+
+用户可以通过定义消息类型的 `*.msg` 文件，使用 RMVL 提供的代码生成工具生成对应的 C++ 代码文件，从而简化消息类型的创建过程。
 
 RMVL 内置了一些常用的消息类型，用户可以直接使用这些消息类型，而无需自行定义和生成代码。同时，RMVL 提供了 `rmvl_generate_msg` 的 CMake 函数，可以辅助用户完成自定义消息类型的代码生成过程，详情可参考 @ref tutorial_table_of_content_rmvlmsg 。
 

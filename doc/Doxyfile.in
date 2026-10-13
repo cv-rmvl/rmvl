@@ -39,8 +39,8 @@ ALIASES                += dl_begin{1}="<dl class=\"params\"><dt>\1</dt><dd><tabl
 ALIASES                += dl_item{2}="<tr><td class=\"paramname\">\1</td><td>\2</td></tr>"
 ALIASES                += dl_item{3}="<tr><td class=\"paramname\">\1</td><td class=\"paramopts\">\2</td><td>\3</td></tr>"
 ALIASES                += dl_end="</table></dd></dl>"
-ALIASES                += prev_tutorial{1}="**上一篇教程：**\ref \1 \n"
-ALIASES                += next_tutorial{1}="**下一篇教程：**\ref \1 \n"
+ALIASES                += prev_tutorial{1}="<div class=\"rmvl-tutorial-shortcut rmvl-tutorial-prev\"><span>上一篇教程：</span>\ref \1</div>"
+ALIASES                += next_tutorial{1}="<div class=\"rmvl-tutorial-shortcut rmvl-tutorial-next\"><span>下一篇教程：</span>\ref \1</div>"
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
 OPTIMIZE_FOR_FORTRAN   = NO
@@ -157,7 +157,8 @@ HTML_FILE_EXTENSION    = .html
 HTML_HEADER            = @CMAKE_CURRENT_SOURCE_DIR@/header.html
 HTML_FOOTER            = @CMAKE_CURRENT_SOURCE_DIR@/footer.html
 HTML_STYLESHEET        =
-HTML_EXTRA_STYLESHEET  = @CMAKE_CURRENT_SOURCE_DIR@/doxygen-awesome.css
+HTML_EXTRA_STYLESHEET  = @CMAKE_CURRENT_SOURCE_DIR@/doxygen-awesome.css \
+                        @CMAKE_CURRENT_SOURCE_DIR@/rmvl-custom-docstyle.css
 HTML_EXTRA_FILES       = @CMAKE_DOXYGEN_HTML_FILES@
 HTML_COLORSTYLE_HUE    = 209
 HTML_COLORSTYLE_SAT    = 255

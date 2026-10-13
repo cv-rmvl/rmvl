@@ -40,6 +40,7 @@ set(RMVL_VERSION_PATCH @RMVL_VERSION_PATCH@)
 set(RMVL_VERSION_STATUS "@RMVL_VERSION_STATUS@")
 
 include(FindPackageHandleStandardArgs)
+include(CMakeFindDependencyMacro)
 
 if(RMVL_FIND_COMPONENTS)
   list(APPEND _RMVL_FPHSA_ARGS HANDLE_COMPONENTS)
@@ -72,6 +73,11 @@ unset(__d)
 # Get imported targets found in Module mode
 @RMVL_MODULES_IMPORTED_CONFIGCMAKE@
 # ------ 3rdparty common ------
+# threads
+if(NOT TARGET Threads::Threads)
+  find_dependency(Threads)
+endif()
+
 # 3rdparty: opencv
 option(WITH_OPENCV "Enable opencv support" @WITH_OPENCV@)
 
@@ -87,7 +93,7 @@ if(WITH_OPENCV)
     endif()
   else()
     if(NOT TARGET opencv_core)
-      find_package(OpenCV REQUIRED)
+      find_dependency(OpenCV)
     endif()
   endif()
 endif()
@@ -95,7 +101,7 @@ endif()
 # 3rdparty: openssl
 option(WITH_OPENSSL "Enable openssl support" @WITH_OPENSSL@)
 if(WITH_OPENSSL AND NOT TARGET OpenSSL::SSL)
-  find_package(OpenSSL REQUIRED)
+  find_dependency(OpenSSL)
 endif()
 
 @RMVL_MODULES_3RD_CONFIGCMAKE@
