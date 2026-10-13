@@ -60,10 +60,9 @@ html {
     /* The content is centered and constraint in it's width. To make the content fill the whole page, set the variable to auto.*/
     --content-maxwidth: 1050px;
     --table-line-height: 24px;
-    --top-sticky-offset: 80px;
-    --toc-sticky-top: calc(var(--top-sticky-offset) + var(--spacing-medium));
+    --toc-sticky-top: var(--spacing-medium);
     --toc-width: 200px;
-    --toc-max-height: calc(100vh - var(--toc-sticky-top) - var(--spacing-medium));
+    --toc-max-height: calc(100vh - 2 * var(--spacing-medium) - 85px);
 
     /* colors for various content boxes: @warning, @note, @deprecated @bug */
     --warning-color: #faf3d8;
@@ -158,9 +157,6 @@ html {
     --webkit-scrollbar-padding: 4px;
     --webkit-scrollbar-color: var(--separator-color);
 
-    --scroll-top-button-progress-color: #6aa1b7;
-    --scroll-top-button-icon-color: #3c3c438f;
-
     --animation-duration: .12s
 }
 
@@ -234,9 +230,6 @@ html {
         --fragment-linenumber-color: #cccccc;
         --fragment-linenumber-background: #35393c;
         --fragment-linenumber-border: #1f1f1f;
-
-        --scroll-top-button-progress-color: #86c8df;
-        --scroll-top-button-icon-color: #ebebf561;
     }
 }
 
@@ -300,9 +293,6 @@ html.dark-mode {
     --fragment-linenumber-color: #cccccc;
     --fragment-linenumber-background: #35393c;
     --fragment-linenumber-border: #1f1f1f;
-
-    --scroll-top-button-progress-color: #86c8df;
-    --scroll-top-button-icon-color: #ebebf561;
 }
 
 body {
@@ -344,7 +334,7 @@ a:hover {
 }
 
 a.anchor {
-    scroll-margin-top: var(--top-sticky-offset);
+    scroll-margin-top: var(--spacing-large);
     display: block;
 }
 
@@ -355,16 +345,14 @@ a.anchor {
 #top {
     background: var(--header-background);
     border-bottom: 1px solid var(--separator-color);
-    position: sticky;
-    top: 0;
-    z-index: 200;
+    position: relative;
+    z-index: 99;
 }
 
 @media screen and (min-width: 768px) {
     #top {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between;
         align-items: center;
     }
 }
@@ -384,10 +372,6 @@ a.anchor {
 }
 
 @media screen and (max-width: 767px) {
-    html {
-        --top-sticky-offset: 112px;
-    }
-
     #titlearea {
         padding-bottom: var(--spacing-small);
     }
@@ -601,7 +585,7 @@ a.anchor {
 }
 
 /* Doxygen 1.9.5 */
-.left span#MSearchSelect {
+.left span#MSearchSelect, .left span#MSearchSelectExt {
     left: 0;
     user-select: none;
     margin-left: 8px;
@@ -675,7 +659,7 @@ a.anchor {
     color: var(--searchbar-foreground);
 }
 
-#MSearchSelect {
+#MSearchSelect, #MSearchSelectExt {
     top: calc(calc(var(--searchbar-height) / 2) - 11px);
 }
 
@@ -831,7 +815,7 @@ html.dark-mode iframe#MSearchResults {
 }
 
 
-#nav-tree, #top {
+#nav-tree {
     border-right: 1px solid var(--separator-color);
 }
 
@@ -1190,11 +1174,6 @@ blockquote p {
     color: var(--primary-dark-color);
 }
 
-.paramopts, .paramopts em {
-    font-weight: 400;
-    color: var(--fragment-comment);
-}
-
 .paramname > code {
     border: 0;
 }
@@ -1203,15 +1182,6 @@ table.params .paramname {
     font-weight: 600;
     font-family: var(--font-family-monospace);
     font-size: var(--code-font-size);
-    padding-right: var(--spacing-small);
-    line-height: var(--table-line-height);
-}
-
-table.params .paramopts {
-    font-weight: 400;
-    font-family: var(--font-family-monospace);
-    font-size: var(--code-font-size);
-    color: var(--fragment-comment);
     padding-right: var(--spacing-small);
     line-height: var(--table-line-height);
 }
@@ -2729,13 +2699,11 @@ doxygen-awesome-dark-mode-toggle:active > svg {
 }
 
 doxygen-awesome-dark-mode-toggle:hover {
-    background-color: rgba(0,0,0,.03) !important;
-    border-radius: var(--searchbar-border-radius) !important;
+    background-color: rgba(0,0,0,.03);
 }
 
 html.dark-mode doxygen-awesome-dark-mode-toggle:hover {
-    background-color: rgba(0,0,0,.18) !important;
-    border-radius: var(--searchbar-border-radius) !important;
+    background-color: rgba(0,0,0,.18);
 }
 
 /*
@@ -3082,119 +3050,4 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
 
 .primary-button:hover {
     background: var(--primary-dark-color);
-}
-
-/*
- Scroll-to-top button
- */
-
-.scroll-top-button {
-    position: fixed;
-    right: max(20px, env(safe-area-inset-right));
-    bottom: max(45px, env(safe-area-inset-bottom));
-    width: 50px;
-    height: 50px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    border-radius: 999px;
-    background: var(--page-background-color);
-    color: var(--page-foreground-color);
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    z-index: 1000;
-    opacity: 0;
-    transform: none;
-    pointer-events: none;
-    transition: opacity 0.2s ease-in-out;
-}
-
-.scroll-top-button.visible {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-}
-
-@keyframes scroll-top-button-fade-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-.scroll-top-button-progress {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
-}
-
-.scroll-top-button-progress-track,
-.scroll-top-button-progress-value {
-    fill: none;
-    stroke-width: 5;
-}
-
-.scroll-top-button-progress-track {
-    stroke: transparent;
-}
-
-.scroll-top-button-progress-value {
-    stroke: var(--scroll-top-button-progress-color);
-    stroke-linecap: butt;
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-}
-
-.scroll-top-button-percent {
-    position: absolute;
-    inset: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--page-foreground-color);
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: 0;
-    opacity: 1;
-    transition: opacity 0.2s ease-in-out;
-}
-
-.scroll-top-button-icon {
-    position: absolute;
-    inset: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--scroll-top-button-icon-color);
-    line-height: 0;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-}
-
-.scroll-top-button-icon svg {
-    display: block;
-    fill: currentColor;
-}
-
-.scroll-top-button.idle .scroll-top-button-percent {
-    opacity: 0;
-}
-
-.scroll-top-button.idle .scroll-top-button-icon {
-    opacity: 1;
-}
-
-@media screen and (max-width: 767px) {
-    .scroll-top-button {
-        right: max(15px, env(safe-area-inset-right));
-        bottom: max(30px, env(safe-area-inset-bottom));
-    }
 }

@@ -20,24 +20,18 @@ class DoxygenAwesomeGithubLink {
             DoxygenAwesomeGithubLink.scheduleLayout()
         }
 
-        if(window.jQuery) {
-            $(function() {
-                $(document).ready(ready)
-                $(window).resize(() => DoxygenAwesomeGithubLink.scheduleLayout())
-            })
-        } else if(document.readyState === "loading") {
+        if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", ready)
-            window.addEventListener("resize", () => DoxygenAwesomeGithubLink.scheduleLayout())
         } else {
             ready()
-            window.addEventListener("resize", () => DoxygenAwesomeGithubLink.scheduleLayout())
         }
+        window.addEventListener("resize", () => DoxygenAwesomeGithubLink.scheduleLayout())
 
         window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
             DoxygenAwesomeGithubLink.updateIcon()
         })
         document.addEventListener("visibilitychange", () => {
-            if(document.visibilityState === "visible") {
+            if (document.visibilityState === "visible") {
                 DoxygenAwesomeGithubLink.scheduleLayout()
             }
         })
@@ -45,10 +39,10 @@ class DoxygenAwesomeGithubLink {
 
     static get darkModeEnabled() {
         const root = document.documentElement
-        if(root.classList.contains("dark-mode")) {
+        if (root.classList.contains("dark-mode")) {
             return true
         }
-        if(root.classList.contains("light-mode")) {
+        if (root.classList.contains("light-mode")) {
             return false
         }
         return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -59,13 +53,13 @@ class DoxygenAwesomeGithubLink {
     }
 
     static updateIcon() {
-        if(!DoxygenAwesomeGithubLink.link) {
+        if (!DoxygenAwesomeGithubLink.link) {
             return
         }
         const color = DoxygenAwesomeGithubLink.darkModeEnabled
             ? DoxygenAwesomeGithubLink.darkColor
             : DoxygenAwesomeGithubLink.lightColor
-        if(DoxygenAwesomeGithubLink.link.dataset.githubColor === color) {
+        if (DoxygenAwesomeGithubLink.link.dataset.githubColor === color) {
             return
         }
         DoxygenAwesomeGithubLink.link.dataset.githubColor = color
@@ -76,11 +70,11 @@ class DoxygenAwesomeGithubLink {
         // Doxygen rebuilds the search bar from cached HTML when switching layouts.
         // Keep the original link and discard any copies restored with that HTML.
         document.querySelectorAll(`a.${DoxygenAwesomeGithubLink.className}`).forEach(link => {
-            if(link !== DoxygenAwesomeGithubLink.link) {
+            if (link !== DoxygenAwesomeGithubLink.link) {
                 link.remove()
             }
         })
-        if(!DoxygenAwesomeGithubLink.link) {
+        if (!DoxygenAwesomeGithubLink.link) {
             DoxygenAwesomeGithubLink.link = document.createElement("a")
             DoxygenAwesomeGithubLink.link.className = DoxygenAwesomeGithubLink.className
             DoxygenAwesomeGithubLink.link.href = DoxygenAwesomeGithubLink.url
@@ -92,23 +86,23 @@ class DoxygenAwesomeGithubLink {
 
         const toggleButton = document.querySelector("doxygen-awesome-dark-mode-toggle")
         const searchBox = document.getElementById("MSearchBox")
-        const parent = toggleButton?.parentNode || searchBox?.parentNode || document.getElementById("top")
+        const parent = searchBox?.parentNode
 
-        if(!parent) {
+        if (!parent) {
             return
         }
 
-        if(toggleButton && DoxygenAwesomeGithubLink.link.previousElementSibling !== toggleButton) {
+        if (toggleButton?.parentNode === parent && DoxygenAwesomeGithubLink.link.previousElementSibling !== toggleButton) {
             toggleButton.insertAdjacentElement("afterend", DoxygenAwesomeGithubLink.link)
-        } else if(!DoxygenAwesomeGithubLink.link.parentNode) {
-            parent.appendChild(DoxygenAwesomeGithubLink.link)
+        } else if (!toggleButton && searchBox.nextElementSibling !== DoxygenAwesomeGithubLink.link) {
+            searchBox.insertAdjacentElement("afterend", DoxygenAwesomeGithubLink.link)
         }
 
         DoxygenAwesomeGithubLink.updateIcon()
     }
 
     static scheduleLayout() {
-        if(DoxygenAwesomeGithubLink.layoutFrame) {
+        if (DoxygenAwesomeGithubLink.layoutFrame) {
             return
         }
         DoxygenAwesomeGithubLink.layoutFrame = requestAnimationFrame(() => {
@@ -123,7 +117,7 @@ class DoxygenAwesomeGithubLink {
         const searchBox = document.getElementById("MSearchBox")
         const searchField = document.getElementById("MSearchField")
 
-        if(!searchPosition || !DoxygenAwesomeGithubLink.link || !searchPosition.contains(DoxygenAwesomeGithubLink.link)) {
+        if (!searchPosition || !DoxygenAwesomeGithubLink.link || !searchPosition.contains(DoxygenAwesomeGithubLink.link)) {
             return
         }
 
@@ -131,7 +125,7 @@ class DoxygenAwesomeGithubLink {
         searchPosition.style.alignItems = "center"
         searchPosition.style.gap = "var(--spacing-small)"
 
-        if(searchBox && searchBox.parentNode === searchPosition) {
+        if (searchBox && searchBox.parentNode === searchPosition) {
             searchBox.style.width = "0"
             searchBox.style.minWidth = "0"
             searchBox.style.flex = "1 1 0"
@@ -139,18 +133,18 @@ class DoxygenAwesomeGithubLink {
             searchBox.style.marginBottom = "0"
         }
 
-        if(searchField && searchBox?.contains(searchField)) {
+        if (searchField && searchBox?.contains(searchField)) {
             searchField.style.width = "calc(100% - 64px)"
         }
     }
 
     static watchLayout() {
-        if(DoxygenAwesomeGithubLink.observer) {
+        if (DoxygenAwesomeGithubLink.observer) {
             return
         }
 
         DoxygenAwesomeGithubLink.observer = new MutationObserver(mutations => {
-            if(mutations.some(mutation => mutation.type === "childList" || mutation.attributeName === "class")) {
+            if (mutations.some(mutation => mutation.type === "childList" || mutation.attributeName === "class")) {
                 DoxygenAwesomeGithubLink.scheduleLayout()
             }
         })
@@ -163,7 +157,7 @@ class DoxygenAwesomeGithubLink {
     }
 
     static injectStyle() {
-        if(document.getElementById(DoxygenAwesomeGithubLink.styleId)) {
+        if (document.getElementById(DoxygenAwesomeGithubLink.styleId)) {
             return
         }
 
@@ -226,6 +220,18 @@ a.${DoxygenAwesomeGithubLink.className} > svg {
     width: 24px !important;
     height: 24px !important;
     transition: transform var(--animation-duration) ease-in-out !important;
+}
+
+#searchBoxPos2 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+#searchBoxPos2 > #MSearchBox {
+    position: relative;
+    right: auto;
+    margin: 0;
 }
 
 @media screen and (max-width: 767px) {

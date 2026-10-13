@@ -68,8 +68,8 @@ enum class LogLevel : uint8_t {
 
 /**
  * @brief 日志后端写入定制点
- * @details 自定义日志后端需要通过 ADL 提供返回 bool 的 `sink_write_invoke(SinkType &, LogLevel,
- *          std::string_view)` 重载，即自定义的 `sink_write_invoke` 需要定义在和 SinkType 相同的命名空间中。
+ * @details 自定义日志后端需要通过 ADL 提供返回 bool 的 `sink_write_invoke(SinkType &, LogLevel, std::string_view)`
+ *          重载，即自定义的 `sink_write_invoke` 需要定义在和 SinkType 相同的命名空间中。
  */
 struct sink_write_t {
     /**
