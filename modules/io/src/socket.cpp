@@ -1484,7 +1484,7 @@ bool DgramSocket::SocketMultiWriteAwaiter::await_resume() {
     epoll_ctl(_aioh, EPOLL_CTL_DEL, _fd, nullptr);
 
     auto [dst_storage, addr_len] = parse_sendto(_addr, _endpoint);
-    iovec iov[MAX_IOVEC];
+    iovec iov[MAX_IOVEC]{};
     size_t iov_cnt = build_write_iovec(_buffers, iov);
 
     msghdr msg{};
