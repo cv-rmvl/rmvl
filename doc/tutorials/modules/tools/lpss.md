@@ -198,9 +198,12 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
 
 #### 1.3.1 话题消息传输协议
 
-即 Message Transfer Protocol， @ref lpss 提供的 RMTP 是话题消息传输协议的 RMVL 实现。跨主机时使用 UDPv4 单播，同一主机内优先使用 SHM 共享内存。
+即 Message Transfer Protocol(MTP)， @ref lpss 提供的 RMTP 是话题消息传输协议的 RMVL 实现，具有标准 MTP 协议和 MTP 扩展两部分，其中
 
-**UDP 报文格式**
+- 标准 MTP 协议：跨主机时使用 UDPv4 单播，采用标准的 MTP 报文；
+- MTP 扩展：同一主机内的通信优先使用 SHM 共享内存。
+
+**标准 MTP 协议——UDP报文格式**
 
 每个 MT02 数据报由 Header 和当前分片的 Payload 组成。设话题名称的 UTF-8 字节数为 \f$M\f$，消息类型名称的字节数为 \f$N\f$，Header 长度为 \f$H=16+M+N\f$ 字节。即使消息不需要分片，也使用相同的头部格式。
 
@@ -219,7 +222,7 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
 
 话题名称和消息类型名称均不能超过 63 字节。Sequence、FragmentId、TotalSize 和 PayloadSize 使用大端序（网络字节序），Payload 的编码则由消息的序列化实现决定。
 
-**分片与重组**
+**标准 MTP 协议——分片与重组**
 
 发送端根据出站接口的 MTU 计算每个分片可承载的数据量，扣除 IPv4、UDP 和 MT02 头部后分片发送。单条消息最多使用 65536 个分片，Sequence 为 16 位无符号整数，递增后循环使用。
 
@@ -232,7 +235,7 @@ REDP 同样满足以上 EDP 标准，具体的信息格式如下所示：
 
 @note MT02 提供分片重组，不提供 ACK 或超时重传。缺少分片的消息不会交给订阅回调，也不保证所有发布消息都能到达。
 
-**同机共享内存通道**
+**MTP 扩展——共享内存通道**
 
 同机端点匹配后，RMTP 根据发布端与订阅端的 GUID 创建独立的 `LatestBytesSHM` 通道，共享内存名称为 `lpss_mtp_<writer_guid>_<reader_guid>`，其中 GUID 使用完整 64 位值的十进制表示。共享内存直接保存序列化后的完整载荷，不套用上述 UDP 分片头部。
 
