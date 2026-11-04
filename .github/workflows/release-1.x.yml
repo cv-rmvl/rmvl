@@ -25,3 +25,15 @@ jobs:
       - build-u22
       - build-u22arm
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-release.yml@v1
+  docs:
+    name: 文档构建与发布
+    needs:
+      - build-u20
+      - build-u22
+      - build-u22arm
+      - release
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-doc.yml@v1
+    with:
+      folder: ${{ github.ref_name }}
+    secrets:
+      DOCS_TOKEN: ${{ secrets.DOCS_TOKEN }}

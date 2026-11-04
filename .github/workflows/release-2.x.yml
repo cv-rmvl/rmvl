@@ -85,3 +85,30 @@ jobs:
       - package-win
       - package-win-arm
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-release-assets.yml@v1
+  docs:
+    name: 文档构建与发布
+    needs:
+      - build-u20
+      - build-u22
+      - build-u22-arm
+      - build-u24
+      - build-u24-arm
+      - build-u26
+      - build-u26-arm
+      - build-win
+      - build-win-arm
+      - package-u20
+      - package-u22
+      - package-u22-arm
+      - package-u24
+      - package-u24-arm
+      - package-u26
+      - package-u26-arm
+      - package-win
+      - package-win-arm
+      - release
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-doc.yml@v1
+    with:
+      folder: ${{ github.ref_name }}
+    secrets:
+      DOCS_TOKEN: ${{ secrets.DOCS_TOKEN }}
