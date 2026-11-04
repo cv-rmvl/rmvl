@@ -19,3 +19,15 @@ jobs:
   build-u22-arm:
     name: Ubuntu 22.04 support for aarch64
     uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-u22arm.yml@v1
+  docs:
+    name: 文档构建与发布
+    needs:
+      - build-u20
+      - build-u22
+      - build-u22-arm
+    if: ${{ success() && github.event_name != 'pull_request' }}
+    uses: cv-rmvl/ci-workflow/.github/workflows/rmvl-build-doc.yml@v1
+    with:
+      folder: '1.x'
+    secrets:
+      DOCS_TOKEN: ${{ secrets.DOCS_TOKEN }}
