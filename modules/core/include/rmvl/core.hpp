@@ -13,8 +13,7 @@
 
 /**
  * @defgroup core RMVL 核心模块
- * @brief 提供异常处理、定时器、编程工具和 YAML 数据读写等基础功能
- * @see core_reflect、core_meta、core_str、core_timer、core_yaml
+ * @brief 提供异常处理、定时器、编程工具、YAML 数据读写和 TOML 解析等基础功能、
  */
 
 /**
@@ -43,3 +42,4 @@
 #include "core/util.hpp"
 #include "core/version.hpp"
 #include "core/yaml.hpp"
+#include "core/toml.hpp"

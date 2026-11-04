@@ -51,3 +51,9 @@ rapidyaml      Description    A fast YAML parser and emitter for C++
                Homepage       https://github.com/biojppm/rapidyaml
                CMake options  Always built as a required third-party module; no BUILD_ or WITH_
                               option is provided
+
+tomlplusplus   Description    TOML 1.0 parser, vendored single header v3.4.0
+               License        MIT, see tomlplusplus/LICENSE
+               Homepage       https://github.com/marzer/tomlplusplus
+               CMake options  Always included as a required INTERFACE library; no BUILD_ or WITH_
+                              option is provided
