@@ -3,7 +3,7 @@ YAML 数据读写 {#tutorial_modules_yaml}
 
 @prev_tutorial{tutorial_modules_aggregate_reflect}
 
-@next_tutorial{tutorial_modules_coro}
+@next_tutorial{tutorial_modules_toml}
 
 @tableofcontents
 

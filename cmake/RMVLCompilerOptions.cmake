@@ -323,6 +323,9 @@ add_subdirectory(${_3rd_dir}/json)
 # rapidyaml
 add_subdirectory(${_3rd_dir}/rapidyaml)
 
+# tomlplusplus
+add_subdirectory(${_3rd_dir}/tomlplusplus)
+
 # tinyxml2
 add_subdirectory(${_3rd_dir}/tinyxml2)
 

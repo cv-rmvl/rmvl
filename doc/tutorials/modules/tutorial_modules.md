@@ -13,8 +13,9 @@
 
 #### 基础开发工具
 
-- @subpage tutorial_modules_aggregate_reflect
+- @subpage tutorial_modules_aggregate_reflect - C++26 标准引入编译期反射的语言特性
 - @subpage tutorial_modules_yaml
+- @subpage tutorial_modules_toml
 
 #### 基础通信设施
 

@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 find_package(Threads REQUIRED)
 
-rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT} rapidyaml)
+rmvl_add_module(core EXTERNAL ${CMAKE_THREAD_LIBS_INIT} rapidyaml tomlplusplus)
 if(WITH_OPENCV)
   rmvl_link_libraries(core PUBLIC ${OpenCV_LIBS})
   if(WIN32)
