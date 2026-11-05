@@ -167,21 +167,36 @@ offset = 2024-02-29T12:34:56+08:00
 }
 
 TEST(TOML, errors) {
+    Error error;
+    EXPECT_FALSE(error);
     for (auto source : {"x =", "x = 1\nx = 2", "[a]\n[a]", "a = 1\na.b = 2", "x = null",
-                        "x = 9223372036854775808", "x = 2023-02-29", "x = { a = 1, a = 2 }"})
-        EXPECT_THROW(loads(source), ParseError) << source;
-    try {
-        loads("valid = 1\nbroken =\n");
-        FAIL() << "expected parse error";
-    } catch (const ParseError &error) {
-        EXPECT_EQ(error.line, 2u);
-        EXPECT_GT(error.column, 0u);
-        EXPECT_NE(std::string(error.what()), "");
+                        "x = 9223372036854775808", "x = 2023-02-29", "x = { a = 1, a = 2 }"}) {
+        EXPECT_FALSE(loads(source, &error)) << source;
+        EXPECT_EQ(error.code, ErrorCode::Parse);
+        EXPECT_TRUE(error);
+        EXPECT_FALSE(error.message.empty());
+        EXPECT_FALSE(loads(source)); // 忽略错误详情时，同样返回无效节点
     }
-    EXPECT_THROW(load(""), IoError);
-    EXPECT_THROW(load(std::string("bad\0path", 8)), IoError);
+    EXPECT_FALSE(loads("valid = 1\nbroken =\n", &error));
+    EXPECT_EQ(error.line, 2u);
+    EXPECT_GT(error.column, 0u);
+    EXPECT_FALSE(load("", &error));
+    EXPECT_EQ(error.code, ErrorCode::Io);
+    EXPECT_EQ(error.line, 0u);
+    EXPECT_EQ(error.column, 0u);
+    EXPECT_FALSE(load(std::string("bad\0path", 8), &error));
+    EXPECT_EQ(error.code, ErrorCode::Io);
+    EXPECT_FALSE(load(""));
     const std::string invalid_utf8 = "key = \"\xff\"";
-    EXPECT_THROW(loads(invalid_utf8), ParseError);
+    EXPECT_FALSE(loads(invalid_utf8, &error));
+    EXPECT_EQ(error.code, ErrorCode::Parse);
+    EXPECT_TRUE(loads("x = 1", &error));
+    EXPECT_FALSE(error);
+    EXPECT_TRUE(error.message.empty());
+    EXPECT_EQ(error.line, 0u);
+    EXPECT_EQ(error.column, 0u);
+    EXPECT_TRUE(loads("", &error)); // 空输入加载成功，可与失败区分
+    EXPECT_FALSE(error);
 }
 
 TEST(TOML, shared_lifetime_and_move) {
@@ -207,12 +222,19 @@ TEST(TOML, file_load) {
     const auto closed = std::fclose(file);
     ASSERT_EQ(written, source.size());
     ASSERT_EQ(closed, 0);
-    EXPECT_EQ(load(path)["server"]["port"].as<int>(), 8080);
+    Error error{ErrorCode::Parse, "previous error", 1, 1};
+    EXPECT_EQ(load(path, &error)["server"]["port"].as<int>(), 8080);
+    EXPECT_FALSE(error);
+    EXPECT_TRUE(error.message.empty());
+    EXPECT_EQ(error.line, 0u);
+    EXPECT_EQ(error.column, 0u);
     file = std::fopen(path.c_str(), "wb");
     ASSERT_NE(file, nullptr);
     std::fputs("invalid =", file);
     std::fclose(file);
-    EXPECT_THROW(load(path), ParseError);
+    EXPECT_FALSE(load(path, &error));
+    EXPECT_EQ(error.code, ErrorCode::Parse);
+    EXPECT_FALSE(load(path));
 }
 } // namespace
 } // namespace rm_test

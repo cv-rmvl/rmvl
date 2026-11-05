@@ -4,7 +4,7 @@
 #include <memory>
 
 #define TOML_HEADER_ONLY 1
-#define TOML_EXCEPTIONS 1
+#define TOML_EXCEPTIONS 0
 #define TOML_ENABLE_FORMATTERS 0
 #define TOML_ENABLE_UNRELEASED_FEATURES 0
 #define TOML_LARGE_FILES 1
@@ -127,30 +127,48 @@ bool Node::readValue(DateTime &value) const noexcept {
     return true;
 }
 
-Node loads(std::string_view source) {
-    try {
-        auto impl = std::make_shared<Node::Impl>(::toml::parse(source));
-        const auto *root = &impl->root;
-        return Node(std::move(impl), root);
-    } catch (const ::toml::parse_error &error) {
-        throw ParseError(std::string(error.description()), error.source().begin.line, error.source().begin.column);
+Node loads(std::string_view source, Error *error) {
+    if (error)
+        *error = {};
+    auto result = ::toml::parse(source);
+    if (!result) {
+        if (error) {
+            const auto &reason = result.error();
+            *error = {ErrorCode::Parse, std::string(reason.description()),
+                      reason.source().begin.line, reason.source().begin.column};
+        }
+        return {};
     }
+    auto impl = std::make_shared<Node::Impl>(std::move(result).table());
+    const auto *root = &impl->root;
+    return Node(std::move(impl), root);
 }
 
-Node load(std::string_view path) {
-    if (path.find('\0') != std::string_view::npos)
-        throw IoError("TOML file path contains a null character");
+Node load(std::string_view path, Error *error) {
+    if (error)
+        *error = {};
+    if (path.find('\0') != std::string_view::npos) {
+        if (error)
+            *error = {ErrorCode::Io, "TOML file path contains a null character", 0, 0};
+        return {};
+    }
     const std::string filename(path);
     std::unique_ptr<std::FILE, FileCloser> file(std::fopen(filename.c_str(), "rb"));
-    if (!file)
-        throw IoError("failed to open TOML file: " + filename);
+    if (!file) {
+        if (error)
+            *error = {ErrorCode::Io, "failed to open TOML file: " + filename, 0, 0};
+        return {};
+    }
     std::string source;
     char buffer[8192];
     while (const auto count = std::fread(buffer, 1, sizeof(buffer), file.get()))
         source.append(buffer, count);
-    if (std::ferror(file.get()))
-        throw IoError("failed to read TOML file: " + filename);
-    return loads(source);
+    if (std::ferror(file.get())) {
+        if (error)
+            *error = {ErrorCode::Io, "failed to read TOML file: " + filename, 0, 0};
+        return {};
+    }
+    return loads(source, error);
 }
 
 } // namespace rm::toml
