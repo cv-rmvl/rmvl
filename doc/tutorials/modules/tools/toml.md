@@ -9,7 +9,7 @@ TOML 配置加载 {#tutorial_modules_toml}
 
 ------
 
-### 1. 概述
+### 1 概述
 
 core 模块提供 TOML 1.0 配置解析，包含 `<rmvl/core/toml.hpp>` 或 `<rmvl/core.hpp>` 即可使用。
 
@@ -33,7 +33,7 @@ if (auto server = config["server"]) {
 }
 ```
 
-### 2. 节点访问与类型转换
+### 2 节点访问与类型转换
 
 `valid()` 和显式布尔转换只判断节点是否有效。因此 `enabled = false` 对应的节点仍然满足 `if (node)`，实际的布尔值通过 `as<bool>()` 读取。
 
@@ -47,13 +47,13 @@ if (auto server = config["server"]) {
 
 自定义类型在其命名空间提供 `bool toml_decode(const rm::toml::Node &, T &)`，即可使用上述读取接口。转换在临时对象上完成，失败不会改写调用方原有对象。
 
-### 3. 日期时间与所有权
+### 3 日期时间与所有权
 
 日期、时间和日期时间分别对应 `rm::toml::Date`、`Time`、`DateTime`。`Time` 的小数秒保留至纳秒，超出部分截断。`DateTime::offsetMinutes` 无值表示本地日期时间，0 表示 UTC，其他值表示以分钟为单位的 UTC 偏移。
 
 `Node` 拷贝共享底层节点树，不复制节点树。子节点可以脱离根句柄保存，键名视图在底层节点树最后一个句柄销毁前有效。节点树只读，可以在多个线程中并发读取。
 
-### 4. 错误处理
+### 4 错误处理
 
 加载失败时返回无效节点，可通过 `valid()` 或显式布尔转换判断。需要错误详情时传入可选的 `rm::toml::Error *` 输出参数，成功时会清空已有错误。
 

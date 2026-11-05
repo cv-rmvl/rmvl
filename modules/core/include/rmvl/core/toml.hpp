@@ -52,9 +52,9 @@ enum class NodeType : uint8_t {
 
 //! 本地日期，对应 TOML 的 local date
 struct Date {
-    int year{};         //!< 年份
-    unsigned month{};   //!< 月份，范围为 1～12
-    unsigned day{};     //!< 日期，范围为 1～31，实际范围取决于年月
+    int year{};       //!< 年份
+    unsigned month{}; //!< 月份，范围为 \f$1\sim12\f$
+    unsigned day{};   //!< 日期，范围为 \f$1\sim31\f$，实际范围取决于年月
 };
 
 /**
@@ -62,10 +62,10 @@ struct Date {
  * @details 小数秒保留至纳秒，源文本中超出纳秒精度的部分截断
  */
 struct Time {
-    unsigned hour{};         //!< 时，范围为 0～23
-    unsigned minute{};       //!< 分，范围为 0～59
-    unsigned second{};       //!< 秒，范围为 0～59
-    unsigned nanosecond{};   //!< 纳秒，范围为 0～999999999
+    unsigned hour{};       //!< 时，范围为 \f$0\sim23\f$
+    unsigned minute{};     //!< 分，范围为 \f$0\sim59\f$
+    unsigned second{};     //!< 秒，范围为 \f$0\sim59\f$
+    unsigned nanosecond{}; //!< 纳秒，范围为 \f$0\sim999999999\f$
 };
 
 /**
@@ -75,9 +75,9 @@ struct Time {
  * - Time 的小数秒保留至纳秒，源文本中超出纳秒精度的部分截断
  */
 struct DateTime {
-    Date date;                         //!< 日期部分
-    Time time;                         //!< 时间部分
-    std::optional<int> offsetMinutes;   //!< UTC 偏移分钟数，无值表示本地日期时间，0 表示 UTC，正值表示领先 UTC
+    Date date;                        //!< 日期部分
+    Time time;                        //!< 时间部分
+    std::optional<int> offsetMinutes; //!< UTC 偏移分钟数，无值表示本地日期时间，0 表示 UTC，正值表示领先 UTC
 };
 
 //! TOML 加载错误类型
@@ -93,9 +93,9 @@ enum class ErrorCode : uint8_t {
  */
 struct Error {
     ErrorCode code{ErrorCode::None}; //!< 错误类型
-    std::string message;            //!< 错误描述，无错误时为空
-    std::size_t line{};             //!< 解析错误行号，从 1 开始，不适用时为 0
-    std::size_t column{};           //!< 解析错误列号，从 1 开始，不适用时为 0
+    std::string message;             //!< 错误描述，无错误时为空
+    std::size_t line{};              //!< 解析错误行号，从 1 开始，不适用时为 0
+    std::size_t column{};            //!< 解析错误列号，从 1 开始，不适用时为 0
 
     //! @return 是否包含错误
     explicit operator bool() const noexcept { return code != ErrorCode::None; }
