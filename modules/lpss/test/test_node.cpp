@@ -16,6 +16,7 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
 #endif
@@ -110,11 +111,12 @@ TEST(LPSS_node, diff_domain_issolate) {
     lpss::Node nd("node4", 1);
     DgramSocket sock = Listener(Endpoint(ip::udp::v4(), 7500), false).create();
     sock.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
-    auto recvdata = sock.read();
-    auto start_time = lpss::now();
-    while (recvdata.data.empty() && lpss::now() - start_time < 50ms)
-        recvdata = sock.read();
-    EXPECT_TRUE(recvdata.data.empty());
+    const auto start_time = lpss::now();
+    do {
+        const auto recvdata = sock.read();
+        const auto announcement = lpss::RNDPMessage::deserialize(recvdata.data);
+        ASSERT_FALSE(announcement && announcement->guid == nd.guid());
+    } while (lpss::now() - start_time < 50ms);
 }
 
 TEST(LPSS_node, diff_domain_discover) {
@@ -425,5 +427,431 @@ TEST(LPSS_node, async_timer_cancel) {
 }
 
 #endif
+
+TEST(LPSS_rsd2, rndp_version_field_and_bounds) {
+    lpss::RNDPMessage packet{};
+    packet.guid = lpss::Guid{0x1234567800010000ULL};
+    packet.heartbeat_timeout = 5;
+    packet.locators = {{7850, {127, 0, 0, 1}}};
+    packet.name = "rndp-version";
+    auto data = packet.serialize();
+    ASSERT_GE(data.size(), lpss::RNDP_HEADER_SIZE + 1);
+    EXPECT_EQ(data.substr(0, 4), "ND02");
+    EXPECT_EQ(data.substr(12, 4), std::string({'v', 2, 2, 2}));
+    auto decoded = lpss::RNDPMessage::deserialize(data);
+    ASSERT_TRUE(decoded.has_value());
+    EXPECT_EQ(decoded->guid, packet.guid);
+    ASSERT_EQ(decoded->locators.size(), 1u);
+    EXPECT_EQ(decoded->locators.front().port, 7850);
+    EXPECT_EQ(decoded->name, packet.name);
+
+    auto obsolete = data;
+    obsolete.replace(0, 4, "ND01");
+    EXPECT_FALSE(lpss::RNDPMessage::deserialize(obsolete));
+
+    auto future_versions = data;
+    future_versions[13] = 3; // 允许未来版本继续使用兼容的 ND02 消息布局
+    future_versions[14] = 3;
+    future_versions[15] = 4;
+    const auto future = lpss::RNDPMessage::deserialize(future_versions);
+    ASSERT_TRUE(future.has_value());
+    EXPECT_EQ(future->ndp_version, 3);
+    EXPECT_EQ(future->edp_version, 3);
+    EXPECT_EQ(future->mtp_version, 4);
+    EXPECT_EQ(future->serialize(), future_versions);
+
+    auto invalid_ndp = data;
+    invalid_ndp[13] = 1;
+    EXPECT_FALSE(lpss::RNDPMessage::deserialize(invalid_ndp));
+    auto wrong_marker = data;
+    wrong_marker[12] = 'x';
+    EXPECT_FALSE(lpss::RNDPMessage::deserialize(wrong_marker));
+    EXPECT_FALSE(lpss::RNDPMessage::deserialize(data.substr(0, data.size() - 1)));
+
+    auto oversized = packet;
+    oversized.locators.resize(256);
+    EXPECT_TRUE(oversized.serialize().empty());
+    oversized = packet;
+    oversized.name.assign(256, 'x');
+    EXPECT_TRUE(oversized.serialize().empty());
+}
+
+TEST(LPSS_rsd2, negotiate_compatible_protocol_versions) {
+    const auto same = lpss::negotiate(2, 2, 2, 2);
+    EXPECT_EQ(same.edp, 2);
+    EXPECT_EQ(same.mtp, 2);
+
+    const auto newer_peer = lpss::negotiate(2, 2, 3, 4);
+    EXPECT_EQ(newer_peer.edp, 2);
+    EXPECT_EQ(newer_peer.mtp, 2);
+
+    const auto newer_local = lpss::negotiate(4, 3, 5, 4);
+    EXPECT_EQ(newer_local.edp, 4);
+    EXPECT_EQ(newer_local.mtp, 3);
+
+    const auto mixed = lpss::negotiate(3, 4, 2, 5);
+    EXPECT_EQ(mixed.edp, 2);
+    EXPECT_EQ(mixed.mtp, 4);
+
+    const auto legacy = lpss::negotiate(2, 2, 1, 0);
+    EXPECT_EQ(legacy.edp, 2);
+    EXPECT_EQ(legacy.mtp, 2);
+}
+
+TEST(LPSS_rsd2, redp_wire_and_ack_sequence_rollover) {
+    const lpss::Guid source{0x1234567800010000ULL};
+    lpss::REDPMessage snapshot{};
+    snapshot.source = source;
+    snapshot.syn = 65535;
+    snapshot.snapshot = {{lpss::Guid{source.full | 1}, 0, "/writer", "std/String"},
+                         {lpss::Guid{source.full | 2}, 7881, "/reader", "std/String"}};
+    const auto wire = snapshot.serialize();
+    ASSERT_GE(wire.size(), 17u);
+    EXPECT_EQ(wire.substr(0, 4), "ED02");
+    EXPECT_EQ(static_cast<uint8_t>(wire[14]), 0u);
+    const auto decoded = lpss::REDPMessage::deserialize(wire);
+    ASSERT_TRUE(decoded.has_value());
+    ASSERT_EQ(decoded->snapshot.size(), 2u);
+    EXPECT_EQ(decoded->snapshot[1].port, 7881u);
+    EXPECT_EQ(decoded->snapshot[0].topic, "/writer");
+
+    lpss::REDPReceiver receiver(source);
+    const auto result = receiver.accept(*decoded, lpss::Guid{0x1234567800020000ULL});
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result->applied);
+    EXPECT_TRUE(result->ack.ack);
+    EXPECT_EQ(result->ack.syn, 0u);
+    const auto duplicate = receiver.accept(*decoded, lpss::Guid{0x1234567800020000ULL});
+    ASSERT_TRUE(duplicate.has_value());
+    EXPECT_FALSE(duplicate->applied);
+    auto malformed = wire;
+    malformed[14] = 2;
+    EXPECT_FALSE(lpss::REDPMessage::deserialize(malformed));
+    EXPECT_FALSE(lpss::REDPMessage::deserialize(wire.substr(0, wire.size() - 1)));
+    auto duplicate_guid = snapshot;
+    duplicate_guid.snapshot.push_back(snapshot.snapshot.front());
+    EXPECT_TRUE(duplicate_guid.serialize().empty());
+}
+
+TEST(LPSS_rsd2, sender_uses_supplied_snapshot) {
+    const lpss::Guid a{0x1234567800010000ULL}, b{0x1234567800020000ULL};
+    lpss::REDPSender sender(a, b);
+    const lpss::REDPEndpoint reader{lpss::Guid{a.full | 2}, 7881, "/lifecycle", "std/String"};
+    const std::vector<lpss::REDPEndpoint> current{reader};
+
+    EXPECT_FALSE(sender.request(current));
+    sender.markDirty();
+    sender.markDirty();
+    const auto packet = sender.request(current);
+    ASSERT_TRUE(packet);
+    ASSERT_EQ(packet->snapshot.size(), 1u);
+    EXPECT_EQ(packet->snapshot.front().guid, reader.guid);
+    EXPECT_TRUE(sender.confirm({b, static_cast<uint16_t>(packet->syn + 1), true, {}}, current));
+    EXPECT_FALSE(sender.dirty());
+    EXPECT_FALSE(sender.request(current));
+}
+
+TEST(LPSS_rsd2, sender_preserves_pending_and_sends_latest_after_ack) {
+    const lpss::Guid a{0x1234567800010000ULL}, b{0x1234567800020000ULL};
+    lpss::REDPSender sender(a, b);
+    lpss::REDPReceiver receiver(a);
+    const lpss::REDPEndpoint writer{lpss::Guid{a.full | 1}, 0, "/lifecycle", "std/String"};
+    const lpss::REDPEndpoint reader{lpss::Guid{a.full | 2}, 7881, "/lifecycle", "std/String"};
+    std::vector<lpss::REDPEndpoint> current{writer};
+    sender.markDirty();
+    const auto first = sender.request(current);
+    ASSERT_TRUE(first);
+    const auto received = receiver.accept(*first, b);
+    ASSERT_TRUE(received);
+
+    current.push_back(reader);
+    sender.markDirty();
+    current.erase(current.begin());
+    sender.markDirty();
+    const auto retry = sender.request(current);
+    ASSERT_TRUE(retry);
+    EXPECT_EQ(retry->serialize(), first->serialize());
+    const auto duplicate = receiver.accept(*retry, b);
+    ASSERT_TRUE(duplicate);
+    EXPECT_FALSE(duplicate->applied);
+    auto wrong_ack = received->ack;
+    ++wrong_ack.syn;
+    EXPECT_FALSE(sender.confirm(wrong_ack, current));
+    EXPECT_TRUE(sender.waiting());
+    ASSERT_TRUE(sender.confirm(received->ack, current));
+
+    const auto latest = sender.request(current);
+    ASSERT_TRUE(latest);
+    EXPECT_EQ(latest->syn, static_cast<uint16_t>(first->syn + 1));
+    ASSERT_EQ(latest->snapshot.size(), 1u);
+    EXPECT_EQ(latest->snapshot.front().guid, reader.guid);
+    const auto applied = receiver.accept(*latest, b);
+    ASSERT_TRUE(applied);
+    EXPECT_TRUE(applied->applied);
+    ASSERT_TRUE(sender.confirm(applied->ack, current));
+    EXPECT_FALSE(sender.request(current));
+
+    current.clear();
+    sender.markDirty();
+    const auto empty = sender.request(current);
+    ASSERT_TRUE(empty);
+    EXPECT_TRUE(empty->snapshot.empty());
+    const auto removed = receiver.accept(*empty, b);
+    ASSERT_TRUE(removed);
+    EXPECT_TRUE(receiver.snapshot().empty());
+    EXPECT_TRUE(sender.confirm(removed->ack, current));
+    EXPECT_FALSE(sender.request(current));
+}
+
+TEST(LPSS_rsd2, sender_discards_cancelled_changes_while_waiting) {
+    const lpss::Guid a{0x1234567800010000ULL}, b{0x1234567800020000ULL};
+    lpss::REDPSender sender(a, b);
+    const lpss::REDPEndpoint writer{lpss::Guid{a.full | 1}, 0, "/lifecycle", "std/String"};
+    const lpss::REDPEndpoint reader{lpss::Guid{a.full | 2}, 7881, "/lifecycle", "std/String"};
+    std::vector<lpss::REDPEndpoint> current{writer};
+    sender.markDirty();
+    const auto pending = sender.request(current);
+    ASSERT_TRUE(pending);
+    current.push_back(reader);
+    sender.markDirty();
+    current.pop_back();
+    sender.markDirty();
+    ASSERT_TRUE(sender.confirm({b, static_cast<uint16_t>(pending->syn + 1), true, {}}, current));
+    EXPECT_FALSE(sender.dirty());
+    EXPECT_FALSE(sender.request(current));
+}
+
+TEST(LPSS_rsd2, receiver_rejects_out_of_order_and_conflicting_duplicate) {
+    const lpss::Guid a{0x1234567800010000ULL}, b{0x1234567800020000ULL};
+    lpss::REDPReceiver receiver(a);
+    lpss::REDPMessage first{a, 100, false, {{lpss::Guid{a.full | 1}, 0, "/x", "std/String"}}};
+    ASSERT_TRUE(receiver.accept(first, b).has_value());
+    auto future = first;
+    future.syn = 102;
+    EXPECT_FALSE(receiver.accept(future, b).has_value());
+    auto conflicting = first;
+    conflicting.snapshot[0].topic = "/different";
+    EXPECT_FALSE(receiver.accept(conflicting, b).has_value());
+    auto next = first;
+    next.syn = 101;
+    next.snapshot.clear();
+    ASSERT_TRUE(receiver.accept(next, b)->applied);
+    EXPECT_TRUE(receiver.snapshot().empty());
+}
+
+TEST(LPSS_rsd2, sync_node_heartbeat_expiry) {
+    class Probe : public lpss::Node {
+    public:
+        using Node::Node;
+
+        bool hasPeer(lpss::Guid peer) {
+            std::shared_lock lock(_nodes_mtx);
+            return _discovered_nodes.find(peer) != _discovered_nodes.end();
+        }
+        bool hasWriter(std::string_view topic, lpss::Guid writer) {
+            std::shared_lock lock(_discovered_mtx);
+            auto it = _discovered_writers.find(std::string(topic));
+            return it != _discovered_writers.end() && it->second.writers.count(writer);
+        }
+        void expire(lpss::Guid peer) {
+            std::lock_guard lock(_nodes_mtx);
+            auto it = _discovered_nodes.find(peer);
+            if (it != _discovered_nodes.end())
+                it->second.last_alive = std::chrono::steady_clock::now() - 5s;
+        }
+    };
+
+    constexpr uint8_t domain = 117;
+    auto observer = Listener(Endpoint(ip::udp::v4(), 7500 + domain), false).create();
+    observer.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
+    Probe node("rsd2_timeout", domain);
+
+    uint16_t control_port{};
+    std::string local_addr{};
+    std::array<uint8_t, 4> local_interface{};
+    const auto deadline = std::chrono::steady_clock::now() + 2s;
+    while (!control_port && std::chrono::steady_clock::now() < deadline) {
+        auto [wire, addr, port] = observer.read();
+        auto announcement = lpss::RNDPMessage::deserialize(wire);
+        if (announcement && announcement->guid == node.guid() && !announcement->locators.empty()) {
+            control_port = announcement->locators.front().port;
+            local_addr = addr;
+            ASSERT_EQ(::inet_pton(AF_INET, addr.c_str(), local_interface.data()), 1);
+        }
+        std::this_thread::sleep_for(5ms);
+    }
+    ASSERT_NE(control_port, 0);
+
+    const lpss::Guid peer{0x12345678, 0x9876, 0};
+    const lpss::Guid writer{0x12345678, 0x9876, 1};
+    const std::string topic = "/rsd2/timeout";
+    auto control = Listener(Endpoint(ip::udp::v4(), Endpoint::ANY_PORT), false).create();
+    auto receiveREDP = [&]() -> std::optional<lpss::REDPMessage> {
+        const auto until = std::chrono::steady_clock::now() + 1s;
+        do {
+            auto [wire, addr, port] = control.read();
+            if (auto packet = lpss::REDPMessage::deserialize(wire))
+                return packet;
+            std::this_thread::sleep_for(5ms);
+        } while (std::chrono::steady_clock::now() < until);
+        return std::nullopt;
+    };
+    lpss::RNDPMessage announcement{};
+    announcement.guid = peer;
+    announcement.heartbeat_timeout = 1;
+    announcement.locators = {{control.endpoint().port(), local_interface}};
+    announcement.name = "synthetic-peer";
+    lpss::REDPMessage snapshot{peer, 100, false, {{writer, 0, topic, msg::String::msg_type}}};
+    auto sender = Sender(ip::udp::v4()).create();
+    sender.setOption(ip::multicast::Loopback(true));
+    sender.setOption(ip::multicast::Interface(local_interface));
+    auto sendRNDP = [&] {
+        sender.write(lpss::BROADCAST_IP, Endpoint(ip::udp::v4(), 7500 + domain), announcement.serialize());
+    };
+    auto sendREDP = [&] {
+        control.write(local_addr, Endpoint(ip::udp::v4(), control_port), snapshot.serialize());
+    };
+    auto sendREDPAck = [&](uint16_t syn) {
+        lpss::REDPMessage ack{peer, syn, true, {}};
+        control.write(local_addr, Endpoint(ip::udp::v4(), control_port), ack.serialize());
+    };
+    auto waitFor = [&](auto predicate, auto action) {
+        const auto until = std::chrono::steady_clock::now() + 2s;
+        do {
+            action();
+            if (predicate())
+                return true;
+            std::this_thread::sleep_for(5ms);
+        } while (std::chrono::steady_clock::now() < until);
+        return predicate();
+    };
+
+    ASSERT_TRUE(waitFor([&] { return node.hasPeer(peer); }, sendRNDP));
+
+    // The initial baseline establishes the peer's expected outbound SYN.
+    auto first_baseline = receiveREDP();
+    ASSERT_TRUE(first_baseline.has_value());
+    ASSERT_FALSE(first_baseline->ack);
+    EXPECT_TRUE(first_baseline->snapshot.empty());
+    sendREDPAck(static_cast<uint16_t>(first_baseline->syn + 1));
+
+    sendREDP();
+    ASSERT_TRUE(waitFor([&] { return node.hasWriter(topic, writer); }, [] {}));
+    auto first_ack = receiveREDP();
+    ASSERT_TRUE(first_ack.has_value());
+    ASSERT_TRUE(first_ack->ack);
+    EXPECT_EQ(first_ack->syn, 101u);
+
+    node.expire(peer);
+    ASSERT_TRUE(waitFor([&] { return !node.hasPeer(peer) && !node.hasWriter(topic, writer); }, [] {}));
+
+    ASSERT_TRUE(waitFor([&] { return node.hasPeer(peer); }, sendRNDP));
+    // Rediscovery must resume the previous session instead of choosing a random SYN.
+    auto resumed_baseline = receiveREDP();
+    ASSERT_TRUE(resumed_baseline.has_value());
+    ASSERT_FALSE(resumed_baseline->ack);
+    EXPECT_EQ(resumed_baseline->syn, static_cast<uint16_t>(first_baseline->syn + 1));
+    sendREDPAck(static_cast<uint16_t>(resumed_baseline->syn + 1));
+
+    // The last accepted remote snapshot is restored without waiting for a new update.
+    EXPECT_TRUE(node.hasWriter(topic, writer));
+}
+
+TEST(LPSS_rsd2, sync_node_clamps_lower_mtp_version_to_two) {
+    class Probe : public lpss::Node {
+    public:
+        using Node::Node;
+
+        bool hasPeer(lpss::Guid peer) {
+            std::shared_lock lock(_nodes_mtx);
+            return _discovered_nodes.find(peer) != _discovered_nodes.end();
+        }
+        bool hasCachedWriter(std::string_view topic, lpss::Guid writer) {
+            std::shared_lock lock(_discovered_mtx);
+            auto it = _discovered_writers.find(std::string(topic));
+            return it != _discovered_writers.end() && it->second.writers.count(writer);
+        }
+    };
+
+    constexpr uint8_t domain = 118;
+    auto observer = Listener(Endpoint(ip::udp::v4(), 7500 + domain), false).create();
+    observer.setOption(ip::multicast::JoinGroup(lpss::BROADCAST_IP));
+    Probe node("rsd2_mtp_incompatible", domain);
+
+    uint16_t control_port{};
+    std::string local_addr{};
+    std::array<uint8_t, 4> local_interface{};
+    const auto deadline = std::chrono::steady_clock::now() + 2s;
+    while (!control_port && std::chrono::steady_clock::now() < deadline) {
+        auto [wire, addr, port] = observer.read();
+        auto local = lpss::RNDPMessage::deserialize(wire);
+        if (local && local->guid == node.guid() && !local->locators.empty()) {
+            control_port = local->locators.front().port;
+            local_addr = addr;
+            ASSERT_EQ(::inet_pton(AF_INET, addr.c_str(), local_interface.data()), 1);
+        }
+        std::this_thread::sleep_for(5ms);
+    }
+    ASSERT_NE(control_port, 0);
+
+    const lpss::Guid peer{0x12345678, 0x9877, 0};
+    const lpss::Guid writer{0x12345678, 0x9877, 1};
+    const std::string topic = "/rsd2/mtp_incompatible";
+    auto control = Listener(Endpoint(ip::udp::v4(), Endpoint::ANY_PORT), false).create();
+    auto receiveREDP = [&]() -> std::optional<lpss::REDPMessage> {
+        const auto until = std::chrono::steady_clock::now() + 1s;
+        do {
+            auto [wire, addr, port] = control.read();
+            if (auto packet = lpss::REDPMessage::deserialize(wire))
+                return packet;
+            std::this_thread::sleep_for(5ms);
+        } while (std::chrono::steady_clock::now() < until);
+        return std::nullopt;
+    };
+    lpss::RNDPMessage announcement{};
+    announcement.guid = peer;
+    announcement.mtp_version = 1;
+    announcement.heartbeat_timeout = 1;
+    announcement.locators = {{control.endpoint().port(), local_interface}};
+    announcement.name = "mtp-incompatible-peer";
+    const lpss::REDPMessage snapshot{peer, 100, false, {{writer, 0, topic, msg::String::msg_type}}};
+    auto sender = Sender(ip::udp::v4()).create();
+    sender.setOption(ip::multicast::Loopback(true));
+    sender.setOption(ip::multicast::Interface(local_interface));
+    auto sendRNDP = [&] {
+        sender.write(lpss::BROADCAST_IP, Endpoint(ip::udp::v4(), 7500 + domain), announcement.serialize());
+    };
+    const auto discovery_deadline = std::chrono::steady_clock::now() + 2s;
+    while (!node.hasPeer(peer) && std::chrono::steady_clock::now() < discovery_deadline) {
+        sendRNDP();
+        std::this_thread::sleep_for(5ms);
+    }
+    ASSERT_TRUE(node.hasPeer(peer));
+    std::this_thread::sleep_for(10ms);
+
+    const auto local_baseline = receiveREDP();
+    ASSERT_TRUE(local_baseline.has_value());
+    ASSERT_FALSE(local_baseline->ack);
+    control.write(local_addr, Endpoint(ip::udp::v4(), control_port),
+                  lpss::REDPMessage{peer, static_cast<uint16_t>(local_baseline->syn + 1), true, {}}.serialize());
+
+    control.write(local_addr, Endpoint(ip::udp::v4(), control_port), snapshot.serialize());
+    std::optional<lpss::REDPMessage> ack{};
+    const auto ack_deadline = std::chrono::steady_clock::now() + 1s;
+    while (!ack && std::chrono::steady_clock::now() < ack_deadline) {
+        auto packet = receiveREDP();
+        if (packet && packet->ack)
+            ack = std::move(packet);
+    }
+    ASSERT_TRUE(ack.has_value());
+    EXPECT_EQ(ack->syn, 101u);
+
+    // MTP negotiation falls back to version 2, so the remote endpoint is usable.
+    EXPECT_TRUE(node.hasCachedWriter(topic, writer));
+    auto subscriber = node.createSubscriber<msg::String>(topic, [](const msg::String &) {});
+    ASSERT_FALSE(subscriber.invalid());
+    EXPECT_TRUE(node.hasCachedWriter(topic, writer));
+    node.destroySubscriber(subscriber);
+}
 
 } // namespace rm_test

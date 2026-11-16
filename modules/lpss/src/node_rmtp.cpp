@@ -465,9 +465,13 @@ void DataReaderBase::stop() noexcept {
 void DataReaderBase::add(const Guid &guid) noexcept {
     if (!same_host(_guid, guid))
         return;
-    std::lock_guard lk(_shm_mtx);
-    auto name = shm_channel_name(guid, _guid);
-    _shm_sources[guid] = {name, create_shm_channel(name), 0};
+    {
+        std::lock_guard lk(_shm_mtx);
+        auto name = shm_channel_name(guid, _guid);
+        _shm_sources[guid] = {name, create_shm_channel(name), 0};
+    }
+    // 端点注册可能晚于首次通知，重新唤醒读取线程以处理共享内存中的消息
+    _udpv4.write({127, 0, 0, 1}, Endpoint(ip::udp::v4(), _port), MTP_SHM_NOTIFY);
 }
 
 void DataReaderBase::remove(const Guid &guid) noexcept {
@@ -615,6 +619,9 @@ void DataReaderBase::add(const Guid &guid) noexcept {
         return;
     auto name = shm_channel_name(guid, _guid);
     _shm_sources[guid] = {name, create_shm_channel(name), 0};
+    // 端点注册可能晚于首次通知，重新唤醒读取协程以处理共享内存中的消息
+    static_cast<::rm::DgramSocket &>(_udpv4).write(
+        {127, 0, 0, 1}, Endpoint(ip::udp::v4(), _port), MTP_SHM_NOTIFY);
 }
 
 void DataReaderBase::remove(const Guid &guid) noexcept {

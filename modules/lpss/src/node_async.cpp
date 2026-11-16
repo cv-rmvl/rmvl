@@ -11,6 +11,7 @@
 
 #if __cplusplus >= 202002L
 
+#include <algorithm>
 #include <csignal>
 
 #ifdef _WIN32
@@ -63,95 +64,228 @@ rm::async::Task<> Node::rndp_listener(rm::async::DgramSocket rndp_reader) {
     while (_running) {
         // 接收原始 UDP 报文
         auto [data, addr_str, port] = co_await rndp_reader.read();
+        // 解析 RNDP 消息
+        auto ndp_msg = RNDPMessage::deserialize(data);
+        if (!ndp_msg || ndp_msg->guid == _uid)
+            continue;
+        std::array<uint8_t, 4> addr{};
+        if (inet_pton(AF_INET, addr_str.c_str(), addr.data()) != 1)
+            continue;
+        // 选择最佳控制平面定位器
+        const auto ctrl_loc = selectBestLocator(addr, *ndp_msg);
+        if (ctrl_loc.invalid())
+            continue;
+        const auto selected = negotiate(CURRENT_EDP_VERSION, CURRENT_MTP_VERSION,
+                                        ndp_msg->edp_version, ndp_msg->mtp_version);
 
-        if (data.size() < RNDP_HEADER_SIZE)
-            continue;
-        // 解析的 RNDP 消息
-        auto rndp_msg = RNDPMessage::deserialize(const_cast<const char *>(data.data()));
-        if (rndp_msg.guid == _uid)
-            continue;
         // 处理发现的节点信息
-        bool is_new_node{};
-        auto [it, inserted] = _discovered_nodes.try_emplace(rndp_msg.guid, NodeStorageInfo{rndp_msg});
-        if (inserted)
-            is_new_node = true;
-        else
-            it->second.last_alive = std::chrono::steady_clock::now();
+        const auto now = std::chrono::steady_clock::now();
+        auto &node = _discovered_nodes[ndp_msg->guid];
+        node.rndp_msg = *ndp_msg;
+        node.last_alive = now;
+        node.ctrl_loc = ctrl_loc;
+        node.selected = selected;
+        // 建立 REDP 会话并同步本地 Writers/Readers 快照
+        activateREDPPeer(ndp_msg->guid, ctrl_loc);
+    }
+}
 
-        if (is_new_node) {
-            std::array<uint8_t, 4> addr{};
-            inet_pton(AF_INET, addr_str.c_str(), addr.data());
-            // 选择最佳控制平面定位器
-            auto ctrl_loc = selectBestLocator(addr, rndp_msg);
-            std::vector<REDPMessage> redp_msgs{};
-            redp_msgs.reserve(_local_writers.size() + _local_readers.size());
-            if (!ctrl_loc.invalid()) {
-                _discovered_nodes[rndp_msg.guid].ctrl_loc = ctrl_loc;
-                for (const auto &[topic, writer] : _local_writers)
-                    redp_msgs.push_back(REDPMessage::addWriter(writer->guid(), topic, writer->msgtype()));
-                for (const auto &[topic, reader] : _local_readers)
-                    redp_msgs.push_back(REDPMessage::addReader(reader->guid(), topic, reader->port(), reader->msgtype()));
+bool Node::canRegisterREDPEndpoints(
+    std::initializer_list<std::pair<std::string_view, std::string_view>> additions) {
+    size_t wire_size = 17;
+    for (const auto &[topic, writer] : _local_writers)
+        if (!countREDPEndpointSize(wire_size, topic, writer->msgtype()))
+            return false;
+    for (const auto &[topic, reader] : _local_readers)
+        if (!countREDPEndpointSize(wire_size, topic, reader->msgtype()))
+            return false;
+    for (const auto &[topic, type] : additions)
+        if (!countREDPEndpointSize(wire_size, topic, type))
+            return false;
+    return true;
+}
+
+std::vector<REDPEndpoint> Node::snapshot() {
+    std::vector<REDPEndpoint> endpoints{};
+    endpoints.reserve(_local_writers.size() + _local_readers.size());
+    for (const auto &[topic, writer] : _local_writers)
+        endpoints.push_back({writer->guid(), 0, topic, std::string(writer->msgtype())});
+    for (const auto &[topic, reader] : _local_readers)
+        endpoints.push_back({reader->guid(), reader->port(), topic, std::string(reader->msgtype())});
+    return endpoints;
+}
+
+void Node::endpointChanged() {
+    const auto current = snapshot();
+    std::vector<std::pair<Locator, REDPMessage>> outbound{};
+    for (auto &[peer, session] : _redp_peers) {
+        session.sender.markDirty();
+        if (session.online && !session.sender.waiting())
+            if (auto packet = session.sender.request(current))
+                outbound.emplace_back(session.locator, std::move(*packet));
+    }
+    for (const auto &[loc, packet] : outbound)
+        sendREDPMessage(*_redp_socket, loc, packet);
+}
+
+void Node::activateREDPPeer(Guid peer, Locator locator) {
+    auto it = _redp_peers.find(peer);
+    if (it != _redp_peers.end() && it->second.online &&
+        it->second.locator.port == locator.port &&
+        it->second.locator.addr == locator.addr)
+        return;
+
+    std::optional<REDPMessage> first{};
+    std::vector<REDPEndpoint> remote_snapshot{};
+    if (it != _redp_peers.end()) {
+        auto &session = it->second;
+        const bool resumed = !session.online;
+        const bool locator_changed = session.locator.port != locator.port ||
+                                     session.locator.addr != locator.addr;
+        session.locator = locator;
+        session.online = true;
+        if (resumed)
+            remote_snapshot = session.receiver.snapshot();
+        if (resumed || locator_changed) {
+            // 保留未确认报文，仅在空闲时重新同步当前快照。
+            if (!session.sender.waiting() && !session.sender.dirty())
+                session.sender.markDirty();
+            first = session.sender.request(snapshot());
+        }
+    } else {
+        auto &session = _redp_peers.try_emplace(peer, _uid, peer, locator).first->second;
+        session.locator = locator;
+        session.online = true;
+        session.sender.markDirty();
+        first = session.sender.request(snapshot());
+    }
+    if (!remote_snapshot.empty())
+        applyREDPSnapshot(peer, locator.addr, {}, remote_snapshot);
+    if (first)
+        sendREDPMessage(*_redp_socket, locator, *first);
+}
+
+void Node::applyREDPSnapshot(Guid peer, std::array<uint8_t, 4> source_ip,
+                             const std::vector<REDPEndpoint> &previous,
+                             const std::vector<REDPEndpoint> &current) {
+    const auto peer_info = _discovered_nodes.find(peer);
+    const bool mt02_compatible = peer_info != _discovered_nodes.end() &&
+                                 peer_info->second.selected.mtp >= 2;
+    const auto belongs = [peer](const REDPEndpoint &ep) {
+        return ep.guid.full != 0 && ep.guid.host() == peer.host() && ep.guid.pid() == peer.pid();
+    };
+    // 比较新旧快照中的端点变化
+    std::vector<REDPEndpoint> removed{}, added{};
+    for (const auto &old_ep : previous)
+        if (belongs(old_ep) && std::none_of(current.begin(), current.end(),
+                                            [&](const auto &ep) { return sameREDPEndpoint(old_ep, ep); }))
+            removed.push_back(old_ep);
+    for (const auto &new_ep : current)
+        if (belongs(new_ep) && std::none_of(previous.begin(), previous.end(),
+                                            [&](const auto &ep) { return sameREDPEndpoint(new_ep, ep); }))
+            added.push_back(new_ep);
+
+    // 移除已下线的 Writers/Readers 并更新本地缓存
+    for (const auto &ep : removed) {
+        if (ep.port == 0) {
+            auto it = _discovered_writers.find(ep.topic);
+            if (it != _discovered_writers.end()) {
+                it->second.writers.erase(ep.guid);
+                if (it->second.writers.empty())
+                    _discovered_writers.erase(it);
             }
-            // 向新发现的节点单播包含所有本地 Writers/Readers 的 REDP 消息
-            for (const auto &msg : redp_msgs)
-                sendREDPMessage(ctrl_loc, msg);
+            auto reader = _local_readers.find(ep.topic);
+            if (reader != _local_readers.end())
+                reader->second->remove(ep.guid);
+        } else {
+            auto it = _discovered_readers.find(ep.topic);
+            if (it != _discovered_readers.end()) {
+                it->second.readers.erase(ep.guid);
+                if (it->second.readers.empty())
+                    _discovered_readers.erase(it);
+            }
+            auto writer = _local_writers.find(ep.topic);
+            if (writer != _local_writers.end())
+                writer->second->remove(ep.guid);
+        }
+    }
+
+    // 注册新增的 Writers/Readers 并更新本地缓存
+    if (!mt02_compatible)
+        return;
+    for (const auto &ep : added) {
+        if (ep.port == 0) {
+            auto &storage = _discovered_writers[ep.topic];
+            if (storage.msgtype.empty())
+                storage.msgtype = ep.msgtype;
+            if (storage.msgtype != ep.msgtype)
+                RMVL_Error_(RMVL_StsError, "[LPSS Node] Inconsistent msgtype for topic '%s'",
+                            ep.topic.c_str());
+            storage.writers.insert(ep.guid);
+            auto reader = _local_readers.find(ep.topic);
+            if (mt02_compatible && reader != _local_readers.end())
+                reader->second->add(ep.guid);
+        } else {
+            auto &storage = _discovered_readers[ep.topic];
+            if (storage.msgtype.empty())
+                storage.msgtype = ep.msgtype;
+            if (storage.msgtype != ep.msgtype)
+                RMVL_Error_(RMVL_StsError, "[LPSS Node] Inconsistent msgtype for topic '%s'",
+                            ep.topic.c_str());
+            storage.readers[ep.guid] = {ep.port, source_ip};
+            auto writer = _local_writers.find(ep.topic);
+            if (mt02_compatible && writer != _local_writers.end())
+                writer->second->add(ep.guid, {ep.port, source_ip});
         }
     }
 }
 
-rm::async::Task<> Node::redp_listener(rm::async::DgramSocket redp_socket) {
+rm::async::Task<> Node::redp_listener(std::shared_ptr<rm::async::DgramSocket> redp_socket) {
     while (_running) {
-        auto [redp_msg, addr_str, port] = co_await redp_socket.read();
-        std::array<uint8_t, 4> addr{};
-        inet_pton(AF_INET, addr_str.c_str(), addr.data());
+        auto [redp_msg, addr_str, port] = co_await redp_socket->read();
         // 解析 REDP 消息
-        auto msg = REDPMessage::deserialize(reinterpret_cast<const char *>(redp_msg.data()));
-        // 设置已发现的 Writers/Readers 列表
-        if (msg.action == REDPMessage::Action::Add) {
-            if (msg.type == REDPMessage::Type::Writer) {
-                _discovered_writers[msg.topic].writers.insert(msg.endpoint_guid);
-                if (_discovered_writers[msg.topic].msgtype.empty())
-                    _discovered_writers[msg.topic].msgtype = msg.msgtype;
-                if (_discovered_writers[msg.topic].msgtype != msg.msgtype)
-                    RMVL_Error_(RMVL_StsError, "[LPSS Node] Inconsistent msgtype for topic '%s': existing '%s', new '%s'",
-                                msg.topic.c_str(), _discovered_writers[msg.topic].msgtype.data(), msg.msgtype.data());
-            } else { // Reader
-                _discovered_readers[msg.topic].readers[msg.endpoint_guid] = {msg.port, addr};
-                if (_discovered_readers[msg.topic].msgtype.empty())
-                    _discovered_readers[msg.topic].msgtype = msg.msgtype;
-                if (_discovered_readers[msg.topic].msgtype != msg.msgtype)
-                    RMVL_Error_(RMVL_StsError, "[LPSS Node] Inconsistent msgtype for topic '%s': existing '%s', new '%s'",
-                                msg.topic.c_str(), _discovered_readers[msg.topic].msgtype.data(), msg.msgtype.data());
-            }
-        } else { // Remove
-            if (msg.type == REDPMessage::Type::Writer) {
-                _discovered_writers[msg.topic].writers.erase(msg.endpoint_guid);
-                if (_discovered_writers[msg.topic].writers.empty())
-                    _discovered_writers.erase(msg.topic);
-            } else { // Reader
-                _discovered_readers[msg.topic].readers.erase(msg.endpoint_guid);
-                if (_discovered_readers[msg.topic].readers.empty())
-                    _discovered_readers.erase(msg.topic);
-            }
-        }
-        // 为本地 DataWriters 更新缓存
-        if (msg.type == REDPMessage::Type::Reader) {
-            auto it = _local_writers.find(msg.topic);
-            if (it != _local_writers.end()) {
-                if (msg.action == REDPMessage::Action::Add)
-                    it->second->add(msg.endpoint_guid, {msg.port, addr});
-                else // Remove
-                    it->second->remove(msg.endpoint_guid);
-            }
-        } else { // Writer
-            auto it = _local_readers.find(msg.topic);
-            if (it != _local_readers.end()) {
-                if (msg.action == REDPMessage::Action::Add)
-                    it->second->add(msg.endpoint_guid);
-                else // Remove
-                    it->second->remove(msg.endpoint_guid);
+        auto msg = REDPMessage::deserialize(redp_msg);
+        if (!msg)
+            continue;
+        std::array<uint8_t, 4> addr{};
+        if (inet_pton(AF_INET, addr_str.c_str(), addr.data()) != 1)
+            continue;
+        auto it = _discovered_nodes.find(msg->source);
+        // 校验报文是否来自 RNDP 公告的控制端口
+        if (it == _discovered_nodes.end() || it->second.ctrl_loc.addr != addr ||
+            it->second.ctrl_loc.port != port)
+            continue;
+        if (!msg->ack && !snapshotBelongsToPeer(msg->source, msg->snapshot))
+            continue;
+
+        std::optional<REDPMessage> response{}, next{};
+        std::vector<REDPEndpoint> previous{}, current{};
+        bool applied{};
+        Locator locator{};
+        auto peer = _redp_peers.find(msg->source);
+        if (peer == _redp_peers.end())
+            continue;
+        auto &session = peer->second;
+        locator = session.locator;
+        if (msg->ack) {
+            const auto local = snapshot();
+            if (session.sender.confirm(*msg, local))
+                next = session.sender.request(local);
+        } else {
+            previous = session.receiver.snapshot();
+            auto received = session.receiver.accept(*msg, _uid);
+            if (received) {
+                response = received->ack;
+                applied = received->applied;
+                current = session.receiver.snapshot();
             }
         }
+        if (applied)
+            applyREDPSnapshot(msg->source, addr, previous, current);
+        if (response)
+            sendREDPMessage(*_redp_socket, locator, *response);
+        if (next)
+            sendREDPMessage(*_redp_socket, locator, *next);
     }
 }
 
@@ -167,7 +301,7 @@ rm::async::Task<> Node::heartbeat_detect() {
                 guid_ready_to_erase.push_back(guid);
         for (const auto &g : guid_ready_to_erase)
             _discovered_nodes.erase(g);
-        // 删除节点关联的发布者、订阅者缓存，使用 iterator 遍历以避免 crash
+        // 移除超时节点关联的端点缓存，遍历期间安全擦除元素
         if (!guid_ready_to_erase.empty()) {
             for (const auto &dead_guid : guid_ready_to_erase) {
                 // 清理 Writers
@@ -194,25 +328,22 @@ rm::async::Task<> Node::heartbeat_detect() {
                     reader->remove(dead_guid);
             }
         }
+        const auto local = snapshot();
+        std::vector<std::pair<Locator, REDPMessage>> retries{};
+        for (const auto &dead : guid_ready_to_erase) {
+            auto it = _redp_peers.find(dead);
+            if (it != _redp_peers.end())
+                it->second.online = false;
+        }
+        for (auto &[peer, session] : _redp_peers)
+            if (session.online)
+                if (auto packet = session.sender.request(local))
+                    retries.emplace_back(session.locator, std::move(*packet));
+        for (const auto &[loc, packet] : retries)
+            sendREDPMessage(*_redp_socket, loc, packet);
 
         co_await _hbt_timer.sleep_for(500ms);
     }
-}
-
-static void sendStopMessage(const std::unordered_map<Guid, NodeStorageInfo, GuidHash> &discovered_nodes,
-                            const std::unordered_map<std::string, DataWriterBase::ptr> &local_writers,
-                            const std::unordered_map<std::string, DataReaderBase::ptr> &local_readers) {
-    // 向已发现节点发送 Remove 的 REDP 消息
-    std::vector<REDPMessage> redp_msgs{};
-    redp_msgs.reserve(local_writers.size() + local_readers.size());
-    for (const auto &[topic, writer] : local_writers)
-        redp_msgs.push_back(REDPMessage::removeWriter(writer->guid(), topic));
-    for (const auto &[topic, reader] : local_readers)
-        redp_msgs.push_back(REDPMessage::removeReader(reader->guid(), topic));
-
-    for (const auto &[guid, node_info] : discovered_nodes)
-        for (const auto &msg : redp_msgs)
-            sendREDPMessage(node_info.ctrl_loc, msg);
 }
 
 rm::async::Task<> Node::on_shutdown_signal(int signum) {
@@ -230,8 +361,18 @@ Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_
 
     // 创建监听 Socket
     auto rndp_reader = rm::async::Listener(_ctx, Endpoint(ip::udp::v4(), _rndp_port)).create();
-    auto redp_socket = rm::async::Listener(_ctx, Endpoint(ip::udp::v4(), Endpoint::ANY_PORT)).create();
-    _redp_port = redp_socket.endpoint().port();
+    auto redp_socket = std::make_shared<rm::async::DgramSocket>(rm::async::Listener(_ctx, Endpoint(ip::udp::v4(), Endpoint::ANY_PORT)).create());
+    _redp_port = redp_socket->endpoint().port();
+    _redp_socket = redp_socket;
+    // 关闭 REDP 控制 Socket 的地址复用
+#ifdef _WIN32
+    const char no_reuse = 0;
+#else
+    const int no_reuse = 0;
+#endif
+    if (::setsockopt(redp_socket->native_handle(), SOL_SOCKET, SO_REUSEADDR,
+                     reinterpret_cast<const char *>(&no_reuse), sizeof(no_reuse)) != 0)
+        WARNING_("[LPSS Node] Failed to disable SO_REUSEADDR on REDP control socket");
 
     // 设置 Socket 选项
     _rndp_writer.setOption(ip::multicast::Loopback(true));
@@ -244,7 +385,7 @@ Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_
     co_spawn(_ctx, &Node::rndp_listener, this, std::move(rndp_reader));
 
     // 启动 REDP 监听协程任务
-    co_spawn(_ctx, &Node::redp_listener, this, std::move(redp_socket));
+    co_spawn(_ctx, &Node::redp_listener, this, redp_socket);
 
     // 启动心跳检测协程任务
     co_spawn(_ctx, &Node::heartbeat_detect, this);
@@ -257,9 +398,21 @@ Node::Node(std::string_view name, uint8_t domain_id) : _rndp_port(7500 + domain_
 void Node::shutdown() noexcept {
     if (!_running.exchange(false, std::memory_order_acq_rel))
         return;
-    sendStopMessage(_discovered_nodes, _local_writers, _local_readers);
+    // 准备本地端点下线的 REDP 快照
+    std::vector<std::pair<Locator, REDPMessage>> final_snapshots{};
+    for (auto &[peer, session] : _redp_peers) {
+        if (session.sender.waiting() || session.sender.dirty())
+            continue;
+        session.sender.markDirty();
+        if (auto packet = session.sender.request({}))
+            final_snapshots.emplace_back(session.locator, std::move(*packet));
+    }
+    // 移除本地注册的 Writers/Readers
     _local_readers.clear();
     _local_writers.clear();
+    // 向已发现节点单播 REDP 快照
+    for (const auto &[loc, packet] : final_snapshots)
+        sendREDPMessage(*_redp_socket, loc, packet);
     _ctx.stop();
 }
 
