@@ -28,8 +28,12 @@ void Publisher<MsgType>::publish(const MsgType &msg) {
 
 template <typename MsgType, typename Enable>
 Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
+    std::lock_guard registration_lock(_endpoint_registration_mtx);
     if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
         WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
+    if (!canRegisterREDPEndpoints({{topic, MsgType::msg_type}})) {
         return nullptr;
     }
     if (_local_writers.find(std::string(topic)) != _local_writers.end())
@@ -50,18 +54,19 @@ Publisher<MsgType> Node::createPublisher(std::string_view topic) noexcept {
         std::lock_guard lk(_local_mtx);
         _local_writers[std::string(topic)] = writer;
     }
-    // 向已发现的节点发送 addWriter 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic, writer->msgtype());
-    std::shared_lock lk(_discovered_mtx);
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步新增的 Writer
+    endpointChanged();
     return Publisher<MsgType>(topic, std::move(writer));
 }
 
 template <typename MsgType, typename SubscribeMsgCallback, typename Enable>
 Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgCallback &&callback) noexcept {
+    std::lock_guard registration_lock(_endpoint_registration_mtx);
     if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
         WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
+    if (!canRegisterREDPEndpoints({{topic, MsgType::msg_type}})) {
         return nullptr;
     }
     if (_local_readers.find(std::string(topic)) != _local_readers.end())
@@ -81,17 +86,15 @@ Subscriber<MsgType> Node::createSubscriber(std::string_view topic, SubscribeMsgC
         std::lock_guard lk(_local_mtx);
         _local_readers[std::string(topic)] = reader;
     }
-    // 向已发现的节点发送 addReader 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port(), reader->msgtype());
-    std::shared_lock lk(_discovered_mtx);
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步新增的 Reader
+    endpointChanged();
 
     return Subscriber<MsgType>(topic, std::move(reader));
 }
 
 template <typename MsgType>
 void Node::destroyPublisher(Publisher<MsgType> &pub) {
+    std::lock_guard registration_lock(_endpoint_registration_mtx);
     if (pub.invalid())
         return;
     // 移除本地 DataWriter
@@ -99,32 +102,31 @@ void Node::destroyPublisher(Publisher<MsgType> &pub) {
         std::lock_guard lk(_local_mtx);
         _local_writers.erase(pub._topic);
     }
-    // 向已发现的节点发送 removeWriter 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::removeWriter(pub._writer->guid(), pub._topic);
-    std::shared_lock lk(_discovered_mtx);
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步移除的 Writer
+    endpointChanged();
     // 释放资源
     pub._writer.reset();
 }
 
 template <typename MsgType>
 void Node::destroySubscriber(Subscriber<MsgType> &sub) {
-    if (sub.invalid())
-        return;
-    sub._reader->stop();
-    // 移除本地 DataReader
+    std::shared_ptr<DataReaderBase> reader;
     {
-        std::lock_guard lk(_local_mtx);
-        _local_readers.erase(sub._topic);
+        std::lock_guard registration_lock(_endpoint_registration_mtx);
+        if (sub.invalid())
+            return;
+        reader = std::move(sub._reader);
+        reader->stop();
+        // 移除本地 DataReader
+        {
+            std::lock_guard lk(_local_mtx);
+            _local_readers.erase(sub._topic);
+        }
+        // 向已发现节点同步移除的 Reader
+        endpointChanged();
     }
-    // 向已发现的节点发送 removeReader 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::removeReader(sub._reader->guid(), sub._topic);
-    std::shared_lock lk(_discovered_mtx);
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
     // 释放资源
-    sub._reader.reset();
+    reader.reset();
 }
 
 #if __cplusplus >= 202002L
@@ -143,6 +145,9 @@ typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) n
         WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
         return nullptr;
     }
+    if (!canRegisterREDPEndpoints({{topic, MsgType::msg_type}})) {
+        return nullptr;
+    }
     if (_local_writers.find(std::string(topic)) != _local_writers.end())
         return nullptr;
     Guid pub_guid = _uid;
@@ -155,10 +160,8 @@ typename Publisher<MsgType>::ptr Node::createPublisher(std::string_view topic) n
             writer->add(reader_guid, locator);
     // 注册本地 DataWriter
     _local_writers[std::string(topic)] = writer;
-    // 向已发现的节点发送 addWriter 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addWriter(pub_guid, topic, writer->msgtype());
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步新增的 Writer
+    endpointChanged();
     return std::make_shared<Publisher<MsgType>>(_ctx, topic, std::move(writer));
 }
 
@@ -166,6 +169,9 @@ template <typename MsgType, typename SubscribeMsgCallback, typename Enable>
 typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic, SubscribeMsgCallback callback) noexcept {
     if (topic.size() > 63 || std::string_view(MsgType::msg_type).size() > 63) {
         WARNING_("[LPSS Node] MTP limits topic and message type names to 63 bytes");
+        return nullptr;
+    }
+    if (!canRegisterREDPEndpoints({{topic, MsgType::msg_type}})) {
         return nullptr;
     }
     if (_local_readers.find(std::string(topic)) != _local_readers.end())
@@ -181,10 +187,8 @@ typename Subscriber<MsgType>::ptr Node::createSubscriber(std::string_view topic,
             reader->add(writer_guid);
     _local_readers[std::string(topic)] = reader;
     typed_reader->start();
-    // 向已发现的节点发送 addReader 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::addReader(sub_guid, topic, reader->port(), reader->msgtype());
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步新增的 Reader
+    endpointChanged();
 
     return std::make_shared<Subscriber<MsgType>>(_ctx, topic, std::move(reader));
 }
@@ -283,6 +287,10 @@ typename Service<SrvType>::ptr Node::createService(std::string_view service, Ser
         WARNING_("[LPSS Node] MTP limits service names and message type names to 63 bytes");
         return nullptr;
     }
+    if (!canRegisterREDPEndpoints({{request_topic, Request::msg_type},
+                                   {response_topic, Response::msg_type}})) {
+        return nullptr;
+    }
     if (_local_readers.find(request_topic) != _local_readers.end() || _local_writers.find(response_topic) != _local_writers.end())
         return nullptr;
 
@@ -302,12 +310,8 @@ typename Service<SrvType>::ptr Node::createService(std::string_view service, Ser
 
     _local_readers[request_topic] = request_reader;
     _local_writers[response_topic] = response_writer;
-    const auto add_request = REDPMessage::addReader(request_guid, request_topic, request_reader->port(), Request::msg_type);
-    const auto add_response = REDPMessage::addWriter(response_guid, response_topic, Response::msg_type);
-    for (const auto &[guid, node] : _discovered_nodes) {
-        sendREDPMessage(node.ctrl_loc, add_request);
-        sendREDPMessage(node.ctrl_loc, add_response);
-    }
+    // 向已发现节点同步 Service 的请求和响应端点
+    endpointChanged();
 
     auto result = typename Service<SrvType>::ptr(new Service<SrvType>(_ctx, service, std::move(request_reader), std::move(response_writer),
                                                                       typename Service<SrvType>::Callback(std::move(callback))));
@@ -324,6 +328,10 @@ typename Client<SrvType>::ptr Node::createClient(std::string_view service) noexc
     if (service.empty() || request_topic.size() > 63 || response_topic.size() > 63 ||
         std::string_view(Request::msg_type).size() > 63 || std::string_view(Response::msg_type).size() > 63) {
         WARNING_("[LPSS Node] MTP limits service names and message type names to 63 bytes");
+        return nullptr;
+    }
+    if (!canRegisterREDPEndpoints({{request_topic, Request::msg_type},
+                                   {response_topic, Response::msg_type}})) {
         return nullptr;
     }
     if (_local_writers.find(request_topic) != _local_writers.end() || _local_readers.find(response_topic) != _local_readers.end())
@@ -345,12 +353,8 @@ typename Client<SrvType>::ptr Node::createClient(std::string_view service) noexc
 
     _local_writers[request_topic] = request_writer;
     _local_readers[response_topic] = response_reader;
-    const auto add_request = REDPMessage::addWriter(request_guid, request_topic, Request::msg_type);
-    const auto add_response = REDPMessage::addReader(response_guid, response_topic, response_reader->port(), Response::msg_type);
-    for (const auto &[guid, node] : _discovered_nodes) {
-        sendREDPMessage(node.ctrl_loc, add_request);
-        sendREDPMessage(node.ctrl_loc, add_response);
-    }
+    // 向已发现节点同步 Client 的请求和响应端点
+    endpointChanged();
 
     auto result = typename Client<SrvType>::ptr(new Client<SrvType>(_ctx, service, std::move(request_writer), std::move(response_reader)));
     result->_delay_start();
@@ -363,10 +367,8 @@ void Node::destroyPublisher(std::shared_ptr<Publisher<MsgType>> pub) {
         return;
     // 移除本地 DataWriter
     _local_writers.erase(pub->_topic);
-    // 向已发现的节点发送 removeWriter 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::removeWriter(pub->_writer->guid(), pub->_topic);
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步移除的 Writer
+    endpointChanged();
     // 释放资源
     pub->_writer.reset();
 }
@@ -375,15 +377,14 @@ template <typename MsgType>
 void Node::destroySubscriber(std::shared_ptr<Subscriber<MsgType>> sub) {
     if (!sub || sub->invalid())
         return;
-    sub->_reader->stop();
+    auto reader = std::move(sub->_reader);
+    reader->stop();
     // 移除本地 DataReader
     _local_readers.erase(sub->_topic);
-    // 向已发现的节点发送 removeReader 的 EDP 消息
-    REDPMessage redp_msg = REDPMessage::removeReader(sub->_reader->guid(), sub->_topic);
-    for (const auto &discovered_node : _discovered_nodes)
-        sendREDPMessage(discovered_node.second.ctrl_loc, redp_msg);
+    // 向已发现节点同步移除的 Reader
+    endpointChanged();
     // 释放资源
-    sub->_reader.reset();
+    reader.reset();
 }
 
 template <typename Rep, typename Period, typename TimerCallback>

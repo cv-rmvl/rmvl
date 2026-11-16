@@ -12,6 +12,7 @@
 #pragma once
 
 #include <condition_variable>
+#include <map>
 #include <mutex>
 
 #include "rmvlmsg/std/time.hpp"
@@ -204,19 +205,42 @@ private:
     void rndp_listener(DgramSocket rndp_reader);
 
     //! 监听 EDP 消息
-    void redp_listener(DgramSocket redp_socket);
+    void redp_listener(std::shared_ptr<DgramSocket> redp_socket);
 
     //! 心跳检测
     void heartbeat_detect();
+
+    //! 检查本地端点是否满足 REDP 快照长度限制
+    bool canRegisterREDPEndpoints(std::initializer_list<std::pair<std::string_view, std::string_view>> additions);
+
+    //! 生成本地端点完整快照，Writer 在前、Reader 在后，各自按 topic 排序
+    std::vector<REDPEndpoint> snapshot();
+
+    //! 同步本地端点变化
+    void endpointChanged();
+
+    //! 建立或更新 REDP 会话，调用方需持有 _endpoint_registration_mtx
+    std::optional<REDPMessage> activateREDPPeer(Guid peer, Locator locator);
+
+    //! 更新发现的端点缓存
+    void applyREDPSnapshot(Guid peer, std::array<uint8_t, 4> source_ip,
+                                        const std::vector<REDPEndpoint> &previous,
+                                        const std::vector<REDPEndpoint> &current);
+
+    //! 串行化本地端点变更、节点发现/超时清理及 REDP 快照状态迁移
+    std::mutex _endpoint_registration_mtx{};
+    std::mutex _redp_mtx{};                                                  //!< REDP 会话互斥锁
+    std::unordered_map<Guid, REDPPeer, GuidHash> _redp_peers{}; //!< REDP 会话状态
 
     std::atomic_bool _running{true};   //!< 运行状态
     std::atomic_uint16_t _next_eid{1}; //!< 用于生成实体 ID 的原子计数器
 
     uint16_t _rndp_port{}; //!< RNDP 广播端口号
-    uint16_t _redp_port{}; //!< REDP 监听端口号
+    uint16_t _redp_port{}; //!< REDP 控制端口号
 
-    Guid _uid{};              //!< 节点唯一标识符
-    DgramSocket _rndp_writer; //!< NDP 广播 Socket
+    Guid _uid{};                                 //!< 节点唯一标识符
+    DgramSocket _rndp_writer;                    //!< NDP 广播 Socket
+    std::shared_ptr<DgramSocket> _redp_socket{}; //!< REDP 控制收发共用的 Socket
 
     std::thread _bcast_thrd{};       //!< 广播线程
     std::thread _rndp_listen_thrd{}; //!< NDP 监听线程
@@ -234,9 +258,9 @@ protected:
     //! 本地实体读写锁
     std::shared_mutex _local_mtx{};
     //! 已注册的 Writers 列表
-    std::unordered_map<std::string, DataWriterBase::ptr> _local_writers{};
+    std::map<std::string, DataWriterBase::ptr> _local_writers{};
     //! 已注册的 Readers 列表
-    std::unordered_map<std::string, DataReaderBase::ptr> _local_readers{};
+    std::map<std::string, DataReaderBase::ptr> _local_readers{};
 
     //! 已发现实体读写锁
     std::shared_mutex _discovered_mtx{};
@@ -486,7 +510,7 @@ public:
      *
      * @param[in] timeout 最大等待时间
      * @return 服务端在超时前上线返回 `true`，否则返回 `false`
-    */
+     */
     template <typename Rep, typename Period>
     rm::async::Task<bool> wait(std::chrono::duration<Rep, Period> timeout);
 
@@ -564,6 +588,7 @@ private:
  * @details
  * - 内置节点发现协议 NDP (Node Discovery Protocol)，用于节点间的自动发现与通信
  * - 内置通信端点发现协议 EDP (Endpoint Discovery Protocol)，用于发布者与订阅者间的自动发现与通信
+ * @note 运行期间应在事件循环线程中操作节点，运行前可完成初始化。
  * @see 详情见 @ref tutorial_modules_lpss
  */
 class Node {
@@ -681,10 +706,28 @@ private:
     rm::async::Task<> rndp_listener(rm::async::DgramSocket rndp_reader);
 
     //! 监听 EDP 消息
-    rm::async::Task<> redp_listener(rm::async::DgramSocket redp_socket);
+    rm::async::Task<> redp_listener(std::shared_ptr<rm::async::DgramSocket> redp_socket);
 
     //! 心跳检测
     rm::async::Task<> heartbeat_detect();
+
+    //! 检查本地端点是否满足 REDP 快照长度限制
+    bool canRegisterREDPEndpoints(
+        std::initializer_list<std::pair<std::string_view, std::string_view>> additions);
+
+    //! 生成本地端点完整快照，Writer 在前、Reader 在后，各自按 topic 排序
+    std::vector<REDPEndpoint> snapshot();
+
+    //! 同步本地端点变化
+    void endpointChanged();
+
+    //! 建立或更新 REDP 会话
+    void activateREDPPeer(Guid peer, Locator locator);
+
+    //! 更新发现的端点缓存
+    void applyREDPSnapshot(Guid peer, std::array<uint8_t, 4> source_ip,
+                                        const std::vector<REDPEndpoint> &previous,
+                                        const std::vector<REDPEndpoint> &current);
 
     //! 处理要求节点正常退出的信号
     rm::async::Task<> on_shutdown_signal(int signum);
@@ -693,14 +736,17 @@ protected:
     rm::async::IOContext _ctx{}; //!< 异步 IO 上下文
 
 private:
+    std::unordered_map<Guid, REDPPeer, GuidHash> _redp_peers{}; //!< REDP 会话状态
+
     std::atomic_bool _running{true}; //!< 运行状态
-    uint16_t _next_eid{1}; //!< 用于生成实体 ID 的计数器
+    uint16_t _next_eid{1};           //!< 用于生成实体 ID 的计数器
 
     uint16_t _rndp_port{}; //!< RNDP 广播端口号
-    uint16_t _redp_port{}; //!< REDP 监听端口号
+    uint16_t _redp_port{}; //!< REDP 控制端口号
 
-    Guid _uid{};                         //!< 节点唯一标识符
-    rm::async::DgramSocket _rndp_writer; //!< NDP 广播 Socket
+    Guid _uid{};                                            //!< 节点唯一标识符
+    rm::async::DgramSocket _rndp_writer;                    //!< NDP 广播 Socket
+    std::shared_ptr<rm::async::DgramSocket> _redp_socket{}; //!< REDP 控制收发共用的 Socket
 
     rm::async::Timer _broadcast_timer{_ctx}; //!< NDP 广播异步定时器
     rm::async::Timer _hbt_timer{_ctx};       //!< 心跳检测异步定时器
@@ -710,9 +756,9 @@ protected:
     std::unordered_map<Guid, NodeStorageInfo, GuidHash> _discovered_nodes{};
 
     //! 已注册的 Writers 列表
-    std::unordered_map<std::string, DataWriterBase::ptr> _local_writers{};
+    std::map<std::string, DataWriterBase::ptr> _local_writers{};
     //! 已注册的 Readers 列表
-    std::unordered_map<std::string, DataReaderBase::ptr> _local_readers{};
+    std::map<std::string, DataReaderBase::ptr> _local_readers{};
 
     //! 已发现的 Writers 列表
     std::unordered_map<std::string, DiscoveredWriterStorageInfo> _discovered_writers{};

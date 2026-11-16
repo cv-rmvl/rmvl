@@ -66,7 +66,7 @@ struct GuidHash {
     inline std::size_t operator()(const rm::lpss::Guid &guid) const noexcept { return static_cast<std::size_t>(guid.full); }
 };
 
-constexpr std::size_t RNDP_HEADER_SIZE = 4 + sizeof(Guid) + 2;
+constexpr std::size_t RNDP_HEADER_SIZE = 4 + sizeof(Guid) + 1 + 3 + 2; // magic, GUID, version marker, versions, count, heartbeat
 constexpr std::size_t REDP_HEADER_SIZE = 4 + sizeof(Guid) + 1;
 constexpr auto BROADCAST_IP = "239.255.0.5";
 
